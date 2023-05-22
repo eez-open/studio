@@ -1,36 +1,23 @@
 import React from "react";
-import { makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
-    ClassInfo,
-    EezObject,
     getClassInfoLvglProperties,
-    getParent,
     getProperty,
-    IMessage,
-    IPropertyGridGroupDefinition,
     LVGL_FLAG_CODES,
     LVGL_REACTIVE_FLAGS,
     LVGL_REACTIVE_STATES,
     LVGL_STATE_CODES,
-    PropertyInfo,
-    PropertyProps,
-    PropertyType
+    PropertyProps
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    createObject,
-    getAncestorOfType,
-    getObjectPathAsString,
-    propertyNotSetMessage
-} from "project-editor/store";
+import { getAncestorOfType, getObjectPathAsString } from "project-editor/store";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { WidgetEvents } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,249 +32,24 @@ export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
 export const LV_EVENT_CHECKED = 0x7e;
 export const LV_EVENT_UNCHECKED = 0x7f;
 
-const LVGL_EVENTS = {
-    PRESSED: 1,
-    PRESS_LOST: 3,
-    RELEASED: 8,
-    CLICKED: 7,
-    LONG_PRESSED: 5,
-    LONG_PRESSED_REPEAT: 6,
-    FOCUSED: 14,
-    DEFOCUSED: 15,
-    VALUE_CHANGED: 28,
-    READY: 31,
-    CANCEL: 32,
-    SCREEN_LOADED: 39,
-    SCREEN_UNLOADED: 40,
-    SCREEN_LOAD_START: 38,
-    SCREEN_UNLOAD_START: 37,
-    CHECKED: LV_EVENT_CHECKED,
-    UNCHECKED: LV_EVENT_UNCHECKED
-};
-
-export type ValuesOf<T extends any[]> = T[number];
-
-function getTriggerEnumItems(
-    eventHandlers: EventHandler[],
-    eventHandler: EventHandler | undefined
-) {
-    const eventNames: string[] = eventHandlers
-        .filter(eh => eh != eventHandler)
-        .map(eventHandler => eventHandler.trigger);
-    return Object.keys(LVGL_EVENTS)
-        .filter(eventName => eventNames.indexOf(eventName) == -1)
-        .map(eventName => ({
-            id: eventName,
-            label: eventName
-        }));
-}
-
-export class EventHandler extends EezObject {
-    trigger: keyof typeof LVGL_EVENTS;
-    handlerType: "flow" | "action";
-    action: string;
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            trigger: observable,
-            handlerType: observable,
-            action: observable
-        });
-    }
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "trigger",
-                type: PropertyType.Enum,
-                enumItems: (eventHandler: EventHandler) => {
-                    const eventHandlers = getParent(
-                        eventHandler
-                    ) as EventHandler[];
-                    return getTriggerEnumItems(eventHandlers, eventHandler);
-                },
-                enumDisallowUndefined: true
-            },
-            {
-                name: "handlerType",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "flow", label: "Flow" },
-                    { id: "action", label: "Action" }
-                ],
-                enumDisallowUndefined: true,
-                readOnlyInPropertyGrid: eventHandler =>
-                    !ProjectEditor.getProject(eventHandler).projectTypeTraits
-                        .hasFlowSupport
-            },
-            {
-                name: "action",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "actions",
-                hideInPropertyGrid: (eventHandler: EventHandler) => {
-                    return eventHandler.handlerType != "action";
-                }
-            }
-        ],
-
-        listLabel: (eventHandler: EventHandler, collapsed) =>
-            !collapsed
-                ? ""
-                : `${eventHandler.trigger} ${eventHandler.handlerType}${
-                      eventHandler.handlerType == "action"
-                          ? `: ${eventHandler.action}`
-                          : ""
-                  }`,
-        updateObjectValueHook: (
-            eventHandler: EventHandler,
-            values: Partial<EventHandler>
-        ) => {
-            if (
-                values.handlerType == "action" &&
-                eventHandler.handlerType == "flow"
-            ) {
-                const widget = getAncestorOfType<LVGLWidget>(
-                    eventHandler,
-                    ProjectEditor.LVGLWidgetClass.classInfo
-                )!;
-
-                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                    widget,
-                    eventHandler.trigger
-                );
-            } else if (
-                values.trigger != undefined &&
-                eventHandler.trigger != values.trigger
-            ) {
-                const widget = getAncestorOfType<LVGLWidget>(
-                    eventHandler,
-                    ProjectEditor.LVGLWidgetClass.classInfo
-                );
-                if (widget) {
-                    ProjectEditor.getFlow(widget).rerouteConnectionLinesOutput(
-                        widget,
-                        eventHandler.trigger,
-                        values.trigger
-                    );
-                }
-            }
-        },
-
-        deleteObjectRefHook: (eventHandler: EventHandler) => {
-            const widget = getAncestorOfType<LVGLWidget>(
-                eventHandler,
-                ProjectEditor.LVGLWidgetClass.classInfo
-            )!;
-
-            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                widget,
-                eventHandler.trigger
-            );
-        },
-
-        defaultValue: {
-            handlerType: "action"
-        },
-
-        newItem: async (eventHandlers: EventHandler[]) => {
-            const project = ProjectEditor.getProject(eventHandlers);
-
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Event Handler",
-                    fields: [
-                        {
-                            name: "trigger",
-                            type: "enum",
-                            enumItems: getTriggerEnumItems(
-                                eventHandlers,
-                                undefined
-                            )
-                        },
-                        {
-                            name: "handlerType",
-                            type: "enum",
-                            enumItems: [
-                                { id: "flow", label: "Flow" },
-                                { id: "action", label: "Action" }
-                            ],
-                            visible: () =>
-                                project.projectTypeTraits.hasFlowSupport
-                        },
-                        {
-                            name: "action",
-                            type: "enum",
-                            enumItems: project.actions.map(action => ({
-                                id: action.name,
-                                label: action.name
-                            })),
-                            visible: (values: any) => {
-                                return values.handlerType == "action";
-                            }
-                        }
-                    ]
-                },
-                values: {
-                    handlerType: project.projectTypeTraits.hasFlowSupport
-                        ? "flow"
-                        : "action"
-                },
-                dialogContext: project
-            });
-
-            const properties: Partial<EventHandler> = {
-                trigger: result.values.trigger,
-                handlerType: result.values.handlerType,
-                action: result.values.action
-            };
-
-            const eventHandler = createObject<EventHandler>(
-                project._store,
-                properties,
-                EventHandler
-            );
-
-            return eventHandler;
-        },
-
-        check: (eventHandler: EventHandler, messages: IMessage[]) => {
-            if (eventHandler.handlerType == "action") {
-                if (!eventHandler.action) {
-                    messages.push(
-                        propertyNotSetMessage(eventHandler, "action")
-                    );
-                }
-                ProjectEditor.documentSearch.checkObjectReference(
-                    eventHandler,
-                    "action",
-                    messages
-                );
-            }
-        }
-    };
-
-    get triggerCode() {
-        return LVGL_EVENTS[this.trigger];
-    }
-}
-
-const eventsGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-events",
-    title: "Events",
-    position: 4
-};
-
-export const eventHandlersProperty: PropertyInfo = {
-    name: "eventHandlers",
-    type: PropertyType.Array,
-    typeClass: EventHandler,
-    arrayItemOrientation: "vertical",
-    propertyGridGroup: eventsGroup,
-    partOfNavigation: false,
-    enumerable: false,
-    defaultValue: []
+export const LVGL_EVENTS: WidgetEvents = {
+    PRESSED: { code: 1, paramExpressionType: "null" },
+    PRESS_LOST: { code: 3, paramExpressionType: "null" },
+    RELEASED: { code: 8, paramExpressionType: "null" },
+    CLICKED: { code: 7, paramExpressionType: "null" },
+    LONG_PRESSED: { code: 5, paramExpressionType: "null" },
+    LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
+    FOCUSED: { code: 14, paramExpressionType: "null" },
+    DEFOCUSED: { code: 15, paramExpressionType: "null" },
+    VALUE_CHANGED: { code: 28, paramExpressionType: "null" },
+    READY: { code: 31, paramExpressionType: "null" },
+    CANCEL: { code: 32, paramExpressionType: "null" },
+    SCREEN_LOADED: { code: 39, paramExpressionType: "null" },
+    SCREEN_UNLOADED: { code: 40, paramExpressionType: "null" },
+    SCREEN_LOAD_START: { code: 38, paramExpressionType: "null" },
+    SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
+    CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
+    UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

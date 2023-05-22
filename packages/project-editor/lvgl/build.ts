@@ -335,8 +335,8 @@ export class LVGLBuild {
 
                     for (const eventHandler of widget.eventHandlers) {
                         if (
-                            eventHandler.trigger == "CHECKED" ||
-                            eventHandler.trigger == "UNCHECKED"
+                            eventHandler.eventName == "CHECKED" ||
+                            eventHandler.eventName == "UNCHECKED"
                         ) {
                             build.line(
                                 `lv_obj_t *ta = lv_event_get_target(e);`
@@ -346,17 +346,17 @@ export class LVGLBuild {
                     }
 
                     for (const eventHandler of widget.eventHandlers) {
-                        if (eventHandler.trigger == "CHECKED") {
+                        if (eventHandler.eventName == "CHECKED") {
                             build.line(
                                 `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
                             );
-                        } else if (eventHandler.trigger == "UNCHECKED") {
+                        } else if (eventHandler.eventName == "UNCHECKED") {
                             build.line(
                                 `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
                             );
                         } else {
                             build.line(
-                                `if (event == LV_EVENT_${eventHandler.trigger}) {`
+                                `if (event == LV_EVENT_${eventHandler.eventName}) {`
                             );
                         }
 
@@ -391,7 +391,7 @@ export class LVGLBuild {
                             const outputIndex =
                                 build.assets.getComponentOutputIndex(
                                     widget,
-                                    eventHandler.trigger
+                                    eventHandler.eventName
                                 );
                             build.line(
                                 `flowPropagateValue(flowState, ${componentIndex}, ${outputIndex});`

@@ -237,7 +237,7 @@ function buildComponent(
                 component,
                 output.name,
                 -1,
-                assets.getFlowIndexFromComponentProperty(component, output.name)
+                assets.getFlowIndexFromEventHandler(component, output.name)
             );
         }
     });
@@ -279,6 +279,13 @@ function buildComponent(
 
         assets.map.flows[flowIndex].components[componentIndex].outputs.push({
             outputName: output.name,
+            actionFlowIndex:
+                output.type == "property"
+                    ? assets.getFlowIndexFromEventHandler(
+                          component,
+                          output.name
+                      )
+                    : -1,
             valueTypeIndex: assets.getTypeIndex(output.valueType),
             connectionLines: connectionLinesMap
         });

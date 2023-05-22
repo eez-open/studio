@@ -398,6 +398,7 @@ interface AssetsMap {
             };
             outputs: {
                 outputName: string;
+                actionFlowIndex: number;
                 valueTypeIndex: number;
                 connectionLines: {
                     targetComponentIndex: number;

@@ -79,16 +79,16 @@ export const LVGL_FLOW_BASIC_TYPE_NAMES = [
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ACTION_PARAMS_STRUCT_NAME = "$ActionParams";
-export const CHECKBOX_ACTION_PARAMS_STRUCT_NAME = "$CheckboxActionParams";
-export const TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME = "$TextInputActionParams";
-export const DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME =
-    "$DropDownListActionParams";
+export const CLICK_EVENT_STRUCT_NAME = "$ClickEvent";
+export const CHECKBOX_CHANGE_EVENT_STRUCT_NAME = "$CheckboxChangeEvent";
+export const TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME = "$TextInputChangeEvent";
+export const DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME =
+    "$DropDownListChangeEvent";
 export const SCROLLBAR_STATE_STRUCT_NAME = "$ScrollbarState";
 
 export const SYSTEM_STRUCTURES: IStructure[] = [
     {
-        name: ACTION_PARAMS_STRUCT_NAME,
+        name: CLICK_EVENT_STRUCT_NAME,
         fields: [
             {
                 name: "index",
@@ -102,7 +102,7 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
         fieldsMap: new Map()
     },
     {
-        name: CHECKBOX_ACTION_PARAMS_STRUCT_NAME,
+        name: CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
                 name: "index",
@@ -120,7 +120,7 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
         fieldsMap: new Map()
     },
     {
-        name: TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
+        name: TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
                 name: "index",
@@ -138,7 +138,7 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
         fieldsMap: new Map()
     },
     {
-        name: DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME,
+        name: DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
                 name: "index",
@@ -611,6 +611,14 @@ export function migrateType(objectJS: any) {
     } else if (objectJS.type == "enum") {
         objectJS.type = `enum:${objectJS.enum}`;
         delete objectJS.enum;
+    } else if (objectJS.type == "struct:$ActionParams") {
+        objectJS.type = "struct:$ClickEvent";
+    } else if (objectJS.type == "struct:$CheckboxActionParams") {
+        objectJS.type = "struct:$CheckboxChangeEvent";
+    } else if (objectJS.type == "struct:$TextInputActionParams") {
+        objectJS.type = "struct:$TextInputChangeEvent";
+    } else if (objectJS.type == "struct:$DropDownListActionParams") {
+        objectJS.type = "struct:$DropDownListChangeEvent";
     }
 }
 

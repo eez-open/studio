@@ -225,6 +225,16 @@ export function isFirmwareWithFlowSupportProject(object: IEezObject) {
     );
 }
 
+export function isNotFirmwareProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return !(
+        project.projectTypeTraits.isFirmware ||
+        project.projectTypeTraits.isFirmwareModule ||
+        project.projectTypeTraits.isResource ||
+        project.projectTypeTraits.isApplet
+    );
+}
+
 export function isAppletProject(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return project.projectTypeTraits.isApplet;

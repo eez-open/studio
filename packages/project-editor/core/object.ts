@@ -114,7 +114,6 @@ export interface IOnSelectParams {
 
 export type FlowPropertyType =
     | "input"
-    | "output"
     | "assignable"
     | "template-literal"
     | "scpi-template-literal";
@@ -281,6 +280,14 @@ interface LVGLClassInfoProperties {
     defaultStates?: string;
 }
 
+export type WidgetEvents = {
+    [eventName: string]: {
+        code: number;
+        paramExpressionType: ValueType;
+        oldName?: string;
+    };
+};
+
 export interface ClassInfo {
     properties: PropertyInfo[];
 
@@ -393,6 +400,8 @@ export interface ClassInfo {
     execute?: (context: IDashboardComponentContext) => void;
 
     findChildIndex?: (parent: IEezObject[], child: IEezObject) => number;
+
+    widgetEvents?: WidgetEvents;
 }
 
 export function makeDerivedClassInfo(

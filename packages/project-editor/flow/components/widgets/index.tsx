@@ -46,7 +46,8 @@ import {
     isProjectWithFlowSupport,
     isNotV1Project,
     isV3OrNewerProject,
-    isNotProjectWithFlowSupport
+    isNotProjectWithFlowSupport,
+    isNotFirmwareProject
 } from "project-editor/project/project-type-traits";
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
@@ -77,17 +78,17 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import {
-    ACTION_PARAMS_STRUCT_NAME,
-    CHECKBOX_ACTION_PARAMS_STRUCT_NAME,
-    TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME,
+    CLICK_EVENT_STRUCT_NAME,
+    CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
+    TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
     getEnumTypeNameFromVariable,
     isEnumVariable,
-    makeActionParamsValue,
-    makeCheckboxActionParamsValue,
-    makeTextInputActionParamsValue,
-    makeDropDownListActionParamsValue,
+    makeActionParamsValue as makeClickEventValue,
+    makeCheckboxActionParamsValue as makeCheckboxChangeEventValue,
+    makeTextInputActionParamsValue as makeTextInputChangeEventValue,
+    makeDropDownListActionParamsValue as makeDropDownListChangeEventValue,
     ValueType,
-    DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME
+    DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME
 } from "project-editor/features/variable/value-type";
 import {
     drawText,
@@ -109,8 +110,7 @@ import {
     migrateStyleProperty,
     ComponentInput,
     ComponentOutput,
-    makeExpressionProperty,
-    makeActionPropertyInfo
+    makeExpressionProperty
 } from "project-editor/flow/component";
 
 import {
@@ -2025,7 +2025,8 @@ export class TextWidget extends Widget {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 defaultValue: false,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: isNotFirmwareProject
             },
             Object.assign(
                 makeStylePropertyInfo("focusStyle"),
@@ -2133,9 +2134,9 @@ export class TextWidget extends Widget {
                                 flowContext.projectStore.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
-                                    "action",
-                                    makeActionParamsValue(flowContext),
-                                    `struct:${ACTION_PARAMS_STRUCT_NAME}`
+                                    "CLICKED",
+                                    makeClickEventValue(flowContext),
+                                    `struct:${CLICK_EVENT_STRUCT_NAME}`
                                 );
                             }
                         }}
@@ -2604,7 +2605,8 @@ export class RectangleWidget extends Widget {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
-                defaultValue: false
+                defaultValue: false,
+                hideInPropertyGrid: isNotFirmwareProject
             }
         ],
 
@@ -3057,7 +3059,12 @@ export class ButtonWidget extends Widget {
             top: 0,
             width: 64,
             height: 40,
-            asOutputProperties: ["action"]
+            eventHandlers: [
+                {
+                    eventName: "CLICKED",
+                    handlerType: "flow"
+                }
+            ]
         },
 
         componentDefaultValue: (projectStore: ProjectStore) => {
@@ -3173,9 +3180,9 @@ export class ButtonWidget extends Widget {
                                 flowContext.projectStore.runtime.executeWidgetAction(
                                     flowContext,
                                     this,
-                                    "action",
-                                    makeActionParamsValue(flowContext),
-                                    `struct:${ACTION_PARAMS_STRUCT_NAME}`
+                                    "CLICKED",
+                                    makeClickEventValue(flowContext),
+                                    `struct:${CLICK_EVENT_STRUCT_NAME}`
                                 );
                             }
                         }}
@@ -6715,9 +6722,9 @@ function TextInputWidgetInput({
                 flowState.runtime.executeWidgetAction(
                     flowContext,
                     textInputWidget,
-                    "onChange",
-                    makeTextInputActionParamsValue(flowContext, value),
-                    `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+                    "ON_CHANGE",
+                    makeTextInputChangeEventValue(flowContext, value),
+                    `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
                 );
             }
         }
@@ -6749,12 +6756,12 @@ function TextInputWidgetInput({
                             flowState.runtime.executeWidgetAction(
                                 flowContext,
                                 textInputWidget,
-                                "action",
-                                makeTextInputActionParamsValue(
+                                "ON_INPUT",
+                                makeTextInputChangeEventValue(
                                     flowContext,
                                     value
                                 ),
-                                `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
+                                `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
                             );
                         }
                     }
@@ -6776,14 +6783,6 @@ export class TextInputWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: "Value"
             }),
-            makeActionPropertyInfo("action", {
-                displayName: "On input",
-                expressionType: `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
-            }),
-            makeActionPropertyInfo("onChange", {
-                displayName: "On change",
-                expressionType: `struct:${TEXT_INPUT_ACTION_PARAMS_STRUCT_NAME}`
-            }),
             {
                 name: "password",
                 type: PropertyType.Boolean
@@ -6796,6 +6795,7 @@ export class TextInputWidget extends Widget {
             height: 32,
             title: ""
         },
+
         componentDefaultValue: (projectStore: ProjectStore) => {
             return projectStore.projectTypeTraits.isFirmwareModule ||
                 projectStore.projectTypeTraits.isApplet ||
@@ -6835,18 +6835,29 @@ export class TextInputWidget extends Widget {
                 <path d="M13 12h.01"></path>
             </svg>
         ),
-        execute: (context: IDashboardComponentContext) => {}
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_INPUT: {
+                code: 1,
+                paramExpressionType: `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            },
+            ON_CHANGE: {
+                code: 2,
+                paramExpressionType: `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "onChange"
+            }
+        }
     });
 
-    onChange?: string;
     password: boolean;
 
     constructor() {
         super();
 
         makeObservable(this, {
-            password: observable,
-            onChange: observable
+            password: observable
         });
     }
 
@@ -6912,11 +6923,7 @@ export class CheckboxWidget extends Widget {
                     propertyGridGroup: specificGroup
                 },
                 "string"
-            ),
-            makeActionPropertyInfo("action", {
-                displayName: "onChange",
-                expressionType: `struct:${CHECKBOX_ACTION_PARAMS_STRUCT_NAME}`
-            })
+            )
         ],
         defaultValue: {
             left: 0,
@@ -6935,7 +6942,15 @@ export class CheckboxWidget extends Widget {
             </svg>
         ),
 
-        execute: (context: IDashboardComponentContext) => {}
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${CHECKBOX_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
     });
 
     label: string;
@@ -7060,12 +7075,12 @@ export class CheckboxWidget extends Widget {
                                     flowState.runtime.executeWidgetAction(
                                         flowContext,
                                         this,
-                                        "action",
-                                        makeCheckboxActionParamsValue(
+                                        "ON_CHANGE",
+                                        makeCheckboxChangeEventValue(
                                             flowContext,
                                             value
                                         ),
-                                        `struct:${CHECKBOX_ACTION_PARAMS_STRUCT_NAME}`
+                                        `struct:${CHECKBOX_CHANGE_EVENT_STRUCT_NAME}`
                                     );
                                 }
                             }
@@ -7578,13 +7593,7 @@ export class DropDownListWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
-        properties: [
-            makeDataPropertyInfo("options"),
-            makeActionPropertyInfo("action", {
-                displayName: "onChange",
-                expressionType: `struct:${DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME}`
-            })
-        ],
+        properties: [makeDataPropertyInfo("options")],
 
         defaultValue: {
             left: 0,
@@ -7597,7 +7606,15 @@ export class DropDownListWidget extends Widget {
             <svg viewBox="0 0 1000 1000" fill="currentColor">
                 <path d="M258.8 402.9v157.4H990V402.9H258.8zm685.5 111.7H304.5v-66h639.8v66zM258.8 743.1H990V585.7H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm-45.7 293.2H990V767.2H258.8v157.4zm45.7-111.7h639.8v66H304.5v-66zm436.7-463.3h198V75.4H10v274.2h731.2zm0-228.5h152.3v182.8H741.2V121.1zM55.7 303.9V121.1h639.8v182.8H55.7zm714.7-113.5h100.1l-50 63.6-50.1-63.6z" />
             </svg>
-        )
+        ),
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
     });
 
     constructor() {
@@ -7634,12 +7651,12 @@ export class DropDownListWidget extends Widget {
                         flowContext.projectStore.runtime.executeWidgetAction(
                             flowContext,
                             this,
-                            "action",
-                            makeDropDownListActionParamsValue(
+                            "ON_CHANGE",
+                            makeDropDownListChangeEventValue(
                                 flowContext,
                                 event.target.selectedIndex
                             ),
-                            `struct:${DROP_DOWN_LIST_ACTION_PARAMS_STRUCT_NAME}`
+                            `struct:${DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME}`
                         );
                     }
                 }}

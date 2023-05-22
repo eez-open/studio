@@ -911,11 +911,13 @@ export class Assets {
         return this.getFlowState(flow).index;
     }
 
-    getFlowIndexFromComponentProperty(
-        component: Component,
-        propertyName: string
-    ) {
-        const actionName = getProperty(component, propertyName);
+    getFlowIndexFromEventHandler(component: Component, eventName: string) {
+        const eventHandlers = component.getEventHandlers();
+        const actionName = eventHandlers?.find(
+            eventHandler =>
+                eventHandler.eventName == eventName &&
+                eventHandler.handlerType == "action"
+        )?.action;
         if (!actionName) {
             return -1;
         }
@@ -1020,12 +1022,30 @@ export class Assets {
         );
     }
 
-    getFlowWidgetActionIndex(widget: Widget, propertyName: string) {
+    getFlowWidgetActionIndex(widget: Widget | Component, propertyName: string) {
+        if (widget instanceof ProjectEditor.WidgetClass) {
+            if (propertyName == "action") {
+                propertyName = widget.getDefaultActionEventName();
+            }
+        }
+
         if (
-            !widget.asOutputProperties ||
-            widget.asOutputProperties.indexOf(propertyName) == -1
+            !(widget instanceof ProjectEditor.WidgetClass) ||
+            !widget.isFlowEventHander(propertyName)
         ) {
-            const actionName = getProperty(widget, propertyName);
+            let actionName: string | undefined;
+
+            if (widget instanceof ProjectEditor.WidgetClass) {
+                const eventHandlers = widget.getEventHandlers();
+                actionName = eventHandlers?.find(
+                    eventHandler =>
+                        eventHandler.eventName == propertyName &&
+                        eventHandler.handlerType == "action"
+                )?.action;
+            } else {
+                actionName = getProperty(widget, propertyName);
+            }
+
             if (!actionName) {
                 return 0;
             }
@@ -1062,7 +1082,7 @@ export class Assets {
         if (index == undefined) {
             index = flowState.flowWidgetActionIndexes.size;
             flowState.flowWidgetActionIndexes.set(path, index);
-            flowState.flowWidgetFromActionIndex.set(index, widget);
+            flowState.flowWidgetFromActionIndex.set(index, widget as Widget);
         }
         return -(index + 1);
     }

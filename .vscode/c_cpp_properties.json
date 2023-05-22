@@ -16,7 +16,7 @@
                 "EEZ_PLATFORM_LVGL",
                 "__EMSCRIPTEN__",
                 "OPTION_GUI=1",
-                "EEZ_FOR_LVGL"
+                "EEZ_OPTION_GUI"
             ],
             "windowsSdkVersion": "10.0.17134.0",
             "compilerPath": "C:/MinGW/bin/g++.exe",

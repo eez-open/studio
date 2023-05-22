@@ -53,6 +53,7 @@ export function loadProject(
     currentProjectStore = projectStore;
     isLoadProject = true;
     createNewObjectobjIDs = false;
+    wireSourceChangedList = [];
 
     rewireBegin();
 
@@ -130,6 +131,11 @@ let flowsWireIDToObjID: Map<Flow, Map<string, string>> = new Map<
 let currentFlowWireIDToObjID: Map<string, string>;
 let wireIDToObjID: Map<string, string> = new Map<string, string>();
 let oldObjID_to_newObjID: Map<string, string> = new Map<string, string>();
+let wireSourceChangedList: {
+    object: IEezObject;
+    oldSourceName: string;
+    newSourceName: string;
+}[];
 
 function loadArrayObject(
     arrayObject: any,
@@ -431,10 +437,32 @@ export function rewireEnd(object: IEezObject) {
                     connectionLine.input = newInput;
                 }
             }
+
+            for (const wireSourceChanged of wireSourceChangedList) {
+                if (
+                    connectionLine.source ==
+                        (wireSourceChanged.object as EezObject).objID &&
+                    connectionLine.output == wireSourceChanged.oldSourceName
+                ) {
+                    connectionLine.output = wireSourceChanged.newSourceName;
+                }
+            }
         }
     }
 
     flowsWireIDToObjID.clear();
     wireIDToObjID.clear();
     oldObjID_to_newObjID.clear();
+}
+
+export function wireSourceChanged(
+    object: IEezObject,
+    oldSourceName: string,
+    newSourceName: string
+) {
+    wireSourceChangedList.push({
+        object,
+        oldSourceName,
+        newSourceName
+    });
 }

@@ -74,15 +74,12 @@ import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
-import { ValueType } from "project-editor/features/variable/value-type";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
-    EventHandler,
-    eventHandlersProperty,
     LVGLWidgetFlagsProperty,
     LVGLWidgetStatesProperty,
     LV_EVENT_ARC_VALUE_CHANGED,
@@ -94,7 +91,8 @@ import {
     LV_EVENT_ROLLER_SELECTED_CHANGED,
     getCode,
     getExpressionPropertyData,
-    LV_EVENT_METER_TICK_LABEL_EVENT
+    LV_EVENT_METER_TICK_LABEL_EVENT,
+    LVGL_EVENTS
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -309,8 +307,6 @@ export class LVGLWidget extends Widget {
 
     useStyle: string;
     localStyles: LVGLStylesDefinition;
-
-    eventHandlers: EventHandler[];
 
     _lvglObj: number | undefined;
     _refreshCounter: number = 0;
@@ -604,8 +600,7 @@ export class LVGLWidget extends Widget {
                 propertyGridCollapsable: true,
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
-            },
-            eventHandlersProperty
+            }
         ],
 
         beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>) => {
@@ -785,7 +780,9 @@ export class LVGLWidget extends Widget {
             widget.localStyles.check(messages);
         },
 
-        showTreeCollapseIcon: "has-children"
+        showTreeCollapseIcon: "has-children",
+
+        widgetEvents: LVGL_EVENTS
     });
 
     constructor() {
@@ -813,7 +810,6 @@ export class LVGLWidget extends Widget {
             allStates: computed,
             useStyle: observable,
             localStyles: observable,
-            eventHandlers: observable,
             _lvglObj: observable,
             _refreshCounter: observable,
             relativePosition: computed,
@@ -953,20 +949,6 @@ export class LVGLWidget extends Widget {
         return super.getResizeHandlers();
     }
 
-    getOutputs(): ComponentOutput[] {
-        return [
-            ...super.getOutputs(),
-            ...this.eventHandlers
-                .filter(eventHandler => eventHandler.handlerType == "flow")
-                .map(eventHandler => ({
-                    name: eventHandler.trigger,
-                    type: "any" as ValueType,
-                    isOptionalOutput: false,
-                    isSequenceOutput: false
-                }))
-        ];
-    }
-
     get allStates() {
         const states = this.states.split(
             "|"
@@ -1062,12 +1044,12 @@ export class LVGLWidget extends Widget {
                         if (componentIndex != undefined) {
                             const component = flow.components[componentIndex];
                             const outputIndex =
-                                component.outputIndexes[eventHandler.trigger];
+                                component.outputIndexes[eventHandler.eventName];
                             if (outputIndex != undefined) {
                                 lvglAddObjectFlowCallback(
                                     runtime,
                                     obj,
-                                    eventHandler.triggerCode,
+                                    eventHandler.eventCode,
                                     componentIndex,
                                     outputIndex
                                 );
@@ -1082,7 +1064,7 @@ export class LVGLWidget extends Widget {
                             lvglAddObjectFlowCallback(
                                 runtime,
                                 obj,
-                                eventHandler.triggerCode,
+                                eventHandler.eventCode,
                                 -1,
                                 actionFlowIndex
                             );

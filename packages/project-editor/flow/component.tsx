@@ -9,6 +9,8 @@ import { BoundingRectBuilder, Point, Rect } from "eez-studio-shared/geometry";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
+import * as notification from "eez-studio-ui/notification";
+
 import {
     IEezObject,
     EezObject,
@@ -20,7 +22,6 @@ import {
     IOnSelectParams,
     getParent,
     makeDerivedClassInfo,
-    findPropertyByNameInClassInfo,
     PropertyProps,
     isPropertyHidden,
     getProperty,
@@ -28,7 +29,8 @@ import {
     registerClass,
     FlowPropertyType,
     setParent,
-    IMessage
+    IMessage,
+    IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -89,8 +91,9 @@ import {
     variableTypeProperty,
     ValueType,
     VariableTypeFieldComponent,
-    ACTION_PARAMS_STRUCT_NAME,
-    isValidType
+    CLICK_EVENT_STRUCT_NAME,
+    isValidType,
+    migrateType
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "./editor/ComponentsPalette";
@@ -144,6 +147,8 @@ import {
     getInputDisplayName,
     getOutputDisplayName
 } from "project-editor/flow/helper";
+
+import { wireSourceChanged } from "project-editor/store/serialization";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,21 +207,6 @@ export function makeDataPropertyInfo(
             },
             expressionType
         ),
-        props
-    );
-}
-
-export function makeActionPropertyInfo(
-    name: string,
-    props?: Partial<PropertyInfo>
-): PropertyInfo {
-    return Object.assign(
-        makeToggablePropertyToOutput({
-            name,
-            type: PropertyType.ObjectReference,
-            referencedObjectCollectionPath: "actions",
-            propertyGridGroup: specificGroup
-        }),
         props
     );
 }
@@ -504,78 +494,6 @@ export function makeTemplateLiteralProperty(
     );
 }
 
-export function makeToggablePropertyToOutput(
-    propertyInfo: PropertyInfo
-): PropertyInfo {
-    return Object.assign(propertyInfo, {
-        flowProperty: "output",
-        propertyMenu(props: PropertyProps) {
-            let menuItems: Electron.MenuItem[] = [];
-
-            if (props.objects.length == 1) {
-                const component = props.objects[0] as Component;
-
-                let asOutputProperties = (
-                    component.asOutputProperties ?? []
-                ).slice();
-                const i = asOutputProperties.indexOf(props.propertyInfo.name);
-
-                menuItems.push(
-                    new MenuItem({
-                        label:
-                            i === -1
-                                ? "Convert to output"
-                                : "Convert to property",
-                        click: () => {
-                            const projectStore = getProjectStore(
-                                props.objects[0]
-                            );
-
-                            projectStore.undoManager.setCombineCommands(true);
-
-                            if (i === -1) {
-                                asOutputProperties.push(
-                                    props.propertyInfo.name
-                                );
-                            } else {
-                                asOutputProperties.splice(i, 1);
-
-                                ProjectEditor.getFlow(
-                                    component
-                                ).deleteConnectionLinesFromOutput(
-                                    component,
-                                    props.propertyInfo.name
-                                );
-                            }
-
-                            asOutputProperties.sort();
-
-                            projectStore.updateObject(component, {
-                                asOutputProperties,
-                                [props.propertyInfo.name]: undefined
-                            });
-
-                            projectStore.undoManager.setCombineCommands(false);
-                        }
-                    })
-                );
-            }
-
-            return menuItems;
-        },
-        readOnlyInPropertyGrid(
-            component: Component,
-            propertyInfo: PropertyInfo
-        ) {
-            return (
-                (component.asOutputProperties ?? []).indexOf(
-                    propertyInfo.name
-                ) !== -1
-            );
-        }
-    } as Partial<PropertyInfo>);
-}
-
 export function isFlowProperty(
     object: IEezObject | undefined,
     propertyInfo: PropertyInfo,
@@ -747,6 +665,10 @@ export class CustomInput extends EezObject implements ComponentInput {
 
         defaultValue: {},
 
+        beforeLoadHook: (object: CustomInput, objectJS: any) => {
+            migrateType(objectJS);
+        },
+
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);
 
@@ -869,6 +791,10 @@ export class CustomOutput extends EezObject implements ComponentOutput {
         ],
 
         defaultValue: {},
+
+        beforeLoadHook: (object: CustomOutput, objectJS: any) => {
+            migrateType(objectJS);
+        },
 
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);
@@ -1647,8 +1573,6 @@ export class Component extends EezObject {
     customInputs: CustomInput[];
     customOutputs: CustomOutput[];
 
-    asOutputProperties: string[];
-
     _geometry: ComponentGeometry;
 
     catchError: boolean;
@@ -1664,7 +1588,6 @@ export class Component extends EezObject {
             height: observable,
             customInputs: observable,
             customOutputs: observable,
-            asOutputProperties: observable,
             _geometry: observable,
             catchError: observable,
             absolutePositionPoint: computed,
@@ -1810,12 +1733,6 @@ export class Component extends EezObject {
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup,
                 hideInPropertyGrid: isNotProjectWithFlowSupport
-            },
-            {
-                name: "asOutputProperties",
-                type: PropertyType.StringArray,
-                hideInPropertyGrid: true,
-                defaultValue: []
             }
         ],
 
@@ -2317,18 +2234,6 @@ export class Component extends EezObject {
         );
     }
 
-    isOutputProperty(property: PropertyInfo | string) {
-        if (!this.asOutputProperties) {
-            return false;
-        }
-
-        return (
-            this.asOutputProperties.indexOf(
-                typeof property === "string" ? property : property.name
-            ) !== -1
-        );
-    }
-
     get inputs(): ComponentInput[] {
         return this.getInputs();
     }
@@ -2342,29 +2247,7 @@ export class Component extends EezObject {
     }
 
     getOutputs(): ComponentOutput[] {
-        const asOutputs: ComponentOutput[] = (
-            (this.asOutputProperties ?? [])
-                .map(outputPropertyName =>
-                    findPropertyByNameInClassInfo(
-                        getClassInfo(this),
-                        outputPropertyName
-                    )
-                )
-                .filter(
-                    propertyInfo =>
-                        propertyInfo && !isPropertyHidden(this, propertyInfo)
-                ) as PropertyInfo[]
-        ).map(propertyInfo => ({
-            name: propertyInfo.name,
-            type: propertyInfo.expressionType ?? "any",
-            isOptionalOutput: false,
-            isSequenceOutput: false
-        }));
-
-        const outputs: ComponentOutput[] = [
-            ...(this.customOutputs ?? []),
-            ...asOutputs
-        ];
+        const outputs: ComponentOutput[] = [...(this.customOutputs ?? [])];
 
         if (this.catchError) {
             outputs.push({
@@ -2377,6 +2260,10 @@ export class Component extends EezObject {
         }
 
         return outputs;
+    }
+
+    getEventHandlers(): EventHandler[] | undefined {
+        return undefined;
     }
 
     get buildInputs() {
@@ -2400,16 +2287,16 @@ export class Component extends EezObject {
             valueType: ValueType;
         }[] = [];
 
-        for (const propertyInfo of getClassInfo(this).properties) {
-            if (isFlowProperty(this, propertyInfo, ["output"])) {
+        const eventHandlers = this.getEventHandlers();
+        if (eventHandlers) {
+            for (const eventHandler of eventHandlers) {
                 outputs.push({
-                    name: propertyInfo.name,
+                    name: eventHandler.eventName,
                     type:
-                        !this.asOutputProperties ||
-                        this.asOutputProperties.indexOf(propertyInfo.name) == -1
-                            ? "property"
-                            : "output",
-                    valueType: propertyInfo.expressionType!
+                        eventHandler.handlerType == "flow"
+                            ? "output"
+                            : "property",
+                    valueType: eventHandler.eventParamExpressionType
                 });
             }
         }
@@ -2463,10 +2350,267 @@ export class Component extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getWidgetEvents(object: IEezObject) {
+    return (
+        getClassInfo(
+            getAncestorOfType<Widget>(
+                object,
+                ProjectEditor.WidgetClass.classInfo
+            )!
+        ).widgetEvents || {}
+    );
+}
+
+function getEventEnumItems(
+    eventHandlers: EventHandler[],
+    eventHandler: EventHandler | undefined
+) {
+    const existingEventNames: string[] = eventHandlers
+        .filter(eh => eh != eventHandler)
+        .map(eventHandler => eventHandler.eventName);
+
+    const widgetEvents = getWidgetEvents(eventHandlers);
+
+    return Object.keys(widgetEvents)
+        .filter(eventName => existingEventNames.indexOf(eventName) == -1)
+        .map(eventName => ({
+            id: eventName,
+            label: eventName
+        }));
+}
+
+export class EventHandler extends EezObject {
+    eventName: string;
+    handlerType: "flow" | "action";
+    action: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            eventName: observable,
+            handlerType: observable,
+            action: observable
+        });
+    }
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "eventName",
+                displayName: "Event",
+                type: PropertyType.Enum,
+                enumItems: (eventHandler: EventHandler) => {
+                    const eventHandlers = getParent(
+                        eventHandler
+                    ) as EventHandler[];
+                    return getEventEnumItems(eventHandlers, eventHandler);
+                },
+                enumDisallowUndefined: true
+            },
+            {
+                name: "handlerType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "flow", label: "Flow" },
+                    { id: "action", label: "Action" }
+                ],
+                enumDisallowUndefined: true,
+                hideInPropertyGrid: eventHandler =>
+                    !ProjectEditor.getProject(eventHandler).projectTypeTraits
+                        .hasFlowSupport
+            },
+            {
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "actions",
+                hideInPropertyGrid: (eventHandler: EventHandler) => {
+                    return eventHandler.handlerType != "action";
+                }
+            }
+        ],
+
+        listLabel: (eventHandler: EventHandler, collapsed) =>
+            !collapsed
+                ? ""
+                : `${eventHandler.eventName} ${eventHandler.handlerType}${
+                      eventHandler.handlerType == "action"
+                          ? `: ${eventHandler.action}`
+                          : ""
+                  }`,
+
+        updateObjectValueHook: (
+            eventHandler: EventHandler,
+            values: Partial<EventHandler>
+        ) => {
+            if (
+                values.handlerType == "action" &&
+                eventHandler.handlerType == "flow"
+            ) {
+                const widget = getAncestorOfType<Widget>(
+                    eventHandler,
+                    ProjectEditor.WidgetClass.classInfo
+                )!;
+
+                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                    widget,
+                    eventHandler.eventName
+                );
+            } else if (
+                values.eventName != undefined &&
+                eventHandler.eventName != values.eventName
+            ) {
+                const widget = getAncestorOfType<Widget>(
+                    eventHandler,
+                    ProjectEditor.WidgetClass.classInfo
+                );
+                if (widget) {
+                    ProjectEditor.getFlow(widget).rerouteConnectionLinesOutput(
+                        widget,
+                        eventHandler.eventName,
+                        values.eventName
+                    );
+                }
+            }
+        },
+
+        deleteObjectRefHook: (eventHandler: EventHandler) => {
+            const widget = getAncestorOfType<Widget>(
+                eventHandler,
+                ProjectEditor.WidgetClass.classInfo
+            )!;
+
+            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                widget,
+                eventHandler.eventName
+            );
+        },
+
+        defaultValue: {
+            handlerType: "flow"
+        },
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.trigger) {
+                jsObject.eventName = jsObject.trigger;
+                delete jsObject.trigger;
+            }
+        },
+
+        newItem: async (eventHandlers: EventHandler[]) => {
+            const project = ProjectEditor.getProject(eventHandlers);
+
+            const eventEnumItems = getEventEnumItems(eventHandlers, undefined);
+
+            if (eventEnumItems.length == 0) {
+                notification.info("All event handlers are already defined");
+                return;
+            }
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Event Handler",
+                    fields: [
+                        {
+                            name: "eventName",
+                            displayName: "Event",
+                            type: "enum",
+                            enumItems: eventEnumItems
+                        },
+                        {
+                            name: "handlerType",
+                            type: "enum",
+                            enumItems: [
+                                { id: "flow", label: "Flow" },
+                                { id: "action", label: "Action" }
+                            ],
+                            visible: () =>
+                                project.projectTypeTraits.hasFlowSupport
+                        },
+                        {
+                            name: "action",
+                            type: "enum",
+                            enumItems: project.actions.map(action => ({
+                                id: action.name,
+                                label: action.name
+                            })),
+                            visible: (values: any) => {
+                                return values.handlerType == "action";
+                            }
+                        }
+                    ]
+                },
+                values: {
+                    handlerType: project.projectTypeTraits.hasFlowSupport
+                        ? "flow"
+                        : "action"
+                },
+                dialogContext: project
+            });
+
+            const properties: Partial<EventHandler> = {
+                eventName: result.values.eventName,
+                handlerType: result.values.handlerType,
+                action: result.values.action
+            };
+
+            const eventHandler = createObject<EventHandler>(
+                project._store,
+                properties,
+                EventHandler
+            );
+
+            return eventHandler;
+        },
+
+        check: (eventHandler: EventHandler, messages: IMessage[]) => {
+            if (eventHandler.handlerType == "action") {
+                if (!eventHandler.action) {
+                    messages.push(
+                        propertyNotSetMessage(eventHandler, "action")
+                    );
+                }
+                ProjectEditor.documentSearch.checkObjectReference(
+                    eventHandler,
+                    "action",
+                    messages
+                );
+            }
+        }
+    };
+
+    get eventCode() {
+        return getWidgetEvents(this)[this.eventName].code;
+    }
+
+    get eventParamExpressionType() {
+        return getWidgetEvents(this)[this.eventName].paramExpressionType;
+    }
+}
+
+const eventsGroup: IPropertyGridGroupDefinition = {
+    id: "widget-event-handlers",
+    title: "Events",
+    position: 4
+};
+
+export const eventHandlersProperty: PropertyInfo = {
+    name: "eventHandlers",
+    type: PropertyType.Array,
+    typeClass: EventHandler,
+    arrayItemOrientation: "vertical",
+    propertyGridGroup: eventsGroup,
+    propertyGridColSpan: true,
+    partOfNavigation: false,
+    enumerable: false,
+    defaultValue: []
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Widget extends Component {
     data?: string;
     visible?: string;
-    action?: string;
     resizing: IResizing;
     style: Style;
 
@@ -2475,6 +2619,8 @@ export class Widget extends Component {
     locked: boolean;
     hiddenInEditor: boolean;
 
+    eventHandlers: EventHandler[];
+
     timeline: TimelineKeyframe[];
 
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
@@ -2482,10 +2628,6 @@ export class Widget extends Component {
             resizingProperty,
             makeDataPropertyInfo("data", { hideInPropertyGrid: isLVGLProject }),
             makeDataPropertyInfo("visible", {
-                hideInPropertyGrid: isLVGLProject
-            }),
-            makeActionPropertyInfo("action", {
-                expressionType: `struct:${ACTION_PARAMS_STRUCT_NAME}`,
                 hideInPropertyGrid: isLVGLProject
             }),
             makeStylePropertyInfo("style", "Normal style", {
@@ -2525,10 +2667,60 @@ export class Widget extends Component {
                 computed: true,
                 hideInPropertyGrid: (widget: Widget) =>
                     !isTimelineEditorActive(widget)
-            }
+            },
+            eventHandlersProperty
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.eventHandlers == undefined) {
+                jsObject.eventHandlers = [];
+            }
+
+            const classInfo = getClassInfo(object);
+
+            if (classInfo.widgetEvents) {
+                if (jsObject.action) {
+                    for (const eventName of Object.keys(
+                        classInfo.widgetEvents
+                    )) {
+                        const eventDef = classInfo.widgetEvents[eventName];
+                        if (eventDef.oldName == "action") {
+                            jsObject.eventHandlers.push({
+                                eventName,
+                                handlerType: "action",
+                                action: jsObject.action
+                            });
+                            break;
+                        }
+                    }
+
+                    delete jsObject.action;
+                }
+
+                if (jsObject.asOutputProperties?.length > 0) {
+                    for (const asOutputProperty of jsObject.asOutputProperties) {
+                        for (const eventName of Object.keys(
+                            classInfo.widgetEvents
+                        )) {
+                            const eventDef = classInfo.widgetEvents[eventName];
+                            if (eventDef.oldName == asOutputProperty) {
+                                jsObject.eventHandlers.push({
+                                    eventName,
+                                    handlerType: "flow"
+                                });
+                                wireSourceChanged(
+                                    object,
+                                    asOutputProperty,
+                                    eventName
+                                );
+                                break;
+                            }
+                        }
+                    }
+                    delete jsObject.asOutputProperties;
+                }
+            }
+
             if (jsObject.type.startsWith("Local.")) {
                 jsObject.layout = jsObject.type.substring("Local.".length);
                 jsObject.type = "UserWidgetWidget";
@@ -2732,12 +2924,6 @@ export class Widget extends Component {
                     messages
                 );
             }
-
-            ProjectEditor.documentSearch.checkObjectReference(
-                object,
-                "action",
-                messages
-            );
         },
         showSelectedObjectsParent: () => {
             return true;
@@ -2750,6 +2936,14 @@ export class Widget extends Component {
         },
         isMoveable(widget: Widget) {
             return !widget.locked && !getTimelineEditorState(widget);
+        },
+
+        widgetEvents: {
+            CLICKED: {
+                code: 1,
+                paramExpressionType: `struct:${CLICK_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
         }
     });
 
@@ -2759,19 +2953,72 @@ export class Widget extends Component {
         makeObservable(this, {
             data: observable,
             visible: observable,
-            action: observable,
             resizing: observable,
             style: observable,
             allowOutside: observable,
             styleObject: computed,
             locked: observable,
             hiddenInEditor: observable,
-            timeline: observable
+            timeline: observable,
+            eventHandlers: observable
         });
     }
 
     get styleObject() {
         return this.style;
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            ...super.getOutputs(),
+            ...this.eventHandlers
+                .filter(eventHandler => eventHandler.handlerType == "flow")
+                .map(eventHandler => ({
+                    name: eventHandler.eventName,
+                    type: "any" as ValueType,
+                    isOptionalOutput: false,
+                    isSequenceOutput: false
+                }))
+        ];
+    }
+
+    getEventHandlers(): EventHandler[] | undefined {
+        return this.eventHandlers;
+    }
+
+    isFlowEventHander(eventName: string) {
+        return (
+            this.eventHandlers.find(
+                eventHandler =>
+                    eventHandler.eventName == eventName &&
+                    eventHandler.handlerType == "flow"
+            ) != undefined
+        );
+    }
+
+    getDefaultActionEventName() {
+        const classInfo = getClassInfo(this);
+
+        if (classInfo.widgetEvents) {
+            for (const eventName of Object.keys(classInfo.widgetEvents)) {
+                const eventDef = classInfo.widgetEvents[eventName];
+                if (eventDef.oldName == "action") {
+                    return eventName;
+                }
+            }
+        }
+
+        return "CLICKED";
+    }
+
+    get action() {
+        const defaultActionEventName = this.getDefaultActionEventName();
+
+        return this.eventHandlers.find(
+            eventHandler =>
+                eventHandler.eventName == defaultActionEventName &&
+                eventHandler.handlerType == "action"
+        )?.action;
     }
 
     putInSelect() {

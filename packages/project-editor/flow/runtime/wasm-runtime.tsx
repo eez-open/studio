@@ -860,19 +860,30 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         const componentPath = getObjectPathAsString(widget);
-        const componentIndex =
+        let componentIndex =
             this.assetsMap.flows[flowIndex].componentIndexes[componentPath];
         if (componentIndex == undefined) {
             console.error("Unexpected!");
             return;
         }
 
-        const outputIndex =
+        let outputIndex =
             this.assetsMap.flows[flowIndex].components[componentIndex]
                 .outputIndexes[actionName];
         if (outputIndex == undefined) {
             console.error("Unexpected!");
             return;
+        }
+
+        const output =
+            this.assetsMap.flows[flowIndex].components[componentIndex].outputs[
+                outputIndex
+            ];
+
+        if (output.actionFlowIndex != -1) {
+            console.log("output.actionFlowIndex", output.actionFlowIndex);
+            componentIndex = -1;
+            outputIndex = output.actionFlowIndex;
         }
 
         const valueTypeIndex = this.assetsMap.typeIndexes[valueType];
