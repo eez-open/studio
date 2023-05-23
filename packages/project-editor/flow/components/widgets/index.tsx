@@ -2100,6 +2100,18 @@ export class TextWidget extends Widget {
         return classNames("eez-widget-component", this.type);
     }
 
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        super.styleHook(style, flowContext);
+
+        if (this.style.alignHorizontalProperty == "left") {
+            style.textAlign = "left";
+        } else if (this.style.alignHorizontalProperty == "center") {
+            style.textAlign = "center";
+        } else if (this.style.alignHorizontalProperty == "right") {
+            style.textAlign = "right";
+        }
+    }
+
     render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,

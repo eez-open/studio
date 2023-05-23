@@ -111,7 +111,6 @@ export class PageTimelineEditorState {
     get treeAdapter() {
         return new TreeAdapter(
             this.tabState.widgetContainer,
-            undefined,
             (object: IEezObject) => {
                 return object instanceof ProjectEditor.WidgetClass;
             },

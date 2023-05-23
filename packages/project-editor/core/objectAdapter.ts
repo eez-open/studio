@@ -789,9 +789,10 @@ export enum DropPosition {
 }
 
 export class TreeAdapter {
+    protected selectedObject?: IObservableValue<IEezObject | undefined>;
+
     constructor(
         public rootItem: TreeObjectAdapter,
-        protected selectedObject?: IObservableValue<IEezObject | undefined>,
         private filter?: (object: IEezObject) => boolean,
         private collapsable?: boolean,
         public sortDirection?: SortDirectionType,

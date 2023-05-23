@@ -104,7 +104,6 @@ export const PageStructure = observer(
             }
             return new TreeAdapter(
                 this.componentContainerDisplayItem,
-                undefined,
                 (object: IEezObject) => {
                     return object instanceof ProjectEditor.WidgetClass;
                 },
@@ -440,7 +439,6 @@ export const ActionComponents = observer(
             }
             return new TreeAdapter(
                 this.componentContainerDisplayItem,
-                undefined,
                 (object: IEezObject) => {
                     return (
                         object instanceof ProjectEditor.ActionComponentClass &&

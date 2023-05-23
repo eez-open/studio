@@ -113,7 +113,6 @@ const ActionComponents = observer(
             }
             return new TreeAdapter(
                 this.componentContainerDisplayItem,
-                undefined,
                 (object: IEezObject) => {
                     return (
                         object instanceof ProjectEditor.ActionComponentClass &&

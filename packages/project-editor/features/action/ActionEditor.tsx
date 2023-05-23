@@ -34,7 +34,6 @@ export const ActionEditor = observer(
             return new TreeAdapter(
                 flowTabState.widgetContainer,
                 undefined,
-                undefined,
                 true
             );
         }
