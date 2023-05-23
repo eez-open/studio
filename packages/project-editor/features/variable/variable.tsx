@@ -159,7 +159,8 @@ export class Variable extends EezObject {
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: object => hasFlowSupport(object),
+                hideInPropertyGrid: object =>
+                    isLVGLProject(object) || hasFlowSupport(object),
                 monospaceFont: true,
                 disableSpellcheck: true
             },
