@@ -2108,7 +2108,7 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
                     size="small"
                     onClick={this.showUserWidgetPage}
                 >
-                    Show User Widget Page
+                    Show User Widget
                 </Button>
             );
         }

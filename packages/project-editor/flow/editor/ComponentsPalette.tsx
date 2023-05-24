@@ -161,18 +161,36 @@ export const ComponentsPalette1 = observer(
             }
 
             const stockComponents = getClassesDerivedFrom(baseClass).filter(
-                objectClassInfo =>
-                    (this.context.projectTypeTraits.isFirmware ||
-                        this.context.projectTypeTraits.isLVGL) &&
-                    this.context.projectTypeTraits.hasFlowSupport
-                        ? objectClassInfo.objectClass.classInfo
-                              .flowComponentId != undefined ||
-                          (this.context.projectTypeTraits.isLVGL &&
-                              isProperSubclassOf(
-                                  objectClassInfo.objectClass.classInfo,
-                                  ProjectEditor.WidgetClass.classInfo
-                              ))
-                        : true
+                objectClassInfo => {
+                    if (
+                        objectClassInfo.objectClass ==
+                            ProjectEditor.UserWidgetWidgetClass ||
+                        objectClassInfo.objectClass ==
+                            ProjectEditor.LVGLUserWidgetWidgetClass ||
+                        objectClassInfo.objectClass ==
+                            ProjectEditor.CallActionActionComponentClass
+                    ) {
+                        return false;
+                    }
+
+                    if (
+                        (this.context.projectTypeTraits.isFirmware ||
+                            this.context.projectTypeTraits.isLVGL) &&
+                        this.context.projectTypeTraits.hasFlowSupport
+                    ) {
+                        return (
+                            objectClassInfo.objectClass.classInfo
+                                .flowComponentId != undefined ||
+                            (this.context.projectTypeTraits.isLVGL &&
+                                isProperSubclassOf(
+                                    objectClassInfo.objectClass.classInfo,
+                                    ProjectEditor.WidgetClass.classInfo
+                                ))
+                        );
+                    }
+
+                    return true;
+                }
             );
 
             const userWidgets: IObjectClassInfo[] = [];

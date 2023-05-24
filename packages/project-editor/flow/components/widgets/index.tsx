@@ -1251,7 +1251,7 @@ const UserWidgetPropertyGridUI = observer(
                     size="small"
                     onClick={this.showUserWidgetPage}
                 >
-                    Show User Widget Page
+                    Show User Widget
                 </Button>
             );
         }
@@ -1275,7 +1275,7 @@ export class UserWidgetWidget extends Widget {
         properties: [
             {
                 name: "userWidgetPageName",
-                displayName: "User Widget Page",
+                displayName: "User widget",
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "userWidgets"
