@@ -10,9 +10,9 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 The EEZ Studio is an open source cross-platform modular visual low-code development tool and [SCPI](https://www.ivifoundation.org/scpi/) controller for [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
 
-### EEZ Studio _Project_ (aka _Flow_)
+### EEZ Studio _Project_
 
-![EEZ Studio Project](images/esp_intro.png)
+![EEZ Studio Project](images/projects_intro.png)
 
 -   Modular visual development environment for designing TFT display screen decorations and defining user interaction (embedded GUI)
 -   Generate C++ code for embedded GUI functionality that can be directly included in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for BB3 and other STM32 target platforms or [Arduino IDE](https://www.arduino.cc/en/software) for H24005 and other Arduino compatible target platforms
@@ -23,7 +23,7 @@ The EEZ Studio is an open source cross-platform modular visual low-code developm
 -   Drag&drop editor for creating instrument's desktop dashboard (for remote control and management)
 -   Flowchart based low-code programming for desktop dashboard
 
-![Flow](images/EEZ_Flow_M1_intro.png)
+![Flow](images/flow_intro.png)
 
 New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) fund from NLnet, which will enable quick and easy creation of flow diagrams using ready-made components. The target for executing the flow chart can be PC or EEZ BB3. This will be realized in the following milestones:
 
@@ -39,10 +39,12 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 -   [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
 -   [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
 -   [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - LVGL integration
+-   [M13](https://github.com/eez-open/studio/releases/tag/v0.9.98) - Standalone Flow dashboard
+-   [M14](https://github.com/eez-open/studio/releases/tag/v0.9.99) - Home page modifications and enhancements
 
 ### EEZ Studio _Instrument_
 
-![EEZ Studio Instrument](images/esw_intro.png)
+![EEZ Studio Instrument](images/instruments_intro.png)
 
 -   Dynamic environment where multiple instruments can be configured and easily accessed
 -   Session oriented interaction with each SCPI instrument
