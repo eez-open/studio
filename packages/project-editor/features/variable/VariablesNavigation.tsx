@@ -93,23 +93,19 @@ export const VariablesTab = observer(
                 });
             }
 
-            if (!this.context.projectTypeTraits.isLVGL) {
-                items.push({
-                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS,
-                    component: (
-                        <ListNavigation
-                            id="enums"
-                            navigationObject={
-                                this.context.project.variables.enums
-                            }
-                            selectedObject={
-                                this.context.navigationStore.selectedEnumObject
-                            }
-                        />
-                    ),
-                    numItems: this.context.project.variables.enums.length
-                });
-            }
+            items.push({
+                name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS,
+                component: (
+                    <ListNavigation
+                        id="enums"
+                        navigationObject={this.context.project.variables.enums}
+                        selectedObject={
+                            this.context.navigationStore.selectedEnumObject
+                        }
+                    />
+                ),
+                numItems: this.context.project.variables.enums.length
+            });
 
             return (
                 <SubNavigation

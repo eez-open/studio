@@ -209,9 +209,9 @@ function buildFlowValue(
                 let elements: FlowValue[];
 
                 if (Array.isArray(flowValue.value)) {
-                    const elementType = (getArrayElementTypeFromType(
-                        flowValue.valueType
-                    ) || "any") as ValueType;
+                    const elementType =
+                        getArrayElementTypeFromType(flowValue.valueType) ||
+                        "any";
 
                     elements = flowValue.value.map((element: any) => ({
                         type: getValueType(elementType),

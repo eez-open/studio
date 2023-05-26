@@ -1,4 +1,4 @@
-import { TAB, NamingConvention, getName } from "project-editor/build/helper";
+import { NamingConvention, getName, Build } from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
@@ -10,8 +10,12 @@ import type { Assets } from "project-editor/build/assets";
 import { writeTextFile } from "eez-studio-shared/util-electron";
 import { getLvglBitmapSourceFile } from "project-editor/lvgl/bitmap";
 import type { LVGLStyle } from "project-editor/lvgl/style";
+import {
+    isEnumType,
+    getEnumTypeNameFromType
+} from "project-editor/features/variable/value-type";
 
-export class LVGLBuild {
+export class LVGLBuild extends Build {
     project: Project;
 
     pages: Page[];
@@ -25,10 +29,9 @@ export class LVGLBuild {
     bitmaps: Bitmap[];
     bitmapNames = new Map<string, string>();
 
-    result: string;
-    indentation: string;
-
     constructor(public assets: Assets) {
+        super();
+
         this.project = assets.projectStore.project;
 
         this.enumPages();
@@ -157,25 +160,6 @@ export class LVGLBuild {
         }
     }
 
-    indent() {
-        this.indentation += TAB;
-    }
-
-    unindent() {
-        this.indentation = this.indentation.substring(
-            0,
-            this.indentation.length - TAB.length
-        );
-    }
-
-    line(line: string) {
-        this.result += this.indentation + line + "\n";
-    }
-
-    text(text: string) {
-        this.result += text;
-    }
-
     getScreenIdentifier(page: Page) {
         return getName("", page, NamingConvention.UnderscoreLowerCase);
     }
@@ -270,8 +254,7 @@ export class LVGLBuild {
     }
 
     async buildScreensDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line(`typedef struct _objects_t {`);
@@ -311,8 +294,7 @@ export class LVGLBuild {
     }
 
     async buildScreensDef() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line(`objects_t objects;`);
@@ -450,8 +432,7 @@ export class LVGLBuild {
     }
 
     async buildScreensDeclExt() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line("void create_screens();");
@@ -461,8 +442,7 @@ export class LVGLBuild {
     }
 
     async buildScreensDefExt() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line("void create_screens() {");
@@ -511,8 +491,7 @@ void tick_screen(int screen_index) {
     }
 
     async buildImagesDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const bitmap of this.bitmaps) {
@@ -532,22 +511,27 @@ typedef struct _ext_img_desc_t {
 } ext_img_desc_t;
 #endif
 
-extern const ext_img_desc_t images[${this.bitmaps.length}];
+extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 `);
 
         return this.result;
     }
 
     async buildImagesDef() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
-        build.line(`const ext_img_desc_t images[${this.bitmaps.length}] = {`);
+        build.line(
+            `const ext_img_desc_t images[${this.bitmaps.length || 1}] = {`
+        );
         build.indent();
-        for (const bitmap of this.bitmaps) {
-            const varName = this.getImageVariableName(bitmap);
-            build.line(`{ "${bitmap.name}", &${varName} },`);
+        if (this.bitmaps.length > 0) {
+            for (const bitmap of this.bitmaps) {
+                const varName = this.getImageVariableName(bitmap);
+                build.line(`{ "${bitmap.name}", &${varName} },`);
+            }
+        } else {
+            build.line(`0`);
         }
         build.unindent();
         build.line(`};`);
@@ -556,8 +540,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildFontsDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const font of this.fonts) {
@@ -570,8 +553,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildActionsDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const action of this.project.actions) {
@@ -591,20 +573,25 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildActionsArrayDef() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line("ActionExecFunc actions[] = {");
         build.indent();
 
+        let numActions = 0;
         for (const action of this.project.actions) {
             if (
                 !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 action.implementationType === "native"
             ) {
                 build.line(`${this.getActionFunctionName(action.name)},`);
+                numActions++;
             }
+        }
+
+        if (numActions == 0) {
+            build.line("0");
         }
 
         build.unindent();
@@ -614,8 +601,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildVariablesDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const variable of this.project.variables.globalVariables) {
@@ -623,23 +609,26 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
                 !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 variable.native
             ) {
-                let type;
+                let nativeType;
+
                 if (variable.type == "integer") {
-                    type = "int32_t ";
+                    nativeType = "int32_t ";
                 } else if (variable.type == "float") {
-                    type = "float ";
+                    nativeType = "float ";
                 } else if (variable.type == "double") {
-                    type = "double ";
+                    nativeType = "double ";
                 } else if (variable.type == "boolean") {
-                    type = "bool ";
+                    nativeType = "bool ";
                 } else if (variable.type == "string") {
-                    type = "const char *";
+                    nativeType = "const char *";
+                } else if (isEnumType(variable.type)) {
+                    const enumType = getEnumTypeNameFromType(variable.type);
+                    nativeType = `${enumType} `;
                 } else {
-                    type = "void *";
                 }
 
                 build.line(
-                    `extern ${type}${this.getVariableGetterFunctionName(
+                    `extern ${nativeType}${this.getVariableGetterFunctionName(
                         variable.name
                     )}();`
                 );
@@ -647,7 +636,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
                 build.line(
                     `extern void ${this.getVariableSetterFunctionName(
                         variable.name
-                    )}(${type}value);`
+                    )}(${nativeType}value);`
                 );
             }
         }
@@ -656,8 +645,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildNativeVarsTableDef() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         build.line("native_var_t native_vars[] = {");
@@ -671,7 +659,11 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
                 variable.native
             ) {
                 build.line(
-                    `{ NATIVE_VAR_TYPE_${variable.type.toUpperCase()}, ${this.getVariableGetterFunctionName(
+                    `{ NATIVE_VAR_TYPE_${
+                        isEnumType(variable.type)
+                            ? "INTEGER"
+                            : variable.type.toUpperCase()
+                    }, ${this.getVariableGetterFunctionName(
                         variable.name
                     )}, ${this.getVariableSetterFunctionName(
                         variable.name
@@ -687,8 +679,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildStylesDef() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const lvglStyle of this.styles) {
@@ -703,8 +694,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length}];
     }
 
     async buildStylesDecl() {
-        this.result = "";
-        this.indentation = "";
+        this.startBuild();
         const build = this;
 
         for (const lvglStyle of this.styles) {

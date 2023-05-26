@@ -579,7 +579,7 @@ void doUpdateTasks() {
         if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
             const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
             const char *cur_val = lv_label_get_text(updateTask.obj);
-            if (strcmp(new_val, cur_val) != 0) lv_label_set_text(updateTask.obj, new_val);
+            if (strcmp(new_val, cur_val) != 0) lv_label_set_text(updateTask.obj, new_val ? new_val : "");
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_TEXTAREA_TEXT) {
             const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Textarea widget");
             const char *cur_val = lv_textarea_get_text(updateTask.obj);
@@ -769,6 +769,10 @@ extern "C" bool flowTick() {
     }
 
     eez::flow::tick();
+
+    if (eez::flow::isFlowStopped()) {
+        return false;
+    }
 
     doAnimate();
 

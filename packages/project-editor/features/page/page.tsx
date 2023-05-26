@@ -964,8 +964,10 @@ export class Page extends Flow {
 
     lvglBuild(build: LVGLBuild) {
         if (!this.isUsedAsUserWidget) {
-            let flowIndex = build.assets.getFlowIndex(this);
-            build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let flowIndex = build.assets.getFlowIndex(this);
+                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+            }
 
             build.line(`lv_obj_t *obj = lv_obj_create(0);`);
             build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
@@ -1007,8 +1009,10 @@ export class Page extends Flow {
 
     lvglBuildTick(build: LVGLBuild) {
         if (!this.isUsedAsUserWidget) {
-            let flowIndex = build.assets.getFlowIndex(this);
-            build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let flowIndex = build.assets.getFlowIndex(this);
+                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+            }
         }
 
         for (const widget of this.components) {

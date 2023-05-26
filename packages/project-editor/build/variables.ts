@@ -118,7 +118,7 @@ export function buildFlowGlobalVariablesEnum(assets: Assets) {
         );
 
     if (variables.length == 0) {
-        variables.push(`FLOW_GLOBAL_VARIABLE_NONE`);
+        variables.push(`${TAB}FLOW_GLOBAL_VARIABLE_NONE`);
     }
 
     return `enum FlowGlobalVariables {\n${variables.join(",\n")}\n};`;

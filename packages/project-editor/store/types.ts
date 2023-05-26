@@ -208,9 +208,7 @@ export class TypesStore {
                 return undefined;
             }
 
-            const elementType = this.getTypeFromValueType(
-                elementValueType as ValueType
-            );
+            const elementType = this.getTypeFromValueType(elementValueType);
             if (!elementType) {
                 return undefined;
             }

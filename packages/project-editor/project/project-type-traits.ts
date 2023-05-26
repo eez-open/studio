@@ -1,6 +1,10 @@
 import { IEezObject, ProjectType } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { Project } from "./project";
+import type { Project } from "project-editor/project/project";
+import {
+    ValueType,
+    isEnumType
+} from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +71,10 @@ class ProjectTypeTraits {
     get hasDisplaySizeProperty() {
         return false;
     }
+
+    isVariableTypeSupportedAsNative(type: ValueType) {
+        return false;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +103,10 @@ class FirmwareProjectTypeTraits extends ProjectTypeTraits {
     }
 
     override get hasDisplaySizeProperty() {
+        return true;
+    }
+
+    isVariableTypeSupportedAsNative(type: ValueType) {
         return true;
     }
 }
@@ -129,6 +141,10 @@ class ResourceProjectTypeTraits extends FirmwareProjectTypeTraits {
     override get hasDisplaySizeProperty() {
         return false;
     }
+
+    isVariableTypeSupportedAsNative(type: ValueType) {
+        return false;
+    }
 }
 
 class AppletProjectTypeTraits extends FirmwareProjectTypeTraits {
@@ -149,6 +165,10 @@ class AppletProjectTypeTraits extends FirmwareProjectTypeTraits {
     }
 
     override get hasDisplaySizeProperty() {
+        return false;
+    }
+
+    isVariableTypeSupportedAsNative(type: ValueType) {
         return false;
     }
 }
@@ -173,6 +193,10 @@ class DashboardProjectTypeTraits extends ProjectTypeTraits {
     }
 
     override get hasDisplaySizeProperty() {
+        return false;
+    }
+
+    override isVariableTypeSupportedAsNative(type: ValueType) {
         return false;
     }
 }
@@ -202,6 +226,17 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
 
     override get hasDisplaySizeProperty() {
         return true;
+    }
+
+    override isVariableTypeSupportedAsNative(type: ValueType) {
+        return (
+            isEnumType(type) ||
+            type == "integer" ||
+            type == "float" ||
+            type == "double" ||
+            type == "boolean" ||
+            type == "string"
+        );
     }
 }
 

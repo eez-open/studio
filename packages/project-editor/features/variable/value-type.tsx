@@ -406,18 +406,16 @@ const VariableTypeSelect = observer(
                   })
                 : [];
 
-        const arrayOfEnums =
-            !props.project.projectTypeTraits.isLVGL ||
-            props.project.projectTypeTraits.hasFlowSupport
-                ? project.variables.enums.map(enumDef => (
-                      <option
-                          key={enumDef.name}
-                          value={addType(`array:enum:${enumDef.name}`)}
-                      >
-                          {humanizeVariableType(`array:enum:${enumDef.name}`)}
-                      </option>
-                  ))
-                : [];
+        const arrayOfEnums = props.project.projectTypeTraits.hasFlowSupport
+            ? project.variables.enums.map(enumDef => (
+                  <option
+                      key={enumDef.name}
+                      value={addType(`array:enum:${enumDef.name}`)}
+                  >
+                      {humanizeVariableType(`array:enum:${enumDef.name}`)}
+                  </option>
+              ))
+            : [];
 
         const arrayOfStructures = props.project.projectTypeTraits.hasFlowSupport
             ? structureTypes.map(struct => (
@@ -663,7 +661,7 @@ export function isDynamicType(type: string) {
 }
 
 export function isArrayType(type: string) {
-    return type && type.match(ARRAY_TYPE_REGEXP) != null;
+    return type ? type.match(ARRAY_TYPE_REGEXP) != null : false;
 }
 
 export function isObjectType(type: string) {
@@ -683,7 +681,7 @@ export function getArrayElementTypeFromType(type: string) {
     if (result == null) {
         return null;
     }
-    return result[1];
+    return result[1] as ValueType;
 }
 
 export function getStructTypeNameFromType(type: string) {

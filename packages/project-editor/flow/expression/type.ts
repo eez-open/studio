@@ -295,7 +295,7 @@ export function findValueTypeInExpressionNode(
                     if (!valueType) {
                         throw `Array type expected but found '${node.object.valueType}'`;
                     }
-                    node.valueType = valueType as ValueType;
+                    node.valueType = valueType;
                 }
             } else {
                 if (node.property.type != "Identifier") {

@@ -1290,7 +1290,11 @@ export class LVGLWidget extends Widget {
             build.line(
                 `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
                     this
-                )}, LV_EVENT_ALL, flowState);`
+                )}, LV_EVENT_ALL, ${
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
+                        ? "flowState"
+                        : 0
+                });`
             );
         }
 

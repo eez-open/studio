@@ -51,7 +51,9 @@ import { buildGuiColors } from "project-editor/build/themes";
 import {
     buildFlowData,
     buildFlowDefs,
-    buildFlowStructs
+    buildFlowStructs,
+    buildFlowStructValues,
+    buildFlowEnums
 } from "project-editor/build/flows";
 import { buildGuiBitmapsEnum } from "project-editor/build/bitmaps";
 import {
@@ -1415,6 +1417,17 @@ export async function buildAssets(
 
         if (!sectionNames || sectionNames.indexOf("FLOW_STRUCTS") !== -1) {
             result.FLOW_STRUCTS = buildFlowStructs(assets);
+        }
+
+        if (
+            !sectionNames ||
+            sectionNames.indexOf("FLOW_STRUCT_VALUES") !== -1
+        ) {
+            result.FLOW_STRUCT_VALUES = buildFlowStructValues(assets);
+        }
+
+        if (!sectionNames || sectionNames.indexOf("FLOW_ENUMS") !== -1) {
+            result.FLOW_ENUMS = buildFlowEnums(assets);
         }
 
         if (!sectionNames || sectionNames.indexOf("FLOW_DEFS") !== -1) {

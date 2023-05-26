@@ -137,8 +137,12 @@ export class Variable extends EezObject {
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    isDashboardProject(variable) ||
-                    !hasFlowSupport(variable)
+                    !hasFlowSupport(variable) ||
+                    !ProjectEditor.getProject(
+                        variable
+                    ).projectTypeTraits.isVariableTypeSupportedAsNative(
+                        variable.type
+                    )
             },
             {
                 name: "defaultValue",

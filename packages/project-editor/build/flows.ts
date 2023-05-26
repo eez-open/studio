@@ -1,4 +1,9 @@
-import { TAB, NamingConvention, getName } from "project-editor/build/helper";
+import {
+    TAB,
+    NamingConvention,
+    getName,
+    Build
+} from "project-editor/build/helper";
 
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Flow } from "project-editor/flow/flow";
@@ -36,8 +41,16 @@ import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/c
 import {
     BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES,
-    ValueType
+    ValueType,
+    isStructType,
+    getStructTypeNameFromType,
+    getStructureFromType,
+    isArrayType,
+    getArrayElementTypeFromType,
+    isEnumType,
+    getEnumTypeNameFromType
 } from "project-editor/features/variable/value-type";
+import type { Structure } from "project-editor/features/variable/variable";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -633,7 +646,11 @@ export function buildFlowStructs(assets: Assets) {
         );
     }
 
-    defs.push(`enum FlowStructures {\n${structureEnumItems.join(",\n")}\n};`);
+    if (structureEnumItems.length > 0) {
+        defs.push(
+            `enum FlowStructures {\n${structureEnumItems.join(",\n")}\n};`
+        );
+    }
 
     // enum FlowArrayOfStructures
     const arrayOfStructureEnumItems = [];
@@ -648,11 +665,13 @@ export function buildFlowStructs(assets: Assets) {
             )}`
         );
     }
-    defs.push(
-        `enum FlowArrayOfStructures {\n${arrayOfStructureEnumItems.join(
-            ",\n"
-        )}\n};`
-    );
+    if (arrayOfStructureEnumItems.length > 0) {
+        defs.push(
+            `enum FlowArrayOfStructures {\n${arrayOfStructureEnumItems.join(
+                ",\n"
+            )}\n};`
+        );
+    }
 
     for (const structure of assets.projectStore.project.variables.structures) {
         const fieldEnumItems = [];
@@ -685,6 +704,223 @@ export function buildFlowStructs(assets: Assets) {
             `enum ${structure.name}FlowStructureFields {\n${fieldEnumItems.join(
                 ",\n"
             )}\n};`
+        );
+    }
+
+    return defs.join("\n\n");
+}
+
+export function buildFlowStructValues(assets: Assets) {
+    const build = new Build();
+
+    build.startBuild();
+
+    const builded = new Set<string>();
+
+    function buildStructure(structure: Structure) {
+        if (builded.has(structure.name)) {
+            return;
+        }
+
+        builded.add(structure.name);
+
+        for (const field of structure.fields) {
+            const fieldStructure = getStructureFromType(
+                assets.projectStore.project,
+                field.type
+            );
+            if (fieldStructure) {
+                buildStructure(fieldStructure as Structure);
+            } else {
+                const elementType = getArrayElementTypeFromType(field.type);
+                if (elementType) {
+                    const fieldStructure = getStructureFromType(
+                        assets.projectStore.project,
+                        elementType
+                    );
+                    if (fieldStructure) {
+                        buildStructure(fieldStructure as Structure);
+                    }
+                }
+            }
+        }
+
+        build.line(`struct ${structure.name}Value {`);
+        build.indent();
+
+        build.line(`Value value;`);
+
+        build.line("");
+
+        build.line(`${structure.name}Value() {`);
+        build.indent();
+
+        build.line(
+            `value = Value::makeArrayRef(${getName(
+                "FLOW_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )}_NUM_FIELDS, ${getName(
+                "FLOW_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )}, 0);`
+        );
+
+        build.unindent();
+        build.line("}");
+
+        build.line("");
+
+        build.line(`${structure.name}Value(Value value) : value(value) {}`);
+
+        build.line("");
+
+        build.line(`operator Value() const { return value; }`);
+
+        build.line("");
+
+        build.line(`operator bool() const { return value.isArray(); }`);
+
+        structure.fields.forEach(field => {
+            const filedIndex = `${getName(
+                "FLOW_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )}_${getName(
+                "FIELD_",
+                field.name,
+                NamingConvention.UnderscoreUpperCase
+            )}`;
+
+            let nativeType;
+            let get;
+            let set;
+            let castGet;
+
+            if (field.type == "integer") {
+                nativeType = "int ";
+                get = ".getInt()";
+                set = `IntegerValue(${field.name})`;
+            } else if (field.type == "float") {
+                nativeType = "float ";
+                get = ".getFloat()";
+                set = `FloatValue(${field.name})`;
+            } else if (field.type == "double") {
+                nativeType = "double ";
+                get = ".getDoulbe()";
+                set = `DoubleValue(${field.name})`;
+            } else if (field.type == "boolean") {
+                nativeType = "bool ";
+                get = ".getBoolean()";
+                set = `BooleanValue(${field.name})`;
+            } else if (field.type == "string") {
+                nativeType = "const char *";
+                get = ".getString()";
+                set = `StringValue(${field.name})`;
+            } else if (isEnumType(field.type)) {
+                const enumType = getEnumTypeNameFromType(field.type);
+                nativeType = `${enumType} `;
+                get = ".getInt()";
+                set = `IntegerValue((int)${field.name})`;
+                castGet = `(${enumType})`;
+            } else if (isArrayType(field.type)) {
+                const elementType = getArrayElementTypeFromType(field.type)!;
+                if (isStructType(elementType)) {
+                    nativeType = `ArrayOf${getStructTypeNameFromType(
+                        elementType
+                    )}Value `;
+                    get = "";
+                    set = `${field.name}.value`;
+                } else if (elementType == "integer") {
+                    nativeType = "ArrayOfInteger ";
+                    get = "";
+                    set = `${field.name}.value`;
+                } else if (elementType == "float") {
+                    nativeType = "ArrayOfFloat ";
+                    get = "";
+                    set = `${field.name}.value`;
+                } else if (elementType == "double") {
+                    nativeType = "ArrayOfDouble ";
+                    get = "";
+                    set = `${field.name}.value`;
+                } else if (elementType == "boolean") {
+                    nativeType = "ArrayOfBoolean ";
+                    get = "";
+                    set = `${field.name}.value`;
+                } else if (elementType == "string") {
+                    nativeType = "ArrayOfString ";
+                    get = "";
+                    set = `${field.name}.value`;
+                } else {
+                    nativeType = "Value ";
+                    get = "";
+                    set = `${field.name}`;
+                }
+            } else if (isStructType(field.type)) {
+                nativeType = `${getStructTypeNameFromType(field.type)}Value `;
+                get = "";
+                set = `${field.name}`;
+            } else {
+                nativeType = "Value ";
+                get = "";
+                set = `${field.name}`;
+            }
+
+            build.line("");
+
+            build.line(`${nativeType}${field.name}() {`);
+            build.indent();
+            build.line(
+                `return ${
+                    castGet ? castGet : ""
+                }value.getArray()->values[${filedIndex}]${get};`
+            );
+            build.unindent();
+            build.line("}");
+
+            build.line(`void ${field.name}(${nativeType}${field.name}) {`);
+            build.indent();
+            build.line(`value.getArray()->values[${filedIndex}] = ${set};`);
+            build.unindent();
+            build.line("}");
+        });
+
+        build.unindent();
+        build.line("};");
+
+        build.line("");
+
+        build.line(
+            `typedef ArrayOf<${structure.name}Value, ${getName(
+                "FLOW_ARRAY_OF_STRUCTURE_",
+                structure.name,
+                NamingConvention.UnderscoreUpperCase
+            )}> ArrayOf${structure.name}Value;`
+        );
+    }
+
+    for (const structure of assets.projectStore.project.variables.structures) {
+        buildStructure(structure);
+    }
+
+    return build.result;
+}
+
+export function buildFlowEnums(assets: Assets) {
+    const defs: string[] = [];
+
+    for (const enumObject of assets.projectStore.project.variables.enums) {
+        const enumItems: string[] = [];
+
+        for (const item of enumObject.members) {
+            enumItems.push(
+                `${TAB}${enumObject.name}_${item.name} = ${item.value}`
+            );
+        }
+
+        defs.push(
+            `typedef enum {\n${enumItems.join(",\n")}\n} ${enumObject.name};`
         );
     }
 

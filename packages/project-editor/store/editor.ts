@@ -181,12 +181,25 @@ export class EditorsStore {
         this.dispose1 = autorun(() => {
             this.projectStore.lastRevision;
             this.editors.slice().forEach(editor => {
-                if (
-                    !editor.object ||
-                    !isObjectExists(editor.object) ||
-                    (editor.subObject && !isObjectExists(editor.subObject))
-                ) {
+                if (!editor.object) {
                     this.closeEditor(editor);
+                } else {
+                    if (!isObjectExists(editor.object)) {
+                        this.closeEditor(editor);
+                    } else {
+                        if (editor.subObject) {
+                            if (!isObjectExists(editor.subObject)) {
+                                const parent = getParent(editor.subObject);
+                                if (!isObjectExists(parent)) {
+                                    this.closeEditor(editor);
+                                } else {
+                                    runInAction(() => {
+                                        editor.subObject = parent;
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             });
         });
