@@ -6265,16 +6265,41 @@ button.EezStudio_Action {
 
         .EezStudio_NewProjectWizard_ProjectTypes {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
+            padding: 10px;
 
             .EezStudio_NewProjectWizard_ProjectType {
                 display: flex;
-                flex-direction: column;
-                margin: 10px;
+                margin-bottom: 10px;
+                &:last-child {
+                    margin-bottom: 0;
+                }
                 padding: 10px;
                 border: 1px solid @borderColor;
+
                 &.selected {
+                    color: @selectionColor;
                     background-color: @selectionBackgroundColor;
+                }
+
+                &:hover:not(.selected) {
+                    color: @hoverColor;
+                    background-color: @hoverBackgroundColor;
+                }
+
+                .EezStudio_NewProjectWizard_ProjectType_Image {
+                    padding: 5px;
+                    color: #333;
+                    border-radius: 4px;
+                    background-color: white;
+                    margin-right: 5px;
+
+                    > img,
+                    & > svg {
+                        /*object-fit: cover !important;*/
+                        width: 160px !important;
+                        height: 90px !important;
+                    }
                 }
             }
         }

@@ -43,15 +43,15 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             headerTitle: opts.jsPanel.title,
             panelSize: {
                 width: Math.min(
-                    Math.round(window.innerWidth * 0.8),
+                    Math.round(window.innerWidth * 0.9),
                     opts.jsPanel.width
                 ),
                 height: opts.jsPanel.height
                     ? Math.min(
-                          Math.round(window.innerHeight * 0.8),
+                          Math.round(window.innerHeight * 0.9),
                           opts.jsPanel.height
                       )
-                    : Math.round(window.innerHeight * 0.8)
+                    : Math.round(window.innerHeight * 0.9)
             },
             content: element,
             headerControls: {

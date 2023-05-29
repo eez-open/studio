@@ -158,6 +158,7 @@ interface IProjectType {
     id: string;
     icon: React.ReactNode;
     label: string;
+    description: string;
     defaultName?: string;
 }
 
@@ -436,7 +437,8 @@ class WizardModel {
                 id: example.path,
                 defaultName: example.name,
                 icon: example.image,
-                label: example.name
+                label: example.name,
+                description: example.description
             };
 
             const categoryId = "_example_" + path.dirname(example.path);
@@ -461,7 +463,7 @@ class WizardModel {
             children: [
                 {
                     id: "_allExamples",
-                    label: "<All Examples>",
+                    label: "All Examples",
                     children: [],
                     selected: this.category == "_allExamples",
                     expanded: true
@@ -531,7 +533,7 @@ class WizardModel {
                 children: [
                     {
                         id: "_allTemplates",
-                        label: `<All Templates> (${this.allProjectTypes.length})`,
+                        label: `All Templates (${this.allProjectTypes.length})`,
                         children: [],
                         selected: this.category == "_allTemplates",
                         expanded: true,
@@ -557,7 +559,7 @@ class WizardModel {
                         id: "_templates",
                         label: (
                             <span>
-                                Templates from{" "}
+                                From{" "}
                                 <a
                                     href="#"
                                     onClick={event => {
@@ -611,17 +613,21 @@ class WizardModel {
             {
                 id: "dashboard",
                 icon: DASHBOARD_PROJECT_ICON(128),
-                label: "Dashboard"
+                label: "Dashboard",
+                description:
+                    "Start your new Dashboard project development here."
             },
             {
                 id: "firmware",
                 icon: EEZ_GUI_PROJECT_ICON(128),
-                label: "EEZ-GUI"
+                label: "EEZ-GUI",
+                description: "Start your new EEZ-GUI project development here."
             },
             {
                 id: "LVGL",
                 icon: "../eez-studio-ui/_images/eez-project-lvgl.png",
-                label: "LVGL"
+                label: "LVGL",
+                description: "Start your new LVGL project development here."
             }
         ];
     }
@@ -631,12 +637,16 @@ class WizardModel {
             {
                 id: "applet",
                 icon: MICROPYTHON_ICON(128),
-                label: "Applet"
+                label: "Applet",
+                description:
+                    "Start your new BB3 Applet project development here."
             },
             {
                 id: "resource",
                 icon: EEZ_GUI_PROJECT_ICON(128),
-                label: "MicroPython Script"
+                label: "MicroPython Script",
+                description:
+                    "Start your new BB3 MicroPyhton project development here."
             }
         ];
     }
@@ -647,7 +657,8 @@ class WizardModel {
             icon: templateProject._image_url,
             label: templateProject.name.startsWith("eez-flow-template-")
                 ? templateProject.name.substring("eez-flow-template-".length)
-                : templateProject.name
+                : templateProject.name,
+            description: templateProject.description
         }));
     }
 
@@ -1366,8 +1377,13 @@ const ProjectTypesList = observer(
                                 wizardModel.changeType(projectType.id);
                             }}
                         >
-                            <Icon icon={projectType.icon} size={128} />
-                            {projectType.label}
+                            <div className="EezStudio_NewProjectWizard_ProjectType_Image">
+                                <Icon icon={projectType.icon} size={128} />
+                            </div>
+                            <div className="EezStudio_NewProjectWizard_ProjectType_Details">
+                                <h6>{projectType.label}</h6>
+                                <div>{projectType.description}</div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -1396,17 +1412,6 @@ const ProjectProperties = observer(
 
             return (
                 <div className="EezStudio_NewProjectWizard_ProjectProperties">
-                    {wizardModel.selectedTemplateProject && (
-                        <div className="mb-3 row">
-                            <h6 className="col-sm-12">
-                                {
-                                    wizardModel.selectedTemplateProject
-                                        .description
-                                }
-                            </h6>
-                        </div>
-                    )}
-
                     <div className="mb-3 row">
                         <label className="col-sm-3 col-form-label">Name</label>
                         <div className="col-sm-9">
@@ -1769,7 +1774,7 @@ const NewProjectWizard = observer(
                             enableDrag: false,
                             enableDrop: false,
                             enableClose: false,
-                            weight: 20,
+                            weight: 15,
                             children: [
                                 {
                                     type: "tab",
@@ -1785,7 +1790,7 @@ const NewProjectWizard = observer(
                             enableDrag: false,
                             enableDrop: false,
                             enableClose: false,
-                            weight: 45,
+                            weight: 55,
                             children: [
                                 {
                                     type: "tab",
@@ -1801,7 +1806,7 @@ const NewProjectWizard = observer(
                             enableDrag: false,
                             enableDrop: false,
                             enableClose: false,
-                            weight: 35,
+                            weight: 30,
                             children: [
                                 {
                                     type: "tab",
