@@ -1,4 +1,3 @@
-import fs from "fs";
 import React from "react";
 import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -47,6 +46,7 @@ import { ThemedColorInput } from "./ThemedColorInput";
 import { ObjectReferenceInput } from "./ObjectReferenceInput";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Checkbox } from "./Checkbox";
+import { ImageProperty } from "./ImageProperty";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1011,104 +1011,12 @@ export const Property = observer(
                     </div>
                 );
             } else if (propertyInfo.type === PropertyType.Image) {
-                const imageValue = this._value || "";
-                const embeddedImage = imageValue.startsWith("data:image");
                 return (
-                    <div>
-                        <div className="input-group">
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={
-                                    embeddedImage
-                                        ? "<embedded image>"
-                                        : imageValue
-                                }
-                                readOnly
-                            />
-                            {!readOnly && (
-                                <button
-                                    className="btn btn-secondary"
-                                    type="button"
-                                    onClick={async () => {
-                                        const result =
-                                            await dialog.showOpenDialog({
-                                                properties: ["openFile"],
-                                                filters: [
-                                                    {
-                                                        name: "Image files",
-                                                        extensions: [
-                                                            "png",
-                                                            "jpg",
-                                                            "jpeg"
-                                                        ]
-                                                    },
-                                                    {
-                                                        name: "All Files",
-                                                        extensions: ["*"]
-                                                    }
-                                                ],
-                                                defaultPath:
-                                                    propertyInfo.defaultImagesPath
-                                                        ? propertyInfo.defaultImagesPath(
-                                                              this.context
-                                                          )
-                                                        : undefined
-                                            });
-                                        const filePaths = result.filePaths;
-                                        if (filePaths && filePaths[0]) {
-                                            if (
-                                                propertyInfo.embeddedImage ==
-                                                true
-                                            ) {
-                                                fs.readFile(
-                                                    this.context.getAbsoluteFilePath(
-                                                        filePaths[0]
-                                                    ),
-                                                    "base64",
-                                                    (err: any, data: any) => {
-                                                        if (!err) {
-                                                            this.changeValue(
-                                                                "data:image/png;base64," +
-                                                                    data
-                                                            );
-                                                        }
-                                                    }
-                                                );
-                                            } else {
-                                                this.changeValue(
-                                                    this.context.getFilePathRelativeToProjectPath(
-                                                        filePaths[0]
-                                                    )
-                                                );
-                                            }
-                                        }
-                                    }}
-                                >
-                                    &hellip;
-                                </button>
-                            )}
-                        </div>
-                        {this._value &&
-                            !this.props.propertyInfo.disableBitmapPreview && (
-                                <img
-                                    src={
-                                        this._value &&
-                                        this._value.startsWith("data:image/")
-                                            ? this._value
-                                            : this.context.getAbsoluteFilePath(
-                                                  this._value || ""
-                                              )
-                                    }
-                                    style={{
-                                        display: "block",
-                                        maxWidth: "100%",
-                                        margin: "auto",
-                                        paddingTop: "5px"
-                                    }}
-                                />
-                            )}
-                    </div>
+                    <ImageProperty
+                        {...this.props}
+                        value={this._value}
+                        changeValue={this.changeValue}
+                    />
                 );
             }
             return null;

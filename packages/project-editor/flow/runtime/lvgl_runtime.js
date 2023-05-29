@@ -1168,12 +1168,12 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  965568: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 965609: ($0) => { startToDebuggerMessage($0); },  
- 965641: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965716: ($0) => { finishToDebuggerMessage($0); },  
- 965749: ($0, $1) => { onArrayValueFree($0, $1); },  
- 965779: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  965552: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 965593: ($0) => { startToDebuggerMessage($0); },  
+ 965625: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 965700: ($0) => { finishToDebuggerMessage($0); },  
+ 965733: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 965763: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 

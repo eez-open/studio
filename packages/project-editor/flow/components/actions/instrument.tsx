@@ -233,25 +233,25 @@ export class SCPIActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -617,19 +617,18 @@ export class SelectInstrumentActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -641,7 +640,8 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                 type: "object:Instrument",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -676,19 +676,18 @@ export class GetInstrumentActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -700,7 +699,8 @@ export class GetInstrumentActionComponent extends ActionComponent {
                 type: "object:Instrument",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -775,25 +775,25 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }

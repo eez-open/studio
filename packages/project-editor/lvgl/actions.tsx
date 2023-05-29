@@ -1124,25 +1124,25 @@ export class LVGLActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 

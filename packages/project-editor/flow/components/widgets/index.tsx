@@ -1547,7 +1547,7 @@ export class UserWidgetWidget extends Widget {
                 isOptionalInput: false
             }));
 
-        return [...super.getInputs(), ...startComponents, ...inputComponents];
+        return [...startComponents, ...inputComponents, ...super.getInputs()];
     }
 
     getOutputs() {
@@ -1576,7 +1576,7 @@ export class UserWidgetWidget extends Widget {
                 isOptionalOutput: false
             }));
 
-        return [...super.getOutputs(), ...endComponents, ...outputComponents];
+        return [...endComponents, ...outputComponents, ...super.getOutputs()];
     }
 
     render(
@@ -5275,13 +5275,13 @@ export class LineChartEmbeddedWidget extends Widget {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "reset",
                 type: "any" as ValueType,
                 isSequenceInput: false,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
@@ -7197,13 +7197,13 @@ export class RollerWidget extends Widget {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "clear",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 

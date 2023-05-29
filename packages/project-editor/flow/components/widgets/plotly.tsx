@@ -545,13 +545,13 @@ export class LineChartWidget extends Widget {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "reset",
                 type: "any" as ValueType,
                 isSequenceInput: false,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 

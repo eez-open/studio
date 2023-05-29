@@ -6215,3 +6215,83 @@ button.EezStudio_Action {
     background-color: @panelHeaderColor;
     z-index: 10;
 }
+
+.EezStudio_NewProjectWizard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    &.disabled {
+        pointer-events: none;
+    }
+
+    .EezStudio_NewProjectWizard_Navigation {
+        flex: 0;
+
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        border-bottom: 1px solid @borderColor;
+        margin-bottom: 10px;
+
+        .EezStudio_NewProjectWizard_NavigationItem {
+            &:not(.selected) {
+                cursor: pointer;
+                &:hover {
+                    border-bottom: 4px solid @borderColor;
+                }
+            }
+            text-transform: uppercase;
+            font-size: 175%;
+            margin: 0 30px;
+            padding: 0px 10px;
+            &.selected {
+                border-bottom: 4px solid @selectionBackgroundColor;
+            }
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        flex: 0;
+        margin: 10px auto;
+        width: 300px;
+        border: 1px solid @borderColor;
+    }
+
+    .EezStudio_NewProjectWizard_Body {
+        flex: 1;
+        position: relative;
+        border-top: 1px solid @borderColor;
+
+        .EezStudio_NewProjectWizard_ProjectTypes {
+            display: flex;
+            flex-wrap: wrap;
+
+            .EezStudio_NewProjectWizard_ProjectType {
+                display: flex;
+                flex-direction: column;
+                margin: 10px;
+                padding: 10px;
+                border: 1px solid @borderColor;
+                &.selected {
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
+
+        .EezStudio_NewProjectWizard_ProjectProperties {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+    }
+
+    .EezStudio_NewProjectWizard_CreationStatus {
+        margin-top: 10px;
+    }
+}

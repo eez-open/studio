@@ -72,6 +72,10 @@ const Content = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        componentDidMount(): void {
+            this.context.editorsStore.openInitialEditors();
+        }
+
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 

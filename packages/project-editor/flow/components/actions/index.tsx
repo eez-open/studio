@@ -125,13 +125,13 @@ export class StartActionComponent extends ActionComponent {
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -152,13 +152,13 @@ export class EndActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 }
@@ -234,13 +234,13 @@ export class InputActionComponent extends ActionComponent {
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: this.inputType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -321,13 +321,13 @@ export class OutputActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
@@ -374,19 +374,18 @@ export class EvalExprActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null",
@@ -398,7 +397,8 @@ export class EvalExprActionComponent extends ActionComponent {
                 type: "any",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -457,19 +457,18 @@ export class WatchVariableActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -482,7 +481,8 @@ export class WatchVariableActionComponent extends ActionComponent {
                 type: "any" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -620,25 +620,25 @@ export class EvalJSExprActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -832,25 +832,25 @@ export class SetVariableActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1055,19 +1055,18 @@ export class SwitchActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1081,7 +1080,8 @@ export class SwitchActionComponent extends ActionComponent {
                     type: "any" as ValueType,
                     isSequenceOutput: true,
                     isOptionalOutput: false
-                }))
+                })),
+            ...super.getOutputs()
         ];
     }
 
@@ -1218,19 +1218,18 @@ export class CompareActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1248,7 +1247,8 @@ export class CompareActionComponent extends ActionComponent {
                 type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1369,19 +1369,18 @@ export class IsTrueActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1401,7 +1400,8 @@ export class IsTrueActionComponent extends ActionComponent {
                 type: "boolean",
                 isSequenceOutput: true,
                 isOptionalOutput: outputIsOptionalIfAtLeastOneOutputExists
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1468,19 +1468,18 @@ export class ConstantActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1493,7 +1492,8 @@ export class ConstantActionComponent extends ActionComponent {
                 type: "any",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1534,19 +1534,18 @@ export class DateNowActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1558,7 +1557,8 @@ export class DateNowActionComponent extends ActionComponent {
                 type: "date",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -1700,19 +1700,18 @@ export class SortArrayActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1724,7 +1723,8 @@ export class SortArrayActionComponent extends ActionComponent {
                 type: "any" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1813,19 +1813,18 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -1837,7 +1836,8 @@ export class ReadSettingActionComponent extends ActionComponent {
                 type: "any",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -1901,25 +1901,25 @@ export class WriteSettingsActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -1969,25 +1969,25 @@ export class LogActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2117,7 +2117,7 @@ export class CallActionActionComponent extends ActionComponent {
             inputs = [];
         }
 
-        return [...super.getInputs(), ...inputs];
+        return [...inputs, ...super.getInputs()];
     }
 
     getOutputs() {
@@ -2159,7 +2159,7 @@ export class CallActionActionComponent extends ActionComponent {
             outputs = [];
         }
 
-        return [...super.getOutputs(), ...outputs];
+        return [...outputs, ...super.getOutputs()];
     }
 
     open() {
@@ -2291,25 +2291,25 @@ export class DynamicCallActionActionComponent extends ActionComponent {
 
     getInputs(): ComponentInput[] {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -2349,25 +2349,25 @@ export class DelayActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2415,13 +2415,13 @@ export class ErrorActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
@@ -2453,7 +2453,6 @@ export class CatchErrorActionComponent extends ActionComponent {
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -2465,7 +2464,8 @@ export class CatchErrorActionComponent extends ActionComponent {
                 type: "string",
                 isSequenceOutput: false,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -2518,19 +2518,18 @@ export class CounterActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -2542,7 +2541,8 @@ export class CounterActionComponent extends ActionComponent {
                 type: "null",
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2664,7 +2664,6 @@ export class LoopActionComponent extends ActionComponent {
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
@@ -2676,7 +2675,8 @@ export class LoopActionComponent extends ActionComponent {
                 type: "null",
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2749,13 +2749,13 @@ export class OnEventActionComponent extends ActionComponent {
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2822,25 +2822,25 @@ export class ShowPageActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -2937,25 +2937,25 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3066,19 +3066,18 @@ export class ShowKeyboardActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "result",
                 type: "string" as ValueType,
@@ -3090,7 +3089,8 @@ export class ShowKeyboardActionComponent extends ActionComponent {
                 type: "null" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3198,19 +3198,18 @@ export class ShowKeypadActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: false
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "result",
                 type: "float" as ValueType,
@@ -3222,7 +3221,8 @@ export class ShowKeypadActionComponent extends ActionComponent {
                 type: "null" as ValueType,
                 isSequenceOutput: false,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3272,25 +3272,25 @@ export class SelectLanguageActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }
@@ -3330,25 +3330,25 @@ export class SetPageDirectionActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3404,25 +3404,25 @@ export class OverrideStyleActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3530,25 +3530,25 @@ export class AnimateActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
@@ -3624,25 +3624,25 @@ export class NoopActionComponent extends ActionComponent {
 
     getInputs() {
         return [
-            ...super.getInputs(),
             {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
     getOutputs() {
         return [
-            ...super.getOutputs(),
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 }

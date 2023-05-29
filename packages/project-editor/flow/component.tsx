@@ -2301,6 +2301,8 @@ export class Component extends EezObject {
             }
         }
 
+        console.log(this.type, this.outputs);
+
         for (const componentOutput of this.outputs) {
             if (!outputs.find(output => output.name == componentOutput.name)) {
                 outputs.push({
@@ -3182,38 +3184,29 @@ export class Widget extends Component {
 
         let boundingRect: Rect | undefined;
 
-        let containerWidget: ContainerWidget;
-        if (
-            fromWidgets.length == 1 &&
-            (fromWidgets[0].type == "Container" ||
-                fromWidgets[0].type == "ContainerWidget")
-        ) {
-            containerWidget = fromWidgets[0] as ContainerWidget;
-        } else {
-            var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
-                Object.assign(
-                    {},
-                    getClassFromType("Container")?.classInfo.defaultValue,
-                    { type: "Container" }
-                );
-
-            containerWidget = createObject<ContainerWidget>(
-                projectStore,
-                containerWidgetJsObjectProperties,
-                ProjectEditor.ContainerWidgetClass
+        var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
+            Object.assign(
+                {},
+                getClassFromType("Container")?.classInfo.defaultValue,
+                { type: "Container" }
             );
 
-            boundingRect = Widget.getBoundingRect(fromWidgets);
+        let containerWidget = createObject<ContainerWidget>(
+            projectStore,
+            containerWidgetJsObjectProperties,
+            ProjectEditor.ContainerWidgetClass
+        );
 
-            fromWidgets.forEach(widget => {
-                containerWidget.widgets.push(widget);
-            });
+        boundingRect = Widget.getBoundingRect(fromWidgets);
 
-            containerWidget.left = boundingRect.left;
-            containerWidget.top = boundingRect.top;
-            containerWidget.width = boundingRect.width;
-            containerWidget.height = boundingRect.height;
-        }
+        fromWidgets.forEach(widget => {
+            containerWidget.widgets.push(widget);
+        });
+
+        containerWidget.left = boundingRect.left;
+        containerWidget.top = boundingRect.top;
+        containerWidget.width = boundingRect.width;
+        containerWidget.height = boundingRect.height;
 
         var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
             {},
@@ -3618,26 +3611,17 @@ function renderActionComponent(
     }
 
     //
-    let errorOutputIndex = -1;
     let seqOutputIndex = -1;
     let i;
     for (i = 0; i < actionNode.outputs.length; i++) {
         const output = actionNode.outputs[i];
-        if (output.name === "@error") {
-            errorOutputIndex = i;
-        } else if (output.isSequenceOutput && output.name == "@seqout") {
+        if (output.isSequenceOutput && output.name == "@seqout") {
             if (seqOutputIndex === -1) {
                 seqOutputIndex = i;
             } else {
                 seqOutputIndex = -1;
                 break;
             }
-        }
-    }
-    for (; i < actionNode.outputs.length; i++) {
-        const output = actionNode.outputs[i];
-        if (output.name === "@error") {
-            errorOutputIndex = i;
         }
     }
 
@@ -3649,15 +3633,6 @@ function renderActionComponent(
         ];
     } else {
         outputs = actionNode.outputs;
-    }
-
-    // move @error output to end
-    if (errorOutputIndex !== -1) {
-        outputs = [
-            ...outputs.slice(0, errorOutputIndex),
-            ...outputs.slice(errorOutputIndex + 1),
-            outputs[errorOutputIndex]
-        ];
     }
 
     let titleStyle: React.CSSProperties | undefined;
@@ -4188,27 +4163,27 @@ export function registerActionComponent(
 
         getInputs(): ComponentInput[] {
             return [
-                ...super.getInputs(),
                 {
                     name: "@seqin",
                     type: "any",
                     isSequenceInput: true,
                     isOptionalInput: true
                 },
-                ...actionComponentDefinition.inputs
+                ...actionComponentDefinition.inputs,
+                ...super.getInputs()
             ];
         }
 
         getOutputs(): ComponentOutput[] {
             return [
-                ...super.getOutputs(),
                 {
                     name: "@seqout",
                     type: "null",
                     isSequenceOutput: true,
                     isOptionalOutput: true
                 },
-                ...actionComponentDefinition.outputs
+                ...actionComponentDefinition.outputs,
+                ...super.getOutputs()
             ];
         }
 

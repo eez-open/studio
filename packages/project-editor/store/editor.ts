@@ -164,6 +164,8 @@ export class EditorsStore {
 
     dispose1: mobx.IReactionDisposer;
 
+    openInitialEditorsAtStart: boolean = false;
+
     constructor(
         public projectStore: ProjectStore,
         public getLayoutModel: () => FlexLayout.Model,
@@ -203,6 +205,24 @@ export class EditorsStore {
                 }
             });
         });
+    }
+
+    setOpenInitialEditorsAtStart() {
+        this.openInitialEditorsAtStart = true;
+    }
+
+    openInitialEditors() {
+        if (this.openInitialEditorsAtStart) {
+            this.openInitialEditorsAtStart = false;
+
+            if (this.projectStore.project.readme) {
+                this.openEditor(this.projectStore.project.readme);
+            } else if (this.projectStore.project.pages) {
+                this.openEditor(this.projectStore.project.pages[0]);
+            } else if (this.projectStore.project.pages) {
+                this.openEditor(this.projectStore.project.settings);
+            }
+        }
     }
 
     getEditorByObject(object: IEezObject) {

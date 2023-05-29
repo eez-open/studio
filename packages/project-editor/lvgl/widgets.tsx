@@ -2393,7 +2393,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 isOptionalInput: false
             }));
 
-        return [...super.getInputs(), ...startComponents, ...inputComponents];
+        return [...startComponents, ...inputComponents, ...super.getInputs()];
     }
 
     getOutputs() {
@@ -2422,7 +2422,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 isOptionalOutput: false
             }));
 
-        return [...super.getOutputs(), ...endComponents, ...outputComponents];
+        return [...endComponents, ...outputComponents, ...super.getOutputs()];
     }
 
     override lvglCreateObj(

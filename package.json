@@ -119,7 +119,7 @@
         "immutability-helper": "^3.1.1",
         "jquery": "^3.5.1",
         "json-stable-stringify": "^1.0.1",
-        "jspanel4": "^4.10.2",
+        "jspanel4": "^4.16.1",
         "lodash": "^4.17.21",
         "lv_font_conv": "^1.5.2",
         "lz4": "0.6.5",

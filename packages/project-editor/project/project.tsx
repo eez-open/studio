@@ -428,6 +428,12 @@ export class General extends EezObject {
     icon: string;
     title: string;
 
+    description: string;
+    image: string;
+    keywords: string;
+    targetPlatform: string;
+    targetPlatformLink: string;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -553,6 +559,28 @@ export class General extends EezObject {
                 type: PropertyType.Image,
                 embeddedImage: true,
                 hideInPropertyGrid: isNotDashboardProject
+            },
+
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "image",
+                type: PropertyType.Image,
+                embeddedImage: true
+            },
+            {
+                name: "keywords",
+                type: PropertyType.String
+            },
+            {
+                name: "targetPlatform",
+                type: PropertyType.String
+            },
+            {
+                name: "targetPlatformLink",
+                type: PropertyType.String
             }
         ],
         check: (general: General, messages: IMessage[]) => {
@@ -652,7 +680,12 @@ export class General extends EezObject {
             imports: observable,
             flowSupport: observable,
             displayWidth: observable,
-            displayHeight: observable
+            displayHeight: observable,
+            description: observable,
+            image: observable,
+            keywords: observable,
+            targetPlatform: observable,
+            targetPlatformLink: observable
         });
     }
 }

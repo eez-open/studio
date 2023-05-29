@@ -67,13 +67,13 @@ export class TerminalWidget extends Widget {
 
     getOutputs(): ComponentOutput[] {
         return [
-            ...super.getOutputs(),
             {
                 name: "onData",
                 type: `struct:${ON_DATA_PARAMS_STRUCT_NAME}`,
                 isOptionalOutput: false,
                 isSequenceOutput: false
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 

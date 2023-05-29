@@ -39,6 +39,8 @@ export class UIStateStore {
 
     logsPanelFilter: LogPanelFilter = "all";
 
+    wasEmpty: boolean;
+
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
     }
@@ -107,20 +109,24 @@ export class UIStateStore {
     }
 
     async load() {
+        let uiState: any = undefined;
+
         const filePath = this.getUIStateFilePath();
-        if (!filePath) {
-            return;
+        if (filePath) {
+            try {
+                const data = await fs.promises.readFile(filePath, "utf8");
+                try {
+                    uiState = JSON.parse(data);
+                } catch (err) {
+                    console.error(err);
+                }
+            } catch (err) {}
         }
 
-        let uiState: any = {};
-        try {
-            const data = await fs.promises.readFile(filePath, "utf8");
-            try {
-                uiState = JSON.parse(data);
-            } catch (err) {
-                console.error(err);
-            }
-        } catch (err) {}
+        if (uiState == undefined) {
+            uiState = {};
+            this.projectStore.editorModeEditorsStore.setOpenInitialEditorsAtStart();
+        }
 
         runInAction(() => {
             this.projectStore.navigationStore.loadState(uiState.navigation);
