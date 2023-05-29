@@ -6275,11 +6275,15 @@ button.EezStudio_Action {
                     margin-bottom: 0;
                 }
                 padding: 10px;
-                border: 1px solid @borderColor;
+                border-bottom: 1px solid @borderColor;
+                &:last-child {
+                    border-bottom: none;
+                }
 
                 &.selected {
                     color: @selectionColor;
                     background-color: @selectionBackgroundColor;
+                    border-bottom: 1px solid transparent;
                 }
 
                 &:hover:not(.selected) {

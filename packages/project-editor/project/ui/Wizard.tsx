@@ -646,7 +646,7 @@ class WizardModel {
                 icon: EEZ_GUI_PROJECT_ICON(128),
                 label: "MicroPython Script",
                 description:
-                    "Start your new BB3 MicroPyhton project development here."
+                    "Start your new BB3 MicroPython project development here."
             }
         ];
     }
