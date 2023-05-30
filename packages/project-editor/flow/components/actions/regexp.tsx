@@ -52,6 +52,12 @@ registerActionComponents("Dashboard Specific", [
                 type: "any" as ValueType,
                 isSequenceInput: true,
                 isOptionalInput: true
+            },
+            {
+                name: "stop",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
             }
         ],
         outputs: [
@@ -110,6 +116,7 @@ registerActionComponents("Dashboard Specific", [
                     context.getComponentExecutionState<RegexpExecutionState>();
                 if (!runningState) {
                     context.throwError("Never started");
+                    return;
                 }
             }
 
@@ -160,8 +167,10 @@ registerActionComponents("Dashboard Specific", [
                         "text is not a string or readable stream"
                     );
                 }
-            } else {
+            } else if (context.getInputValue("next") !== undefined) {
                 runningState.getNext();
+            } else if (context.getInputValue("stop") !== undefined) {
+                runningState.stop();
             }
         }
     }
@@ -171,6 +180,7 @@ registerActionComponents("Dashboard Specific", [
 
 abstract class RegexpExecutionState {
     abstract getNext(): void;
+    abstract stop(): void;
 }
 
 function getMatchStruct(m: RegExpExecArray) {
@@ -212,6 +222,11 @@ class RegexpExecutionStateForString extends RegexpExecutionState {
             this.context.propagateValue("done", null);
             this.context.setComponentExecutionState(undefined);
         }
+    }
+
+    stop() {
+        this.context.propagateValue("done", null);
+        this.context.setComponentExecutionState(undefined);
     }
 }
 
@@ -263,6 +278,11 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
             this.propagate = true;
         }
     }
+
+    stop() {
+        this.context.propagateValue("done", null);
+        this.context.setComponentExecutionState(undefined);
+    }
 }
 
 class StreamSnitch extends Writable {
@@ -288,7 +308,11 @@ class StreamSnitch extends Writable {
         if (Buffer.byteLength(this._buffer) > this.bufferCap)
             this.clearBuffer();
 
-        this._buffer += chunk;
+        if (typeof chunk == "string") {
+            this._buffer += chunk;
+        } else if (chunk instanceof Buffer) {
+            this._buffer += chunk.toString();
+        }
 
         while ((match = this.regex.exec(this._buffer))) {
             this.onDataCallback(match);

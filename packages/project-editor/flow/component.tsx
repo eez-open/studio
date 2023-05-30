@@ -2301,8 +2301,6 @@ export class Component extends EezObject {
             }
         }
 
-        console.log(this.type, this.outputs);
-
         for (const componentOutput of this.outputs) {
             if (!outputs.find(output => output.name == componentOutput.name)) {
                 outputs.push({

@@ -467,13 +467,13 @@ export const builtInFunctions: {
     },
     "Flow.makeArrayValue": {
         operationIndex: 28,
-        arity: 1,
-        args: ["value"],
+        arity: 2,
+        args: ["type", "size"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
-            return args[0];
+            return new Array(args[1]);
         },
         getValueType: (...args: ValueType[]) => {
             return args[0];

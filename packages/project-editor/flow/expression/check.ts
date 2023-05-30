@@ -227,6 +227,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 if (type?.kind != "object") {
                     throw `Invalid type '${node.valueType}'`;
                 }
+            } else if (functionName == "Flow.makeArrayValue") {
+                if (node.arguments[0].type == "Literal") {
+                    node.valueType = node.arguments[0].value;
+                }
             }
 
             node.arguments.forEach(checkNode);

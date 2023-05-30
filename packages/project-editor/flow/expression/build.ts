@@ -318,6 +318,16 @@ function buildExpressionNode(
             };
 
             node.arguments[1].valueType = node.valueType;
+        } else if (functionName == "Flow.makeArrayValue") {
+            if (node.arguments[0].type == "Literal") {
+                node.valueType = node.arguments[0].value;
+            }
+
+            node.arguments[0] = {
+                type: "Literal",
+                value: assets.getTypeIndex(node.valueType),
+                valueType: "integer"
+            };
         }
 
         return [
