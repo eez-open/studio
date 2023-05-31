@@ -46,142 +46,71 @@ import {
     ProjectType
 } from "project-editor/project/project";
 
-class NameInput extends React.Component<{
-    value: string | undefined;
-    onChange: (value: string | undefined) => void;
-}> {
-    render() {
-        return (
-            <input
-                type="text"
-                className="form-control"
-                value={this.props.value || ""}
-                onChange={event => this.props.onChange(event.target.value)}
-                spellCheck={false}
-            />
-        );
-    }
-}
-
-class DirectoryBrowserInput extends React.Component<{
-    value: string | undefined;
-    onChange: (value: string | undefined) => void;
-}> {
-    onSelect = async () => {
-        const result = await dialog.showOpenDialog({
-            properties: ["openDirectory"]
-        });
-
-        if (result.filePaths && result.filePaths[0]) {
-            this.props.onChange(result.filePaths[0]);
-        }
-    };
-
-    render() {
-        return (
-            <div className="input-group">
-                <input
-                    type="text"
-                    className="form-control"
-                    value={this.props.value || ""}
-                    onChange={event => this.props.onChange(event.target.value)}
-                    spellCheck={false}
-                />
-                <>
-                    <button
-                        className="btn btn-secondary"
-                        type="button"
-                        onClick={this.onSelect}
-                    >
-                        &hellip;
-                    </button>
-                </>
-            </div>
-        );
-    }
-}
-
-class FileBrowserInput extends React.Component<{
-    value: string | undefined;
-    onChange: (value: string | undefined) => void;
-}> {
-    onSelect = async () => {
-        const result = await dialog.showOpenDialog({
-            properties: ["openFile"],
-            filters: [
-                { name: "EEZ Project", extensions: ["eez-project"] },
-                { name: "All Files", extensions: ["*"] }
-            ]
-        });
-
-        if (result.filePaths && result.filePaths[0]) {
-            this.props.onChange(result.filePaths[0]);
-        }
-    };
-
-    render() {
-        return (
-            <div className="input-group">
-                <input
-                    type="text"
-                    className="form-control"
-                    value={this.props.value || ""}
-                    onChange={event => this.props.onChange(event.target.value)}
-                    spellCheck={false}
-                />
-                <>
-                    <button
-                        className="btn btn-secondary"
-                        type="button"
-                        onClick={this.onSelect}
-                    >
-                        Browse ...
-                    </button>
-                </>
-            </div>
-        );
-    }
-}
-
 interface TemplateProject {
     clone_url: string;
-    description: string;
-    full_name: string;
     html_url: string;
+
+    full_name: string;
     name: string;
+
+    description: string;
     _image_url: string;
     keywords?: string;
 }
 
-const SAVED_OPTIONS_VERSION = 10;
+export interface ExampleProject {
+    repository: string;
+    eezProjectPath: string;
+    folder: string;
+    projectName: string;
+
+    projectType: string;
+    description: string;
+    image: string;
+    keywords: string;
+    displayWidth?: number;
+    displayHeight?: number;
+    targetPlatform?: string;
+    targetPlatformLink?: string;
+    resourceFiles: string[];
+}
+
+interface IProjectType {
+    id: string;
+
+    repository?: string;
+
+    projectName: string;
+    defaultProjectName?: string;
+
+    projectType: string;
+    description: string;
+    image: React.ReactNode;
+    keywords?: string;
+    displayWidth?: number;
+    displayHeight?: number;
+    targetPlatform?: string;
+    targetPlatformLink?: string;
+    language?: string;
+    resourceFiles?: string[];
+}
+
+const SAVED_OPTIONS_VERSION = 11;
 
 enum SaveOptionsFlags {
     All,
     View
 }
 
-interface IProjectType {
-    id: string;
-    projectType: string;
-    icon: React.ReactNode;
-    label: string;
-    description: string;
-    defaultName?: string;
-    keywords?: string;
-    language?: string;
-    displayWidth?: number;
-    displayHeight?: number;
-}
-
 class WizardModel {
     section: "templates" | "examples" = "templates";
-    category: string | undefined = "_standard";
+    folder: string | undefined = "_standard";
     type: string | undefined = "dashboard";
 
-    lastTemplatesCategory: string | undefined = "_standard";
+    lastTemplatesFolder: string | undefined = "_standard";
     lastTemplatesType: string | undefined = "dashboard";
 
-    lastExamplesCategory: string | undefined = "_allExamples";
+    lastExamplesFolder: string | undefined = "_allExamples";
     lastExamplesType: string | undefined;
 
     _name: string | undefined;
@@ -189,7 +118,9 @@ class WizardModel {
         if (this._name) {
             return this._name;
         }
-        return this.projectType ? this.projectType.defaultName : undefined;
+        return this.projectType
+            ? this.projectType.defaultProjectName
+            : undefined;
     }
     set name(value: string | undefined) {
         runInAction(() => {
@@ -239,10 +170,10 @@ class WizardModel {
         makeObservable(this, {
             createProjectInProgress: observable,
             section: observable,
-            category: observable,
-            lastTemplatesCategory: observable,
+            folder: observable,
+            lastTemplatesFolder: observable,
             lastTemplatesType: observable,
-            lastExamplesCategory: observable,
+            lastExamplesFolder: observable,
             lastExamplesType: observable,
             type: observable,
             _name: observable,
@@ -271,7 +202,7 @@ class WizardModel {
             allProjectTypes: computed,
             switchToTemplates: action.bound,
             switchToExamples: action.bound,
-            changeCategory: action.bound,
+            changeFolder: action.bound,
             changeType: action.bound
         });
 
@@ -285,11 +216,11 @@ class WizardModel {
                 const options = JSON.parse(optionsJSON);
                 if (options.version == SAVED_OPTIONS_VERSION) {
                     this.section = options.section;
-                    this.category = options.category;
+                    this.folder = options.folder;
                     this.type = options.type;
-                    this.lastTemplatesCategory = options.lastTemplatesCategory;
+                    this.lastTemplatesFolder = options.lastTemplatesFolder;
                     this.lastTemplatesType = options.lastTemplatesType;
-                    this.lastExamplesCategory = options.lastExamplesCategory;
+                    this.lastExamplesFolder = options.lastExamplesFolder;
                     this.lastExamplesType = options.lastExamplesType;
 
                     this.location = options.location;
@@ -323,10 +254,10 @@ class WizardModel {
 
                     section: this.section,
                     type: this.type,
-                    category: this.category,
-                    lastTemplatesCategory: this.lastTemplatesCategory,
+                    folder: this.folder,
+                    lastTemplatesFolder: this.lastTemplatesFolder,
                     latsTemplatesType: this.lastTemplatesType,
-                    lastExamplesCategory: this.lastExamplesCategory,
+                    lastExamplesFolder: this.lastExamplesFolder,
                     lastExamplesType: this.lastExamplesType,
 
                     location: this.location,
@@ -354,10 +285,10 @@ class WizardModel {
 
                     section: this.section,
                     type: this.type,
-                    category: this.category,
-                    lastTemplatesCategory: this.lastTemplatesCategory,
+                    folder: this.folder,
+                    lastTemplatesFolder: this.lastTemplatesFolder,
                     latsTemplatesType: this.lastTemplatesType,
-                    lastExamplesCategory: this.lastExamplesCategory,
+                    lastExamplesFolder: this.lastExamplesFolder,
                     lastExamplesType: this.lastExamplesType,
 
                     location: this.lastOptions.location,
@@ -436,7 +367,7 @@ class WizardModel {
         this.dispose2();
     }
 
-    get exampleCategoryProjectTypes() {
+    get exampleProjectTypes() {
         const map = new Map<string, IProjectType[]>();
 
         const _allExamples: IProjectType[] = [];
@@ -445,30 +376,40 @@ class WizardModel {
 
         const examples = examplesCatalog.catalog
             .slice()
-            .sort((a, b) => stringCompare(a.exampleName, b.exampleName));
+            .sort((a, b) => stringCompare(a.projectName, b.projectName));
 
         examples.forEach(example => {
+            const eezProjectDownloadUrl =
+                example.repository.replace(
+                    "github.com",
+                    "raw.githubusercontent.com"
+                ) +
+                "/master/" +
+                example.eezProjectPath;
+
             const projectType: IProjectType = {
-                id: example.eezProjectPath,
-                projectType: PROJECT_TYPE_NAMES[example.type as ProjectType],
-                defaultName: example.exampleName,
-                icon: example.image,
-                label: example.exampleName,
+                id: eezProjectDownloadUrl,
+                repository: example.repository,
+                projectType:
+                    PROJECT_TYPE_NAMES[example.projectType as ProjectType],
+                defaultProjectName: example.projectName,
+                image: example.image,
+                projectName: example.projectName,
                 description: example.description,
                 keywords: example.keywords,
                 displayWidth: example.displayWidth,
-                displayHeight: example.displayHeight
+                displayHeight: example.displayHeight,
+                resourceFiles: example.resourceFiles
             };
 
-            const categoryId =
-                "_example_" + path.dirname(example.eezProjectPath);
+            const folderId = "_example_" + example.folder;
 
-            let categoryProjectTypes = map.get(categoryId);
-            if (!categoryProjectTypes) {
-                categoryProjectTypes = [];
-                map.set(categoryId, categoryProjectTypes);
+            let projectTypes = map.get(folderId);
+            if (!projectTypes) {
+                projectTypes = [];
+                map.set(folderId, projectTypes);
             }
-            categoryProjectTypes.push(projectType);
+            projectTypes.push(projectType);
 
             _allExamples.push(projectType);
         });
@@ -476,7 +417,7 @@ class WizardModel {
         return map;
     }
 
-    get exampleCategories(): ITreeNode {
+    get exampleFolders(): ITreeNode {
         const rootNode: ITreeNode = {
             id: "_root",
             label: "Root",
@@ -485,7 +426,7 @@ class WizardModel {
                     id: "_allExamples",
                     label: "All Examples",
                     children: [],
-                    selected: this.category == "_allExamples",
+                    selected: this.folder == "_allExamples",
                     expanded: true
                 }
             ],
@@ -494,12 +435,12 @@ class WizardModel {
         };
 
         examplesCatalog.catalog.forEach(example => {
-            const examplePath = path.dirname(example.eezProjectPath).split("/");
+            const parts = example.folder.split("/");
 
             let nodes = rootNode.children;
             let id = "_example_";
 
-            for (const part of examplePath) {
+            for (const part of parts) {
                 const childNodeId = id + part;
 
                 let childNode = nodes.find(
@@ -511,7 +452,7 @@ class WizardModel {
                         id: childNodeId,
                         label: part,
                         children: [],
-                        selected: this.category == childNodeId,
+                        selected: this.folder == childNodeId,
                         expanded: true
                     };
 
@@ -523,10 +464,10 @@ class WizardModel {
             }
         });
 
-        const exampleCategoryProjectTypes = this.exampleCategoryProjectTypes;
+        const exampleProjectTypes = this.exampleProjectTypes;
 
         function sortChildren(node: ITreeNode) {
-            const projectTypes = exampleCategoryProjectTypes.get(node.id);
+            const projectTypes = exampleProjectTypes.get(node.id);
             if (projectTypes) {
                 node.label = `${node.label} (${projectTypes.length})`;
             }
@@ -545,7 +486,7 @@ class WizardModel {
         return rootNode;
     }
 
-    get categories(): ITreeNode {
+    get folders(): ITreeNode {
         if (this.section == "templates") {
             return {
                 id: "_root",
@@ -555,7 +496,7 @@ class WizardModel {
                         id: "_allTemplates",
                         label: `All Templates (${this.allProjectTypes.length})`,
                         children: [],
-                        selected: this.category == "_allTemplates",
+                        selected: this.folder == "_allTemplates",
                         expanded: true,
                         data: undefined
                     },
@@ -563,7 +504,7 @@ class WizardModel {
                         id: "_standard",
                         label: `Builtin Templates (${this.standardProjectTypes.length})`,
                         children: [],
-                        selected: this.category == "_standard",
+                        selected: this.folder == "_standard",
                         expanded: true,
                         data: undefined
                     },
@@ -571,7 +512,7 @@ class WizardModel {
                         id: "_bb3",
                         label: `BB3 Script Templates (${this.bb3ProjectTypes.length}) `,
                         children: [],
-                        selected: this.category == "_bb3",
+                        selected: this.folder == "_bb3",
                         expanded: true,
                         data: undefined
                     },
@@ -595,7 +536,7 @@ class WizardModel {
                             </span>
                         ),
                         children: [],
-                        selected: this.category == "_templates",
+                        selected: this.folder == "_templates",
                         expanded: true,
                         data: undefined
                     }
@@ -624,7 +565,7 @@ class WizardModel {
                 data: undefined
             };
         } else {
-            return this.exampleCategories;
+            return this.exampleFolders;
         }
     }
 
@@ -633,23 +574,23 @@ class WizardModel {
             {
                 id: "dashboard",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.DASHBOARD],
-                icon: DASHBOARD_PROJECT_ICON(128),
-                label: "Dashboard",
+                image: DASHBOARD_PROJECT_ICON(128),
+                projectName: "Dashboard",
                 description:
                     "Start your new Dashboard project development here."
             },
             {
                 id: "firmware",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
-                icon: EEZ_GUI_PROJECT_ICON(128),
-                label: "EEZ-GUI",
+                image: EEZ_GUI_PROJECT_ICON(128),
+                projectName: "EEZ-GUI",
                 description: "Start your new EEZ-GUI project development here."
             },
             {
                 id: "LVGL",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
-                icon: "../eez-studio-ui/_images/eez-project-lvgl.png",
-                label: "LVGL",
+                image: "../eez-studio-ui/_images/eez-project-lvgl.png",
+                projectName: "LVGL",
                 description: "Start your new LVGL project development here."
             }
         ];
@@ -660,16 +601,16 @@ class WizardModel {
             {
                 id: "applet",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
-                icon: MICROPYTHON_ICON(128),
-                label: "Applet",
+                image: MICROPYTHON_ICON(128),
+                projectName: "Applet",
                 description:
                     "Start your new BB3 Applet project development here."
             },
             {
                 id: "resource",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.RESOURCE],
-                icon: EEZ_GUI_PROJECT_ICON(128),
-                label: "MicroPython Script",
+                image: EEZ_GUI_PROJECT_ICON(128),
+                projectName: "MicroPython Script",
                 description:
                     "Start your new BB3 MicroPython project development here."
             }
@@ -680,8 +621,8 @@ class WizardModel {
         return this.templateProjects.map(templateProject => ({
             id: templateProject.clone_url,
             projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
-            icon: templateProject._image_url,
-            label: templateProject.name.startsWith("eez-flow-template-")
+            image: templateProject._image_url,
+            projectName: templateProject.name.startsWith("eez-flow-template-")
                 ? templateProject.name.substring("eez-flow-template-".length)
                 : templateProject.name,
             description: templateProject.description,
@@ -699,18 +640,18 @@ class WizardModel {
 
     get projectTypes(): IProjectType[] {
         if (this.section == "templates") {
-            if (this.category == "_allTemplates") {
+            if (this.folder == "_allTemplates") {
                 return this.allProjectTypes;
-            } else if (this.category == "_standard") {
+            } else if (this.folder == "_standard") {
                 return this.standardProjectTypes;
-            } else if (this.category == "_bb3") {
+            } else if (this.folder == "_bb3") {
                 return this.bb3ProjectTypes;
             } else {
                 return this.templateProjectTypes;
             }
         } else {
-            return this.category
-                ? this.exampleCategoryProjectTypes.get(this.category) || []
+            return this.folder
+                ? this.exampleProjectTypes.get(this.folder) || []
                 : [];
         }
     }
@@ -730,23 +671,23 @@ class WizardModel {
         );
     }
 
-    hasCategory(category: string) {
-        function hasCategory(treeNode: ITreeNode) {
-            if (treeNode.id == category) {
+    hasFolder(folder: string) {
+        function hasFolder(treeNode: ITreeNode) {
+            if (treeNode.id == folder) {
                 return true;
             }
             for (const child of treeNode.children) {
-                if (child.id == category) {
+                if (child.id == folder) {
                     return true;
                 }
 
-                if (hasCategory(child)) {
+                if (hasFolder(child)) {
                     return true;
                 }
             }
             return false;
         }
-        return hasCategory(this.categories);
+        return hasFolder(this.folders);
     }
 
     hasType(type: string) {
@@ -762,12 +703,12 @@ class WizardModel {
         this.section = "templates";
 
         if (
-            this.lastTemplatesCategory != undefined &&
-            this.hasCategory(this.lastTemplatesCategory)
+            this.lastTemplatesFolder != undefined &&
+            this.hasFolder(this.lastTemplatesFolder)
         ) {
-            this.category = this.lastTemplatesCategory;
+            this.folder = this.lastTemplatesFolder;
         } else {
-            this.category = this.categories.children[0].id;
+            this.folder = this.folders.children[0].id;
         }
 
         if (
@@ -787,12 +728,12 @@ class WizardModel {
         this.section = "examples";
 
         if (
-            this.lastExamplesCategory != undefined &&
-            this.hasCategory(this.lastExamplesCategory)
+            this.lastExamplesFolder != undefined &&
+            this.hasFolder(this.lastExamplesFolder)
         ) {
-            this.category = this.lastExamplesCategory;
+            this.folder = this.lastExamplesFolder;
         } else {
-            this.category = this.categories.children[0].id;
+            this.folder = this.folders.children[0].id;
         }
 
         if (
@@ -808,11 +749,11 @@ class WizardModel {
         }
     }
 
-    changeCategory(category: string) {
-        this.category = category;
+    changeFolder(folder: string) {
+        this.folder = folder;
 
         if (this.section == "templates") {
-            this.lastTemplatesCategory = this.category;
+            this.lastTemplatesFolder = this.folder;
 
             if (
                 this.lastTemplatesType != undefined &&
@@ -828,7 +769,7 @@ class WizardModel {
 
             this.lastTemplatesType = this.type;
         } else {
-            this.lastExamplesCategory = this.category;
+            this.lastExamplesFolder = this.folder;
 
             if (
                 this.lastExamplesType != undefined &&
@@ -856,7 +797,7 @@ class WizardModel {
         }
     }
 
-    async loadProjectTemplate() {
+    async loadEezProject() {
         if (this.section == "templates") {
             const relativePath = `project-templates/${this.type}.eez-project`;
 
@@ -870,9 +811,7 @@ class WizardModel {
             return JSON.parse(json);
         } else {
             return new Promise<any>((resolve, reject) => {
-                const projectFileUrl =
-                    "https://raw.githubusercontent.com/eez-open/eez-project-examples/master/examples/" +
-                    this.type;
+                const projectFileUrl = this.type!;
 
                 let req = new XMLHttpRequest();
                 req.responseType = "json";
@@ -1310,7 +1249,7 @@ class WizardModel {
                     let projectTemplate;
 
                     try {
-                        projectTemplate = await this.loadProjectTemplate();
+                        projectTemplate = await this.loadEezProject();
                     } catch (err) {
                         runInAction(() => {
                             this.projectCreationError = err.toString();
@@ -1450,14 +1389,14 @@ class WizardModel {
 
 const wizardModel = new WizardModel();
 
-const CategoriesTree = observer(
-    class CategoriesTree extends React.Component {
+const FoldersTree = observer(
+    class FoldersTree extends React.Component {
         render() {
             return (
                 <Tree
-                    rootNode={wizardModel.categories}
+                    rootNode={wizardModel.folders}
                     selectNode={node => {
-                        wizardModel.changeCategory(node.id);
+                        wizardModel.changeFolder(node.id);
                     }}
                     showOnlyChildren={true}
                     style={{ height: "100%", overflow: "auto" }}
@@ -1486,16 +1425,19 @@ const ProjectTypesList = observer(
                             }}
                         >
                             <div className="EezStudio_NewProjectWizard_ProjectType_Image">
-                                <Icon icon={projectType.icon} size={128} />
+                                <Icon icon={projectType.image} size={128} />
                             </div>
                             <div className="EezStudio_NewProjectWizard_ProjectType_Details">
-                                <h6>{projectType.label}</h6>
+                                <h6>{projectType.projectName}</h6>
                                 {projectType.keywords && (
                                     <div className="EezStudio_NewProjectWizard_ProjectType_Details_Keywords">
                                         {projectType.keywords
                                             .split(" ")
                                             .map(keyword => (
-                                                <span className="badge bg-info">
+                                                <span
+                                                    key={keyword}
+                                                    className="badge bg-info"
+                                                >
                                                     {keyword}
                                                 </span>
                                             ))}
@@ -1544,13 +1486,13 @@ function ProjectTypeInfo(props: {
     return (
         <div className="EezStudio_NewProjectWizard_ProjectType_Details_InfoList">
             {infoList.map((infoName: string, i: number) => (
-                <>
+                <span key={infoName}>
                     <span className="lighter">{infoName}: </span>
                     <span className="bolder">{props.infoList[infoName]}</span>
                     {i < infoList.length - 1 && (
                         <span className="lighter"> | </span>
                     )}
-                </>
+                </span>
             ))}
         </div>
     );
@@ -1943,8 +1885,8 @@ const NewProjectWizard = observer(
                                 {
                                     type: "tab",
                                     enableClose: false,
-                                    name: "CategoriesTree",
-                                    component: "CategoriesTree"
+                                    name: "FoldersTree",
+                                    component: "FoldersTree"
                                 }
                             ]
                         },
@@ -1988,8 +1930,8 @@ const NewProjectWizard = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
-            if (component === "CategoriesTree") {
-                return <CategoriesTree />;
+            if (component === "FoldersTree") {
+                return <FoldersTree />;
             }
 
             if (component === "ProjectTypesList") {
@@ -2072,6 +2014,103 @@ export function showNewProjectWizard() {
     );
 
     modalDialogObservable.set(modalDialog);
+}
+
+class NameInput extends React.Component<{
+    value: string | undefined;
+    onChange: (value: string | undefined) => void;
+}> {
+    render() {
+        return (
+            <input
+                type="text"
+                className="form-control"
+                value={this.props.value || ""}
+                onChange={event => this.props.onChange(event.target.value)}
+                spellCheck={false}
+            />
+        );
+    }
+}
+
+class DirectoryBrowserInput extends React.Component<{
+    value: string | undefined;
+    onChange: (value: string | undefined) => void;
+}> {
+    onSelect = async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ["openDirectory"]
+        });
+
+        if (result.filePaths && result.filePaths[0]) {
+            this.props.onChange(result.filePaths[0]);
+        }
+    };
+
+    render() {
+        return (
+            <div className="input-group">
+                <input
+                    type="text"
+                    className="form-control"
+                    value={this.props.value || ""}
+                    onChange={event => this.props.onChange(event.target.value)}
+                    spellCheck={false}
+                />
+                <>
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onSelect}
+                    >
+                        &hellip;
+                    </button>
+                </>
+            </div>
+        );
+    }
+}
+
+class FileBrowserInput extends React.Component<{
+    value: string | undefined;
+    onChange: (value: string | undefined) => void;
+}> {
+    onSelect = async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ["openFile"],
+            filters: [
+                { name: "EEZ Project", extensions: ["eez-project"] },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        });
+
+        if (result.filePaths && result.filePaths[0]) {
+            this.props.onChange(result.filePaths[0]);
+        }
+    };
+
+    render() {
+        return (
+            <div className="input-group">
+                <input
+                    type="text"
+                    className="form-control"
+                    value={this.props.value || ""}
+                    onChange={event => this.props.onChange(event.target.value)}
+                    spellCheck={false}
+                />
+                <>
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onSelect}
+                    >
+                        Browse ...
+                    </button>
+                </>
+            </div>
+        );
+    }
 }
 
 function openLink(url: string) {

@@ -9,6 +9,8 @@ import {
 
 import * as notification from "eez-studio-ui/notification";
 
+import type { ExampleProject } from "project-editor/project/ui/Wizard";
+
 export const EEZ_PROJECT_EXAMPLES_REPOSITORY =
     "https://github.com/eez-open/eez-project-examples";
 
@@ -22,40 +24,8 @@ interface ICatalogVersion {
     lastModified: Date;
 }
 
-/*
-interface IProjectExample {
-    name: string;
-    type: string;
-    path: string;
-    description: string;
-    image: string;
-    keywords: string;
-    displayWidth: number;
-    displayHeight: number;
-    targetPlatform?: string;
-    targetPlatformLink?: string;
-}
-*/
-
-interface IProjectExample {
-    repository: string;
-    eezProjectPath: string;
-    folder: string;
-    exampleName: string;
-
-    type: string;
-    description: string;
-    image: string;
-    keywords: string;
-    displayWidth?: number;
-    displayHeight?: number;
-    targetPlatform?: string;
-    targetPlatformLink?: string;
-    resourceFiles: string[];
-}
-
 class ExamplesCatalog {
-    catalog: IProjectExample[] = [];
+    catalog: ExampleProject[] = [];
     catalogVersion: ICatalogVersion;
 
     constructor() {
@@ -95,9 +65,9 @@ class ExamplesCatalog {
         if (await fileExists(catalogPath)) {
             return (await readJsObjectFromFile(
                 catalogPath
-            )) as IProjectExample[];
+            )) as ExampleProject[];
         }
-        return [] as IProjectExample[];
+        return [] as ExampleProject[];
     }
 
     get catalogVersionPath() {
