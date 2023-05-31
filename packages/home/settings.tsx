@@ -224,10 +224,6 @@ class SettingsController {
         ) as HTMLDivElement;
         content.style.opacity = "0";
 
-        const bootstrapLinkElement = document.getElementById(
-            "bootstrap-css"
-        ) as HTMLLinkElement;
-
         const mainLinkElement = document.getElementById(
             "main-css"
         ) as HTMLLinkElement;
@@ -237,8 +233,7 @@ class SettingsController {
         ) as HTMLLinkElement;
 
         if (this.isDarkTheme) {
-            bootstrapLinkElement.href =
-                "../../node_modules/bootstrap-dark-5/dist/css/bootstrap-night.min.css";
+            document.body.parentElement?.setAttribute("data-bs-theme", "dark");
 
             mainLinkElement.href =
                 "../eez-studio-ui/_stylesheets/main-dark.css";
@@ -246,8 +241,7 @@ class SettingsController {
             flexlayoutLinkElement.href =
                 "../../node_modules/flexlayout-react/style/dark.css";
         } else {
-            bootstrapLinkElement.href =
-                "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
+            document.body.parentElement?.setAttribute("data-bs-theme", "light");
 
             mainLinkElement.href = "../eez-studio-ui/_stylesheets/main.css";
 
