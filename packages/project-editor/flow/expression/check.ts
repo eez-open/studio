@@ -15,6 +15,7 @@ import {
 import {
     ValueType,
     getStructureFromType,
+    isArrayType,
     isEnumType
 } from "project-editor/features/variable/value-type";
 import {
@@ -241,8 +242,6 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
 
                     const structure = getStructureFromType(project, type)!;
 
-                    console.log(node.properties);
-
                     for (const property of node.properties) {
                         if (property.key.type != "Identifier") {
                             return "field name is not a literal";
@@ -255,8 +254,22 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                             return `unknown field '${property.key.name}'`;
                         }
 
-                        if (property.value.valueType != field.type) {
-                            return `${property.value.valueType} => field '${field.name}' should be of type '${field.type}'`;
+                        if (isArrayType(field.type)) {
+                            if (
+                                property.value.valueType != field.type &&
+                                property.value.valueType != "array:any" &&
+                                field.type != "array:any"
+                            ) {
+                                return `${property.value.valueType} => field '${field.name}' should be of type '${field.type}'`;
+                            }
+                        } else {
+                            if (
+                                property.value.valueType != field.type &&
+                                property.value.valueType != "any" &&
+                                field.type != "any"
+                            ) {
+                                return `${property.value.valueType} => field '${field.name}' should be of type '${field.type}'`;
+                            }
                         }
                     }
 

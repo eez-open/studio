@@ -253,8 +253,7 @@ registerSystemStructure({
             name: "path",
             type: "string"
         }
-    ],
-    fieldsMap: new Map()
+    ]
 });
 
 registerActionComponents("Serial Port", [

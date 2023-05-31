@@ -37,8 +37,7 @@ registerSystemStructure({
             name: "indices",
             type: "array:array:integer"
         }
-    ],
-    fieldsMap: new Map()
+    ]
 });
 
 registerActionComponents("Dashboard Specific", [

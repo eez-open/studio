@@ -133,8 +133,7 @@ registerSystemStructure({
             name: "data",
             type: "string"
         }
-    ],
-    fieldsMap: new Map()
+    ]
 });
 
 interface OnDataParamsValue {

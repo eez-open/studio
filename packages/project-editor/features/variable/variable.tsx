@@ -862,7 +862,7 @@ registerClass("StructureField", StructureField);
 export interface IStructure {
     name: string;
     fields: IStructureField[];
-    fieldsMap: Map<string, IStructureField>;
+    get fieldsMap(): Map<string, IStructureField>;
 }
 
 export class Structure extends EezObject implements IStructure {

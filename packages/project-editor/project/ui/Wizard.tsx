@@ -545,7 +545,7 @@ class WizardModel {
                 id: "applet",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
                 image: MICROPYTHON_ICON(128),
-                projectName: "Applet",
+                projectName: "BB3 Applet",
                 description:
                     "Start your new BB3 Applet project development here."
             },
@@ -553,7 +553,7 @@ class WizardModel {
                 id: "resource",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.RESOURCE],
                 image: EEZ_GUI_PROJECT_ICON(128),
-                projectName: "MicroPython Script",
+                projectName: "BB3 MicroPython Script",
                 description:
                     "Start your new BB3 MicroPython project development here."
             }
@@ -1425,11 +1425,10 @@ class WizardModel {
     onSearchChange(event: any) {
         this.searchText = $(event.target).val() as string;
 
-        if (this.section == "templates") {
-            this.folder = "_allTemplates";
-        } else {
-            this.folder = "_allExamples";
-        }
+        this.changeFolder(
+            this.section == "templates" ? "_allTemplates" : "_allExamples"
+        );
+        console.log(this.type);
     }
 
     searchFilter(projectType: IProjectType) {
@@ -2166,14 +2165,24 @@ const NewProjectWizard = observer(
                     />
 
                     <div className="EezStudio_NewProjectWizard_Body">
-                        <FlexLayout.Layout
-                            model={this.layoutModel}
-                            factory={this.factory}
-                            realtimeResize={true}
-                            font={{
-                                size: "small"
-                            }}
-                        />
+                        {wizardModel.folders.children.length > 0 ? (
+                            <FlexLayout.Layout
+                                model={this.layoutModel}
+                                factory={this.factory}
+                                realtimeResize={true}
+                                font={{
+                                    size: "small"
+                                }}
+                            />
+                        ) : (
+                            <div className="EezStudio_NewProjectWizard_NoProjects">
+                                No{" "}
+                                {wizardModel.section == "templates"
+                                    ? "templates"
+                                    : "examples"}{" "}
+                                found
+                            </div>
+                        )}
                     </div>
                 </div>
             );

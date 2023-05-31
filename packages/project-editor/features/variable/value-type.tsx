@@ -6,7 +6,8 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    IReactionDisposer
+    IReactionDisposer,
+    computed
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -34,7 +35,10 @@ import type {
     IVariable
 } from "project-editor/flow/flow-interfaces";
 
-import type { IStructure } from "project-editor/features/variable/variable";
+import type {
+    IStructure,
+    IStructureField
+} from "project-editor/features/variable/variable";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 
 export type {
@@ -96,8 +100,29 @@ export const DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME =
     "$DropDownListChangeEvent";
 export const SCROLLBAR_STATE_STRUCT_NAME = "$ScrollbarState";
 
+class SystemStructure implements IStructure {
+    name: string;
+    fields: IStructureField[];
+
+    constructor(structure: Omit<IStructure, "fieldsMap">) {
+        Object.assign(this, structure);
+
+        makeObservable(this, {
+            name: observable,
+            fields: observable,
+            fieldsMap: computed
+        });
+    }
+
+    get fieldsMap() {
+        return new Map<string, IStructureField>(
+            this.fields.map(field => [field.name, field])
+        );
+    }
+}
+
 export const SYSTEM_STRUCTURES: IStructure[] = [
-    {
+    new SystemStructure({
         name: CLICK_EVENT_STRUCT_NAME,
         fields: [
             {
@@ -108,10 +133,9 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 name: "indexes",
                 type: "array:integer"
             }
-        ],
-        fieldsMap: new Map()
-    },
-    {
+        ]
+    }),
+    new SystemStructure({
         name: CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
@@ -126,10 +150,9 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 name: "value",
                 type: "boolean"
             }
-        ],
-        fieldsMap: new Map()
-    },
-    {
+        ]
+    }),
+    new SystemStructure({
         name: TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
@@ -144,10 +167,9 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 name: "value",
                 type: "string"
             }
-        ],
-        fieldsMap: new Map()
-    },
-    {
+        ]
+    }),
+    new SystemStructure({
         name: DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
@@ -162,10 +184,9 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 name: "selectedIndex",
                 type: "integer"
             }
-        ],
-        fieldsMap: new Map()
-    },
-    {
+        ]
+    }),
+    new SystemStructure({
         name: SCROLLBAR_STATE_STRUCT_NAME,
         fields: [
             {
@@ -184,13 +205,14 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
                 name: "position",
                 type: "integer"
             }
-        ],
-        fieldsMap: new Map()
-    }
+        ]
+    })
 ];
 
-export function registerSystemStructure(structure: IStructure) {
-    SYSTEM_STRUCTURES.push(structure);
+export function registerSystemStructure(
+    structure: Omit<IStructure, "fieldsMap">
+) {
+    SYSTEM_STRUCTURES.push(new SystemStructure(structure));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
