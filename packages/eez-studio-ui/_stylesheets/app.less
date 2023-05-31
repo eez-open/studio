@@ -6221,6 +6221,15 @@ button.EezStudio_Action {
     display: flex;
     flex-direction: column;
 
+    a {
+        color: @textColor;
+    }
+    .selected {
+        a {
+            color: @selectionColor;
+        }
+    }
+
     &.disabled {
         pointer-events: none;
     }
@@ -6307,9 +6316,16 @@ button.EezStudio_Action {
                 }
 
                 .EezStudio_NewProjectWizard_ProjectType_Details {
-                    h6 {
-                        margin-bottom: 0;
+                    flex: 1;
+
+                    .EezStudio_NewProjectWizard_ProjectType_Details_Title {
+                        display: flex;
+                        justify-content: space-between;
+                        h6 {
+                            margin-bottom: 0;
+                        }
                     }
+
                     .EezStudio_NewProjectWizard_ProjectType_Details_Keywords {
                         span.badge {
                             margin-right: 5px;

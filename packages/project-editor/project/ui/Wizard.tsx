@@ -38,7 +38,10 @@ import {
     MICROPYTHON_ICON
 } from "project-editor/ui-components/icons";
 import { Icon } from "eez-studio-ui/icon";
-import { examplesCatalog } from "project-editor/store/examples-catalog";
+import {
+    EEZ_PROJECT_EXAMPLES_REPOSITORY,
+    examplesCatalog
+} from "project-editor/store/examples-catalog";
 import { stringCompare } from "eez-studio-shared/string";
 
 import {
@@ -46,6 +49,7 @@ import {
     ProjectType
 } from "project-editor/project/project";
 
+// from https://envox.hr/gitea
 interface TemplateProject {
     clone_url: string;
     html_url: string;
@@ -620,6 +624,7 @@ class WizardModel {
     get templateProjectTypes(): IProjectType[] {
         return this.templateProjects.map(templateProject => ({
             id: templateProject.clone_url,
+            repository: templateProject.html_url,
             projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
             image: templateProject._image_url,
             projectName: templateProject.name.startsWith("eez-flow-template-")
@@ -1412,62 +1417,92 @@ const ProjectTypesList = observer(
             return (
                 <div className="EezStudio_NewProjectWizard_ProjectTypes">
                     {wizardModel.projectTypes.map(projectType => (
-                        <div
+                        <ProjectTypeComponent
                             key={projectType.id}
-                            className={classNames(
-                                "EezStudio_NewProjectWizard_ProjectType",
-                                {
-                                    selected: wizardModel.type == projectType.id
-                                }
-                            )}
-                            onClick={() => {
-                                wizardModel.changeType(projectType.id);
-                            }}
-                        >
-                            <div className="EezStudio_NewProjectWizard_ProjectType_Image">
-                                <Icon icon={projectType.image} size={128} />
-                            </div>
-                            <div className="EezStudio_NewProjectWizard_ProjectType_Details">
-                                <h6>{projectType.projectName}</h6>
-                                {projectType.keywords && (
-                                    <div className="EezStudio_NewProjectWizard_ProjectType_Details_Keywords">
-                                        {projectType.keywords
-                                            .split(" ")
-                                            .map(keyword => (
-                                                <span
-                                                    key={keyword}
-                                                    className="badge bg-info"
-                                                >
-                                                    {keyword}
-                                                </span>
-                                            ))}
-                                    </div>
-                                )}
-                                <div className="EezStudio_NewProjectWizard_ProjectType_Details_Description">
-                                    {projectType.description}
-                                </div>
-
-                                <ProjectTypeInfo
-                                    infoList={{
-                                        Type: projectType.projectType,
-                                        Language: projectType.language,
-                                        Resolution:
-                                            projectType.displayWidth !=
-                                                undefined &&
-                                            projectType.displayHeight !=
-                                                undefined
-                                                ? `${projectType.displayWidth} x ${projectType.displayHeight}`
-                                                : undefined,
-                                        "LVGL version":
-                                            projectType.projectType ==
-                                            PROJECT_TYPE_NAMES[ProjectType.LVGL]
-                                                ? "8.3"
-                                                : undefined
-                                    }}
-                                />
-                            </div>
-                        </div>
+                            projectType={projectType}
+                        />
                     ))}
+                </div>
+            );
+        }
+    }
+);
+
+const ProjectTypeComponent = observer(
+    class ProjectTypeComponent extends React.Component<{
+        projectType: IProjectType;
+    }> {
+        render() {
+            const { projectType } = this.props;
+
+            return (
+                <div
+                    key={projectType.id}
+                    className={classNames(
+                        "EezStudio_NewProjectWizard_ProjectType",
+                        {
+                            selected: wizardModel.type == projectType.id
+                        }
+                    )}
+                    onClick={() => {
+                        wizardModel.changeType(projectType.id);
+                    }}
+                >
+                    <div className="EezStudio_NewProjectWizard_ProjectType_Image">
+                        <Icon icon={projectType.image} size={128} />
+                    </div>
+                    <div className="EezStudio_NewProjectWizard_ProjectType_Details">
+                        <div className="EezStudio_NewProjectWizard_ProjectType_Details_Title">
+                            <h6>{projectType.projectName}</h6>
+                            {projectType.repository &&
+                                projectType.repository !=
+                                    EEZ_PROJECT_EXAMPLES_REPOSITORY && (
+                                    <a
+                                        href="#"
+                                        onClick={event => {
+                                            event.preventDefault();
+                                            openLink(projectType.repository!);
+                                        }}
+                                    >
+                                        INFO
+                                    </a>
+                                )}
+                        </div>
+                        {projectType.keywords && (
+                            <div className="EezStudio_NewProjectWizard_ProjectType_Details_Keywords">
+                                {projectType.keywords
+                                    .split(" ")
+                                    .map(keyword => (
+                                        <span
+                                            key={keyword}
+                                            className="badge bg-info"
+                                        >
+                                            {keyword}
+                                        </span>
+                                    ))}
+                            </div>
+                        )}
+                        <div className="EezStudio_NewProjectWizard_ProjectType_Details_Description">
+                            {projectType.description}
+                        </div>
+
+                        <ProjectTypeInfo
+                            infoList={{
+                                Type: projectType.projectType,
+                                Language: projectType.language,
+                                Resolution:
+                                    projectType.displayWidth != undefined &&
+                                    projectType.displayHeight != undefined
+                                        ? `${projectType.displayWidth} x ${projectType.displayHeight}`
+                                        : undefined,
+                                "LVGL version":
+                                    projectType.projectType ==
+                                    PROJECT_TYPE_NAMES[ProjectType.LVGL]
+                                        ? "8.3"
+                                        : undefined
+                            }}
+                        />
+                    </div>
                 </div>
             );
         }
