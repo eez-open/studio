@@ -210,7 +210,9 @@ class WizardModel {
             changeFolder: action.bound,
             changeType: action.bound,
             exampleProjectTypes: computed,
-            exampleFolders: computed
+            exampleFolders: computed,
+            projectTypes: computed,
+            selectedProjectType: computed
         });
 
         this.loadOptions();
@@ -401,12 +403,14 @@ class WizardModel {
                 projectType:
                     PROJECT_TYPE_NAMES[example.projectType as ProjectType],
                 defaultProjectName: example.projectName,
-                image: example.image,
                 projectName: example.projectName,
                 description: example.description,
+                image: example.image,
                 keywords: example.keywords,
                 displayWidth: example.displayWidth,
                 displayHeight: example.displayHeight,
+                targetPlatform: example.targetPlatform,
+                targetPlatformLink: example.targetPlatformLink,
                 resourceFiles: example.resourceFiles
             };
 
@@ -684,6 +688,12 @@ class WizardModel {
                 ? this.exampleProjectTypes.get(this.folder) || []
                 : [];
         }
+    }
+
+    get selectedProjectType(): IProjectType | undefined {
+        return this.projectTypes.find(
+            projectType => projectType.id == this.type
+        );
     }
 
     get projectType() {
@@ -1599,325 +1609,372 @@ const ProjectProperties = observer(
 
             return (
                 <div className="EezStudio_NewProjectWizard_ProjectProperties">
-                    <div className="mb-3 row">
-                        <label className="col-sm-3 col-form-label">Name</label>
-                        <div className="col-sm-9">
-                            <NameInput
-                                value={wizardModel.name || ""}
-                                onChange={action(
-                                    (value: string | undefined) =>
-                                        (wizardModel.name = value)
-                                )}
-                            />
-                            {wizardModel.nameError && (
-                                <div className="text-danger">
-                                    {wizardModel.nameError}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <PlatformDescription />
 
-                    <div className="mb-3 row">
-                        <label className="col-sm-3 col-form-label">
-                            Location
-                        </label>
-                        <div className="col-sm-9">
-                            <DirectoryBrowserInput
-                                value={wizardModel.location || ""}
-                                onChange={action(
-                                    (value: string | undefined) =>
-                                        (wizardModel.location = value)
-                                )}
-                            />
-                            {wizardModel.locationError && (
-                                <div className="text-danger">
-                                    {wizardModel.locationError}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {!wizardModel.selectedTemplateProject && (
-                        <div className="mb-3 row">
-                            <div className="col-sm-3"></div>
-                            <div className="col-sm-9">
-                                <div className="form-check">
-                                    <input
-                                        id="new-project-wizard-create-directory-checkbox"
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        checked={wizardModel.createDirectory}
+                    <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
+                        <h6>Project Settings</h6>
+                        <div>
+                            <div className="mb-3 row">
+                                <label className="col-sm-3 col-form-label">
+                                    Name
+                                </label>
+                                <div className="col-sm-9">
+                                    <NameInput
+                                        value={wizardModel.name || ""}
                                         onChange={action(
-                                            event =>
-                                                (wizardModel.createDirectory =
-                                                    event.target.checked)
+                                            (value: string | undefined) =>
+                                                (wizardModel.name = value)
                                         )}
                                     />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="new-project-wizard-create-directory-checkbox"
-                                    >
-                                        Create directory
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="mb-3 row">
-                        <label className="col-sm-3 col-form-label">
-                            {wizardModel.selectedTemplateProject
-                                ? "Project folder path"
-                                : "Project file path"}
-                        </label>
-                        <div className="col-sm-9">
-                            <div className="EezStudio_NewProjectWizard_StaticField">
-                                {wizardModel.selectedTemplateProject
-                                    ? wizardModel.projectDirPath || ""
-                                    : wizardModel.projectFilePath || ""}
-                            </div>
-                        </div>
-                    </div>
-
-                    {wizardModel.selectedTemplateProject && (
-                        <div className="mb-3 row">
-                            <div className="col-sm-3"></div>
-                            <div className="col-sm-9">
-                                <div className="form-check">
-                                    <input
-                                        id="new-project-wizard-git-init-checkbox"
-                                        className="form-check-input"
-                                        type="checkbox"
-                                        checked={wizardModel.gitInit}
-                                        onChange={action(
-                                            event =>
-                                                (wizardModel.gitInit =
-                                                    event.target.checked)
-                                        )}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="new-project-wizard-git-init-checkbox"
-                                    >
-                                        Initialize as Git repository
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {wizardModel.section == "templates" &&
-                        (wizardModel.type == "applet" ||
-                            wizardModel.type == "resource") && (
-                            <>
-                                <div className="mb-3 row">
-                                    <label className="col-sm-3 col-form-label">
-                                        BB3 project file option
-                                    </label>
-                                    <div className="col-sm-9 pt-2">
-                                        <div className="form-check form-check-inline">
-                                            <input
-                                                id="new-project-wizard-bb3-project-download"
-                                                className="form-check-input"
-                                                type="radio"
-                                                name="new-project-wizard-bb3-project"
-                                                value={"download"}
-                                                checked={
-                                                    wizardModel.bb3ProjectOption ==
-                                                    "download"
-                                                }
-                                                onChange={action(
-                                                    event =>
-                                                        (wizardModel.bb3ProjectOption =
-                                                            event.target.checked
-                                                                ? "download"
-                                                                : "local")
-                                                )}
-                                            />
-                                            <label
-                                                className="form-check-label"
-                                                htmlFor="new-project-wizard-bb3-project-download"
-                                            >
-                                                Download from GitHub
-                                            </label>
+                                    {wizardModel.nameError && (
+                                        <div className="text-danger">
+                                            {wizardModel.nameError}
                                         </div>
-                                        <div className="form-check form-check-inline">
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="mb-3 row">
+                                <label className="col-sm-3 col-form-label">
+                                    Location
+                                </label>
+                                <div className="col-sm-9">
+                                    <DirectoryBrowserInput
+                                        value={wizardModel.location || ""}
+                                        onChange={action(
+                                            (value: string | undefined) =>
+                                                (wizardModel.location = value)
+                                        )}
+                                    />
+                                    {wizardModel.locationError && (
+                                        <div className="text-danger">
+                                            {wizardModel.locationError}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {!wizardModel.selectedTemplateProject && (
+                                <div className="mb-3 row">
+                                    <div className="col-sm-3"></div>
+                                    <div className="col-sm-9">
+                                        <div className="form-check">
                                             <input
-                                                id="new-project-wizard-bb3-project-local"
+                                                id="new-project-wizard-create-directory-checkbox"
                                                 className="form-check-input"
-                                                type="radio"
-                                                name="new-project-wizard-bb3-project"
-                                                value={1}
+                                                type="checkbox"
                                                 checked={
-                                                    wizardModel.bb3ProjectOption ==
-                                                    "local"
+                                                    wizardModel.createDirectory
                                                 }
                                                 onChange={action(
                                                     event =>
-                                                        (wizardModel.bb3ProjectOption =
-                                                            event.target.checked
-                                                                ? "local"
-                                                                : "download")
+                                                        (wizardModel.createDirectory =
+                                                            event.target.checked)
                                                 )}
                                             />
                                             <label
                                                 className="form-check-label"
-                                                htmlFor="new-project-wizard-bb3-project-local"
+                                                htmlFor="new-project-wizard-create-directory-checkbox"
                                             >
-                                                I already have a local copy
+                                                Create directory
                                             </label>
                                         </div>
                                     </div>
                                 </div>
+                            )}
 
-                                {wizardModel.bb3ProjectOption == "download" &&
-                                    wizardModel.bb3ProjectFileDownloadError && (
+                            <div className="mb-3 row">
+                                <label className="col-sm-3 col-form-label">
+                                    {wizardModel.selectedTemplateProject
+                                        ? "Project folder path"
+                                        : "Project file path"}
+                                </label>
+                                <div className="col-sm-9">
+                                    <div className="EezStudio_NewProjectWizard_StaticField">
+                                        {wizardModel.selectedTemplateProject
+                                            ? wizardModel.projectDirPath || ""
+                                            : wizardModel.projectFilePath || ""}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {wizardModel.selectedTemplateProject && (
+                                <div className="mb-3 row">
+                                    <div className="col-sm-3"></div>
+                                    <div className="col-sm-9">
+                                        <div className="form-check">
+                                            <input
+                                                id="new-project-wizard-git-init-checkbox"
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={wizardModel.gitInit}
+                                                onChange={action(
+                                                    event =>
+                                                        (wizardModel.gitInit =
+                                                            event.target.checked)
+                                                )}
+                                            />
+                                            <label
+                                                className="form-check-label"
+                                                htmlFor="new-project-wizard-git-init-checkbox"
+                                            >
+                                                Initialize as Git repository
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {wizardModel.section == "templates" &&
+                                (wizardModel.type == "applet" ||
+                                    wizardModel.type == "resource") && (
+                                    <>
                                         <div className="mb-3 row">
-                                            <div className="col-sm-2"></div>
-                                            <div className="col-sm-10">
-                                                <div className="text-danger">
-                                                    {
-                                                        wizardModel.bb3ProjectFileDownloadError
-                                                    }
+                                            <label className="col-sm-3 col-form-label">
+                                                BB3 project file option
+                                            </label>
+                                            <div className="col-sm-9 pt-2">
+                                                <div className="form-check form-check-inline">
+                                                    <input
+                                                        id="new-project-wizard-bb3-project-download"
+                                                        className="form-check-input"
+                                                        type="radio"
+                                                        name="new-project-wizard-bb3-project"
+                                                        value={"download"}
+                                                        checked={
+                                                            wizardModel.bb3ProjectOption ==
+                                                            "download"
+                                                        }
+                                                        onChange={action(
+                                                            event =>
+                                                                (wizardModel.bb3ProjectOption =
+                                                                    event.target
+                                                                        .checked
+                                                                        ? "download"
+                                                                        : "local")
+                                                        )}
+                                                    />
+                                                    <label
+                                                        className="form-check-label"
+                                                        htmlFor="new-project-wizard-bb3-project-download"
+                                                    >
+                                                        Download from GitHub
+                                                    </label>
+                                                </div>
+                                                <div className="form-check form-check-inline">
+                                                    <input
+                                                        id="new-project-wizard-bb3-project-local"
+                                                        className="form-check-input"
+                                                        type="radio"
+                                                        name="new-project-wizard-bb3-project"
+                                                        value={1}
+                                                        checked={
+                                                            wizardModel.bb3ProjectOption ==
+                                                            "local"
+                                                        }
+                                                        onChange={action(
+                                                            event =>
+                                                                (wizardModel.bb3ProjectOption =
+                                                                    event.target
+                                                                        .checked
+                                                                        ? "local"
+                                                                        : "download")
+                                                        )}
+                                                    />
+                                                    <label
+                                                        className="form-check-label"
+                                                        htmlFor="new-project-wizard-bb3-project-local"
+                                                    >
+                                                        I already have a local
+                                                        copy
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
 
-                                {wizardModel.bb3ProjectOption == "local" && (
-                                    <div className="mb-3 row">
-                                        <label className="col-sm-3 col-form-label">
-                                            BB3 project file path
-                                        </label>
-                                        <div className="col-sm-9">
-                                            <FileBrowserInput
-                                                value={
-                                                    wizardModel.bb3ProjectFile
-                                                }
-                                                onChange={action(
-                                                    (
-                                                        value:
-                                                            | string
-                                                            | undefined
-                                                    ) =>
-                                                        (wizardModel.bb3ProjectFile =
-                                                            value)
-                                                )}
-                                            />
-                                            {wizardModel.bb3ProjectFileError && (
-                                                <div className="text-danger">
-                                                    {
-                                                        wizardModel.bb3ProjectFileError
-                                                    }
+                                        {wizardModel.bb3ProjectOption ==
+                                            "download" &&
+                                            wizardModel.bb3ProjectFileDownloadError && (
+                                                <div className="mb-3 row">
+                                                    <div className="col-sm-2"></div>
+                                                    <div className="col-sm-10">
+                                                        <div className="text-danger">
+                                                            {
+                                                                wizardModel.bb3ProjectFileDownloadError
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
+
+                                        {wizardModel.bb3ProjectOption ==
+                                            "local" && (
+                                            <div className="mb-3 row">
+                                                <label className="col-sm-3 col-form-label">
+                                                    BB3 project file path
+                                                </label>
+                                                <div className="col-sm-9">
+                                                    <FileBrowserInput
+                                                        value={
+                                                            wizardModel.bb3ProjectFile
+                                                        }
+                                                        onChange={action(
+                                                            (
+                                                                value:
+                                                                    | string
+                                                                    | undefined
+                                                            ) =>
+                                                                (wizardModel.bb3ProjectFile =
+                                                                    value)
+                                                        )}
+                                                    />
+                                                    {wizardModel.bb3ProjectFileError && (
+                                                        <div className="text-danger">
+                                                            {
+                                                                wizardModel.bb3ProjectFileError
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                            {wizardModel.section == "templates" &&
+                                wizardModel.type == "resource" && (
+                                    <div className="mb-3 row">
+                                        <label className="col-sm-3 col-form-label">
+                                            Target BB3 firmware
+                                        </label>
+                                        <div className="col-sm-9 pt-2">
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    id="new-project-wizard-bb3-target-version-v3"
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="new-project-wizard-bb3-target"
+                                                    value={"v3"}
+                                                    checked={
+                                                        wizardModel.projectVersion ==
+                                                        "v3"
+                                                    }
+                                                    onChange={action(
+                                                        event =>
+                                                            (wizardModel.projectVersion =
+                                                                event.target
+                                                                    .checked
+                                                                    ? "v3"
+                                                                    : "v2")
+                                                    )}
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor="new-project-wizard-bb3-target-version-v3"
+                                                >
+                                                    1.8 or newer
+                                                </label>
+                                            </div>
+                                            <div className="form-check form-check-inline">
+                                                <input
+                                                    id="new-project-wizard-bb3-target-version-v2"
+                                                    className="form-check-input"
+                                                    type="radio"
+                                                    name="new-project-wizard-bb3-target"
+                                                    value={"v2"}
+                                                    checked={
+                                                        wizardModel.projectVersion ==
+                                                        "v2"
+                                                    }
+                                                    onChange={action(
+                                                        event =>
+                                                            (wizardModel.projectVersion =
+                                                                event.target
+                                                                    .checked
+                                                                    ? "v2"
+                                                                    : "v3")
+                                                    )}
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor="new-project-wizard-bb3-target-version-v2"
+                                                >
+                                                    1.7.X or older
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
-                            </>
-                        )}
 
-                    {wizardModel.section == "templates" &&
-                        wizardModel.type == "resource" && (
-                            <div className="mb-3 row">
-                                <label className="col-sm-3 col-form-label">
-                                    Target BB3 firmware
-                                </label>
-                                <div className="col-sm-9 pt-2">
-                                    <div className="form-check form-check-inline">
-                                        <input
-                                            id="new-project-wizard-bb3-target-version-v3"
-                                            className="form-check-input"
-                                            type="radio"
-                                            name="new-project-wizard-bb3-target"
-                                            value={"v3"}
-                                            checked={
-                                                wizardModel.projectVersion ==
-                                                "v3"
-                                            }
-                                            onChange={action(
-                                                event =>
-                                                    (wizardModel.projectVersion =
-                                                        event.target.checked
-                                                            ? "v3"
-                                                            : "v2")
-                                            )}
-                                        />
-                                        <label
-                                            className="form-check-label"
-                                            htmlFor="new-project-wizard-bb3-target-version-v3"
+                            <div className="d-flex justify-content-end">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={this.onOk}
+                                    disabled={
+                                        wizardModel.createProjectInProgress
+                                    }
+                                >
+                                    Create Project
+                                </button>
+                            </div>
+
+                            <div className="EezStudio_NewProjectWizard_CreationStatus">
+                                {wizardModel.createProjectInProgress ? (
+                                    <div
+                                        style={{
+                                            flex: 1,
+                                            display: "flex",
+                                            alignItems: "center"
+                                        }}
+                                    >
+                                        <Loader />
+                                        <div
+                                            style={{ paddingLeft: 10, flex: 1 }}
                                         >
-                                            1.8 or newer
-                                        </label>
+                                            {wizardModel.progress}
+                                        </div>
                                     </div>
-                                    <div className="form-check form-check-inline">
-                                        <input
-                                            id="new-project-wizard-bb3-target-version-v2"
-                                            className="form-check-input"
-                                            type="radio"
-                                            name="new-project-wizard-bb3-target"
-                                            value={"v2"}
-                                            checked={
-                                                wizardModel.projectVersion ==
-                                                "v2"
-                                            }
-                                            onChange={action(
-                                                event =>
-                                                    (wizardModel.projectVersion =
-                                                        event.target.checked
-                                                            ? "v2"
-                                                            : "v3")
-                                            )}
-                                        />
-                                        <label
-                                            className="form-check-label"
-                                            htmlFor="new-project-wizard-bb3-target-version-v2"
-                                        >
-                                            1.7.X or older
-                                        </label>
+                                ) : wizardModel.projectCreationError ? (
+                                    <div
+                                        className="alert alert-danger"
+                                        style={{ flex: 1 }}
+                                    >
+                                        {wizardModel.projectCreationError}
                                     </div>
-                                </div>
+                                ) : undefined}
                             </div>
-                        )}
-
-                    <div>
-                        <button
-                            className="btn btn-primary"
-                            onClick={this.onOk}
-                            disabled={wizardModel.createProjectInProgress}
-                        >
-                            Create Project
-                        </button>
-                    </div>
-
-                    <div className="EezStudio_NewProjectWizard_CreationStatus">
-                        {wizardModel.createProjectInProgress ? (
-                            <div
-                                style={{
-                                    flex: 1,
-                                    display: "flex",
-                                    alignItems: "center"
-                                }}
-                            >
-                                <Loader />
-                                <div style={{ paddingLeft: 10, flex: 1 }}>
-                                    {wizardModel.progress}
-                                </div>
-                            </div>
-                        ) : wizardModel.projectCreationError ? (
-                            <div
-                                className="alert alert-danger"
-                                style={{ flex: 1 }}
-                            >
-                                {wizardModel.projectCreationError}
-                            </div>
-                        ) : undefined}
+                        </div>
                     </div>
                 </div>
             );
         }
     }
 );
+
+function PlatformDescription() {
+    if (!wizardModel.selectedProjectType) {
+        return null;
+    }
+
+    if (!wizardModel.selectedProjectType.targetPlatform) {
+        return null;
+    }
+
+    const showdown = require("showdown");
+    const converter = new showdown.Converter();
+    const html = {
+        __html: converter.makeHtml(
+            wizardModel.selectedProjectType.targetPlatform || ""
+        )
+    };
+
+    return (
+        <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
+            <h6>Platform Description</h6>
+            <div className="markdown" dangerouslySetInnerHTML={html} />
+        </div>
+    );
+}
 
 const NewProjectWizard = observer(
     class NewProjectWizard extends React.Component<{

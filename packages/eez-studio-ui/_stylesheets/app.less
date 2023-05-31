@@ -6373,7 +6373,28 @@ button.EezStudio_Action {
             height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 10px;
+
+            .EezStudio_NewProjectWizard_ProjectProperties_Section {
+                h6 {
+                    background-color: @panelHeaderColor;
+                    padding: 5px 10px;
+                    text-transform: uppercase;
+                    margin: 0;
+                }
+
+                & > div {
+                    padding: 10px;
+                }
+
+                .markdown {
+                    p {
+                        line-height: 1.2;
+                    }
+                    & > p:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+            }
         }
     }
 
