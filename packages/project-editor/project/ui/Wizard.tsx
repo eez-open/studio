@@ -544,7 +544,7 @@ class WizardModel {
             {
                 id: "applet",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
-                image: MICROPYTHON_ICON(128),
+                image: EEZ_GUI_PROJECT_ICON(128),
                 projectName: "BB3 Applet",
                 description:
                     "Start your new BB3 Applet project development here."
@@ -552,7 +552,7 @@ class WizardModel {
             {
                 id: "resource",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.RESOURCE],
-                image: EEZ_GUI_PROJECT_ICON(128),
+                image: MICROPYTHON_ICON(128),
                 projectName: "BB3 MicroPython Script",
                 description:
                     "Start your new BB3 MicroPython project development here."
@@ -883,10 +883,7 @@ class WizardModel {
     async loadResourceFile(resourceFileRelativePath: string) {
         return new Promise<any>((resolve, reject) => {
             const resourceFileUrl =
-                "https://raw.githubusercontent.com/eez-open/eez-project-examples/master/examples/" +
-                path.dirname(this.type!) +
-                "/" +
-                resourceFileRelativePath;
+                path.dirname(this.type!) + "/" + resourceFileRelativePath;
 
             let req = new XMLHttpRequest();
             req.responseType = "arraybuffer";
@@ -1428,7 +1425,6 @@ class WizardModel {
         this.changeFolder(
             this.section == "templates" ? "_allTemplates" : "_allExamples"
         );
-        console.log(this.type);
     }
 
     searchFilter(projectType: IProjectType) {

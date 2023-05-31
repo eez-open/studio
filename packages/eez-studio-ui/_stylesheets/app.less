@@ -6252,7 +6252,6 @@ button.EezStudio_Action {
         justify-content: center;
         padding: 10px;
         border-bottom: 1px solid @borderColor;
-        margin-bottom: 10px;
 
         .EezStudio_NewProjectWizard_NavigationItem {
             &:not(.selected) {
@@ -6274,8 +6273,18 @@ button.EezStudio_Action {
     .EezStudio_SearchInput_Container {
         flex: 0;
         margin: 10px auto;
-        width: 300px;
+        width: 360px;
         border: 1px solid @borderColor;
+        background-color: field;
+        border-radius: 18px;
+        padding: 5px 10px;
+        font-size: 120%;
+        /*
+        box-shadow: 0 2px 5px 1px @borderColor;
+        &:hover {
+            box-shadow: 0 2px 8px 1px @borderColor;
+        }
+        */
     }
 
     .EezStudio_NewProjectWizard_Body {
