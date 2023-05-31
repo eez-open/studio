@@ -1444,7 +1444,11 @@ class WizardModel {
             projectType.description,
             projectType.keywords,
             projectType.language,
-            projectType.targetPlatform
+            projectType.targetPlatform,
+            projectType.repository &&
+            projectType.repository != EEZ_PROJECT_EXAMPLES_REPOSITORY
+                ? "git"
+                : ""
         ]
             .filter(target => target && target.trim().length > 0)
             .join(", ")
@@ -1494,6 +1498,12 @@ const ProjectTypeComponent = observer(
     class ProjectTypeComponent extends React.Component<{
         projectType: IProjectType;
     }> {
+        myRef = React.createRef<HTMLDivElement>();
+
+        componentDidMount(): void {
+            this.myRef.current?.scrollIntoView({ block: "center" });
+        }
+
         render() {
             const { projectType } = this.props;
 
@@ -1509,6 +1519,7 @@ const ProjectTypeComponent = observer(
                     onClick={() => {
                         wizardModel.changeType(projectType.id);
                     }}
+                    ref={this.myRef}
                 >
                     <div className="EezStudio_NewProjectWizard_ProjectType_Image">
                         <Icon icon={projectType.image} size={128} />
@@ -1974,10 +1985,30 @@ function PlatformDescription() {
         )
     };
 
+    const targetPlatformLink =
+        wizardModel.selectedProjectType.targetPlatformLink;
+
     return (
         <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
-            <h6>Platform Description</h6>
-            <div className="markdown" dangerouslySetInnerHTML={html} />
+            <h6>
+                <span>Platform Description</span>
+            </h6>
+            <div>
+                <div className="markdown" dangerouslySetInnerHTML={html} />
+                {targetPlatformLink && (
+                    <div className="mt-2">
+                        <a
+                            href="#"
+                            onClick={event => {
+                                event.preventDefault();
+                                openLink(targetPlatformLink);
+                            }}
+                        >
+                            Find more on the platform web site ...
+                        </a>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
