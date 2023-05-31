@@ -1424,6 +1424,12 @@ class WizardModel {
 
     onSearchChange(event: any) {
         this.searchText = $(event.target).val() as string;
+
+        if (this.section == "templates") {
+            this.folder = "_allTemplates";
+        } else {
+            this.folder = "_allExamples";
+        }
     }
 
     searchFilter(projectType: IProjectType) {
