@@ -41,6 +41,11 @@ import { Icon } from "eez-studio-ui/icon";
 import { examplesCatalog } from "project-editor/store/examples-catalog";
 import { stringCompare } from "eez-studio-shared/string";
 
+import {
+    PROJECT_TYPE_NAMES,
+    ProjectType
+} from "project-editor/project/project";
+
 class NameInput extends React.Component<{
     value: string | undefined;
     onChange: (value: string | undefined) => void;
@@ -88,7 +93,7 @@ class DirectoryBrowserInput extends React.Component<{
                         type="button"
                         onClick={this.onSelect}
                     >
-                        Browse ...
+                        &hellip;
                     </button>
                 </>
             </div>
@@ -145,6 +150,7 @@ interface TemplateProject {
     html_url: string;
     name: string;
     _image_url: string;
+    keywords?: string;
 }
 
 const SAVED_OPTIONS_VERSION = 10;
@@ -156,10 +162,15 @@ enum SaveOptionsFlags {
 
 interface IProjectType {
     id: string;
+    projectType: string;
     icon: React.ReactNode;
     label: string;
     description: string;
     defaultName?: string;
+    keywords?: string;
+    language?: string;
+    displayWidth?: number;
+    displayHeight?: number;
 }
 
 class WizardModel {
@@ -432,16 +443,25 @@ class WizardModel {
 
         map.set("_allExamples", _allExamples);
 
-        examplesCatalog.catalog.forEach(example => {
+        const examples = examplesCatalog.catalog
+            .slice()
+            .sort((a, b) => stringCompare(a.exampleName, b.exampleName));
+
+        examples.forEach(example => {
             const projectType: IProjectType = {
-                id: example.path,
-                defaultName: example.name,
+                id: example.eezProjectPath,
+                projectType: PROJECT_TYPE_NAMES[example.type as ProjectType],
+                defaultName: example.exampleName,
                 icon: example.image,
-                label: example.name,
-                description: example.description
+                label: example.exampleName,
+                description: example.description,
+                keywords: example.keywords,
+                displayWidth: example.displayWidth,
+                displayHeight: example.displayHeight
             };
 
-            const categoryId = "_example_" + path.dirname(example.path);
+            const categoryId =
+                "_example_" + path.dirname(example.eezProjectPath);
 
             let categoryProjectTypes = map.get(categoryId);
             if (!categoryProjectTypes) {
@@ -474,7 +494,7 @@ class WizardModel {
         };
 
         examplesCatalog.catalog.forEach(example => {
-            const examplePath = path.dirname(example.path).split("/");
+            const examplePath = path.dirname(example.eezProjectPath).split("/");
 
             let nodes = rootNode.children;
             let id = "_example_";
@@ -612,6 +632,7 @@ class WizardModel {
         return [
             {
                 id: "dashboard",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.DASHBOARD],
                 icon: DASHBOARD_PROJECT_ICON(128),
                 label: "Dashboard",
                 description:
@@ -619,12 +640,14 @@ class WizardModel {
             },
             {
                 id: "firmware",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
                 icon: EEZ_GUI_PROJECT_ICON(128),
                 label: "EEZ-GUI",
                 description: "Start your new EEZ-GUI project development here."
             },
             {
                 id: "LVGL",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
                 icon: "../eez-studio-ui/_images/eez-project-lvgl.png",
                 label: "LVGL",
                 description: "Start your new LVGL project development here."
@@ -636,6 +659,7 @@ class WizardModel {
         return [
             {
                 id: "applet",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
                 icon: MICROPYTHON_ICON(128),
                 label: "Applet",
                 description:
@@ -643,6 +667,7 @@ class WizardModel {
             },
             {
                 id: "resource",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.RESOURCE],
                 icon: EEZ_GUI_PROJECT_ICON(128),
                 label: "MicroPython Script",
                 description:
@@ -654,11 +679,13 @@ class WizardModel {
     get templateProjectTypes(): IProjectType[] {
         return this.templateProjects.map(templateProject => ({
             id: templateProject.clone_url,
+            projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
             icon: templateProject._image_url,
             label: templateProject.name.startsWith("eez-flow-template-")
                 ? templateProject.name.substring("eez-flow-template-".length)
                 : templateProject.name,
-            description: templateProject.description
+            description: templateProject.description,
+            keywords: templateProject.keywords || ""
         }));
     }
 
@@ -874,6 +901,40 @@ class WizardModel {
         }
     }
 
+    async loadResourceFile(resourceFileRelativePath: string) {
+        return new Promise<any>((resolve, reject) => {
+            const resourceFileUrl =
+                "https://raw.githubusercontent.com/eez-open/eez-project-examples/master/examples/" +
+                path.dirname(this.type!) +
+                "/" +
+                resourceFileRelativePath;
+
+            let req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", resourceFileUrl);
+
+            req.addEventListener("load", async () => {
+                if (req.readyState == 4) {
+                    if (req.status != 200 || !req.response) {
+                        reject("Download failed!");
+                        return;
+                    }
+                    try {
+                        resolve(Buffer.from(req.response));
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
+            });
+
+            req.addEventListener("error", error => {
+                reject(error);
+            });
+
+            req.send();
+        });
+    }
+
     get projectDirPath() {
         if (!this.location || !this.name) {
             return undefined;
@@ -890,6 +951,10 @@ class WizardModel {
             return undefined;
         }
         return `${this.projectDirPath}${path.sep}${this.name}.eez-project`;
+    }
+
+    getResourceFilePath(resourceFileRelativePath: string) {
+        return `${this.projectDirPath}${path.sep}${resourceFileRelativePath}`;
     }
 
     validateName() {
@@ -1308,6 +1373,49 @@ class WizardModel {
                         });
                         return false;
                     }
+
+                    const resourceFiles =
+                        projectTemplate.settings.general.resourceFiles;
+                    if (resourceFiles && resourceFiles.length > 0) {
+                        for (const resourceFile of resourceFiles) {
+                            const resourceFileContent =
+                                await this.loadResourceFile(
+                                    resourceFile.filePath
+                                );
+
+                            try {
+                                const resourceFilePath =
+                                    this.getResourceFilePath(
+                                        resourceFile.filePath
+                                    );
+
+                                try {
+                                    await fs.promises.mkdir(
+                                        path.dirname(resourceFilePath),
+                                        {
+                                            recursive: true
+                                        }
+                                    );
+                                } catch (err) {
+                                    runInAction(() => {
+                                        this.locationError = err.toString();
+                                    });
+                                    return false;
+                                }
+
+                                await fs.promises.writeFile(
+                                    resourceFilePath,
+                                    resourceFileContent,
+                                    "binary"
+                                );
+                            } catch (err) {
+                                runInAction(() => {
+                                    this.nameError = err.toString();
+                                });
+                                return false;
+                            }
+                        }
+                    }
                 }
 
                 this.saveOptions(SaveOptionsFlags.All);
@@ -1382,7 +1490,39 @@ const ProjectTypesList = observer(
                             </div>
                             <div className="EezStudio_NewProjectWizard_ProjectType_Details">
                                 <h6>{projectType.label}</h6>
-                                <div>{projectType.description}</div>
+                                {projectType.keywords && (
+                                    <div className="EezStudio_NewProjectWizard_ProjectType_Details_Keywords">
+                                        {projectType.keywords
+                                            .split(" ")
+                                            .map(keyword => (
+                                                <span className="badge bg-info">
+                                                    {keyword}
+                                                </span>
+                                            ))}
+                                    </div>
+                                )}
+                                <div className="EezStudio_NewProjectWizard_ProjectType_Details_Description">
+                                    {projectType.description}
+                                </div>
+
+                                <ProjectTypeInfo
+                                    infoList={{
+                                        Type: projectType.projectType,
+                                        Language: projectType.language,
+                                        Resolution:
+                                            projectType.displayWidth !=
+                                                undefined &&
+                                            projectType.displayHeight !=
+                                                undefined
+                                                ? `${projectType.displayWidth} x ${projectType.displayHeight}`
+                                                : undefined,
+                                        "LVGL version":
+                                            projectType.projectType ==
+                                            PROJECT_TYPE_NAMES[ProjectType.LVGL]
+                                                ? "8.3"
+                                                : undefined
+                                    }}
+                                />
                             </div>
                         </div>
                     ))}
@@ -1391,6 +1531,30 @@ const ProjectTypesList = observer(
         }
     }
 );
+
+function ProjectTypeInfo(props: {
+    infoList: {
+        [key: string]: string | undefined;
+    };
+}) {
+    const infoList: string[] = Object.keys(props.infoList).filter(
+        infoName => props.infoList[infoName] != undefined
+    );
+
+    return (
+        <div className="EezStudio_NewProjectWizard_ProjectType_Details_InfoList">
+            {infoList.map((infoName: string, i: number) => (
+                <>
+                    <span className="lighter">{infoName}: </span>
+                    <span className="bolder">{props.infoList[infoName]}</span>
+                    {i < infoList.length - 1 && (
+                        <span className="lighter"> | </span>
+                    )}
+                </>
+            ))}
+        </div>
+    );
+}
 
 const ProjectProperties = observer(
     class ProjectProperties extends React.Component<{

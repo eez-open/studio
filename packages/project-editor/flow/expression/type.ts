@@ -1,7 +1,10 @@
 import type { Project } from "project-editor/project/project";
 import type { Component } from "project-editor/flow/component";
 import type { ExpressionNode } from "project-editor/flow/expression/node";
-import { ValueType } from "project-editor/features/variable/value-type";
+import {
+    ValueType,
+    getStructureFromType
+} from "project-editor/features/variable/value-type";
 
 import {
     getArrayElementTypeFromType,
@@ -234,6 +237,91 @@ export function findValueTypeInExpressionNode(
         node.valueType = builtInFunction.getValueType(
             ...node.arguments.map(node => node.valueType)
         );
+
+        if (functionName == "Flow.makeValue") {
+            if (node.arguments[0].type == "Literal") {
+                node.valueType = node.arguments[0].value;
+            }
+
+            const type = project._store.typesStore.getType(node.valueType);
+            if (type?.kind == "object") {
+                const valueArgument = node.arguments[1];
+
+                if (valueArgument && valueArgument.type == "ObjectExpression") {
+                    const structure = getStructureFromType(
+                        project,
+                        node.valueType
+                    )!;
+
+                    if (structure) {
+                        for (const property of valueArgument.properties) {
+                            if (property.key.type != "Identifier") {
+                                continue;
+                            }
+
+                            const field = structure.fieldsMap.get(
+                                property.key.name
+                            );
+
+                            if (field) {
+                                if (
+                                    field.type == "double" &&
+                                    (property.value.valueType == "integer" ||
+                                        property.value.valueType == "float")
+                                ) {
+                                    property.value.valueType = "double";
+                                } else if (
+                                    field.type == "float" &&
+                                    property.value.valueType == "integer"
+                                ) {
+                                    property.value.valueType = "float";
+                                } else if (field.type == "array:double") {
+                                    if (
+                                        property.value.valueType ==
+                                            "array:integer" ||
+                                        property.value.valueType ==
+                                            "array:float"
+                                    ) {
+                                        property.value.valueType =
+                                            "array:double";
+                                    }
+
+                                    if (
+                                        property.value.type == "ArrayExpression"
+                                    ) {
+                                        for (const element of property.value
+                                            .elements) {
+                                            element.valueType = "double";
+                                        }
+                                    }
+                                } else if (field.type == "array:float") {
+                                    if (
+                                        property.value.valueType ==
+                                        "array:integer"
+                                    ) {
+                                        property.value.valueType =
+                                            "array:float";
+                                    }
+
+                                    if (
+                                        property.value.type == "ArrayExpression"
+                                    ) {
+                                        for (const element of property.value
+                                            .elements) {
+                                            element.valueType = "float";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (functionName == "Flow.makeArrayValue") {
+            if (node.arguments[0].type == "Literal") {
+                node.valueType = node.arguments[0].value;
+            }
+        }
     } else if (node.type == "MemberExpression") {
         findValueTypeInExpressionNode(
             project,

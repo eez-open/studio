@@ -412,7 +412,69 @@ registerClass("ImportDirective", ImportDirective);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class ResourceFile extends EezObject {
+    filePath: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "filePath",
+                type: PropertyType.RelativeFile,
+                fileFilters: [{ name: "All Files", extensions: ["*"] }],
+                isOptional: false
+            }
+        ],
+        listLabel: (resourceFile: ResourceFile, collapsed: boolean) => {
+            return resourceFile.filePath;
+        },
+        defaultValue: {},
+        check: (object: ResourceFile, messages: IMessage[]) => {
+            if (object.filePath) {
+                if (
+                    !fileExistsSync(
+                        getProjectStore(object).getAbsoluteFilePath(
+                            object.filePath
+                        )
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "File doesn't exists",
+                            getChildOfObject(object, "filePath")
+                        )
+                    );
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "filePath"));
+            }
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            filePath: observable
+        });
+    }
+}
+
+registerClass("ResourceFile", ResourceFile);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type ProjectVersion = "v1" | "v2" | "v3";
+
+export const PROJECT_TYPE_NAMES = {
+    [ProjectType.UNDEFINED]: "Undefined",
+    [ProjectType.FIRMWARE]: "EEZ-GUI",
+    [ProjectType.FIRMWARE_MODULE]: "EEZ-GUI Library",
+    [ProjectType.RESOURCE]: "BB3 MicroPython Script",
+    [ProjectType.APPLET]: "BB3 Applet",
+    [ProjectType.DASHBOARD]: "Dashboard",
+    [ProjectType.LVGL]: "LVGL"
+};
 
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
@@ -433,6 +495,7 @@ export class General extends EezObject {
     keywords: string;
     targetPlatform: string;
     targetPlatformLink: string;
+    resourceFiles: ResourceFile[];
 
     static classInfo: ClassInfo = {
         label: () => "General",
@@ -441,19 +504,34 @@ export class General extends EezObject {
                 name: "projectType",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: ProjectType.UNDEFINED, label: "Undefined" },
-                    { id: ProjectType.FIRMWARE, label: "EEZ-GUI" },
+                    {
+                        id: ProjectType.UNDEFINED,
+                        label: PROJECT_TYPE_NAMES[ProjectType.UNDEFINED]
+                    },
+                    {
+                        id: ProjectType.FIRMWARE,
+                        label: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE]
+                    },
                     {
                         id: ProjectType.FIRMWARE_MODULE,
-                        label: "EEZ-GUI Library"
+                        label: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE_MODULE]
                     },
                     {
                         id: ProjectType.RESOURCE,
-                        label: "BB3 MicroPython Script"
+                        label: PROJECT_TYPE_NAMES[ProjectType.RESOURCE]
                     },
-                    { id: ProjectType.APPLET, label: "BB3 Applet" },
-                    { id: ProjectType.DASHBOARD },
-                    { id: ProjectType.LVGL, label: "LVGL" }
+                    {
+                        id: ProjectType.APPLET,
+                        label: PROJECT_TYPE_NAMES[ProjectType.APPLET]
+                    },
+                    {
+                        id: ProjectType.DASHBOARD,
+                        label: PROJECT_TYPE_NAMES[ProjectType.DASHBOARD]
+                    },
+                    {
+                        id: ProjectType.LVGL,
+                        label: PROJECT_TYPE_NAMES[ProjectType.LVGL]
+                    }
                 ],
                 readOnlyInPropertyGrid: (general: General) =>
                     general.projectType != ProjectType.UNDEFINED
@@ -581,6 +659,13 @@ export class General extends EezObject {
             {
                 name: "targetPlatformLink",
                 type: PropertyType.String
+            },
+            {
+                name: "resourceFiles",
+                type: PropertyType.Array,
+                typeClass: ResourceFile,
+                defaultValue: [],
+                arrayItemOrientation: "vertical"
             }
         ],
         check: (general: General, messages: IMessage[]) => {
@@ -685,7 +770,8 @@ export class General extends EezObject {
             image: observable,
             keywords: observable,
             targetPlatform: observable,
-            targetPlatformLink: observable
+            targetPlatformLink: observable,
+            resourceFiles: observable
         });
     }
 }

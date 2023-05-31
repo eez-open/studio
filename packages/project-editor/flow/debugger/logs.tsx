@@ -67,7 +67,13 @@ export class ActionEndLogItem extends LogItem {
 
 export class ExecuteComponentLogItem extends LogItem {
     constructor(public queueTask: QueueTask) {
-        super("debug", undefined, queueTask.flowState, queueTask.component);
+        super(
+            "debug",
+            undefined,
+            queueTask.flowState,
+            queueTask.component,
+            queueTask.connectionLine
+        );
     }
 
     get label() {

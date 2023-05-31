@@ -12,13 +12,18 @@ import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
-import { isEnumType } from "project-editor/features/variable/value-type";
+import {
+    ValueType,
+    getStructureFromType,
+    isEnumType
+} from "project-editor/features/variable/value-type";
 import {
     findValueTypeInExpressionNode,
     checkArity
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { templateLiteralToExpression } from "project-editor/flow/expression/helper";
+import type { Project } from "project-editor/project/project";
 
 export function checkExpression(component: Component, expression: string) {
     if (typeof expression == "string") {
@@ -218,14 +223,54 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             checkArity(functionName, node);
 
             if (functionName == "Flow.makeValue") {
-                if (node.arguments[0].type == "Literal") {
-                    node.valueType = node.arguments[0].value;
-                }
-
                 const project = ProjectEditor.getProject(component);
+
                 const type = project._store.typesStore.getType(node.valueType);
                 if (type?.kind != "object") {
                     throw `Invalid type '${node.valueType}'`;
+                }
+
+                function isTypeOf(
+                    project: Project,
+                    node: ExpressionNode,
+                    type: ValueType
+                ): string | undefined {
+                    if (node.type != "ObjectExpression") {
+                        return "invalid value parameter of Flow.MakeValue";
+                    }
+
+                    const structure = getStructureFromType(project, type)!;
+
+                    console.log(node.properties);
+
+                    for (const property of node.properties) {
+                        if (property.key.type != "Identifier") {
+                            return "field name is not a literal";
+                        }
+
+                        const field = structure.fieldsMap.get(
+                            property.key.name
+                        );
+                        if (!field) {
+                            return `unknown field '${property.key.name}'`;
+                        }
+
+                        if (property.value.valueType != field.type) {
+                            return `${property.value.valueType} => field '${field.name}' should be of type '${field.type}'`;
+                        }
+                    }
+
+                    return undefined;
+                }
+
+                const err = isTypeOf(
+                    project,
+                    node.arguments[1],
+                    node.valueType
+                );
+
+                if (err) {
+                    throw `Invalid value: ${err}`;
                 }
             } else if (functionName == "Flow.makeArrayValue") {
                 if (node.arguments[0].type == "Literal") {

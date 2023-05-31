@@ -307,10 +307,6 @@ function buildExpressionNode(
         checkArity(functionName, node);
 
         if (functionName == "Flow.makeValue") {
-            if (node.arguments[0].type == "Literal") {
-                node.valueType = node.arguments[0].value;
-            }
-
             node.arguments[0] = {
                 type: "Literal",
                 value: assets.getTypeIndex(node.valueType),

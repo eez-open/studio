@@ -9,6 +9,9 @@ import {
 
 import * as notification from "eez-studio-ui/notification";
 
+export const EEZ_PROJECT_EXAMPLES_REPOSITORY =
+    "https://github.com/eez-open/eez-project-examples";
+
 const CATALOG_VERSION_DOWNLOAD_URL =
     "https://github.com/eez-open/eez-project-examples/raw/master/build/catalog-version.json";
 
@@ -19,6 +22,7 @@ interface ICatalogVersion {
     lastModified: Date;
 }
 
+/*
 interface IProjectExample {
     name: string;
     type: string;
@@ -30,6 +34,24 @@ interface IProjectExample {
     displayHeight: number;
     targetPlatform?: string;
     targetPlatformLink?: string;
+}
+*/
+
+interface IProjectExample {
+    repository: string;
+    eezProjectPath: string;
+    folder: string;
+    exampleName: string;
+
+    type: string;
+    description: string;
+    image: string;
+    keywords: string;
+    displayWidth?: number;
+    displayHeight?: number;
+    targetPlatform?: string;
+    targetPlatformLink?: string;
+    resourceFiles: string[];
 }
 
 class ExamplesCatalog {
@@ -103,9 +125,6 @@ class ExamplesCatalog {
     async checkNewVersionOfCatalog() {
         try {
             const catalogVersion = await this.downloadCatalogVersion();
-
-            console.log("old", this.catalogVersion.lastModified);
-            console.log("new", catalogVersion.lastModified);
 
             if (
                 !this.catalogVersion ||
