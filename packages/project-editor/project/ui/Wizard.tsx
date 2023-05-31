@@ -35,7 +35,8 @@ import classNames from "classnames";
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
-    MICROPYTHON_ICON
+    MICROPYTHON_ICON,
+    APPLET_ICON
 } from "project-editor/ui-components/icons";
 import { Icon } from "eez-studio-ui/icon";
 import {
@@ -544,7 +545,7 @@ class WizardModel {
             {
                 id: "applet",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
-                image: EEZ_GUI_PROJECT_ICON(128),
+                image: APPLET_ICON(128),
                 projectName: "BB3 Applet",
                 description:
                     "Start your new BB3 Applet project development here."

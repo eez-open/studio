@@ -2,7 +2,8 @@ import { ProjectType } from "project-editor/project/project";
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
-    MICROPYTHON_ICON
+    MICROPYTHON_ICON,
+    APPLET_ICON
 } from "project-editor/ui-components/icons";
 
 export function getProjectIcon(
@@ -21,6 +22,10 @@ export function getProjectIcon(
 
     if (projectType == ProjectType.RESOURCE) {
         return MICROPYTHON_ICON(size);
+    }
+
+    if (projectType == ProjectType.APPLET) {
+        return APPLET_ICON(size);
     }
 
     return EEZ_GUI_PROJECT_ICON(size);

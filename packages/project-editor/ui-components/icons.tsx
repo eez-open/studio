@@ -2346,36 +2346,250 @@ export const REPLACE_ALL_ICON = (
 );
 
 export const DASHBOARD_PROJECT_ICON = (size: number) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        width={size}
-        height={size}
-    >
-        <path d="M21 16V4H3v12h18m0-14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-7v2h2v2H8v-2h2v-2H3c-1.11 0-2-.9-2-2V4c0-1.11.89-2 2-2h18M5 6h9v5H5V6m10 0h4v2h-4V6m4 3v5h-4V9h4M5 12h4v2H5v-2m5 0h4v2h-4v-2Z" />
+    <svg viewBox="0 0 560 510" width={size} height={size}>
+        <g>
+            <path
+                d="M509.09 0A50.91 50.91 0 0 1 560 50.91v305.454a50.91 50.91 0 0 1-50.91 50.909H330.91v50.909h50.908v50.909H178.182v-50.91h50.909v-50.908H50.909C22.655 407.273 0 384.363 0 356.363V50.91A50.733 50.733 0 0 1 50.91 0h458.18"
+                strokeWidth="25.4545"
+                fill="#adb5bd"
+                fillOpacity="1"
+            />
+            <path
+                d="M527.5 368.937h-495v-334h495z"
+                fill="#fefefe"
+                fillOpacity="1"
+                strokeWidth="1.23022"
+            />
+            <path
+                d="M54.633 102.161h70v70h-70zM54.592 192.49h70v70h-70zM54.93 281.458h70v70h-70z"
+                fill="#502d16"
+                fillOpacity="1"
+                strokeWidth="24.7486"
+            />
+            <path
+                d="M32.5 34.937h495v46h-495v-46"
+                fill="#d4aa00"
+                fillOpacity="1"
+                strokeWidth="22.4944"
+            />
+            <circle
+                cx={240.475}
+                cy={182.325}
+                r={68.5}
+                fill="#502d16"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <circle
+                cx={414.7}
+                cy={182.325}
+                r={68.5}
+                fill="#502d16"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+        </g>
     </svg>
 );
 
 export const EEZ_GUI_PROJECT_ICON = (size: number) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 20 18"
+        viewBox="-25 -25 611 458"
         width={size}
         height={size}
     >
-        <g fill="none" fillRule="evenodd">
-            <path d="M-2-3h24v24H-2z" />
+        <g>
             <path
-                d="M20 5c0-.55-.45-1-1-1h-1V2c0-1.1-.9-2-2-2H2C.9 0 0 .9 0 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-2h1c.55 0 1-.45 1-1s-.45-1-1-1h-1v-2h1c.55 0 1-.45 1-1s-.45-1-1-1h-1V6h1c.55 0 1-.45 1-1Zm-5 11H3c-.55 0-1-.45-1-1V3c0-.55.45-1 1-1h12c.55 0 1 .45 1 1v12c0 .55-.45 1-1 1ZM4.5 10h4c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5h-4c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5Zm6-6h3c.28 0 .5.22.5.5v2c0 .28-.22.5-.5.5h-3c-.28 0-.5-.22-.5-.5v-2c0-.28.22-.5.5-.5Zm-6 0h4c.28 0 .5.22.5.5v4c0 .28-.22.5-.5.5h-4c-.28 0-.5-.22-.5-.5v-4c0-.28.22-.5.5-.5Zm6 4h3c.28 0 .5.22.5.5v5c0 .28-.22.5-.5.5h-3c-.28 0-.5-.22-.5-.5v-5c0-.28.22-.5.5-.5Z"
-                fill="currentColor"
+                d="M510 0H51C22.95 0 0 22.95 0 51v306c0 28.05 22.95 51 51 51h459c28.05 0 51-22.95 51-51V51c0-28.05-22.95-51-51-51Z"
+                fill="#adb5bd"
+                fillOpacity="1"
+            />
+        </g>
+        <g>
+            <path
+                d="M527.987 370.963h-495v-334h495z"
+                fill="#434667"
+                fillOpacity="1"
+                strokeWidth="1.23022"
+            />
+        </g>
+        <g>
+            <path
+                d="M55.12 104.188h70v70h-70Zm-.04 90.328h70v70h-70Zm.336 88.969h70v70h-70z"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="24.7486"
+            />
+            <path
+                d="M32.987 36.963h495v46h-495v-46"
+                fill="#c05fb1"
+                fillOpacity="1"
+                strokeWidth="22.4944"
+            />
+            <g transform="translate(0 -7.283)">
+                <circle
+                    cx={240.961}
+                    cy={191.635}
+                    r={68.5}
+                    fill="#adb5bd"
+                    fillOpacity="1"
+                    stroke="#000"
+                    strokeWidth="0"
+                    strokeLinecap="square"
+                    strokeOpacity="1"
+                    paintOrder="fill markers stroke"
+                />
+                <circle
+                    cx={415.187}
+                    cy={191.635}
+                    r={68.5}
+                    fill="#adb5bd"
+                    fillOpacity="1"
+                    stroke="#000"
+                    strokeWidth="0"
+                    strokeLinecap="square"
+                    strokeOpacity="1"
+                    paintOrder="fill markers stroke"
+                />
+            </g>
+        </g>
+    </svg>
+);
+
+export const APPLET_ICON = (size: number) => (
+    <svg viewBox="0 0 561 408" width={size} height={size} fill="currentColor">
+        <g>
+            <path
+                d="M510 0H51C22.95 0 0 22.95 0 51v306c0 28.05 22.95 51 51 51h459c28.05 0 51-22.95 51-51V51c0-28.05-22.95-51-51-51Z"
+                fill="#AFD0FF"
+                fillOpacity="1"
+            />
+        </g>
+        <g>
+            <path
+                d="M527.987 370.963h-495v-334h495z"
+                fill="#000"
+                fillOpacity="1"
+                strokeWidth="1.23022"
+            />
+        </g>
+        <g>
+            <path
+                d="M32.987 324.963h495v46h-495v-46"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="22.4944"
+            />
+            <path
+                d="M62.813 63.485h121.444v168.97H62.813Z"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="50.6461"
+            />
+            <circle
+                cx={155.38}
+                cy={280.845}
+                r={23.597}
+                fill="#adb5bd"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <circle
+                cx={91.69}
+                cy={280.845}
+                r={23.597}
+                fill="#FFD800"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <path
+                d="M219.765 63.485h121.444v168.97H219.765Z"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="50.6461"
+            />
+            <circle
+                cx={312.332}
+                cy={280.845}
+                r={23.597}
+                fill="#FF6A00"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <circle
+                cx={248.642}
+                cy={280.845}
+                r={23.597}
+                fill="#adb5bd"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <path
+                d="M376.716 63.485H498.16v168.97H376.716Z"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="50.6461"
+            />
+            <circle
+                cx={469.284}
+                cy={280.845}
+                r={23.597}
+                fill="#adb5bd"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <circle
+                cx={405.593}
+                cy={280.845}
+                r={23.597}
+                fill="#adb5bd"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
             />
         </g>
     </svg>
 );
 
 export const MICROPYTHON_ICON = (size: number) => (
-    <svg viewBox="-25 -25 392 392" width={size} height={size}>
+    <svg
+        viewBox="-30 -30 402 402"
+        width={size}
+        height={size}
+        fill="currentColor"
+    >
         <path d="M0 0h164v267h14V0h164v342h-75V75h-14v267H89V75l-14 .5V342H0Zm317 278h-20v34h20z" />
     </svg>
 );
