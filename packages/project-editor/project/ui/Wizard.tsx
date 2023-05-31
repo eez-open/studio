@@ -1479,9 +1479,30 @@ const FoldersTree = observer(
 
 const ProjectTypesList = observer(
     class ProjectTypesList extends React.Component {
+        myRef = React.createRef<HTMLDivElement>();
+
+        componentDidMount(): void {
+            this.myRef.current
+                ?.querySelector(
+                    ".EezStudio_NewProjectWizard_ProjectType.selected"
+                )
+                ?.scrollIntoView({ block: "center" });
+        }
+
+        componentDidUpdate(): void {
+            this.myRef.current
+                ?.querySelector(
+                    ".EezStudio_NewProjectWizard_ProjectType.selected"
+                )
+                ?.scrollIntoView({ block: "nearest" });
+        }
+
         render() {
             return (
-                <div className="EezStudio_NewProjectWizard_ProjectTypes">
+                <div
+                    className="EezStudio_NewProjectWizard_ProjectTypes"
+                    ref={this.myRef}
+                >
                     {wizardModel.projectTypes.map(projectType => (
                         <ProjectTypeComponent
                             key={projectType.id}
@@ -1498,12 +1519,6 @@ const ProjectTypeComponent = observer(
     class ProjectTypeComponent extends React.Component<{
         projectType: IProjectType;
     }> {
-        myRef = React.createRef<HTMLDivElement>();
-
-        componentDidMount(): void {
-            this.myRef.current?.scrollIntoView({ block: "center" });
-        }
-
         render() {
             const { projectType } = this.props;
 
@@ -1519,7 +1534,6 @@ const ProjectTypeComponent = observer(
                     onClick={() => {
                         wizardModel.changeType(projectType.id);
                     }}
-                    ref={this.myRef}
                 >
                     <div className="EezStudio_NewProjectWizard_ProjectType_Image">
                         <Icon icon={projectType.image} size={128} />
