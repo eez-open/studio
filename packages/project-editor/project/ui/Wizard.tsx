@@ -83,6 +83,7 @@ interface IProjectType {
     id: string;
 
     repository?: string;
+    folder?: string;
 
     projectName: string;
     defaultProjectName?: string;
@@ -207,7 +208,9 @@ class WizardModel {
             switchToTemplates: action.bound,
             switchToExamples: action.bound,
             changeFolder: action.bound,
-            changeType: action.bound
+            changeType: action.bound,
+            exampleProjectTypes: computed,
+            exampleFolders: computed
         });
 
         this.loadOptions();
@@ -394,6 +397,7 @@ class WizardModel {
             const projectType: IProjectType = {
                 id: eezProjectDownloadUrl,
                 repository: example.repository,
+                folder: example.folder,
                 projectType:
                     PROJECT_TYPE_NAMES[example.projectType as ProjectType],
                 defaultProjectName: example.projectName,
@@ -405,6 +409,10 @@ class WizardModel {
                 displayHeight: example.displayHeight,
                 resourceFiles: example.resourceFiles
             };
+
+            if (!this.searchFilter(projectType)) {
+                return;
+            }
 
             const folderId = "_example_" + example.folder;
 
@@ -438,8 +446,8 @@ class WizardModel {
             expanded: true
         };
 
-        examplesCatalog.catalog.forEach(example => {
-            const parts = example.folder.split("/");
+        this.exampleProjectTypes.get("_allExamples")!.forEach(example => {
+            const parts = example.folder!.split("/");
 
             let nodes = rootNode.children;
             let id = "_example_";
@@ -471,106 +479,33 @@ class WizardModel {
         const exampleProjectTypes = this.exampleProjectTypes;
 
         function sortChildren(node: ITreeNode) {
-            const projectTypes = exampleProjectTypes.get(node.id);
-            if (projectTypes) {
-                node.label = `${node.label} (${projectTypes.length})`;
-            }
-
             node.children.sort((a, b) => {
                 return stringCompare(a.label as string, b.label as string);
             });
 
+            const toRemove = [];
+
             for (const child of node.children) {
+                const projectTypes = exampleProjectTypes.get(child.id);
+                if (projectTypes) {
+                    if (projectTypes.length == 0) {
+                        toRemove.push(child);
+                        continue;
+                    }
+                    child.label = `${child.label} (${projectTypes.length})`;
+                }
+
                 sortChildren(child);
+            }
+
+            for (const child of toRemove) {
+                node.children.splice(node.children.indexOf(child), 1);
             }
         }
 
         sortChildren(rootNode);
 
         return rootNode;
-    }
-
-    get folders(): ITreeNode {
-        if (this.section == "templates") {
-            return {
-                id: "_root",
-                label: "Root",
-                children: [
-                    {
-                        id: "_allTemplates",
-                        label: `All Templates (${this.allProjectTypes.length})`,
-                        children: [],
-                        selected: this.folder == "_allTemplates",
-                        expanded: true,
-                        data: undefined
-                    },
-                    {
-                        id: "_standard",
-                        label: `Builtin Templates (${this.standardProjectTypes.length})`,
-                        children: [],
-                        selected: this.folder == "_standard",
-                        expanded: true,
-                        data: undefined
-                    },
-                    {
-                        id: "_bb3",
-                        label: `BB3 Script Templates (${this.bb3ProjectTypes.length}) `,
-                        children: [],
-                        selected: this.folder == "_bb3",
-                        expanded: true,
-                        data: undefined
-                    },
-                    {
-                        id: "_templates",
-                        label: (
-                            <span>
-                                From{" "}
-                                <a
-                                    href="#"
-                                    onClick={event => {
-                                        event.preventDefault();
-                                        openLink(
-                                            "https://envox.hr/gitea/explore/repos?q=eez-flow-template&topic=1"
-                                        );
-                                    }}
-                                >
-                                    envox.hr/gitea
-                                </a>
-                                {` (${this.templateProjects.length})`}
-                            </span>
-                        ),
-                        children: [],
-                        selected: this.folder == "_templates",
-                        expanded: true,
-                        data: undefined
-                    }
-                    /*,
-                    {
-                        id: "_advanced",
-                        label: "Advanced",
-                        children: [
-                            {
-                                id: "empty",
-                                label: "Empty",
-                                children: [],
-                                selected: this.type === "empty",
-                                expanded: false,
-                                data: undefined
-                            }
-                        ],
-                        selected: false,
-                        expanded: false,
-                        data: undefined
-                    }
-                    */
-                ],
-                selected: false,
-                expanded: false,
-                data: undefined
-            };
-        } else {
-            return this.exampleFolders;
-        }
     }
 
     get standardProjectTypes(): IProjectType[] {
@@ -597,7 +532,7 @@ class WizardModel {
                 projectName: "LVGL",
                 description: "Start your new LVGL project development here."
             }
-        ];
+        ].filter(projectType => this.searchFilter(projectType));
     }
 
     get bb3ProjectTypes(): IProjectType[] {
@@ -618,21 +553,27 @@ class WizardModel {
                 description:
                     "Start your new BB3 MicroPython project development here."
             }
-        ];
+        ].filter(projectType => this.searchFilter(projectType));
     }
 
     get templateProjectTypes(): IProjectType[] {
-        return this.templateProjects.map(templateProject => ({
-            id: templateProject.clone_url,
-            repository: templateProject.html_url,
-            projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
-            image: templateProject._image_url,
-            projectName: templateProject.name.startsWith("eez-flow-template-")
-                ? templateProject.name.substring("eez-flow-template-".length)
-                : templateProject.name,
-            description: templateProject.description,
-            keywords: templateProject.keywords || ""
-        }));
+        return this.templateProjects
+            .map(templateProject => ({
+                id: templateProject.clone_url,
+                repository: templateProject.html_url,
+                projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
+                image: templateProject._image_url,
+                projectName: templateProject.name.startsWith(
+                    "eez-flow-template-"
+                )
+                    ? templateProject.name.substring(
+                          "eez-flow-template-".length
+                      )
+                    : templateProject.name,
+                description: templateProject.description,
+                keywords: templateProject.keywords || ""
+            }))
+            .filter(projectType => this.searchFilter(projectType));
     }
 
     get allProjectTypes(): IProjectType[] {
@@ -641,6 +582,90 @@ class WizardModel {
             ...this.bb3ProjectTypes,
             ...this.templateProjectTypes
         ];
+    }
+
+    get folders(): ITreeNode {
+        if (this.section == "templates") {
+            const children = [];
+
+            if (this.allProjectTypes.length > 0) {
+                children.push({
+                    id: "_allTemplates",
+                    label: `All Templates (${this.allProjectTypes.length})`,
+                    children: [],
+                    selected: this.folder == "_allTemplates",
+                    expanded: true,
+                    data: undefined
+                });
+            }
+
+            if (this.standardProjectTypes.length > 0) {
+                children.push({
+                    id: "_standard",
+                    label: `Builtin Templates (${this.standardProjectTypes.length})`,
+                    children: [],
+                    selected: this.folder == "_standard",
+                    expanded: true,
+                    data: undefined
+                });
+            }
+
+            if (this.bb3ProjectTypes.length > 0) {
+                children.push({
+                    id: "_bb3",
+                    label: `BB3 Script Templates (${this.bb3ProjectTypes.length}) `,
+                    children: [],
+                    selected: this.folder == "_bb3",
+                    expanded: true,
+                    data: undefined
+                });
+            }
+
+            if (this.templateProjectTypes.length > 0) {
+                children.push({
+                    id: "_templates",
+                    label: (
+                        <span>
+                            From envox.hr/gitea
+                            {` (${this.templateProjects.length})`}
+                        </span>
+                    ),
+                    children: [],
+                    selected: this.folder == "_templates",
+                    expanded: true,
+                    data: undefined
+                });
+            }
+
+            // children.push({
+            //     id: "_advanced",
+            //     label: "Advanced",
+            //     children: [
+            //         {
+            //             id: "empty",
+            //             label: "Empty",
+            //             children: [],
+            //             selected: this.type === "empty",
+            //             expanded: false,
+            //             data: undefined
+            //         }
+            //     ],
+            //     selected: false,
+            //     expanded: false,
+            //     data: undefined
+            // });
+
+            return {
+                id: "_root",
+                label: "Root",
+                children,
+                selected: false,
+                expanded: false,
+                data: undefined
+            };
+        } else {
+            return this.exampleFolders;
+        }
     }
 
     get projectTypes(): IProjectType[] {
@@ -1390,6 +1415,27 @@ class WizardModel {
     onSearchChange(event: any) {
         this.searchText = $(event.target).val() as string;
     }
+
+    searchFilter(projectType: IProjectType) {
+        const parts = this.searchText.trim().toLowerCase().split("+");
+        if (parts.length == 0) {
+            return true;
+        }
+
+        const searchTargets = [
+            projectType.projectName,
+            projectType.projectType,
+            projectType.description,
+            projectType.keywords,
+            projectType.language,
+            projectType.targetPlatform
+        ]
+            .filter(target => target && target.trim().length > 0)
+            .join(", ")
+            .toLowerCase();
+
+        return !parts.find(part => searchTargets.indexOf(part) == -1);
+    }
 }
 
 const wizardModel = new WizardModel();
@@ -1625,18 +1671,11 @@ const ProjectProperties = observer(
                                 : "Project file path"}
                         </label>
                         <div className="col-sm-9">
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={
-                                    wizardModel.selectedTemplateProject
-                                        ? wizardModel.projectDirPath || ""
-                                        : wizardModel.projectFilePath || ""
-                                }
-                                onChange={() => {}}
-                                readOnly
-                                spellCheck={false}
-                            />
+                            <div className="EezStudio_NewProjectWizard_StaticField">
+                                {wizardModel.selectedTemplateProject
+                                    ? wizardModel.projectDirPath || ""
+                                    : wizardModel.projectFilePath || ""}
+                            </div>
                         </div>
                     </div>
 

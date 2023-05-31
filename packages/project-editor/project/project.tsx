@@ -654,7 +654,7 @@ export class General extends EezObject {
             },
             {
                 name: "targetPlatform",
-                type: PropertyType.String
+                type: PropertyType.MultilineText
             },
             {
                 name: "targetPlatformLink",
