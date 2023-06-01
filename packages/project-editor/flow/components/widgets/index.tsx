@@ -7062,6 +7062,8 @@ export class CheckboxWidget extends Widget {
                             if (flowState) {
                                 const value = event.target.checked;
 
+                                console.log(value);
+
                                 if (this.data) {
                                     flowState.runtime.assignProperty(
                                         flowContext,

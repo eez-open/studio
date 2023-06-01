@@ -126,18 +126,10 @@ registerActionComponents("Dashboard Specific", [
                     return;
                 }
 
-                const global: any = context.evalProperty("global");
-                if (typeof global != "boolean") {
-                    context.throwError("Global is not a boolean");
-                    return;
-                }
+                const global: any = !!context.evalProperty("global");
 
                 const caseInsensitive: any =
-                    context.evalProperty("caseInsensitive");
-                if (typeof caseInsensitive != "boolean") {
-                    context.throwError("Case insensitive is not a boolean");
-                    return;
-                }
+                    !!context.evalProperty("caseInsensitive");
 
                 const re = new RegExp(
                     patternValue,

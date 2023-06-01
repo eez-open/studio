@@ -875,8 +875,8 @@ export const Home = observer(
                     <VerticalHeaderWithBody className="EezStudio_HomeTab_NewProjectWizard">
                         <Header>
                             <ToolbarHeader>
-                                <h5 style={{ marginBottom: 0 }}>New Project</h5>
-                                <div style={{ flexGrow: 1, height: 52 }}></div>
+                                <h5>New Project</h5>
+                                <div></div>
                             </ToolbarHeader>
                         </Header>
                         <Body>
