@@ -47,6 +47,7 @@ import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
+import { homeLayoutModels } from "home/home-layout-models";
 
 const MODIFED_MARK = "\u002A ";
 
@@ -94,6 +95,11 @@ class HomeTab implements IHomeTab {
 
     makeActive(): void {
         this.tabs.makeActive(this);
+    }
+
+    async beforeAppClose() {
+        homeLayoutModels.save();
+        return true;
     }
 }
 

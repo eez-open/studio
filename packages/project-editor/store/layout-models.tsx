@@ -5,12 +5,16 @@ import { observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
 import { Icon } from "eez-studio-ui/icon";
+import {
+    AbstractLayoutModels,
+    ILayoutModel
+} from "eez-studio-ui/layout-models";
 
 import type { ProjectStore } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LayoutModels {
+export class LayoutModels extends AbstractLayoutModels {
     static FONT = {
         size: "small"
     };
@@ -191,6 +195,8 @@ export class LayoutModels {
     viewers: FlexLayout.Model;
 
     constructor(public projectStore: ProjectStore) {
+        super();
+
         makeObservable(this, {
             rootEditor: observable,
             rootRuntime: observable,
@@ -280,13 +286,7 @@ export class LayoutModels {
         return borders;
     }
 
-    get models(): {
-        name: string;
-        version: number;
-        json: FlexLayout.IJsonModel;
-        get: () => FlexLayout.Model;
-        set: (model: FlexLayout.Model) => void;
-    }[] {
+    get models(): ILayoutModel[] {
         return [
             {
                 name: "rootEditor",
@@ -847,34 +847,8 @@ export class LayoutModels {
     }
 
     load(layoutModels: any) {
-        for (const model of this.models) {
-            const savedModel = layoutModels && layoutModels[model.name];
-            if (savedModel && savedModel.version == model.version) {
-                model.set(FlexLayout.Model.fromJson(savedModel.json));
-            } else {
-                model.set(FlexLayout.Model.fromJson(model.json));
-            }
-        }
-
+        super.load(layoutModels);
         this.projectStore.project.enableTabs();
-    }
-
-    save() {
-        const layoutModels: any = {};
-
-        for (const model of this.models) {
-            try {
-                layoutModels[model.name] = {
-                    version: model.version,
-                    json: model.get().toJson()
-                };
-            } catch (err) {
-                console.log(model);
-                console.error(err);
-            }
-        }
-
-        return layoutModels;
     }
 
     selectTab(model: FlexLayout.Model, tabId: string) {

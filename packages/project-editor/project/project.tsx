@@ -864,23 +864,6 @@ function getProjectClassInfo() {
             label: () => "Project",
             properties: projectProperties,
             beforeLoadHook: (project: Project, projectJs: any) => {
-                if (projectJs.pages) {
-                    projectJs.userPages = projectJs.pages.filter(
-                        (page: any) =>
-                            !(
-                                page.isUsedAsCustomWidget ||
-                                page.isUsedAsUserWidget
-                            )
-                    );
-
-                    projectJs.userWidgets = projectJs.pages.filter(
-                        (page: any) =>
-                            page.isUsedAsCustomWidget || page.isUsedAsUserWidget
-                    );
-
-                    delete projectJs.pages;
-                }
-
                 if (
                     projectJs.settings.general.projectType == ProjectType.LVGL
                 ) {
@@ -969,6 +952,23 @@ function getProjectClassInfo() {
                 if (projectJs.gui) {
                     Object.assign(projectJs, projectJs.gui);
                     delete projectJs.gui;
+                }
+
+                if (projectJs.pages) {
+                    projectJs.userPages = projectJs.pages.filter(
+                        (page: any) =>
+                            !(
+                                page.isUsedAsCustomWidget ||
+                                page.isUsedAsUserWidget
+                            )
+                    );
+
+                    projectJs.userWidgets = projectJs.pages.filter(
+                        (page: any) =>
+                            page.isUsedAsCustomWidget || page.isUsedAsUserWidget
+                    );
+
+                    delete projectJs.pages;
                 }
 
                 if (projectJs.settings.general.css) {

@@ -11,6 +11,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import {
     VerticalHeaderWithBody,
@@ -18,7 +19,6 @@ import {
     Body,
     ToolbarHeader
 } from "eez-studio-ui/header-with-body";
-import { Splitter } from "eez-studio-ui/splitter";
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
@@ -51,6 +51,8 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import { getProjectIcon } from "home/helper";
 import { Setup } from "./setup";
 import { firstTime } from "./first-time";
+import { homeLayoutModels } from "home/home-layout-models";
+import { NewProjectWizard } from "project-editor/project/ui/Wizard";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -377,42 +379,65 @@ export class PanelTitle extends React.Component<{ title?: string }, {}> {
     }
 }
 
+const InstrumentDetailsEnclosure = observer(() => {
+    const selectedInstrumentId = selectedInstrument.get();
+    if (!selectedInstrumentId) {
+        return null;
+    }
+    const instrument = instruments.get(selectedInstrumentId);
+    if (!instrument) {
+        return null;
+    }
+
+    return (
+        <div className="EezStudio_InstrumentDetailsEnclosure">
+            <InstrumentDetails instrument={instrument} />
+        </div>
+    );
+});
+
+const HistoryEnclosure = observer(() => {
+    const selectedInstrumentId = selectedInstrument.get();
+    if (!selectedInstrumentId) {
+        return null;
+    }
+
+    return (
+        <div className="EezStudio_HistoryContainer">
+            <PanelTitle title="History" />
+            <div className="EezStudio_HistoryContent">
+                <HistorySection oids={[selectedInstrumentId]} simple={true} />
+            </div>
+        </div>
+    );
+});
+
 export const Properties = observer(
-    class Properties extends React.Component<{
-        selectedInstrumentId: string | undefined;
-    }> {
-        render() {
-            if (!this.props.selectedInstrumentId) {
-                return <div />;
+    class Properties extends React.Component {
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "Details") {
+                return <InstrumentDetailsEnclosure />;
             }
 
-            let history = (
-                <div className="EezStudio_HistoryContainer">
-                    <PanelTitle title="History" />
-                    <div className="EezStudio_HistoryContent">
-                        <HistorySection
-                            oids={[this.props.selectedInstrumentId]}
-                            simple={true}
-                        />
-                    </div>
-                </div>
-            );
+            if (component === "History") {
+                return <HistoryEnclosure />;
+            }
 
-            const instrument = instruments.get(this.props.selectedInstrumentId);
+            return null;
+        };
 
+        render() {
             return (
-                <Splitter
-                    type="vertical"
-                    sizes={"100%|240px"}
-                    persistId={"home/designer/properties/splitter"}
-                >
-                    <div className="EezStudio_InstrumentDetailsEnclosure">
-                        {instrument && (
-                            <InstrumentDetails instrument={instrument} />
-                        )}
-                    </div>
-                    {history}
-                </Splitter>
+                <FlexLayout.Layout
+                    model={homeLayoutModels.instrumentProperties}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={{
+                        size: "small"
+                    }}
+                />
             );
         }
     }
@@ -476,10 +501,7 @@ const InstrumentComponent = observer(
 );
 
 export const WorkbenchDocumentComponent = observer(
-    class WorkbenchDocumentComponent extends React.Component<{
-        selectedInstrumentId: string | undefined;
-        selectInstrument: (instrument: InstrumentObject) => void;
-    }> {
+    class WorkbenchDocumentComponent extends React.Component {
         render() {
             return (
                 <div className="EezStudio_WorkbenchDocument d-flex flex-wrap justify-content-center align-items-center">
@@ -489,10 +511,10 @@ export const WorkbenchDocumentComponent = observer(
                             <InstrumentComponent
                                 key={obj.id}
                                 instrument={obj}
-                                isSelected={
-                                    obj.id == this.props.selectedInstrumentId
-                                }
-                                selectInstrument={this.props.selectInstrument}
+                                isSelected={obj.id == selectedInstrument.get()}
+                                selectInstrument={action(instrument =>
+                                    selectedInstrument.set(instrument.id)
+                                )}
                             />
                         ))}
                 </div>
@@ -542,17 +564,19 @@ export const InstrumentContent = observer(
 
 export const Workbench = observer(
     class Workbench extends React.Component<{ onClose: () => void }> {
-        constructor(props: any) {
-            super(props);
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
 
-            makeObservable(this, {
-                selectInstrument: action.bound
-            });
-        }
+            if (component === "Workbench") {
+                return <WorkbenchDocumentComponent />;
+            }
 
-        selectInstrument(instrument: InstrumentObject) {
-            selectedInstrument.set(instrument.id);
-        }
+            if (component === "SelectedInstrument") {
+                return <Properties />;
+            }
+
+            return null;
+        };
 
         render() {
             return (
@@ -564,20 +588,14 @@ export const Workbench = observer(
                         {firstTime.get() ? (
                             <Setup onlyBody={false} />
                         ) : (
-                            <Splitter
-                                type="horizontal"
-                                sizes={/*"240px|100%|240px"*/ "100%|240px"}
-                                persistId="home/designer/splitter"
-                            >
-                                <WorkbenchDocumentComponent
-                                    selectedInstrumentId={selectedInstrument.get()}
-                                    selectInstrument={this.selectInstrument}
-                                />
-
-                                <Properties
-                                    selectedInstrumentId={selectedInstrument.get()}
-                                />
-                            </Splitter>
+                            <FlexLayout.Layout
+                                model={homeLayoutModels.instrumentsBody}
+                                factory={this.factory}
+                                realtimeResize={true}
+                                font={{
+                                    size: "small"
+                                }}
+                            />
                         )}
                     </Body>
                 </VerticalHeaderWithBody>
@@ -652,19 +670,22 @@ const Projects = observer(
                         <ToolbarHeader>
                             <h5>Projects</h5>
                             <div>
-                                <ButtonAction
-                                    text="New Project"
-                                    title="New Project"
-                                    className="btn-success"
-                                    onClick={async () => {
-                                        const { showNewProjectWizard } =
-                                            await import(
-                                                "project-editor/project/ui/Wizard"
-                                            );
-                                        showNewProjectWizard();
-                                    }}
-                                    style={{ height: 38 }}
-                                />
+                                {tabs.homeSectionsVisibilityOption ==
+                                    "both" && (
+                                    <ButtonAction
+                                        text="New Project"
+                                        title="New Project"
+                                        className="btn-success"
+                                        onClick={async () => {
+                                            const { showNewProjectWizard } =
+                                                await import(
+                                                    "project-editor/project/ui/Wizard"
+                                                );
+                                            showNewProjectWizard();
+                                        }}
+                                        style={{ height: 38 }}
+                                    />
+                                )}
                                 <ButtonAction
                                     text="Open Project"
                                     title="Open Project"
@@ -694,20 +715,20 @@ const Projects = observer(
                                 onChange={this.onSearchChange}
                                 onKeyDown={this.onSearchChange}
                             />
-                            <div style={{ padding: 5 }}>
-                                {this.sortAlphabetically ? (
-                                    <IconAction
-                                        icon={SORT_ALPHA_ICON}
-                                        title={"Sort alphabetically"}
-                                        onClick={this.toggleSort}
-                                    />
-                                ) : (
-                                    <IconAction
-                                        icon={SORT_RECENT_ICON}
-                                        title={"Show most recent first"}
-                                        onClick={this.toggleSort}
-                                    />
-                                )}
+                            <div className="sort-button">
+                                <IconAction
+                                    icon={
+                                        this.sortAlphabetically
+                                            ? SORT_ALPHA_ICON
+                                            : SORT_RECENT_ICON
+                                    }
+                                    title={
+                                        this.sortAlphabetically
+                                            ? "Sort alphabetically"
+                                            : "Show most recent first"
+                                    }
+                                    onClick={this.toggleSort}
+                                />
                             </div>
                         </div>
                         <ListContainer tabIndex={0}>
@@ -823,86 +844,66 @@ export const Home = observer(
             selectedInstrument.set(instrument.id);
         }
 
-        render() {
-            let commonTabsContainer = (
-                <div className="EezStudio_HomeTab_TabsContainer">
-                    {tabs.allTabs
-                        .filter(tab => tab.instance.category == "common")
-                        .map(tab => (
-                            <TabButton key={tab.instance.id} tab={tab} />
-                        ))}
-                </div>
-            );
-
-            let body;
-
+        get layoutModel() {
             if (tabs.homeSectionsVisibilityOption == "both") {
-                body = (
-                    <Splitter
-                        type="horizontal"
-                        sizes={"35%|65%"}
-                        persistId={
-                            "home/home-tab/projects-and-instruments-splitter"
-                        }
-                    >
-                        <div className="EezStudio_HomeTab_Projects">
-                            <Projects
-                                onClose={() =>
-                                    (tabs.homeSectionsVisibilityOption =
-                                        "instruments")
-                                }
-                            />
-                        </div>
-                        <div className="EezStudio_HomeTab_Instruments">
-                            <Workbench
-                                onClose={() =>
-                                    (tabs.homeSectionsVisibilityOption =
-                                        "projects")
-                                }
-                            />
-                        </div>
-                    </Splitter>
-                );
+                return homeLayoutModels.projectsAndInstruments;
             } else if (tabs.homeSectionsVisibilityOption == "projects") {
-                body = (
-                    <Splitter
-                        type="horizontal"
-                        sizes={"100%"}
-                        persistId={
-                            "home/home-tab/projects-and-instruments-splitter1"
-                        }
-                    >
-                        <div className="EezStudio_HomeTab_Projects">
-                            <Projects
-                                onClose={() =>
-                                    (tabs.homeSectionsVisibilityOption =
-                                        "projects")
-                                }
-                            />
-                        </div>
-                    </Splitter>
-                );
+                return homeLayoutModels.projects;
             } else {
-                body = (
-                    <Splitter
-                        type="horizontal"
-                        sizes={"100%"}
-                        persistId={
-                            "home/home-tab/projects-and-instruments-splitter2"
-                        }
-                    >
-                        <div className="EezStudio_HomeTab_Instruments">
-                            <Workbench
-                                onClose={() =>
-                                    (tabs.homeSectionsVisibilityOption =
-                                        "projects")
-                                }
-                            />
-                        </div>
-                    </Splitter>
+                return homeLayoutModels.instruments;
+            }
+        }
+
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "Projects") {
+                return (
+                    <div className="EezStudio_HomeTab_Projects">
+                        <Projects
+                            onClose={() =>
+                                (tabs.homeSectionsVisibilityOption =
+                                    "instruments")
+                            }
+                        />
+                    </div>
                 );
             }
 
+            if (component === "Wizard") {
+                return (
+                    <VerticalHeaderWithBody className="EezStudio_HomeTab_NewProjectWizard">
+                        <Header>
+                            <ToolbarHeader>
+                                <h5 style={{ marginBottom: 0 }}>New Project</h5>
+                                <div style={{ flexGrow: 1, height: 52 }}></div>
+                            </ToolbarHeader>
+                        </Header>
+                        <Body>
+                            <NewProjectWizard
+                                modalDialog={observable.box<any>()}
+                            />
+                        </Body>
+                    </VerticalHeaderWithBody>
+                );
+            }
+
+            if (component === "Instruments") {
+                return (
+                    <div className="EezStudio_HomeTab_Instruments">
+                        <Workbench
+                            onClose={() =>
+                                (tabs.homeSectionsVisibilityOption = "projects")
+                            }
+                        />
+                    </div>
+                );
+            }
+
+            return null;
+        };
+
+        render() {
             const showSectionButtonText =
                 tabs.homeSectionsVisibilityOption == "projects"
                     ? "Show Instruments"
@@ -913,7 +914,18 @@ export const Home = observer(
             return (
                 <div className="EezStudio_HomeTab">
                     <div className="EezStudio_HomeTab_Tabs">
-                        {commonTabsContainer}
+                        <div className="EezStudio_HomeTab_TabsContainer">
+                            {tabs.allTabs
+                                .filter(
+                                    tab => tab.instance.category == "common"
+                                )
+                                .map(tab => (
+                                    <TabButton
+                                        key={tab.instance.id}
+                                        tab={tab}
+                                    />
+                                ))}
+                        </div>
                         {showSectionButtonText && (
                             <button
                                 key={"show-home-section"}
@@ -928,7 +940,14 @@ export const Home = observer(
                         )}
                     </div>
                     <div className="EezStudio_HomeTab_Projects_And_Instruments">
-                        {body}
+                        <FlexLayout.Layout
+                            model={this.layoutModel}
+                            factory={this.factory}
+                            realtimeResize={true}
+                            font={{
+                                size: "small"
+                            }}
+                        />
                     </div>
                 </div>
             );

@@ -4337,6 +4337,7 @@ button.EezStudio_Action {
     }
 
     .EezStudio_HomeTab_Projects_And_Instruments {
+        position: relative;
         display: flex;
         border: 1px solid @borderColor;
 
@@ -4346,6 +4347,7 @@ button.EezStudio_Action {
 
         .EezStudio_HomeTab_Projects,
         .EezStudio_HomeTab_Instruments {
+            height: 100%;
             display: flex;
             flex-grow: 1;
 
@@ -4377,6 +4379,11 @@ button.EezStudio_Action {
         }
 
         .EezStudio_HomeTab_Projects {
+            .sort-button {
+                padding: 5px;
+                background-color: field;
+            }
+
             .EezStudio_ListContainer {
                 overflow-x: hidden;
                 overflow-y: auto;
@@ -4385,6 +4392,7 @@ button.EezStudio_Action {
 
                 .EezStudio_ListItem {
                     margin-bottom: 10px;
+                    position: relative;
 
                     img {
                         background-color: white;
@@ -4392,7 +4400,6 @@ button.EezStudio_Action {
                     }
 
                     .EezStudio_HomeTab_ProjectItem {
-                        position: relative;
                         display: flex;
                         flex-direction: column;
 
@@ -4415,7 +4422,7 @@ button.EezStudio_Action {
                             border-radius: 4px;
                             padding: 3px;
                             position: absolute;
-                            right: 4px;
+                            right: 0;
                             top: 0;
                             display: none;
                             &:hover {
@@ -6221,10 +6228,32 @@ button.EezStudio_Action {
     z-index: 10;
 }
 
+.EezStudio_HomeTab_NewProjectWizard {
+    height: 100%;
+
+    .EezStudio_Header {
+        .EezStudio_ToolbarHeader {
+            h5 {
+                margin-bottom: 0;
+            }
+
+            div {
+                flex-grow: 1;
+                height: 52px;
+            }
+        }
+    }
+
+    .EezStudio_Body {
+        height: 100%;
+    }
+}
+
 .EezStudio_NewProjectWizard {
     flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100%;
 
     a {
         color: @textColor;

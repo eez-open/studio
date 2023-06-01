@@ -49,6 +49,7 @@ import {
     PROJECT_TYPE_NAMES,
     ProjectType
 } from "project-editor/project/project";
+import { homeLayoutModels } from "home/home-layout-models";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -110,7 +111,7 @@ enum SaveOptionsFlags {
 
 class WizardModel {
     section: "templates" | "examples" = "templates";
-    folder: string | undefined = "_standard";
+    folder: string | undefined = "_allTemplates";
     type: string | undefined = "dashboard";
 
     lastTemplatesFolder: string | undefined = "_standard";
@@ -1049,7 +1050,7 @@ class WizardModel {
         }
 
         try {
-            modalDialog.get().setControlStatus("close", "disable");
+            modalDialog.get()?.setControlStatus("close", "disable");
             runInAction(() => {
                 this.createProjectInProgress = true;
                 this.projectCreationError = undefined;
@@ -1416,7 +1417,7 @@ class WizardModel {
             runInAction(() => {
                 this.createProjectInProgress = false;
             });
-            modalDialog.get().setControlStatus("close", "enable");
+            modalDialog.get()?.setControlStatus("close", "enable");
         }
     };
 
@@ -1625,7 +1626,7 @@ const ProjectProperties = observer(
                 this.props.modalDialog
             );
             if (success) {
-                this.props.modalDialog.get().close();
+                this.props.modalDialog.get()?.close();
             }
         };
 
@@ -1935,7 +1936,7 @@ const ProjectProperties = observer(
 
                             <div className="d-flex justify-content-end">
                                 <button
-                                    className="btn btn-primary"
+                                    className="btn btn-success"
                                     onClick={this.onOk}
                                     disabled={
                                         wizardModel.createProjectInProgress
@@ -2023,7 +2024,7 @@ function PlatformDescription() {
     );
 }
 
-const NewProjectWizard = observer(
+export const NewProjectWizard = observer(
     class NewProjectWizard extends React.Component<{
         modalDialog: IObservableValue<any>;
     }> {
@@ -2037,72 +2038,6 @@ const NewProjectWizard = observer(
 
         componentWillUnmount() {
             wizardModel.unmount();
-        }
-
-        get layoutModel() {
-            return FlexLayout.Model.fromJson({
-                global: {
-                    borderEnableAutoHide: true,
-                    splitterSize: 4,
-                    splitterExtra: 4,
-                    legacyOverflowMenu: false,
-                    tabEnableRename: false
-                },
-                borders: [],
-                layout: {
-                    type: "row",
-                    children: [
-                        {
-                            type: "tabset",
-                            enableTabStrip: false,
-                            enableDrag: false,
-                            enableDrop: false,
-                            enableClose: false,
-                            weight: 15,
-                            children: [
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "FoldersTree",
-                                    component: "FoldersTree"
-                                }
-                            ]
-                        },
-                        {
-                            type: "tabset",
-                            enableTabStrip: false,
-                            enableDrag: false,
-                            enableDrop: false,
-                            enableClose: false,
-                            weight: 55,
-                            children: [
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "ProjectTypesList",
-                                    component: "ProjectTypesList"
-                                }
-                            ]
-                        },
-                        {
-                            type: "tabset",
-                            enableTabStrip: false,
-                            enableDrag: false,
-                            enableDrop: false,
-                            enableClose: false,
-                            weight: 30,
-                            children: [
-                                {
-                                    type: "tab",
-                                    enableClose: false,
-                                    name: "ProjectProperties",
-                                    component: "ProjectProperties"
-                                }
-                            ]
-                        }
-                    ]
-                }
-            });
         }
 
         factory = (node: FlexLayout.TabNode) => {
@@ -2164,7 +2099,11 @@ const NewProjectWizard = observer(
                     <div className="EezStudio_NewProjectWizard_Body">
                         {wizardModel.folders.children.length > 0 ? (
                             <FlexLayout.Layout
-                                model={this.layoutModel}
+                                model={
+                                    this.props.modalDialog.get()
+                                        ? homeLayoutModels.newProjectWizardDialog
+                                        : homeLayoutModels.newProjectWizard
+                                }
                                 factory={this.factory}
                                 realtimeResize={true}
                                 font={{

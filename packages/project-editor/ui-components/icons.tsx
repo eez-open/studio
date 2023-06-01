@@ -2403,7 +2403,7 @@ export const DASHBOARD_PROJECT_ICON = (size: number) => (
 export const EEZ_GUI_PROJECT_ICON = (size: number) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="-25 -25 611 458"
+        viewBox="-20 -20 601 448"
         width={size}
         height={size}
     >
@@ -2466,7 +2466,12 @@ export const EEZ_GUI_PROJECT_ICON = (size: number) => (
 );
 
 export const APPLET_ICON = (size: number) => (
-    <svg viewBox="0 0 561 408" width={size} height={size} fill="currentColor">
+    <svg
+        viewBox="-10 -10 581 428"
+        width={size}
+        height={size}
+        fill="currentColor"
+    >
         <g>
             <path
                 d="M510 0H51C22.95 0 0 22.95 0 51v306c0 28.05 22.95 51 51 51h459c28.05 0 51-22.95 51-51V51c0-28.05-22.95-51-51-51Z"
