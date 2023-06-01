@@ -6300,6 +6300,11 @@ button.EezStudio_Action {
             &.selected {
                 border-bottom: 4px solid @selectionBackgroundColor;
             }
+
+            .badge {
+                margin-left: 10px;
+                transform: translateY(-2px);
+            }
         }
     }
 
@@ -6324,6 +6329,27 @@ button.EezStudio_Action {
         flex: 1;
         position: relative;
         border-top: 1px solid @borderColor;
+
+        .EezStudio_TreeRow {
+            width: 100%;
+            height: 24px;
+
+            .EezStudio_TreeRowLabel,
+            .EezStudio_TreeRowLabel_Triangle {
+                width: 100%;
+                display: inline-flex;
+                align-items: center;
+
+                width: 100%;
+
+                justify-content: space-between;
+
+                .badge {
+                    margin-left: 5px;
+                    margin-right: 5px;
+                }
+            }
+        }
 
         .EezStudio_NewProjectWizard_ProjectTypes {
             display: flex;

@@ -129,7 +129,11 @@ export const TreeRow = observer(
                             />
                         </span>
                     );
-                    label = <span>{labelText}</span>;
+                    label = (
+                        <span className="EezStudio_TreeRowLabel_Triangle">
+                            {labelText}
+                        </span>
+                    );
                 } else {
                     label = (
                         <span className="EezStudio_TreeRowLabel">

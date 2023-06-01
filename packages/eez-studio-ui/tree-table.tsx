@@ -122,7 +122,14 @@ const TreeTableRow = observer(
                             />
                         </span>
                     );
-                    label = <span title={labelTitle}>{labelText}</span>;
+                    label = (
+                        <span
+                            className="EezStudio_TreeRowLabel_Triangle"
+                            title={labelTitle}
+                        >
+                            {labelText}
+                        </span>
+                    );
                 } else {
                     label = (
                         <span

@@ -211,7 +211,7 @@ class WizardModel {
             standardProjectTypes: computed,
             bb3ProjectTypes: computed,
             templateProjectTypes: computed,
-            allProjectTypes: computed,
+            allTemplateProjectTypes: computed,
             switchToTemplates: action.bound,
             switchToExamples: action.bound,
             changeFolder: action.bound,
@@ -509,7 +509,12 @@ class WizardModel {
                         toRemove.push(child);
                         continue;
                     }
-                    child.label = `${child.label} (${projectTypes.length})`;
+                    child.label = (
+                        <Count
+                            label={child.label as string}
+                            count={projectTypes.length}
+                        />
+                    );
                 }
 
                 sortChildren(child);
@@ -593,7 +598,7 @@ class WizardModel {
             .filter(projectType => this.searchFilter(projectType));
     }
 
-    get allProjectTypes(): IProjectType[] {
+    get allTemplateProjectTypes(): IProjectType[] {
         return [
             ...this.standardProjectTypes,
             ...this.bb3ProjectTypes,
@@ -605,10 +610,15 @@ class WizardModel {
         if (this.section == "templates") {
             const children = [];
 
-            if (this.allProjectTypes.length > 0) {
+            if (this.allTemplateProjectTypes.length > 0) {
                 children.push({
                     id: "_allTemplates",
-                    label: `All Templates (${this.allProjectTypes.length})`,
+                    label: (
+                        <Count
+                            label="All examples"
+                            count={this.allTemplateProjectTypes.length}
+                        ></Count>
+                    ),
                     children: [],
                     selected: this.folder == "_allTemplates",
                     expanded: true,
@@ -619,7 +629,12 @@ class WizardModel {
             if (this.standardProjectTypes.length > 0) {
                 children.push({
                     id: "_standard",
-                    label: `Builtin Templates (${this.standardProjectTypes.length})`,
+                    label: (
+                        <Count
+                            label="Builtin Templates"
+                            count={this.standardProjectTypes.length}
+                        ></Count>
+                    ),
                     children: [],
                     selected: this.folder == "_standard",
                     expanded: true,
@@ -630,7 +645,12 @@ class WizardModel {
             if (this.bb3ProjectTypes.length > 0) {
                 children.push({
                     id: "_bb3",
-                    label: `BB3 Script Templates (${this.bb3ProjectTypes.length}) `,
+                    label: (
+                        <Count
+                            label="BB3 Script Templates"
+                            count={this.bb3ProjectTypes.length}
+                        ></Count>
+                    ),
                     children: [],
                     selected: this.folder == "_bb3",
                     expanded: true,
@@ -642,10 +662,10 @@ class WizardModel {
                 children.push({
                     id: "_templates",
                     label: (
-                        <span>
-                            From envox.hr/gitea
-                            {` (${this.templateProjects.length})`}
-                        </span>
+                        <Count
+                            label="From envox.hr/gitea"
+                            count={this.templateProjectTypes.length}
+                        ></Count>
                     ),
                     children: [],
                     selected: this.folder == "_templates",
@@ -688,7 +708,7 @@ class WizardModel {
     get projectTypes(): IProjectType[] {
         if (this.section == "templates") {
             if (this.folder == "_allTemplates") {
-                return this.allProjectTypes;
+                return this.allTemplateProjectTypes;
             } else if (this.folder == "_standard") {
                 return this.standardProjectTypes;
             } else if (this.folder == "_bb3") {
@@ -1482,7 +1502,10 @@ class WizardModel {
     }
 
     isGitProject(projectType: IProjectType) {
-        return projectType.repository != EEZ_PROJECT_EXAMPLES_REPOSITORY;
+        return (
+            projectType.repository &&
+            projectType.repository != EEZ_PROJECT_EXAMPLES_REPOSITORY
+        );
     }
 
     get isSelectedExampleWithGitRepository() {
@@ -2162,7 +2185,15 @@ export const NewProjectWizard = observer(
                             )}
                             onClick={wizardModel.switchToTemplates}
                         >
-                            Templates
+                            <Count
+                                label="Templates"
+                                count={
+                                    wizardModel.searchText
+                                        ? wizardModel.allTemplateProjectTypes
+                                              .length
+                                        : undefined
+                                }
+                            />
                         </div>
                         <div
                             className={classNames(
@@ -2171,7 +2202,16 @@ export const NewProjectWizard = observer(
                             )}
                             onClick={wizardModel.switchToExamples}
                         >
-                            Examples
+                            <Count
+                                label="Examples"
+                                count={
+                                    wizardModel.searchText
+                                        ? wizardModel.exampleProjectTypes.get(
+                                              "_allExamples"
+                                          )!.length
+                                        : undefined
+                                }
+                            />
                         </div>
                     </div>
 
@@ -2371,3 +2411,22 @@ export async function confirmOverwrite(description: string) {
     const buttonIndex = result.response;
     return buttons[buttonIndex].result;
 }
+
+const Count = observer(
+    ({ label, count }: { label: string; count: number | undefined }) => {
+        return (
+            <>
+                {label}
+                {count != undefined && (
+                    <span
+                        className={classNames(
+                            "badge rounded-pill bg-secondary"
+                        )}
+                    >
+                        {count}
+                    </span>
+                )}
+            </>
+        );
+    }
+);
