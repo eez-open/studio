@@ -671,7 +671,7 @@ class WizardModel {
                     id: "_allTemplates",
                     label: (
                         <Count
-                            label="All examples"
+                            label="All Templates"
                             count={this.allTemplateProjectTypes.length}
                         ></Count>
                     ),
