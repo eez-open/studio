@@ -308,7 +308,7 @@ let files = [
             category: "Utility",
             synopsis: packageJson.description,
             description:
-                "The EEZ Studio is an open source cross-platform modular visual tool for communication with various T&M instruments that allows simple data acquisition, analysis, presentation and archiving. Flow Editor allows easy creation of complex scenarios for testing and measurement automation.",
+                "EEZ Studio is a free and open source cross-platform low-code tool for embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple T&M equipment.",
             mimeTypes: ["application/x-eez-project"]
         }
     };

@@ -1192,9 +1192,8 @@ class WizardModel {
                             ) {
                                 return false;
                             }
+                            await rmdir(projectDirPath, { recursive: true });
                         }
-
-                        await rmdir(projectDirPath, { recursive: true });
                     }
 
                     // do git stuff
@@ -1225,10 +1224,12 @@ class WizardModel {
                               }
                     );
 
-                    await fs.promises.rm(projectDirPath + "/.git", {
-                        recursive: true,
-                        force: true
-                    });
+                    if (!this.isSelectedExampleWithGitRepository) {
+                        await fs.promises.rm(projectDirPath + "/.git", {
+                            recursive: true,
+                            force: true
+                        });
+                    }
 
                     // execute template post processing
                     if (this.selectedTemplateProject) {
@@ -1911,8 +1912,13 @@ const ProjectProperties = observer(
                                         className="form-check-label"
                                         htmlFor="new-project-wizard-git-clone-checkbox"
                                     >
-                                        Download the entire git repository
+                                        Clone git repository
                                     </label>
+                                    <div className="form-text">
+                                        Check this if you want to download the
+                                        entire repository not only eez-project
+                                        file and its dependencies.
+                                    </div>
                                 </div>
                             )}
 
