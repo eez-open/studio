@@ -62,6 +62,7 @@ interface TemplateProject {
 
     _image_url: string;
 
+    _projectType: string;
     _description: string;
     _keywords?: string;
     _displayWidth?: number;
@@ -342,6 +343,10 @@ class WizardModel {
                 })
         );
 
+        for (const templateProject of this.templateProjects) {
+            templateProject._projectType = "";
+        }
+
         runInAction(() => {
             this.templateProjects = templateProjects;
         });
@@ -373,6 +378,8 @@ class WizardModel {
                 const general = eezProjectJson.settings?.general;
 
                 if (general) {
+                    templateProject._projectType =
+                        PROJECT_TYPE_NAMES[general.projectType as ProjectType];
                     templateProject._description = general.description;
                     templateProject._keywords = general.keywords;
                     templateProject._displayWidth = general.displayWidth;
@@ -628,7 +635,7 @@ class WizardModel {
             .map(templateProject => ({
                 id: templateProject.clone_url,
                 repository: templateProject.html_url,
-                projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
+                projectType: templateProject._projectType,
                 image: templateProject._image_url,
                 projectName: templateProject.name.startsWith(
                     "eez-flow-template-"
