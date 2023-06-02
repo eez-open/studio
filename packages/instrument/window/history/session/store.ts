@@ -88,26 +88,25 @@ export class HistorySessions {
     }
 
     async load() {
-        // const rows = await dbQuery(
-        //     `SELECT
-        //             id,
-        //             ${activityLogStore.nonTransientAndNonLazyProperties}
-        //         FROM
-        //             "${activityLogStore.storeName}" AS T3
-        //         WHERE
-        //             type = 'activity-log/session-start' AND
-        //             (
-        //                 json_extract(message, '$.sessionCloseId') IS NULL OR
-        //                 EXISTS(
-        //                     SELECT * FROM ${activityLogStore.storeName} AS T1
-        //                     WHERE ${this.history.oidWhereClause} AND T1.sid = T3.id
-        //                 )
-        //             )
-        //         ORDER BY
-        //             date`
-        // ).all();
-
-        const rows: any = [];
+        const rows = await dbQuery(
+            "HistorySessions load",
+            `SELECT
+                    id,
+                    ${activityLogStore.nonTransientAndNonLazyProperties}
+                FROM
+                    "${activityLogStore.storeName}" AS T3
+                WHERE
+                    type = 'activity-log/session-start' AND
+                    (
+                        json_extract(message, '$.sessionCloseId') IS NULL OR
+                        EXISTS(
+                            SELECT * FROM ${activityLogStore.storeName} AS T1
+                            WHERE ${this.history.oidWhereClause} AND T1.sid = T3.id
+                        )
+                    )
+                ORDER BY
+                    date`
+        ).all();
 
         runInAction(() => {
             this.sessions = rowsToHistoryItems(activityLogStore, rows).map(
@@ -131,6 +130,7 @@ export class HistorySessions {
 
         if (selectedSession) {
             const rows = await dbQuery(
+                "HistorySessions selectSession",
                 `SELECT
                         id,
                         ${activityLogStore.nonTransientAndNonLazyProperties}

@@ -3,14 +3,14 @@ import dbQueryService from "db-services/query";
 export function dbQuery(id: string, query: string) {
     return {
         all: async (...args: any[]): Promise<any[]> => {
-            console.time(id);
-            console.log(id, "query", query, args);
+            //console.time(id);
             const { err, rows } = await dbQueryService({
                 query,
                 args
             });
-            console.log(id, "result", err, rows);
-            console.timeEnd(id);
+
+            //console.log("query", id, { query, err, result: rows });
+            //console.timeEnd(id);
 
             if (err) {
                 throw err;

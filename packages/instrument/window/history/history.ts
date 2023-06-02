@@ -201,6 +201,10 @@ class HistoryCalendar {
 
         try {
             const rows = await dbQuery(
+                "HistoryCalendar load " +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT
                         date,
                         count(*) AS count
@@ -246,6 +250,10 @@ class HistoryCalendar {
             this.showFirstHistoryItemAsSelectedDay = false;
 
             const rows = await dbQuery(
+                "HistoryCalendar update selected day" +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT
                         id,
                         ${
@@ -279,6 +287,10 @@ class HistoryCalendar {
 
             // display most recent log items
             const rows = await dbQuery(
+                "HistoryCalendar update no selected day" +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT
                         id,
                         ${
@@ -485,6 +497,8 @@ class HistorySearch {
         // )
 
         const rows = await dbQuery(
+            "HistoryCalendar searchLoop" +
+                ((this.history as any).emptyTrash ? " for deleted items" : ""),
             `SELECT
                     id,
                     ${
@@ -568,6 +582,10 @@ class HistorySearch {
             searchResult.selected = true;
 
             const rows = await dbQuery(
+                "HistoryCalendar selectSearchResult" +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT * FROM (
                         SELECT * FROM (
                             SELECT
@@ -727,6 +745,10 @@ class HistoryNavigator {
     async loadOlder() {
         if (this.hasOlder) {
             const rows = await dbQuery(
+                "HistoryCalendar loadOlder" +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT
                         id,
                         ${
@@ -767,6 +789,10 @@ class HistoryNavigator {
     async loadNewer() {
         if (this.hasNewer) {
             const rows = await dbQuery(
+                "HistoryCalendar loadNewer" +
+                    ((this.history as any).emptyTrash
+                        ? " for deleted items"
+                        : ""),
                 `SELECT
                         id,
                         ${
@@ -1498,6 +1524,8 @@ export class History {
 
     async showItem(historyItem: IHistoryItem) {
         const rows = await dbQuery(
+            "HistoryCalendar showItem " +
+                ((this as any).emptyTrash ? " for deleted items" : ""),
             `SELECT
                     id,
                     ${this.options.store.nonTransientAndNonLazyProperties}

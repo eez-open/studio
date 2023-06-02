@@ -206,6 +206,7 @@ export class FilterStats {
 
         scheduleTask("Get filter stats", Priority.Lowest, async () => {
             const rows = await dbQuery(
+                "Get filter stats",
                 `SELECT
                             type, count(*) AS count
                         FROM
