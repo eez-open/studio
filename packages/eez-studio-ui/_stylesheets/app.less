@@ -3512,26 +3512,26 @@ button.EezStudio_Action {
         flex-grow: 1;
         overflow: auto;
 
-        .card {
+        .eez-component-palette-group {
             border: none;
             border-radius: 0;
 
-            & > div:not(.card-header) {
+            & > div:not(.eez-component-palette-header) {
                 padding-left: 10px;
             }
         }
 
-        .card:not(:last-child) {
+        .eez-component-palette-group:not(:last-child) {
             margin-bottom: 0px;
         }
 
-        .card-header {
+        .eez-component-palette-header {
             padding: 2px 2px 2px 5px;
             border: none;
             background: none;
         }
 
-        .card-body {
+        .eez-component-palette-body {
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
@@ -4743,6 +4743,8 @@ button.EezStudio_Action {
                     margin: 2px;
                     border: 1px solid @borderColor;
                     background-color: @componentBody;
+
+                    color: @textColor;
 
                     pre {
                         padding: 3px 5px 2px 5px;

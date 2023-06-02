@@ -1,12 +1,16 @@
 import dbQueryService from "db-services/query";
 
-export function dbQuery(query: string) {
+export function dbQuery(id: string, query: string) {
     return {
         all: async (...args: any[]): Promise<any[]> => {
+            console.time(id);
+            console.log(id, "query", query, args);
             const { err, rows } = await dbQueryService({
                 query,
                 args
             });
+            console.log(id, "result", err, rows);
+            console.timeEnd(id);
 
             if (err) {
                 throw err;

@@ -372,10 +372,10 @@ class PaletteGroup extends React.Component<{
             .replace(/(^-\d-|^\d|^-\d|^--)/, "a$1")
             .replace(/[\W]/g, "-")}`;
         return (
-            <div className="card">
-                <div className="card-header">{name}</div>
-                <div id={target} className="collapse show">
-                    <div className="card-body">
+            <div className="eez-component-palette-group">
+                <div className="eez-component-palette-header">{name}</div>
+                <div id={target}>
+                    <div className="eez-component-palette-body">
                         {this.props.componentClasses.map(componentClass => {
                             return (
                                 <PaletteItem
