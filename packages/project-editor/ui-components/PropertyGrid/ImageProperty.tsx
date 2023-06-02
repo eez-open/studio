@@ -1,5 +1,5 @@
 import fs from "fs";
-import { clipboard } from "@electron/remote";
+import { clipboard, nativeImage } from "@electron/remote";
 import React from "react";
 import { observer } from "mobx-react";
 import { makeObservable, observable, runInAction } from "mobx";
@@ -60,15 +60,26 @@ export const ImageProperty = observer(
                             }
                             readOnly
                         />
+                        {embeddedImage && (
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={() => {
+                                    clipboard.writeImage(
+                                        nativeImage.createFromDataURL(
+                                            imageValue
+                                        )
+                                    );
+                                }}
+                            >
+                                <Icon icon="material:content_copy" size={16} />
+                            </button>
+                        )}
                         {this.hasClipboardImage && (
                             <button
                                 className="btn btn-secondary"
                                 type="button"
-                                onClick={async () => {
-                                    console.log(
-                                        clipboard.readImage().toDataURL()
-                                    );
-
+                                onClick={() => {
                                     changeValue(
                                         clipboard.readImage().toDataURL()
                                     );
@@ -135,6 +146,17 @@ export const ImageProperty = observer(
                                 }}
                             >
                                 &hellip;
+                            </button>
+                        )}
+                        {imageValue && (
+                            <button
+                                className="btn btn-secondary"
+                                type="button"
+                                onClick={() => {
+                                    changeValue(undefined);
+                                }}
+                            >
+                                <Icon icon="material:close" size={16} />
                             </button>
                         )}
                     </div>

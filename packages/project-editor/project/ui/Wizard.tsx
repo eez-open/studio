@@ -60,9 +60,14 @@ interface TemplateProject {
     full_name: string;
     name: string;
 
-    description: string;
     _image_url: string;
-    keywords?: string;
+
+    _description: string;
+    _keywords?: string;
+    _displayWidth?: number;
+    _displayHeight?: number;
+    _targetPlatform?: string;
+    _targetPlatformLink?: string;
 }
 
 export interface ExampleProject {
@@ -323,23 +328,63 @@ class WizardModel {
         }
     }
 
-    fetchTemplateProjects() {
-        fetch(
+    async fetchTemplateProjects() {
+        const result = await fetch(
             "https://envox.hr/gitea/api/v1/repos/search?q=eez-flow-template&topic=true"
-        )
-            .then(response => response.json())
-            .then(data => {
-                runInAction(() => {
-                    this.templateProjects = data.data.map(
-                        (templateProject: TemplateProject) =>
-                            Object.assign({}, templateProject, {
-                                _image_url:
-                                    templateProject.html_url +
-                                    "/raw/branch/master/template/image.png"
-                            })
+        );
+        const data = await result.json();
+        const templateProjects = data.data.map(
+            (templateProject: TemplateProject) =>
+                Object.assign({}, templateProject, {
+                    _image_url:
+                        templateProject.html_url +
+                        "/raw/branch/master/template/image.png"
+                })
+        );
+
+        runInAction(() => {
+            this.templateProjects = templateProjects;
+        });
+
+        for (const templateProject of this.templateProjects) {
+            try {
+                const manifestJsonUrl =
+                    templateProject.html_url +
+                    "/raw/branch/master/template/manifest.json";
+
+                const manifestJson = await (
+                    await fetch(manifestJsonUrl)
+                ).json();
+
+                const eezProjectUrl =
+                    templateProject.html_url +
+                    "/raw/branch/master/" +
+                    manifestJson["eez-project-path"].replace(
+                        "{{projectName}}",
+                        templateProject.name
                     );
-                });
-            });
+
+                const eezProjectJson = await (
+                    await fetch(eezProjectUrl, { cache: "no-store" })
+                ).json();
+
+                console.log(eezProjectUrl, eezProjectJson);
+
+                const general = eezProjectJson.settings?.general;
+
+                if (general) {
+                    templateProject._description = general.description;
+                    templateProject._keywords = general.keywords;
+                    templateProject._displayWidth = general.displayWidth;
+                    templateProject._displayHeight = general.displayHeight;
+                    templateProject._targetPlatform = general.targetPlatform;
+                    templateProject._targetPlatformLink =
+                        general.targetPlatformLink;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
     }
 
     mount() {
@@ -592,8 +637,12 @@ class WizardModel {
                           "eez-flow-template-".length
                       )
                     : templateProject.name,
-                description: templateProject.description,
-                keywords: templateProject.keywords || ""
+                description: templateProject._description,
+                keywords: templateProject._keywords,
+                displayWidth: templateProject._displayWidth,
+                displayHeight: templateProject._displayHeight,
+                targetPlatform: templateProject._targetPlatform,
+                targetPlatformLink: templateProject._targetPlatformLink
             }))
             .filter(projectType => this.searchFilter(projectType));
     }
