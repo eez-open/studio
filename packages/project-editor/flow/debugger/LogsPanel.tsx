@@ -177,7 +177,6 @@ const LogItemRow = observer(
             }
 
             if (objects.length > 0) {
-                console.log("showObjects", objects);
                 this.context.navigationStore.showObjects(
                     objects,
                     true,
