@@ -374,8 +374,6 @@ class WizardModel {
                     await fetch(eezProjectUrl, { cache: "no-store" })
                 ).json();
 
-                console.log(eezProjectUrl, eezProjectJson);
-
                 const general = eezProjectJson.settings?.general;
 
                 if (general) {
