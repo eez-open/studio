@@ -2,8 +2,9 @@ import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
 import { rmdir } from "fs/promises";
 import path, { resolve } from "path";
-
 import React from "react";
+import ReactDOM from "react-dom";
+
 import {
     action,
     reaction,
@@ -1744,8 +1745,34 @@ const ProjectTypeComponent = observer(
     class ProjectTypeComponent extends React.Component<{
         projectType: IProjectType;
     }> {
+        zoomed: boolean = false;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, { zoomed: observable });
+        }
+
         render() {
             const { projectType } = this.props;
+
+            const selected = wizardModel.type == projectType.id;
+
+            let zoomedImage;
+            if (this.zoomed) {
+                zoomedImage = ReactDOM.createPortal(
+                    <div
+                        className="EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Container"
+                        onClick={action(() => (this.zoomed = false))}
+                    >
+                        <div className="EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Backface"></div>
+                        <div className="EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Image">
+                            <Icon icon={projectType.image} size={128} />
+                        </div>
+                    </div>,
+                    document.body
+                );
+            }
 
             return (
                 <div
@@ -1753,7 +1780,7 @@ const ProjectTypeComponent = observer(
                     className={classNames(
                         "EezStudio_NewProjectWizard_ProjectType",
                         {
-                            selected: wizardModel.type == projectType.id
+                            selected
                         }
                     )}
                     data-object-id={projectType.id}
@@ -1762,8 +1789,17 @@ const ProjectTypeComponent = observer(
                     }}
                 >
                     <div className="EezStudio_NewProjectWizard_ProjectType_Image">
-                        <Icon icon={projectType.image} size={128} />
+                        <Icon
+                            icon={projectType.image}
+                            size={128}
+                            onClick={
+                                selected
+                                    ? action(() => (this.zoomed = true))
+                                    : undefined
+                            }
+                        />
                     </div>
+                    {zoomedImage}
                     <div className="EezStudio_NewProjectWizard_ProjectType_Details">
                         <div className="EezStudio_NewProjectWizard_ProjectType_Details_Title">
                             <h6>{projectType.projectName}</h6>
