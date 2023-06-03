@@ -1224,7 +1224,7 @@ class WizardModel {
                     await simpleGit({ progress: onGitProgress }).clone(
                         this.gitCloneUrl!,
                         projectDirPath,
-                        this.gitInit || !this.isSelectedExampleWithGitRepository
+                        this.gitInit && !this.isSelectedExampleWithGitRepository
                             ? {}
                             : {
                                   "--recurse-submodules": null
