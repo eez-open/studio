@@ -262,10 +262,14 @@ const WatchTable = observer(
                             const elementValue = value[i];
                             const name = `[${i}]`;
                             const type = elementType ?? typeof elementValue;
-                            const valueLabel = getValueLabel(
-                                this.props.runtime.projectStore.project,
-                                elementValue,
-                                type
+                            const valueLabel = (
+                                <span>
+                                    {getValueLabel(
+                                        this.props.runtime.projectStore.project,
+                                        elementValue,
+                                        type
+                                    )}
+                                </span>
                             );
 
                             children.push(
@@ -316,10 +320,14 @@ const WatchTable = observer(
                                 }
                             }
 
-                            const valueLabel = getValueLabel(
-                                this.props.runtime.projectStore.project,
-                                propertyValue,
-                                fieldType
+                            const valueLabel = (
+                                <span>
+                                    {getValueLabel(
+                                        this.props.runtime.projectStore.project,
+                                        propertyValue,
+                                        fieldType
+                                    )}
+                                </span>
                             );
 
                             children.push(
@@ -377,10 +385,15 @@ const WatchTable = observer(
                                             expression
                                         ));
 
-                                    watchExpressionLabel = getValueLabel(
-                                        this.props.runtime.projectStore.project,
-                                        value,
-                                        type
+                                    watchExpressionLabel = (
+                                        <span>
+                                            {getValueLabel(
+                                                this.props.runtime.projectStore
+                                                    .project,
+                                                value,
+                                                type
+                                            )}
+                                        </span>
                                     );
                                 } catch (err) {
                                     watchExpressionLabel = err.toString();
@@ -437,10 +450,14 @@ const WatchTable = observer(
                 const name = variable.fullName;
 
                 const value = dataContext.get(name);
-                const valueLabel = getValueLabel(
-                    this.props.runtime.projectStore.project,
-                    value,
-                    variable.type
+                const valueLabel = (
+                    <span>
+                        {getValueLabel(
+                            this.props.runtime.projectStore.project,
+                            value,
+                            variable.type
+                        )}
+                    </span>
                 );
 
                 return observable({
@@ -516,10 +533,14 @@ const WatchTable = observer(
 
                 let value = componentState.getInputValue(input.name);
 
-                let valueLabel = getValueLabel(
-                    this.props.runtime.projectStore.project,
-                    value,
-                    null
+                let valueLabel = (
+                    <span>
+                        {getValueLabel(
+                            this.props.runtime.projectStore.project,
+                            value,
+                            null
+                        )}
+                    </span>
                 );
 
                 return observable({

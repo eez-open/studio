@@ -317,7 +317,7 @@ export function getValueLabel(
     }
 
     if (typeof value == "string") {
-        return `"${value}"`;
+        return JSON.stringify(value);
     }
 
     if (value instanceof Stream) {
