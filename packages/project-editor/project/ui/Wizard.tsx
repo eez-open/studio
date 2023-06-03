@@ -130,9 +130,10 @@ class WizardModel {
 
     _name: string | undefined;
     get name() {
-        if (this._name) {
+        if (this._name != undefined) {
             return this._name;
         }
+
         return this.selectedProjectType
             ? this.selectedProjectType.defaultProjectName
             : undefined;
@@ -842,6 +843,8 @@ class WizardModel {
                     ? this.projectTypes[0].id
                     : undefined;
         }
+
+        this.name = undefined;
     }
 
     switchToExamples() {
@@ -867,6 +870,8 @@ class WizardModel {
                     ? this.projectTypes[0].id
                     : undefined;
         }
+
+        this.name = undefined;
     }
 
     changeFolder(folder: string) {
@@ -904,6 +909,8 @@ class WizardModel {
             }
 
             this.lastExamplesType = this.type;
+
+            this.name = undefined;
         }
     }
 
@@ -914,6 +921,8 @@ class WizardModel {
             this.lastTemplatesType = this.type;
         } else {
             this.lastExamplesType = this.type;
+
+            this.name = undefined;
         }
     }
 
