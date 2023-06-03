@@ -229,11 +229,25 @@ const SelectItemDialog = observer(
             return vars;
         }
 
-        getTypeChildren(type: string, prefix: string): ITreeNode<string>[] {
+        getTypeChildren(
+            type: string,
+            prefix: string,
+            set?: Set<string>
+        ): ITreeNode<string>[] {
+            if (set) {
+                if (set.has(type)) {
+                    return [];
+                }
+            } else {
+                set = new Set<string>();
+            }
+            set.add(type);
+
             if (isArrayType(type)) {
                 return this.getTypeChildren(
                     getArrayElementTypeFromType(type)!,
-                    `${prefix}[]`
+                    `${prefix}[]`,
+                    set
                 );
             } else if (isStructType(type)) {
                 const structure = getStructureFromType(
@@ -257,7 +271,8 @@ const SelectItemDialog = observer(
                             ),
                             children: this.getTypeChildren(
                                 field.type,
-                                `${prefix}.${field.name}`
+                                `${prefix}.${field.name}`,
+                                set
                             ),
                             selected: this.selection == data,
                             expanded: true,

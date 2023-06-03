@@ -1643,11 +1643,83 @@ const ProjectTypesList = observer(
                 ?.scrollIntoView({ block: "nearest" });
         }
 
+        onKeyDown = (event: any) => {
+            let focusedItemId = $(event.target)
+                .find(".EezStudio_NewProjectWizard_ProjectType.selected")
+                .attr("data-object-id");
+
+            if (!focusedItemId) {
+                return;
+            }
+
+            let $focusedItem = $(event.target).find(
+                `.EezStudio_NewProjectWizard_ProjectType[data-object-id="${focusedItemId}"]`
+            );
+
+            if (
+                event.keyCode == 38 ||
+                event.keyCode == 40 ||
+                event.keyCode == 33 ||
+                event.keyCode == 34 ||
+                event.keyCode == 36 ||
+                event.keyCode == 35
+            ) {
+                let $rows = $(event.target).find(
+                    ".EezStudio_NewProjectWizard_ProjectType"
+                );
+                let index = $rows.index($focusedItem);
+
+                let pageSize = Math.floor(
+                    $(event.target).parent().height()! /
+                        $($rows[0]).outerHeight()!
+                );
+
+                if (event.keyCode == 38) {
+                    // up
+                    index--;
+                } else if (event.keyCode == 40) {
+                    // down
+                    index++;
+                } else if (event.keyCode == 33) {
+                    // page up
+                    index -= pageSize;
+                } else if (event.keyCode == 34) {
+                    // page down
+                    index += pageSize;
+                } else if (event.keyCode == 36) {
+                    // home
+                    index = 0;
+                } else if (event.keyCode == 35) {
+                    // end
+                    index = $rows.length - 1;
+                }
+
+                if (index < 0) {
+                    index = 0;
+                } else if (index >= $rows.length) {
+                    index = $rows.length - 1;
+                }
+
+                let newFocusedItemId = $($rows[index]).attr("data-object-id");
+                if (newFocusedItemId) {
+                    wizardModel.changeType(newFocusedItemId);
+                    ($rows[index] as Element).scrollIntoView({
+                        block: "nearest",
+                        behavior: "auto"
+                    });
+                }
+
+                event.preventDefault();
+            }
+        };
+
         render() {
             return (
                 <div
                     className="EezStudio_NewProjectWizard_ProjectTypes"
                     ref={this.myRef}
+                    tabIndex={0}
+                    onKeyDown={this.onKeyDown}
                 >
                     {wizardModel.projectTypes.map(projectType => (
                         <ProjectTypeComponent
@@ -1677,6 +1749,7 @@ const ProjectTypeComponent = observer(
                             selected: wizardModel.type == projectType.id
                         }
                     )}
+                    data-object-id={projectType.id}
                     onClick={() => {
                         wizardModel.changeType(projectType.id);
                     }}
@@ -1912,7 +1985,7 @@ const ProjectProperties = observer(
                                         className="form-check-label"
                                         htmlFor="new-project-wizard-git-clone-checkbox"
                                     >
-                                        Clone git repository
+                                        Clone Git repository
                                     </label>
                                     <div className="form-text">
                                         Check this if you want to download the

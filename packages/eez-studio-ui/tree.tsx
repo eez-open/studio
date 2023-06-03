@@ -213,6 +213,117 @@ export const Tree = observer(
             }
         };
 
+        findNodeByID(node: ITreeNode, id: string): ITreeNode | undefined {
+            if (node.id == id) {
+                return node;
+            }
+
+            for (const child of node.children) {
+                const found = this.findNodeByID(child, id);
+                if (found) {
+                    return found;
+                }
+            }
+
+            return undefined;
+        }
+
+        onSelectByID(id: string) {
+            const node = this.findNodeByID(this.props.rootNode, id);
+            if (node) {
+                this.props.selectNode(node);
+            }
+        }
+
+        onKeyDown = (event: any) => {
+            let focusedItemId = $(event.target)
+                .find(".EezStudio_Selected")
+                .attr("data-object-id");
+
+            if (!focusedItemId) {
+                return;
+            }
+
+            let $focusedItem = $(event.target).find(
+                `.EezStudio_TreeRow[data-object-id="${focusedItemId}"]`
+            );
+
+            if (
+                event.keyCode == 38 ||
+                event.keyCode == 40 ||
+                event.keyCode == 33 ||
+                event.keyCode == 34 ||
+                event.keyCode == 36 ||
+                event.keyCode == 35
+            ) {
+                let $rows = $(event.target).find(".EezStudio_TreeRow");
+                let index = $rows.index($focusedItem);
+
+                let pageSize = Math.floor(
+                    $(event.target).height()! / $rows.height()!
+                );
+
+                if (event.keyCode == 38) {
+                    // up
+                    index--;
+                } else if (event.keyCode == 40) {
+                    // down
+                    index++;
+                } else if (event.keyCode == 33) {
+                    // page up
+                    index -= pageSize;
+                } else if (event.keyCode == 34) {
+                    // page down
+                    index += pageSize;
+                } else if (event.keyCode == 36) {
+                    // home
+                    index = 0;
+                } else if (event.keyCode == 35) {
+                    // end
+                    index = $rows.length - 1;
+                }
+
+                if (index < 0) {
+                    index = 0;
+                } else if (index >= $rows.length) {
+                    index = $rows.length - 1;
+                }
+
+                let newFocusedItemId = $($rows[index]).attr("data-object-id");
+                if (newFocusedItemId) {
+                    this.onSelectByID(newFocusedItemId);
+                    ($rows[index] as Element).scrollIntoView({
+                        block: "nearest",
+                        behavior: "auto"
+                    });
+                }
+
+                event.preventDefault();
+            } else if (event.keyCode == 37) {
+                // left
+                let $rows = $focusedItem.parent().find(".EezStudio_TreeRow");
+                if ($rows.length == 1) {
+                    let $row = $($rows[0]);
+                    $rows = $row.parent().parent().find(".EezStudio_TreeRow");
+                    let newFocusedItemId = $($rows[0]).attr("data-object-id");
+                    if (newFocusedItemId) {
+                        this.onSelectByID(newFocusedItemId);
+                    }
+                } else {
+                    $focusedItem
+                        .find(".EezStudio_TreeRowTriangle")
+                        .trigger("click");
+                }
+
+                event.preventDefault();
+            } else if (event.keyCode == 39) {
+                // right
+                $focusedItem
+                    .find(".EezStudio_TreeRowTriangle:not(.EezStudio_Expanded)")
+                    .trigger("click");
+            }
+        };
+
         render() {
             return (
                 <div
@@ -222,6 +333,7 @@ export const Tree = observer(
                     )}
                     tabIndex={0}
                     style={this.props.style}
+                    onKeyDown={this.onKeyDown}
                 >
                     <TreeRow
                         showOnlyChildren={this.props.showOnlyChildren}
