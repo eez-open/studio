@@ -6377,8 +6377,11 @@ button.EezStudio_Action {
                     color: @selectionColor;
                     background-color: @selectionBackgroundColor;
                     border-bottom: 1px solid transparent;
-                    .EezStudio_NewProjectWizard_ProjectType_Image > img {
-                        cursor: zoom-in;
+                    .EezStudio_NewProjectWizard_ProjectType_Image {
+                        > img,
+                        & > svg {
+                            cursor: zoom-in;
+                        }
                     }
                 }
 
