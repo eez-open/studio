@@ -1,6 +1,14 @@
 import React from "react";
-import { observable, action, computed, makeObservable } from "mobx";
+import {
+    observable,
+    action,
+    computed,
+    makeObservable,
+    reaction,
+    IReactionDisposer
+} from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import {
     VALIDATION_MESSAGE_REQUIRED,
@@ -18,6 +26,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
+import { Icon } from "eez-studio-ui/icon";
 
 import { IParameter, compareMnemonic } from "instrument/scpi";
 import {
@@ -28,6 +37,7 @@ import {
 } from "instrument/commands-tree";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
+import { terminalState } from "instrument/window/terminal/terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -386,7 +396,7 @@ export const CommandsBrowser = observer(
         {}
     > {
         selectedNode: ICommandNode;
-        searchText: string = "";
+        dispose: IReactionDisposer;
 
         constructor(props: {
             appStore: InstrumentAppStore;
@@ -398,7 +408,6 @@ export const CommandsBrowser = observer(
 
             makeObservable(this, {
                 selectedNode: observable,
-                searchText: observable,
                 foundNodes: computed,
                 selectNode: action.bound,
                 onSearchChange: action.bound
@@ -410,7 +419,7 @@ export const CommandsBrowser = observer(
                 commandNode: ICommandNode;
             })[] = [];
 
-            let searchText = this.searchText.toLowerCase();
+            let searchText = terminalState.searchText.toLowerCase();
             let selectedNode = this.selectedNode;
 
             function visitCommandNode(node: ICommandNode) {
@@ -438,6 +447,21 @@ export const CommandsBrowser = observer(
             return foundNodes;
         }
 
+        componentDidMount(): void {
+            this.dispose = reaction(
+                () => terminalState.searchText,
+                () => {
+                    if (this.foundNodes.length > 0) {
+                        this.selectNode(this.foundNodes[0]);
+                    }
+                }
+            );
+        }
+
+        componentWillUnmount(): void {
+            this.dispose();
+        }
+
         selectNode(node: ITreeNode | IListNode) {
             let commandNode: ICommandNode;
 
@@ -463,12 +487,12 @@ export const CommandsBrowser = observer(
         };
 
         onSearchChange(event: any) {
-            this.searchText = $(event.target).val() as string;
+            terminalState.searchText = $(event.target).val() as string;
         }
 
         render() {
             let leftSideBody;
-            if (this.searchText) {
+            if (terminalState.searchText) {
                 leftSideBody = (
                     <List
                         nodes={this.foundNodes}
@@ -523,10 +547,22 @@ export const CommandsBrowser = observer(
                 >
                     <VerticalHeaderWithBody className="EezStudio_CommandsBrowserTree">
                         <Header>
+                            <Icon
+                                icon="material:link"
+                                title="Link the command input with the documentation browser"
+                                onClick={action(() => {
+                                    terminalState.linkCommandInputWithDocumentationBrowser =
+                                        !terminalState.linkCommandInputWithDocumentationBrowser;
+                                })}
+                                className={classNames({
+                                    selected:
+                                        terminalState.linkCommandInputWithDocumentationBrowser
+                                })}
+                            />
                             <SearchInput
-                                searchText={this.searchText}
+                                searchText={terminalState.searchText || ""}
                                 onClear={action(() => {
-                                    this.searchText = "";
+                                    terminalState.searchText = "";
                                 })}
                                 onChange={this.onSearchChange}
                                 onKeyDown={this.onSearchChange}

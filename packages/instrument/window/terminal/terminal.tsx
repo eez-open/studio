@@ -1,5 +1,4 @@
 import React from "react";
-import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { Splitter } from "eez-studio-ui/splitter";
@@ -9,7 +8,6 @@ import * as notification from "eez-studio-ui/notification";
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import { executeShortcut } from "instrument/window/script";
 
-import type { ISession } from "instrument/window/history/session/store";
 import {
     HistoryView,
     HistoryTools
@@ -18,53 +16,11 @@ import {
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { parseScpi, SCPI_PART_QUERY } from "eez-studio-shared/scpi-parser";
+import { terminalState } from "./terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_COMMANDS_HISTORY_SIZE = 1000;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export interface ITerminalState {
-    command: string;
-    selectedSession: ISession | undefined;
-    selectSession: (session: ISession | undefined) => void;
-}
-
-class TerminalState {
-    _command: string = "";
-    selectedSession: ISession | undefined;
-
-    constructor() {
-        makeObservable(this, {
-            _command: observable,
-            selectedSession: observable,
-            selectSession: action
-        });
-    }
-
-    get command() {
-        return this._command;
-    }
-
-    set command(command: string) {
-        runInAction(() => {
-            this._command = command;
-        });
-    }
-
-    selectSession(selectedSession: ISession | undefined) {
-        if (this.selectedSession) {
-            this.selectedSession.selected = false;
-        }
-        this.selectedSession = selectedSession;
-        if (this.selectedSession) {
-            this.selectedSession.selected = true;
-        }
-    }
-}
-
-const terminalState = new TerminalState();
 
 ////////////////////////////////////////////////////////////////////////////////
 

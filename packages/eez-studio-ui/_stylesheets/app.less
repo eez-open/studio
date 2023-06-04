@@ -2422,10 +2422,18 @@ button.EezStudio_Action {
 }
 
 .EezStudio_CommandsBrowserTree {
-    > div:nth-child(1) {
-        padding: 1px;
-        padding-top: 2px;
+    .EezStudio_Header {
         border-bottom: 1px solid @borderColor;
+        padding: 0;
+
+        display: flex;
+
+        .EezStudio_Icon {
+            border-right: 1px solid @borderColor;
+            &.selected {
+                background-color: @panelHeaderColor;
+            }
+        }
     }
 }
 
