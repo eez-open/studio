@@ -793,7 +793,20 @@ export abstract class RuntimeBase {
         value: any
     ): void;
 
+    cleanupFlowStatesTimeout: any;
+
     cleanupFlowStates() {
+        if (!this.cleanupFlowStatesTimeout) {
+            this.cleanupFlowStatesTimeout = setTimeout(
+                this.doClenupFlowStates,
+                1000
+            );
+        }
+    }
+
+    doClenupFlowStates = () => {
+        this.cleanupFlowStatesTimeout = undefined;
+
         const runtime = this;
 
         function cleanupFlowState(flowState: FlowState | RuntimeBase) {
@@ -813,7 +826,7 @@ export abstract class RuntimeBase {
         }
 
         cleanupFlowState(this);
-    }
+    };
 
     setObjectVariableValue(variableName: string, value: IObjectVariableValue) {}
 }

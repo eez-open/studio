@@ -669,13 +669,29 @@ void startToDebuggerMessage() {
     }, eez::flow::g_wasmModuleId);
 }
 
+static char g_debuggerBuffer[1024 * 1024];
+static uint32_t g_debuggerBufferIndex = 0;
+
 void writeDebuggerBuffer(const char *buffer, uint32_t length) {
-    EM_ASM({
-        writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
-    }, eez::flow::g_wasmModuleId, buffer, length);
+    if (g_debuggerBufferIndex + length > sizeof(g_debuggerBuffer)) {
+        EM_ASM({
+            writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
+        }, eez::flow::g_wasmModuleId, g_debuggerBuffer, g_debuggerBufferIndex);
+        g_debuggerBufferIndex = 0;
+    } else {
+        memcpy(g_debuggerBuffer + g_debuggerBufferIndex, buffer, length);
+        g_debuggerBufferIndex += length;
+    }
 }
 
 void finishToDebuggerMessage() {
+    if (g_debuggerBufferIndex > 0) {
+        EM_ASM({
+            writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
+        }, eez::flow::g_wasmModuleId, g_debuggerBuffer, g_debuggerBufferIndex);
+        g_debuggerBufferIndex = 0;
+    }
+
     EM_ASM({
         finishToDebuggerMessage($0);
     }, eez::flow::g_wasmModuleId);

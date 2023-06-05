@@ -39,6 +39,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import { InputActionComponent } from "project-editor/flow/components/actions";
+import { IEezObject } from "project-editor/core/object";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -416,18 +417,25 @@ export class RemoteRuntime extends RuntimeBase {
         }
     }
 
+    stringPathToObject = new Map<string, IEezObject | undefined>();
+
+    getObjectFromStringPath(path: string) {
+        let object = this.stringPathToObject.get(path);
+        if (!object) {
+            object = getObjectFromStringPath(this.projectStore.project, path);
+            this.stringPathToObject.set(path, object);
+        }
+        return object;
+    }
+
     findComponentInSourceMap(component: Component) {
         let flowIndex = -1;
         let componentIndex = -1;
 
         const flow = ProjectEditor.getFlow(component);
-        const projectStore = ProjectEditor.getProjectStore(flow);
 
         const flowInAssetsMap = this.assetsMap.flows.find(flowInAssetsMap => {
-            const obj = getObjectFromStringPath(
-                projectStore.project,
-                flowInAssetsMap.path
-            );
+            const obj = this.getObjectFromStringPath(flowInAssetsMap.path);
             return obj == flow;
         });
 
@@ -436,8 +444,7 @@ export class RemoteRuntime extends RuntimeBase {
 
             const componentInAssetsMap = flowInAssetsMap.components.find(
                 componentInAssetsMap => {
-                    const obj = getObjectFromStringPath(
-                        projectStore.project,
+                    const obj = this.getObjectFromStringPath(
                         componentInAssetsMap.path
                     );
                     return obj == component;
@@ -849,10 +856,10 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        const targetComponent = getObjectFromStringPath(
-                            runtime.projectStore.project,
-                            targetComponentInAssetsMap.path
-                        ) as Component;
+                        const targetComponent =
+                            this.runtime.getObjectFromStringPath(
+                                targetComponentInAssetsMap.path
+                            ) as Component;
                         if (!targetComponent) {
                             console.error("UNEXPECTED!");
                             return;
@@ -870,10 +877,10 @@ export abstract class DebuggerConnectionBase {
                                 return;
                             }
 
-                            const sourceComponent = getObjectFromStringPath(
-                                runtime.projectStore.project,
-                                sourceComponentInAssetsMap.path
-                            ) as Component;
+                            const sourceComponent =
+                                this.runtime.getObjectFromStringPath(
+                                    sourceComponentInAssetsMap.path
+                                ) as Component;
                             if (!sourceComponent) {
                                 console.error("UNEXPECTED!");
                                 return;
@@ -1109,8 +1116,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        const component = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        const component = this.runtime.getObjectFromStringPath(
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1184,8 +1190,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        const flow = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        const flow = this.runtime.getObjectFromStringPath(
                             flowInAssetsMap.path
                         ) as Flow;
                         if (!flow) {
@@ -1228,10 +1233,10 @@ export abstract class DebuggerConnectionBase {
                                     return;
                                 }
 
-                                parentComponent = getObjectFromStringPath(
-                                    runtime.projectStore.project,
-                                    componentInAssetsMap.path
-                                ) as Component;
+                                parentComponent =
+                                    this.runtime.getObjectFromStringPath(
+                                        componentInAssetsMap.path
+                                    ) as Component;
                                 if (!parentComponent) {
                                     console.error("UNEXPECTED!");
                                     return;
@@ -1360,8 +1365,7 @@ export abstract class DebuggerConnectionBase {
                             console.error("UNEXPECTED!");
                             return;
                         }
-                        component = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        component = this.runtime.getObjectFromStringPath(
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1403,8 +1407,7 @@ export abstract class DebuggerConnectionBase {
                                 console.error("UNEXPECTED!");
                                 return;
                             }
-                            component = getObjectFromStringPath(
-                                runtime.projectStore.project,
+                            component = this.runtime.getObjectFromStringPath(
                                 componentInAssetsMap.path
                             ) as Component;
                             if (!component) {
@@ -1452,8 +1455,7 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        const page = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        const page = this.runtime.getObjectFromStringPath(
                             this.runtime.assetsMap.flows[pageId].path
                         );
 
@@ -1494,8 +1496,7 @@ export abstract class DebuggerConnectionBase {
                             console.error("UNEXPECTED!");
                             return;
                         }
-                        component = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        component = this.runtime.getObjectFromStringPath(
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
@@ -1540,8 +1541,7 @@ export abstract class DebuggerConnectionBase {
                             console.error("UNEXPECTED!");
                             return;
                         }
-                        component = getObjectFromStringPath(
-                            runtime.projectStore.project,
+                        component = this.runtime.getObjectFromStringPath(
                             componentInAssetsMap.path
                         ) as Component;
                         if (!component) {
