@@ -255,7 +255,7 @@ static void memory_monitor(lv_timer_t * param)
 
 bool initialized = false;
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
     is_editor = assetsSize == 0;
 
     hor_res = displayWidth;
@@ -272,7 +272,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSi
     lv_disp_set_theme(dispp, theme);
 
     if (!is_editor) {
-        flowInit(wasmModuleId, assets, assetsSize);
+        flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize);
     }
 
     initialized = true;

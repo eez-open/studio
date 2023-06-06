@@ -1168,16 +1168,16 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  56680: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 56721: ($0, $1, $2, $3, $4) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4); },  
- 56796: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
- 56957: ($0) => { startToDebuggerMessage($0); },  
- 56989: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 57064: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 57139: ($0) => { finishToDebuggerMessage($0); },  
- 57172: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
- 57219: ($0, $1) => { onArrayValueFree($0, $1); },  
- 57249: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
+  56696: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 56737: ($0, $1, $2, $3, $4) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4); },  
+ 56812: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
+ 56973: ($0) => { startToDebuggerMessage($0); },  
+ 57005: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 57080: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 57155: ($0) => { finishToDebuggerMessage($0); },  
+ 57188: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
+ 57235: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 57265: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
 };
 
 
@@ -5320,7 +5320,7 @@ var _getNextSiblingFlowState = Module["_getNextSiblingFlowState"] = createExport
 var _getFlowStateFlowIndex = Module["_getFlowStateFlowIndex"] = createExportWrapper("getFlowStateFlowIndex");
 
 /** @type {function(...*):?} */
-var _setSendMinimalDebuggerMessages = Module["_setSendMinimalDebuggerMessages"] = createExportWrapper("setSendMinimalDebuggerMessages");
+var _setDebuggerMessageSubsciptionFilter = Module["_setDebuggerMessageSubsciptionFilter"] = createExportWrapper("setDebuggerMessageSubsciptionFilter");
 
 /** @type {function(...*):?} */
 var _isRTL = Module["_isRTL"] = createExportWrapper("isRTL");

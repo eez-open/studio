@@ -11,20 +11,26 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import * as FlexLayout from "flexlayout-react";
 
 var sha256 = require("sha256");
 
 import { compareVersions, studioVersion } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
 
-import { IExtension } from "eez-studio-shared/extensions/extension";
+import {
+    ExtensionType,
+    IExtension
+} from "eez-studio-shared/extensions/extension";
 import {
     extensions,
     installExtension,
     uninstallExtension,
     changeExtensionImage,
-    exportExtension
+    exportExtension,
+    reloadExtension
 } from "eez-studio-shared/extensions/extensions";
+import { extensionsFolderPath } from "eez-studio-shared/extensions/extension-folder";
 
 import {
     copyFile,
@@ -34,11 +40,9 @@ import {
 } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 
-import { Splitter } from "eez-studio-ui/splitter";
 import {
     VerticalHeaderWithBody,
     Header,
-    ToolbarHeader,
     Body
 } from "eez-studio-ui/header-with-body";
 import { Toolbar } from "eez-studio-ui/toolbar";
@@ -54,9 +58,13 @@ import {
     confirmWithButtons
 } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts";
 import { extensionsCatalog } from "home/extensions-manager/catalog";
+
+import { homeLayoutModels } from "home/home-layout-models";
+import { yarnInstall } from "eez-studio-shared/extensions/yarn";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -113,8 +121,7 @@ class ExtensionsVersionsCatalogBuilder {
     }
 
     addExtension(extension: IExtension) {
-        for (let i = 0; i < this.extensionsVersions.length; ++i) {
-            const extensionVersions = this.extensionsVersions[i];
+        for (const extensionVersions of this.extensionsVersions) {
             if (extensionVersions.versionInFocus.id === extension.id) {
                 // a new version of already seen extension
                 this.addVersion(extensionVersions, extension);
@@ -154,19 +161,59 @@ class ExtensionsVersionsCatalogBuilder {
         this.extensionsVersions.push(extensionVersions);
     }
 
-    get(viewFilter: ViewFilter) {
+    get(
+        extensionType: ExtensionType | undefined,
+        viewFilter: ViewFilter,
+        searchText: string
+    ) {
+        let extensionsVersions;
+        if (extensionType) {
+            extensionsVersions = this.extensionsVersions.filter(
+                extensionsVersions =>
+                    extensionsVersions.versionInFocus.extensionType ==
+                    extensionType
+            );
+        } else {
+            extensionsVersions = this.extensionsVersions;
+        }
+
+        if (searchText) {
+            extensionsVersions = extensionsVersions.filter(
+                extensionsVersions => {
+                    const parts = searchText.trim().toLowerCase().split("+");
+                    if (parts.length == 0) {
+                        return true;
+                    }
+
+                    const searchTargets = [
+                        extensionsVersions.versionInFocus.name,
+                        extensionsVersions.versionInFocus.displayName,
+                        extensionsVersions.versionInFocus.description,
+                        extensionsVersions.versionInFocus.author
+                    ]
+                        .filter(target => target && target.trim().length > 0)
+                        .join(", ")
+                        .toLowerCase();
+
+                    return !parts.find(
+                        part => searchTargets.indexOf(part) == -1
+                    );
+                }
+            );
+        }
+
         if (viewFilter === ViewFilter.ALL) {
-            return this.extensionsVersions;
+            return extensionsVersions;
         } else if (viewFilter === ViewFilter.INSTALLED) {
-            return this.extensionsVersions.filter(
+            return extensionsVersions.filter(
                 extensionVersions => !!extensionVersions.installedVersion
             );
         } else if (viewFilter === ViewFilter.NOT_INSTALLED) {
-            return this.extensionsVersions.filter(
+            return extensionsVersions.filter(
                 extensionVersions => !extensionVersions.installedVersion
             );
         } else {
-            return this.extensionsVersions.filter(
+            return extensionsVersions.filter(
                 extensionVersions =>
                     extensionVersions.installedVersion &&
                     compareVersions(
@@ -181,23 +228,80 @@ class ExtensionsVersionsCatalogBuilder {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ExtensionsManagerStore {
+    section: ExtensionType = "iext";
     selectedExtension: IExtension | undefined;
     _viewFilter: ViewFilter | undefined;
+    searchText: string = "";
 
     constructor() {
         makeObservable(this, {
+            section: observable,
             selectedExtension: observable,
             _viewFilter: observable,
             viewFilter: computed,
+            searchText: observable,
+
             extensionsVersionsCatalogBuilder: computed,
             all: computed,
             installed: computed,
             notInstalled: computed,
             newVersions: computed,
             extensionNodes: computed,
+
             selectExtensionById: action,
-            selectedExtensionVersions: computed
+            selectedExtensionVersions: computed,
+
+            switchToInstrumentExtensions: action.bound,
+            switchToProjectExtensions: action.bound,
+            switchToMeasurementExtensions: action.bound,
+            onSearchChange: action.bound
         });
+    }
+
+    updateSelectedExtension() {
+        if (
+            !extensionsManagerStore.extensionNodes.find(
+                extensionNode => extensionNode.id == this.selectedExtension?.id
+            )
+        ) {
+            this.selectedExtension =
+                extensionsManagerStore.extensionNodes[0].data;
+        }
+    }
+
+    updateViewFilter() {
+        if (this._viewFilter) {
+            if (
+                (this._viewFilter == ViewFilter.INSTALLED &&
+                    this.installed.length == 0) ||
+                (this._viewFilter == ViewFilter.NOT_INSTALLED &&
+                    this.notInstalled.length == 0) ||
+                (this._viewFilter == ViewFilter.NEW_VERSIONS &&
+                    this.newVersions.length == 0)
+            ) {
+                this._viewFilter = ViewFilter.ALL;
+            }
+        }
+
+        this.updateSelectedExtension();
+    }
+
+    switchToInstrumentExtensions() {
+        this.section = "iext";
+        this.updateViewFilter();
+    }
+    switchToProjectExtensions() {
+        this.section = "pext";
+        this.updateViewFilter();
+    }
+    switchToMeasurementExtensions() {
+        this.section = "measurement-functions";
+        this.updateViewFilter();
+    }
+
+    onSearchChange(event: any) {
+        this.searchText = $(event.target).val() as string;
+        this._viewFilter = ViewFilter.ALL;
     }
 
     get viewFilter() {
@@ -216,14 +320,21 @@ export class ExtensionsManagerStore {
         this._viewFilter = value;
     }
 
+    filterExtension(extension: IExtension) {
+        if (extension.extensionType != this.section) {
+            return false;
+        }
+        return true;
+    }
+
     get extensionsVersionsCatalogBuilder() {
         const builder = new ExtensionsVersionsCatalogBuilder();
 
-        installedExtensions
-            .get()
-            .forEach(extension => builder.addExtension(extension));
+        installedExtensions.get().forEach(extension => {
+            builder.addExtension(extension);
+        });
 
-        extensionsCatalog.catalog.forEach(extension => {
+        extensionsCatalog.catalog.forEach((extension: any) => {
             const extensionMinStudioVersion = (extension as any)["eez-studio"]
                 .minVersion;
             if (extensionMinStudioVersion !== undefined) {
@@ -242,28 +353,52 @@ export class ExtensionsManagerStore {
     }
 
     get all() {
-        return this.extensionsVersionsCatalogBuilder.get(ViewFilter.ALL);
+        return this.extensionsVersionsCatalogBuilder.get(
+            this.section,
+            ViewFilter.ALL,
+            this.searchText
+        );
     }
 
     get installed() {
-        return this.extensionsVersionsCatalogBuilder.get(ViewFilter.INSTALLED);
+        return this.extensionsVersionsCatalogBuilder.get(
+            this.section,
+            ViewFilter.INSTALLED,
+            this.searchText
+        );
     }
 
     get notInstalled() {
         return this.extensionsVersionsCatalogBuilder.get(
-            ViewFilter.NOT_INSTALLED
+            this.section,
+            ViewFilter.NOT_INSTALLED,
+            this.searchText
         );
     }
 
     get newVersions() {
         return this.extensionsVersionsCatalogBuilder.get(
-            ViewFilter.NEW_VERSIONS
+            this.section,
+            ViewFilter.NEW_VERSIONS,
+            this.searchText
+        );
+    }
+
+    get newVersionsInAllSections() {
+        return this.extensionsVersionsCatalogBuilder.get(
+            undefined,
+            ViewFilter.NEW_VERSIONS,
+            ""
         );
     }
 
     get extensionNodes() {
         return this.extensionsVersionsCatalogBuilder
-            .get(extensionsManagerStore.viewFilter)
+            .get(
+                this.section,
+                extensionsManagerStore.viewFilter,
+                this.searchText
+            )
             .sort((a, b) =>
                 stringCompare(
                     a.versionInFocus.displayName || a.versionInFocus.name,
@@ -286,11 +421,13 @@ export class ExtensionsManagerStore {
         );
         this.selectedExtension =
             (extensionNode && extensionNode.data) || undefined;
+
+        this.updateSelectedExtension();
     }
 
     getExtensionVersionsById(id: string) {
         return this.extensionsVersionsCatalogBuilder
-            .get(ViewFilter.ALL)
+            .get(undefined, ViewFilter.ALL, "")
             .find(
                 extensionVersions => extensionVersions.versionInFocus.id === id
             );
@@ -409,242 +546,19 @@ const BUTTONS = ["OK", "Cancel"];
 
 const MasterView = observer(
     class MasterView extends React.Component {
-        isUpdatingAll: boolean = false;
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                isUpdatingAll: observable
-            });
-        }
-
-        installExtension = async () => {
-            const result = await dialog.showOpenDialog({
-                properties: ["openFile"],
-                filters: [
-                    { name: "Extensions", extensions: ["zip"] },
-                    { name: "All Files", extensions: ["*"] }
-                ]
-            });
-
-            const filePaths = result.filePaths;
-            if (filePaths && filePaths[0]) {
-                try {
-                    let filePath = filePaths[0];
-
-                    const extension = await installExtension(filePath, {
-                        notFound() {
-                            info(
-                                "This is not a valid extension package file.",
-                                undefined
-                            );
-                        },
-                        async confirmReplaceNewerVersion(
-                            newExtension: IExtension,
-                            existingExtension: IExtension
-                        ) {
-                            return (
-                                (await confirmWithButtons(
-                                    confirmMessage(newExtension),
-                                    `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
-                                    BUTTONS
-                                )) === 0
-                            );
-                        },
-                        async confirmReplaceOlderVersion(
-                            newExtension: IExtension,
-                            existingExtension: IExtension
-                        ) {
-                            return (
-                                (await confirmWithButtons(
-                                    confirmMessage(newExtension),
-                                    `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
-                                    BUTTONS
-                                )) === 0
-                            );
-                        },
-                        async confirmReplaceTheSameVersion(
-                            newExtension: IExtension,
-                            existingExtension: IExtension
-                        ) {
-                            return (
-                                (await confirmWithButtons(
-                                    confirmMessage(newExtension),
-                                    `That version is already installed.${BUTTON_INSTRUCTIONS}`,
-                                    BUTTONS
-                                )) === 0
-                            );
-                        }
-                    });
-
-                    if (extension) {
-                        notification.success(
-                            `Extension "${
-                                extension.displayName || extension.name
-                            }" installed`
-                        );
-
-                        extensionsManagerStore.selectExtensionById(
-                            extension.id
-                        );
-                    }
-                } catch (err) {
-                    notification.error(err.toString());
-                }
-            }
-        };
-
-        updateCatalog = async () => {
-            if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
-                notification.info(
-                    "There is currently no new version of catalog available."
-                );
-            }
-        };
-
-        updateAll = async () => {
-            runInAction(() => (this.isUpdatingAll = true));
-
-            const extensionsToUpdate =
-                extensionsManagerStore.extensionNodes.map(
-                    extensionNode =>
-                        extensionsManagerStore.getExtensionVersionsById(
-                            extensionNode.data.id
-                        )!.latestVersion
-                );
-
-            const progressToastId = notification.info("Updating...", {
-                autoClose: false
-            });
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            for (let i = 0; i < extensionsToUpdate.length; ++i) {
-                await downloadAndInstallExtension(
-                    extensionsToUpdate[i],
-                    progressToastId
-                );
-            }
-
-            notification.update(progressToastId, {
-                render: "All extensions successfully updated!",
-                type: notification.SUCCESS,
-                autoClose: 5000
-            });
-
-            runInAction(() => (this.isUpdatingAll = false));
-        };
-
         render() {
             return (
-                <VerticalHeaderWithBody>
-                    <ToolbarHeader>
-                        <div style={{ flexGrow: 1 }}>
-                            <label style={{ paddingRight: 5 }}>View:</label>
-                            <label className="form-check-label">
-                                <select
-                                    className="form-control"
-                                    value={extensionsManagerStore.viewFilter}
-                                    onChange={action(
-                                        (
-                                            event: React.ChangeEvent<HTMLSelectElement>
-                                        ) =>
-                                            (extensionsManagerStore.viewFilter =
-                                                parseInt(
-                                                    event.currentTarget.value
-                                                ))
-                                    )}
-                                >
-                                    <option value={ViewFilter.ALL.toString()}>
-                                        All ({extensionsManagerStore.all.length}
-                                        )
-                                    </option>
-                                    {extensionsManagerStore.installed.length >
-                                        0 && (
-                                        <option
-                                            value={ViewFilter.INSTALLED.toString()}
-                                        >
-                                            Installed (
-                                            {
-                                                extensionsManagerStore.installed
-                                                    .length
-                                            }
-                                            )
-                                        </option>
-                                    )}
-                                    {extensionsManagerStore.notInstalled
-                                        .length > 0 && (
-                                        <option
-                                            value={ViewFilter.NOT_INSTALLED.toString()}
-                                        >
-                                            Not installed (
-                                            {
-                                                extensionsManagerStore
-                                                    .notInstalled.length
-                                            }
-                                            )
-                                        </option>
-                                    )}
-                                    {extensionsManagerStore.newVersions.length >
-                                        0 && (
-                                        <option
-                                            value={ViewFilter.NEW_VERSIONS.toString()}
-                                        >
-                                            New versions (
-                                            {
-                                                extensionsManagerStore
-                                                    .newVersions.length
-                                            }
-                                            )
-                                        </option>
-                                    )}
-                                </select>
-                            </label>
-                        </div>
-
-                        <Toolbar>
-                            {extensionsManagerStore.viewFilter ===
-                                ViewFilter.NEW_VERSIONS &&
-                                extensionsManagerStore.extensionNodes.length >
-                                    0 &&
-                                !this.isUpdatingAll && (
-                                    <ButtonAction
-                                        text="Update All"
-                                        title=""
-                                        className="btn-success"
-                                        onClick={this.updateAll}
-                                    />
-                                )}
-                            <DropdownIconAction
-                                icon="material:menu"
-                                title="Actions"
-                            >
-                                <DropdownItem
-                                    text="Update Catalog"
-                                    onClick={this.updateCatalog}
-                                />
-                                <DropdownItem
-                                    text="Install Extension"
-                                    title="Install extension from local file"
-                                    onClick={this.installExtension}
-                                />
-                            </DropdownIconAction>
-                        </Toolbar>
-                    </ToolbarHeader>
-                    <Body tabIndex={0}>
-                        <List
-                            nodes={extensionsManagerStore.extensionNodes}
-                            renderNode={node => (
-                                <ExtensionInMasterView extension={node.data} />
-                            )}
-                            selectNode={action(
-                                (node: IListNode) =>
-                                    (extensionsManagerStore.selectedExtension =
-                                        node.data)
-                            )}
-                        />
-                    </Body>
-                </VerticalHeaderWithBody>
+                <List
+                    nodes={extensionsManagerStore.extensionNodes}
+                    renderNode={node => (
+                        <ExtensionInMasterView extension={node.data} />
+                    )}
+                    selectNode={action(
+                        (node: IListNode) =>
+                            (extensionsManagerStore.selectedExtension =
+                                node.data)
+                    )}
+                />
             );
         }
     }
@@ -797,58 +711,111 @@ export function downloadAndInstallExtension(
         ): void;
     } = notification
 ) {
-    return new Promise<IExtension | undefined>((resolve, reject) => {
-        var req = new XMLHttpRequest();
-        req.responseType = "arraybuffer";
-        req.open("GET", extensionToInstall.download!);
+    return new Promise<IExtension | undefined>(async (resolve, reject) => {
+        if (extensionToInstall.extensionType == "pext") {
+            progress.update(progressId, {
+                render: `Installing extension ${
+                    extensionToInstall.displayName || extensionToInstall.name
+                }@${extensionToInstall.version} ...`,
+                type: notification.INFO
+            });
 
-        progress.update(progressId, {
-            render: `Downloading "${
-                extensionToInstall.displayName || extensionToInstall.name
-            }" extension package ...`,
-            type: notification.INFO
-        });
+            try {
+                await yarnInstall(extensionToInstall);
 
-        req.addEventListener("progress", event => {
+                await reloadExtension(
+                    extensionsFolderPath +
+                        "/node_modules/" +
+                        extensionToInstall.name
+                );
+
+                progress.update(progressId, {
+                    render: `Extension ${
+                        extensionToInstall.displayName ||
+                        extensionToInstall.name
+                    }@${extensionToInstall.version} has been installed.`,
+                    type: notification.INFO,
+                    autoClose: 5000
+                });
+            } catch (err) {
+                progress.update(progressId, {
+                    render: `Failed to install ${
+                        extensionToInstall.displayName ||
+                        extensionToInstall.name
+                    }@${extensionToInstall.version} extension: ${err}`,
+                    type: notification.ERROR,
+                    autoClose: 5000
+                });
+
+                reject();
+            }
+        } else {
+            var req = new XMLHttpRequest();
+            req.responseType = "arraybuffer";
+            req.open("GET", extensionToInstall.download!);
+
             progress.update(progressId, {
                 render: `Downloading "${
                     extensionToInstall.displayName || extensionToInstall.name
-                }" extension package: ${event.loaded} of ${event.total}.`,
+                }" extension package ...`,
                 type: notification.INFO
             });
-        });
 
-        req.addEventListener("load", () => {
-            const extensionZipFileData = Buffer.from(req.response);
+            req.addEventListener("progress", event => {
+                progress.update(progressId, {
+                    render: `Downloading "${
+                        extensionToInstall.displayName ||
+                        extensionToInstall.name
+                    }" extension package: ${event.loaded} of ${event.total}.`,
+                    type: notification.INFO
+                });
+            });
 
-            if (extensionToInstall.sha256) {
-                if (
-                    sha256(extensionZipFileData) !== extensionToInstall.sha256
-                ) {
-                    progress.update(progressId, {
-                        render: `Failed to install "${
-                            extensionToInstall.displayName ||
-                            extensionToInstall.name
-                        }" extension because package file hash doesn't match.`,
-                        type: notification.ERROR,
-                        autoClose: 5000
-                    });
-                    reject();
-                    return;
-                }
-            }
+            req.addEventListener("load", () => {
+                const extensionZipFileData = Buffer.from(req.response);
 
-            finishInstall(extensionZipFileData)
-                .then(extension => {
-                    if (extension) {
+                if (extensionToInstall.sha256) {
+                    if (
+                        sha256(extensionZipFileData) !==
+                        extensionToInstall.sha256
+                    ) {
                         progress.update(progressId, {
-                            render: `Extension "${
-                                extension.displayName || extension.name
-                            }" installed.`,
-                            type: notification.SUCCESS,
+                            render: `Failed to install "${
+                                extensionToInstall.displayName ||
+                                extensionToInstall.name
+                            }" extension because package file hash doesn't match.`,
+                            type: notification.ERROR,
                             autoClose: 5000
                         });
-                    } else {
+                        reject();
+                        return;
+                    }
+                }
+
+                finishInstall(extensionZipFileData)
+                    .then(extension => {
+                        if (extension) {
+                            progress.update(progressId, {
+                                render: `Extension "${
+                                    extension.displayName || extension.name
+                                }" installed.`,
+                                type: notification.SUCCESS,
+                                autoClose: 5000
+                            });
+                        } else {
+                            progress.update(progressId, {
+                                render: `Failed to install "${
+                                    extensionToInstall.displayName ||
+                                    extensionToInstall.name
+                                }" extension.`,
+                                type: notification.ERROR,
+                                autoClose: 5000
+                            });
+                        }
+                        resolve(extension);
+                    })
+                    .catch(error => {
+                        console.error("Extension download error", error);
                         progress.update(progressId, {
                             render: `Failed to install "${
                                 extensionToInstall.displayName ||
@@ -857,36 +824,25 @@ export function downloadAndInstallExtension(
                             type: notification.ERROR,
                             autoClose: 5000
                         });
-                    }
-                    resolve(extension);
-                })
-                .catch(error => {
-                    console.error("Extension download error", error);
-                    progress.update(progressId, {
-                        render: `Failed to install "${
-                            extensionToInstall.displayName ||
-                            extensionToInstall.name
-                        }" extension.`,
-                        type: notification.ERROR,
-                        autoClose: 5000
+                        reject();
                     });
-                    reject();
-                });
-        });
-
-        req.addEventListener("error", error => {
-            console.error("Extension download error", error);
-            progress.update(progressId, {
-                render: `Failed to download "${
-                    extensionToInstall.displayName || extensionToInstall.name
-                }" extension package.`,
-                type: notification.ERROR,
-                autoClose: 5000
             });
-            reject();
-        });
 
-        req.send();
+            req.addEventListener("error", error => {
+                console.error("Extension download error", error);
+                progress.update(progressId, {
+                    render: `Failed to download "${
+                        extensionToInstall.displayName ||
+                        extensionToInstall.name
+                    }" extension package.`,
+                    type: notification.ERROR,
+                    autoClose: 5000
+                });
+                reject();
+            });
+
+            req.send();
+        }
     });
 }
 
@@ -1021,13 +977,21 @@ export const DetailsView = observer(
             }
 
             confirm("Are you sure?", undefined, async () => {
-                await uninstallExtension(extension.id);
-                notification.success(
-                    `Extension "${
-                        extension.displayName || extension.name
-                    }" uninstalled`
-                );
-                extensionsManagerStore.selectExtensionById(extension.id);
+                try {
+                    await uninstallExtension(extension.id);
+                    notification.success(
+                        `Extension "${
+                            extension.displayName || extension.name
+                        }" uninstalled`
+                    );
+                    extensionsManagerStore.selectExtensionById(extension.id);
+                } catch (err) {
+                    notification.error(
+                        `Failed to uninstall extension ${
+                            extension.displayName || extension.name
+                        }: ${err}`
+                    );
+                }
             });
         };
 
@@ -1137,15 +1101,16 @@ export const DetailsView = observer(
                     <Header className="EezStudio_ExtensionDetailsHeader">
                         <div className="EezStudio_ExtensionDetailsHeaderImageContainer">
                             <img src={extension.image} width={256} />
-                            {extension.type == "instrument" && (
-                                <a
-                                    href="#"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={this.handleChangeImage}
-                                >
-                                    Change image
-                                </a>
-                            )}
+                            {extension.installationFolderPath &&
+                                extension.extensionType == "iext" && (
+                                    <a
+                                        href="#"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={this.handleChangeImage}
+                                    >
+                                        Change image
+                                    </a>
+                                )}
                         </div>
                         <div className="EezStudio_ExtensionDetailsHeaderProperties">
                             <div className="EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion">
@@ -1245,21 +1210,491 @@ export const DetailsView = observer(
     }
 );
 
+const ExtensionsManagerSubNavigation = observer(
+    class ExtensionsManagerSubNavigation extends React.Component {
+        isUpdatingAll: boolean = false;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                isUpdatingAll: observable
+            });
+        }
+
+        installExtension = async () => {
+            const result = await dialog.showOpenDialog({
+                properties: ["openFile"],
+                filters: [
+                    { name: "Extensions", extensions: ["zip"] },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths[0]) {
+                try {
+                    let filePath = filePaths[0];
+
+                    const extension = await installExtension(filePath, {
+                        notFound() {
+                            info(
+                                "This is not a valid extension package file.",
+                                undefined
+                            );
+                        },
+                        async confirmReplaceNewerVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `The newer version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        },
+                        async confirmReplaceOlderVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `The older version ${existingExtension.version} is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        },
+                        async confirmReplaceTheSameVersion(
+                            newExtension: IExtension,
+                            existingExtension: IExtension
+                        ) {
+                            return (
+                                (await confirmWithButtons(
+                                    confirmMessage(newExtension),
+                                    `That version is already installed.${BUTTON_INSTRUCTIONS}`,
+                                    BUTTONS
+                                )) === 0
+                            );
+                        }
+                    });
+
+                    if (extension) {
+                        notification.success(
+                            `Extension "${
+                                extension.displayName || extension.name
+                            }" installed`
+                        );
+
+                        extensionsManagerStore.selectExtensionById(
+                            extension.id
+                        );
+                    }
+                } catch (err) {
+                    notification.error(err.toString());
+                }
+            }
+        };
+
+        updateCatalog = async () => {
+            if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
+                notification.info(
+                    "There is currently no new version of catalog available."
+                );
+            }
+        };
+
+        updateAll = async () => {
+            runInAction(() => (this.isUpdatingAll = true));
+
+            const extensionsToUpdate =
+                extensionsManagerStore.extensionNodes.map(
+                    extensionNode =>
+                        extensionsManagerStore.getExtensionVersionsById(
+                            extensionNode.data.id
+                        )!.latestVersion
+                );
+
+            const progressToastId = notification.info("Updating...", {
+                autoClose: false
+            });
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            for (let i = 0; i < extensionsToUpdate.length; ++i) {
+                await downloadAndInstallExtension(
+                    extensionsToUpdate[i],
+                    progressToastId
+                );
+            }
+
+            notification.update(progressToastId, {
+                render: "All extensions successfully updated!",
+                type: notification.SUCCESS,
+                autoClose: 5000
+            });
+
+            runInAction(() => (this.isUpdatingAll = false));
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_ExtensionsManager_SubNavigation">
+                    <div></div>
+
+                    <div className="EezStudio_ExtensionsManager_ViewFilter">
+                        <ul className="nav nav-pills">
+                            <li
+                                className="nav-item"
+                                onClick={action(
+                                    () =>
+                                        (extensionsManagerStore.viewFilter =
+                                            ViewFilter.ALL)
+                                )}
+                            >
+                                <a
+                                    href="#"
+                                    className={classNames("nav-link", {
+                                        active:
+                                            extensionsManagerStore.viewFilter ===
+                                            ViewFilter.ALL
+                                    })}
+                                >
+                                    <Count
+                                        label={"All"}
+                                        count={
+                                            extensionsManagerStore.all.length
+                                        }
+                                        attention={false}
+                                    />
+                                </a>
+                            </li>
+                            {extensionsManagerStore.installed.length > 0 && (
+                                <li
+                                    className="nav-item"
+                                    onClick={action(
+                                        () =>
+                                            (extensionsManagerStore.viewFilter =
+                                                ViewFilter.INSTALLED)
+                                    )}
+                                >
+                                    <a
+                                        href="#"
+                                        className={classNames("nav-link", {
+                                            active:
+                                                extensionsManagerStore.viewFilter ===
+                                                ViewFilter.INSTALLED
+                                        })}
+                                    >
+                                        <Count
+                                            label={"Installed"}
+                                            count={
+                                                extensionsManagerStore.installed
+                                                    .length
+                                            }
+                                            attention={false}
+                                        />
+                                    </a>
+                                </li>
+                            )}
+                            {extensionsManagerStore.notInstalled.length > 0 && (
+                                <li
+                                    className="nav-item"
+                                    onClick={action(
+                                        () =>
+                                            (extensionsManagerStore.viewFilter =
+                                                ViewFilter.NOT_INSTALLED)
+                                    )}
+                                >
+                                    <a
+                                        href="#"
+                                        className={classNames("nav-link", {
+                                            active:
+                                                extensionsManagerStore.viewFilter ===
+                                                ViewFilter.NOT_INSTALLED
+                                        })}
+                                    >
+                                        <Count
+                                            label={"Not installed"}
+                                            count={
+                                                extensionsManagerStore
+                                                    .notInstalled.length
+                                            }
+                                            attention={false}
+                                        />
+                                    </a>
+                                </li>
+                            )}
+                            {extensionsManagerStore.newVersions.length > 0 && (
+                                <li
+                                    className="nav-item"
+                                    onClick={action(
+                                        () =>
+                                            (extensionsManagerStore.viewFilter =
+                                                ViewFilter.NEW_VERSIONS)
+                                    )}
+                                >
+                                    <a
+                                        href="#"
+                                        className={classNames("nav-link", {
+                                            active:
+                                                extensionsManagerStore.viewFilter ===
+                                                ViewFilter.NEW_VERSIONS
+                                        })}
+                                    >
+                                        <Count
+                                            label={"New versions"}
+                                            count={
+                                                extensionsManagerStore
+                                                    .newVersions.length
+                                            }
+                                            attention={
+                                                extensionsManagerStore
+                                                    .newVersions.length > 0
+                                            }
+                                        />
+                                    </a>
+                                </li>
+                            )}
+                        </ul>
+                    </div>
+
+                    <div>
+                        {
+                            <ButtonAction
+                                text="Update All"
+                                title=""
+                                className="btn-success"
+                                onClick={this.updateAll}
+                                style={{
+                                    visibility:
+                                        extensionsManagerStore.viewFilter ===
+                                            ViewFilter.NEW_VERSIONS &&
+                                        extensionsManagerStore.extensionNodes
+                                            .length > 0 &&
+                                        !this.isUpdatingAll
+                                            ? "visible"
+                                            : "hidden"
+                                }}
+                            />
+                        }
+                        <DropdownIconAction
+                            icon="material:menu"
+                            title="Actions"
+                        >
+                            <DropdownItem
+                                text="Update Catalog"
+                                onClick={this.updateCatalog}
+                            />
+                            <DropdownItem
+                                text="Install Extension"
+                                title="Install extension from local file"
+                                onClick={this.installExtension}
+                            />
+                        </DropdownIconAction>
+                    </div>
+                </div>
+            );
+        }
+    }
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ExtensionsManager = observer(
     class ExtensionsManager extends React.Component {
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "Master") {
+                return <MasterView />;
+            }
+
+            if (component === "Details") {
+                return <DetailsView />;
+            }
+
+            return null;
+        };
+
         render() {
             return (
-                <Splitter
-                    type="horizontal"
-                    sizes="240px|100%"
-                    persistId="home/extensions-manager/splitter"
-                >
-                    <MasterView />
-                    <DetailsView />
-                </Splitter>
+                <div className="EezStudio_ExtensionsManager">
+                    <div className="EezStudio_ExtensionsManager_Navigation">
+                        <div
+                            className={classNames(
+                                "EezStudio_ExtensionsManager_NavigationItem",
+                                {
+                                    selected:
+                                        extensionsManagerStore.section == "iext"
+                                }
+                            )}
+                            onClick={
+                                extensionsManagerStore.switchToInstrumentExtensions
+                            }
+                        >
+                            <Count
+                                label="Instrument Extensions"
+                                count={
+                                    extensionsManagerStore.searchText
+                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                              "iext",
+                                              ViewFilter.ALL,
+                                              extensionsManagerStore.searchText
+                                          ).length
+                                        : undefined
+                                }
+                                attention={
+                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                        "iext",
+                                        ViewFilter.NEW_VERSIONS,
+                                        ""
+                                    ).length > 0
+                                }
+                            />
+                        </div>
+                        <div
+                            className={classNames(
+                                "EezStudio_ExtensionsManager_NavigationItem",
+                                {
+                                    selected:
+                                        extensionsManagerStore.section == "pext"
+                                }
+                            )}
+                            onClick={
+                                extensionsManagerStore.switchToProjectExtensions
+                            }
+                        >
+                            <Count
+                                label="Project Editor Extensions"
+                                count={
+                                    extensionsManagerStore.searchText
+                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                              "pext",
+                                              ViewFilter.ALL,
+                                              extensionsManagerStore.searchText
+                                          ).length
+                                        : undefined
+                                }
+                                attention={
+                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                        "pext",
+                                        ViewFilter.NEW_VERSIONS,
+                                        ""
+                                    ).length > 0
+                                }
+                            />
+                        </div>
+                        <div
+                            className={classNames(
+                                "EezStudio_ExtensionsManager_NavigationItem",
+                                {
+                                    selected:
+                                        extensionsManagerStore.section ==
+                                        "measurement-functions"
+                                }
+                            )}
+                            onClick={
+                                extensionsManagerStore.switchToMeasurementExtensions
+                            }
+                        >
+                            <Count
+                                label="Measurement Extenstions"
+                                count={
+                                    extensionsManagerStore.searchText
+                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                              "measurement-functions",
+                                              ViewFilter.ALL,
+                                              extensionsManagerStore.searchText
+                                          ).length
+                                        : undefined
+                                }
+                                attention={
+                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                        "measurement-functions",
+                                        ViewFilter.NEW_VERSIONS,
+                                        ""
+                                    ).length > 0
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    <SearchInput
+                        searchText={extensionsManagerStore.searchText}
+                        onClear={action(() => {
+                            extensionsManagerStore.searchText = "";
+                        })}
+                        onChange={extensionsManagerStore.onSearchChange}
+                    />
+
+                    {extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                        extensionsManagerStore.section,
+                        ViewFilter.ALL,
+                        extensionsManagerStore.searchText
+                    ).length > 0 ? (
+                        <>
+                            <ExtensionsManagerSubNavigation />
+
+                            <div className="EezStudio_ExtensionsManager_Body">
+                                <FlexLayout.Layout
+                                    model={homeLayoutModels.extensionManager}
+                                    factory={this.factory}
+                                    realtimeResize={true}
+                                    font={{
+                                        size: "small"
+                                    }}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="EezStudio_ExtensionsManager_NoExtensions">
+                            No extension found
+                        </div>
+                    )}
+                </div>
             );
         }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const Count = observer(
+    ({
+        label,
+        count,
+        attention
+    }: {
+        label: string;
+        count: number | undefined;
+        attention: boolean;
+    }) => {
+        const result = (
+            <>
+                {label}
+                {count != undefined && (
+                    <span
+                        className={classNames(
+                            "badge rounded-pill bg-secondary"
+                        )}
+                    >
+                        {count}
+                    </span>
+                )}
+            </>
+        );
+
+        if (attention) {
+            return (
+                <div className="EezStudio_AttentionContainer">
+                    {result}
+                    <div className="EezStudio_AttentionDiv" />
+                </div>
+            );
+        }
+
+        return result;
     }
 );

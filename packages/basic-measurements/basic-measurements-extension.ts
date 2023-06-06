@@ -69,6 +69,7 @@ const fftParametersDescription: IFieldProperties[] = [
 
 const basicMeasurementsExtension: IExtensionDefinition = {
     preInstalled: true,
+    extensionType: "measurement-functions",
 
     measurementFunctions: [
         {

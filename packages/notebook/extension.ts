@@ -14,6 +14,7 @@ import "notebook/store";
 
 const notebookExtension: IExtensionDefinition = {
     preInstalled: true,
+    extensionType: "built-in",
 
     homeSections: [
         {

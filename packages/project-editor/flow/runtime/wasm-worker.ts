@@ -183,6 +183,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 
 export function createWasmWorker(
     wasmModuleId: number,
+    debuggerMessageSubsciptionFilter: number,
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
     lvgl: boolean,
     displayWidth: number,
@@ -385,13 +386,12 @@ export function createWasmWorker(
 
             WasmFlowRuntime._init(
                 wasmModuleId,
+                debuggerMessageSubsciptionFilter,
                 ptr,
                 assets.length,
                 displayWidth,
                 displayHeight
             );
-
-            // WasmFlowRuntime._setSendMinimalDebuggerMessages(true);
 
             WasmFlowRuntime._free(ptr);
 

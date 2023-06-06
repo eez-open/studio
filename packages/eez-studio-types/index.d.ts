@@ -487,7 +487,7 @@ export interface IWasmFlowRuntime {
     onRuntimeTerminate: () => void;
 
     // eez framework API
-    _init(wasmModuleId: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number): void;
+    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number): void;
     _mainLoop(): boolean;
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number): void;
@@ -557,7 +557,7 @@ export interface IWasmFlowRuntime {
 
     _isRTL(): boolean;
 
-    _setSendMinimalDebuggerMessages(sendMinimalDebuggerMessages: boolean): number;
+    _setDebuggerMessageSubsciptionFilter(filter: uint32_t): void;
 
     // LVGL API
     _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;

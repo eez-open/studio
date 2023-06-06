@@ -749,7 +749,7 @@ static const void *getLvglImageByName(const char *name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assetsSize) {
+extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                false, LV_FONT_DEFAULT);
@@ -774,6 +774,7 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint8_t *assets, uint32_t assets
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
 
+    eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();
 
     eez::flow::start(eez::g_mainAssets);

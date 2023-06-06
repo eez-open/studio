@@ -10,10 +10,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { loadExtensions } from "eez-studio-shared/extensions/extensions";
-import {
-    getNodeModuleFolders,
-    yarnInstall
-} from "eez-studio-shared/extensions/yarn";
+import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
 
 import * as notification from "eez-studio-ui/notification";
 import { showAboutBox } from "eez-studio-ui/about-box";
@@ -150,8 +147,6 @@ async function main() {
     await loadExtensions(nodeModuleFolders);
 
     extensionsCatalog.load();
-
-    setTimeout(yarnInstall, 1000);
 
     loadTabs();
 

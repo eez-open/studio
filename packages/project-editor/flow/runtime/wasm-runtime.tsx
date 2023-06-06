@@ -21,7 +21,8 @@ import {
 
 import {
     RemoteRuntime,
-    DebuggerConnectionBase
+    DebuggerConnectionBase,
+    MessagesToDebugger
 } from "project-editor/flow//runtime/remote-runtime";
 
 import type {
@@ -191,6 +192,19 @@ export class WasmRuntime extends RemoteRuntime {
         this.wasmModuleId = nextWasmModuleId++;
         this.worker = createWasmWorker(
             this.wasmModuleId,
+            isDebuggerActive
+                ? 0xffffffff
+                : (1 << MessagesToDebugger.MESSAGE_TO_DEBUGGER_STATE_CHANGED) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_TIMELINE_CHANGED) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_CREATED) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_DESTROYED) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_PAGE_CHANGED),
             this.onWorkerMessage,
             this.projectStore.projectTypeTraits.isLVGL,
             this.displayWidth,
@@ -240,6 +254,14 @@ export class WasmRuntime extends RemoteRuntime {
             });
         }
         this.projectStore.setEditorMode();
+    }
+
+    onDebuggerActiveChanged() {
+        if (this.isDebuggerActive) {
+            this.worker.wasm._setDebuggerMessageSubsciptionFilter(0xffffffff);
+        }
+
+        super.onDebuggerActiveChanged();
     }
 
     ////////////////////////////////////////////////////////////////////////////////

@@ -504,7 +504,8 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 const extension: IExtension = observable(
                     {
                         id,
-                        type: "instrument",
+                        preInstalled: false,
+                        extensionType: "iext",
                         name,
                         description:
                             ScpiConfiguration.attr("description") ||
@@ -559,7 +560,8 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
 
             const extension: IExtension = {
                 id: packageJSON["id"],
-                type: "instrument",
+                preInstalled: false,
+                extensionType: "iext",
                 name: "",
                 description: "",
                 version: "",

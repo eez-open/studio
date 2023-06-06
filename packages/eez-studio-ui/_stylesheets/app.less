@@ -1416,42 +1416,185 @@ button.EezStudio_Action {
     min-height: calc(100% - 20px);
 }
 
-.EezStudio_ExtensionDetailsHeader {
-    display: flex;
-    flex-direction: row;
-    padding: 10px;
-    border-bottom: 1px solid @borderColor;
-    * {
-        user-select: auto;
-    }
-
-    pre {
-        font-family: inherit;
-        font-size: 100%;
-        white-space: pre-wrap;
-    }
-}
-
-.EezStudio_ExtensionDetailsHeaderImageContainer {
-    flex-grow: 0;
-    flex-shrink: 0;
-    padding-right: 10px;
+.EezStudio_ExtensionsManager {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
+    height: 100%;
 
-.EezStudio_ExtensionDetailsHeaderProperties {
-    flex-grow: 1;
-    flex-shrink: 0;
-    width: 0;
-}
+    .EezStudio_ExtensionsManager_Navigation {
+        flex: 0;
 
-.EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        border-bottom: 1px solid @borderColor;
+
+        .EezStudio_ExtensionsManager_NavigationItem {
+            &:not(.selected) {
+                cursor: pointer;
+                &:hover {
+                    border-bottom: 4px solid @borderColor;
+                }
+            }
+            text-transform: uppercase;
+            font-size: 175%;
+            margin: 0 30px;
+            padding: 0px 10px;
+            &.selected {
+                border-bottom: 4px solid @selectionBackgroundColor;
+            }
+
+            .badge {
+                margin-left: 10px;
+                transform: translateY(-2px);
+            }
+
+            .EezStudio_AttentionDiv {
+                bottom: unset;
+                top: 2px;
+                right: -8px;
+            }
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        flex: 0;
+        margin: 10px auto;
+        width: 360px;
+        border: 1px solid @borderColor;
+        background-color: field;
+        border-radius: 18px;
+        padding: 5px 10px;
+        font-size: 120%;
+        /*
+        box-shadow: 0 2px 5px 1px @borderColor;
+        &:hover {
+            box-shadow: 0 2px 8px 1px @borderColor;
+        }
+        */
+    }
+
+    .EezStudio_ExtensionsManager_SubNavigation {
+        border-top: 1px solid @borderColor;
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+
+        > div:nth-child(1) {
+            width: 140px;
+        }
+
+        .EezStudio_ExtensionsManager_ViewFilter {
+            display: flex;
+
+            font-size: 120%;
+
+            & > .nav {
+                flex-grow: 0;
+                flex-shrink: 0;
+                padding: 4px;
+
+                & > .nav-item {
+                    margin-right: 4px;
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+
+                a {
+                    color: @textColor;
+                    padding: 2px 8px;
+                    &:hover:not(.active) {
+                        background-color: @hoverBackgroundColor;
+                    }
+                    &.active {
+                        color: @selectionColor;
+                        background-color: @selectionBackgroundColor;
+                    }
+                }
+            }
+
+            & > div {
+                flex-grow: 1;
+                overflow: hidden;
+            }
+
+            .badge {
+                margin-left: 10px;
+                transform: translateY(-2px);
+            }
+
+            .EezStudio_AttentionDiv {
+                bottom: unset;
+                top: 2px;
+                right: -2px;
+            }
+        }
+
+        > div:nth-child(3) {
+            width: 140px;
+            display: flex;
+            justify-content: flex-end;
+
+            button {
+                margin-right: 10px;
+            }
+        }
+    }
+
+    .EezStudio_ExtensionsManager_Body {
+        flex: 1;
+        position: relative;
+        border-top: 1px solid @borderColor;
+
+        .EezStudio_ExtensionDetailsHeader {
+            display: flex;
+            flex-direction: row;
+            padding: 10px;
+            border-bottom: 1px solid @borderColor;
+            * {
+                user-select: auto;
+            }
+
+            pre {
+                font-family: inherit;
+                font-size: 100%;
+                white-space: pre-wrap;
+            }
+        }
+
+        .EezStudio_ExtensionDetailsHeaderImageContainer {
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .EezStudio_ExtensionDetailsHeaderProperties {
+            flex-grow: 1;
+            flex-shrink: 0;
+            width: 0;
+        }
+
+        .EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+        }
+    }
+
+    .EezStudio_ExtensionsManager_NoExtensions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font-size: 150%;
+        border-top: 1px solid @borderColor;
+    }
 }
 
 .EezStudio_InstrumentPanelContainer {

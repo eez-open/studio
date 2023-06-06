@@ -32,7 +32,7 @@ export interface IInstrumentExtensionProperties extends IExtensionProperties {
 
 export const instrumentExtensions = computed(() => {
     return values(extensions)
-        .filter(extension => extension.type === "instrument")
+        .filter(extension => extension.extensionType === "iext")
         .sort((a, b) =>
             stringCompare(a.displayName || a.name, b.displayName || b.name)
         );
@@ -40,6 +40,7 @@ export const instrumentExtensions = computed(() => {
 
 const instrumentExtension: IExtensionDefinition = {
     preInstalled: true,
+    extensionType: "built-in",
 
     init() {
         if (!isRenderer()) {

@@ -21,7 +21,8 @@ import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
 import {
     IExtension,
-    IExtensionProperties
+    IExtensionProperties,
+    ExtensionType
 } from "eez-studio-shared/extensions/extension";
 
 import {
@@ -33,9 +34,11 @@ import {
 import type * as ShortcutsStoreModule from "shortcuts/shortcuts-store";
 import path from "path";
 
+import { yarnUninstall } from "eez-studio-shared/extensions/yarn";
+
 export const CONF_EEZ_STUDIO_PROPERTY_NAME = "eez-studio";
-const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
-const CONF_NODE_MODULE_PROPERTY_NAME = "node-module";
+export const CONF_MAIN_SCRIPT_PROPERTY_NAME = "main";
+export const CONF_NODE_MODULE_PROPERTY_NAME = "node-module";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,14 +56,19 @@ async function loadExtension(
                     packageJsonEezStudio[CONF_MAIN_SCRIPT_PROPERTY_NAME];
 
                 let extension: IExtension | undefined;
+                let extensionType: ExtensionType | undefined;
                 try {
                     if (mainScript) {
+                        // this is measurement functions extension
+                        extensionType = "measurement-functions";
                         extension = require(extensionFolderPath +
                             "/" +
                             mainScript).default;
                     } else if (
                         packageJsonEezStudio[CONF_NODE_MODULE_PROPERTY_NAME]
                     ) {
+                        // this is project editor extension
+                        extensionType = "pext";
                         extension = require(extensionFolderPath).default;
                     }
                 } catch (err) {
@@ -68,8 +76,9 @@ async function loadExtension(
                     return undefined;
                 }
 
-                if (extension) {
+                if (extension && extensionType) {
                     extension.id = packageJson.id || packageJson.name;
+                    extension.extensionType = extensionType;
                     extension.name = packageJson.name;
                     extension.displayName = packageJson.displayName;
                     extension.version = packageJson.version;
@@ -164,6 +173,16 @@ async function loadAndRegisterExtension(folder: string) {
         newLoadExtensionTask.emit("error", err);
         throw err;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+export async function reloadExtension(folder: string) {
+    let extension = await loadExtension(folder);
+    if (extension) {
+        extension = registerExtension(extension);
+    }
+    return extension;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -357,7 +376,7 @@ export async function installExtension(
 
     if (
         checkExtensionType &&
-        (!result.extension.type || !checkExtensionType(result.extension.type))
+        checkExtensionType(result.extension.extensionType)
     ) {
         await removeFolder(result.tmpExtensionFolderPath);
         return undefined;
@@ -418,25 +437,32 @@ export async function installExtension(
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function uninstallExtension(extensionId: string) {
-    if (extensions.has(extensionId)) {
-        let extensionFolderPath = getExtensionFolderPath(extensionId);
+    const extension = extensions.get(extensionId);
+    if (extension) {
+        if (extension.extensionType === "pext") {
+            await yarnUninstall(extension.name);
+            action(() => extensions.delete(extensionId))();
+        } else {
+            let extensionFolderPath = getExtensionFolderPath(extensionId);
 
-        try {
-            await removeFolder(extensionFolderPath);
-        } catch (err) {
-            console.error(err);
+            try {
+                await removeFolder(extensionFolderPath);
+            } catch (err) {
+                console.error(err);
+            }
+
+            action(() => extensions.delete(extensionId))();
+            loadExtensionTasks.delete(extensionFolderPath);
+
+            const {
+                deleteGroupInShortcuts,
+                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
+            } =
+                require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
+            deleteGroupInShortcuts(
+                SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId
+            );
         }
-
-        action(() => extensions.delete(extensionId))();
-        loadExtensionTasks.delete(extensionFolderPath);
-
-        const {
-            deleteGroupInShortcuts,
-            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX
-        } = require("shortcuts/shortcuts-store") as typeof ShortcutsStoreModule;
-        deleteGroupInShortcuts(
-            SHORTCUTS_GROUP_NAME_FOR_EXTENSION_PREFIX + extensionId
-        );
     }
 }
 

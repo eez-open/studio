@@ -1,21 +1,13 @@
 import path from "path";
-import { BrowserWindow } from "@electron/remote";
 
-import {
-    fileExists,
-    readJsObjectFromFile,
-    makeFolder
-} from "eez-studio-shared/util-electron";
+import { fileExists, makeFolder } from "eez-studio-shared/util-electron";
 import { _difference } from "eez-studio-shared/algorithm";
 
-import { confirm } from "eez-studio-ui/dialog-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 
 import { extensionsFolderPath } from "eez-studio-shared/extensions/extension-folder";
-import {
-    CONF_EEZ_STUDIO_PROPERTY_NAME,
-    extensions
-} from "eez-studio-shared/extensions/extensions";
+
+import type { IExtension } from "eez-studio-shared/extensions/extension";
 
 function yarnFn(args: string[]) {
     const yarn = sourceRootDir() + "/../libs/yarn-1.22.10.js";
@@ -52,72 +44,30 @@ function yarnFn(args: string[]) {
     });
 }
 
-export async function yarnInstall() {
+export async function yarnInstall(extensionToInstall?: IExtension) {
     const cacheFolderPath = `${extensionsFolderPath}/cache`;
-    await makeFolder(cacheFolderPath);
 
-    try {
+    if (extensionToInstall) {
+        await yarnFn([
+            "add",
+            "--no-emoji",
+            "--cache-folder",
+            cacheFolderPath,
+            `${extensionToInstall.name}@${extensionToInstall.version}`
+        ]);
+    } else {
         await yarnFn([
             "install",
             "--no-emoji",
-            "--no-lockfile",
             "--cache-folder",
             cacheFolderPath
         ]);
-
-        const packageJsonPath = `${extensionsFolderPath}/package.json`;
-        const packageJson = require(packageJsonPath);
-
-        const folders = Object.keys(packageJson.dependencies ?? []).map(
-            plugin =>
-                path.resolve(
-                    extensionsFolderPath,
-                    "node_modules",
-                    plugin.split("#")[0]
-                )
-        );
-
-        const newExtensions = [];
-
-        for (let i = 0; i < folders.length; i++) {
-            const folder = folders[i];
-            let packageJsonFilePath = folder + "/" + "package.json";
-            if (await fileExists(packageJsonFilePath)) {
-                try {
-                    const packageJson = await readJsObjectFromFile(
-                        packageJsonFilePath
-                    );
-                    const packageJsonEezStudio =
-                        packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
-                    if (packageJsonEezStudio) {
-                        const extension = extensions.get(packageJson.name);
-                        if (
-                            !extension ||
-                            packageJson.version != extension.version
-                        ) {
-                            newExtensions.push(path.basename(folder));
-                        }
-                    }
-                } catch (err) {
-                    console.log(err);
-                }
-            }
-        }
-
-        if (newExtensions.length > 0) {
-            confirm(
-                "New extensions detected. Reload?",
-                newExtensions.join(", "),
-                () => {
-                    BrowserWindow.getAllWindows().forEach(window => {
-                        window.webContents.send("reload");
-                    });
-                }
-            );
-        }
-    } catch (err) {
-        console.log("yarn", err);
     }
+}
+
+export async function yarnUninstall(moduleName: string) {
+    await yarnInstall();
+    await yarnFn(["remove", moduleName]);
 }
 
 export async function getNodeModuleFolders() {
@@ -128,6 +78,11 @@ export async function getNodeModuleFolders() {
         } catch (err) {
             console.log("yarn", err);
         }
+    }
+
+    const cacheFolderPath = `${extensionsFolderPath}/cache`;
+    if (!(await fileExists(cacheFolderPath))) {
+        await makeFolder(cacheFolderPath);
     }
 
     const packageJson = require(packageJsonPath);

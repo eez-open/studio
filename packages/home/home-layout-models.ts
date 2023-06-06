@@ -179,6 +179,40 @@ export class LayoutModels extends AbstractLayoutModels {
         ]
     };
 
+    static EXTENSION_MANAGER_MASTER_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        enableTabStrip: false,
+        enableDrag: false,
+        enableDrop: false,
+        enableClose: false,
+        weight: 55,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Master",
+                component: "Master"
+            }
+        ]
+    };
+
+    static EXTENSION_MANAGER_DETAILS_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        enableTabStrip: false,
+        enableDrag: false,
+        enableDrop: false,
+        enableClose: false,
+        weight: 55,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Details",
+                component: "Details"
+            }
+        ]
+    };
+
     constructor() {
         super();
 
@@ -189,7 +223,8 @@ export class LayoutModels extends AbstractLayoutModels {
             newProjectWizardDialog: observable,
             instruments: observable,
             instrumentsBody: observable,
-            instrumentProperties: observable
+            instrumentProperties: observable,
+            extensionManager: observable
         });
 
         const savedLayoutModels =
@@ -214,6 +249,8 @@ export class LayoutModels extends AbstractLayoutModels {
     instruments: FlexLayout.Model;
     instrumentsBody: FlexLayout.Model;
     instrumentProperties: FlexLayout.Model;
+
+    extensionManager: FlexLayout.Model;
 
     get models(): ILayoutModel[] {
         const global = {
@@ -346,6 +383,23 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.newProjectWizardDialog,
                 set: action(model => (this.newProjectWizardDialog = model))
+            },
+            {
+                name: "extensionManager",
+                version: 1,
+                json: {
+                    global,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            LayoutModels.EXTENSION_MANAGER_MASTER_TABSET,
+                            LayoutModels.EXTENSION_MANAGER_DETAILS_TABSET
+                        ]
+                    }
+                },
+                get: () => this.extensionManager,
+                set: action(model => (this.extensionManager = model))
             }
         ];
     }

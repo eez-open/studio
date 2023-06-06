@@ -145,10 +145,15 @@ export interface IExtensionHost {
     activeTab: IHomeTab;
 }
 
-export interface IExtensionDefinition {
-    preInstalled?: boolean;
+export type ExtensionType =
+    | "built-in"
+    | "iext"
+    | "pext"
+    | "measurement-functions";
 
-    type?: string;
+export interface IExtensionDefinition {
+    preInstalled: boolean;
+    extensionType: ExtensionType;
 
     init?: () => void;
     destroy?: () => void;

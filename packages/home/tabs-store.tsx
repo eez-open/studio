@@ -255,7 +255,7 @@ class ExtensionManagerTab implements IHomeTab {
     get numNewVersions() {
         const { extensionsManagerStore } =
             require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
-        return extensionsManagerStore.newVersions.length;
+        return extensionsManagerStore.newVersionsInAllSections.length;
     }
 
     get icon() {

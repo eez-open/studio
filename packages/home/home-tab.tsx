@@ -161,13 +161,7 @@ window.addEventListener("message", (message: any) => {
     }
 });
 
-function TabButton({ tab }: { tab: ITabDefinition }) {
-    let icon;
-    if (typeof tab.instance.icon == "string") {
-        icon = <Icon icon={tab.instance.icon} />;
-    } else {
-        icon = tab.instance.icon;
-    }
+const TabButton = observer(function ({ tab }: { tab: ITabDefinition }) {
     return (
         <button
             className="btn btn btn-secondary"
@@ -179,13 +173,13 @@ function TabButton({ tab }: { tab: ITabDefinition }) {
             }
             style={{ display: "inline-flex", alignItems: "center" }}
         >
-            {icon}
+            <Icon icon={tab.instance.icon} attention={tab.instance.attention} />
             <span style={{ paddingLeft: 5, whiteSpace: "nowrap" }}>
                 {tab.instance.title}
             </span>
         </button>
     );
-}
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 
