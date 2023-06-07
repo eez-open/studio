@@ -183,6 +183,7 @@ import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { IDashboardComponentContext } from "eez-studio-types";
 import type { Page } from "project-editor/features/page/page";
 import { visitObjects } from "project-editor/core/search";
+import { Loader } from "eez-studio-ui/loader";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -237,7 +238,10 @@ export class ContainerWidget extends Widget {
             makeDataPropertyInfo("overlay", {
                 hideInPropertyGrid: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);
-                    return !project.projectTypeTraits.hasFlowSupport;
+                    return (
+                        !project.projectTypeTraits.hasFlowSupport ||
+                        project.projectTypeTraits.isDashboard
+                    );
                 }
             }),
             {
@@ -4878,6 +4882,57 @@ export class ProgressWidget extends Widget {
 }
 
 registerClass("ProgressWidget", ProgressWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SpinnerWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Visualiser",
+
+        properties: [],
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 40,
+            height: 40
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M12 3a9 9 0 1 0 9 9" />
+            </svg>
+        ),
+
+        execute: (context: IDashboardComponentContext) => {}
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
+        return <Loader />;
+    }
+}
+
+registerClass("SpinnerWidget", SpinnerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
