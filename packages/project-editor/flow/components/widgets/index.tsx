@@ -7012,40 +7012,6 @@ export class CheckboxWidget extends Widget {
         return false;
     }
 
-    getLabel(flowContext: IFlowContext) {
-        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.label) {
-                try {
-                    const value = evalProperty(flowContext, this, "label");
-
-                    if (value != null && value != undefined) {
-                        return value;
-                    }
-                    return "";
-                } catch (err) {
-                    //console.error(err);
-                    return "";
-                }
-            }
-
-            if (flowContext.flowState) {
-                return "";
-            }
-
-            return "<no label>";
-        }
-
-        if (this.label) {
-            const result = flowContext.dataContext.get(this.label);
-            if (result != undefined) {
-                return result;
-            }
-            return this.label;
-        }
-
-        return "<no label>";
-    }
-
     getClassName() {
         return classNames("eez-widget-component", this.type);
     }
@@ -7071,6 +7037,14 @@ export class CheckboxWidget extends Widget {
 
         const style: React.CSSProperties = {};
         this.styleHook(style, flowContext);
+
+        const label = getTextValue(
+            flowContext,
+            this,
+            "label",
+            "<no label>",
+            this.label
+        );
 
         return (
             <>
@@ -7113,7 +7087,7 @@ export class CheckboxWidget extends Widget {
                         id={id}
                     ></input>
                     <label className="form-check-label" htmlFor={id}>
-                        {this.getLabel(flowContext)}
+                        {label}
                     </label>
                 </div>
                 {super.render(flowContext, width, height)}

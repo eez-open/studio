@@ -288,9 +288,9 @@ function getClassFromType(project: Project, type: string) {
     }
 
     if (type.endsWith("ActionComponent")) {
-        componentClass = findClass(
-            type.substring(0, type.length - "ActionComponent".length)
-        );
+        type = type.substring(0, type.length - "ActionComponent".length);
+
+        componentClass = findClass(type);
 
         if (componentClass) {
             return componentClass;
