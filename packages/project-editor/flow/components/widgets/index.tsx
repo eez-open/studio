@@ -7042,7 +7042,7 @@ export class CheckboxWidget extends Widget {
             flowContext,
             this,
             "label",
-            "<no label>",
+            undefined,
             this.label
         );
 
@@ -7087,7 +7087,7 @@ export class CheckboxWidget extends Widget {
                         id={id}
                     ></input>
                     <label className="form-check-label" htmlFor={id}>
-                        {label}
+                        {typeof label == "string" ? label : label.text}
                     </label>
                 </div>
                 {super.render(flowContext, width, height)}
