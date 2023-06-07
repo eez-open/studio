@@ -7,7 +7,6 @@ import type { ArrayValue } from "project-editor/flow/runtime/wasm-value";
 export interface RendererToWorkerMessage {
     // response to init message from WASM worker
     init?: {
-        nodeModuleFolders: string[];
         assetsData: Uint8Array;
         assetsMap: AssetsMap;
         globalVariableValues: IGlobalVariable[];

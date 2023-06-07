@@ -350,36 +350,42 @@ export const ComponentEnclosure = observer(
             );
 
             return (
-                <div
-                    ref={this.elRef}
-                    data-eez-flow-object-id={dataFlowObjectId}
-                    className={className}
-                    style={style}
-                >
-                    {component.render(
-                        flowContext,
-                        width ?? component.width,
-                        height ?? component.height
-                    )}
+                <>
+                    {flowContext.projectStore.projectTypeTraits.isDashboard &&
+                        component instanceof ProjectEditor.WidgetClass &&
+                        component.style.render()}
 
-                    {
-                        // component description
-                        component instanceof
-                            ProjectEditor.ActionComponentClass &&
-                            component.description &&
-                            flowContext.projectStore.uiStateStore
-                                .showComponentDescriptions &&
-                            (flowContext.projectStore.runtime
-                                ? flowContext.projectStore.runtime
-                                      .isDebuggerActive &&
-                                  !flowContext.frontFace
-                                : true) && (
-                                <div className="EezStudio_ActionComponentDescription">
-                                    {component.description}
-                                </div>
-                            )
-                    }
-                </div>
+                    <div
+                        ref={this.elRef}
+                        data-eez-flow-object-id={dataFlowObjectId}
+                        className={className}
+                        style={style}
+                    >
+                        {component.render(
+                            flowContext,
+                            width ?? component.width,
+                            height ?? component.height
+                        )}
+
+                        {
+                            // component description
+                            component instanceof
+                                ProjectEditor.ActionComponentClass &&
+                                component.description &&
+                                flowContext.projectStore.uiStateStore
+                                    .showComponentDescriptions &&
+                                (flowContext.projectStore.runtime
+                                    ? flowContext.projectStore.runtime
+                                          .isDebuggerActive &&
+                                      !flowContext.frontFace
+                                    : true) && (
+                                    <div className="EezStudio_ActionComponentDescription">
+                                        {component.description}
+                                    </div>
+                                )
+                        }
+                    </div>
+                </>
             );
         }
     }

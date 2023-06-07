@@ -37,6 +37,7 @@ export class RuntimeSettings {
         }
 
         const objectVariableType = ProjectEditor.getObjectVariableTypeFromType(
+            this.projectStore,
             variable.type
         );
 
@@ -92,6 +93,7 @@ export class RuntimeSettings {
                 if (value != null) {
                     const objectVariableType =
                         ProjectEditor.getObjectVariableTypeFromType(
+                            this.projectStore,
                             variable.type
                         );
                     if (objectVariableType) {

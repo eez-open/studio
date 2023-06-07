@@ -3,8 +3,6 @@ import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
-
 import { InstrumentObject } from "instrument/instrument-object";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
@@ -73,6 +71,7 @@ import { IExpressionContext } from "project-editor/flow/expression";
 import type { Page } from "project-editor/features/page/page";
 import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
+import { getClassByName } from "project-editor/core/object";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -208,7 +207,8 @@ export class WasmRuntime extends RemoteRuntime {
             this.onWorkerMessage,
             this.projectStore.projectTypeTraits.isLVGL,
             this.displayWidth,
-            this.displayHeight
+            this.displayHeight,
+            (className: string) => getClassByName(this.projectStore, className)
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
@@ -309,7 +309,6 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             message.init = {
-                nodeModuleFolders: await getNodeModuleFolders(),
                 assetsData: this.assetsData,
                 assetsMap: this.assetsMap,
                 globalVariableValues,
@@ -349,8 +348,10 @@ export class WasmRuntime extends RemoteRuntime {
                     valueType != "object:Instrument" ||
                     !this.projectStore.dashboardInstrument
                 ) {
-                    const objectVariableType =
-                        getObjectVariableTypeFromType(valueType);
+                    const objectVariableType = getObjectVariableTypeFromType(
+                        this.projectStore,
+                        valueType
+                    );
                     if (objectVariableType) {
                         const value = objectVariableType.createValue(
                             workerToRenderMessage.freeArrayValue
@@ -529,6 +530,7 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             const objectVariableType = getObjectVariableTypeFromType(
+                this.projectStore,
                 variable.type
             );
             if (objectVariableType) {
@@ -559,7 +561,12 @@ export class WasmRuntime extends RemoteRuntime {
                         this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
-                        getObjectVariableTypeFromType
+                        (type: string) => {
+                            return getObjectVariableTypeFromType(
+                                this.projectStore,
+                                type
+                            );
+                        }
                     );
 
                     this.globalVariables.push({
@@ -578,7 +585,12 @@ export class WasmRuntime extends RemoteRuntime {
                         this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
-                        getObjectVariableTypeFromType
+                        (type: string) => {
+                            return getObjectVariableTypeFromType(
+                                this.projectStore,
+                                type
+                            );
+                        }
                     );
 
                     this.globalVariables.push({
@@ -645,7 +657,12 @@ export class WasmRuntime extends RemoteRuntime {
                     this.assetsMap.typeIndexes[objectVariable.variable.type],
                     objectVariable.objectVariableValue,
                     this.assetsMap,
-                    getObjectVariableTypeFromType
+                    (type: string) => {
+                        return getObjectVariableTypeFromType(
+                            this.projectStore,
+                            type
+                        );
+                    }
                 );
 
                 if (isDifferent(oldArrayValue, newArrayValue)) {
@@ -918,7 +935,9 @@ export class WasmRuntime extends RemoteRuntime {
             valueTypeIndex,
             value,
             this.assetsMap,
-            getObjectVariableTypeFromType
+            (type: string) => {
+                return getObjectVariableTypeFromType(this.projectStore, type);
+            }
         );
 
         if (arrayValue == undefined) {

@@ -8,6 +8,7 @@ import {
     addItem,
     canAdd,
     createObject,
+    getAncestorOfType,
     LayoutModels
 } from "project-editor/store";
 
@@ -16,6 +17,7 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 
 import {
     BuildFile,
+    General,
     ImportDirective,
     ProjectType
 } from "project-editor/project/project";
@@ -260,6 +262,10 @@ export const SettingsContent = observer(
                 this.context.project.settings.general;
 
             if (object === this.context.project.settings) {
+                object = this.context.project.settings.general;
+            }
+
+            if (getAncestorOfType(object, General.classInfo)) {
                 object = this.context.project.settings.general;
             }
 

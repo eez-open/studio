@@ -1548,53 +1548,65 @@ button.EezStudio_Action {
         position: relative;
         border-top: 1px solid @borderColor;
 
-        .EezStudio_ExtensionDetailsHeader {
-            display: flex;
-            flex-direction: row;
-            padding: 10px;
-            border-bottom: 1px solid @borderColor;
-            * {
-                user-select: auto;
-            }
-
-            pre {
-                font-family: inherit;
-                font-size: 100%;
-                white-space: pre-wrap;
+        .EezStudio_ListItem {
+            & > div:nth-child(2) {
+                white-space: unset;
             }
         }
+    }
+}
 
-        .EezStudio_ExtensionDetailsHeaderImageContainer {
-            flex-grow: 0;
-            flex-shrink: 0;
-            padding-right: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+.EezStudio_ExtensionsManager_SelectProjectExtensionDialog {
+    width: 100%;
+    height: 100%;
+}
 
-        .EezStudio_ExtensionDetailsHeaderProperties {
-            flex-grow: 1;
-            flex-shrink: 0;
-            width: 0;
-        }
+.EezStudio_ExtensionsManager_NoExtensions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 150%;
+    border-top: 1px solid @borderColor;
+}
 
-        .EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-        }
+.EezStudio_ExtensionDetailsHeader {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    border-bottom: 1px solid @borderColor;
+    * {
+        user-select: auto;
     }
 
-    .EezStudio_ExtensionsManager_NoExtensions {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        font-size: 150%;
-        border-top: 1px solid @borderColor;
+    pre {
+        font-family: inherit;
+        font-size: 100%;
+        white-space: pre-wrap;
     }
+}
+
+.EezStudio_ExtensionDetailsHeaderImageContainer {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.EezStudio_ExtensionDetailsHeaderProperties {
+    flex-grow: 1;
+    flex-shrink: 0;
+    width: 0;
+}
+
+.EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 
 .EezStudio_InstrumentPanelContainer {
@@ -2647,6 +2659,7 @@ button.EezStudio_Action {
     height: 100%;
 
     & > :nth-child(1) {
+        position: relative;
         flex-grow: 1;
         display: flex;
         overflow: auto;
@@ -2993,6 +3006,17 @@ button.EezStudio_Action {
 
     text-area.form-control {
         min-height: auto;
+    }
+
+    table {
+        & > tbody {
+            & > tr.inError {
+                background-color: #ffaaaa;
+            }
+            & > td.highlighted {
+                background-color: #ff6666;
+            }
+        }
     }
 
     & > table {
@@ -6704,5 +6728,61 @@ button.EezStudio_Action {
             width: auto !important;
             height: auto !important;
         }
+    }
+}
+
+.EezStudio_ProjectEditor_MissingExtensions {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+    overflow: auto;
+
+    & > div {
+        margin-bottom: 10px;
+    }
+
+    & > div:last-child {
+        margin-bottom: 0;
+    }
+
+    .EezStudio_ProjectEditor_MissingExtensions_Body {
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        min-height: 100px;
+        max-height: 600px;
+        overflow: auto;
+        margin-bottom: 20px;
+        > div {
+            width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+            &:last-child {
+                border-bottom: none;
+            }
+
+            & > button {
+                margin-left: 5px;
+            }
+
+            & > .unknown-extension {
+                margin-left: 5px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                color: @errorColor;
+            }
+        }
+    }
+
+    .EezStudio_ProjectEditor_MissingExtensions_Footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 390px;
     }
 }

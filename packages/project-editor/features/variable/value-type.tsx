@@ -40,6 +40,7 @@ import type {
     IStructureField
 } from "project-editor/features/variable/variable";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
+import type { ProjectStore } from "project-editor/store";
 
 export type {
     IObjectVariableValueConstructorParams,
@@ -367,7 +368,7 @@ const VariableTypeSelect = observer(
         const objectTypes =
             props.project.projectTypeTraits.hasFlowSupport &&
             !props.project.projectTypeTraits.isLVGL
-                ? [...objectVariableTypes.keys()].map(name => {
+                ? [...project._store.objectVariableTypes.keys()].map(name => {
                       return (
                           <option key={name} value={addType(`object:${name}`)}>
                               {humanizeVariableType(`object:${name}`)}
@@ -416,7 +417,7 @@ const VariableTypeSelect = observer(
         const arrayOfObjects =
             props.project.projectTypeTraits.hasFlowSupport &&
             !props.project.projectTypeTraits.isLVGL
-                ? [...objectVariableTypes.keys()].map(name => {
+                ? [...project._store.objectVariableTypes.keys()].map(name => {
                       return (
                           <option
                               key={name}
@@ -741,7 +742,10 @@ export function getEnumTypeNameFromType(type: string) {
     return result[1];
 }
 
-export function getObjectVariableTypeFromType(type: string) {
+export function getObjectVariableTypeFromType(
+    projectStore: ProjectStore,
+    type: string
+) {
     const result = type.match(OBJECT_TYPE_REGEXP);
     if (result == null) {
         return undefined;
@@ -749,7 +753,7 @@ export function getObjectVariableTypeFromType(type: string) {
 
     const objectVariableTypeName = result[1];
 
-    return objectVariableTypes.get(objectVariableTypeName);
+    return projectStore.objectVariableTypes.get(objectVariableTypeName);
 }
 
 export function isIntegerVariable(variable: IVariable) {
@@ -880,8 +884,7 @@ export function isValidType(project: Project, valueType: ValueType): boolean {
 
 export const objectVariableTypes = new Map<string, IObjectVariableType>();
 
-export function registerObjectVariableType(
-    name: string,
+export function createObjectVariableType(
     objectVariableType: IObjectVariableType
 ) {
     const temp = Object.assign({}, objectVariableType);
@@ -926,7 +929,14 @@ export function registerObjectVariableType(
         }
     ];
 
-    objectVariableTypes.set(name, temp);
+    return temp;
+}
+
+export function registerObjectVariableType(
+    name: string,
+    objectVariableType: IObjectVariableType
+) {
+    objectVariableTypes.set(name, createObjectVariableType(objectVariableType));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

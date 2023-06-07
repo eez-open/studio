@@ -7,8 +7,6 @@ import type {
     IWasmFlowRuntime
 } from "eez-studio-types";
 
-import { getClassByName } from "project-editor/core/object";
-
 import type {
     RendererToWorkerMessage,
     IGlobalVariable
@@ -134,7 +132,7 @@ function executeDashboardComponent(
             componentType
         ];
 
-    const aClass = getClassByName(componentName);
+    const aClass = WasmFlowRuntime.getClassByName(componentName);
     if (aClass && aClass.classInfo.execute) {
         aClass.classInfo.execute(dashboardComponentContext);
     } else {
@@ -187,7 +185,8 @@ export function createWasmWorker(
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
     lvgl: boolean,
     displayWidth: number,
-    displayHeight: number
+    displayHeight: number,
+    getClassByName: (className: string) => any
 ) {
     let WasmFlowRuntime: IWasmFlowRuntime;
 
@@ -200,6 +199,8 @@ export function createWasmWorker(
             postWorkerToRenderMessage
         );
     }
+
+    WasmFlowRuntime.getClassByName = getClassByName;
 
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 

@@ -24,7 +24,8 @@ import type {
     Widget,
     getWidgetParent,
     CustomInput,
-    CustomOutput
+    CustomOutput,
+    createActionComponentClass
 } from "project-editor/flow/component";
 import type {
     Glyph,
@@ -147,6 +148,7 @@ export interface IProjectEditor {
     CustomInputClass: typeof CustomInput;
     CustomOutputClass: typeof CustomOutput;
     ImportDirectiveClass: typeof ImportDirective;
+    createActionComponentClass: typeof createActionComponentClass;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

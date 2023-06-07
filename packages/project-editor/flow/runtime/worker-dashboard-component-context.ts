@@ -252,6 +252,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         const outputIndex = component.outputIndexes[outputName];
         if (outputIndex == undefined) {
             this.throwError(`Output "${outputName}" not found`);
+            return;
         }
         const output = component.outputs[outputIndex];
 

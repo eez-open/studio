@@ -115,6 +115,7 @@ export class LVGLStyle extends EezObject {
         ],
         listLabel: (lvglStyle: LVGLStyle) => {
             const componentClass = getClassesDerivedFrom(
+                ProjectEditor.getProjectStore(lvglStyle),
                 ProjectEditor.LVGLWidgetClass
             ).find(
                 componentClass => componentClass.name == lvglStyle.forWidgetType
@@ -154,6 +155,8 @@ export class LVGLStyle extends EezObject {
             );
         },
         newItem: async (parent: IEezObject) => {
+            const project = ProjectEditor.getProject(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Style",
@@ -171,6 +174,7 @@ export class LVGLStyle extends EezObject {
                             type: "enum",
                             enumItems: () => {
                                 return getClassesDerivedFrom(
+                                    project._store,
                                     ProjectEditor.LVGLWidgetClass
                                 ).map(componentClass => {
                                     const classInfo =
@@ -201,8 +205,6 @@ export class LVGLStyle extends EezObject {
                 definition: {} as any
             };
 
-            const project = ProjectEditor.getProject(parent);
-
             const style = createObject<LVGLStyle>(
                 project._store,
                 styleProperties,
@@ -217,6 +219,7 @@ export class LVGLStyle extends EezObject {
         },
         lvgl: (lvglStyle: LVGLStyle) => {
             const componentClass = getClassesDerivedFrom(
+                ProjectEditor.getProjectStore(lvglStyle),
                 ProjectEditor.LVGLWidgetClass
             ).find(
                 componentClass => componentClass.name == lvglStyle.forWidgetType

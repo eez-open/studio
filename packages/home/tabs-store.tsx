@@ -830,6 +830,26 @@ export class ProjectEditorTab implements IHomeTab {
         return true;
     }
 
+    async reloadProject() {
+        if (!this.projectStore) {
+            return;
+        }
+
+        await this.projectStore.closeWindow();
+        this.projectStore.unmount();
+
+        if (this.removeListeners) {
+            this.removeListeners();
+            this.removeListeners = undefined;
+        }
+
+        this.loadProject();
+
+        if (this.active) {
+            this.addListeners();
+        }
+    }
+
     loadDebugInfo(filePath: string) {
         if (this.projectStore) {
             this.projectStore.loadDebugInfo(filePath);
@@ -1198,6 +1218,17 @@ export class Tabs {
             this._homeSectionsVisibilityOption == "both" ||
             this._homeSectionsVisibilityOption == "instruments"
         );
+    }
+
+    reloadProject(projectStore: ProjectStore) {
+        const tab = this.tabs.find(
+            tab =>
+                tab instanceof ProjectEditorTab &&
+                tab.projectStore == projectStore
+        ) as ProjectEditorTab | undefined;
+        if (tab) {
+            tab.reloadProject();
+        }
     }
 }
 

@@ -685,6 +685,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             project._store,
             {
                 components: getClassesDerivedFrom(
+                    project._store,
                     ProjectEditor.LVGLWidgetClass
                 ).map(componentClass =>
                     Object.assign(

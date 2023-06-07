@@ -10,7 +10,6 @@ import type { Flow } from "project-editor/flow/flow";
 import { Component, isFlowProperty } from "project-editor/flow/component";
 import {
     getClassesDerivedFrom,
-    getClassName,
     getProperty,
     IObjectClassInfo,
     isPropertyHidden,
@@ -18,10 +17,10 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    getClass,
     getClassInfo,
     getHumanReadableObjectPath,
     getObjectPathAsString,
+    ProjectStore,
     Section
 } from "project-editor/store";
 import { visitObjects } from "project-editor/core/search";
@@ -66,8 +65,8 @@ function getComponentId(componentType: IObjectClassInfo) {
     return componentType.objectClass.classInfo.flowComponentId;
 }
 
-function getComponentTypes() {
-    return getClassesDerivedFrom(Component)
+function getComponentTypes(projectStore: ProjectStore) {
+    return getClassesDerivedFrom(projectStore, Component)
         .filter(componentType => getComponentId(componentType) != undefined)
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
@@ -94,8 +93,7 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
         (assets.projectStore.projectTypeTraits.isDashboard ||
             assets.projectStore.projectTypeTraits.isLVGL)
     ) {
-        const eezClass = getClass(component);
-        const name = getClassName(eezClass);
+        const name = component.type;
         if (name) {
             flowComponentId =
                 assets.dashboardComponentClassNameToComponentIdMap[name];
@@ -484,7 +482,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
 export function buildFlowDefs(assets: Assets) {
     const defs = [];
 
-    const componentTypes = getComponentTypes();
+    const componentTypes = getComponentTypes(assets.projectStore);
 
     // enum ComponentTypes
     let componentTypeEnumItems = componentTypes.map(

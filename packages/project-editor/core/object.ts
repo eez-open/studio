@@ -294,7 +294,7 @@ export interface ClassInfo {
     _arrayAndObjectProperties?: PropertyInfo[];
 
     // optional properties
-    getClass?: (jsObject: any, aClass: EezClass) => any;
+    getClass?: (project: Project, jsObject: any, aClass: EezClass) => any;
     label?: (object: IEezObject) => string;
     listLabel?: (object: IEezObject, collapsed: boolean) => React.ReactNode;
 
@@ -523,12 +523,13 @@ export function registerClass(name: string, eezClass: EezClass) {
     eezClassToClassNameMap.set(eezClass, name);
 }
 
-export function getClassByName(className: string) {
-    return classNameToEezClassMap.get(className);
-}
+export function getClassByName(projectStore: ProjectStore, className: string) {
+    const result = classNameToEezClassMap.get(className);
+    if (result) {
+        return result;
+    }
 
-export function getClassName(eezClass: EezClass) {
-    return eezClassToClassNameMap.get(eezClass);
+    return projectStore.project.getClassByName(className);
 }
 
 export function getAllClasses() {
@@ -560,7 +561,10 @@ export interface IObjectClassInfo {
     props?: any;
 }
 
-export function getClassesDerivedFrom(parentClass: EezClass) {
+export function getClassesDerivedFrom(
+    projectStore: ProjectStore,
+    parentClass: EezClass
+) {
     const derivedClasses: IObjectClassInfo[] = [];
 
     for (const className of classNameToEezClassMap.keys()) {
@@ -572,6 +576,15 @@ export function getClassesDerivedFrom(parentClass: EezClass) {
                 objectClass
             });
         }
+    }
+
+    for (const [className, objectClass] of projectStore.project
+        .importedActionComponentClasses) {
+        derivedClasses.push({
+            id: className,
+            name: className,
+            objectClass
+        });
     }
 
     return derivedClasses;
@@ -630,9 +643,6 @@ export function setParent(object: IEezObject, parentObject: IEezObject) {
 }
 
 export function getKey(object: IEezObject): string {
-    if (!(object as any)._eez_key) {
-        console.log(object);
-    }
     return (object as any)._eez_key;
 }
 

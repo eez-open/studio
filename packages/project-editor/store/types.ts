@@ -14,7 +14,6 @@ import {
     isObjectType,
     isStructType,
     getObjectVariableTypeFromType,
-    objectVariableTypes,
     isArrayType,
     getArrayElementTypeFromType,
     BASIC_TYPE_NAMES,
@@ -79,10 +78,12 @@ export class TypesStore {
         allValueTypes.push(`undefined`);
         allValueTypes.push(`null`);
 
-        objectVariableTypes.forEach((_, objectVariableTypeName) => {
-            allValueTypes.push(`object:${objectVariableTypeName}`);
-            allValueTypes.push(`array:object:${objectVariableTypeName}`);
-        });
+        this.projectStore.objectVariableTypes.forEach(
+            (_, objectVariableTypeName) => {
+                allValueTypes.push(`object:${objectVariableTypeName}`);
+                allValueTypes.push(`array:object:${objectVariableTypeName}`);
+            }
+        );
 
         BASIC_TYPE_NAMES.forEach((basicTypeName: BasicType) => {
             allValueTypes.push(basicTypeName);
@@ -238,7 +239,10 @@ export class TypesStore {
         }
 
         if (isObjectType(valueType)) {
-            const objectVariableType = getObjectVariableTypeFromType(valueType);
+            const objectVariableType = getObjectVariableTypeFromType(
+                this.projectStore,
+                valueType
+            );
             if (objectVariableType) {
                 const type = this.objectVariableFieldDescriptionsToType(
                     valueType,

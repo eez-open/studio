@@ -186,7 +186,13 @@ function loadObjectInternal(
 
     try {
         object = aClass.classInfo.getClass
-            ? new (aClass.classInfo.getClass(jsObject, aClass))()
+            ? new (aClass.classInfo.getClass(
+                  currentProject
+                      ? currentProject
+                      : currentProjectStore!.project,
+                  jsObject,
+                  aClass
+              ))()
             : new aClass();
     } catch (err) {
         // TODO we need much better error recovery here
@@ -277,6 +283,10 @@ function loadObjectInternal(
             if (value !== undefined) {
                 (object as any)[propertyInfo.name] = value;
             }
+        }
+
+        if (object == currentProject && propertyInfo.name == "settings") {
+            currentProject.mount();
         }
     }
 

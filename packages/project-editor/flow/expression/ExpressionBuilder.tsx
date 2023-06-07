@@ -281,7 +281,10 @@ const SelectItemDialog = observer(
                     });
                 }
             } else if (isObjectType(type)) {
-                const objectVariableType = getObjectVariableTypeFromType(type);
+                const objectVariableType = getObjectVariableTypeFromType(
+                    this.context,
+                    type
+                );
                 if (objectVariableType) {
                     function getFields(
                         fieldDescriptions: IObjectVariableValueFieldDescription[],

@@ -861,7 +861,7 @@ export class FontSource extends EezObject {
     size?: number;
 
     static classInfo: ClassInfo = {
-        getClass: (jsObject: any) => {
+        getClass: (project: Project, jsObject: any) => {
             return FontSource;
         },
 

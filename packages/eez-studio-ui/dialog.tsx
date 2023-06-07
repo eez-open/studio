@@ -16,6 +16,7 @@ export interface IDialogOptions {
         title: string;
         width: number;
         height?: number;
+        onclosed?: () => void;
     };
     fieldsEnclosureDiv?: React.ComponentType<{ children?: React.ReactNode }>;
 }
@@ -60,7 +61,8 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             },
             dragit: {},
             resizeit: {},
-            closeOnBackdrop: false
+            closeOnBackdrop: false,
+            onclosed: opts.jsPanel.onclosed
         });
         return [dialog, element, root];
     } else {

@@ -139,7 +139,7 @@ export class OpenProjectsManager {
     }
 
     getAbsoluteFilePath(filePath: string, relativeFilePath: string) {
-        return path.resolve(path.dirname(filePath), relativeFilePath);
+        return path.resolve(path.dirname(filePath), relativeFilePath || "");
     }
 
     getMasterProject(project: Project): Project | undefined {

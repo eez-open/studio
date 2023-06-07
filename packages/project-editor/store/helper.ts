@@ -745,6 +745,7 @@ export function pasteItem(object: IEezObject) {
                         );
                     } else {
                         const aClass = getClassByName(
+                            projectStore,
                             c.serializedData.objectClassName
                         );
 

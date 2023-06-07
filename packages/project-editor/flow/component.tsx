@@ -149,6 +149,7 @@ import {
 } from "project-editor/flow/helper";
 
 import { wireSourceChanged } from "project-editor/store/serialization";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -265,7 +266,7 @@ export function migrateStyleProperty(
     }
 }
 
-function getClassFromType(type: string) {
+function getClassFromType(project: Project, type: string) {
     if (type.startsWith("Local.")) {
         return findClass("UserWidgetWidget");
     }
@@ -296,10 +297,15 @@ function getClassFromType(type: string) {
         }
     }
 
+    componentClass = project.importedActionComponentClasses.get(type);
+    if (componentClass) {
+        return componentClass;
+    }
+
     return NotFoundComponent;
 }
 
-function getComponentClass(jsObject: any) {
+function getComponentClass(project: Project, jsObject: any) {
     if (jsObject.type === "EvalActionComponent") {
         jsObject.type = "EvalJSExprActionComponent";
     }
@@ -318,7 +324,7 @@ function getComponentClass(jsObject: any) {
     ) {
         jsObject.type = "UserWidgetWidget";
     }
-    return getClassFromType(jsObject.type);
+    return getClassFromType(project, jsObject.type);
 }
 
 export function outputIsOptionalIfAtLeastOneOutputExists(
@@ -1602,8 +1608,8 @@ export class Component extends EezObject {
     }
 
     static classInfo: ClassInfo = {
-        getClass: function (jsObject: any) {
-            return getComponentClass(jsObject);
+        getClass: function (project: Project, jsObject: any) {
+            return getComponentClass(project, jsObject);
         },
 
         label: getComponentLabel,
@@ -3026,7 +3032,8 @@ export class Widget extends Component {
 
         var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
             {},
-            getClassFromType("Select")?.classInfo.defaultValue,
+            getClassFromType(projectStore.project, "Select")?.classInfo
+                .defaultValue,
             { type: "Select" }
         );
 
@@ -3141,7 +3148,8 @@ export class Widget extends Component {
 
         var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
             {},
-            getClassFromType("Container")?.classInfo.defaultValue,
+            getClassFromType(projectStore.project, "Container")?.classInfo
+                .defaultValue,
             { type: "Container" }
         );
 
@@ -3185,7 +3193,8 @@ export class Widget extends Component {
         var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
             Object.assign(
                 {},
-                getClassFromType("Container")?.classInfo.defaultValue,
+                getClassFromType(projectStore.project, "Container")?.classInfo
+                    .defaultValue,
                 { type: "Container" }
             );
 
@@ -3208,7 +3217,8 @@ export class Widget extends Component {
 
         var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
             {},
-            getClassFromType("List")?.classInfo.defaultValue,
+            getClassFromType(projectStore.project, "List")?.classInfo
+                .defaultValue,
             { type: "List" }
         );
         const listWidget = createObject<ListWidget>(
@@ -4107,7 +4117,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
     return properties;
 }
 
-export function registerActionComponent(
+export function createActionComponentClass(
     actionComponentDefinition: IActionComponentDefinition,
     name?: string,
     componentPaletteGroupName?: string
@@ -4292,7 +4302,23 @@ export function registerActionComponent(
         }
     };
 
-    registerClass(name || actionComponentDefinition.name, actionComponentClass);
+    return {
+        className: name || actionComponentDefinition.name,
+        actionComponentClass
+    };
+}
+
+export function registerActionComponent(
+    actionComponentDefinition: IActionComponentDefinition,
+    name?: string,
+    componentPaletteGroupName?: string
+) {
+    const { className, actionComponentClass } = createActionComponentClass(
+        actionComponentDefinition,
+        name,
+        componentPaletteGroupName
+    );
+    registerClass(className, actionComponentClass);
 }
 
 export function registerActionComponents(

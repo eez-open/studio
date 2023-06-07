@@ -724,12 +724,18 @@ export class Page extends Flow {
         }
 
         return (
-            <ComponentEnclosure
-                component={this}
-                flowContext={flowContext}
-                width={width}
-                height={height}
-            />
+            <>
+                {flowContext.projectStore.projectTypeTraits.isDashboard &&
+                    flowContext.projectStore.project.styles.map(style =>
+                        style.render()
+                    )}
+                <ComponentEnclosure
+                    component={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+            </>
         );
     }
 

@@ -33,7 +33,8 @@ import {
     getProject,
     ProjectType,
     findPage,
-    findBitmap
+    findBitmap,
+    Project
 } from "project-editor/project/project";
 import { Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
@@ -73,7 +74,7 @@ export class LVGLActionType extends EezObject {
     action: keyof typeof LVGL_ACTIONS;
 
     static classInfo: ClassInfo = {
-        getClass: function (jsObject: any) {
+        getClass: function (project: Project, jsObject: any) {
             if (jsObject.action == "CHANGE_SCREEN")
                 return LVGLChangeScreenActionType;
             else if (jsObject.action == "PLAY_ANIMATION")

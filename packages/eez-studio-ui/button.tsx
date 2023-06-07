@@ -8,9 +8,10 @@ export class Button extends React.Component<{
     color: "primary" | "secondary";
     size: "small" | "medium" | "large";
     onClick: () => void;
+    style?: React.CSSProperties;
 }> {
     render() {
-        const { color, size, onClick } = this.props;
+        const { color, size, onClick, style } = this.props;
         const className = classNames("btn", {
             "btn-sm": size === "small",
             "btn-lg": size === "large",
@@ -19,7 +20,7 @@ export class Button extends React.Component<{
         });
 
         return (
-            <button className={className} onClick={onClick}>
+            <button className={className} onClick={onClick} style={style}>
                 {this.props.children}
             </button>
         );

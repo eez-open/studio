@@ -145,6 +145,8 @@ export class ProjectStore {
     dashboardInstrument?: InstrumentObject;
     standalone: boolean = false;
 
+    missingExtensionsResolved: boolean = false;
+
     get editorsStore() {
         return this.runtime
             ? this.runtimeModeEditorsStore
@@ -176,7 +178,10 @@ export class ProjectStore {
             setModified: action,
             setProject: action,
             setEditorMode: action,
-            onSetEditorMode: action
+            onSetEditorMode: action,
+            missingExtensionsResolved: observable,
+            objectVariableTypes: computed,
+            importedActionComponentClasses: computed
         });
 
         this.currentSearch = new ProjectEditor.documentSearch.CurrentSearch(
@@ -323,6 +328,7 @@ export class ProjectStore {
         if (this.dispose5) {
             this.dispose5();
         }
+        if (this.project) this.project.unmount();
 
         this.openProjectsManager.unmount();
 
@@ -784,6 +790,11 @@ export class ProjectStore {
 
         await this.uiStateStore.load();
         await this.runtimeSettings.load();
+
+        runInAction(() => {
+            this.missingExtensionsResolved =
+                this.project.missingExtensions.length == 0;
+        });
     }
 
     canSave() {
@@ -1143,6 +1154,18 @@ export class ProjectStore {
         runtime.loadDebugInfo(filePath);
         runInAction(() => (this.runtime = runtime));
         this.editorsStore.refresh(true);
+    }
+
+    get objectVariableTypes() {
+        return this.project.objectVariableTypes;
+    }
+
+    get importedActionComponentClasses() {
+        return this.project.importedActionComponentClasses;
+    }
+
+    reloadProject() {
+        ProjectEditor.homeTabs?.reloadProject(this);
     }
 }
 

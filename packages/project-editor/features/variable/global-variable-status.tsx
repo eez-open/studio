@@ -34,6 +34,7 @@ export const GlobalVariableStatuses = observer(
 
             for (const variable of this.context.project.allGlobalVariables) {
                 const objectVariableType = getObjectVariableTypeFromType(
+                    this.context,
                     variable.type
                 );
                 if (objectVariableType) {
@@ -124,6 +125,7 @@ export const RenderVariableStatusPropertyUI = observer(
             const variable = this.props.objects[0] as Variable;
 
             const objectVariableType = getObjectVariableTypeFromType(
+                this.context,
                 variable.type
             );
             if (!objectVariableType) {

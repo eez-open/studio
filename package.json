@@ -97,6 +97,7 @@
     "dependencies": {
         "@electron/remote": "^2.0.9",
         "@emotion/css": "^11.7.1",
+        "@emotion/react": "^11.11.0",
         "@popperjs/core": "^2.9.2",
         "adm-zip": "^0.5.9",
         "app-module-path": "^2.2.0",

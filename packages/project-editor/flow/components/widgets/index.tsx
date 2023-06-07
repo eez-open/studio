@@ -6701,11 +6701,13 @@ registerClass("InputEmbeddedWidget", InputEmbeddedWidget);
 function TextInputWidgetInput({
     value,
     flowContext,
-    textInputWidget
+    textInputWidget,
+    placeholder
 }: {
     value: string;
     flowContext: IFlowContext;
     textInputWidget: TextInputWidget;
+    placeholder: string;
 }) {
     const ref = React.useRef<HTMLInputElement>(null);
     const [cursor, setCursor] = React.useState<number | null>(null);
@@ -6736,6 +6738,7 @@ function TextInputWidgetInput({
                 ref={ref}
                 type="text"
                 value={value}
+                placeholder={placeholder}
                 onChange={event => {
                     const flowState = flowContext.flowState as FlowState;
                     if (flowState) {
@@ -6783,9 +6786,11 @@ export class TextInputWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: "Value"
             }),
+            makeDataPropertyInfo("placehoder"),
             {
                 name: "password",
-                type: PropertyType.Boolean
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
             }
         ],
         defaultValue: {
@@ -6851,12 +6856,14 @@ export class TextInputWidget extends Widget {
         }
     });
 
+    placehoder: string;
     password: boolean;
 
     constructor() {
         super();
 
         makeObservable(this, {
+            placehoder: observable,
             password: observable
         });
     }
@@ -6881,12 +6888,29 @@ export class TextInputWidget extends Widget {
         return "";
     }
 
+    getPlaceholder(flowContext: IFlowContext) {
+        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.placehoder) {
+                try {
+                    return evalProperty(flowContext, this, "placehoder");
+                } catch (err) {
+                    //console.error(err);
+                }
+            }
+
+            return "";
+        }
+
+        return "";
+    }
+
     render(
         flowContext: IFlowContext,
         width: number,
         height: number
     ): React.ReactNode {
         let value = this.getValue(flowContext) ?? "";
+        let placeholder = this.getPlaceholder(flowContext) ?? "";
 
         return (
             <>
@@ -6894,6 +6918,7 @@ export class TextInputWidget extends Widget {
                     flowContext={flowContext}
                     textInputWidget={this}
                     value={value}
+                    placeholder={placeholder}
                 />
                 {super.render(flowContext, width, height)}
             </>
@@ -7061,8 +7086,6 @@ export class CheckboxWidget extends Widget {
                                 flowContext.flowState as FlowState;
                             if (flowState) {
                                 const value = event.target.checked;
-
-                                console.log(value);
 
                                 if (this.data) {
                                     flowState.runtime.assignProperty(

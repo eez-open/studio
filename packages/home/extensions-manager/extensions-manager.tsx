@@ -162,11 +162,13 @@ class ExtensionsVersionsCatalogBuilder {
     }
 
     get(
-        extensionType: ExtensionType | undefined,
-        viewFilter: ViewFilter,
-        searchText: string
+        extensionType?: ExtensionType,
+        viewFilter?: ViewFilter,
+        searchText?: string,
+        excludeExtensions?: string[]
     ) {
         let extensionsVersions;
+
         if (extensionType) {
             extensionsVersions = this.extensionsVersions.filter(
                 extensionsVersions =>
@@ -202,7 +204,19 @@ class ExtensionsVersionsCatalogBuilder {
             );
         }
 
-        if (viewFilter === ViewFilter.ALL) {
+        if (excludeExtensions) {
+            extensionsVersions = extensionsVersions.filter(
+                extensionsVersions => {
+                    return !excludeExtensions.find(
+                        excludeExtension =>
+                            extensionsVersions.versionInFocus.name ===
+                            excludeExtension
+                    );
+                }
+            );
+        }
+
+        if (viewFilter == undefined || viewFilter === ViewFilter.ALL) {
             return extensionsVersions;
         } else if (viewFilter === ViewFilter.INSTALLED) {
             return extensionsVersions.filter(
@@ -232,6 +246,7 @@ export class ExtensionsManagerStore {
     selectedExtension: IExtension | undefined;
     _viewFilter: ViewFilter | undefined;
     searchText: string = "";
+    excludeExtensions: string[] | undefined;
 
     constructor() {
         makeObservable(this, {
@@ -240,6 +255,7 @@ export class ExtensionsManagerStore {
             _viewFilter: observable,
             viewFilter: computed,
             searchText: observable,
+            excludeExtensions: observable,
 
             extensionsVersionsCatalogBuilder: computed,
             all: computed,
@@ -265,7 +281,9 @@ export class ExtensionsManagerStore {
             )
         ) {
             this.selectedExtension =
-                extensionsManagerStore.extensionNodes[0].data;
+                extensionsManagerStore.extensionNodes.length > 0
+                    ? extensionsManagerStore.extensionNodes[0].data
+                    : undefined;
         }
     }
 
@@ -397,7 +415,8 @@ export class ExtensionsManagerStore {
             .get(
                 this.section,
                 extensionsManagerStore.viewFilter,
-                this.searchText
+                this.searchText,
+                this.excludeExtensions
             )
             .sort((a, b) =>
                 stringCompare(
@@ -544,7 +563,7 @@ Click 'Cancel' to stop the installation.`;
 
 const BUTTONS = ["OK", "Cancel"];
 
-const MasterView = observer(
+export const MasterView = observer(
     class MasterView extends React.Component {
         render() {
             return (
@@ -723,7 +742,7 @@ export function downloadAndInstallExtension(
             try {
                 await yarnInstall(extensionToInstall);
 
-                await reloadExtension(
+                const extension = await reloadExtension(
                     extensionsFolderPath +
                         "/node_modules/" +
                         extensionToInstall.name
@@ -737,6 +756,8 @@ export function downloadAndInstallExtension(
                     type: notification.INFO,
                     autoClose: 5000
                 });
+
+                resolve(extension);
             } catch (err) {
                 progress.update(progressId, {
                     render: `Failed to install ${
@@ -1502,6 +1523,47 @@ const ExtensionsManagerSubNavigation = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const ExtensionsList = observer(
+    class ExtensionsList extends React.Component {
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "Master") {
+                return <MasterView />;
+            }
+
+            if (component === "Details") {
+                return <DetailsView />;
+            }
+
+            return null;
+        };
+
+        render() {
+            if (extensionsManagerStore.extensionNodes.length === 0) {
+                return (
+                    <div className="EezStudio_ExtensionsManager_NoExtensions">
+                        No extension found
+                    </div>
+                );
+            }
+
+            return (
+                <FlexLayout.Layout
+                    model={homeLayoutModels.extensionManager}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={{
+                        size: "small"
+                    }}
+                />
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const ExtensionsManager = observer(
     class ExtensionsManager extends React.Component {
         factory = (node: FlexLayout.TabNode) => {
@@ -1600,7 +1662,7 @@ export const ExtensionsManager = observer(
                             }
                         >
                             <Count
-                                label="Measurement Extenstions"
+                                label="Measurement Extensions"
                                 count={
                                     extensionsManagerStore.searchText
                                         ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
@@ -1638,14 +1700,7 @@ export const ExtensionsManager = observer(
                             <ExtensionsManagerSubNavigation />
 
                             <div className="EezStudio_ExtensionsManager_Body">
-                                <FlexLayout.Layout
-                                    model={homeLayoutModels.extensionManager}
-                                    factory={this.factory}
-                                    realtimeResize={true}
-                                    font={{
-                                        size: "small"
-                                    }}
-                                />
+                                <ExtensionsList />
                             </div>
                         </>
                     ) : (

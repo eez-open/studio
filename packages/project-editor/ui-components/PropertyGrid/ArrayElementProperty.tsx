@@ -907,7 +907,15 @@ const ArrayElementPropertiesVerticalOrientation = observer(
                                     {getClassInfo(
                                         this.props.object
                                     ).properties.map(propertyInfo => (
-                                        <tr key={propertyInfo.name}>
+                                        <tr
+                                            key={propertyInfo.name}
+                                            className={classNames({
+                                                inError: isPropertyInError(
+                                                    this.props.object,
+                                                    propertyInfo
+                                                )
+                                            })}
+                                        >
                                             <ArrayElementPropertyVerticalOrientation
                                                 propertyInfo={propertyInfo}
                                                 object={this.props.object}

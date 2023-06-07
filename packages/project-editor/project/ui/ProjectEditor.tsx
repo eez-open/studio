@@ -12,6 +12,8 @@ import {
     PageTabState
 } from "project-editor/features/page/PageEditor";
 
+import * as notification from "eez-studio-ui/notification";
+
 import { Editor, LayoutModels, Section } from "project-editor/store";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
@@ -35,9 +37,15 @@ import { ScpiTab } from "project-editor/features/scpi/ScpiNavigation";
 import { ExtensionDefinitionsTab } from "project-editor/features/extension-definitions/extension-definitions";
 import { ChangesTab } from "project-editor/features/changes/navigation";
 import classNames from "classnames";
-import { runInAction } from "mobx";
+import { action, computed, makeObservable, runInAction } from "mobx";
 import { SearchPanel } from "project-editor/project/ui/SearchPanel";
 import { ReferencesPanel } from "project-editor/project/ui/ReferencesPanel";
+import { Button } from "eez-studio-ui/button";
+import {
+    downloadAndInstallExtension,
+    extensionsManagerStore
+} from "home/extensions-manager/extensions-manager";
+import { IExtension } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +59,13 @@ export const ProjectEditorView = observer(
         render() {
             if (!this.context.project || !this.context.project._fullyLoaded) {
                 return <div className="EezStudio_ProjectEditorWrapper" />;
+            }
+
+            if (
+                this.context.project.missingExtensions.length > 0 &&
+                !this.context.missingExtensionsResolved
+            ) {
+                return <MissingExtensions />;
             }
 
             return (
@@ -511,6 +526,124 @@ const Editors = observer(
                     onContextMenu={this.onContextMenu}
                     onModelChange={this.onModelChange}
                 />
+            );
+        }
+    }
+);
+
+const MissingExtensions = observer(
+    class MissingExtensions extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                installableExtensions: computed
+            });
+        }
+
+        get installableExtensions() {
+            return extensionsManagerStore.extensionsVersionsCatalogBuilder
+                .get()
+                .filter(extensionsVersions =>
+                    this.context.project.missingExtensions.find(
+                        missingExtension =>
+                            extensionsVersions.versionInFocus.name ==
+                            missingExtension.extensionName
+                    )
+                );
+        }
+
+        installExtension = async (extensionToInstall: IExtension) => {
+            const progressToastId = notification.info("Updating...", {
+                autoClose: false
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            await downloadAndInstallExtension(
+                extensionToInstall,
+                progressToastId
+            );
+
+            if (this.installableExtensions.length == 0) {
+                this.context.reloadProject();
+            }
+        };
+
+        installAll = () => {};
+
+        render() {
+            return (
+                <div className="EezStudio_ProjectEditor_MissingExtensions">
+                    <div className="EezStudio_ProjectEditor_MissingExtensions_Title">
+                        <h6>
+                            {this.context.project.missingExtensions.length > 1
+                                ? "Install missing extensions"
+                                : "Install missing extension"}
+                            :
+                        </h6>
+                    </div>
+                    <div className="EezStudio_ProjectEditor_MissingExtensions_Body">
+                        {this.context.project.missingExtensions.map(
+                            extension => {
+                                const installableExtension =
+                                    this.installableExtensions.find(
+                                        installableExtension =>
+                                            installableExtension.versionInFocus
+                                                .name ===
+                                            extension.extensionName
+                                    )?.versionInFocus;
+
+                                return (
+                                    <div key={extension.extensionName}>
+                                        {extension.extensionName}
+                                        {installableExtension ? (
+                                            <Button
+                                                color="primary"
+                                                size="small"
+                                                onClick={() =>
+                                                    this.installExtension(
+                                                        installableExtension
+                                                    )
+                                                }
+                                            >
+                                                Install
+                                            </Button>
+                                        ) : (
+                                            <div className="unknown-extension">
+                                                Unknown extension
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            }
+                        )}
+                    </div>
+                    <div className="EezStudio_ProjectEditor_MissingExtensions_Footer">
+                        <Button
+                            color="secondary"
+                            size="small"
+                            onClick={action(() => {
+                                this.context.missingExtensionsResolved = true;
+                            })}
+                        >
+                            Edit Project
+                        </Button>
+
+                        {this.installableExtensions.length >= 1 && (
+                            <Button
+                                color="primary"
+                                size="small"
+                                onClick={this.installAll}
+                            >
+                                Install All
+                            </Button>
+                        )}
+                    </div>
+                </div>
             );
         }
     }

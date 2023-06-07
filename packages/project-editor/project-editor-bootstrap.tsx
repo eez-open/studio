@@ -1,7 +1,3 @@
-import { validators } from "eez-studio-shared/validation";
-
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-
 import type { ProjectEditorTab, Tabs } from "home/tabs-store";
 
 import { getProjectFeatures } from "project-editor/store/features";
@@ -29,15 +25,13 @@ import {
     ImportDirective
 } from "project-editor/project/project";
 
-import { extensions } from "eez-studio-shared/extensions/extensions";
-
 import {
     ActionComponent,
     Component,
-    registerActionComponent,
     getWidgetParent,
     CustomInput,
-    CustomOutput
+    CustomOutput,
+    createActionComponentClass
 } from "project-editor/flow/component";
 
 import { Page } from "project-editor/features/page/page";
@@ -47,10 +41,7 @@ import { Flow, FlowFragment } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
-import {
-    getObjectVariableTypeFromType,
-    registerObjectVariableType
-} from "project-editor/features/variable/value-type";
+import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 import "project-editor/flow/components/actions/stream";
 import "project-editor/flow/components/actions/execute-command";
@@ -69,10 +60,6 @@ import "project-editor/flow/components/widgets/terminal";
 import "project-editor/lvgl/widgets";
 import "project-editor/lvgl/actions";
 
-import type {
-    IActionComponentDefinition,
-    IObjectVariableType
-} from "eez-studio-types";
 import { getBitmapData } from "project-editor/features/bitmap/bitmap";
 import {
     migrateProjectVersion,
@@ -118,47 +105,6 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-let extensionsInitialized = false;
-
-export async function initExtensions() {
-    if (!extensionsInitialized) {
-        extensionsInitialized = true;
-        extensions.forEach(extension => {
-            if (extension.eezFlowExtensionInit) {
-                try {
-                    extension.eezFlowExtensionInit({
-                        registerActionComponent: (
-                            actionComponentDefinition: IActionComponentDefinition
-                        ) =>
-                            registerActionComponent(
-                                actionComponentDefinition,
-                                `${extension.name}/${actionComponentDefinition.name}`
-                            ),
-
-                        registerObjectVariableType: (
-                            name: string,
-                            objectVariableType: IObjectVariableType
-                        ) =>
-                            registerObjectVariableType(
-                                `${extension.name}/${name}`,
-                                objectVariableType
-                            ),
-
-                        showGenericDialog,
-
-                        validators: {
-                            required: validators.required,
-                            rangeInclusive: validators.rangeInclusive
-                        }
-                    } as any);
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-        });
-    }
-}
-
 export async function initProjectEditor(
     homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
@@ -166,8 +112,6 @@ export async function initProjectEditor(
     if (ProjectEditor.DataContextClass) {
         return;
     }
-
-    await initExtensions();
 
     const projectEditor: IProjectEditor = {
         homeTabs,
@@ -236,7 +180,8 @@ export async function initProjectEditor(
         EnumMemberClass: EnumMember,
         CustomInputClass: CustomInput,
         CustomOutputClass: CustomOutput,
-        ImportDirectiveClass: ImportDirective
+        ImportDirectiveClass: ImportDirective,
+        createActionComponentClass
     };
 
     Object.assign(ProjectEditor, projectEditor);

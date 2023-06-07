@@ -183,8 +183,10 @@ export class Variable extends EezObject {
                     !isGlobalVariable(variable) ||
                     variable.native ||
                     (isObjectType(variable.type) &&
-                        !getObjectVariableTypeFromType(variable.type)
-                            ?.editConstructorParams)
+                        !getObjectVariableTypeFromType(
+                            ProjectEditor.getProjectStore(variable),
+                            variable.type
+                        )?.editConstructorParams)
             },
             {
                 name: "persistedValue",
@@ -196,8 +198,10 @@ export class Variable extends EezObject {
                     !variable.persistent ||
                     !isObjectType(variable.type) ||
                     !isGlobalVariable(variable) ||
-                    !getObjectVariableTypeFromType(variable.type)
-                        ?.editConstructorParams
+                    !getObjectVariableTypeFromType(
+                        ProjectEditor.getProjectStore(variable),
+                        variable.type
+                    )?.editConstructorParams
             }
         ],
         listLabel: (variable: Variable) => {
@@ -514,6 +518,7 @@ export class DataContext implements IDataContext {
             const variable = this.findVariable(variableName);
             if (variable) {
                 const objectVariableType = getObjectVariableTypeFromType(
+                    this.project._store,
                     variable.type
                 );
                 if (objectVariableType) {

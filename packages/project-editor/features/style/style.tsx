@@ -1,6 +1,7 @@
+import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
-import { css } from "@emotion/css";
+import { Global, css } from "@emotion/react";
 
 import { _map, _zipObject } from "eez-studio-shared/algorithm";
 import { isValid, strToColor16 } from "eez-studio-shared/color";
@@ -1986,6 +1987,10 @@ export class Style extends EezObject {
         return cssPreview;
     }
 
+    get globalClassName() {
+        return "eez-project-style-" + this.name + "-" + this.objID;
+    }
+
     get classNames(): string[] {
         const classNames = [];
 
@@ -2001,13 +2006,29 @@ export class Style extends EezObject {
             }
 
             if (this.cssDeclarations) {
-                // use &&&& to increase specificity, so this style overrides for example:
-                // .EezStudio_FlowCanvasContainer.EezStudio_FlowEditorCanvasContainer .EezStudio_ComponentEnclosure.ButtonWidget button
-                classNames.push(css(`&&&& { ${this.cssDeclarations} }`));
+                classNames.push(this.globalClassName);
             }
         }
 
         return classNames;
+    }
+
+    render() {
+        // increase specificity, so this style overrides for example:
+        // .EezStudio_FlowCanvasContainer.EezStudio_FlowEditorCanvasContainer .EezStudio_ComponentEnclosure.ButtonWidget button
+
+        const selector = `.${this.globalClassName}.${this.globalClassName}.${this.globalClassName}.${this.globalClassName}`;
+
+        return this.cssDeclarations ? (
+            <Global
+                key={this.objID}
+                styles={css`
+                    ${selector} {
+                        ${this.cssDeclarations}
+                    }
+                `}
+            ></Global>
+        ) : null;
     }
 }
 

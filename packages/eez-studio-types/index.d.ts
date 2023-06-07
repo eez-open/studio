@@ -484,6 +484,8 @@ export interface IWasmFlowRuntime {
     componentMessages: IMessageFromWorker[] | undefined;
     postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => any;
 
+    getClassByName: (className: string) => any;
+
     onRuntimeTerminate: () => void;
 
     // eez framework API
