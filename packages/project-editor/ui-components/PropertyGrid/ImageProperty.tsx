@@ -5,6 +5,8 @@ import { observer } from "mobx-react";
 import { makeObservable, observable, runInAction } from "mobx";
 import { dialog } from "@electron/remote";
 
+import * as notification from "eez-studio-ui/notification";
+
 import type { PropertyProps } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
@@ -70,7 +72,11 @@ export const ImageProperty = observer(
                                             imageValue
                                         )
                                     );
+                                    notification.info(
+                                        "Image copied to clipboard"
+                                    );
                                 }}
+                                title="Copy image to clipboard"
                             >
                                 <Icon icon="material:content_copy" size={16} />
                             </button>
@@ -84,6 +90,7 @@ export const ImageProperty = observer(
                                         clipboard.readImage().toDataURL()
                                     );
                                 }}
+                                title="Paste image from clipboard"
                             >
                                 <Icon icon="material:content_paste" size={16} />
                             </button>
