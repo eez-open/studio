@@ -187,9 +187,7 @@ function loadObjectInternal(
     try {
         object = aClass.classInfo.getClass
             ? new (aClass.classInfo.getClass(
-                  currentProject
-                      ? currentProject
-                      : currentProjectStore!.project,
+                  currentProjectStore!,
                   jsObject,
                   aClass
               ))()
@@ -286,7 +284,7 @@ function loadObjectInternal(
         }
 
         if (object == currentProject && propertyInfo.name == "settings") {
-            currentProject.mount();
+            currentProjectStore!.buildImportedExtensions(currentProject!);
         }
     }
 

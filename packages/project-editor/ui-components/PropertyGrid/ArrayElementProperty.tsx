@@ -397,15 +397,22 @@ export const ArrayProperty = observer(
             }
 
             return (
-                <div
-                    className={classNames(
-                        "shadow-sm rounded EezStudio_ArrayProperty",
-                        { "vertical-orientation": isVerticalOrientation }
+                <>
+                    <div
+                        className={classNames(
+                            "shadow-sm rounded EezStudio_ArrayProperty",
+                            { "vertical-orientation": isVerticalOrientation }
+                        )}
+                    >
+                        {toolbar}
+                        {content}
+                    </div>
+                    {this.props.propertyInfo.formText && (
+                        <div className="form-text">
+                            {this.props.propertyInfo.formText}
+                        </div>
                     )}
-                >
-                    {toolbar}
-                    {content}
-                </div>
+                </>
             );
         }
     }

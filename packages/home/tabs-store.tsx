@@ -24,6 +24,8 @@ import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 import { ITab } from "eez-studio-ui/tabs";
 import { Icon } from "eez-studio-ui/icon";
 
+import * as notification from "eez-studio-ui/notification";
+
 import {
     HistoryViewComponent,
     showSessionsList
@@ -653,6 +655,10 @@ export class ProjectEditorTab implements IHomeTab {
             projectStore.layoutModels.reset();
         };
 
+        const onReloadProject = () => {
+            this.reloadProject();
+        };
+
         ipcRenderer.on("save", save);
         ipcRenderer.on("saveAs", saveAs);
         ipcRenderer.on("check", check);
@@ -670,6 +676,8 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("delete", deleteSelection);
 
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
+
+        ipcRenderer.on("reload-project", onReloadProject);
 
         this.removeListeners = () => {
             ipcRenderer.removeListener("save", save);
@@ -692,6 +700,8 @@ export class ProjectEditorTab implements IHomeTab {
                 "resetLayoutModels",
                 onResetLayoutModels
             );
+
+            ipcRenderer.removeListener("reload-project", onReloadProject);
 
             projectStore.onDeactivate();
         };
@@ -843,16 +853,28 @@ export class ProjectEditorTab implements IHomeTab {
             this.removeListeners = undefined;
         }
 
+        runInAction(() => {
+            this.projectStore = undefined;
+        });
+
         this.loadProject();
 
         if (this.active) {
             this.addListeners();
         }
+
+        notification.info("Project reloaded");
     }
 
     loadDebugInfo(filePath: string) {
         if (this.projectStore) {
             this.projectStore.loadDebugInfo(filePath);
+        }
+    }
+
+    saveDebugInfo() {
+        if (this.projectStore) {
+            this.projectStore.runtime?.saveDebugInfo();
         }
     }
 }

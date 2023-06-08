@@ -1,13 +1,5 @@
 import React from "react";
-import {
-    observable,
-    computed,
-    action,
-    makeObservable,
-    IReactionDisposer,
-    autorun,
-    runInAction
-} from "mobx";
+import { observable, computed, action, makeObservable } from "mobx";
 import css from "css";
 import * as FlexLayout from "flexlayout-react";
 
@@ -81,15 +73,6 @@ import { observer } from "mobx-react";
 import { extensions } from "eez-studio-shared/extensions/extensions";
 import { Button } from "eez-studio-ui/button";
 import { showSelectProjectExtensionDialog } from "home/extensions-manager/select-project-extension-dialog";
-import type { ActionComponent } from "project-editor/flow/component";
-import {
-    IActionComponentDefinition,
-    IObjectVariableType
-} from "eez-studio-types";
-import {
-    createObjectVariableType,
-    objectVariableTypes
-} from "project-editor/features/variable/value-type";
 
 export { ProjectType } from "project-editor/core/object";
 
@@ -708,7 +691,9 @@ export class General extends EezObject {
                 defaultValue: [],
                 arrayItemOrientation: "vertical",
                 partOfNavigation: false,
-                enumerable: false
+                enumerable: false,
+                formText:
+                    "After adding an extension, you need to reload the project to see the changes. To reload the project select 'Reload Project' from the 'File' menu."
             },
             {
                 name: "imports",
@@ -794,7 +779,9 @@ export class General extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ResourceFile,
                 defaultValue: [],
-                arrayItemOrientation: "vertical"
+                arrayItemOrientation: "vertical",
+                partOfNavigation: false,
+                enumerable: false
             }
         ],
         check: (general: General, messages: IMessage[]) => {
@@ -1256,20 +1243,6 @@ function getProjectClassInfo() {
     return projectClassInfo;
 }
 
-interface ExtensionContent {
-    extensionName: string;
-
-    actionComponentClasses: {
-        className: string;
-        actionComponentClass: typeof ActionComponent;
-    }[];
-
-    objectVariableTypes: {
-        name: string;
-        type: IObjectVariableType;
-    }[];
-}
-
 export class Project extends EezObject {
     _store!: ProjectStore;
     _isReadOnly: boolean = false;
@@ -1278,8 +1251,6 @@ export class Project extends EezObject {
     _fullyLoaded = false;
 
     _assets = new Assets(this);
-
-    _importedExtensions = new Map<ExtensionDirective, ExtensionContent>();
 
     get _objectsMap() {
         const objectsMap = new Map<string, EezObject>();
@@ -1320,8 +1291,6 @@ export class Project extends EezObject {
 
     lvglStyles: LVGLStyles;
 
-    dispose1: IReactionDisposer;
-
     constructor() {
         super();
 
@@ -1357,113 +1326,8 @@ export class Project extends EezObject {
             buildColors: computed({ keepAlive: true }),
             projectTypeTraits: computed,
             _objectsMap: computed,
-            missingExtensions: computed,
-            _importedExtensions: observable.shallow,
-            objectVariableTypes: computed,
-            importedActionComponentClasses: computed
+            missingExtensions: computed
         });
-    }
-
-    mount() {
-        this.dispose1 = autorun(() => {
-            const extensionDirectives = this.settings?.general?.extensions;
-            if (!extensionDirectives) {
-                return;
-            }
-
-            const newImportedExtensions = new Map<
-                ExtensionDirective,
-                ExtensionContent
-            >();
-
-            for (const extensionDirective of extensionDirectives) {
-                if (extensionDirective.extensionName) {
-                    const extension = extensions.get(
-                        extensionDirective.extensionName
-                    );
-
-                    if (!extension) {
-                        continue;
-                    }
-
-                    if (!extension.eezFlowExtensionInit) {
-                        continue;
-                    }
-
-                    const oldExtensionContent =
-                        this._importedExtensions.get(extensionDirective);
-                    if (
-                        oldExtensionContent &&
-                        oldExtensionContent.extensionName == extension.name
-                    ) {
-                        newImportedExtensions.set(
-                            extensionDirective,
-                            oldExtensionContent
-                        );
-                        continue;
-                    }
-
-                    try {
-                        const extensionContent: ExtensionContent = {
-                            extensionName: extension.name,
-                            actionComponentClasses: [],
-                            objectVariableTypes: []
-                        };
-
-                        extension.eezFlowExtensionInit({
-                            registerActionComponent: (
-                                actionComponentDefinition: IActionComponentDefinition
-                            ) => {
-                                const { className, actionComponentClass } =
-                                    ProjectEditor.createActionComponentClass(
-                                        actionComponentDefinition,
-                                        `${extension.name}/${actionComponentDefinition.name}`
-                                    );
-
-                                extensionContent.actionComponentClasses.push({
-                                    className,
-                                    actionComponentClass
-                                });
-                            },
-
-                            registerObjectVariableType: (
-                                name: string,
-                                objectVariableType: IObjectVariableType
-                            ) => {
-                                extensionContent.objectVariableTypes.push({
-                                    name: `${extension.name}/${name}`,
-                                    type: createObjectVariableType(
-                                        objectVariableType
-                                    )
-                                });
-                            },
-
-                            showGenericDialog,
-
-                            validators: {
-                                required: validators.required,
-                                rangeInclusive: validators.rangeInclusive
-                            }
-                        });
-
-                        newImportedExtensions.set(
-                            extensionDirective,
-                            extensionContent
-                        );
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-            }
-
-            runInAction(() => {
-                this._importedExtensions = newImportedExtensions;
-            });
-        });
-    }
-
-    unmount() {
-        this.dispose1();
     }
 
     get projectTypeTraits() {
@@ -1739,59 +1603,6 @@ export class Project extends EezObject {
         return this.settings.general.extensions.filter(
             extension => !extension.isInstalled
         );
-    }
-
-    get objectVariableTypes() {
-        const allObjectVariableTypes = new Map<string, IObjectVariableType>();
-
-        const globalObjectVariableTypes = objectVariableTypes;
-
-        // insert global object variable types
-        for (const [name, objectVariableType] of globalObjectVariableTypes) {
-            allObjectVariableTypes.set(name, objectVariableType);
-        }
-
-        // insert object variable types from imported extensions
-        for (const extensionContent of this._importedExtensions.values()) {
-            for (const objectVariableType of extensionContent.objectVariableTypes) {
-                allObjectVariableTypes.set(
-                    objectVariableType.name,
-                    objectVariableType.type
-                );
-            }
-        }
-
-        return allObjectVariableTypes;
-    }
-
-    get importedActionComponentClasses() {
-        const allActionComponentClasses = new Map<
-            string,
-            typeof ActionComponent
-        >();
-
-        // insert action component classes from imported extensions
-        for (const extensionContent of this._importedExtensions.values()) {
-            for (const actionComponentClass of extensionContent.actionComponentClasses) {
-                allActionComponentClasses.set(
-                    actionComponentClass.className,
-                    actionComponentClass.actionComponentClass
-                );
-            }
-        }
-
-        return allActionComponentClasses;
-    }
-
-    getClassByName(className: string) {
-        for (const extensionContent of this._importedExtensions.values()) {
-            for (const actionComponentClass of extensionContent.actionComponentClasses) {
-                if (className == actionComponentClass.className) {
-                    return actionComponentClass.actionComponentClass;
-                }
-            }
-        }
-        return undefined;
     }
 }
 

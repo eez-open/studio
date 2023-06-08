@@ -84,6 +84,16 @@ export function loadDebugInfo(debugInfoFilePath: string, focusedWindow?: any) {
     }
 }
 
+export function saveDebugInfo(focusedWindow?: any) {
+    if (!focusedWindow) {
+        focusedWindow = BrowserWindow.getFocusedWindow();
+    }
+
+    if (focusedWindow) {
+        focusedWindow.webContents.send("save-debug-info");
+    }
+}
+
 function createNewProject() {
     BrowserWindow.getFocusedWindow()!.webContents.send("new-project");
 }
@@ -226,6 +236,18 @@ function buildFileMenu(win: IWindow | undefined) {
                 type: "separator"
             },
             {
+                label: "Reload Project",
+                click: function (item: any, focusedWindow: any) {
+                    focusedWindow.webContents.send("reload-project");
+                }
+            }
+        );
+
+        fileMenuSubmenu.push(
+            {
+                type: "separator"
+            },
+            {
                 label: "Load Debug Info...",
                 click: async function (item: any, focusedWindow: any) {
                     const result = await dialog.showOpenDialog({
@@ -246,6 +268,12 @@ function buildFileMenu(win: IWindow | undefined) {
                     if (filePaths && filePaths[0]) {
                         loadDebugInfo(filePaths[0], focusedWindow);
                     }
+                }
+            },
+            {
+                label: "Save Debug Info...",
+                click: async function (item: any, focusedWindow: any) {
+                    saveDebugInfo(focusedWindow);
                 }
             }
         );

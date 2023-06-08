@@ -215,6 +215,8 @@ export interface PropertyInfo {
     propertyGridColSpan?: boolean;
 
     visitProperty?: (parentObject: IEezObject) => EezValueObject[];
+
+    formText?: string;
 }
 
 export type InheritedValue =
@@ -294,7 +296,11 @@ export interface ClassInfo {
     _arrayAndObjectProperties?: PropertyInfo[];
 
     // optional properties
-    getClass?: (project: Project, jsObject: any, aClass: EezClass) => any;
+    getClass?: (
+        projectStore: ProjectStore,
+        jsObject: any,
+        aClass: EezClass
+    ) => any;
     label?: (object: IEezObject) => string;
     listLabel?: (object: IEezObject, collapsed: boolean) => React.ReactNode;
 
@@ -529,7 +535,7 @@ export function getClassByName(projectStore: ProjectStore, className: string) {
         return result;
     }
 
-    return projectStore.project.getClassByName(className);
+    return projectStore.getClassByName(className);
 }
 
 export function getAllClasses() {
@@ -578,8 +584,10 @@ export function getClassesDerivedFrom(
         }
     }
 
-    for (const [className, objectClass] of projectStore.project
-        .importedActionComponentClasses) {
+    for (const [
+        className,
+        objectClass
+    ] of projectStore.importedActionComponentClasses) {
         derivedClasses.push({
             id: className,
             name: className,

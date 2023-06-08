@@ -1243,7 +1243,7 @@ const ExtensionsManagerSubNavigation = observer(
             });
         }
 
-        installExtension = async () => {
+        installExtensionFromFile = async () => {
             const result = await dialog.showOpenDialog({
                 properties: ["openFile"],
                 filters: [
@@ -1315,6 +1315,62 @@ const ExtensionsManagerSubNavigation = observer(
                     }
                 } catch (err) {
                     notification.error(err.toString());
+                }
+            }
+        };
+
+        installExtensionFromFolder = async () => {
+            const result = await dialog.showOpenDialog({
+                properties: ["openDirectory"]
+            });
+
+            if (result.filePaths && result.filePaths[0]) {
+                const folderPath = result.filePaths[0];
+
+                const progressToastId = notification.info("Updating...", {
+                    autoClose: false
+                });
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                try {
+                    notification.update(progressToastId, {
+                        render: `Installing extension from ${folderPath} ...`,
+                        type: notification.INFO
+                    });
+
+                    const extensionToInstall = require(folderPath +
+                        "/package.json");
+
+                    const name = extensionToInstall.name;
+
+                    extensionToInstall.name =
+                        "link:" + folderPath.replace(/\\/g, "/");
+                    extensionToInstall.version = undefined;
+
+                    await yarnInstall(extensionToInstall);
+
+                    const extension = await reloadExtension(
+                        extensionsFolderPath + "/node_modules/" + name
+                    );
+
+                    if (extension) {
+                        extensionsManagerStore.selectExtensionById(
+                            extension.id
+                        );
+                    }
+
+                    notification.update(progressToastId, {
+                        render: `Extension from ${folderPath} has been installed.`,
+                        type: notification.INFO,
+                        autoClose: 5000
+                    });
+                } catch (err) {
+                    console.error(err);
+                    notification.update(progressToastId, {
+                        render: `Failed to install extension from ${folderPath}: ${err}`,
+                        type: notification.ERROR,
+                        autoClose: 5000
+                    });
                 }
             }
         };
@@ -1508,11 +1564,22 @@ const ExtensionsManagerSubNavigation = observer(
                                 text="Update Catalog"
                                 onClick={this.updateCatalog}
                             />
-                            <DropdownItem
-                                text="Install Extension"
-                                title="Install extension from local file"
-                                onClick={this.installExtension}
-                            />
+                            {(extensionsManagerStore.section == "iext" ||
+                                extensionsManagerStore.section ==
+                                    "measurement-functions") && (
+                                <DropdownItem
+                                    text="Install Extension"
+                                    title="Install extension from local file"
+                                    onClick={this.installExtensionFromFile}
+                                />
+                            )}
+                            {extensionsManagerStore.section == "pext" && (
+                                <DropdownItem
+                                    text="Install Extension"
+                                    title="Install extension from local folder"
+                                    onClick={this.installExtensionFromFolder}
+                                />
+                            )}
                         </DropdownIconAction>
                     </div>
                 </div>
@@ -1621,38 +1688,6 @@ export const ExtensionsManager = observer(
                                 "EezStudio_ExtensionsManager_NavigationItem",
                                 {
                                     selected:
-                                        extensionsManagerStore.section == "pext"
-                                }
-                            )}
-                            onClick={
-                                extensionsManagerStore.switchToProjectExtensions
-                            }
-                        >
-                            <Count
-                                label="Project Editor Extensions"
-                                count={
-                                    extensionsManagerStore.searchText
-                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
-                                              "pext",
-                                              ViewFilter.ALL,
-                                              extensionsManagerStore.searchText
-                                          ).length
-                                        : undefined
-                                }
-                                attention={
-                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
-                                        "pext",
-                                        ViewFilter.NEW_VERSIONS,
-                                        ""
-                                    ).length > 0
-                                }
-                            />
-                        </div>
-                        <div
-                            className={classNames(
-                                "EezStudio_ExtensionsManager_NavigationItem",
-                                {
-                                    selected:
                                         extensionsManagerStore.section ==
                                         "measurement-functions"
                                 }
@@ -1675,6 +1710,38 @@ export const ExtensionsManager = observer(
                                 attention={
                                     extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
                                         "measurement-functions",
+                                        ViewFilter.NEW_VERSIONS,
+                                        ""
+                                    ).length > 0
+                                }
+                            />
+                        </div>
+                        <div
+                            className={classNames(
+                                "EezStudio_ExtensionsManager_NavigationItem",
+                                {
+                                    selected:
+                                        extensionsManagerStore.section == "pext"
+                                }
+                            )}
+                            onClick={
+                                extensionsManagerStore.switchToProjectExtensions
+                            }
+                        >
+                            <Count
+                                label="Project Editor Extensions"
+                                count={
+                                    extensionsManagerStore.searchText
+                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                              "pext",
+                                              ViewFilter.ALL,
+                                              extensionsManagerStore.searchText
+                                          ).length
+                                        : undefined
+                                }
+                                attention={
+                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                        "pext",
                                         ViewFilter.NEW_VERSIONS,
                                         ""
                                     ).length > 0

@@ -288,12 +288,17 @@ export const workbenchDocument = new WorkbenchDocument();
 ////////////////////////////////////////////////////////////////////////////////
 
 export const WorkbenchToolbar = observer(
-    class WorkbenchToolbar extends React.Component<{ onClose: () => void }> {
-        get buttons() {
+    class WorkbenchToolbar extends React.Component<{
+        onClose: () => void;
+        collapseButtons: boolean;
+    }> {
+        render() {
             let buttons = [
                 {
                     id: "instrument-add",
-                    label: "Add Instrument",
+                    label: this.props.collapseButtons
+                        ? "Add"
+                        : "Add Instrument",
                     title: "Add instrument",
                     className: "btn-success",
                     onClick: () => {
@@ -314,7 +319,9 @@ export const WorkbenchToolbar = observer(
             if (deletedInstruments.size > 0) {
                 buttons.push({
                     id: "show-deleted-instruments",
-                    label: "Deleted Instruments",
+                    label: this.props.collapseButtons
+                        ? "Deleted"
+                        : "Deleted Instruments",
                     title: "Show deleted instruments",
                     className: "btn-secondary",
                     onClick: () => {
@@ -323,15 +330,11 @@ export const WorkbenchToolbar = observer(
                 });
             }
 
-            return buttons;
-        }
-
-        render() {
             return (
                 <ToolbarHeader>
                     <h5>Instruments</h5>
                     <div>
-                        {this.buttons.map((button, i) => (
+                        {buttons.map((button, i) => (
                             <ButtonAction
                                 key={button.id}
                                 text={button.label}
@@ -340,7 +343,7 @@ export const WorkbenchToolbar = observer(
                                 onClick={button.onClick}
                                 style={{
                                     marginRight:
-                                        this.buttons.length - 1 == i ? 20 : 10
+                                        buttons.length - 1 == i ? 20 : 10
                                 }}
                             />
                         ))}
@@ -558,6 +561,44 @@ export const InstrumentContent = observer(
 
 export const Workbench = observer(
     class Workbench extends React.Component<{ onClose: () => void }> {
+        divRef = React.createRef<HTMLDivElement>();
+        resizeObserver: ResizeObserver;
+        collapseButtons: boolean;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                collapseButtons: observable
+            });
+
+            this.resizeObserver = new ResizeObserver(
+                this.resizeObserverCallback
+            );
+        }
+
+        componentDidMount(): void {
+            if (this.divRef.current) {
+                this.resizeObserver.observe(this.divRef.current);
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.divRef.current) {
+                this.resizeObserver.unobserve(this.divRef.current);
+            }
+        }
+
+        resizeObserverCallback = action(() => {
+            if (this.divRef.current) {
+                let rect = this.divRef.current.getBoundingClientRect();
+
+                runInAction(() => {
+                    this.collapseButtons = rect.width < 860;
+                });
+            }
+        });
+
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
@@ -574,25 +615,33 @@ export const Workbench = observer(
 
         render() {
             return (
-                <VerticalHeaderWithBody>
-                    <Header>
-                        <WorkbenchToolbar onClose={this.props.onClose} />
-                    </Header>
-                    <Body>
-                        {firstTime.get() ? (
-                            <Setup onlyBody={false} />
-                        ) : (
-                            <FlexLayout.Layout
-                                model={homeLayoutModels.instrumentsBody}
-                                factory={this.factory}
-                                realtimeResize={true}
-                                font={{
-                                    size: "small"
-                                }}
+                <div
+                    className="EezStudio_HomeTab_Instruments"
+                    ref={this.divRef}
+                >
+                    <VerticalHeaderWithBody>
+                        <Header>
+                            <WorkbenchToolbar
+                                onClose={this.props.onClose}
+                                collapseButtons={this.collapseButtons}
                             />
-                        )}
-                    </Body>
-                </VerticalHeaderWithBody>
+                        </Header>
+                        <Body>
+                            {firstTime.get() ? (
+                                <Setup onlyBody={false} />
+                            ) : (
+                                <FlexLayout.Layout
+                                    model={homeLayoutModels.instrumentsBody}
+                                    factory={this.factory}
+                                    realtimeResize={true}
+                                    font={{
+                                        size: "small"
+                                    }}
+                                />
+                            )}
+                        </Body>
+                    </VerticalHeaderWithBody>
+                </div>
             );
         }
     }
@@ -608,6 +657,10 @@ const Projects = observer(
 
         sortAlphabetically: boolean = false;
 
+        divRef = React.createRef<HTMLDivElement>();
+        resizeObserver: ResizeObserver;
+        collapseButtons: boolean;
+
         constructor(props: any) {
             super(props);
 
@@ -622,8 +675,13 @@ const Projects = observer(
                 sortAlphabetically: observable,
                 mru: computed,
                 mruAlpha: computed,
-                onSearchChange: action.bound
+                onSearchChange: action.bound,
+                collapseButtons: observable
             });
+
+            this.resizeObserver = new ResizeObserver(
+                this.resizeObserverCallback
+            );
         }
 
         get mruAlpha() {
@@ -657,166 +715,204 @@ const Projects = observer(
             this.searchText = ($(event.target).val() as string).trim();
         }
 
+        componentDidMount(): void {
+            if (this.divRef.current) {
+                this.resizeObserver.observe(this.divRef.current);
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.divRef.current) {
+                this.resizeObserver.unobserve(this.divRef.current);
+            }
+        }
+
+        resizeObserverCallback = action(() => {
+            if (this.divRef.current) {
+                let rect = this.divRef.current.getBoundingClientRect();
+
+                runInAction(() => {
+                    this.collapseButtons =
+                        rect.width <
+                        (tabs.homeSectionsVisibilityOption == "both"
+                            ? 340
+                            : 200);
+                });
+            }
+        });
+
         render() {
             return (
-                <VerticalHeaderWithBody>
-                    <Header>
-                        <ToolbarHeader>
-                            <h5>Projects</h5>
-                            <div>
-                                {tabs.homeSectionsVisibilityOption ==
-                                    "both" && (
+                <div className="EezStudio_HomeTab_Projects" ref={this.divRef}>
+                    <VerticalHeaderWithBody>
+                        <Header>
+                            <ToolbarHeader>
+                                <h5>Projects</h5>
+                                <div>
+                                    {tabs.homeSectionsVisibilityOption ==
+                                        "both" && (
+                                        <ButtonAction
+                                            text={
+                                                this.collapseButtons
+                                                    ? "New"
+                                                    : "New Project"
+                                            }
+                                            title="New Project"
+                                            className="btn-success"
+                                            onClick={async () => {
+                                                const { showNewProjectWizard } =
+                                                    await import(
+                                                        "project-editor/project/ui/Wizard"
+                                                    );
+                                                showNewProjectWizard();
+                                            }}
+                                            style={{ height: 38 }}
+                                        />
+                                    )}
                                     <ButtonAction
-                                        text="New Project"
-                                        title="New Project"
-                                        className="btn-success"
-                                        onClick={async () => {
-                                            const { showNewProjectWizard } =
-                                                await import(
-                                                    "project-editor/project/ui/Wizard"
-                                                );
-                                            showNewProjectWizard();
+                                        text={
+                                            this.collapseButtons
+                                                ? "Open"
+                                                : "Open Project"
+                                        }
+                                        title="Open Project"
+                                        className="btn-primary"
+                                        onClick={() => {
+                                            ipcRenderer.send("open-project");
                                         }}
-                                        style={{ height: 38 }}
                                     />
-                                )}
-                                <ButtonAction
-                                    text="Open Project"
-                                    title="Open Project"
-                                    className="btn-primary"
-                                    onClick={() => {
-                                        ipcRenderer.send("open-project");
-                                    }}
+                                    {tabs.homeSectionsVisibilityOption ==
+                                        "both" && (
+                                        <IconAction
+                                            icon="material:close"
+                                            title="Hide this section"
+                                            onClick={this.props.onClose}
+                                        />
+                                    )}
+                                </div>
+                            </ToolbarHeader>
+                        </Header>
+                        <Body>
+                            <div className="d-flex">
+                                <SearchInput
+                                    searchText={this.searchText}
+                                    onClear={action(() => {
+                                        this.searchText = "";
+                                    })}
+                                    onChange={this.onSearchChange}
+                                    onKeyDown={this.onSearchChange}
                                 />
-                                {tabs.homeSectionsVisibilityOption ==
-                                    "both" && (
+                                <div className="sort-button">
                                     <IconAction
-                                        icon="material:close"
-                                        title="Hide this section"
-                                        onClick={this.props.onClose}
+                                        icon={
+                                            this.sortAlphabetically
+                                                ? SORT_ALPHA_ICON
+                                                : SORT_RECENT_ICON
+                                        }
+                                        title={
+                                            this.sortAlphabetically
+                                                ? "Sort alphabetically"
+                                                : "Show most recent first"
+                                        }
+                                        onClick={this.toggleSort}
                                     />
-                                )}
+                                </div>
                             </div>
-                        </ToolbarHeader>
-                    </Header>
-                    <Body>
-                        <div className="d-flex">
-                            <SearchInput
-                                searchText={this.searchText}
-                                onClear={action(() => {
-                                    this.searchText = "";
-                                })}
-                                onChange={this.onSearchChange}
-                                onKeyDown={this.onSearchChange}
-                            />
-                            <div className="sort-button">
-                                <IconAction
-                                    icon={
-                                        this.sortAlphabetically
-                                            ? SORT_ALPHA_ICON
-                                            : SORT_RECENT_ICON
-                                    }
-                                    title={
-                                        this.sortAlphabetically
-                                            ? "Sort alphabetically"
-                                            : "Show most recent first"
-                                    }
-                                    onClick={this.toggleSort}
-                                />
-                            </div>
-                        </div>
-                        <ListContainer tabIndex={0}>
-                            <List
-                                nodes={this.mru
-                                    .filter(
-                                        mruItem =>
-                                            mruItem.filePath
-                                                .toLowerCase()
-                                                .indexOf(
-                                                    this.searchText.toLowerCase()
-                                                ) != -1
-                                    )
-                                    .map(mruItem => ({
-                                        id: mruItem.filePath,
-                                        data: mruItem,
-                                        selected:
-                                            mruItem.filePath ==
-                                            this.selectedFilePath
-                                    }))}
-                                renderNode={(node: IListNode<IMruItem>) => {
-                                    let mruItem = node.data;
+                            <ListContainer tabIndex={0}>
+                                <List
+                                    nodes={this.mru
+                                        .filter(
+                                            mruItem =>
+                                                mruItem.filePath
+                                                    .toLowerCase()
+                                                    .indexOf(
+                                                        this.searchText.toLowerCase()
+                                                    ) != -1
+                                        )
+                                        .map(mruItem => ({
+                                            id: mruItem.filePath,
+                                            data: mruItem,
+                                            selected:
+                                                mruItem.filePath ==
+                                                this.selectedFilePath
+                                        }))}
+                                    renderNode={(node: IListNode<IMruItem>) => {
+                                        let mruItem = node.data;
 
-                                    const isProject =
-                                        mruItem.filePath.endsWith(
-                                            ".eez-project"
+                                        const isProject =
+                                            mruItem.filePath.endsWith(
+                                                ".eez-project"
+                                            );
+
+                                        let extension = isProject
+                                            ? ".eez-project"
+                                            : ".eez-dashboard";
+
+                                        const baseName = path.basename(
+                                            mruItem.filePath,
+                                            extension
                                         );
 
-                                    let extension = isProject
-                                        ? ".eez-project"
-                                        : ".eez-dashboard";
-
-                                    const baseName = path.basename(
-                                        mruItem.filePath,
-                                        extension
-                                    );
-
-                                    return (
-                                        <ListItem
-                                            leftIcon={getProjectIcon(
-                                                mruItem.filePath,
-                                                mruItem.projectType,
-                                                48
-                                            )}
-                                            leftIconSize={48}
-                                            label={
-                                                <div
-                                                    className="EezStudio_HomeTab_ProjectItem"
-                                                    title={mruItem.filePath}
-                                                >
-                                                    <div className="fist-line">
-                                                        <span className="fw-bolder">
-                                                            {baseName}
-                                                        </span>
-                                                        <span>{extension}</span>
+                                        return (
+                                            <ListItem
+                                                leftIcon={getProjectIcon(
+                                                    mruItem.filePath,
+                                                    mruItem.projectType,
+                                                    48
+                                                )}
+                                                leftIconSize={48}
+                                                label={
+                                                    <div
+                                                        className="EezStudio_HomeTab_ProjectItem"
+                                                        title={mruItem.filePath}
+                                                    >
+                                                        <div className="fist-line">
+                                                            <span className="fw-bolder">
+                                                                {baseName}
+                                                            </span>
+                                                            <span>
+                                                                {extension}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-secondary">
+                                                            {path.dirname(
+                                                                mruItem.filePath
+                                                            )}
+                                                        </div>
+                                                        <Icon
+                                                            className="remove-icon"
+                                                            icon="material:close"
+                                                            title="Remove project from the list"
+                                                            onClick={event => {
+                                                                event.preventDefault();
+                                                                event.stopPropagation();
+                                                                settingsController.removeItemFromMRU(
+                                                                    mruItem
+                                                                );
+                                                            }}
+                                                        />
                                                     </div>
-                                                    <div className="text-secondary">
-                                                        {path.dirname(
-                                                            mruItem.filePath
-                                                        )}
-                                                    </div>
-                                                    <Icon
-                                                        className="remove-icon"
-                                                        icon="material:close"
-                                                        title="Remove project from the list"
-                                                        onClick={event => {
-                                                            event.preventDefault();
-                                                            event.stopPropagation();
-                                                            settingsController.removeItemFromMRU(
-                                                                mruItem
-                                                            );
-                                                        }}
-                                                    />
-                                                </div>
-                                            }
-                                        />
-                                    );
-                                }}
-                                selectNode={(node: IListNode<IMruItem>) => {
-                                    runInAction(
-                                        () =>
-                                            (this.selectedFilePath =
-                                                node.data.filePath)
-                                    );
+                                                }
+                                            />
+                                        );
+                                    }}
+                                    selectNode={(node: IListNode<IMruItem>) => {
+                                        runInAction(
+                                            () =>
+                                                (this.selectedFilePath =
+                                                    node.data.filePath)
+                                        );
 
-                                    ipcRenderer.send(
-                                        "open-file",
-                                        node.data.filePath
-                                    );
-                                }}
-                            ></List>
-                        </ListContainer>
-                    </Body>
-                </VerticalHeaderWithBody>
+                                        ipcRenderer.send(
+                                            "open-file",
+                                            node.data.filePath
+                                        );
+                                    }}
+                                ></List>
+                            </ListContainer>
+                        </Body>
+                    </VerticalHeaderWithBody>
+                </div>
             );
         }
     }
@@ -853,14 +949,11 @@ export const Home = observer(
 
             if (component === "Projects") {
                 return (
-                    <div className="EezStudio_HomeTab_Projects">
-                        <Projects
-                            onClose={() =>
-                                (tabs.homeSectionsVisibilityOption =
-                                    "instruments")
-                            }
-                        />
-                    </div>
+                    <Projects
+                        onClose={() =>
+                            (tabs.homeSectionsVisibilityOption = "instruments")
+                        }
+                    />
                 );
             }
 
@@ -884,13 +977,11 @@ export const Home = observer(
 
             if (component === "Instruments") {
                 return (
-                    <div className="EezStudio_HomeTab_Instruments">
-                        <Workbench
-                            onClose={() =>
-                                (tabs.homeSectionsVisibilityOption = "projects")
-                            }
-                        />
-                    </div>
+                    <Workbench
+                        onClose={() =>
+                            (tabs.homeSectionsVisibilityOption = "projects")
+                        }
+                    />
                 );
             }
 

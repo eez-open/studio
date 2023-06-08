@@ -149,7 +149,6 @@ import {
 } from "project-editor/flow/helper";
 
 import { wireSourceChanged } from "project-editor/store/serialization";
-import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -266,7 +265,7 @@ export function migrateStyleProperty(
     }
 }
 
-function getClassFromType(project: Project, type: string) {
+function getClassFromType(projectStore: ProjectStore, type: string) {
     if (type.startsWith("Local.")) {
         return findClass("UserWidgetWidget");
     }
@@ -297,7 +296,7 @@ function getClassFromType(project: Project, type: string) {
         }
     }
 
-    componentClass = project.importedActionComponentClasses.get(type);
+    componentClass = projectStore.importedActionComponentClasses.get(type);
     if (componentClass) {
         return componentClass;
     }
@@ -305,7 +304,7 @@ function getClassFromType(project: Project, type: string) {
     return NotFoundComponent;
 }
 
-function getComponentClass(project: Project, jsObject: any) {
+function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     if (jsObject.type === "EvalActionComponent") {
         jsObject.type = "EvalJSExprActionComponent";
     }
@@ -324,7 +323,7 @@ function getComponentClass(project: Project, jsObject: any) {
     ) {
         jsObject.type = "UserWidgetWidget";
     }
-    return getClassFromType(project, jsObject.type);
+    return getClassFromType(projectStore, jsObject.type);
 }
 
 export function outputIsOptionalIfAtLeastOneOutputExists(
@@ -1608,8 +1607,8 @@ export class Component extends EezObject {
     }
 
     static classInfo: ClassInfo = {
-        getClass: function (project: Project, jsObject: any) {
-            return getComponentClass(project, jsObject);
+        getClass: function (projectStore: ProjectStore, jsObject: any) {
+            return getComponentClass(projectStore, jsObject);
         },
 
         label: getComponentLabel,
@@ -3032,8 +3031,7 @@ export class Widget extends Component {
 
         var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
             {},
-            getClassFromType(projectStore.project, "Select")?.classInfo
-                .defaultValue,
+            getClassFromType(projectStore, "Select")?.classInfo.defaultValue,
             { type: "Select" }
         );
 
@@ -3148,8 +3146,7 @@ export class Widget extends Component {
 
         var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
             {},
-            getClassFromType(projectStore.project, "Container")?.classInfo
-                .defaultValue,
+            getClassFromType(projectStore, "Container")?.classInfo.defaultValue,
             { type: "Container" }
         );
 
@@ -3193,7 +3190,7 @@ export class Widget extends Component {
         var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
             Object.assign(
                 {},
-                getClassFromType(projectStore.project, "Container")?.classInfo
+                getClassFromType(projectStore, "Container")?.classInfo
                     .defaultValue,
                 { type: "Container" }
             );
@@ -3217,8 +3214,7 @@ export class Widget extends Component {
 
         var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
             {},
-            getClassFromType(projectStore.project, "List")?.classInfo
-                .defaultValue,
+            getClassFromType(projectStore, "List")?.classInfo.defaultValue,
             { type: "List" }
         );
         const listWidget = createObject<ListWidget>(

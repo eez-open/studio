@@ -37,7 +37,10 @@ import type { RuntimeBase } from "project-editor/flow/runtime/runtime";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import type { Project } from "project-editor/project/project";
+import type {
+    ExtensionDirective,
+    Project
+} from "project-editor/project/project";
 
 import {
     findPropertyByNameInObject,
@@ -78,11 +81,25 @@ import { objectsToClipboardData } from "project-editor/store/clipboard";
 import { getProjectFeatures } from "./features";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { IExtension } from "eez-studio-shared/extensions/extension";
-import { installExtension } from "eez-studio-shared/extensions/extensions";
+import {
+    extensions,
+    installExtension
+} from "eez-studio-shared/extensions/extensions";
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import { LVGLIdentifiers } from "project-editor/lvgl/identifiers";
 import { OpenProjectsManager } from "project-editor/store/open-projects-manager";
+import { ActionComponent } from "project-editor/flow/component";
+import {
+    IActionComponentDefinition,
+    IObjectVariableType
+} from "eez-studio-types";
+import {
+    createObjectVariableType,
+    objectVariableTypes
+} from "project-editor/features/variable/value-type";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { validators } from "eez-studio-shared/validation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +114,20 @@ export * from "project-editor/store/serialization";
 export * from "project-editor/store/clipboard";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+interface ExtensionContent {
+    extensionName: string;
+
+    actionComponentClasses: {
+        className: string;
+        actionComponentClass: typeof ActionComponent;
+    }[];
+
+    objectVariableTypes: {
+        name: string;
+        type: IObjectVariableType;
+    }[];
+}
 
 export class ProjectStore {
     project: Project;
@@ -147,6 +178,10 @@ export class ProjectStore {
 
     missingExtensionsResolved: boolean = false;
 
+    extensionNames: string[];
+    objectVariableTypes = new Map<string, IObjectVariableType>();
+    importedActionComponentClasses = new Map<string, typeof ActionComponent>();
+
     get editorsStore() {
         return this.runtime
             ? this.runtimeModeEditorsStore
@@ -179,9 +214,7 @@ export class ProjectStore {
             setProject: action,
             setEditorMode: action,
             onSetEditorMode: action,
-            missingExtensionsResolved: observable,
-            objectVariableTypes: computed,
-            importedActionComponentClasses: computed
+            missingExtensionsResolved: observable
         });
 
         this.currentSearch = new ProjectEditor.documentSearch.CurrentSearch(
@@ -328,7 +361,6 @@ export class ProjectStore {
         if (this.dispose5) {
             this.dispose5();
         }
-        if (this.project) this.project.unmount();
 
         this.openProjectsManager.unmount();
 
@@ -1156,12 +1188,126 @@ export class ProjectStore {
         this.editorsStore.refresh(true);
     }
 
-    get objectVariableTypes() {
-        return this.project.objectVariableTypes;
+    buildImportedExtensions(project: Project) {
+        // build importedExtensionToExtensionContent
+        const importedExtensionToExtensionContent = new Map<
+            ExtensionDirective,
+            ExtensionContent
+        >();
+
+        const extensionDirectives = project.settings?.general?.extensions;
+        if (extensionDirectives) {
+            for (const extensionDirective of extensionDirectives) {
+                if (extensionDirective.extensionName) {
+                    const extension = extensions.get(
+                        extensionDirective.extensionName
+                    );
+
+                    if (!extension) {
+                        continue;
+                    }
+
+                    if (!extension.eezFlowExtensionInit) {
+                        continue;
+                    }
+
+                    try {
+                        const extensionContent: ExtensionContent = {
+                            extensionName: extension.name,
+                            actionComponentClasses: [],
+                            objectVariableTypes: []
+                        };
+
+                        extension.eezFlowExtensionInit({
+                            registerActionComponent: (
+                                actionComponentDefinition: IActionComponentDefinition
+                            ) => {
+                                const { className, actionComponentClass } =
+                                    ProjectEditor.createActionComponentClass(
+                                        actionComponentDefinition,
+                                        `${extension.name}/${actionComponentDefinition.name}`
+                                    );
+
+                                extensionContent.actionComponentClasses.push({
+                                    className,
+                                    actionComponentClass
+                                });
+                            },
+
+                            registerObjectVariableType: (
+                                name: string,
+                                objectVariableType: IObjectVariableType
+                            ) => {
+                                extensionContent.objectVariableTypes.push({
+                                    name: `${extension.name}/${name}`,
+                                    type: createObjectVariableType(
+                                        objectVariableType
+                                    )
+                                });
+                            },
+
+                            showGenericDialog,
+
+                            validators: {
+                                required: validators.required,
+                                rangeInclusive: validators.rangeInclusive
+                            }
+                        });
+
+                        importedExtensionToExtensionContent.set(
+                            extensionDirective,
+                            extensionContent
+                        );
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            }
+        }
+
+        //
+        // build objectVariableTypes
+        //
+        this.objectVariableTypes = new Map<string, IObjectVariableType>();
+
+        const globalObjectVariableTypes = objectVariableTypes;
+
+        // insert global object variable types
+        for (const [name, objectVariableType] of globalObjectVariableTypes) {
+            this.objectVariableTypes.set(name, objectVariableType);
+        }
+
+        // insert object variable types from imported extensions
+        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+            for (const objectVariableType of extensionContent.objectVariableTypes) {
+                this.objectVariableTypes.set(
+                    objectVariableType.name,
+                    objectVariableType.type
+                );
+            }
+        }
+
+        //
+        // build importedActionComponentClasses
+        //
+        this.importedActionComponentClasses = new Map<
+            string,
+            typeof ActionComponent
+        >();
+
+        // insert action component classes from imported extensions
+        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+            for (const actionComponentClass of extensionContent.actionComponentClasses) {
+                this.importedActionComponentClasses.set(
+                    actionComponentClass.className,
+                    actionComponentClass.actionComponentClass
+                );
+            }
+        }
     }
 
-    get importedActionComponentClasses() {
-        return this.project.importedActionComponentClasses;
+    getClassByName(className: string) {
+        return this.importedActionComponentClasses.get(className);
     }
 
     reloadProject() {

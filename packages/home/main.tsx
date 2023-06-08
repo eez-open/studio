@@ -101,6 +101,17 @@ ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
     }
 });
 
+ipcRenderer.on("save-debug-info", () => {
+    try {
+        let tab = tabs.activeTab;
+        if (tab instanceof ProjectEditorTab) {
+            tab.saveDebugInfo();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+});
+
 ipcRenderer.on("new-project", async (sender: any, filePath: any) => {
     const { showNewProjectWizard } = await import(
         "project-editor/project/ui/Wizard"

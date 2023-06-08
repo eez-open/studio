@@ -38,7 +38,8 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage,
     objectToClipboardData,
-    clipboardDataToObject
+    clipboardDataToObject,
+    ProjectStore
 } from "project-editor/store";
 
 import {
@@ -47,8 +48,7 @@ import {
     findBitmap,
     findAction,
     findPage,
-    findLvglStyle,
-    Project
+    findLvglStyle
 } from "project-editor/project/project";
 
 import type {
@@ -5680,7 +5680,10 @@ export class LVGLMeterIndicator extends EezObject {
     type: keyof typeof LVGL_METER_INDICATOR_TYPES;
 
     static classInfo: ClassInfo = {
-        getClass: function (project: Project, object: LVGLMeterIndicator) {
+        getClass: function (
+            projectStore: ProjectStore,
+            object: LVGLMeterIndicator
+        ) {
             if (object.type == "NEEDLE_IMG") return LVGLMeterIndicatorNeedleImg;
             else if (object.type == "NEEDLE_LINE")
                 return LVGLMeterIndicatorNeedleLine;

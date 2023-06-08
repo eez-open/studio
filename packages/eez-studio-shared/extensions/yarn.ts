@@ -53,7 +53,9 @@ export async function yarnInstall(extensionToInstall?: IExtension) {
             "--no-emoji",
             "--cache-folder",
             cacheFolderPath,
-            `${extensionToInstall.name}@${extensionToInstall.version}`
+            extensionToInstall.version
+                ? `${extensionToInstall.name}@${extensionToInstall.version}`
+                : extensionToInstall.name
         ]);
     } else {
         await yarnFn([
