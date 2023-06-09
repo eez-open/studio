@@ -97,7 +97,8 @@ import {
     COMPONENT_TYPE_ANIMATE_ACTION,
     COMPONENT_TYPE_ON_EVENT_ACTION,
     COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
-    COMPONENT_TYPE_SORT_ARRAY_ACTION
+    COMPONENT_TYPE_SORT_ARRAY_ACTION,
+    COMPONENT_TYPE_TEST_AND_SET_ACTION
 } from "project-editor/flow/components/component_types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -3886,6 +3887,137 @@ export class CommentActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class SyncLockActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_DELAY_ACTION,
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "milliseconds",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            )
+        ],
+        icon: (
+            <svg viewBox="0 0 10 10">
+                <path d="M7.5 5.1c0 .3-.2.5-.5.5H5c-.3 0-.5-.2-.5-.5v-2c0-.3.2-.5.5-.5s.5.2.5.5v1.5H7c.2 0 .5.3.5.5zM10 5c0-2.8-2.2-5-5-5S0 2.2 0 5s2.2 5 5 5 5-2.2 5-5zM9 5c0 2.2-1.8 4-4 4S1 7.2 1 5s1.8-4 4-4 4 1.8 4 4z" />
+            </svg>
+        ),
+        componentHeaderColor: "#E6E0F8"
+    });
+
+    milliseconds: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            milliseconds: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.milliseconds} ms</pre>
+            </div>
+        );
+    }
+}
+
+export class TestAndSetActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_TEST_AND_SET_ACTION,
+        properties: [
+            makeAssignableExpressionProperty(
+                {
+                    name: "variable",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            )
+        ],
+        icon: (
+            <svg viewBox="-30 -30 421.118 421.118">
+                <path d="M274.765 141.3V94.205C274.765 42.172 232.583 0 180.559 0c-52.032 0-94.205 42.172-94.205 94.205V141.3c-17.34 0-31.4 14.06-31.4 31.4v157.016c0 17.344 14.06 31.402 31.4 31.402h188.411c17.341 0 31.398-14.059 31.398-31.402V172.7c.001-17.34-14.057-31.4-31.398-31.4zM117.756 94.205c0-34.69 28.12-62.803 62.803-62.803 34.685 0 62.805 28.112 62.805 62.803V141.3H117.756V94.205zm157.009 235.51H86.354V172.708h188.411v157.007zm-109.907-67.157v20.054c0 8.664 7.035 15.701 15.701 15.701 8.664 0 15.701-7.037 15.701-15.701v-20.054c9.337-5.441 15.701-15.456 15.701-27.046 0-17.348-14.062-31.41-31.402-31.41-17.34 0-31.4 14.062-31.4 31.41 0 11.59 6.358 21.605 15.699 27.046z" />
+            </svg>
+        ),
+        componentHeaderColor: "#AAAA66",
+        defaultValue: {}
+    });
+
+    variable: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            variable: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        return (
+            <div className="body">
+                <pre>{this.variable}</pre>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("StartActionComponent", StartActionComponent);
 registerClass("EndActionComponent", EndActionComponent);
 registerClass("InputActionComponent", InputActionComponent);
@@ -3900,6 +4032,8 @@ registerClass("SetVariableActionComponent", SetVariableActionComponent);
 registerClass("SwitchActionComponent", SwitchActionComponent);
 registerClass("CompareActionComponent", CompareActionComponent);
 registerClass("IsTrueActionComponent", IsTrueActionComponent);
+
+registerClass("TestAndSetActionComponent", TestAndSetActionComponent);
 
 registerClass("DelayActionComponent", DelayActionComponent);
 
