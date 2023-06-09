@@ -55,6 +55,10 @@ input::placeholder {
     align-items: center;
 }
 
+.dropdown-menu {
+    z-index: 2000;
+}
+
 .progress.vertical {
     transform: rotate(-90deg);
 }
@@ -3198,6 +3202,10 @@ button.EezStudio_Action {
         }
     }
 
+    .dropdown-toggle {
+        min-width: 15.39px;
+    }
+
     & > table {
         width: 100%;
 
@@ -4794,6 +4802,53 @@ button.EezStudio_Action {
             }
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+.EezStudio_VariableTypeSelect {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    & > div {
+        height: 240px;
+        overflow: auto;
+        ul {
+            margin: 0;
+            padding: 5px;
+
+            & > div {
+                > div:nth-child(1) {
+                    margin-top: 5px;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    font-size: smaller;
+                }
+                > div:nth-child(2) {
+                    margin-left: 20px;
+                }
+            }
+
+            li {
+                list-style: none;
+                cursor: pointer;
+                &:hover {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_VariableTypeSelect_DropdownButton {
+    border-color: @formControlBorderColor;
+    padding: 1px 6px;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

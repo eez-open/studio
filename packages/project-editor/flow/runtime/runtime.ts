@@ -829,6 +829,8 @@ export abstract class RuntimeBase {
     };
 
     setObjectVariableValue(variableName: string, value: IObjectVariableValue) {}
+
+    onKeyDown(key: string) {}
 }
 
 export class FlowState {

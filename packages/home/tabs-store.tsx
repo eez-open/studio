@@ -659,6 +659,12 @@ export class ProjectEditorTab implements IHomeTab {
             this.reloadProject();
         };
 
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (this.projectStore?.runtime) {
+                this.projectStore?.runtime.onKeyDown(e.key);
+            }
+        };
+
         ipcRenderer.on("save", save);
         ipcRenderer.on("saveAs", saveAs);
         ipcRenderer.on("check", check);
@@ -678,6 +684,8 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
 
         ipcRenderer.on("reload-project", onReloadProject);
+
+        document.addEventListener("keydown", onKeyDown);
 
         this.removeListeners = () => {
             ipcRenderer.removeListener("save", save);
@@ -702,6 +710,8 @@ export class ProjectEditorTab implements IHomeTab {
             );
 
             ipcRenderer.removeListener("reload-project", onReloadProject);
+
+            document.removeEventListener("keydown", onKeyDown);
 
             projectStore.onDeactivate();
         };

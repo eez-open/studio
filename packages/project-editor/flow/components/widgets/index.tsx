@@ -641,7 +641,7 @@ export class ListWidget extends Widget {
         const iterators =
             flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-        return _range(dataValue.length).map(i => (
+        return _range(flowContext.flowState ? dataValue.length : 1).map(i => (
             <ListWidgetItem
                 key={i}
                 flowContext={flowContext}
@@ -725,8 +725,7 @@ export class GridWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -831,7 +830,7 @@ export class GridWidget extends Widget {
         const iterators =
             flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-        return _range(dataValue.length).map(i => (
+        return _range(flowContext.flowState ? dataValue.length : 1).map(i => (
             <GridWidgetItem
                 key={i}
                 flowContext={flowContext}

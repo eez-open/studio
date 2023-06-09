@@ -29,7 +29,6 @@ import {
     getStructureFromType,
     isArrayType,
     isStructType,
-    humanizeVariableType,
     isObjectType,
     getObjectVariableTypeFromType
 } from "project-editor/features/variable/value-type";
@@ -266,7 +265,7 @@ const SelectItemDialog = observer(
                                         "." +
                                         field.name
                                     }
-                                    type={humanizeVariableType(field.type)}
+                                    type={field.type}
                                 />
                             ),
                             children: this.getTypeChildren(
@@ -304,9 +303,7 @@ const SelectItemDialog = observer(
                                                 "." +
                                                 field.name
                                             }
-                                            type={humanizeVariableType(
-                                                field.valueType
-                                            )}
+                                            type={field.valueType}
                                         />
                                     ) : (
                                         `.${field.name}`
@@ -429,7 +426,7 @@ const SelectItemDialog = observer(
                         label: (
                             <VariableLabel
                                 name={localVariable.name}
-                                type={humanizeVariableType(localVariable.type)}
+                                type={localVariable.type}
                             />
                         ),
                         children: this.getTypeChildren(
@@ -454,7 +451,7 @@ const SelectItemDialog = observer(
                         label: (
                             <VariableLabel
                                 name={globalVariable.fullName}
-                                type={humanizeVariableType(globalVariable.type)}
+                                type={globalVariable.type}
                             />
                         ),
                         children: this.getTypeChildren(

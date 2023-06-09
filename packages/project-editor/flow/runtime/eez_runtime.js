@@ -5302,6 +5302,9 @@ var _endAsyncExecution = Module["_endAsyncExecution"] = createExportWrapper("end
 var _executeCallAction = Module["_executeCallAction"] = createExportWrapper("executeCallAction");
 
 /** @type {function(...*):?} */
+var _onEvent = Module["_onEvent"] = createExportWrapper("onEvent");
+
+/** @type {function(...*):?} */
 var _logInfo = Module["_logInfo"] = createExportWrapper("logInfo");
 
 /** @type {function(...*):?} */

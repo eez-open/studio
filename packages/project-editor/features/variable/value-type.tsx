@@ -1,5 +1,6 @@
 import { Stream } from "stream";
 import React from "react";
+import ReactDOM from "react-dom";
 import {
     action,
     observable,
@@ -11,7 +12,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { humanize } from "eez-studio-shared/string";
 import { _difference } from "eez-studio-shared/algorithm";
 
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
@@ -21,6 +21,8 @@ import type {
     IObjectVariableValue,
     ValueType
 } from "eez-studio-types";
+
+import { closest } from "eez-studio-shared/dom";
 
 import {
     PropertyType,
@@ -218,36 +220,15 @@ export function registerSystemStructure(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function humanizeVariableType(type: string): string {
-    if (isObjectType(type)) {
-        return getObjectType(type) ?? "";
-    }
-    if (isEnumType(type)) {
-        return getEnumTypeNameFromType(type) ?? "";
-    }
-    if (isStructType(type)) {
-        return getStructTypeNameFromType(type) ?? "";
-    }
-    if (isArrayType(type)) {
-        return `Array of ${humanizeVariableType(
-            getArrayElementTypeFromType(type) ?? ""
-        )}`;
-    }
-    return humanize(type);
-}
-
 export function getDefaultValueForType(project: Project, type: string): string {
     if (isObjectType(type)) {
         return "null";
     }
     if (isEnumType(type)) {
-        const enumTypeName = getEnumTypeNameFromType(type);
-        if (enumTypeName) {
-            const enumType = project.variables.enumsMap.get(enumTypeName);
-            if (enumType) {
-                if (enumType.members.length > 0) {
-                    return `${enumTypeName}.${enumType.members[0].name}`;
-                }
+        const enumType = getEnumFromType(project, type);
+        if (enumType) {
+            if (enumType.members.length > 0) {
+                return `${enumType.name}.${enumType.members[0].name}`;
             }
         }
         return "0";
@@ -330,182 +311,388 @@ export function getValueLabel(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const VariableTypeSelect = observer(
-    React.forwardRef<
-        HTMLSelectElement,
-        {
-            value: string;
-            onChange: (value: string) => void;
-            project: Project;
+export const VariableTypeSelect = observer(
+    class VariableTypeSelect extends React.Component<{
+        value: string;
+        onChange: (value: string) => void;
+        project: Project;
+        readOnly?: boolean;
+        forwardRef?: any;
+    }> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        buttonRef = React.createRef<HTMLButtonElement>();
+        dropDownRef = React.createRef<HTMLDivElement>();
+        dropDownOpen: boolean | undefined = false;
+        dropDownLeft = 0;
+        dropDownTop = 0;
+        dropDownWidth = 0;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                dropDownOpen: observable,
+                dropDownLeft: observable,
+                dropDownTop: observable,
+                dropDownWidth: observable,
+                setDropDownOpen: action
+            });
         }
-    >((props, ref) => {
-        const allTypes = new Set<string>();
 
-        function addType(type: string) {
-            allTypes.add(type);
-            return type;
+        setDropDownOpen(open: boolean) {
+            if (this.dropDownOpen === false) {
+                document.removeEventListener(
+                    "pointerdown",
+                    this.onDocumentPointerDown,
+                    true
+                );
+            }
+
+            this.dropDownOpen = open;
+
+            if (this.dropDownOpen) {
+                document.addEventListener(
+                    "pointerdown",
+                    this.onDocumentPointerDown,
+                    true
+                );
+            }
         }
 
-        const { value, onChange, project } = props;
+        openDropdown = action(() => {
+            const buttonEl = this.buttonRef.current;
+            if (!buttonEl) {
+                return;
+            }
 
-        const basicTypeNames = props.project.projectTypeTraits.isLVGL
-            ? props.project.projectTypeTraits.hasFlowSupport
-                ? LVGL_FLOW_BASIC_TYPE_NAMES
-                : LVGL_BASIC_TYPE_NAMES
-            : props.project.projectTypeTraits.isDashboard
-            ? BASIC_TYPE_NAMES
-            : FIRMWARE_BASIC_TYPE_NAMES;
+            const dropDownEl = this.dropDownRef.current;
+            if (!dropDownEl) {
+                return;
+            }
 
-        const basicTypes = basicTypeNames.map(basicTypeName => {
-            return (
-                <option key={basicTypeName} value={addType(basicTypeName)}>
-                    {humanizeVariableType(basicTypeName)}
-                </option>
-            );
+            this.setDropDownOpen(!this.dropDownOpen);
+
+            if (this.dropDownOpen) {
+                const rectInputGroup =
+                    buttonEl.parentElement!.getBoundingClientRect();
+
+                this.dropDownLeft = rectInputGroup.left;
+                this.dropDownTop = rectInputGroup.bottom;
+                this.dropDownWidth = rectInputGroup.width;
+
+                if (
+                    this.dropDownLeft + this.dropDownWidth >
+                    window.innerWidth
+                ) {
+                    this.dropDownLeft = window.innerWidth - this.dropDownWidth;
+                }
+
+                const DROP_DOWN_HEIGHT = 270;
+                if (
+                    this.dropDownTop + DROP_DOWN_HEIGHT + 20 >
+                    window.innerHeight
+                ) {
+                    this.dropDownTop =
+                        window.innerHeight - (DROP_DOWN_HEIGHT + 20);
+                }
+            }
         });
-        basicTypes.unshift(<option key="__empty" value={addType("")} />);
 
-        const objectTypes =
-            props.project.projectTypeTraits.hasFlowSupport &&
-            !props.project.projectTypeTraits.isLVGL
-                ? [...project._store.objectVariableTypes.keys()].map(name => {
-                      return (
-                          <option key={name} value={addType(`object:${name}`)}>
-                              {humanizeVariableType(`object:${name}`)}
-                          </option>
-                      );
-                  })
+        onDocumentPointerDown = action((event: MouseEvent) => {
+            if (this.dropDownOpen) {
+                if (
+                    !closest(
+                        event.target,
+                        el =>
+                            this.buttonRef.current == el ||
+                            this.dropDownRef.current == el
+                    )
+                ) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.setDropDownOpen(false);
+                }
+            }
+        });
+
+        render() {
+            const allTypes = new Set<string>();
+
+            function addType(type: string) {
+                allTypes.add(type);
+                return type;
+            }
+
+            const { value, onChange, project } = this.props;
+
+            const basicTypeNames = this.props.project.projectTypeTraits.isLVGL
+                ? this.props.project.projectTypeTraits.hasFlowSupport
+                    ? LVGL_FLOW_BASIC_TYPE_NAMES
+                    : LVGL_BASIC_TYPE_NAMES
+                : this.props.project.projectTypeTraits.isDashboard
+                ? BASIC_TYPE_NAMES
+                : FIRMWARE_BASIC_TYPE_NAMES;
+
+            const basicTypes = basicTypeNames.map(basicTypeName => {
+                return (
+                    <li
+                        key={basicTypeName}
+                        value={addType(basicTypeName)}
+                        onClick={action(() => {
+                            this.props.onChange(basicTypeName);
+                            this.setDropDownOpen(false);
+                        })}
+                    >
+                        {basicTypeName}
+                    </li>
+                );
+            });
+
+            const objectTypes =
+                this.props.project.projectTypeTraits.hasFlowSupport &&
+                !this.props.project.projectTypeTraits.isLVGL
+                    ? [...project._store.objectVariableTypes.keys()].map(
+                          name => {
+                              return (
+                                  <li
+                                      key={name}
+                                      value={addType(`object:${name}`)}
+                                      onClick={action(() => {
+                                          this.props.onChange(`object:${name}`);
+                                          this.setDropDownOpen(false);
+                                      })}
+                                  >
+                                      {`object:${name}`}
+                                  </li>
+                              );
+                          }
+                      )
+                    : [];
+
+            const enums = project.variables.enums.map(enumDef => (
+                <li
+                    key={enumDef.name}
+                    value={addType(`enum:${enumDef.name}`)}
+                    onClick={action(() => {
+                        this.props.onChange(`enum:${enumDef.name}`);
+                        this.setDropDownOpen(false);
+                    })}
+                >
+                    {`enum:${enumDef.name}`}
+                </li>
+            ));
+
+            const structureTypes = [
+                ...project.variables.structures,
+                ...(this.props.project.projectTypeTraits.isLVGL
+                    ? []
+                    : SYSTEM_STRUCTURES)
+            ];
+
+            const structures = this.props.project.projectTypeTraits
+                .hasFlowSupport
+                ? structureTypes.map(struct => (
+                      <li
+                          key={struct.name}
+                          value={addType(`struct:${struct.name}`)}
+                          onClick={action(() => {
+                              this.props.onChange(`struct:${struct.name}`);
+                              this.setDropDownOpen(false);
+                          })}
+                      >
+                          {`struct:${struct.name}`}
+                      </li>
+                  ))
                 : [];
 
-        const enums = project.variables.enums.map(enumDef => (
-            <option key={enumDef.name} value={addType(`enum:${enumDef.name}`)}>
-                {humanizeVariableType(`enum:${enumDef.name}`)}
-            </option>
-        ));
+            const arrayOfBasicTypes =
+                !this.props.project.projectTypeTraits.isLVGL ||
+                this.props.project.projectTypeTraits.hasFlowSupport
+                    ? basicTypeNames.map(basicTypeName => {
+                          return (
+                              <li
+                                  key={`array:${basicTypeName}`}
+                                  value={addType(`array:${basicTypeName}`)}
+                                  onClick={action(() => {
+                                      this.props.onChange(
+                                          `array:${basicTypeName}`
+                                      );
+                                      this.setDropDownOpen(false);
+                                  })}
+                              >
+                                  {`array:${basicTypeName}`}
+                              </li>
+                          );
+                      })
+                    : [];
 
-        const structureTypes = [
-            ...project.variables.structures,
-            ...(props.project.projectTypeTraits.isLVGL ? [] : SYSTEM_STRUCTURES)
-        ];
+            const arrayOfObjects =
+                this.props.project.projectTypeTraits.hasFlowSupport &&
+                !this.props.project.projectTypeTraits.isLVGL
+                    ? [...project._store.objectVariableTypes.keys()].map(
+                          name => {
+                              return (
+                                  <li
+                                      key={name}
+                                      value={addType(`array:object:${name}`)}
+                                      onClick={action(() => {
+                                          this.props.onChange(
+                                              `array:object:${name}`
+                                          );
+                                          this.setDropDownOpen(false);
+                                      })}
+                                  >
+                                      {`array:object:${name}`}
+                                  </li>
+                              );
+                          }
+                      )
+                    : [];
 
-        const structures = props.project.projectTypeTraits.hasFlowSupport
-            ? structureTypes.map(struct => (
-                  <option
-                      key={struct.name}
-                      value={addType(`struct:${struct.name}`)}
-                  >
-                      {humanizeVariableType(`struct:${struct.name}`)}
-                  </option>
-              ))
-            : [];
-
-        const arrayOfBasicTypes =
-            !props.project.projectTypeTraits.isLVGL ||
-            props.project.projectTypeTraits.hasFlowSupport
-                ? basicTypeNames.map(basicTypeName => {
-                      return (
-                          <option
-                              key={`array:${basicTypeName}`}
-                              value={addType(`array:${basicTypeName}`)}
-                          >
-                              {humanizeVariableType(`array:${basicTypeName}`)}
-                          </option>
-                      );
-                  })
+            const arrayOfEnums = this.props.project.projectTypeTraits
+                .hasFlowSupport
+                ? project.variables.enums.map(enumDef => (
+                      <li
+                          key={enumDef.name}
+                          value={addType(`array:enum:${enumDef.name}`)}
+                          onClick={action(() => {
+                              this.props.onChange(`array:enum:${enumDef.name}`);
+                              this.setDropDownOpen(false);
+                          })}
+                      >
+                          {`array:enum:${enumDef.name}`}
+                      </li>
+                  ))
                 : [];
 
-        const arrayOfObjects =
-            props.project.projectTypeTraits.hasFlowSupport &&
-            !props.project.projectTypeTraits.isLVGL
-                ? [...project._store.objectVariableTypes.keys()].map(name => {
-                      return (
-                          <option
-                              key={name}
-                              value={addType(`array:object:${name}`)}
-                          >
-                              {humanizeVariableType(`array:object:${name}`)}
-                          </option>
-                      );
-                  })
+            const arrayOfStructures = this.props.project.projectTypeTraits
+                .hasFlowSupport
+                ? structureTypes.map(struct => (
+                      <li
+                          key={struct.name}
+                          value={addType(`array:struct:${struct.name}`)}
+                          onClick={action(() => {
+                              this.props.onChange(
+                                  `array:struct:${struct.name}`
+                              );
+                              this.setDropDownOpen(false);
+                          })}
+                      >
+                          {`array:struct:${struct.name}`}
+                      </li>
+                  ))
                 : [];
 
-        const arrayOfEnums = props.project.projectTypeTraits.hasFlowSupport
-            ? project.variables.enums.map(enumDef => (
-                  <option
-                      key={enumDef.name}
-                      value={addType(`array:enum:${enumDef.name}`)}
-                  >
-                      {humanizeVariableType(`array:enum:${enumDef.name}`)}
-                  </option>
-              ))
-            : [];
+            const portal = ReactDOM.createPortal(
+                <div
+                    ref={this.dropDownRef}
+                    className="dropdown-menu dropdown-menu-end EezStudio_VariableTypeSelect shadow rounded"
+                    style={{
+                        display: this.dropDownOpen ? "block" : "none",
+                        left: this.dropDownLeft,
+                        top: this.dropDownTop,
+                        width: this.dropDownWidth
+                    }}
+                >
+                    <div>
+                        <ul>
+                            <div className="font-monospace">{basicTypes}</div>
 
-        const arrayOfStructures = props.project.projectTypeTraits.hasFlowSupport
-            ? structureTypes.map(struct => (
-                  <option
-                      key={struct.name}
-                      value={addType(`array:struct:${struct.name}`)}
-                  >
-                      {humanizeVariableType(`array:struct:${struct.name}`)}
-                  </option>
-              ))
-            : [];
+                            {objectTypes.length > 0 && (
+                                <div>
+                                    <div>Objects</div>
+                                    <div className="font-monospace">
+                                        {objectTypes}
+                                    </div>
+                                </div>
+                            )}
 
-        if (!allTypes.has(value)) {
-            basicTypes.splice(
-                1,
-                0,
-                <option key="__notfound" value={value} className="error">
-                    [Not found!] {value}
-                </option>
+                            {enums.length > 0 && (
+                                <div>
+                                    <div>Enums</div>
+                                    <div className="font-monospace">
+                                        {enums}
+                                    </div>
+                                </div>
+                            )}
+
+                            {structures.length > 0 && (
+                                <div>
+                                    <div>Structures</div>
+                                    <div className="font-monospace">
+                                        {structures}
+                                    </div>
+                                </div>
+                            )}
+
+                            {arrayOfBasicTypes.length > 0 && (
+                                <div>
+                                    <div>Arrays</div>
+                                    <div className="font-monospace">
+                                        {arrayOfBasicTypes}
+                                    </div>
+                                </div>
+                            )}
+
+                            {arrayOfObjects.length > 0 && (
+                                <div>
+                                    <div>Array of Objects</div>
+                                    <div className="font-monospace">
+                                        {arrayOfObjects}
+                                    </div>
+                                </div>
+                            )}
+
+                            {arrayOfEnums.length > 0 && (
+                                <div>
+                                    <div>Array of Enumerations</div>
+                                    <div className="font-monospace">
+                                        {arrayOfEnums}
+                                    </div>
+                                </div>
+                            )}
+
+                            {arrayOfStructures.length > 0 && (
+                                <div>
+                                    <div>Array of Structures</div>
+                                    <div className="font-monospace">
+                                        {arrayOfStructures}
+                                    </div>
+                                </div>
+                            )}
+                        </ul>
+                    </div>
+                </div>,
+                document.body
+            );
+
+            return (
+                <div className="input-group" style={{ position: "relative" }}>
+                    <input
+                        ref={this.props.forwardRef}
+                        className="form-control font-monospace"
+                        type="text"
+                        value={value || ""}
+                        onChange={event => onChange(event.target.value)}
+                        readOnly={this.props.readOnly}
+                    />
+                    {!this.props.readOnly && (
+                        <>
+                            <button
+                                ref={this.buttonRef}
+                                className="btn btn-outline-secondary dropdown-toggle EezStudio_VariableTypeSelect_DropdownButton"
+                                type="button"
+                                onClick={this.openDropdown}
+                            />
+                            {portal}
+                        </>
+                    )}
+                </div>
             );
         }
-
-        return (
-            <select
-                ref={ref}
-                className="form-select"
-                value={value}
-                onChange={event => onChange(event.target.value)}
-            >
-                {basicTypes}
-
-                {objectTypes.length > 0 && (
-                    <optgroup label="Objects">{objectTypes}</optgroup>
-                )}
-
-                {enums.length > 0 && (
-                    <optgroup label="Enumerations">{enums}</optgroup>
-                )}
-
-                {structures.length > 0 && (
-                    <optgroup label="Structures">{structures}</optgroup>
-                )}
-
-                {arrayOfBasicTypes.length > 0 && (
-                    <optgroup label="Arrays">{arrayOfBasicTypes}</optgroup>
-                )}
-
-                {arrayOfObjects.length > 0 && (
-                    <optgroup label="Array of Objects">
-                        {arrayOfObjects}
-                    </optgroup>
-                )}
-
-                {arrayOfEnums.length > 0 && (
-                    <optgroup label="Array of Enumerations">
-                        {arrayOfEnums}
-                    </optgroup>
-                )}
-
-                {arrayOfStructures.length > 0 && (
-                    <optgroup label="Array of Structures">
-                        {arrayOfStructures}
-                    </optgroup>
-                )}
-            </select>
-        );
-    })
+    }
 );
 
 export const VariableTypeUI = observer(
@@ -584,10 +771,11 @@ export const VariableTypeUI = observer(
         render() {
             return (
                 <VariableTypeSelect
-                    ref={this.ref}
+                    forwardRef={this.ref}
                     value={this._type}
                     onChange={this.onChange}
                     project={this.context.project}
+                    readOnly={this.props.readOnly}
                 />
             );
         }
@@ -614,6 +802,7 @@ export const VariableTypeFieldComponent = observer(
                         this.props.onChange(value);
                     }}
                     project={this.project}
+                    readOnly={false}
                 />
             );
         }
@@ -625,7 +814,9 @@ export const VariableTypeFieldComponent = observer(
 export const variableTypeProperty: PropertyInfo = {
     name: "type",
     type: PropertyType.String,
-    propertyGridColumnComponent: VariableTypeUI
+    propertyGridColumnComponent: VariableTypeUI,
+    monospaceFont: true,
+    disableSpellcheck: true
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,6 +931,14 @@ export function getEnumTypeNameFromType(type: string) {
         return null;
     }
     return result[1];
+}
+
+export function getEnumFromType(project: Project, type: string) {
+    const enumTypeName = getEnumTypeNameFromType(type);
+    if (!enumTypeName) {
+        return undefined;
+    }
+    return project.variables.enumsMap.get(enumTypeName);
 }
 
 export function getObjectVariableTypeFromType(
@@ -877,7 +1076,38 @@ export function isValueTypeOf(
 }
 
 export function isValidType(project: Project, valueType: ValueType): boolean {
-    return project._store.typesStore.allValueTypes.indexOf(valueType) != -1;
+    if (valueType == "undefined") {
+        return true;
+    }
+    if (valueType == "null") {
+        return true;
+    }
+
+    if (isBasicType(valueType)) {
+        return true;
+    }
+
+    if (getEnumFromType(project, valueType)) {
+        return true;
+    }
+
+    if (getStructureFromType(project, valueType)) {
+        return true;
+    }
+
+    const objectType = getObjectType(valueType);
+    if (objectType) {
+        if (project._store.objectVariableTypes.get(objectType)) {
+            return true;
+        }
+    }
+
+    const arrayElement = getArrayElementTypeFromType(valueType);
+    if (arrayElement) {
+        return isValidType(project, arrayElement);
+    }
+
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

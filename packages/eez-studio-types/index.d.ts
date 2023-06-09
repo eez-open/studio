@@ -539,6 +539,8 @@ export interface IWasmFlowRuntime {
     _propagateValue(flowStateIndex: number, componentIndex: number, outputIndex: number, valuePtr: number): void;
     _propagateValueThroughSeqout(flowStateIndex: number, componentIndex: number): void;
 
+    _onEvent(flowStateIndex: number, flowEvent: number, valuePtr: number): void;
+
     _startAsyncExecution(flowStateIndex: number, componentIndex: number): number;
     _endAsyncExecution(flowStateIndex: number, componentIndex: number): void;
 

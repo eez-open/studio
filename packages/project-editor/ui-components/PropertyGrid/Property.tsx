@@ -817,7 +817,9 @@ export const Property = observer(
                             <input
                                 ref={(ref: any) => (this.input = ref)}
                                 type="text"
-                                className="form-control"
+                                className={classNames("form-control", {
+                                    "font-monospace": propertyInfo.monospaceFont
+                                })}
                                 value={this._value || ""}
                                 onChange={this.onChange}
                                 onSelect={this.onSelectionChange}
@@ -839,7 +841,9 @@ export const Property = observer(
                         <input
                             ref={(ref: any) => (this.input = ref)}
                             type="text"
-                            className="form-control"
+                            className={classNames("form-control", {
+                                "font-monospace": propertyInfo.monospaceFont
+                            })}
                             value={this._value || ""}
                             onChange={this.onChange}
                             onKeyDown={this.onKeyDown}

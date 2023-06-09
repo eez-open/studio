@@ -2,7 +2,7 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
     getArrayElementTypeFromType,
-    getEnumTypeNameFromType,
+    getEnumFromType,
     isArrayType,
     isEnumType,
     isObjectType,
@@ -127,13 +127,10 @@ export function getDefaultValueForType(project: Project, type: ValueType): any {
         return null;
     }
     if (isEnumType(type)) {
-        const enumTypeName = getEnumTypeNameFromType(type);
-        if (enumTypeName) {
-            const enumType = project.variables.enumsMap.get(enumTypeName);
-            if (enumType) {
-                if (enumType.members.length > 0) {
-                    return enumType.members[0].value;
-                }
+        const enumType = getEnumFromType(project, type);
+        if (enumType) {
+            if (enumType.members.length > 0) {
+                return enumType.members[0].value;
             }
         }
         return 0;

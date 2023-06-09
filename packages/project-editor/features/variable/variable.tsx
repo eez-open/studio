@@ -210,7 +210,9 @@ export class Variable extends EezObject {
                     {variable.native && <span>[NATIVE] </span>}
                     {variable.persistent && <span>[PERSISTENT] </span>}
                     <span>{variable.name} </span>
-                    <em style={{ opacity: 0.5 }}>{variable.type}</em>
+                    <em className="font-monospace" style={{ opacity: 0.5 }}>
+                        {variable.type}
+                    </em>
                 </>
             );
         },

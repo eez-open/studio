@@ -48,7 +48,8 @@ import {
 import {
     ArrayValue,
     clarStremIDs,
-    createJsArrayValue
+    createJsArrayValue,
+    createWasmValue
 } from "project-editor/flow/runtime/wasm-value";
 
 import {
@@ -72,6 +73,7 @@ import type { Page } from "project-editor/features/page/page";
 import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
 import { getClassByName } from "project-editor/core/object";
+import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -963,6 +965,38 @@ export class WasmRuntime extends RemoteRuntime {
             finalResult: finalResult == undefined ? true : finalResult
         };
         this.worker.postMessage(message);
+    }
+
+    onKeyDown(key: string) {
+        if (!this.projectStore.projectTypeTraits.isDashboard) {
+            return;
+        }
+
+        if (!this.selectedPage) {
+            return;
+        }
+
+        const flowState = this.getFlowState(this.selectedPage);
+        if (!flowState) {
+            return;
+        }
+
+        const flowStateIndex = this.flowStateToFlowIndexMap.get(flowState);
+        if (flowStateIndex == undefined) {
+            console.error("Unexpected!");
+            return;
+        }
+
+        let valuePtr = createWasmValue(this.worker.wasm, key);
+
+        if (!valuePtr) {
+            console.error("Out of memory");
+            return;
+        }
+
+        this.worker.wasm._onEvent(flowStateIndex, FLOW_EVENT_KEYDOWN, valuePtr);
+
+        this.worker.wasm._valueFree(valuePtr);
     }
 
     ////////////////////////////////////////////////////////////////////////////////

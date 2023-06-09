@@ -106,6 +106,11 @@ import { humanize } from "eez-studio-shared/string";
 import { LeftArrow, RightArrow } from "project-editor/ui-components/icons";
 import { Icon } from "eez-studio-ui/icon";
 import type { IDashboardComponentContext } from "eez-studio-types";
+import {
+    FLOW_EVENT_OPEN_PAGE,
+    FLOW_EVENT_CLOSE_PAGE,
+    FLOW_EVENT_KEYDOWN
+} from "project-editor/flow/runtime/flow-events";
 
 const NOT_NAMED_LABEL = "<not named>";
 
@@ -2714,10 +2719,22 @@ export class OnEventActionComponent extends ActionComponent {
             {
                 name: "event",
                 type: PropertyType.Enum,
-                enumItems: [
-                    { id: "page_open", label: "Page open" },
-                    { id: "page_close", label: "Page close" }
-                ],
+                enumItems: (object: IEezObject) => {
+                    if (
+                        ProjectEditor.getProject(object).projectTypeTraits
+                            .isDashboard
+                    ) {
+                        return [
+                            { id: "page_open", label: "Page open" },
+                            { id: "page_close", label: "Page close" },
+                            { id: "keydown", label: "Keydown" }
+                        ];
+                    }
+                    return [
+                        { id: "page_open", label: "Page open" },
+                        { id: "page_close", label: "Page close" }
+                    ];
+                },
                 propertyGridGroup: specificGroup
             }
         ],
@@ -2751,9 +2768,15 @@ export class OnEventActionComponent extends ActionComponent {
         return [
             {
                 name: "@seqout",
-                type: "null" as ValueType,
+                type: "null" as const,
                 isSequenceOutput: true,
                 isOptionalOutput: false
+            },
+            {
+                name: "event",
+                type: "any" as const,
+                isSequenceOutput: false,
+                isOptionalOutput: true
             },
             ...super.getOutputs()
         ];
@@ -2761,15 +2784,14 @@ export class OnEventActionComponent extends ActionComponent {
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // event
-        const FLOW_EVENT_OPEN_PAGE = 0;
-        const FLOW_EVENT_CLOSE_PAGE = 1;
-
         let event: number = 0;
 
         if (this.event == "page_open") {
             event = FLOW_EVENT_OPEN_PAGE;
         } else if (this.event == "page_close") {
             event = FLOW_EVENT_CLOSE_PAGE;
+        } else if (this.event == "keydown") {
+            event = FLOW_EVENT_KEYDOWN;
         }
 
         dataBuffer.writeUint8(event);

@@ -12,7 +12,10 @@ const expressionParserGrammar = readFileSync(
     "utf8"
 );
 
-const peggyParser = peggy.generate(expressionParserGrammar);
+const peggyParser = peggy.generate(expressionParserGrammar, {
+    cache: true,
+    optimize: "speed"
+});
 
 const cache = new Map<string, any>();
 
