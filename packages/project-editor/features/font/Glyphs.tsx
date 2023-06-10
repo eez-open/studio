@@ -25,6 +25,7 @@ export const Glyphs = observer(
             selectedGlyph: IObservableValue<Glyph | undefined>;
             onSelectGlyph: (glyph: Glyph) => void;
             onDoubleClickGlyph: (glyph: Glyph) => void;
+            onEditGlyphs?: () => void;
             onAddGlyph?: () => void;
             onDeleteGlyph?: () => void;
             onCreateShadow?: () => void;
@@ -39,16 +40,7 @@ export const Glyphs = observer(
 
         list: HTMLUListElement;
 
-        constructor(props: {
-            glyphs: Glyph[];
-            selectedGlyph: IObservableValue<Glyph | undefined>;
-            onSelectGlyph: (glyph: Glyph) => void;
-            onDoubleClickGlyph: (glyph: Glyph) => void;
-            onAddGlyph?: () => void;
-            onDeleteGlyph?: () => void;
-            onCreateShadow?: () => void;
-            dialog: boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -137,7 +129,7 @@ export const Glyphs = observer(
             ) {
                 addGlyphButton = (
                     <IconAction
-                        title="Add Glyphs"
+                        title="Add Characters"
                         icon="material:add"
                         iconSize={16}
                         onClick={this.props.onAddGlyph}
@@ -160,7 +152,7 @@ export const Glyphs = observer(
                     if (font) {
                         deleteGlyphButton = (
                             <IconAction
-                                title="Delete Glyph"
+                                title="Delete Character"
                                 icon="material:delete"
                                 iconSize={16}
                                 onClick={this.props.onDeleteGlyph}
@@ -168,6 +160,18 @@ export const Glyphs = observer(
                         );
                     }
                 }
+            }
+
+            let editGlyphsButton: JSX.Element | undefined;
+            if (!this.props.dialog && this.props.onEditGlyphs) {
+                editGlyphsButton = (
+                    <IconAction
+                        title="Add or Remove Characters"
+                        icon="material:edit"
+                        iconSize={16}
+                        onClick={this.props.onEditGlyphs}
+                    />
+                );
             }
 
             let createShadowButton: JSX.Element | undefined;
@@ -205,6 +209,7 @@ export const Glyphs = observer(
                             />
                             {addGlyphButton}
                             {deleteGlyphButton}
+                            {editGlyphsButton}
                             {createShadowButton}
                         </div>
                     </div>

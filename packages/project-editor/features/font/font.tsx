@@ -1107,6 +1107,18 @@ export class Font extends EezObject {
                 hideInPropertyGrid: true
             },
             {
+                name: "lvglRanges",
+                displayName: "Ranges",
+                type: PropertyType.String,
+                computed: true
+            },
+            {
+                name: "lvglSymbols",
+                displayName: "Symbols",
+                type: PropertyType.String,
+                computed: true
+            },
+            {
                 name: "lvglBinFile",
                 type: PropertyType.String,
                 hideInPropertyGrid: true
@@ -1151,48 +1163,6 @@ export class Font extends EezObject {
 
             function isCreateGlyphs(obj: IEezObject) {
                 return getProperty(obj, "createGlyphs");
-            }
-
-            function getEncodings(ranges: string): EncodingRange[] | undefined {
-                let encodings: EncodingRange[] = [];
-
-                ranges = ranges.trim();
-                if (ranges != "") {
-                    let rangeArr = ranges.split(",");
-
-                    for (let i = 0; i < rangeArr.length; i++) {
-                        let parts = rangeArr[i].split("-");
-                        if (parts.length < 1 || parts.length > 2) {
-                            return undefined;
-                        }
-
-                        const from = parseInt(parts[0]);
-                        if (isNaN(from) || from < 0) {
-                            return undefined;
-                        }
-
-                        if (parts.length == 2) {
-                            const to = parseInt(parts[1]);
-                            if (isNaN(to) || to < 0 || to < from) {
-                                return undefined;
-                            }
-                            encodings.push({ from, to });
-                        } else {
-                            encodings.push({ from, to: from });
-                        }
-                    }
-                }
-
-                return encodings;
-            }
-
-            function validateRanges(object: any, ruleName: string) {
-                const ranges = object[ruleName];
-                if (ranges == undefined) {
-                    return VALIDATION_MESSAGE_REQUIRED;
-                }
-
-                return getEncodings(ranges) ? null : "Invalid range";
             }
 
             const projectStore = getProjectStore(parent);
@@ -1245,11 +1215,19 @@ export class Font extends EezObject {
                                 {
                                     name: "ranges",
                                     type: "string",
-                                    validators: [validateRanges]
+                                    validators: [
+                                        validateRanges,
+                                        requiredRangesOrSymbols
+                                    ],
+                                    formText:
+                                        "Ranges and/or characters to include. Example: 32-127,140,160-170,200,210-255"
                                 },
                                 {
                                     name: "symbols",
-                                    type: "string"
+                                    type: "string",
+                                    validators: [requiredRangesOrSymbols],
+                                    formText:
+                                        "List of characters to include. Example: abc01234äöüčćšđ"
                                 }
                             ]
                         },
@@ -1268,6 +1246,13 @@ export class Font extends EezObject {
                     result.values.encodings = getEncodings(
                         result.values.ranges
                     );
+
+                    const { encodings, symbols } = removeDuplicates(
+                        result.values.encodings,
+                        result.values.symbols
+                    );
+                    result.values.encodings = encodings;
+                    result.values.symbols = symbols;
                 } else {
                     result = await showGenericDialog(projectStore, {
                         dialogDefinition: {
@@ -1325,20 +1310,24 @@ export class Font extends EezObject {
                                 },
                                 {
                                     name: "createGlyphs",
+                                    displayName: "Create characters",
                                     type: "boolean"
                                 },
                                 {
                                     name: "fromGlyph",
+                                    displayName: "From character",
                                     type: "number",
                                     visible: isCreateGlyphs
                                 },
                                 {
                                     name: "toGlyph",
+                                    displayName: "To character",
                                     type: "number",
                                     visible: isCreateGlyphs
                                 },
                                 {
                                     name: "createBlankGlyphs",
+                                    displayName: "Create blank characters",
                                     type: "boolean",
                                     visible: isCreateGlyphs
                                 }
@@ -1464,6 +1453,7 @@ export class Font extends EezObject {
         });
 
         runInAction(() => {
+            this.glyphs.splice(0, this.glyphs.length);
             for (const glyphProperties of fontProperties.glyphs) {
                 const glyph = createObject<Glyph>(
                     projectStore,
@@ -1545,9 +1535,138 @@ export class Font extends EezObject {
             lvglSourceFile: fontProperties.lvglSourceFile
         });
     }
+
+    get lvglRanges() {
+        const encodings = this.lvglGlyphs?.encodings;
+        if (encodings && encodings.length > 0) {
+            return encodings
+                .map(encoding =>
+                    encoding.from != encoding.to
+                        ? `${encoding.from} - ${encoding.to}`
+                        : `${encoding.from}`
+                )
+                .join(",");
+        }
+
+        return "";
+    }
+
+    get lvglSymbols() {
+        return this.lvglGlyphs?.symbols ?? "";
+    }
 }
 
 registerClass("Font", Font);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getEncodings(ranges: string): EncodingRange[] | undefined {
+    let encodings: EncodingRange[] = [];
+
+    ranges = ranges.trim();
+    if (ranges != "") {
+        let rangeArr = ranges.split(",");
+
+        for (let i = 0; i < rangeArr.length; i++) {
+            let parts = rangeArr[i].split("-");
+            if (parts.length < 1 || parts.length > 2) {
+                return undefined;
+            }
+
+            const from = parseInt(parts[0]);
+            if (isNaN(from) || from < 0) {
+                return undefined;
+            }
+
+            if (parts.length == 2) {
+                const to = parseInt(parts[1]);
+                if (isNaN(to) || to < 0 || to < from) {
+                    return undefined;
+                }
+                encodings.push({ from, to });
+            } else {
+                encodings.push({ from, to: from });
+            }
+        }
+    }
+
+    return encodings;
+}
+
+export function validateRanges(object: any, ruleName: string) {
+    const ranges = object[ruleName];
+    if (ranges == undefined) {
+        return VALIDATION_MESSAGE_REQUIRED;
+    }
+
+    return getEncodings(ranges) ? null : "Invalid range";
+}
+
+export function requiredRangesOrSymbols(object: any, ruleName: string) {
+    const ranges = object["ranges"];
+    const symbols = object["symbols"];
+
+    if (!ranges && !symbols) {
+        return "Either ranges or symbols are required";
+    }
+
+    return null;
+}
+
+export function removeDuplicates(encodings: EncodingRange[], symbols: string) {
+    function cleanUpRanges(ranges: EncodingRange[]): EncodingRange[] {
+        if (ranges.length <= 1) {
+            return ranges;
+        }
+
+        // Sort the ranges based on their 'from' values
+        ranges.sort((a, b) => a.from - b.from);
+
+        const cleanedRanges: EncodingRange[] = [];
+        let currentRange = ranges[0];
+
+        for (let i = 1; i < ranges.length; i++) {
+            const nextRange = ranges[i];
+
+            if (nextRange.from <= currentRange.to) {
+                // There is an overlap, update the 'to' value of the current range
+                currentRange.to = Math.max(currentRange.to, nextRange.to);
+            } else {
+                // No overlap, add the current range to the cleaned ranges
+                cleanedRanges.push(currentRange);
+                currentRange = nextRange;
+            }
+        }
+
+        // Add the last remaining range to the cleaned ranges
+        cleanedRanges.push(currentRange);
+
+        return cleanedRanges;
+    }
+
+    encodings = cleanUpRanges(encodings);
+
+    function isCharacterInEncodings(ch: number) {
+        for (const range of encodings) {
+            if (ch >= range.from && ch <= range.to) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    let symbolsDeduplicated = "";
+    for (let i = 0; i < symbols.length; i++) {
+        if (
+            symbolsDeduplicated.indexOf(symbols[i]) == -1 &&
+            !isCharacterInEncodings(symbols.codePointAt(i)!)
+        ) {
+            symbolsDeduplicated += symbols[i];
+        }
+    }
+
+    return { encodings, symbols: symbolsDeduplicated };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

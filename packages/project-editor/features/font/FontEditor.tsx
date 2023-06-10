@@ -34,7 +34,15 @@ import { Glyphs } from "./Glyphs";
 import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
-import { Font, Glyph, GlyphSource } from "project-editor/features/font/font";
+import {
+    Font,
+    getEncodings,
+    Glyph,
+    GlyphSource,
+    removeDuplicates,
+    requiredRangesOrSymbols,
+    validateRanges
+} from "project-editor/features/font/font";
 
 import {
     EncodingRange,
@@ -54,7 +62,8 @@ export const FontEditor = observer(
             makeObservable(this, {
                 onSelectGlyph: action.bound,
                 onAddGlyph: action.bound,
-                onDeleteGlyph: action.bound
+                onDeleteGlyph: action.bound,
+                onEditGlyphs: action.bound
             });
         }
 
@@ -151,24 +160,24 @@ export const FontEditor = observer(
             const addOptionEnumItems = [
                 {
                     id: "append",
-                    label: "Add single glyph at the end"
+                    label: "Add single character at the end"
                 },
                 {
                     id: "range",
-                    label: "Add glpyhs from range"
+                    label: "Add characters from range"
                 }
             ];
 
             if (missingEncodings.length > 0) {
                 addOptionEnumItems.push({
                     id: "missing",
-                    label: "Add missing glyphs"
+                    label: "Add missing characters"
                 });
             }
 
             return showGenericDialog(this.context, {
                 dialogDefinition: {
-                    title: "Add Glyphs",
+                    title: "Add Characters",
                     fields: [
                         {
                             name: "filePath",
@@ -220,11 +229,13 @@ export const FontEditor = observer(
                         },
                         {
                             name: "fromGlyph",
+                            displayName: "From character",
                             type: "number",
                             visible: isAddOptionRange
                         },
                         {
                             name: "toGlyph",
+                            displayName: "To character",
                             type: "number",
                             visible: isAddOptionRange
                         },
@@ -235,6 +246,7 @@ export const FontEditor = observer(
                         },
                         {
                             name: "createBlankGlyphs",
+                            displayName: "Create blank characters",
                             type: "boolean"
                         }
                     ]
@@ -343,12 +355,14 @@ export const FontEditor = observer(
 
                             if (result.values.addOption === "missing") {
                                 notification.info(
-                                    `Added ${added} glyph(s), not found ${
+                                    `Added ${added} character(s), not found ${
                                         missingEncodings.length - added
-                                    } glyph(s)`
+                                    } character(s)`
                                 );
                             } else if (result.values.addOption === "range") {
-                                notification.info(`Added ${added} glyph(s)`);
+                                notification.info(
+                                    `Added ${added} character(s)`
+                                );
                             }
                         })
                         .catch(err => {
@@ -363,10 +377,10 @@ export const FontEditor = observer(
 
                             if (errorMessage) {
                                 notification.error(
-                                    `Adding glyphs failed: ${errorMessage}!`
+                                    `Adding characters failed: ${errorMessage}!`
                                 );
                             } else {
-                                notification.error(`Adding glyphs failed!`);
+                                notification.error(`Adding characters failed!`);
                             }
 
                             return false;
@@ -382,6 +396,102 @@ export const FontEditor = observer(
             const glyph = this.selectedGlyph;
             if (glyph) {
                 this.context.deleteObject(glyph);
+            }
+        }
+
+        async onEditGlyphs() {
+            const result = await showGenericDialog(this.context, {
+                dialogDefinition: {
+                    title: "Add or Remove Characters",
+                    fields: [
+                        {
+                            name: "ranges",
+                            type: "string",
+                            validators: [
+                                validateRanges,
+                                requiredRangesOrSymbols
+                            ],
+                            formText:
+                                "Ranges and/or characters to include. Example: 32-127,140,160-170,200,210-255"
+                        },
+                        {
+                            name: "symbols",
+                            type: "string",
+                            validators: [requiredRangesOrSymbols],
+                            formText:
+                                "List of characters to include. Example: abc01234äöüčćšđ"
+                        }
+                    ]
+                },
+                values: {
+                    ranges: this.font.lvglRanges,
+                    symbols: this.font.lvglSymbols
+                }
+            });
+
+            try {
+                let relativeFilePath = this.font.source!.filePath;
+                let absoluteFilePath =
+                    this.context.getAbsoluteFilePath(relativeFilePath);
+
+                const encodingsBeforeDeduplication = getEncodings(
+                    result.values.ranges
+                )!;
+
+                const { encodings, symbols } = removeDuplicates(
+                    encodingsBeforeDeduplication,
+                    result.values.symbols
+                );
+                result.values.symbols = symbols;
+
+                const fontProperties = await extractFont({
+                    name: this.font.name,
+                    absoluteFilePath,
+                    embeddedFontFile: this.font.embeddedFontFile,
+                    relativeFilePath,
+                    renderingEngine: "LVGL",
+                    bpp: this.font.bpp,
+                    size: this.font.source!.size!,
+                    threshold: 128,
+                    createGlyphs: true,
+                    encodings,
+                    symbols: result.values.symbols,
+                    createBlankGlyphs: false,
+                    doNotAddGlyphIfNotFound: false,
+                    lvglInclude: this.context.project.settings.build.lvglInclude
+                });
+
+                this.context.updateObject(this.font, {
+                    lvglBinFile: fontProperties.lvglBinFile,
+                    lvglSourceFile: fontProperties.lvglSourceFile,
+                    lvglGlyphs: {
+                        encodings,
+                        symbols: result.values.symbols
+                    }
+                });
+
+                this.font.loadLvglGlyphs(this.context);
+
+                notification.info(
+                    `Font ${this.font.name} successfully modified.`
+                );
+            } catch (err) {
+                let errorMessage;
+                if (err) {
+                    if (err.message) {
+                        errorMessage = err.message;
+                    } else {
+                        errorMessage = err.toString();
+                    }
+                }
+
+                if (errorMessage) {
+                    notification.error(
+                        `Modifying ${Font.name} failed: ${errorMessage}!`
+                    );
+                } else {
+                    notification.error(`Modifying ${Font.name} failed!`);
+                }
             }
         }
 
@@ -554,6 +664,11 @@ export const FontEditor = observer(
                         onSelectGlyph={this.onSelectGlyph}
                         onDoubleClickGlyph={this.onBrowseGlyph}
                         onAddGlyph={this.onAddGlyph}
+                        onEditGlyphs={
+                            this.context.projectTypeTraits.isLVGL
+                                ? this.onEditGlyphs
+                                : undefined
+                        }
                         onDeleteGlyph={this.onDeleteGlyph}
                         onCreateShadow={this.onCreateShadow}
                         dialog={false}
@@ -773,7 +888,7 @@ export function browseGlyph(glyph: Glyph) {
         return obj["bpp"] === 1;
     }
 
-    const title = "Select Glyph";
+    const title = "Select Characters";
 
     const projectStore = getProjectStore(glyph);
 

@@ -49,6 +49,8 @@ export abstract class LVGLPageRuntime {
         }
     >();
 
+    unusedFontPtrs: number[] = [];
+
     lvglCreateContext: {
         widgetIndex: number;
         pageIndex: number;
@@ -175,9 +177,19 @@ export abstract class LVGLPageRuntime {
         }
 
         this.fontsCache.delete(font);
-        this.wasm._lvglFreeFont(fontPtr);
+
+        if (this.unusedFontPtrs.indexOf(fontPtr) == -1) {
+            this.unusedFontPtrs.push(fontPtr);
+        }
 
         return this.loadFont(font);
+    }
+
+    freeUnusedFontPtrs() {
+        for (const fontPtr of this.unusedFontPtrs) {
+            this.wasm._lvglFreeFont(fontPtr);
+        }
+        this.unusedFontPtrs = [];
     }
 
     strings: number[] = [];
@@ -334,6 +346,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 }
 
                 this.wasm._lvglScreenLoad(-1, pageObj);
+
+                this.freeUnusedFontPtrs();
 
                 runInAction(() => {
                     if (this.page._lvglObj != undefined) {

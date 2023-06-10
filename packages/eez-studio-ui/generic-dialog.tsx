@@ -65,6 +65,7 @@ export interface IFieldProperties {
     enclosureClassName?: string;
     minValue?: number;
     maxValue?: number;
+    formText?: string;
 }
 
 export interface IFieldComponentProps {
@@ -595,17 +596,28 @@ export const GenericDialog = observer(
                             }
 
                             return (
-                                <Field
-                                    key={fieldProperties.name}
-                                    name={name}
-                                    value={value}
-                                    onChange={onChange}
-                                    errors={errors}
-                                    min={min}
-                                    max={max}
-                                >
-                                    {children}
-                                </Field>
+                                <React.Fragment key={fieldProperties.name}>
+                                    <Field
+                                        name={name}
+                                        value={value}
+                                        onChange={onChange}
+                                        errors={errors}
+                                        min={min}
+                                        max={max}
+                                    >
+                                        {children}
+                                    </Field>
+                                    {fieldProperties.formText && (
+                                        <tr>
+                                            <td />
+                                            <td>
+                                                <div className="form-text">
+                                                    {fieldProperties.formText}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
                             );
                         })}
                 </PropertyList>
