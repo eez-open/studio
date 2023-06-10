@@ -306,8 +306,7 @@ export class LVGLStyles extends EezObject {
             {
                 name: "styles",
                 type: PropertyType.Array,
-                typeClass: LVGLStyle,
-                enumerable: false
+                typeClass: LVGLStyle
             },
             {
                 name: "defaultStyles",

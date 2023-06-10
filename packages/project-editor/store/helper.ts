@@ -869,6 +869,10 @@ export function objectToJS(object: IEezObject): any {
 export function isObjectReferencable(object: IEezObject) {
     const objectClassInfo = getClassInfo(object);
 
+    if (ProjectEditor.LVGLStyleClass.classInfo == objectClassInfo) {
+        return true;
+    }
+
     if (ProjectEditor.EnumClass.classInfo == objectClassInfo) {
         return true;
     }

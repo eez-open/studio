@@ -313,7 +313,11 @@ export function* searchForReference(
             return;
         }
 
-        objectParentPath = getObjectPath(objectParent).join("/");
+        if (object instanceof ProjectEditor.LVGLStyleClass) {
+            objectParentPath = "lvglStyles/allStyles";
+        } else {
+            objectParentPath = getObjectPath(objectParent).join("/");
+        }
     }
 
     while (true) {
