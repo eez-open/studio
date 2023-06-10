@@ -6846,3 +6846,36 @@ button.EezStudio_Action {
         width: 390px;
     }
 }
+
+.EezStudio_ProjectEditor_LVGLStylesTreeNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+        min-height: 28px;
+    }
+
+    .EezStudio_SearchInput_Container {
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}

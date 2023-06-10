@@ -62,7 +62,7 @@ export class LVGLBuild extends Build {
 
         for (const project of this.project._store.openProjectsManager
             .projects) {
-            styles.push(...project.lvglStyles.styles);
+            styles.push(...project.lvglStyles.allStyles);
         }
 
         this.styles = styles;
@@ -702,6 +702,12 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                 `void ${this.getStyleFunctionName(lvglStyle)}(lv_obj_t *obj) {`
             );
             build.indent();
+
+            if (lvglStyle.parentStyle) {
+                build.line(
+                    `${build.getStyleFunctionName(lvglStyle.parentStyle)}(obj);`
+                );
+            }
 
             lvglStyle.definition.lvglBuild(build);
 

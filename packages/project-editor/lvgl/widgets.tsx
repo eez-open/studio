@@ -1,6 +1,7 @@
 import React from "react";
-import { observable, makeObservable, runInAction, computed } from "mobx";
+import { observable, makeObservable, runInAction, computed, toJS } from "mobx";
 import { observer } from "mobx-react";
+import { MenuItem } from "@electron/remote";
 
 import { _find, _range } from "eez-studio-shared/algorithm";
 import { Rect } from "eez-studio-shared/geometry";
@@ -120,6 +121,7 @@ import {
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component_types";
 import { visitObjects } from "project-editor/core/search";
+import { validators } from "eez-studio-shared/validation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -574,7 +576,7 @@ export class LVGLWidget extends Widget {
             {
                 name: "useStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "lvglStyles/styles",
+                referencedObjectCollectionPath: "lvglStyles/allStyles",
                 filterReferencedObjectCollection: (
                     objects: IEezObject[],
                     lvglStyle: LVGLStyle
@@ -591,6 +593,172 @@ export class LVGLWidget extends Widget {
                         ProjectEditor.getProject(widget).lvglStyles
                             .defaultStyles[widget.type] ?? undefined
                     );
+                },
+                propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
+                    let menuItems: Electron.MenuItem[] = [];
+
+                    if (props.objects.length === 1) {
+                        const widget = props.objects[0] as LVGLWidget;
+
+                        if (widget.localStyles.hasModifications) {
+                            menuItems.push(
+                                new MenuItem({
+                                    label: "Reset All Modifications",
+                                    click: () => {
+                                        widget.localStyles.resetAllModifications();
+                                    }
+                                })
+                            );
+
+                            menuItems.push(
+                                new MenuItem({
+                                    label: "Create New Style",
+                                    click: async () => {
+                                        const projectStore =
+                                            getProjectStore(widget);
+
+                                        const result = await showGenericDialog({
+                                            dialogDefinition: {
+                                                title: "New Style",
+                                                fields: [
+                                                    {
+                                                        name: "name",
+                                                        type: "string",
+                                                        validators: [
+                                                            validators.required,
+                                                            validators.unique(
+                                                                {},
+                                                                projectStore
+                                                                    .project
+                                                                    .lvglStyles
+                                                                    .allStyles
+                                                            )
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            values: {}
+                                        });
+
+                                        projectStore.undoManager.setCombineCommands(
+                                            true
+                                        );
+
+                                        let styleParent =
+                                            projectStore.project.lvglStyles
+                                                .styles;
+
+                                        if (widget.useStyle) {
+                                            const lvglStyle = findLvglStyle(
+                                                projectStore.project,
+                                                widget.useStyle
+                                            );
+
+                                            if (
+                                                lvglStyle &&
+                                                lvglStyle.forWidgetType ==
+                                                    widget.type
+                                            ) {
+                                                styleParent =
+                                                    lvglStyle.childStyles;
+                                            }
+                                        }
+
+                                        projectStore.addObject(
+                                            styleParent,
+                                            createObject<LVGLStyle>(
+                                                projectStore,
+                                                {
+                                                    name: result.values.name,
+                                                    forWidgetType: widget.type,
+                                                    definition:
+                                                        createObject<LVGLStylesDefinition>(
+                                                            projectStore,
+                                                            {
+                                                                definition:
+                                                                    toJS(
+                                                                        widget
+                                                                            .localStyles
+                                                                            .definition
+                                                                    )
+                                                            },
+                                                            LVGLStylesDefinition
+                                                        )
+                                                },
+                                                LVGLStyle
+                                            )
+                                        );
+
+                                        projectStore.updateObject(widget, {
+                                            useStyle: result.values.name
+                                        });
+
+                                        projectStore.updateObject(
+                                            widget.localStyles,
+                                            {
+                                                definition: undefined
+                                            }
+                                        );
+
+                                        projectStore.undoManager.setCombineCommands(
+                                            false
+                                        );
+                                    }
+                                })
+                            );
+
+                            if (widget.useStyle) {
+                                menuItems.push(
+                                    new MenuItem({
+                                        label: "Update Style",
+                                        click: async () => {
+                                            const projectStore =
+                                                getProjectStore(widget);
+
+                                            const lvglStyle = findLvglStyle(
+                                                projectStore.project,
+                                                widget.useStyle
+                                            );
+
+                                            if (lvglStyle) {
+                                                projectStore.undoManager.setCombineCommands(
+                                                    true
+                                                );
+
+                                                projectStore.updateObject(
+                                                    lvglStyle.definition,
+                                                    {
+                                                        definition:
+                                                            LVGLStylesDefinition.combineDefinitions(
+                                                                lvglStyle
+                                                                    .definition
+                                                                    .definition,
+                                                                widget
+                                                                    .localStyles
+                                                                    .definition
+                                                            )
+                                                    }
+                                                );
+
+                                                projectStore.updateObject(
+                                                    widget.localStyles,
+                                                    {
+                                                        definition: undefined
+                                                    }
+                                                );
+
+                                                projectStore.undoManager.setCombineCommands(
+                                                    false
+                                                );
+                                            }
+                                        }
+                                    })
+                                );
+                            }
+                        }
+                    }
+
+                    return menuItems;
                 }
             },
             {
@@ -1199,7 +1367,7 @@ export class LVGLWidget extends Widget {
             if (useStyle) {
                 const lvglStyle = findLvglStyle(project, useStyle);
                 if (lvglStyle) {
-                    lvglStyle.definition.lvglCreate(runtime, this, obj);
+                    lvglStyle.lvglCreate(runtime, this, obj);
                 }
             }
             this.localStyles.lvglCreate(runtime, this, obj);

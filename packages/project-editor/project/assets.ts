@@ -25,7 +25,7 @@ export type AssetType =
     | "actions"
     | "variables/globalVariables"
     | "styles"
-    | "lvglStyles/styles"
+    | "lvglStyles/allStyles"
     | "fonts"
     | "bitmaps"
     | "colors";
@@ -103,7 +103,7 @@ export function findStyle(project: Project, name: string | undefined) {
 }
 
 export function findLvglStyle(project: Project, name: string | undefined) {
-    return findAsset<LVGLStyle>(project, "lvglStyles/styles", name);
+    return findAsset<LVGLStyle>(project, "lvglStyles/allStyles", name);
 }
 
 export function findFont(project: Project, name: string | undefined) {
@@ -257,7 +257,7 @@ class AssetsMap {
             { path: "actions", map: this.actionsMap },
             { path: "pages", map: this.pagesMap },
             { path: "styles", map: this.stylesMap },
-            { path: "lvglStyles/styles", map: this.lvglStylesMap },
+            { path: "lvglStyles/allStyles", map: this.lvglStylesMap },
             { path: "fonts", map: this.fontsMap },
             { path: "bitmaps", map: this.bitmapsMap },
             { path: "colors", map: this.colorsMap }
@@ -410,7 +410,7 @@ class AssetsMap {
     get lvglStylesMap() {
         const buildAssets = new BuildAssetsMap<LVGLStyle>();
         if (this.project.lvglStyles) {
-            this.project.lvglStyles.styles.forEach(style =>
+            this.project.lvglStyles.allStyles.forEach(style =>
                 this.addToMap(buildAssets, style)
             );
         }

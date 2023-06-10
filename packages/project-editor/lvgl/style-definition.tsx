@@ -1,4 +1,4 @@
-import { makeObservable, observable, runInAction } from "mobx";
+import { makeObservable, observable, runInAction, toJS } from "mobx";
 
 import {
     ClassInfo,
@@ -19,7 +19,7 @@ import { findBitmap, findFont } from "project-editor/project/project";
 import type { Page } from "project-editor/features/page/page";
 
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     BUILT_IN_FONTS,
@@ -37,14 +37,16 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LVGLStylesDefinition extends EezObject {
-    definition: {
-        [part: string]: {
-            [state: string]: {
-                [prop: string]: any;
-            };
+type Definition = {
+    [part: string]: {
+        [state: string]: {
+            [prop: string]: any;
         };
     };
+};
+
+export class LVGLStylesDefinition extends EezObject {
+    definition: Definition;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -137,6 +139,33 @@ export class LVGLStylesDefinition extends EezObject {
                 }
             }
         };
+    }
+
+    static combineDefinitions(
+        definition1: Definition,
+        definition2: Definition
+    ) {
+        let result = toJS(definition1);
+
+        Object.keys(definition2).forEach(part => {
+            Object.keys(definition2[part]).forEach(state => {
+                Object.keys(definition2[part][state]).forEach(propertyName => {
+                    result = {
+                        ...(result || {}),
+                        [part]: {
+                            ...(result || {})[part],
+                            [state]: {
+                                ...((result || {})[part] || {})[state],
+                                [propertyName]:
+                                    definition2[part][state][propertyName]
+                            }
+                        }
+                    };
+                });
+            });
+        });
+
+        return result;
     }
 
     removePropertyFromDefinition(
@@ -485,6 +514,16 @@ export class LVGLStylesDefinition extends EezObject {
                     }
                 );
             });
+        });
+    }
+
+    get hasModifications() {
+        return this.definition && Object.keys(this.definition).length > 0;
+    }
+
+    resetAllModifications() {
+        ProjectEditor.getProjectStore(this).updateObject(this, {
+            definition: undefined
         });
     }
 }

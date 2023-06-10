@@ -6,6 +6,7 @@ import {
     ClassInfo,
     EezObject,
     getClassesDerivedFrom,
+    getParent,
     IEezObject,
     IMessage,
     PropertyProps,
@@ -15,7 +16,6 @@ import {
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
-import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
@@ -26,6 +26,10 @@ import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { Icon } from "eez-studio-ui/icon";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { LVGLStylesTreeNavigation } from "project-editor/lvgl/LVGLStylesTreeNavigation";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import type { Page } from "project-editor/features/page/page";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +79,7 @@ const DefaultStylePropertyGridUI = observer(
 export class LVGLStyle extends EezObject {
     name: string;
     forWidgetType: string;
+    childStyles: LVGLStyle[];
     definition: LVGLStylesDefinition;
 
     constructor() {
@@ -83,7 +88,9 @@ export class LVGLStyle extends EezObject {
         makeObservable(this, {
             name: observable,
             forWidgetType: observable,
-            definition: observable
+            childStyles: observable,
+            definition: observable,
+            parentStyle: computed
         });
     }
 
@@ -98,6 +105,12 @@ export class LVGLStyle extends EezObject {
                 name: "forWidgetType",
                 type: PropertyType.String,
                 readOnlyInPropertyGrid: true
+            },
+            {
+                name: "childStyles",
+                type: PropertyType.Array,
+                typeClass: LVGLStyle,
+                hideInPropertyGrid: true
             },
             {
                 name: "defaultStyle",
@@ -242,8 +255,28 @@ export class LVGLStyle extends EezObject {
         },
         check: (style: LVGLStyle, messages: IMessage[]) => {
             style.definition.check(messages);
-        }
+        },
+        showTreeCollapseIcon: "has-children"
     };
+
+    get parentStyle(): LVGLStyle | undefined {
+        const object = getParent(getParent(this));
+        if (object && object instanceof LVGLStyle) {
+            return object;
+        }
+        return undefined;
+    }
+
+    lvglCreate(
+        runtime: LVGLPageRuntime,
+        widget: LVGLWidget | Page,
+        obj: number
+    ) {
+        if (this.parentStyle) {
+            this.parentStyle.lvglCreate(runtime, widget, obj);
+        }
+        this.definition.lvglCreate(runtime, widget, obj);
+    }
 }
 
 registerClass("LVGLStyle", LVGLStyle);
@@ -262,7 +295,8 @@ export class LVGLStyles extends EezObject {
         makeObservable(this, {
             styles: observable,
             defaultStyles: observable,
-            lvglRuntime: computed({ keepAlive: true })
+            lvglRuntime: computed({ keepAlive: true }),
+            allStyles: computed
         });
     }
 
@@ -295,6 +329,23 @@ export class LVGLStyles extends EezObject {
     get lvglRuntime() {
         return new LVGLStylesEditorRuntime(ProjectEditor.getProject(this));
     }
+
+    get allStyles() {
+        const styles: LVGLStyle[] = [];
+
+        function addStyles(style: LVGLStyle) {
+            styles.push(style);
+            for (const childStyle of style.childStyles) {
+                addStyles(childStyle);
+            }
+        }
+
+        for (const style of this.styles) {
+            addStyles(style);
+        }
+
+        return styles;
+    }
 }
 
 registerClass("LVGLStyles", LVGLStyles);
@@ -306,7 +357,7 @@ export const LVGLStylesNavigation = observer(
 
         render() {
             return (
-                <ListNavigation
+                <LVGLStylesTreeNavigation
                     id={"lvgl-styles"}
                     navigationObject={this.context.project.lvglStyles.styles}
                     selectedObject={
