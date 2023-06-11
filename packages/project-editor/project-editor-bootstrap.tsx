@@ -105,6 +105,8 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
+import { Style } from "project-editor/features/style/style";
+
 export async function initProjectEditor(
     homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
@@ -150,6 +152,7 @@ export async function initProjectEditor(
         GlyphClass: Glyph,
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
+        StyleClass: Style,
         LVGLWidgetClass: LVGLWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
         LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,

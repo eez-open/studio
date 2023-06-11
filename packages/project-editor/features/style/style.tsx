@@ -55,7 +55,6 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
-import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 
 export type BorderRadiusSpec = {
@@ -153,7 +152,6 @@ const idProperty: PropertyInfo = {
     type: PropertyType.Number,
     isOptional: true,
     unique: true,
-    propertyGridGroup: generalGroup,
     inheritable: false,
     hideInPropertyGrid: style =>
         isWidgetParentOfStyle(style) || isDashboardProject(style),
@@ -173,10 +171,11 @@ const descriptionProperty: PropertyInfo = {
     hideInPropertyGrid: isWidgetParentOfStyle
 };
 
-const inheritFromProperty: PropertyInfo = {
-    name: "inheritFrom",
+const useStyleProperty: PropertyInfo = {
+    name: "useStyle",
     type: PropertyType.ObjectReference,
-    referencedObjectCollectionPath: "styles",
+    referencedObjectCollectionPath: "allStyles",
+    hideInPropertyGrid: (object: IEezObject) => !isWidgetParentOfStyle(object),
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 
@@ -216,7 +215,8 @@ const inheritFromProperty: PropertyInfo = {
                                                 validators.required,
                                                 validators.unique(
                                                     {},
-                                                    projectStore.project.styles
+                                                    projectStore.project
+                                                        .allStyles
                                                 )
                                             ]
                                         }
@@ -241,7 +241,7 @@ const inheritFromProperty: PropertyInfo = {
 
                                 stylePropertyValues.name = result.values.name;
 
-                                objectPropertyValues.inheritFrom =
+                                objectPropertyValues.useStyle =
                                     result.values.name;
 
                                 projectStore.addObject(
@@ -265,10 +265,7 @@ const inheritFromProperty: PropertyInfo = {
                     })
                 );
 
-                const style = findStyle(
-                    projectStore.project,
-                    (props.objects[0] as Style).inheritFrom
-                );
+                const style = (props.objects[0] as Style).parentStyle;
                 if (style) {
                     menuItems.push(
                         new MenuItem({
@@ -438,7 +435,7 @@ const alignHorizontalProperty: PropertyInfo = {
             id: "right"
         }
     ],
-    defaultValue: undefined,
+    defaultValue: "center",
     inheritable: true
 };
 
@@ -456,7 +453,7 @@ const alignVerticalProperty: PropertyInfo = {
             id: "bottom"
         }
     ],
-    defaultValue: undefined,
+    defaultValue: "center",
     inheritable: true
 };
 
@@ -488,7 +485,7 @@ const colorProperty: PropertyInfo = {
     name: "color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#ffffff",
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu
@@ -498,7 +495,7 @@ const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#000000",
     inheritable: true,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu
@@ -516,7 +513,7 @@ const activeColorProperty: PropertyInfo = {
     name: "activeColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#000000",
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
@@ -528,7 +525,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
     displayName: "Active back. color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#ffffff",
     inheritable: true,
     hideInPropertyGrid: isV1Project,
     cssAttributeName: "background-color",
@@ -539,7 +536,7 @@ const focusColorProperty: PropertyInfo = {
     name: "focusColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#ffffff",
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
@@ -551,7 +548,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
     displayName: "Focus back. color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#000000",
     inheritable: true,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu,
@@ -561,7 +558,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
     type: PropertyType.String,
-    defaultValue: undefined,
+    defaultValue: "0",
     inheritable: true,
     cssAttributeName: "border-width",
     propertyMenu
@@ -570,7 +567,7 @@ const borderSizeProperty: PropertyInfo = {
 const borderRadiusProperty: PropertyInfo = {
     name: "borderRadius",
     type: PropertyType.String,
-    defaultValue: undefined,
+    defaultValue: "0",
     inheritable: true,
     cssAttributeName: "border-radius",
     propertyMenu
@@ -580,7 +577,7 @@ const borderColorProperty: PropertyInfo = {
     name: "borderColor",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
-    defaultValue: undefined,
+    defaultValue: "#000000",
     inheritable: true,
     cssAttributeName: "border-color",
     propertyMenu
@@ -631,7 +628,7 @@ const borderStyleProperty: PropertyInfo = {
 const paddingProperty: PropertyInfo = {
     name: "padding",
     type: PropertyType.String,
-    defaultValue: undefined,
+    defaultValue: "0",
     cssAttributeName: "padding",
     propertyMenu,
     inheritable: true
@@ -640,7 +637,7 @@ const paddingProperty: PropertyInfo = {
 const marginProperty: PropertyInfo = {
     name: "margin",
     type: PropertyType.String,
-    defaultValue: undefined,
+    defaultValue: "0",
     inheritable: true,
     hideInPropertyGrid: isV3OrNewerProject
 };
@@ -648,7 +645,7 @@ const marginProperty: PropertyInfo = {
 const opacityProperty: PropertyInfo = {
     name: "opacity",
     type: PropertyType.Number,
-    defaultValue: undefined,
+    defaultValue: "255",
     cssAttributeName: "opacity",
     propertyMenu,
     inheritable: true
@@ -668,14 +665,17 @@ const blinkProperty: PropertyInfo = {
     name: "blink",
     type: PropertyType.Boolean,
     defaultValue: false,
-    inheritable: true
+    inheritable: true,
+    checkboxStyleSwitch: true
 };
 
 const cssProperty: PropertyInfo = {
     name: "css",
     displayName: "Additional CSS",
+    propertyNameAbove: true,
     type: PropertyType.CSS,
     cssAttributeName: "css",
+    nonInheritable: true,
     propertyMenu,
     hideInPropertyGrid: isNotDashboardProject
 };
@@ -683,6 +683,7 @@ const cssProperty: PropertyInfo = {
 const cssPreviewProperty: PropertyInfo = {
     name: "cssPreview",
     displayName: "CSS preview",
+    propertyNameAbove: true,
     type: PropertyType.CSS,
     hideInPropertyGrid: isNotDashboardProject,
     readOnlyInPropertyGrid: true,
@@ -702,7 +703,7 @@ const properties = [
     idProperty,
     nameProperty,
     descriptionProperty,
-    inheritFromProperty,
+    useStyleProperty,
     fontProperty,
     fontFamilyProperty,
     fontSizeProperty,
@@ -742,17 +743,10 @@ const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
 function getInheritedValue(
     styleObject: Style,
     propertyName: string,
-    visited: Style[],
     translateThemedColors?: boolean
 ): InheritedValue {
     if (translateThemedColors == undefined) {
         translateThemedColors = true;
-    }
-
-    if (visited.indexOf(styleObject) != -1) {
-        return undefined;
-    } else {
-        visited.push(styleObject);
     }
 
     let value = getProperty(styleObject, propertyName);
@@ -776,23 +770,18 @@ function getInheritedValue(
         };
     }
 
-    if (styleObject.inheritFrom) {
-        let inheritFromStyleObject = findStyle(
-            ProjectEditor.getProject(styleObject),
-            styleObject.inheritFrom
+    if (styleObject.parentStyle) {
+        return getInheritedValue(
+            styleObject.parentStyle,
+            propertyName,
+            translateThemedColors
         );
-
-        if (inheritFromStyleObject) {
-            return getInheritedValue(
-                inheritFromStyleObject,
-                propertyName,
-                visited,
-                translateThemedColors
-            );
-        }
     }
 
-    return undefined;
+    return {
+        value: propertiesMap[propertyName].defaultValue,
+        source: undefined
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -801,7 +790,8 @@ export class Style extends EezObject {
     id: number | undefined;
     name: string;
     description?: string;
-    inheritFrom?: string;
+    useStyle?: string;
+    childStyles: Style[];
     alwaysBuild: boolean;
 
     font?: string;
@@ -838,7 +828,8 @@ export class Style extends EezObject {
             id: observable,
             name: observable,
             description: observable,
-            inheritFrom: observable,
+            useStyle: observable,
+            childStyles: observable,
             alwaysBuild: observable,
             font: observable,
             fontFamily: observable,
@@ -999,7 +990,15 @@ export class Style extends EezObject {
     }
 
     static classInfo: ClassInfo = {
-        properties,
+        properties: [
+            ...properties,
+            {
+                name: "childStyles",
+                type: PropertyType.Array,
+                typeClass: Style,
+                hideInPropertyGrid: true
+            }
+        ],
         beforeLoadHook(object: Style, jsObject: any) {
             if (
                 jsObject.paddingHorizontal !== undefined ||
@@ -1058,7 +1057,7 @@ export class Style extends EezObject {
             return style;
         },
         getInheritedValue: (styleObject: Style, propertyName: string) =>
-            getInheritedValue(styleObject, propertyName, [], false),
+            getInheritedValue(styleObject, propertyName, false),
         icon: "material:format_color_fill",
         defaultValue: {},
         check: (style: Style, messages: IMessage[]) => {
@@ -1094,30 +1093,26 @@ export class Style extends EezObject {
 
             if (projectStore.projectTypeTraits.isDashboard) {
                 if (
-                    style.inheritFrom &&
-                    !findStyle(projectStore.project, style.inheritFrom)
+                    style.useStyle &&
+                    !findStyle(projectStore.project, style.useStyle)
                 ) {
-                    messages.push(
-                        propertyNotFoundMessage(style, "inheritFrom")
-                    );
+                    messages.push(propertyNotFoundMessage(style, "useStyle"));
                 }
 
                 // TODO
             } else {
                 ProjectEditor.checkAssetId(
                     projectStore,
-                    "styles",
+                    "allStyles",
                     style,
                     messages
                 );
 
                 if (
-                    style.inheritFrom &&
-                    !findStyle(projectStore.project, style.inheritFrom)
+                    style.useStyle &&
+                    !findStyle(projectStore.project, style.useStyle)
                 ) {
-                    messages.push(
-                        propertyNotFoundMessage(style, "inheritFrom")
-                    );
+                    messages.push(propertyNotFoundMessage(style, "useStyle"));
                 } else {
                     if (!style.fontName) {
                         messages.push(propertyNotSetMessage(style, "font"));
@@ -1279,8 +1274,22 @@ export class Style extends EezObject {
                     }
                 }
             }
-        }
+        },
+        showTreeCollapseIcon: "has-children"
     };
+
+    get parentStyle(): Style | undefined {
+        if (this.useStyle) {
+            return findStyle(ProjectEditor.getProject(this), this.useStyle);
+        }
+
+        const object = getParent(getParent(this));
+        if (object && object instanceof Style) {
+            return object;
+        }
+
+        return undefined;
+    }
 
     get fontName(): string {
         return getStyleProperty(this, "font");
@@ -1291,17 +1300,9 @@ export class Style extends EezObject {
             return findFont(ProjectEditor.getProject(this), this.font);
         }
 
-        if (this.inheritFrom) {
-            let inheritFromStyleObject = findStyle(
-                ProjectEditor.getProject(this),
-                this.inheritFrom
-            );
-
-            if (inheritFromStyleObject) {
-                return getInheritedValue(inheritFromStyleObject, "fontObject", [
-                    this
-                ])?.value as Font;
-            }
+        if (this.parentStyle) {
+            return getInheritedValue(this.parentStyle, "fontObject")
+                ?.value as Font;
         }
 
         return undefined;
@@ -1959,17 +1960,11 @@ export class Style extends EezObject {
 
         let cssPreview = "";
 
-        if (this.inheritFrom) {
-            const inheritFromStyle = findStyle(
-                ProjectEditor.getProject(this),
-                this.inheritFrom
-            );
-            if (inheritFromStyle && inheritFromStyle.cssPreview) {
-                if (cssPreview) {
-                    cssPreview += "\n";
-                }
-                cssPreview += inheritFromStyle.cssPreview;
+        if (this.parentStyle && this.parentStyle.cssPreview) {
+            if (cssPreview) {
+                cssPreview += "\n";
             }
+            cssPreview += this.parentStyle.cssPreview;
         }
 
         if (this.cssDeclarations) {
@@ -1995,14 +1990,8 @@ export class Style extends EezObject {
         const classNames = [];
 
         if (isDashboardProject(this)) {
-            if (this.inheritFrom) {
-                const inheritFromStyle = findStyle(
-                    ProjectEditor.getProject(this),
-                    this.inheritFrom
-                );
-                if (inheritFromStyle) {
-                    classNames.push(...inheritFromStyle.classNames);
-                }
+            if (this.parentStyle) {
+                classNames.push(...this.parentStyle.classNames);
             }
 
             if (this.cssDeclarations) {
@@ -2044,7 +2033,6 @@ export function getStyleProperty(
     let inheritedValue = getInheritedValue(
         style,
         propertyName,
-        [],
         translateThemedColors
     );
     if (inheritedValue) {

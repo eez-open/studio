@@ -109,7 +109,7 @@ export class PageOrientation extends EezObject {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles",
+                referencedObjectCollectionPath: "allStyles",
                 propertyGridGroup: styleGroup
             },
             {
@@ -314,7 +314,7 @@ export class Page extends Flow {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles",
+                referencedObjectCollectionPath: "allStyles",
                 propertyGridGroup: styleGroup,
                 hideInPropertyGrid: isLVGLProject
             },
@@ -726,8 +726,8 @@ export class Page extends Flow {
         return (
             <>
                 {flowContext.projectStore.projectTypeTraits.isDashboard &&
-                    flowContext.projectStore.project.styles.map(style =>
-                        style.render()
+                    flowContext.projectStore.openProjectsManager.styles.map(
+                        style => style.render()
                     )}
                 <ComponentEnclosure
                     component={this}

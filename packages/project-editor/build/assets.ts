@@ -373,11 +373,11 @@ export class Assets {
         //
         this.styles = [];
         this.getAssets<Style>(
-            project => project.styles,
+            project => project.allStyles,
             style => style.id != undefined
         ).forEach(style => (this.styles[style.id! - 1] = style));
         this.getAssets<Style>(
-            project => project.styles,
+            project => project.allStyles,
             style => style.id == undefined && style.alwaysBuild
         ).forEach(style => this.styles.push(style));
         const missingIDs: number[] = [];
@@ -612,15 +612,13 @@ export class Assets {
         } else {
             const style = styleNameOrObject;
 
-            if (style.inheritFrom) {
-                const parentStyle = findStyle(project, style.inheritFrom);
-                if (parentStyle) {
-                    if (style.compareTo(parentStyle)) {
-                        if (style.id != undefined) {
-                            return style.id;
-                        }
-                        return this.doGetStyleIndex(project, parentStyle.name);
+            const parentStyle = style.parentStyle;
+            if (parentStyle) {
+                if (style.compareTo(parentStyle)) {
+                    if (style.id != undefined) {
+                        return style.id;
                     }
+                    return this.doGetStyleIndex(project, parentStyle.name);
                 }
             }
 
@@ -757,6 +755,10 @@ export class Assets {
             return 65535;
         }
 
+        if (color.startsWith("#")) {
+            color = color.toUpperCase();
+        }
+
         // TODO: currently all colors are available from master project,
         // we should add support for exporting colors (internal and exported),
         // like we are doing for styles
@@ -810,8 +812,8 @@ export class Assets {
 
     reportUnusedAssets() {
         this.projects.forEach(project => {
-            if (project.styles?.length > 0) {
-                project.styles.forEach(style => {
+            if (project.allStyles?.length > 0) {
+                project.allStyles.forEach(style => {
                     if (
                         !this.styles.find(usedStyle => {
                             if (!usedStyle) {
@@ -822,18 +824,12 @@ export class Assets {
                                 return true;
                             }
 
-                            let baseStyle = findStyle(
-                                this.rootProject,
-                                usedStyle.inheritFrom
-                            );
+                            let baseStyle = usedStyle.parentStyle;
                             while (baseStyle) {
                                 if (baseStyle == style) {
                                     return true;
                                 }
-                                baseStyle = findStyle(
-                                    this.rootProject,
-                                    baseStyle.inheritFrom
-                                );
+                                baseStyle = baseStyle.parentStyle;
                             }
 
                             return false;

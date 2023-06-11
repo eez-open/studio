@@ -16,6 +16,7 @@ import type { ProjectStore } from "project-editor/store";
 import { ImportDirective, Project } from "project-editor/project/project";
 import { loadProject } from "project-editor/store/serialization";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { Style } from "project-editor/features/style/style";
 
 type ProjectReference =
     | {
@@ -46,6 +47,7 @@ export class OpenProjectsManager {
         makeObservable(this, {
             openProjects: observable.shallow,
             projects: computed,
+            styles: computed,
             mapPathToOpenProject: computed,
             mapProjectToOpenProject: computed,
             masterProjects: computed,
@@ -80,6 +82,18 @@ export class OpenProjectsManager {
         }
 
         return projects;
+    }
+
+    get styles() {
+        const styles: Style[] = [];
+
+        for (const project of this.projects) {
+            for (const style of project.allStyles) {
+                styles.push(style);
+            }
+        }
+
+        return styles;
     }
 
     get mapPathToOpenProject(): Map<string, OpenProject> {

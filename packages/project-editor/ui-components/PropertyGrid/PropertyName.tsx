@@ -8,9 +8,10 @@ import {
     PropertyProps,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import { isAnyPropertyModified } from "project-editor/store";
+import { getNumModifications } from "project-editor/store";
 
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
+import classNames from "classnames";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -45,26 +46,37 @@ export const PropertyName = observer(
                     propertyInfo
                 );
 
+                const numModifications = getNumModifications({
+                    ...this.props,
+                    objects: objects.map(
+                        object => (object as any)[propertyInfo.name]
+                    )
+                });
+
                 return (
                     <div className="collapsable" onClick={this.toggleCollapsed}>
-                        {enabled && (
-                            <Icon
-                                icon={
-                                    collapsed
-                                        ? "material:keyboard_arrow_right"
-                                        : "material:keyboard_arrow_down"
-                                }
-                                size={18}
-                                className="triangle"
-                            />
-                        )}
-                        {getObjectPropertyDisplayName(objects[0], propertyInfo)}
-                        {isAnyPropertyModified({
-                            ...this.props,
-                            objects: objects.map(
-                                object => (object as any)[propertyInfo.name]
-                            )
-                        }) && " ●"}
+                        <div
+                            className={classNames({
+                                "fw-bold": numModifications > 0
+                            })}
+                        >
+                            {enabled && (
+                                <Icon
+                                    icon={
+                                        collapsed
+                                            ? "material:keyboard_arrow_right"
+                                            : "material:keyboard_arrow_down"
+                                    }
+                                    size={18}
+                                    className="triangle"
+                                />
+                            )}
+                            {getObjectPropertyDisplayName(
+                                objects[0],
+                                propertyInfo
+                            )}
+                            {numModifications > 0 && ` (${numModifications})`}
+                        </div>
                     </div>
                 );
             } else {

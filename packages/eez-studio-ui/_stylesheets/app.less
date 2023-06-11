@@ -3275,6 +3275,15 @@ button.EezStudio_Action {
                 & > td.embedded-property-cell {
                     padding-left: 20px;
                     padding-right: 0;
+
+                    & > .collapsable > div.collapsable-property-name {
+                        margin-top: 4px;
+                        transform: translateX(-10px);
+                        cursor: pointer;
+                        &:hover {
+                            background-color: #eee;
+                        }
+                    }
                 }
 
                 textarea.pre {
@@ -6275,17 +6284,87 @@ button.EezStudio_Action {
     }
 }
 
+.EezStudio_StylesDefinition {
+    display: flex;
+    width: 100%;
+
+    & > div {
+        border: 1px solid @panelBorderColor;
+    }
+
+    & > div:nth-child(1) {
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
+    }
+
+    & > div:nth-child(2) {
+        border-left: none;
+        border-top-right-radius: var(--bs-border-radius);
+        border-bottom-right-radius: var(--bs-border-radius);
+
+        flex: 1;
+    }
+
+    .EezStudio_SimpleTree {
+        padding: 0;
+        border: 0;
+
+        .EezStudio_TreeRow {
+            font-size: 85%;
+            display: block;
+            &.style-property-name {
+                cursor: default;
+            }
+            &.modified {
+                font-weight: bold;
+            }
+
+            .EezStudio_TreeRowLabel {
+                display: block;
+                padding: 0;
+                margin: 0;
+
+                .EezStudio_Style_PropertyLabel {
+                    display: block;
+                    padding: 2px 10px;
+                }
+            }
+
+            &:not(.EezStudio_Selected) {
+                .EezStudio_TreeRowLabel {
+                    .EezStudio_Style_PropertyLabel {
+                        &.inError {
+                            background-color: #ffaaaa;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .EezStudio_PropertyGrid {
+        font-size: 90%;
+    }
+}
+
 .EezStudio_LVGLStylesDefinition {
     display: flex;
     width: 100%;
 
-    & > div:nth-child(1) {
+    & > div {
         border: 1px solid @panelBorderColor;
     }
 
+    & > div:nth-child(1) {
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
+    }
+
     & > div:nth-child(2) {
-        border: 1px solid @panelBorderColor;
         border-left: none;
+        border-top-right-radius: var(--bs-border-radius);
+        border-bottom-right-radius: var(--bs-border-radius);
+
         flex: 1;
     }
 
@@ -6844,6 +6923,39 @@ button.EezStudio_Action {
         align-items: center;
         justify-content: space-between;
         width: 390px;
+    }
+}
+
+.EezStudio_ProjectEditor_StylesTreeNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+        min-height: 28px;
+    }
+
+    .EezStudio_SearchInput_Container {
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
     }
 }
 

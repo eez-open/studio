@@ -3399,13 +3399,13 @@ export class OverrideStyleActionComponent extends ActionComponent {
             {
                 name: "fromStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles",
+                referencedObjectCollectionPath: "allStyles",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "toStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles",
+                referencedObjectCollectionPath: "allStyles",
                 propertyGridGroup: specificGroup
             }
         ],

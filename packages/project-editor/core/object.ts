@@ -167,6 +167,7 @@ export interface PropertyInfo {
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     defaultValue?: any;
     inheritable?: boolean;
+    nonInheritable?: boolean;
     propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
     unique?:
         | boolean
@@ -217,12 +218,14 @@ export interface PropertyInfo {
     visitProperty?: (parentObject: IEezObject) => EezValueObject[];
 
     formText?: string;
+
+    propertyNameAbove?: boolean;
 }
 
 export type InheritedValue =
     | {
           value: any;
-          source: IEezObject;
+          source: IEezObject | undefined;
       }
     | undefined;
 
@@ -876,11 +879,6 @@ export function areAllChildrenOfTheSameParent(objects: IEezObject[]) {
         }
     }
     return true;
-}
-
-export interface PropertyValueSourceInfo {
-    source: "" | "default" | "modified" | "inherited";
-    inheritedFrom?: IEezObject;
 }
 
 export function getClassInfoLvglProperties(object: IEezObject) {

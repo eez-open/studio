@@ -56,15 +56,15 @@ function migrateRectangleWidgetToV3(project: Project) {
                     updateObject(rectangleWidget.style, {
                         color: undefined
                     });
-                } else if (rectangleWidget.style.inheritFrom == "default") {
+                } else if (rectangleWidget.style.useStyle == "default") {
                     updateObject(rectangleWidget.style, {
-                        inheritFrom: "default_inverse"
+                        useStyle: "default_inverse"
                     });
                 } else if (
-                    rectangleWidget.style.inheritFrom == "default_inverse"
+                    rectangleWidget.style.useStyle == "default_inverse"
                 ) {
                     updateObject(rectangleWidget.style, {
-                        inheritFrom: "default"
+                        useStyle: "default"
                     });
                 } else {
                     console.log(

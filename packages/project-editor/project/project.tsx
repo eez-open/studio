@@ -1088,6 +1088,31 @@ function getProjectClassInfo() {
                     delete projectJs.pages;
                 }
 
+                if (projectJs.styles) {
+                    const rootStyles = [];
+                    for (const style1 of projectJs.styles) {
+                        if (!style1.childStyles) {
+                            style1.childStyles = [];
+                        }
+
+                        if (style1.inheritFrom) {
+                            for (const style2 of projectJs.styles) {
+                                if (style2.name == style1.inheritFrom) {
+                                    if (!style2.childStyles) {
+                                        style2.childStyles = [style1];
+                                    } else {
+                                        style2.childStyles.push(style1);
+                                    }
+                                }
+                            }
+                            delete style1.inheritFrom;
+                        } else {
+                            rootStyles.push(style1);
+                        }
+                    }
+                    projectJs.styles = rootStyles;
+                }
+
                 if (projectJs.settings.general.css) {
                     let ast;
 
@@ -1155,8 +1180,7 @@ function getProjectClassInfo() {
                                             } else {
                                                 projectJs.styles.push({
                                                     name: styleName,
-                                                    css: declarations,
-                                                    inheritFrom: ""
+                                                    css: declarations
                                                 });
                                             }
                                         }
@@ -1326,7 +1350,8 @@ export class Project extends EezObject {
             buildColors: computed({ keepAlive: true }),
             projectTypeTraits: computed,
             _objectsMap: computed,
-            missingExtensions: computed
+            missingExtensions: computed,
+            allStyles: computed
         });
     }
 
@@ -1603,6 +1628,25 @@ export class Project extends EezObject {
         return this.settings.general.extensions.filter(
             extension => !extension.isInstalled
         );
+    }
+
+    get allStyles() {
+        const styles: Style[] = [];
+
+        function addStyles(style: Style) {
+            styles.push(style);
+            for (const childStyle of style.childStyles) {
+                addStyles(childStyle);
+            }
+        }
+
+        if (this.styles) {
+            for (const style of this.styles) {
+                addStyles(style);
+            }
+        }
+
+        return styles;
     }
 }
 

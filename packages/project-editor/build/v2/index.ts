@@ -1601,12 +1601,12 @@ class Assets {
         this.styles = [undefined];
         if (!this.projectStore.masterProject) {
             this.getAssets<Style>(
-                project => project.styles || [],
+                project => project.allStyles || [],
                 style => style.id != undefined
             ).forEach(style => this.addStyle(style));
 
             this.getAssets<Style>(
-                project => project.styles || [],
+                project => project.allStyles || [],
                 style => style.alwaysBuild
             ).forEach(style => this.addStyle(style));
         }
@@ -1716,8 +1716,11 @@ class Assets {
                 if (style.id != undefined) {
                     return style.id;
                 }
-                if (style.inheritFrom) {
-                    return this.doGetStyleIndex(project, style.inheritFrom);
+                if (style.parentStyle) {
+                    return this.doGetStyleIndex(
+                        project,
+                        style.parentStyle.name
+                    );
                 }
             }
         } else {
@@ -1742,18 +1745,13 @@ class Assets {
             } else {
                 const style = styleNameOrObject;
 
-                if (style.inheritFrom) {
-                    const parentStyle = findStyle(project, style.inheritFrom);
-                    if (parentStyle) {
-                        if (style.compareTo(parentStyle)) {
-                            if (style.id != undefined) {
-                                return style.id;
-                            }
-                            return this.doGetStyleIndex(
-                                project,
-                                parentStyle.name
-                            );
+                const parentStyle = style.parentStyle;
+                if (parentStyle) {
+                    if (style.compareTo(parentStyle)) {
+                        if (style.id != undefined) {
+                            return style.id;
                         }
+                        return this.doGetStyleIndex(project, parentStyle.name);
                     }
                 }
 
@@ -1811,6 +1809,10 @@ class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
 
+        if (color.startsWith("#")) {
+            color = color.toUpperCase();
+        }
+
         let colors = this.projectStore.project.colors;
 
         for (let i = 0; i < colors.length; i++) {
@@ -1832,7 +1834,7 @@ class Assets {
 
     reportUnusedAssets() {
         this.projects.forEach(project => {
-            project.styles?.forEach(style => {
+            project.allStyles?.forEach(style => {
                 if (
                     !this.styles.find(usedStyle => {
                         if (!usedStyle) {
@@ -1843,18 +1845,12 @@ class Assets {
                             return true;
                         }
 
-                        let baseStyle = findStyle(
-                            this.rootProject,
-                            usedStyle.inheritFrom
-                        );
+                        let baseStyle = usedStyle.parentStyle;
                         while (baseStyle) {
                             if (baseStyle == style) {
                                 return true;
                             }
-                            baseStyle = findStyle(
-                                this.rootProject,
-                                baseStyle.inheritFrom
-                            );
+                            baseStyle = baseStyle.parentStyle;
                         }
 
                         return false;

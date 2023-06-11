@@ -13,7 +13,6 @@ import {
     isSubclassOf,
     ClassInfo,
     PropertyProps,
-    PropertyValueSourceInfo,
     isPropertyHidden,
     getPropertyInfo,
     getAncestors,
@@ -26,7 +25,8 @@ import {
     getClassByName,
     setId,
     isPropertyOptional,
-    getAllClasses
+    getAllClasses,
+    findPropertyByNameInClassInfo
 } from "project-editor/core/object";
 
 import { getProject, Project } from "project-editor/project/project";
@@ -179,10 +179,17 @@ export function objectToString(object: IEezObject) {
     let label: string;
 
     if (isValue(object)) {
-        label = `${humanize(getKey(object))}: ${getProperty(
-            getParent(object),
-            getKey(object)
-        )}`;
+        const parent = getParent(object);
+        const propertyName = getKey(object);
+        const propertyInfo = findPropertyByNameInClassInfo(
+            getClassInfo(parent),
+            propertyName
+        );
+        label = `${
+            propertyInfo
+                ? getObjectPropertyDisplayName(parent, propertyInfo)
+                : humanize(propertyName)
+        }: ${getProperty(parent, propertyName)}`;
     } else if (isArray(object)) {
         let propertyInfo = findPropertyByNameInObject(
             getParent(object),
@@ -496,7 +503,10 @@ export function getArrayAndObjectProperties(object: IEezObject) {
     return getClassInfo(object)._arrayAndObjectProperties!;
 }
 
-export function getCommonProperties(objects: IEezObject[]) {
+export function getCommonProperties(
+    objects: IEezObject[],
+    includeHidden: boolean = false
+) {
     objects = objects.filter(object => object != undefined);
     if (objects.length == 0) {
         return [];
@@ -508,7 +518,8 @@ export function getCommonProperties(objects: IEezObject[]) {
         propertyInfo =>
             !objects.find(
                 object =>
-                    isArray(object) || isPropertyHidden(object, propertyInfo)
+                    isArray(object) ||
+                    (!includeHidden && isPropertyHidden(object, propertyInfo))
             )
     );
 
@@ -538,6 +549,11 @@ export function getCommonProperties(objects: IEezObject[]) {
     return properties;
 }
 
+interface PropertyValueSourceInfo {
+    source: "" | "default" | "modified" | "inherited";
+    inheritedFrom?: IEezObject;
+}
+
 export function getPropertySourceInfo(
     props: PropertyProps
 ): PropertyValueSourceInfo {
@@ -545,13 +561,17 @@ export function getPropertySourceInfo(
         object: IEezObject,
         propertyInfo: PropertyInfo
     ): PropertyValueSourceInfo {
-        if (props.propertyInfo.propertyMenu && !propertyInfo.inheritable) {
+        let value = (object as any)[propertyInfo.name];
+
+        if (
+            props.propertyInfo.propertyMenu &&
+            !propertyInfo.inheritable &&
+            !propertyInfo.nonInheritable
+        ) {
             return {
                 source: ""
             };
         }
-
-        let value = (object as any)[propertyInfo.name];
 
         if (propertyInfo.inheritable) {
             if (value === undefined) {
@@ -560,10 +580,16 @@ export function getPropertySourceInfo(
                     propertyInfo.name
                 );
                 if (inheritedValue) {
-                    return {
-                        source: "inherited",
-                        inheritedFrom: inheritedValue.source
-                    };
+                    if (inheritedValue.source) {
+                        return {
+                            source: "inherited",
+                            inheritedFrom: inheritedValue.source
+                        };
+                    } else {
+                        return {
+                            source: "default"
+                        };
+                    }
                 }
             }
         }
@@ -594,18 +620,26 @@ export function getPropertySourceInfo(
     return sourceInfoArray[0];
 }
 
-export function isAnyPropertyModified(props: PropertyProps) {
+export function getNumModifications(props: PropertyProps) {
     const properties = getCommonProperties(props.objects);
+    let numModifications = 0;
     for (let propertyInfo of properties) {
         if (propertyInfo.computed) {
             continue;
         }
-        const sourceInfo = getPropertySourceInfo({ ...props, propertyInfo });
+        const sourceInfo = getPropertySourceInfo({
+            ...props,
+            propertyInfo
+        });
         if (sourceInfo.source === "modified") {
-            return true;
+            numModifications++;
         }
     }
-    return false;
+    return numModifications;
+}
+
+export function isAnyPropertyModified(props: PropertyProps) {
+    return getNumModifications(props) > 0;
 }
 
 export function extendContextMenu(
@@ -868,6 +902,10 @@ export function objectToJS(object: IEezObject): any {
 
 export function isObjectReferencable(object: IEezObject) {
     const objectClassInfo = getClassInfo(object);
+
+    if (ProjectEditor.StyleClass.classInfo == objectClassInfo) {
+        return true;
+    }
 
     if (ProjectEditor.LVGLStyleClass.classInfo == objectClassInfo) {
         return true;

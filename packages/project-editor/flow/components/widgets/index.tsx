@@ -273,7 +273,7 @@ export class ContainerWidget extends Widget {
         defaultValue: {
             type: "Container",
             style: {
-                inheritFrom: "default"
+                useStyle: "default"
             },
             widgets: [],
             layout: "static",
@@ -1804,6 +1804,10 @@ export class DisplayDataWidget extends Widget {
             }
         ],
 
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateStyleProperty(jsObject, "focusStyle");
+        },
+
         defaultValue: {
             data: "data",
             left: 0,
@@ -2049,6 +2053,8 @@ export class TextWidget extends Widget {
                     delete jsObject.text;
                 }
             }
+
+            migrateStyleProperty(jsObject, "focusStyle");
         },
 
         defaultValue: {
@@ -3088,19 +3094,19 @@ export class ButtonWidget extends Widget {
                 projectStore.projectTypeTraits.isResource
                 ? {
                       style: {
-                          inheritFrom: "button_M"
+                          useStyle: "button_M"
                       },
                       disabledStyle: {
-                          inheritFrom: "button_M_disabled"
+                          useStyle: "button_M_disabled"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          inheritFrom: "button"
+                          useStyle: "button"
                       },
                       disabledStyle: {
-                          inheritFrom: "button_disabled"
+                          useStyle: "button_disabled"
                       }
                   }
                 : {};
@@ -3372,6 +3378,10 @@ export class ButtonGroupWidget extends Widget {
             top: 0,
             width: 64,
             height: 32
+        },
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateStyleProperty(jsObject, "selectedStyle");
         },
 
         icon: (
@@ -4466,6 +4476,11 @@ export class ScrollBarWidget extends Widget {
             makeTextPropertyInfo("rightButtonText")
         ],
 
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateStyleProperty(jsObject, "thumbStyle");
+            migrateStyleProperty(jsObject, "buttonsStyle");
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -5133,7 +5148,8 @@ export class LineChartEmbeddedWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: []
+                defaultValue: [],
+                propertyNameAbove: true
             },
             makeDataPropertyInfo("showTitle", {}, "boolean"),
             makeDataPropertyInfo("showLegend", {}, "boolean"),
@@ -5222,9 +5238,15 @@ export class LineChartEmbeddedWidget extends Widget {
             }
             if (jsWidget.markerStyle == undefined) {
                 (jsWidget as any).markerStyle = {
-                    inheritFrom: "default"
+                    useStyle: "default"
                 };
             }
+
+            migrateStyleProperty(jsWidget, "titleStyle");
+            migrateStyleProperty(jsWidget, "legendStyle");
+            migrateStyleProperty(jsWidget, "xAxisStyle");
+            migrateStyleProperty(jsWidget, "yAxisStyle");
+            migrateStyleProperty(jsWidget, "markerStyle");
         },
 
         defaultValue: {
@@ -5260,20 +5282,20 @@ export class LineChartEmbeddedWidget extends Widget {
                 }
             ],
             titleStyle: {
-                inheritFrom: "default"
+                useStyle: "default"
             },
             legendStyle: {
-                inheritFrom: "default"
+                useStyle: "default"
             },
             xAxisStyle: {
-                inheritFrom: "default"
+                useStyle: "default"
             },
             yAxisStyle: {
-                inheritFrom: "default",
+                useStyle: "default",
                 alignHorizontal: "right"
             },
             markerStyle: {
-                inheritFrom: "default"
+                useStyle: "default"
             }
         },
 
@@ -6092,6 +6114,16 @@ export class GaugeEmbeddedWidget extends Widget {
             makeStylePropertyInfo("thresholdStyle")
         ],
 
+        beforeLoadHook: (
+            widget: GaugeEmbeddedWidget,
+            jsWidget: Partial<GaugeEmbeddedWidget>
+        ) => {
+            migrateStyleProperty(jsWidget, "barStyle");
+            migrateStyleProperty(jsWidget, "valueStyle");
+            migrateStyleProperty(jsWidget, "ticksStyle");
+            migrateStyleProperty(jsWidget, "thresholdStyle");
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -6861,13 +6893,13 @@ export class TextInputWidget extends Widget {
                 projectStore.projectTypeTraits.isResource
                 ? {
                       style: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          inheritFrom: "text_input"
+                          useStyle: "text_input"
                       }
                   }
                 : {};
@@ -7178,6 +7210,14 @@ export class RollerWidget extends Widget {
             makeStylePropertyInfo("unselectedValueStyle")
         ],
 
+        beforeLoadHook: (
+            widget: RollerWidget,
+            jsWidget: Partial<RollerWidget>
+        ) => {
+            migrateStyleProperty(jsWidget, "selectedValueStyle");
+            migrateStyleProperty(jsWidget, "unselectedValueStyle");
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -7191,25 +7231,25 @@ export class RollerWidget extends Widget {
                 projectStore.projectTypeTraits.isResource
                 ? {
                       style: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       },
                       selectedValueStyle: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       },
                       unselectedValueStyle: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          inheritFrom: "roller_widget"
+                          useStyle: "roller_widget"
                       },
                       selectedValueStyle: {
-                          inheritFrom: "roller_widget_selected_value"
+                          useStyle: "roller_widget_selected_value"
                       },
                       unselectedValueStyle: {
-                          inheritFrom: "roller_widget_unselected_value"
+                          useStyle: "roller_widget_unselected_value"
                       }
                   }
                 : {};
@@ -7354,13 +7394,13 @@ export class SwitchWidget extends Widget {
                 projectStore.projectTypeTraits.isResource
                 ? {
                       style: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          inheritFrom: "switch_widget"
+                          useStyle: "switch_widget"
                       }
                   }
                 : {};
@@ -7486,13 +7526,13 @@ export class SliderWidget extends Widget {
                 projectStore.projectTypeTraits.isResource
                 ? {
                       style: {
-                          inheritFrom: "default"
+                          useStyle: "default"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          inheritFrom: "slider_widget"
+                          useStyle: "slider_widget"
                       }
                   }
                 : {};

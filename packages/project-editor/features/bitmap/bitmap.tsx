@@ -217,7 +217,7 @@ export class Bitmap extends EezObject {
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "styles",
+                referencedObjectCollectionPath: "allStyles",
                 hideInPropertyGrid: isLVGLProject
             },
             {

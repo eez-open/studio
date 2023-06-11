@@ -5,11 +5,12 @@ import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
 
 import { LayoutModels, isObjectExists } from "project-editor/store";
-import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ProjectContext } from "project-editor/project/context";
 import { Style } from "./style";
 import { drawText } from "project-editor/flow/editor/draw";
 import { LVGLStylesNavigation } from "project-editor/lvgl/style";
+
+import { StylesTreeNavigation } from "project-editor/features/style/StylesTreeNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +59,7 @@ const StylesNavigation = observer(
 
             if (component === "styles") {
                 return (
-                    <ListNavigation
+                    <StylesTreeNavigation
                         id={"styles"}
                         navigationObject={this.navigationObject}
                         selectedObject={

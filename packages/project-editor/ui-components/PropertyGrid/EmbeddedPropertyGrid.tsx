@@ -15,6 +15,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { Property } from "./Property";
 import { PropertyGrid } from "./index";
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
+import { getNumModifications } from "project-editor/store";
+import classNames from "classnames";
 
 export const EmbeddedPropertyGrid = observer(
     class EmbeddedPropertyGrid extends React.Component<PropertyProps> {
@@ -105,15 +107,35 @@ export const EmbeddedPropertyGrid = observer(
                 }
             }
 
+            const numModifications = getNumModifications({
+                ...this.props,
+                objects: objects.map(
+                    object => (object as any)[propertyInfo.name]
+                )
+            });
+
             return (
                 <div className="collapsable">
-                    <div onClick={this.toggleCollapsed}>
-                        <Icon
-                            icon="material:keyboard_arrow_down"
-                            size={18}
-                            className="triangle"
-                        />
-                        {getObjectPropertyDisplayName(objects[0], propertyInfo)}
+                    <div
+                        className="collapsable-property-name"
+                        onClick={this.toggleCollapsed}
+                    >
+                        <div
+                            className={classNames({
+                                "fw-bold": numModifications > 0
+                            })}
+                        >
+                            <Icon
+                                icon="material:keyboard_arrow_down"
+                                size={18}
+                                className="triangle"
+                            />
+                            {getObjectPropertyDisplayName(
+                                objects[0],
+                                propertyInfo
+                            )}
+                            {numModifications > 0 && ` (${numModifications})`}
+                        </div>
                     </div>
                     <PropertyGrid
                         objects={this.props.objects.map(

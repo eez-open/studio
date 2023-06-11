@@ -236,17 +236,27 @@ export const PropertyGrid = observer(
                         </td>
                     );
                 } else {
-                    property = (
-                        <React.Fragment>
-                            <td className="property-name">
-                                <PropertyName {...propertyProps} />
-                            </td>
+                    if (propertyInfo.propertyNameAbove) {
+                        property = (
+                            <React.Fragment>
+                                <td colSpan={2}>
+                                    <Property {...propertyProps} />
+                                </td>
+                            </React.Fragment>
+                        );
+                    } else {
+                        property = (
+                            <React.Fragment>
+                                <td className="property-name">
+                                    <PropertyName {...propertyProps} />
+                                </td>
 
-                            <td>
-                                <Property {...propertyProps} />
-                            </td>
-                        </React.Fragment>
-                    );
+                                <td>
+                                    <Property {...propertyProps} />
+                                </td>
+                            </React.Fragment>
+                        );
+                    }
                 }
 
                 const propertyComponent = (
@@ -266,6 +276,8 @@ export const PropertyGrid = observer(
                     />
                 );
 
+                let properties;
+
                 if (propertyGroup) {
                     let groupProperties = groupPropertiesArray.find(
                         groupProperties =>
@@ -280,7 +292,7 @@ export const PropertyGrid = observer(
                         groupPropertiesArray.push(groupProperties);
                     }
 
-                    groupProperties.properties.push(propertyComponent);
+                    properties = groupProperties.properties;
                 } else {
                     if (!groupForPropertiesWithoutGroupSpecified) {
                         groupForPropertiesWithoutGroupSpecified = {
@@ -294,10 +306,29 @@ export const PropertyGrid = observer(
                             groupForPropertiesWithoutGroupSpecified
                         );
                     }
-                    groupForPropertiesWithoutGroupSpecified.properties.push(
-                        propertyComponent
+                    properties =
+                        groupForPropertiesWithoutGroupSpecified.properties;
+                }
+
+                if (propertyInfo.propertyNameAbove) {
+                    properties.push(
+                        <tr
+                            style={{
+                                visibility: collapsed ? "collapse" : "visible"
+                            }}
+                        >
+                            <td
+                                className="property-name"
+                                colSpan={2}
+                                style={{ paddingTop: 8 }}
+                            >
+                                <PropertyName {...propertyProps} />
+                            </td>
+                        </tr>
                     );
                 }
+
+                properties.push(propertyComponent);
             }
 
             let maxPosition = 0;

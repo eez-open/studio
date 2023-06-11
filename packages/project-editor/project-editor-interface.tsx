@@ -84,6 +84,8 @@ import type {
     EnumMember
 } from "project-editor/features/variable/variable";
 
+import type { Style } from "project-editor/features/style/style";
+
 export interface IProjectEditor {
     homeTabs?: Tabs;
     ProjectEditorTabClass: typeof ProjectEditorTab;
@@ -117,6 +119,7 @@ export interface IProjectEditor {
     GlyphClass: typeof Glyph;
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
+    StyleClass: typeof Style;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
     LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;

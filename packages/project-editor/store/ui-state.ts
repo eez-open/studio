@@ -31,6 +31,7 @@ export class UIStateStore {
     _pageRuntimeFrontFace: boolean = true;
     showComponentDescriptions: boolean = true;
     selectedLanguageID: string;
+    selectedStylePropertyName: string = "";
     lvglPart: LVGLParts = "MAIN";
     lvglState: string = "DEFAULT";
     lvglExpandedPropertiesGroup: string[] = [];
@@ -86,6 +87,7 @@ export class UIStateStore {
             watchExpressions: observable,
             selectedLanguage: computed,
             logsPanelFilter: observable,
+            selectedStylePropertyName: observable,
             lvglPart: observable,
             lvglState: observable,
             lvglExpandedPropertiesGroup: observable
@@ -191,6 +193,11 @@ export class UIStateStore {
                 this.logsPanelFilter = uiState.logsPanelFilter;
             }
 
+            if (uiState.selectedStylePropertyName) {
+                this.selectedStylePropertyName =
+                    uiState.selectedStylePropertyName;
+            }
+
             if (uiState.lvglPart) {
                 this.lvglPart = uiState.lvglPart;
             }
@@ -259,6 +266,7 @@ export class UIStateStore {
                 ? this.projectStore.project.changes._state.selectedRevisionHash
                 : undefined,
             logsPanelFilter: this.logsPanelFilter,
+            selectedStylePropertyName: this.selectedStylePropertyName,
             lvglPart: this.lvglPart,
             lvglState: this.lvglState,
             lvglExpandedPropertiesGroup: this.lvglExpandedPropertiesGroup

@@ -543,11 +543,11 @@ function getFontIndex(object: any, propertyName: string) {
 }
 
 function getStyleIndex(object: any, propertyName: string) {
-    const styles = getProject(object).styles;
+    const styles = getProject(object).allStyles;
 
     let itemName = object[propertyName];
-    if (itemName.inheritFrom) {
-        itemName = itemName.inheritFrom;
+    if (itemName.parentStyle) {
+        itemName = itemName.parentStyle.name;
     }
 
     for (let i = 0; i < styles.length; i++) {
@@ -571,7 +571,7 @@ function getStyleIndex(object: any, propertyName: string) {
 }
 
 function getDefaultStyleIndex(object: IEezObject) {
-    const styles = getProject(object).styles;
+    const styles = getProject(object).allStyles;
     for (let i = 0; i < styles.length; i++) {
         if (styles[i].name === "default") {
             if (++i > 255) {
@@ -1000,7 +1000,7 @@ class Int16 extends Field {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildGuiStylesEnum(project: Project) {
-    let styles = project.styles.map(
+    let styles = project.allStyles.map(
         style =>
             `${TAB}${getName(
                 "STYLE_ID_",
@@ -1089,7 +1089,7 @@ function buildGuiStylesDef(project: Project) {
     function build() {
         let styles = new ObjectList();
 
-        project.styles.forEach(style => {
+        project.allStyles.forEach(style => {
             styles.addItem(buildStyle(style));
         });
 

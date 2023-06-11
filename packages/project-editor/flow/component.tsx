@@ -149,6 +149,7 @@ import {
 } from "project-editor/flow/helper";
 
 import { wireSourceChanged } from "project-editor/store/serialization";
+import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -224,8 +225,9 @@ export function makeStylePropertyInfo(
             typeClass: Style,
             propertyGridGroup: styleGroup,
             propertyGridCollapsable: true,
-            propertyGridCollapsableDefaultPropertyName: "inheritFrom",
-            enumerable: false
+            propertyGridCollapsableDefaultPropertyName: "useStyle",
+            enumerable: false,
+            hideInPropertyGrid: true
         },
         props
     );
@@ -245,23 +247,18 @@ export function makeTextPropertyInfo(
     );
 }
 
-export function migrateStyleProperty(
-    jsObject: any,
-    propertyName: string,
-    propertyName2?: string
-) {
+export function migrateStyleProperty(jsObject: any, propertyName: string) {
     if (jsObject[propertyName] === undefined) {
-        jsObject[propertyName] = propertyName2
-            ? jsObject[propertyName2]
-            : {
-                  inheritFrom: "default"
-              };
+        jsObject[propertyName] = {
+            useStyle: "default"
+        };
     } else if (typeof jsObject[propertyName] === "string") {
         jsObject[propertyName] = {
-            inheritFrom: jsObject[propertyName]
+            useStyle: jsObject[propertyName]
         };
-    } else if (!jsObject[propertyName].inheritFrom) {
-        jsObject[propertyName].inheritFrom = "default";
+    } else if (jsObject[propertyName].inheritFrom) {
+        jsObject[propertyName].useStyle = jsObject[propertyName].inheritFrom;
+        delete jsObject[propertyName].inheritFrom;
     }
 }
 
@@ -1720,6 +1717,7 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
+                propertyGridColSpan: true,
                 hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
@@ -1731,13 +1729,15 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
+                propertyGridColSpan: true,
                 hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup,
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                hideInPropertyGrid: isNotProjectWithFlowSupport,
+                checkboxStyleSwitch: true
             }
         ],
 
@@ -2635,9 +2635,15 @@ export class Widget extends Component {
             makeDataPropertyInfo("visible", {
                 hideInPropertyGrid: isLVGLProject
             }),
-            makeStylePropertyInfo("style", "Normal style", {
+            makeStylePropertyInfo("style", "Normal style"),
+            {
+                name: "styleUI",
+                type: PropertyType.Any,
+                propertyGridGroup: styleGroup,
+                propertyGridRowComponent: StylePropertyUI,
+                computed: true,
                 hideInPropertyGrid: isLVGLProject
-            }),
+            },
             {
                 name: "allowOutside",
                 displayName: `Hide "Widget is outside of its parent" warning`,
@@ -2741,7 +2747,7 @@ export class Widget extends Component {
 
             if (jsObject.className) {
                 jsObject.style = {
-                    inheritFrom: jsObject.className
+                    useStyle: jsObject.className
                 };
                 delete jsObject.className;
             }

@@ -313,7 +313,9 @@ export function* searchForReference(
             return;
         }
 
-        if (object instanceof ProjectEditor.LVGLStyleClass) {
+        if (object instanceof ProjectEditor.StyleClass) {
+            objectParentPath = "allStyles";
+        } else if (object instanceof ProjectEditor.LVGLStyleClass) {
             objectParentPath = "lvglStyles/allStyles";
         } else {
             objectParentPath = getObjectPath(objectParent).join("/");
