@@ -11,8 +11,7 @@ import {
     IMessage,
     PropertyProps,
     PropertyType,
-    registerClass,
-    PropertyInfo
+    registerClass
 } from "project-editor/core/object";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
