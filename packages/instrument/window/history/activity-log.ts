@@ -269,7 +269,17 @@ export const activityLogStore = createStore({
         `DROP TABLE activityLogVersion;
         CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
         INSERT INTO versions(tableName, version) VALUES ('activityLog', 13);
-        `
+        `,
+
+        // version 14
+        // migrate version to versions table
+        `CREATE INDEX activityLog_oidAndSid ON activityLog(oid, sid);
+        UPDATE versions SET version = 14 WHERE tableName = 'activityLog';`,
+
+        // version 15
+        // migrate version to versions table
+        `CREATE INDEX activityLog_type ON activityLog(type);
+        UPDATE versions SET version = 15 WHERE tableName = 'activityLog';`
     ],
 
     properties: {
