@@ -54,7 +54,8 @@ import {
     getClass,
     canAdd,
     addItem,
-    isObjectReferencable
+    isObjectReferencable,
+    canContain
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -1183,8 +1184,12 @@ export class TreeAdapter {
         prevObjectId: string | undefined,
         nextObjectId: string | undefined
     ): boolean {
-        const dragObject = DragAndDropManager.dragObject!;
+        const dragObject = DragAndDropManager.dragObject;
         if (!dragObject) {
+            return false;
+        }
+
+        if (!canContain(dropItem.object, dragObject)) {
             return false;
         }
 
@@ -1229,6 +1234,10 @@ export class TreeAdapter {
     }
 
     canDropInside(dropItem: TreeObjectAdapter) {
+        if (!canContain(dropItem.object, DragAndDropManager.dragObject!)) {
+            return false;
+        }
+
         return !!findPastePlaceInside(
             dropItem.object,
             getClassInfo(DragAndDropManager.dragObject!),

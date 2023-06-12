@@ -3,7 +3,9 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    computed
+    computed,
+    observable,
+    action
 } from "mobx";
 
 import type { Page } from "project-editor/features/page/page";
@@ -687,10 +689,12 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
+    lvglWidgetsMap = new Map<string, LVGLWidget>();
+
+    selectedStyle: LVGLStyle | undefined;
+
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
-
-    lvglWidgetsMap = new Map<string, LVGLWidget>();
 
     canvas: HTMLCanvasElement | null = null;
 
@@ -724,6 +728,11 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         for (const component of page.components) {
             this.lvglWidgetsMap.set(component.type, component as LVGLWidget);
         }
+
+        makeObservable(this, {
+            selectedStyle: observable,
+            setSelectedStyle: action
+        });
 
         this.mount();
     }
@@ -773,6 +782,34 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     this.page._lvglWidgetsIncludingUserWidgets.forEach(
                         widget => (widget._lvglObj = undefined)
                     );
+                });
+
+                this.selectedStyle;
+
+                // set all flags to HIDDEN, except selected widget
+                // also, set useStyle
+                runInAction(() => {
+                    for (const lvglWidget of this.lvglWidgetsMap.values()) {
+                        const flags = lvglWidget.flags.split("|");
+
+                        const i = flags.indexOf("HIDDEN");
+                        if (i != -1) {
+                            flags.splice(i, 1);
+                        }
+
+                        if (
+                            this.selectedStyle &&
+                            this.canvas &&
+                            lvglWidget.type == this.selectedStyle.forWidgetType
+                        ) {
+                            lvglWidget.useStyle = this.selectedStyle.name;
+                        } else {
+                            lvglWidget.useStyle = "";
+                            flags.push("HIDDEN");
+                        }
+
+                        lvglWidget.flags = flags.join("|");
+                    }
                 });
 
                 const pageObj = this.page.lvglCreate(this, 0);
@@ -866,31 +903,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         selectedStyle: LVGLStyle | undefined,
         canvas: HTMLCanvasElement | null
     ) {
+        this.selectedStyle = selectedStyle;
         this.canvas = canvas;
-
-        runInAction(() => {
-            for (const lvglWidget of this.lvglWidgetsMap.values()) {
-                const flags = lvglWidget.flags.split("|");
-
-                const i = flags.indexOf("HIDDEN");
-                if (i != -1) {
-                    flags.splice(i, 1);
-                }
-
-                if (
-                    selectedStyle &&
-                    this.canvas &&
-                    lvglWidget.type == selectedStyle.forWidgetType
-                ) {
-                    lvglWidget.useStyle = selectedStyle.name;
-                } else {
-                    lvglWidget.useStyle = "";
-                    flags.push("HIDDEN");
-                }
-
-                lvglWidget.flags = flags.join("|");
-            }
-        });
     }
 }
 

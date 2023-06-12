@@ -89,8 +89,7 @@ export class LVGLStyle extends EezObject {
             name: observable,
             forWidgetType: observable,
             childStyles: observable,
-            definition: observable,
-            parentStyle: computed
+            definition: observable
         });
     }
 

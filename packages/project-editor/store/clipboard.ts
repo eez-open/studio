@@ -23,7 +23,8 @@ import {
     objectToJson,
     ProjectStore,
     rewireBegin,
-    rewireEnd
+    rewireEnd,
+    canContain
 } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +185,18 @@ export function findPastePlaceInsideAndOutside(
 ): IEezObject | PropertyInfo | undefined {
     if (!serializedData.classInfo) {
         return undefined;
+    }
+
+    if (serializedData.object) {
+        if (!canContain(object, serializedData.object)) {
+            return undefined;
+        }
+    } else {
+        for (const childObject of serializedData.objects!) {
+            if (!canContain(object, childObject)) {
+                return undefined;
+            }
+        }
     }
 
     let place = findPastePlaceInside(

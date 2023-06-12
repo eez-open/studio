@@ -1656,6 +1656,38 @@ export const ExtensionsManager = observer(
                                 "EezStudio_ExtensionsManager_NavigationItem",
                                 {
                                     selected:
+                                        extensionsManagerStore.section == "pext"
+                                }
+                            )}
+                            onClick={
+                                extensionsManagerStore.switchToProjectExtensions
+                            }
+                        >
+                            <Count
+                                label="Project Editor Extensions"
+                                count={
+                                    extensionsManagerStore.searchText
+                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                              "pext",
+                                              ViewFilter.ALL,
+                                              extensionsManagerStore.searchText
+                                          ).length
+                                        : undefined
+                                }
+                                attention={
+                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                                        "pext",
+                                        ViewFilter.NEW_VERSIONS,
+                                        ""
+                                    ).length > 0
+                                }
+                            />
+                        </div>
+                        <div
+                            className={classNames(
+                                "EezStudio_ExtensionsManager_NavigationItem",
+                                {
+                                    selected:
                                         extensionsManagerStore.section == "iext"
                                 }
                             )}
@@ -1710,38 +1742,6 @@ export const ExtensionsManager = observer(
                                 attention={
                                     extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
                                         "measurement-functions",
-                                        ViewFilter.NEW_VERSIONS,
-                                        ""
-                                    ).length > 0
-                                }
-                            />
-                        </div>
-                        <div
-                            className={classNames(
-                                "EezStudio_ExtensionsManager_NavigationItem",
-                                {
-                                    selected:
-                                        extensionsManagerStore.section == "pext"
-                                }
-                            )}
-                            onClick={
-                                extensionsManagerStore.switchToProjectExtensions
-                            }
-                        >
-                            <Count
-                                label="Project Editor Extensions"
-                                count={
-                                    extensionsManagerStore.searchText
-                                        ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
-                                              "pext",
-                                              ViewFilter.ALL,
-                                              extensionsManagerStore.searchText
-                                          ).length
-                                        : undefined
-                                }
-                                attention={
-                                    extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
-                                        "pext",
                                         ViewFilter.NEW_VERSIONS,
                                         ""
                                     ).length > 0

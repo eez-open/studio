@@ -961,3 +961,24 @@ export function isLVGLCreateInProgress(flow: Flow) {
             flow._lvglRuntime.isAnyAsyncOperation)
     );
 }
+
+export function canContain(parentObject: IEezObject, childObject: IEezObject) {
+    if (isArray(parentObject)) {
+        parentObject = getParent(parentObject);
+        if (!parentObject) {
+            return true;
+        }
+    }
+
+    if (parentObject instanceof ProjectEditor.LVGLStyleClass) {
+        if (!(childObject instanceof ProjectEditor.LVGLStyleClass)) {
+            return false;
+        }
+
+        if (parentObject.forWidgetType != childObject.forWidgetType) {
+            return false;
+        }
+    }
+
+    return true;
+}
