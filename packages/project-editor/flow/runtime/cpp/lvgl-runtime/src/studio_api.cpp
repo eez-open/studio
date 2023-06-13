@@ -452,7 +452,7 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
 }
 
 EM_PORT_API(void) lvglUpdateLabelText(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_LABEL_TEXT, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle) {
@@ -513,63 +513,71 @@ EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorArc(lv_obj_t *obj, lv_m
 }
 
 EM_PORT_API(void) lvglUpdateMeterIndicatorValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_VALUE, obj, flow_state, component_index, property_index, indicator);
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_VALUE, obj, flow_state, component_index, property_index, indicator, 0);
 }
 
 EM_PORT_API(void) lvglUpdateMeterIndicatorStartValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE, obj, flow_state, component_index, property_index, indicator);
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE, obj, flow_state, component_index, property_index, indicator, 0);
 }
 
 EM_PORT_API(void) lvglUpdateMeterIndicatorEndValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, flow_state, component_index, property_index, indicator);
+    addUpdateTask(UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE, obj, flow_state, component_index, property_index, indicator, 0);
+}
+
+EM_PORT_API(void) lvglUpdateDropdownOptions(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_OPTIONS, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateDropdownSelected(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_DROPDOWN_SELECTED, obj, flow_state, component_index, property_index, 0, 0);
+}
+
+EM_PORT_API(void) lvglUpdateRollerOptions(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, lv_roller_mode_t mode) {
+    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_OPTIONS, obj, flow_state, component_index, property_index, 0, mode);
 }
 
 EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateTextareaText(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_TEXTAREA_TEXT, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateCheckedState(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_CHECKED_STATE, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateDisabledState(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_DISABLED_STATE, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateHiddenFlag(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_HIDDEN_FLAG, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, flow_state, component_index, property_index, 0);
+    addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(void) lvglAddTimelineKeyframe(

@@ -620,7 +620,9 @@ export interface IWasmFlowRuntime {
     _lvglUpdateMeterIndicatorStartValue(obj: number, indicator: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateMeterIndicatorEndValue(obj: number, indicator: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateLabelText(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateRollerOptions(obj: number, flow_state: number, component_index: number, property_index: number, mode: number): void;
     _lvglUpdateRollerSelected(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateDropdownOptions(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateDropdownSelected(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateSliderValueLeft(obj: number, flow_state: number, component_index: number, property_index: number): void;

@@ -75,7 +75,9 @@ void flow_event_callback_delete_user_data(lv_event_t *e);
 enum UpdateTaskType {
     UPDATE_TASK_TYPE_LABEL_TEXT,
     UPDATE_TASK_TYPE_TEXTAREA_TEXT,
+    UPDATE_TASK_TYPE_ROLLER_OPTIONS,
     UPDATE_TASK_TYPE_ROLLER_SELECTED,
+    UPDATE_TASK_TYPE_DROPDOWN_OPTIONS,
     UPDATE_TASK_TYPE_DROPDOWN_SELECTED,
     UPDATE_TASK_TYPE_SLIDER_VALUE,
     UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT,
@@ -91,6 +93,6 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE,
 };
 
-void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj);
+void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);

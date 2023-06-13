@@ -4344,6 +4344,9 @@ var _onMessageFromDebugger = Module["_onMessageFromDebugger"] = createExportWrap
 var _lvglGetFlowState = Module["_lvglGetFlowState"] = createExportWrapper("lvglGetFlowState");
 
 /** @type {function(...*):?} */
+var _setDebuggerMessageSubsciptionFilter = Module["_setDebuggerMessageSubsciptionFilter"] = createExportWrapper("setDebuggerMessageSubsciptionFilter");
+
+/** @type {function(...*):?} */
 var _lvglCreateContainer = Module["_lvglCreateContainer"] = createExportWrapper("lvglCreateContainer");
 
 /** @type {function(...*):?} */
@@ -4503,7 +4506,13 @@ var _lvglUpdateMeterIndicatorStartValue = Module["_lvglUpdateMeterIndicatorStart
 var _lvglUpdateMeterIndicatorEndValue = Module["_lvglUpdateMeterIndicatorEndValue"] = createExportWrapper("lvglUpdateMeterIndicatorEndValue");
 
 /** @type {function(...*):?} */
+var _lvglUpdateDropdownOptions = Module["_lvglUpdateDropdownOptions"] = createExportWrapper("lvglUpdateDropdownOptions");
+
+/** @type {function(...*):?} */
 var _lvglUpdateDropdownSelected = Module["_lvglUpdateDropdownSelected"] = createExportWrapper("lvglUpdateDropdownSelected");
+
+/** @type {function(...*):?} */
+var _lvglUpdateRollerOptions = Module["_lvglUpdateRollerOptions"] = createExportWrapper("lvglUpdateRollerOptions");
 
 /** @type {function(...*):?} */
 var _lvglUpdateRollerSelected = Module["_lvglUpdateRollerSelected"] = createExportWrapper("lvglUpdateRollerSelected");

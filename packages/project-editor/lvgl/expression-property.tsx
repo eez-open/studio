@@ -54,7 +54,8 @@ const LVGLProperty = observer(
                 propertyInfoType =
                     propertyInfo.expressionType == "integer"
                         ? PropertyType.Number
-                        : propertyInfo.expressionType == "string"
+                        : propertyInfo.expressionType == "string" ||
+                          propertyInfo.expressionType == "array:string"
                         ? PropertyType.MultilineText
                         : propertyInfo.expressionType == "boolean"
                         ? PropertyType.Boolean
@@ -107,7 +108,10 @@ const LVGLProperty = observer(
                               )
                         : undefined,
                 isOnSelectAvailable: () => {
-                    return this.context.projectTypeTraits.hasFlowSupport;
+                    return (
+                        type == "expression" &&
+                        this.context.projectTypeTraits.hasFlowSupport
+                    );
                 }
             } as Partial<PropertyInfo>);
 
@@ -238,6 +242,12 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                         propName
                     )} in ${getComponentName(widget.type)} widget");`
                 );
+            } else if (propertyInfo.expressionType == "array:string") {
+                build.line(
+                    `const char *new_val = evalStringArrayPropertyAndJoin(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
+                        propName
+                    )} in ${getComponentName(widget.type)} widget", "\\n");`
+                );
             } else if (propertyInfo.expressionType == "integer") {
                 build.line(
                     `int32_t new_val = evalIntegerProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
@@ -267,7 +277,10 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             }
         }
 
-        if (propertyInfo.expressionType == "string") {
+        if (
+            propertyInfo.expressionType == "string" ||
+            propertyInfo.expressionType == "array:string"
+        ) {
             const objectAccessor = build.getLvglObjectAccessor(widget);
 
             build.line(`const char *cur_val = ${getFunc}(${objectAccessor});`);

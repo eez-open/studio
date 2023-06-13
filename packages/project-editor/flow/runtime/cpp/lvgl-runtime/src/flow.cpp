@@ -402,6 +402,7 @@ struct UpdateTask {
     unsigned component_index;
     unsigned property_index;
     void *subobj;
+    int param;
 };
 
 static UpdateTask *g_updateTask;
@@ -561,7 +562,7 @@ void flow_event_callback_delete_user_data(lv_event_t *e) {
 
 std::vector<UpdateTask> updateTasks;
 
-void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj) {
+void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param) {
     UpdateTask updateTask;
     updateTask.updateTaskType = updateTaskType;
     updateTask.obj = obj;
@@ -569,6 +570,7 @@ void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_stat
     updateTask.component_index = component_index;
     updateTask.property_index = property_index;
     updateTask.subobj = subobj;
+    updateTask.param = param;
     updateTasks.push_back(updateTask);
 }
 
@@ -584,10 +586,18 @@ void doUpdateTasks() {
             const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Textarea widget");
             const char *cur_val = lv_textarea_get_text(updateTask.obj);
             if (strcmp(new_val, cur_val) != 0) lv_textarea_set_text(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_OPTIONS) {
+            const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
+            const char *cur_val = lv_dropdown_get_options(updateTask.obj);
+            if (strcmp(new_val, cur_val) != 0) lv_dropdown_set_options(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_SELECTED) {
             uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
             uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
             if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_OPTIONS) {
+            const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
+            const char *cur_val = lv_roller_get_options(updateTask.obj);
+            if (strcmp(new_val, cur_val) != 0) lv_roller_set_options(updateTask.obj, new_val, (lv_roller_mode_t)updateTask.param);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_SELECTED) {
             uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
             uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
@@ -721,6 +731,10 @@ EM_PORT_API(void) onMessageFromDebugger(char *messageData, uint32_t messageDataS
 
 EM_PORT_API(void *) lvglGetFlowState(void *flowState, unsigned userWidgetComponentIndexOrPageIndex) {
     return getFlowState(flowState, userWidgetComponentIndexOrPageIndex);
+}
+
+EM_PORT_API(void) setDebuggerMessageSubsciptionFilter(uint32_t filter) {
+    eez::flow::setDebuggerMessageSubsciptionFilter(filter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

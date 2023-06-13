@@ -3318,8 +3318,11 @@ export const rollerGroup: IPropertyGridGroupDefinition = {
 
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
+    optionsType: LVGLPropertyType;
+
     selected: number | string;
     selectedType: LVGLPropertyType;
+
     mode: keyof typeof ROLLER_MODES;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -3329,11 +3332,15 @@ export class LVGLRollerWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Input",
 
         properties: [
-            {
-                name: "options",
-                type: PropertyType.MultilineText,
-                propertyGridGroup: rollerGroup
-            },
+            ...makeLvglExpressionProperty(
+                "options",
+                "array:string",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: rollerGroup
+                }
+            ),
             ...makeLvglExpressionProperty(
                 "selected",
                 "integer",
@@ -3372,6 +3379,10 @@ export class LVGLRollerWidget extends LVGLWidget {
             object: LVGLRollerWidget,
             jsObject: Partial<LVGLRollerWidget>
         ) => {
+            if (jsObject.optionsType == undefined) {
+                jsObject.optionsType = "literal";
+            }
+
             if (jsObject.selected == undefined) {
                 jsObject.selected = 0;
                 jsObject.selectedType = "literal";
@@ -3422,10 +3433,15 @@ export class LVGLRollerWidget extends LVGLWidget {
 
         makeObservable(this, {
             options: observable,
+            optionsType: observable,
             selected: observable,
             selectedType: observable,
             mode: observable
         });
+    }
+
+    override getIsAccessibleFromSourceCode() {
+        return this.optionsType == "expression";
     }
 
     override get hasEventHandler() {
@@ -3436,6 +3452,8 @@ export class LVGLRollerWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const optionsExpr = getExpressionPropertyData(runtime, this, "options");
+
         const selectedExpr = getExpressionPropertyData(
             runtime,
             this,
@@ -3450,10 +3468,20 @@ export class LVGLRollerWidget extends LVGLWidget {
             this.lvglCreateTop,
             this.lvglCreateWidth,
             this.lvglCreateHeight,
-            runtime.wasm.allocateUTF8(this.options),
+            runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
             selectedExpr ? 0 : (this.selected as number),
             ROLLER_MODES[this.mode]
         );
+
+        if (optionsExpr) {
+            runtime.wasm._lvglUpdateRollerOptions(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                optionsExpr.componentIndex,
+                optionsExpr.propertyIndex,
+                ROLLER_MODES[this.mode]
+            );
+        }
 
         if (selectedExpr) {
             runtime.wasm._lvglUpdateRollerSelected(
@@ -3489,11 +3517,17 @@ export class LVGLRollerWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(
-            `lv_roller_set_options(obj, ${escapeCString(
-                this.options ?? ""
-            )}, LV_ROLLER_MODE_${this.mode});`
-        );
+        if (this.optionsType == "literal") {
+            build.line(
+                `lv_roller_set_options(obj, ${escapeCString(
+                    this.options ?? ""
+                )}, LV_ROLLER_MODE_${this.mode});`
+            );
+        } else {
+            build.line(
+                `lv_roller_set_options(obj, "", LV_ROLLER_MODE_${this.mode});`
+            );
+        }
 
         if (this.selectedType == "literal") {
             if (this.selected != 0) {
@@ -3505,6 +3539,15 @@ export class LVGLRollerWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLRollerWidget>(
+            build,
+            this,
+            "options" as const,
+            "lv_roller_get_options",
+            "lv_roller_set_options",
+            `, LV_ROLLER_MODE_${this.mode}`
+        );
+
         expressionPropertyBuildTickSpecific<LVGLRollerWidget>(
             build,
             this,
@@ -3864,6 +3907,8 @@ export const dropdownGroup: IPropertyGridGroupDefinition = {
 
 export class LVGLDropdownWidget extends LVGLWidget {
     options: string;
+    optionsType: LVGLPropertyType;
+
     selected: number | string;
     selectedType: LVGLPropertyType;
 
@@ -3874,18 +3919,22 @@ export class LVGLDropdownWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Input",
 
         properties: [
-            {
-                name: "options",
-                type: PropertyType.MultilineText,
-                propertyGridGroup: dropdownGroup
-            },
+            ...makeLvglExpressionProperty(
+                "options",
+                "array:string",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: rollerGroup
+                }
+            ),
             ...makeLvglExpressionProperty(
                 "selected",
                 "integer",
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: rollerGroup
+                    propertyGridGroup: dropdownGroup
                 }
             )
         ],
@@ -3907,6 +3956,10 @@ export class LVGLDropdownWidget extends LVGLWidget {
             object: LVGLDropdownWidget,
             jsObject: Partial<LVGLDropdownWidget>
         ) => {
+            if (jsObject.optionsType == undefined) {
+                jsObject.optionsType = "literal";
+            }
+
             if (jsObject.selected == undefined) {
                 jsObject.selected = 0;
                 jsObject.selectedType = "literal";
@@ -3945,9 +3998,14 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
         makeObservable(this, {
             options: observable,
+            optionsType: observable,
             selected: observable,
             selectedType: observable
         });
+    }
+
+    override getIsAccessibleFromSourceCode() {
+        return this.optionsType == "expression";
     }
 
     override get hasEventHandler() {
@@ -3958,6 +4016,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const optionsExpr = getExpressionPropertyData(runtime, this, "options");
+
         const selectedExpr = getExpressionPropertyData(
             runtime,
             this,
@@ -3972,9 +4032,18 @@ export class LVGLDropdownWidget extends LVGLWidget {
             this.lvglCreateTop,
             this.lvglCreateWidth,
             this.lvglCreateHeight,
-            runtime.wasm.allocateUTF8(this.options),
+            runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
             selectedExpr ? 0 : (this.selected as number)
         );
+
+        if (optionsExpr) {
+            runtime.wasm._lvglUpdateDropdownOptions(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                optionsExpr.componentIndex,
+                optionsExpr.propertyIndex
+            );
+        }
 
         if (selectedExpr) {
             runtime.wasm._lvglUpdateDropdownSelected(
@@ -4010,11 +4079,15 @@ export class LVGLDropdownWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(
-            `lv_dropdown_set_options(obj, ${escapeCString(
-                this.options ?? ""
-            )});`
-        );
+        if (this.optionsType == "literal") {
+            build.line(
+                `lv_dropdown_set_options(obj, ${escapeCString(
+                    this.options ?? ""
+                )});`
+            );
+        } else {
+            build.line(`lv_dropdown_set_options(obj, "");`);
+        }
 
         if (this.selectedType == "literal") {
             if (this.selected != 0) {
@@ -4024,6 +4097,14 @@ export class LVGLDropdownWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLDropdownWidget>(
+            build,
+            this,
+            "options" as const,
+            "lv_dropdown_get_options",
+            "lv_dropdown_set_options"
+        );
+
         expressionPropertyBuildTickSpecific<LVGLDropdownWidget>(
             build,
             this,
