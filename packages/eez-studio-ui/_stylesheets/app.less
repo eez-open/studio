@@ -6410,7 +6410,8 @@ button.EezStudio_Action {
 
             cursor: pointer;
             &:hover {
-                background-color: #eee;
+                color: @hoverColor;
+                background-color: @hoverBackgroundColor;
             }
             &.inError {
                 background-color: #ffaaaa;
@@ -6522,6 +6523,7 @@ button.EezStudio_Action {
             color: @textColor;
             padding: 2px 8px;
             &:hover:not(.active) {
+                color: @hoverColor;
                 background-color: @hoverBackgroundColor;
             }
             &.active {

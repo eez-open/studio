@@ -168,12 +168,13 @@ export class LVGLStylesDefinition extends EezObject {
         return result;
     }
 
-    removePropertyFromDefinition(
-        propertyInfo: LVGLPropertyInfo,
+    static removePropertyFromDefinitionByName(
+        definition: Definition | undefined,
+        propertyName: string,
         part: string,
         state: string
     ) {
-        let def = this.definition;
+        let def = definition;
         let copy = {
             ...(def || {}),
             [part]: {
@@ -184,7 +185,7 @@ export class LVGLStylesDefinition extends EezObject {
             }
         };
 
-        delete copy[part][state][propertyInfo.name];
+        delete copy[part][state][propertyName];
 
         if (Object.keys(copy[part][state]).length == 0) {
             delete copy[part][state];
@@ -199,6 +200,39 @@ export class LVGLStylesDefinition extends EezObject {
         }
 
         return copy;
+    }
+
+    removePropertyFromDefinition(
+        propertyInfo: LVGLPropertyInfo,
+        part: string,
+        state: string
+    ) {
+        return LVGLStylesDefinition.removePropertyFromDefinitionByName(
+            this.definition,
+            propertyInfo.name,
+            part,
+            state
+        );
+    }
+
+    removeModifications(
+        modifications: {
+            part: string;
+            state: string;
+            propertyName: string;
+        }[]
+    ) {
+        let newDefinition: Definition | undefined = this.definition;
+        for (const modification of modifications) {
+            newDefinition =
+                LVGLStylesDefinition.removePropertyFromDefinitionByName(
+                    newDefinition,
+                    modification.propertyName,
+                    modification.part,
+                    modification.state
+                );
+        }
+        return newDefinition;
     }
 
     check(messages: IMessage[]) {

@@ -1,3 +1,4 @@
+import { MenuItem } from "@electron/remote";
 import React from "react";
 import { computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
@@ -162,6 +163,14 @@ export class LVGLStyle extends EezObject {
                         )}
                         {lvglStyle.name}
                     </div>
+                    {lvglStyle.redundantModifications.length > 0 && (
+                        <div>
+                            {lvglStyle.redundantModifications.length} redundant
+                            {lvglStyle.redundantModifications.length == 1
+                                ? " modification"
+                                : " modifications"}
+                        </div>
+                    )}
                     {isDefault && <div>Default</div>}
                 </div>
             );
@@ -255,7 +264,30 @@ export class LVGLStyle extends EezObject {
         check: (style: LVGLStyle, messages: IMessage[]) => {
             style.definition.check(messages);
         },
-        showTreeCollapseIcon: "has-children"
+        showTreeCollapseIcon: "has-children",
+        extendContextMenu(
+            thisObject: LVGLStyle,
+            context,
+            objects,
+            menuItems,
+            editable
+        ) {
+            if (thisObject.redundantModifications.length > 0) {
+                menuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+                menuItems.push(
+                    new MenuItem({
+                        label: "Remove Redundant Modifications",
+                        click: () => {
+                            thisObject.removeRedundantModifications();
+                        }
+                    })
+                );
+            }
+        }
     };
 
     get parentStyle(): LVGLStyle | undefined {
@@ -264,6 +296,64 @@ export class LVGLStyle extends EezObject {
             return object;
         }
         return undefined;
+    }
+
+    get redundantModifications() {
+        function getValue(
+            style: LVGLStyle,
+            part: string,
+            state: string,
+            propertyName: string
+        ): any {
+            const definition = style.definition.definition;
+            const value = definition?.[part]?.[state]?.[propertyName];
+            if (value == undefined && style.parentStyle) {
+                return getValue(style.parentStyle, part, state, propertyName);
+            }
+            return value;
+        }
+
+        const redundantModifications: {
+            part: string;
+            state: string;
+            propertyName: string;
+        }[] = [];
+
+        const definition = this.definition.definition || {};
+        Object.keys(definition).forEach(part => {
+            Object.keys(definition[part]).forEach(state => {
+                Object.keys(definition[part][state]).forEach(propertyName => {
+                    const value = definition[part][state][propertyName];
+                    if (
+                        value != undefined &&
+                        this.parentStyle &&
+                        value ==
+                            getValue(
+                                this.parentStyle,
+                                part,
+                                state,
+                                propertyName
+                            )
+                    ) {
+                        redundantModifications.push({
+                            part,
+                            state,
+                            propertyName
+                        });
+                    }
+                });
+            });
+        });
+
+        return redundantModifications;
+    }
+
+    removeRedundantModifications() {
+        ProjectEditor.getProjectStore(this).updateObject(this.definition, {
+            definition: this.definition.removeModifications(
+                this.redundantModifications
+            )
+        });
     }
 
     lvglCreate(
