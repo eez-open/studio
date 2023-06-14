@@ -223,7 +223,8 @@ export const GenericDialog = observer(
                         this.fieldValues[fieldProperties.name]
                     );
                 } else if (fieldProperties.type === "optional-integer") {
-                    const value = this.fieldValues[fieldProperties.name].trim();
+                    const value =
+                        this.fieldValues[fieldProperties.name]?.trim();
                     if (value) {
                         values[fieldProperties.name] = parseInt(value);
                     } else {

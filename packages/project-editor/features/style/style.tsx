@@ -2020,7 +2020,7 @@ function getInheritedValue(
     return {
         value: getProjectStore(styleObject).projectTypeTraits.isDashboard
             ? undefined
-            : propertiesMap[propertyName].defaultValue,
+            : propertiesMap[propertyName]?.defaultValue,
         source: undefined
     };
 }
