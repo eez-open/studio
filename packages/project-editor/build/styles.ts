@@ -154,6 +154,8 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeInt16(backgroundImage);
     }
 
-    const styles = assets.styles.filter(style => !!style);
+    const styles = assets.projectStore.projectTypeTraits.isDashboard
+        ? []
+        : assets.styles.filter(style => !!style);
     dataBuffer.writeArray(styles, buildStyle);
 }

@@ -52,9 +52,6 @@ export const CodeEditorProperty = observer(
             );
             if (getPropertyValueResult !== undefined) {
                 value = getPropertyValueResult.value;
-                if (value === undefined) {
-                    value = props.propertyInfo.defaultValue;
-                }
             } else {
                 value = undefined;
             }

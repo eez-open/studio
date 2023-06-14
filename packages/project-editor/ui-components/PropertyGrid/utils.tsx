@@ -30,10 +30,6 @@ export function getObjectPropertyValue(
         }
     }
 
-    if (value === undefined) {
-        value = propertyInfo.defaultValue;
-    }
-
     return value;
 }
 
@@ -75,10 +71,6 @@ export function getPropertyValueAsString(
             if (inheritedValue) {
                 value = inheritedValue.value;
             }
-        }
-
-        if (value === undefined) {
-            value = propertyInfo.defaultValue;
         }
 
         return value;

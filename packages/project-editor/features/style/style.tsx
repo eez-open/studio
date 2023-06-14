@@ -740,52 +740,6 @@ const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getInheritedValue(
-    styleObject: Style,
-    propertyName: string,
-    translateThemedColors?: boolean
-): InheritedValue {
-    if (translateThemedColors == undefined) {
-        translateThemedColors = true;
-    }
-
-    let value = getProperty(styleObject, propertyName);
-    if (value !== undefined) {
-        if (
-            translateThemedColors &&
-            (propertyName === "color" ||
-                propertyName === "backgroundColor" ||
-                propertyName === "activeColor" ||
-                propertyName === "activeBackgroundColor" ||
-                propertyName === "focusColor" ||
-                propertyName === "focusBackgroundColor" ||
-                propertyName === "borderColor")
-        ) {
-            value = getThemedColor(getProjectStore(styleObject), value);
-        }
-
-        return {
-            value: value,
-            source: styleObject
-        };
-    }
-
-    if (styleObject.parentStyle) {
-        return getInheritedValue(
-            styleObject.parentStyle,
-            propertyName,
-            translateThemedColors
-        );
-    }
-
-    return {
-        value: propertiesMap[propertyName].defaultValue,
-        source: undefined
-    };
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class Style extends EezObject {
     id: number | undefined;
     name: string;
@@ -2025,6 +1979,52 @@ registerClass("Style", Style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function getInheritedValue(
+    styleObject: Style,
+    propertyName: string,
+    translateThemedColors?: boolean
+): InheritedValue {
+    if (translateThemedColors == undefined) {
+        translateThemedColors = true;
+    }
+
+    let value = getProperty(styleObject, propertyName);
+    if (value !== undefined) {
+        if (
+            translateThemedColors &&
+            (propertyName === "color" ||
+                propertyName === "backgroundColor" ||
+                propertyName === "activeColor" ||
+                propertyName === "activeBackgroundColor" ||
+                propertyName === "focusColor" ||
+                propertyName === "focusBackgroundColor" ||
+                propertyName === "borderColor")
+        ) {
+            value = getThemedColor(getProjectStore(styleObject), value);
+        }
+
+        return {
+            value: value,
+            source: styleObject
+        };
+    }
+
+    if (styleObject.parentStyle) {
+        return getInheritedValue(
+            styleObject.parentStyle,
+            propertyName,
+            translateThemedColors
+        );
+    }
+
+    return {
+        value: getProjectStore(styleObject).projectTypeTraits.isDashboard
+            ? undefined
+            : propertiesMap[propertyName].defaultValue,
+        source: undefined
+    };
+}
+
 export function getStyleProperty(
     style: Style,
     propertyName: string,
@@ -2035,11 +2035,8 @@ export function getStyleProperty(
         propertyName,
         translateThemedColors
     );
-    if (inheritedValue) {
-        return inheritedValue.value;
-    }
 
-    return propertiesMap[propertyName].defaultValue;
+    return inheritedValue?.value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
