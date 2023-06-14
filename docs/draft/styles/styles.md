@@ -1,4 +1,6 @@
-Styes are used to set the visual appearance of the widgets.
+# Overview
+
+Styles are used to set the visual appearance of the widgets.
 
 Style for the widget can be set locally or, optionally, by using reusable style definitions defined in the Styles panel.
 
