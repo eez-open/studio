@@ -14,6 +14,8 @@ Locally defined widget styles in LVGL project:
 
 ![Alt text](image-17.png)
 
+By using style definitions, instead of local style modifications, you are achiving consistency (widgets with the similar purpose has the same visual apperance) and maintability (change in reusable style definition is automatically propagated in all widgets that are using it).
+
 Style definitions are inheritable, that means one style definition can inherit from other style definition. I.e. child style inherits all the properties from the parent style.
 
 In the same way, locally defined widget style inherits all the properties from the style definition it uses. In this case, locally defined style is child style, and style definition it uses is parent style.
@@ -34,11 +36,11 @@ For example, here are shown locally defined styles for the Button widget in EEZ-
 
 ![Alt text](image-1.png)
 
-In the Styles panel, the style hierarchy (parent-child relationship) is defined by using drag and drop. If you want some style to become the child of another then drag child style and drop it inside the parent style. For example, in the following screenshot, `button_disabled` style is child of the `button` style, who is child of the `default` style:
+In the Styles panel, the style hierarchy (i.e. parent-child relationship) is defined by using drag and drop. If you want some style to become the child of another then drag child style and drop it inside the parent style. For example, in the following screenshot, `button_disabled` style is child of the `button` style, who is child of the `default` style:
 
 ![Alt text](image-2.png)
 
-# Locally defined widget styles
+# Style properties
 
 ## EEZ-GUI project
 
@@ -46,13 +48,13 @@ Here is shown the example of editing style locally for the LineChart widget
 
 ![Alt text](image-7.png)
 
-Here we can see that depending of the widget type we can have one or more styles which are used in different parts of widget visual apperance. For example for the LineChart widghet we have: Normal, Title, Legend, X axis, Y axis and Marker style definitions.
+Here we can see that depending of the widget type we can have one or more styles which are used in different parts of widget visual apperance. For example for the LineChart widget we have: Normal, Title, Legend, X axis, Y axis and Marker style definitions.
 
 For each style definition we have the following properties:
 
-    In properties below, color value is either hex color definition (for example: `#ab2a18`) or color name as defined in Themes panel.
+(In properties below, color value is either hex color definition (for example: `#ab2a18`) or color name as defined in Themes panel.)
 
--   `Use style`: The name of the style definition from which this widget inherits style properties. If there is some locally modified property then it has precedence over this style definition. This property can be left empty, which means that this widget doesn't inhertits any property from some style and only local modifications are used.
+-   `Use style`: The name of the style definition from which this widget inherits style properties. If there is some locally modified property then it has precedence over this style definition. This property can be left empty, which means that this widget doesn't inhertits any property from some style definition and only local modifications are used.
 
 -   `Font`: The font for the texts displayed inside this widget.
 
@@ -124,19 +126,29 @@ For the following properties, please consult CSS documentation for the meaning:
     - Opacity
     - Box shadow
 
-Use `Blink` property to achieve widget blinking (you can check in the `CSS preview` read only field the generated CSS when this property is enabled):
+Use `Blink` property to achieve widget blinking. You can check, in the `CSS preview` read only field, the generated CSS when this property is enabled:
 
 ![Alt text](image-18.png)
 
-Use this property to enter any custom CSS properties:
-
--   `Additional CSS`
+Use `Additional CSS` property to enter any custom CSS properties.
 
 In CSS preview field there is a summary of the all CSS properties genereted for the style, including parent styles and local modifications (commented as `/* inline style */`).
 
 ## LVGL project
 
-TODO
+Style definition in LVGL project are grouped in parts and states. Each widget type can have different parts which can be differently customised with the styles. For each widget state (normal, pressed, focused, ...) different style properties can be set.
+
+For example, slider widget has three different parts: Main, Indicator and Knob:
+
+![Alt text](image-19.png)
+
+Differently from the EEZ-GUI and Dashboard project, style properties are modified by checking the checkbox left to property name.
+
+In the category name, state name and part name there is an indication how many properties are changed:
+
+![Alt text](image-20.png)
+
+To learn more about LVGL styles please consult https://docs.lvgl.io/latest/en/html/overview/style.html, and particularly https://docs.lvgl.io/latest/en/html/overview/style.html#properties for the list with explanations of each LVGL style property.
 
 # Styles panel
 
