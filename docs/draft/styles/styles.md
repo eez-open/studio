@@ -2,6 +2,18 @@ Styes are used to set the visual appearance of the widgets.
 
 Style for the widget can be set locally or, optionally, by using reusable style definitions defined in the Styles panel.
 
+Locally defined widget styles in EEZ-GUI project:
+
+![Alt text](image-15.png)
+
+Locally defined widget styles in Dashboard project:
+
+![Alt text](image-16.png)
+
+Locally defined widget styles in LVGL project:
+
+![Alt text](image-17.png)
+
 Style definitions are inheritable, that means one style definition can inherit from other style definition. I.e. child style inherits all the properties from the parent style.
 
 In the same way, locally defined widget style inherits all the properties from the style definition it uses. In this case, locally defined style is child style, and style definition it uses is parent style.
@@ -88,7 +100,7 @@ For each property there is a Help link to open a coresponding CSS property help 
 
 ![Alt text](image-14.png)
 
-    - Use style: same as in EEZ-GUI project
+`Use style` property is the same as in EEZ-GUI project.
 
 For the following properties, please consult CSS documentation for the meaning:
 
@@ -112,15 +124,15 @@ For the following properties, please consult CSS documentation for the meaning:
     - Opacity
     - Box shadow
 
-With this property, widget blinking is achieved (you can check the generated CSS in "CSS preview" read only field):
+Use `Blink` property to achieve widget blinking (you can check in the `CSS preview` read only field the generated CSS when this property is enabled):
 
-    - Blink
+![Alt text](image-18.png)
 
 Use this property to enter any custom CSS properties:
 
-    - Additional CSS
+-   `Additional CSS`
 
-In CSS preview field there is a summary of the all CSS properties genereted for the style, including parent styles and local modifications.
+In CSS preview field there is a summary of the all CSS properties genereted for the style, including parent styles and local modifications (commented as `/* inline style */`).
 
 ## LVGL project
 
