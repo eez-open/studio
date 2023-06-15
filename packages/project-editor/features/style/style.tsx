@@ -1237,8 +1237,13 @@ export class Style extends EezObject {
             return findStyle(ProjectEditor.getProject(this), this.useStyle);
         }
 
-        const object = getParent(getParent(this));
-        if (object && object instanceof Style) {
+        // since getParent is not observable, we need to do this
+        // to invalidate all computed observables when parent changes
+        const styleArray = getParent(this) as Style[];
+        styleArray.indexOf(this);
+
+        const object = getParent(styleArray);
+        if (object instanceof Style) {
             return object;
         }
 
