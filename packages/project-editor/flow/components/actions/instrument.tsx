@@ -68,7 +68,7 @@ import {
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { COMPONENT_TYPE_SCPIACTION } from "project-editor/flow/components/component_types";
+import { COMPONENT_TYPE_SCPI_ACTION } from "project-editor/flow/components/component_types";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import type { WorkerToRenderMessage } from "eez-studio-types";
 import { ProjectContext } from "project-editor/project/context";
@@ -80,7 +80,7 @@ import { ConnectionParameters } from "instrument/connection/interface";
 
 export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: COMPONENT_TYPE_SCPIACTION,
+        flowComponentId: COMPONENT_TYPE_SCPI_ACTION,
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL,
         properties: [

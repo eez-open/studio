@@ -343,6 +343,11 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             if (workerToRenderMessage.freeArrayValue) {
+                console.log(
+                    "freeArrayValue",
+                    workerToRenderMessage.freeArrayValue
+                );
+
                 const valueType =
                     workerToRenderMessage.freeArrayValue.valueType;
 
@@ -668,6 +673,12 @@ export class WasmRuntime extends RemoteRuntime {
                 );
 
                 if (isDifferent(oldArrayValue, newArrayValue)) {
+                    console.log(
+                        "object global variable updated",
+                        oldArrayValue,
+                        newArrayValue
+                    );
+
                     updatedGlobalVariableValues.push({
                         kind: "array",
                         globalVariableIndex: objectVariable.globalVariableIndex,

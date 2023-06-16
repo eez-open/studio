@@ -27,6 +27,26 @@ export function underscore(string: string | undefined): string {
     string = string || "";
     string = string.toString(); // might be a number
     string = string.trim();
+
+    let temp = "";
+    for (let i = 0; i < string.length; i++) {
+        if (string[i] >= "A" && string[i] <= "Z") {
+            if (
+                i > 0 &&
+                string[i - 1] >= "A" &&
+                string[i - 1] <= "Z" &&
+                (i == string.length - 1 ||
+                    (string[i + 1] >= "A" && string[i + 1] <= "Z") ||
+                    string[i + 1] == " ")
+            ) {
+                temp += string[i].toLowerCase();
+                continue;
+            }
+        }
+        temp += string[i];
+    }
+    string = temp;
+
     string = string.replace(/([a-z\d])([A-Z]+)/g, "$1_$2");
     string = string.replace(/[-\s]+/g, "_").toLowerCase();
 

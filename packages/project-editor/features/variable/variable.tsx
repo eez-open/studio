@@ -515,19 +515,19 @@ export class DataContext implements IDataContext {
     }
 
     set(variableName: string, value: any) {
-        const oldValue = this.get(variableName);
-        if (oldValue) {
-            const variable = this.findVariable(variableName);
-            if (variable) {
-                const objectVariableType = getObjectVariableTypeFromType(
-                    this.project._store,
-                    variable.type
-                );
-                if (objectVariableType) {
-                    objectVariableType.destroyValue(oldValue);
-                }
-            }
-        }
+        // const oldValue = this.get(variableName);
+        // if (oldValue) {
+        //     const variable = this.findVariable(variableName);
+        //     if (variable) {
+        //         const objectVariableType = getObjectVariableTypeFromType(
+        //             this.project._store,
+        //             variable.type
+        //         );
+        //         if (objectVariableType) {
+        //             objectVariableType.destroyValue(oldValue, value);
+        //         }
+        //     }
+        // }
 
         runInAction(() => this.setRuntimeValue(variableName, value));
     }

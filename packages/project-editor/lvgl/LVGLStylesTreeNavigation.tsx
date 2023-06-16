@@ -217,6 +217,7 @@ export const LVGLStylesTreeNavigation = observer(
             return new TreeAdapter(
                 this.treeObjectAdapter,
                 undefined,
+                undefined,
                 true,
                 undefined,
                 undefined,

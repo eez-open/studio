@@ -16,7 +16,7 @@ import {
 import { ActionComponent } from "project-editor/flow/component";
 
 import { ValueType } from "project-editor/features/variable/value-type";
-import { COMPONENT_TYPE_LVGLACTION } from "project-editor/flow/components/component_types";
+import { COMPONENT_TYPE_LVGL_ACTION } from "project-editor/flow/components/component_types";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { humanize } from "eez-studio-shared/string";
@@ -1014,7 +1014,7 @@ export class LVGLActionComponent extends ActionComponent {
     actions: LVGLActionType[];
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
-        flowComponentId: COMPONENT_TYPE_LVGLACTION,
+        flowComponentId: COMPONENT_TYPE_LVGL_ACTION,
         componentPaletteGroupName: "!2LVGL",
         componentPaletteLabel: "LVGL",
         enabledInComponentPalette: (projectType: ProjectType) =>

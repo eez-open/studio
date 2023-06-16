@@ -203,7 +203,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     auto component = (ScpiActionComponent *)flowState->flow->components[componentIndex];
 
     Value instrumentValue;
-    if (!evalProperty(flowState, componentIndex, defs_v3::SCPIACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, "Failed to evaluate Instrument in SCPI")) {
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, "Failed to evaluate Instrument in SCPI")) {
         return;
     }
     if (!instrumentValue.isArray()) {

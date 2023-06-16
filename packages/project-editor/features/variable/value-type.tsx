@@ -102,6 +102,7 @@ export const TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME = "$TextInputChangeEvent";
 export const DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME =
     "$DropDownListChangeEvent";
 export const SCROLLBAR_STATE_STRUCT_NAME = "$ScrollbarState";
+export const OBJECT_VARIABLE_STATUS_STRUCT_NAME = "$ObjectVariableStatus";
 
 class SystemStructure implements IStructure {
     name: string;
@@ -207,6 +208,27 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             {
                 name: "position",
                 type: "integer"
+            }
+        ]
+    }),
+    new SystemStructure({
+        name: OBJECT_VARIABLE_STATUS_STRUCT_NAME,
+        fields: [
+            {
+                name: "label",
+                type: "string"
+            },
+            {
+                name: "image",
+                type: "string"
+            },
+            {
+                name: "color",
+                type: "string"
+            },
+            {
+                name: "error",
+                type: "string"
             }
         ]
     })
@@ -682,7 +704,7 @@ export const VariableTypeSelect = observer(
                         <>
                             <button
                                 ref={this.buttonRef}
-                                className="btn btn-outline-secondary dropdown-toggle EezStudio_VariableTypeSelect_DropdownButton"
+                                className="btn btn-secondary dropdown-toggle EezStudio_VariableTypeSelect_DropdownButton"
                                 type="button"
                                 onClick={this.openDropdown}
                             />

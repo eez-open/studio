@@ -142,7 +142,14 @@ function executeDashboardComponent(
     }
 }
 
+let onArrayValueFreeEnabled = true;
+
 function onArrayValueFree(wasmModuleId: number, ptr: number) {
+    if (!onArrayValueFreeEnabled) {
+        console.log("onArrayValueFreeEnabled is false");
+        return;
+    }
+
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
         return;
@@ -234,7 +241,10 @@ export function createWasmWorker(
                 globalVariable.globalVariableIndex,
                 valuePtr
             );
+
+            onArrayValueFreeEnabled = false;
             WasmFlowRuntime._valueFree(valuePtr);
+            onArrayValueFreeEnabled = true;
         }
     }
 
@@ -628,5 +638,88 @@ export function onWasmFlowRuntimeTerminate(
 function fireTerminateEvent(WasmFlowRuntime: IWasmFlowRuntime) {
     for (const callback of wasmFlowRuntimeTerminateCallbacks) {
         callback(WasmFlowRuntime);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function sendMqttEvent(
+    wasmModuleId: number,
+    connectionID: number,
+    eventName: string,
+    eventData:
+        | null
+        | string
+        | {
+              topic: string;
+              payload: string;
+          }
+) {
+    console.log(
+        "sendMqttEvent",
+        wasmModuleId,
+        connectionID,
+        eventName,
+        eventData
+    );
+
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    const EEZ_MQTT_EVENT_CONNECT = 0;
+    const EEZ_MQTT_EVENT_RECONNECT = 1;
+    const EEZ_MQTT_EVENT_CLOSE = 2;
+    const EEZ_MQTT_EVENT_DISCONNECT = 3;
+    const EEZ_MQTT_EVENT_OFFLINE = 4;
+    const EEZ_MQTT_EVENT_ERROR = 5;
+    const EEZ_MQTT_EVENT_MESSAGE = 6;
+
+    let eventType = 0;
+    if (eventName == "connect") {
+        eventType = EEZ_MQTT_EVENT_CONNECT;
+    } else if (eventName == "reconnect") {
+        eventType = EEZ_MQTT_EVENT_RECONNECT;
+    } else if (eventName == "close") {
+        eventType = EEZ_MQTT_EVENT_CLOSE;
+    } else if (eventName == "disconnect") {
+        eventType = EEZ_MQTT_EVENT_DISCONNECT;
+    } else if (eventName == "offline") {
+        eventType = EEZ_MQTT_EVENT_OFFLINE;
+    } else if (eventName == "error") {
+        eventType = EEZ_MQTT_EVENT_ERROR;
+    } else if (eventName == "message") {
+        eventType = EEZ_MQTT_EVENT_MESSAGE;
+    }
+
+    let eventDataPtr1;
+    let eventDataPtr2;
+    if (eventData != null) {
+        if (typeof eventData == "string") {
+            eventDataPtr1 = WasmFlowRuntime.allocateUTF8(eventData);
+            eventDataPtr2 = 0;
+        } else {
+            eventDataPtr1 = WasmFlowRuntime.allocateUTF8(eventData.topic);
+            eventDataPtr2 = WasmFlowRuntime.allocateUTF8(eventData.payload);
+        }
+    } else {
+        eventDataPtr1 = 0;
+        eventDataPtr2 = 0;
+    }
+
+    WasmFlowRuntime._onMqttEvent(
+        connectionID,
+        eventType,
+        eventDataPtr1,
+        eventDataPtr2
+    );
+
+    if (eventDataPtr1) {
+        WasmFlowRuntime._free(eventDataPtr1);
+    }
+
+    if (eventDataPtr2) {
+        WasmFlowRuntime._free(eventDataPtr2);
     }
 }

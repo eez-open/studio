@@ -113,7 +113,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     eez::flow::stopScriptHook = stopScript;
     eez::flow::showKeyboardHook = eez::gui::showKeyboard;
     eez::flow::showKeypadHook = eez::gui::showKeypad;
-    eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPIACTION, eez::flow::executeScpiComponent);
+    eez::flow::registerComponent(eez::flow::defs_v3::COMPONENT_TYPE_SCPI_ACTION, eez::flow::executeScpiComponent);
 
     eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();

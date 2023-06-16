@@ -184,7 +184,10 @@ export interface IObjectVariableType {
         params: IObjectVariableValueConstructorParams,
         isRuntime: boolean
     ): IObjectVariableValue;
-    destroyValue(value: IObjectVariableValue): void;
+    destroyValue(
+        value: IObjectVariableValue,
+        newValue?: IObjectVariableValue
+    ): void;
 
     valueFieldDescriptions: IObjectVariableValueFieldDescription[];
 }
@@ -562,6 +565,8 @@ export interface IWasmFlowRuntime {
     _isRTL(): boolean;
 
     _setDebuggerMessageSubsciptionFilter(filter: uint32_t): void;
+
+    _onMqttEvent(handle: number, eventType: number, eventDataPtr1: number, eventDataPtr2: number);
 
     // LVGL API
     _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;

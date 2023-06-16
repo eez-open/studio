@@ -235,6 +235,7 @@ export const ListNavigation = observer(
         get listAdapter() {
             return new TreeAdapter(
                 new TreeObjectAdapter(this.props.navigationObject),
+                this.props.selectedObject,
                 undefined,
                 undefined,
                 this.sortDirection,

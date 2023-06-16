@@ -219,6 +219,7 @@ export const StylesTreeNavigation = observer(
             return new TreeAdapter(
                 this.treeObjectAdapter,
                 undefined,
+                undefined,
                 true,
                 undefined,
                 undefined,

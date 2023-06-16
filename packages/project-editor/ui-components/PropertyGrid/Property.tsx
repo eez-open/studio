@@ -486,32 +486,47 @@ export const Property = observer(
             } else if (propertyInfo.type === PropertyType.MultilineText) {
                 if (!readOnly && isOnSelectAvailable) {
                     return (
-                        <div className="input-group" title={this._value || ""}>
-                            <textarea
-                                ref={(ref: any) => (this.textarea = ref)}
-                                className={classNames("form-control", {
-                                    pre: propertyInfo.monospaceFont
-                                })}
-                                value={this._value || ""}
-                                onChange={this.onChange}
-                                onSelect={this.onSelectionChange}
-                                style={{ resize: "none", overflowY: "hidden" }}
-                                readOnly={propertyInfo.computed}
-                                spellCheck={
-                                    propertyInfo.disableSpellcheck
-                                        ? false
-                                        : true
-                                }
-                            />
-                            <button
-                                className="btn btn-secondary"
-                                type="button"
-                                onClick={this.onSelect}
-                                title={this.props.propertyInfo.onSelectTitle}
+                        <>
+                            <div
+                                className="input-group"
+                                title={this._value || ""}
                             >
-                                &hellip;
-                            </button>
-                        </div>
+                                <textarea
+                                    ref={(ref: any) => (this.textarea = ref)}
+                                    className={classNames("form-control", {
+                                        pre: propertyInfo.monospaceFont
+                                    })}
+                                    value={this._value || ""}
+                                    onChange={this.onChange}
+                                    onSelect={this.onSelectionChange}
+                                    style={{
+                                        resize: "none",
+                                        overflowY: "hidden"
+                                    }}
+                                    readOnly={propertyInfo.computed}
+                                    spellCheck={
+                                        propertyInfo.disableSpellcheck
+                                            ? false
+                                            : true
+                                    }
+                                />
+                                <button
+                                    className="btn btn-secondary"
+                                    type="button"
+                                    onClick={this.onSelect}
+                                    title={
+                                        this.props.propertyInfo.onSelectTitle
+                                    }
+                                >
+                                    &hellip;
+                                </button>
+                            </div>
+                            {this.props.propertyInfo.formText && (
+                                <div className="form-text">
+                                    {this.props.propertyInfo.formText}
+                                </div>
+                            )}
+                        </>
                     );
                 } else {
                     return (

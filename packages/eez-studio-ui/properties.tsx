@@ -571,25 +571,35 @@ export const BooleanProperty = observer(
             value: boolean;
             onChange: (value: boolean) => void;
             style?: React.CSSProperties;
+            checkboxStyleSwitch?: boolean;
         },
         {}
     > {
         render() {
+            const innerInput = (
+                <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={this.props.value}
+                    onChange={event =>
+                        this.props.onChange(event.target.checked)
+                    }
+                    role={this.props.checkboxStyleSwitch ? "switch" : undefined}
+                />
+            );
+
+            const input = this.props.checkboxStyleSwitch ? (
+                <div className="form-check form-switch">&nbsp;{innerInput}</div>
+            ) : (
+                innerInput
+            );
+
             return (
                 <PropertyEnclosure style={this.props.style}>
                     <td colSpan={2}>
                         <div className="form-check">
                             <label className="form-check-label">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    checked={this.props.value}
-                                    onChange={event =>
-                                        this.props.onChange(
-                                            event.target.checked
-                                        )
-                                    }
-                                />
+                                {input}
                                 {this.props.name}
                             </label>
                         </div>

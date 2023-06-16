@@ -1168,12 +1168,19 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  965456: ($0) => { startToDebuggerMessage($0); },  
- 965488: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965563: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 965638: ($0) => { finishToDebuggerMessage($0); },  
- 965671: ($0, $1) => { onArrayValueFree($0, $1); },  
- 965701: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  968816: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 968922: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 968958: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 968995: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 969035: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 969092: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 969151: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
+ 969224: ($0) => { startToDebuggerMessage($0); },  
+ 969256: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 969331: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 969406: ($0) => { finishToDebuggerMessage($0); },  
+ 969439: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 969469: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 
@@ -4330,6 +4337,9 @@ var _onPointerEvent = Module["_onPointerEvent"] = createExportWrapper("onPointer
 
 /** @type {function(...*):?} */
 var _onMouseWheelEvent = Module["_onMouseWheelEvent"] = createExportWrapper("onMouseWheelEvent");
+
+/** @type {function(...*):?} */
+var _onMqttEvent = Module["_onMqttEvent"] = createExportWrapper("onMqttEvent");
 
 /** @type {function(...*):?} */
 var _free = Module["_free"] = createExportWrapper("free");

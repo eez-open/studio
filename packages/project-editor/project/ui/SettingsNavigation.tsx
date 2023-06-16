@@ -474,6 +474,7 @@ export const SettingsNavigation = observer(
         get treeAdapter() {
             return new TreeAdapter(
                 this.navigationObjectAdapter,
+                undefined,
                 SettingsNavigation.navigationTreeFilter,
                 true,
                 "none",
@@ -502,6 +503,7 @@ export const SettingsNavigation = observer(
                             treeAdapter={
                                 new TreeAdapter(
                                     this.navigationObjectAdapter,
+                                    undefined,
                                     SettingsNavigation.navigationTreeFilter,
                                     true,
                                     "none",

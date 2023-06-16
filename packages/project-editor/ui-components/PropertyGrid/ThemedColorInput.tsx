@@ -211,7 +211,7 @@ export const ThemedColorInput = observer(
                         <>
                             <button
                                 ref={this.buttonRef}
-                                className="btn btn-outline-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
+                                className="btn btn-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
                                 type="button"
                                 onClick={this.openDropdown}
                             />

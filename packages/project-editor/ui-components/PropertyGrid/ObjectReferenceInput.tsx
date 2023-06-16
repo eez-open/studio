@@ -242,7 +242,7 @@ export const ObjectReferenceInput = observer(
                             <>
                                 <button
                                     ref={this.buttonRef}
-                                    className="btn btn-outline-secondary dropdown-toggle EezStudio_ObjectReferenceInput_DropdownButton"
+                                    className="btn btn-secondary dropdown-toggle EezStudio_ObjectReferenceInput_DropdownButton"
                                     type="button"
                                     onClick={this.openDropdown}
                                 />

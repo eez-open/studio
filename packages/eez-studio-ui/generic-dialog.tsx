@@ -66,6 +66,7 @@ export interface IFieldProperties {
     minValue?: number;
     maxValue?: number;
     formText?: string;
+    checkboxStyleSwitch?: boolean;
 }
 
 export interface IFieldComponentProps {
@@ -436,6 +437,7 @@ export const GenericDialog = observer(
 
                             let min;
                             let max;
+                            let checkboxStyleSwitch;
 
                             if (
                                 fieldProperties.type === "integer" ||
@@ -552,6 +554,8 @@ export const GenericDialog = observer(
                                 });
                             } else if (fieldProperties.type === "boolean") {
                                 Field = BooleanProperty;
+                                checkboxStyleSwitch =
+                                    fieldProperties.checkboxStyleSwitch;
                             } else if (fieldProperties.type === "range") {
                                 min = fieldProperties.minValue || 0;
                                 max = fieldProperties.maxValue || 100;
@@ -605,6 +609,9 @@ export const GenericDialog = observer(
                                         errors={errors}
                                         min={min}
                                         max={max}
+                                        checkboxStyleSwitch={
+                                            checkboxStyleSwitch
+                                        }
                                     >
                                         {children}
                                     </Field>

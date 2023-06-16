@@ -47,7 +47,8 @@ import {
     isArrayType,
     getArrayElementTypeFromType,
     isEnumType,
-    getEnumTypeNameFromType
+    getEnumTypeNameFromType,
+    objectVariableTypes
 } from "project-editor/features/variable/value-type";
 import type { Structure } from "project-editor/features/variable/variable";
 
@@ -605,6 +606,56 @@ export function buildFlowDefs(assets: Assets) {
             `enum ${structure.name.substring(
                 1
             )}SystemStructureFields {\n${fieldEnumItems.join(",\n")}\n};`
+        );
+    }
+
+    // enum object types
+    const objectTypeEnumItems = [];
+    for (const [objectTypeName, _] of objectVariableTypes) {
+        objectTypeEnumItems.push(
+            `${TAB}${getName(
+                "OBJECT_TYPE_",
+                objectTypeName,
+                NamingConvention.UnderscoreUpperCase
+            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
+                `object:${objectTypeName}`
+            )}`
+        );
+    }
+
+    defs.push(`enum ObjectTypes {\n${objectTypeEnumItems.join(",\n")}\n};`);
+
+    for (const [objectTypeName, objectType] of objectVariableTypes) {
+        const fieldEnumItems = [];
+        for (const field of objectType.valueFieldDescriptions) {
+            fieldEnumItems.push(
+                `${TAB}${getName(
+                    "OBJECT_TYPE_",
+                    objectTypeName,
+                    NamingConvention.UnderscoreUpperCase
+                )}_${getName(
+                    "FIELD_",
+                    field.name,
+                    NamingConvention.UnderscoreUpperCase
+                )} = ${assets.projectStore.typesStore.getFieldIndex(
+                    `object:${objectTypeName}`,
+                    field.name
+                )}`
+            );
+        }
+
+        fieldEnumItems.push(
+            `${TAB}${getName(
+                "OBJECT_TYPE_",
+                objectTypeName,
+                NamingConvention.UnderscoreUpperCase
+            )}_NUM_FIELDS`
+        );
+
+        defs.push(
+            `enum ${objectTypeName}ObjectTypeFields {\n${fieldEnumItems.join(
+                ",\n"
+            )}\n};`
         );
     }
 

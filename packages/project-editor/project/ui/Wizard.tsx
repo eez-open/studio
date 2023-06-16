@@ -1812,6 +1812,7 @@ const ProjectTypeComponent = observer(
                                             event.preventDefault();
                                             openLink(projectType.repository!);
                                         }}
+                                        title="Project Github Repository"
                                     >
                                         INFO
                                     </a>
