@@ -313,6 +313,7 @@ export const PropertyGrid = observer(
                 if (propertyInfo.propertyNameAbove) {
                     properties.push(
                         <tr
+                            key={propertyInfo.name + "_above"}
                             style={{
                                 visibility: collapsed ? "collapse" : "visible"
                             }}

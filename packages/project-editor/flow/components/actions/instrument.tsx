@@ -878,6 +878,10 @@ registerObjectVariableType("Instrument", {
     },
     destroyValue: (value: IObjectVariableValue) => {},
 
+    getValue: (variableValue: any): IObjectVariableValue | null => {
+        return instruments.get(variableValue.id) ?? null;
+    },
+
     valueFieldDescriptions: [
         {
             name: "id",

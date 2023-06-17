@@ -184,10 +184,13 @@ export interface IObjectVariableType {
         params: IObjectVariableValueConstructorParams,
         isRuntime: boolean
     ): IObjectVariableValue;
+
     destroyValue(
         value: IObjectVariableValue,
         newValue?: IObjectVariableValue
     ): void;
+
+    getValue?(variableValue: any): IObjectVariableValue | null;
 
     valueFieldDescriptions: IObjectVariableValueFieldDescription[];
 }
@@ -515,6 +518,7 @@ export interface IWasmFlowRuntime {
 
     _valueFree(valuePtr: number): void;
 
+    _getGlobalVariable(globalVariableIndex: number): number;
     _setGlobalVariable(globalVariableIndex: number, valuePtr: number): void;
     _updateGlobalVariable(globalVariableIndex: number, valuePtr: number): void;
 

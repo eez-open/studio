@@ -22,6 +22,7 @@ export const FLOW_VALUE_TYPE_ARRAY_REF = 18;
 export const FLOW_VALUE_TYPE_BLOB_REF = 19;
 export const FLOW_VALUE_TYPE_STREAM = 20;
 export const FLOW_VALUE_TYPE_DATE = 21;
+export const FLOW_VALUE_TYPE_POINTER = 29;
 
 export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED

@@ -189,7 +189,7 @@ const Content = observer(
             }
 
             if (component === "propertiesPanel") {
-                return <PropertiesPanel readOnly={!!this.context.runtime} />;
+                return <PropertiesPanel />;
             }
 
             if (component === "componentsPalette") {

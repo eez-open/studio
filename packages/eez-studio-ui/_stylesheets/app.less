@@ -4395,7 +4395,7 @@ button.EezStudio_Action {
     display: flex;
     align-items: center;
 
-    &:not(.form-control) {
+    &.clickable:not(.form-control) {
         cursor: pointer;
     }
 
@@ -4405,7 +4405,7 @@ button.EezStudio_Action {
         margin-right: 5px;
     }
 
-    &:hover:not(.form-control) {
+    &.clickable:hover:not(.form-control) {
         background-color: @hoverBackgroundColor;
         color: @hoverColor;
     }

@@ -132,7 +132,16 @@ function executeDashboardComponent(
             componentType
         ];
 
-    const aClass = WasmFlowRuntime.getClassByName(componentName);
+    let aClass = WasmFlowRuntime.getClassByName(componentName);
+    if (!aClass) {
+        aClass = WasmFlowRuntime.getClassByName(componentName + "Widget");
+    }
+    if (!aClass) {
+        aClass = WasmFlowRuntime.getClassByName(
+            componentName + "ActionComponent"
+        );
+    }
+
     if (aClass && aClass.classInfo.execute) {
         aClass.classInfo.execute(dashboardComponentContext);
     } else {
@@ -142,14 +151,7 @@ function executeDashboardComponent(
     }
 }
 
-let onArrayValueFreeEnabled = true;
-
 function onArrayValueFree(wasmModuleId: number, ptr: number) {
-    if (!onArrayValueFreeEnabled) {
-        console.log("onArrayValueFreeEnabled is false");
-        return;
-    }
-
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
         return;
@@ -242,9 +244,7 @@ export function createWasmWorker(
                 valuePtr
             );
 
-            onArrayValueFreeEnabled = false;
             WasmFlowRuntime._valueFree(valuePtr);
-            onArrayValueFreeEnabled = true;
         }
     }
 

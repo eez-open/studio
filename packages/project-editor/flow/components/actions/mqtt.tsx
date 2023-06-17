@@ -101,7 +101,7 @@ export class MQTTInitActionComponent extends ActionComponent {
                     name: "protocol",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    formText: `"mqtt://" or "ws://"`,
+                    formText: `"mqtt", "mqtts", "ws", "wss", "tcp", "ssl", "wx" or "wxs"`,
                     hideInPropertyGrid: isNotDashboardProject
                 },
                 "string"
@@ -140,7 +140,7 @@ export class MQTTInitActionComponent extends ActionComponent {
             )
         ],
         defaultValue: {
-            protocol: `"mqtt://"`
+            protocol: `"mqtt"`
         },
         icon: MQTT_ICON,
         componentHeaderColor,
@@ -204,7 +204,7 @@ export class MQTTInitActionComponent extends ActionComponent {
                 protocol = undefined;
             }
         } else {
-            protocol = "mqtt://";
+            protocol = "mqtt";
         }
 
         if (!protocol) {
@@ -239,7 +239,7 @@ export class MQTTInitActionComponent extends ActionComponent {
             return undefined;
         }
 
-        return `${protocol}${host}:${port}`;
+        return `${protocol}://${host}:${port}`;
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
@@ -997,6 +997,9 @@ registerObjectVariableType("MQTTConnection", {
             mqttConnections.set(mqttConnection.id, mqttConnection);
         }
     },
+    getValue: (variableValue: any): IObjectVariableValue | null => {
+        return mqttConnections.get(variableValue.id) ?? null;
+    },
     valueFieldDescriptions: [
         {
             name: "protocol",
@@ -1064,16 +1067,39 @@ async function showConnectDialog(
                 fields: [
                     {
                         name: "protocol",
-                        displayName: "URL",
                         type: "enum",
                         enumItems: [
                             {
-                                id: "mqtt://",
-                                label: "mqtt://"
+                                id: "mqtt",
+                                label: "mqtt"
                             },
                             {
-                                id: "ws://",
-                                label: "ws://"
+                                id: "mqtts",
+                                label: "mqtts"
+                            },
+                            {
+                                id: "ws",
+                                label: "ws"
+                            },
+                            {
+                                id: "wss",
+                                label: "wss"
+                            },
+                            {
+                                id: "tcp",
+                                label: "tcp"
+                            },
+                            {
+                                id: "ssl",
+                                label: "ssl"
+                            },
+                            {
+                                id: "wx",
+                                label: "wx"
+                            },
+                            {
+                                id: "wxs",
+                                label: "wxs"
                             }
                         ],
                         validators: [validators.required]
@@ -1102,7 +1128,7 @@ async function showConnectDialog(
                 error: undefined
             },
             values: values || {
-                protocol: "mqtt://",
+                protocol: "mqtt",
                 host: "",
                 port: 1883,
                 userName: "",
@@ -1148,6 +1174,7 @@ class MQTTConnection {
         public constructorParams: MQTTConnectionConstructorParams,
         public wasmModuleId?: number
     ) {
+        console.log("new MQTTConnection", id);
         makeObservable(this, {
             error: observable,
             isConnected: observable,
@@ -1161,7 +1188,7 @@ class MQTTConnection {
 
     get status() {
         return {
-            label: `URL: ${this.constructorParams.protocol}${this.constructorParams.host}:${this.constructorParams.port}`,
+            label: `${this.constructorParams.protocol}://${this.constructorParams.host}:${this.constructorParams.port}`,
             image: "data:image/png;base64,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",
             color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
@@ -1169,36 +1196,32 @@ class MQTTConnection {
     }
 
     async connect() {
-        console.log("connect called", this.id);
+        //console.log("connect called", this.id);
         return new Promise<void>((resolve, reject) => {
-            this.client = mqtt.connect(
-                this.constructorParams.protocol +
-                    this.constructorParams.host +
-                    ":" +
-                    this.constructorParams.password,
-                {
-                    username: this.constructorParams.userName,
-                    password: this.constructorParams.password,
-                    connectTimeout: 3000
-                }
-            );
+            this.client = mqtt.connect(undefined as any, {
+                protocol: this.constructorParams.protocol as any,
+                host: this.constructorParams.host,
+                port: this.constructorParams.port,
+                username: this.constructorParams.userName,
+                password: this.constructorParams.password,
+                connectTimeout: 3000
+            });
 
             const onConnect = () => {
-                console.log("onConnect", this.id);
                 if (this.client) {
+                    console.log("onConnect", this.id);
                     runInAction(() => {
                         this.isConnected = true;
                     });
                     this.client!.off("connect", onConnect);
                     resolve();
                 } else {
-                    console.log("client is undefined", this.id);
-                    reject("client is undefined");
+                    reject(`client is undefined ${this.id}`);
                 }
             };
 
             const onError = (err: Error) => {
-                console.log("onError", this.id);
+                //console.log("onError", this.id);
 
                 this.client!.off("error", onError);
                 this.client = undefined;
@@ -1214,7 +1237,7 @@ class MQTTConnection {
             this.client.on("error", onError);
 
             this.client.on("connect", () => {
-                console.log("connect event", this.id);
+                //console.log("connect event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
@@ -1222,7 +1245,7 @@ class MQTTConnection {
             });
 
             this.client.on("reconnect", () => {
-                console.log("reconnect event", this.id);
+                //console.log("reconnect event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(
@@ -1235,7 +1258,7 @@ class MQTTConnection {
             });
 
             this.client.on("close", () => {
-                console.log("close event", this.id);
+                //console.log("close event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(this.wasmModuleId, this.id, "close", null);
@@ -1250,7 +1273,7 @@ class MQTTConnection {
             });
 
             this.client.on("disconnect", () => {
-                console.log("disconnect event", this.id);
+                //console.log("disconnect event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(
@@ -1263,7 +1286,7 @@ class MQTTConnection {
             });
 
             this.client.on("offline", () => {
-                console.log("offline event", this.id);
+                //console.log("offline event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(this.wasmModuleId, this.id, "offline", null);
@@ -1278,7 +1301,7 @@ class MQTTConnection {
             });
 
             this.client.on("error", err => {
-                console.log("error event", this.id);
+                //console.log("error event", this.id);
 
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(this.wasmModuleId, this.id, "error", null);
@@ -1286,8 +1309,6 @@ class MQTTConnection {
             });
 
             this.client.on("message", (topic, message) => {
-                console.log("message event", topic, message);
-
                 if (this.wasmModuleId != undefined) {
                     sendMqttEvent(this.wasmModuleId, this.id, "message", {
                         topic,
@@ -1297,7 +1318,7 @@ class MQTTConnection {
             });
 
             this.client.on("end", () => {
-                console.log("end event", this.id);
+                //console.log("end event", this.id);
                 if (this.client) {
                     this.client = undefined;
                     runInAction(() => {
@@ -1327,7 +1348,7 @@ class MQTTConnection {
     }
 
     disconnect() {
-        console.log("disconnect called", this.id);
+        //console.log("disconnect called", this.id);
         if (this.client) {
             this.client.end();
         }
@@ -1347,15 +1368,15 @@ function eez_mqtt_init(
     userName: string,
     password: string
 ) {
-    console.log(
-        "eez_mqtt_init",
-        wasmModuleId,
-        protocol,
-        host,
-        port,
-        userName,
-        password
-    );
+    // console.log(
+    //     "eez_mqtt_init",
+    //     wasmModuleId,
+    //     protocol,
+    //     host,
+    //     port,
+    //     userName,
+    //     password
+    // );
 
     const id = nextMQTTConnectionId++;
 
@@ -1379,7 +1400,7 @@ function eez_mqtt_init(
 }
 
 function eez_mqtt_deinit(wasmModuleId: number, handle: number) {
-    console.log("eez_mqtt_free", wasmModuleId, handle);
+    //console.log("eez_mqtt_free", wasmModuleId, handle);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {
@@ -1396,7 +1417,7 @@ function eez_mqtt_deinit(wasmModuleId: number, handle: number) {
 }
 
 function eez_mqtt_connect(wasmModuleId: number, handle: number) {
-    console.log("eez_mqtt_connect", wasmModuleId, handle);
+    //console.log("eez_mqtt_connect", wasmModuleId, handle);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {
@@ -1409,7 +1430,7 @@ function eez_mqtt_connect(wasmModuleId: number, handle: number) {
 }
 
 function eez_mqtt_disconnect(wasmModuleId: number, handle: number) {
-    console.log("eez_mqtt_disconnect", wasmModuleId, handle);
+    //console.log("eez_mqtt_disconnect", wasmModuleId, handle);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {
@@ -1426,7 +1447,7 @@ function eez_mqtt_subscribe(
     handle: number,
     topic: string
 ) {
-    console.log("eez_mqtt_subscribe", wasmModuleId, handle, topic);
+    //console.log("eez_mqtt_subscribe", wasmModuleId, handle, topic);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {
@@ -1443,7 +1464,7 @@ function eez_mqtt_unsubscribe(
     handle: number,
     topic: string
 ) {
-    console.log("eez_mqtt_unsubscribe", wasmModuleId, handle, topic);
+    //console.log("eez_mqtt_unsubscribe", wasmModuleId, handle, topic);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {
@@ -1461,7 +1482,7 @@ function eez_mqtt_publish(
     topic: string,
     payload: string
 ) {
-    console.log("eez_mqtt_publish", wasmModuleId, handle, topic, payload);
+    //console.log("eez_mqtt_publish", wasmModuleId, handle, topic, payload);
 
     const mqttConnection = mqttConnections.get(handle);
     if (!mqttConnection) {

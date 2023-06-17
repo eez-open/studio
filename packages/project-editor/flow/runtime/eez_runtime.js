@@ -5243,6 +5243,9 @@ var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createEx
 var _valueFree = Module["_valueFree"] = createExportWrapper("valueFree");
 
 /** @type {function(...*):?} */
+var _getGlobalVariable = Module["_getGlobalVariable"] = createExportWrapper("getGlobalVariable");
+
+/** @type {function(...*):?} */
 var _setGlobalVariable = Module["_setGlobalVariable"] = createExportWrapper("setGlobalVariable");
 
 /** @type {function(...*):?} */

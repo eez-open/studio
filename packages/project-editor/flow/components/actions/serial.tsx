@@ -583,6 +583,9 @@ registerObjectVariableType("SerialConnection", {
             serialConnections.set(serialConnection.id, serialConnection);
         }
     },
+    getValue: (variableValue: any): IObjectVariableValue | null => {
+        return serialConnections.get(variableValue.id) ?? null;
+    },
     valueFieldDescriptions: [
         {
             name: "port",

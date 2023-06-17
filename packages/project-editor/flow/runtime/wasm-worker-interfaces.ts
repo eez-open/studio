@@ -69,7 +69,7 @@ interface IBasicGlobalVariable extends IGlobalVariableBase {
 
 interface IArrayGlobalVariable extends IGlobalVariableBase {
     kind: "array";
-    value: ArrayValue;
+    value: ArrayValue | null;
 }
 
 export type IGlobalVariable = IBasicGlobalVariable | IArrayGlobalVariable;

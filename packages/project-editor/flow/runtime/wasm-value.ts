@@ -29,7 +29,8 @@ import {
     FLOW_VALUE_TYPE_UINT64,
     FLOW_VALUE_TYPE_UINT8,
     FLOW_VALUE_TYPE_UNDEFINED,
-    FLOW_VALUE_TYPE_DATE
+    FLOW_VALUE_TYPE_DATE,
+    FLOW_VALUE_TYPE_POINTER
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
@@ -82,66 +83,75 @@ export function createJsArrayValue(
                 );
             });
         } else if (type.kind == "object") {
-            values = type.fields.map((field, i) => {
-                let fieldValue = valueFieldDescriptions
-                    ? valueFieldDescriptions[i].getFieldValue(value)
-                    : value[field.name];
+            if (value) {
+                values = type.fields.map((field, i) => {
+                    let fieldValue = valueFieldDescriptions
+                        ? valueFieldDescriptions[i].getFieldValue(value)
+                        : value[field.name];
 
-                const fieldValueTypeIndex =
-                    assetsMap.typeIndexes[field.valueType];
-                if (fieldValueTypeIndex != undefined) {
-                    let fieldValueFieldDescriptions:
-                        | IObjectVariableValueFieldDescription[]
-                        | undefined;
+                    const fieldValueTypeIndex =
+                        assetsMap.typeIndexes[field.valueType];
+                    if (fieldValueTypeIndex != undefined) {
+                        let fieldValueFieldDescriptions:
+                            | IObjectVariableValueFieldDescription[]
+                            | undefined;
 
-                    if (valueFieldDescriptions) {
-                        const temp = valueFieldDescriptions[i];
-                        if (typeof temp.valueType != "string") {
-                            fieldValueFieldDescriptions = temp.valueType;
+                        if (valueFieldDescriptions) {
+                            const temp = valueFieldDescriptions[i];
+                            if (typeof temp.valueType != "string") {
+                                fieldValueFieldDescriptions = temp.valueType;
+                            }
                         }
-                    }
 
-                    if (fieldValueFieldDescriptions) {
-                        return createArrayValue(
-                            fieldValueTypeIndex,
-                            fieldValue,
-                            fieldValueFieldDescriptions
-                        );
-                    } else {
-                        const fieldType = assetsMap.types[fieldValueTypeIndex];
-                        if (fieldType.kind != "basic") {
+                        if (fieldValueFieldDescriptions) {
                             return createArrayValue(
                                 fieldValueTypeIndex,
                                 fieldValue,
-                                undefined
+                                fieldValueFieldDescriptions
                             );
                         } else {
-                            if (typeof fieldValue == "string") {
-                                if (
-                                    fieldType.valueType == "float" ||
-                                    fieldType.valueType == "double"
-                                ) {
-                                    fieldValue = Number.parseFloat(fieldValue);
-                                } else if (fieldType.valueType == "integer") {
-                                    fieldValue = Number.parseInt(fieldValue);
-                                }
-                            } else if (fieldValue instanceof Date) {
-                                if (fieldType.valueType == "string") {
-                                    fieldValue = fieldValue.toISOString();
-                                    fieldValue =
-                                        fieldValue.substring(0, 10) +
-                                        " " +
-                                        fieldValue.substring(
-                                            11,
-                                            fieldValue.length - 1
-                                        );
+                            const fieldType =
+                                assetsMap.types[fieldValueTypeIndex];
+                            if (fieldType.kind != "basic") {
+                                return createArrayValue(
+                                    fieldValueTypeIndex,
+                                    fieldValue,
+                                    undefined
+                                );
+                            } else {
+                                if (typeof fieldValue == "string") {
+                                    if (
+                                        fieldType.valueType == "float" ||
+                                        fieldType.valueType == "double"
+                                    ) {
+                                        fieldValue =
+                                            Number.parseFloat(fieldValue);
+                                    } else if (
+                                        fieldType.valueType == "integer"
+                                    ) {
+                                        fieldValue =
+                                            Number.parseInt(fieldValue);
+                                    }
+                                } else if (fieldValue instanceof Date) {
+                                    if (fieldType.valueType == "string") {
+                                        fieldValue = fieldValue.toISOString();
+                                        fieldValue =
+                                            fieldValue.substring(0, 10) +
+                                            " " +
+                                            fieldValue.substring(
+                                                11,
+                                                fieldValue.length - 1
+                                            );
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                return fieldValue;
-            });
+                    return fieldValue;
+                });
+            } else {
+                return value;
+            }
         } else {
             return value;
         }
@@ -306,10 +316,16 @@ export function getValue(
         };
     } else if (type == FLOW_VALUE_TYPE_INT64) {
         // TODO
-        return { value: undefined, valueType: "undefined" };
+        return {
+            value: WasmFlowRuntime.HEAP32[offset >> 2],
+            valueType: "integer"
+        };
     } else if (type == FLOW_VALUE_TYPE_UINT64) {
         // TODO
-        return { value: undefined, valueType: "undefined" };
+        return {
+            value: WasmFlowRuntime.HEAPU32[offset >> 2],
+            valueType: "integer"
+        };
     } else if (type == FLOW_VALUE_TYPE_FLOAT) {
         return {
             value: WasmFlowRuntime.HEAPF32[offset >> 2],
@@ -371,6 +387,12 @@ export function getValue(
             value: new Date(WasmFlowRuntime.HEAPF64[offset >> 3]),
             valueType: "date"
         };
+    } else if (type == FLOW_VALUE_TYPE_POINTER) {
+        // TODO
+        return {
+            value: WasmFlowRuntime.HEAPU32[offset >> 2],
+            valueType: "integer"
+        };
     }
 
     console.error("Unknown type from WASM: ", type);
@@ -404,7 +426,9 @@ export function getArrayValue(
         return {
             value,
             valueType: `array:${
-                type.kind == "basic" ? type.valueType : type.elementType
+                type.kind == "basic"
+                    ? type.valueType
+                    : type.elementType.valueType
             }` as ValueType
         };
     } else {

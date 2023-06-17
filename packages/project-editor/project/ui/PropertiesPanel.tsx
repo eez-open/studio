@@ -8,9 +8,7 @@ import { EezValueObject, getLabel, isObjectExists } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 
 export const PropertiesPanel = observer(
-    class PropertiesPanel extends React.Component<{
-        readOnly?: boolean;
-    }> {
+    class PropertiesPanel extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -53,7 +51,7 @@ export const PropertiesPanel = observer(
                     <div className="header">{title}</div>
                     <PropertyGrid
                         objects={objects}
-                        readOnly={this.props.readOnly}
+                        readOnly={!!this.context.runtime}
                     />
                 </div>
             );

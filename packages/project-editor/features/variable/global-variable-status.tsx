@@ -200,12 +200,15 @@ export const RenderVariableStatus = observer(
                 humanize(variable.fullName);
         }
 
+        const clickable = !onClear && variable.persistent;
+
         const element = (
             <div
                 className={classNames("EezStudio_CustomVariableStatus", {
-                    "form-control": onClear
+                    "form-control": onClear,
+                    clickable
                 })}
-                onClick={!onClear ? onClick : undefined}
+                onClick={clickable ? onClick : undefined}
                 title={title}
             >
                 {image &&
@@ -243,17 +246,17 @@ export const RenderVariableStatus = observer(
         }
 
         return (
-            <div className="input-group mb-3">
+            <div className="input-group">
                 {element}
                 <button
-                    className="btn btn-outline-secondary"
+                    className="btn btn-secondary"
                     type="button"
                     onClick={onClick}
                 >
                     &hellip;
                 </button>
                 <button
-                    className="btn btn-outline-secondary"
+                    className="btn btn-secondary"
                     type="button"
                     onClick={onClear}
                     disabled={!value}

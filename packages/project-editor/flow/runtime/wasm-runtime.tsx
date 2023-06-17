@@ -49,7 +49,8 @@ import {
     ArrayValue,
     clarStremIDs,
     createJsArrayValue,
-    createWasmValue
+    createWasmValue,
+    getValue
 } from "project-editor/flow/runtime/wasm-value";
 
 import {
@@ -92,10 +93,12 @@ interface IStructGlobalVariable extends IGlobalVariableBase {
 
 interface IObjectGlobalVariable extends IGlobalVariableBase {
     kind: "object";
-    value: ArrayValue;
+    value: ArrayValue | null;
 
-    objectVariableValue: IObjectVariableValue;
+    objectVariableValue: IObjectVariableValue | null;
     objectVariableType: IObjectVariableType;
+
+    studioModified: boolean;
 }
 
 type IRuntimeGlobalVariable =
@@ -343,10 +346,10 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             if (workerToRenderMessage.freeArrayValue) {
-                console.log(
-                    "freeArrayValue",
-                    workerToRenderMessage.freeArrayValue
-                );
+                // console.log(
+                //     "freeArrayValue",
+                //     workerToRenderMessage.freeArrayValue
+                // );
 
                 const valueType =
                     workerToRenderMessage.freeArrayValue.valueType;
@@ -360,12 +363,21 @@ export class WasmRuntime extends RemoteRuntime {
                         valueType
                     );
                     if (objectVariableType) {
-                        const value = objectVariableType.createValue(
-                            workerToRenderMessage.freeArrayValue
-                                .value as IObjectVariableValueConstructorParams,
-                            true
-                        );
-                        objectVariableType.destroyValue(value);
+                        let value;
+                        if (objectVariableType.getValue) {
+                            value = objectVariableType.getValue(
+                                workerToRenderMessage.freeArrayValue.value
+                            );
+                        } else {
+                            value = objectVariableType.createValue(
+                                workerToRenderMessage.freeArrayValue
+                                    .value as IObjectVariableValueConstructorParams,
+                                true
+                            );
+                        }
+                        if (value) {
+                            objectVariableType.destroyValue(value);
+                        }
                     }
                 }
 
@@ -522,7 +534,6 @@ export class WasmRuntime extends RemoteRuntime {
                     globalVariableInAssetsMap =>
                         globalVariableInAssetsMap.name == variable.fullName
                 );
-
             const globalVariableIndex = globalVariableInAssetsMap!.index;
 
             let value =
@@ -542,7 +553,10 @@ export class WasmRuntime extends RemoteRuntime {
             );
             if (objectVariableType) {
                 if (value == null) {
-                    if (objectVariableType.editConstructorParams) {
+                    if (
+                        variable.persistent &&
+                        objectVariableType.editConstructorParams
+                    ) {
                         const constructorParams =
                             await objectVariableType.editConstructorParams(
                                 variable,
@@ -583,7 +597,21 @@ export class WasmRuntime extends RemoteRuntime {
                         value: arrayValue,
 
                         objectVariableValue: value,
-                        objectVariableType
+                        objectVariableType,
+
+                        studioModified: false
+                    });
+                } else {
+                    this.globalVariables.push({
+                        kind: "object",
+                        globalVariableIndex,
+                        variable,
+                        value: null,
+
+                        objectVariableValue: null,
+                        objectVariableType,
+
+                        studioModified: false
                     });
                 }
             } else if (variable.persistent) {
@@ -627,7 +655,19 @@ export class WasmRuntime extends RemoteRuntime {
                 globalVariable.variable.name == variableName &&
                 globalVariable.kind == "object"
             ) {
+                globalVariable.value = createJsArrayValue(
+                    this.assetsMap.typeIndexes[globalVariable.variable.type],
+                    objectVariableValue,
+                    this.assetsMap,
+                    (type: string) => {
+                        return getObjectVariableTypeFromType(
+                            this.projectStore,
+                            type
+                        );
+                    }
+                );
                 globalVariable.objectVariableValue = objectVariableValue;
+                globalVariable.studioModified = true;
                 return;
             }
         }
@@ -637,9 +677,17 @@ export class WasmRuntime extends RemoteRuntime {
         const updatedGlobalVariableValues: IGlobalVariable[] = [];
 
         function isDifferent(
-            oldArrayValue: ArrayValue,
-            newArrayValue: ArrayValue
+            oldArrayValue: ArrayValue | null,
+            newArrayValue: ArrayValue | null
         ) {
+            if (oldArrayValue == null) {
+                return newArrayValue != null;
+            }
+
+            if (newArrayValue == null) {
+                return oldArrayValue != null;
+            }
+
             for (let i = 0; i < oldArrayValue.values.length; i++) {
                 const oldValue = oldArrayValue.values[i];
                 const newValue = newArrayValue.values[i];
@@ -656,13 +704,67 @@ export class WasmRuntime extends RemoteRuntime {
             return false;
         }
 
-        for (const objectVariable of this.globalVariables) {
-            if (objectVariable.kind == "object") {
-                const oldArrayValue = objectVariable.value;
+        for (const globalVariable of this.globalVariables) {
+            const engineValuePtr = this.worker.wasm._getGlobalVariable(
+                globalVariable.globalVariableIndex
+            );
+            const engineValueWithType = getValue(
+                this.worker.wasm,
+                engineValuePtr
+            );
+
+            this.projectStore.dataContext.set(
+                globalVariable.variable.name,
+                engineValueWithType.value
+            );
+
+            if (globalVariable.kind == "object") {
+                if (globalVariable.studioModified) {
+                    updatedGlobalVariableValues.push({
+                        kind: "array",
+                        globalVariableIndex: globalVariable.globalVariableIndex,
+                        value: globalVariable.value
+                    });
+                    globalVariable.studioModified = false;
+                    continue;
+                }
+
+                let oldArrayValue;
+                let objectVariableValue;
+
+                const engineArrayValue = createJsArrayValue(
+                    this.assetsMap.typeIndexes[engineValueWithType.valueType],
+                    engineValueWithType.value,
+                    this.assetsMap,
+                    undefined
+                );
+
+                const objectVariableType = getObjectVariableTypeFromType(
+                    this.projectStore,
+                    globalVariable.variable.type
+                );
+
+                if (
+                    engineArrayValue &&
+                    objectVariableType &&
+                    objectVariableType.getValue
+                ) {
+                    oldArrayValue = engineArrayValue;
+                    objectVariableValue = objectVariableType.getValue(
+                        engineValueWithType.value
+                    );
+                    if (!objectVariableValue) {
+                        continue;
+                    }
+                    globalVariable.objectVariableValue = objectVariableValue;
+                } else {
+                    oldArrayValue = globalVariable.value;
+                    objectVariableValue = globalVariable.objectVariableValue;
+                }
 
                 const newArrayValue = createJsArrayValue(
-                    this.assetsMap.typeIndexes[objectVariable.variable.type],
-                    objectVariable.objectVariableValue,
+                    this.assetsMap.typeIndexes[globalVariable.variable.type],
+                    objectVariableValue,
                     this.assetsMap,
                     (type: string) => {
                         return getObjectVariableTypeFromType(
@@ -672,19 +774,22 @@ export class WasmRuntime extends RemoteRuntime {
                     }
                 );
 
+                //console.log(oldArrayValue, newArrayValue);
+
                 if (isDifferent(oldArrayValue, newArrayValue)) {
-                    console.log(
-                        "object global variable updated",
-                        oldArrayValue,
-                        newArrayValue
-                    );
+                    // console.log(
+                    //     "object global variable updated",
+                    //     oldArrayValue,
+                    //     newArrayValue
+                    // );
 
                     updatedGlobalVariableValues.push({
                         kind: "array",
-                        globalVariableIndex: objectVariable.globalVariableIndex,
+                        globalVariableIndex: globalVariable.globalVariableIndex,
                         value: newArrayValue
                     });
-                    objectVariable.value = newArrayValue;
+
+                    globalVariable.value = newArrayValue;
                 }
             }
         }
@@ -707,7 +812,10 @@ export class WasmRuntime extends RemoteRuntime {
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
-            if (globalVariable.kind == "object") {
+            if (
+                globalVariable.kind == "object" &&
+                globalVariable.objectVariableValue
+            ) {
                 globalVariable.objectVariableType.destroyValue(
                     globalVariable.objectVariableValue
                 );
