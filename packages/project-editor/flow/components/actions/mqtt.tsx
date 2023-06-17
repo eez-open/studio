@@ -941,7 +941,7 @@ export class MQTTPublishActionComponent extends ActionComponent {
             this.payload && (
                 <div className="body">
                     <pre>
-                        {this.connection}: {this.topic}: {this.payload}
+                        {this.connection}: {this.topic}, {this.payload}
                     </pre>
                 </div>
             )
@@ -1331,7 +1331,7 @@ class MQTTConnection {
 
     subscribe(topic: string) {
         if (this.client) {
-            this.client.subscribe(topic);
+            this.client.subscribe(topic, { qos: 0, rap: true, rh: 1 });
         }
     }
 
@@ -1343,7 +1343,11 @@ class MQTTConnection {
 
     publish(topic: string, payload: string) {
         if (this.client) {
-            this.client.publish(topic, payload);
+            this.client.publish(topic, payload, {
+                qos: 0,
+                retain: true,
+                dup: false
+            });
         }
     }
 

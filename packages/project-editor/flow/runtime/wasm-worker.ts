@@ -655,13 +655,13 @@ export function sendMqttEvent(
               payload: string;
           }
 ) {
-    console.log(
-        "sendMqttEvent",
-        wasmModuleId,
-        connectionID,
-        eventName,
-        eventData
-    );
+    // console.log(
+    //     "sendMqttEvent",
+    //     wasmModuleId,
+    //     connectionID,
+    //     eventName,
+    //     eventData
+    // );
 
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
