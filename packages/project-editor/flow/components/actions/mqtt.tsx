@@ -400,6 +400,7 @@ const MQTT_EVENTS = [
     { id: "close", label: "Close", paramExpressionType: "null" },
     { id: "disconnect", label: "Disconnect", paramExpressionType: "null" },
     { id: "offline", label: "Offline", paramExpressionType: "null" },
+    { id: "end", label: "End", paramExpressionType: "null" },
     { id: "error", label: "Error", paramExpressionType: "string" },
     {
         id: "message",
@@ -1197,136 +1198,125 @@ class MQTTConnection {
 
     async connect() {
         //console.log("connect called", this.id);
-        return new Promise<void>((resolve, reject) => {
-            this.client = mqtt.connect(undefined as any, {
-                protocol: this.constructorParams.protocol as any,
-                host: this.constructorParams.host,
-                port: this.constructorParams.port,
-                username: this.constructorParams.userName,
-                password: this.constructorParams.password,
-                connectTimeout: 3000
-            });
 
-            const onConnect = () => {
-                if (this.client) {
-                    console.log("onConnect", this.id);
-                    runInAction(() => {
-                        this.isConnected = true;
-                    });
-                    this.client!.off("connect", onConnect);
-                    resolve();
-                } else {
-                    reject(`client is undefined ${this.id}`);
-                }
-            };
+        this.client = mqtt.connect(undefined as any, {
+            protocol: this.constructorParams.protocol as any,
+            host: this.constructorParams.host,
+            port: this.constructorParams.port,
+            username: this.constructorParams.userName,
+            password: this.constructorParams.password,
+            connectTimeout: 3000
+        });
 
-            const onError = (err: Error) => {
-                //console.log("onError", this.id);
+        this.client.on("connect", () => {
+            //console.log("connect event", this.id);
 
-                this.client!.off("error", onError);
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
+            }
+        });
+
+        this.client.on("reconnect", () => {
+            //console.log("reconnect event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "reconnect", null);
+            }
+        });
+
+        this.client.on("close", () => {
+            //console.log("close event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "close", null);
+            }
+        });
+
+        this.client.on("disconnect", () => {
+            //console.log("disconnect event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "disconnect", null);
+            }
+        });
+
+        this.client.on("offline", () => {
+            //console.log("offline event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "offline", null);
+            }
+        });
+
+        this.client.on("error", err => {
+            //console.log("error event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(
+                    this.wasmModuleId,
+                    this.id,
+                    "error",
+                    err.toString()
+                );
+            }
+        });
+
+        this.client.on("message", (topic, message) => {
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "message", {
+                    topic,
+                    payload: message.toString()
+                });
+            }
+        });
+
+        this.client.on("end", () => {
+            console.log("end event", this.id);
+
+            if (this.wasmModuleId != undefined) {
+                sendMqttEvent(this.wasmModuleId, this.id, "end", null);
+            }
+
+            if (this.client) {
                 this.client = undefined;
-
                 runInAction(() => {
                     this.isConnected = false;
-                    this.error = err.toString();
                 });
-                reject(err.toString());
-            };
-
-            this.client.on("connect", onConnect);
-            this.client.on("error", onError);
-
-            this.client.on("connect", () => {
-                //console.log("connect event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
-                }
-            });
-
-            this.client.on("reconnect", () => {
-                //console.log("reconnect event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(
-                        this.wasmModuleId,
-                        this.id,
-                        "reconnect",
-                        null
-                    );
-                }
-            });
-
-            this.client.on("close", () => {
-                //console.log("close event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(this.wasmModuleId, this.id, "close", null);
-                }
-
-                if (this.client) {
-                    this.client = undefined;
-                    runInAction(() => {
-                        this.isConnected = false;
-                    });
-                }
-            });
-
-            this.client.on("disconnect", () => {
-                //console.log("disconnect event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(
-                        this.wasmModuleId,
-                        this.id,
-                        "disconnect",
-                        null
-                    );
-                }
-            });
-
-            this.client.on("offline", () => {
-                //console.log("offline event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(this.wasmModuleId, this.id, "offline", null);
-                }
-
-                if (this.client) {
-                    this.client = undefined;
-                    runInAction(() => {
-                        this.isConnected = false;
-                    });
-                }
-            });
-
-            this.client.on("error", err => {
-                //console.log("error event", this.id);
-
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(this.wasmModuleId, this.id, "error", null);
-                }
-            });
-
-            this.client.on("message", (topic, message) => {
-                if (this.wasmModuleId != undefined) {
-                    sendMqttEvent(this.wasmModuleId, this.id, "message", {
-                        topic,
-                        payload: message.toString()
-                    });
-                }
-            });
-
-            this.client.on("end", () => {
-                //console.log("end event", this.id);
-                if (this.client) {
-                    this.client = undefined;
-                    runInAction(() => {
-                        this.isConnected = false;
-                    });
-                }
-            });
+            }
         });
+
+        if (this.wasmModuleId == undefined) {
+            return new Promise<void>((resolve, reject) => {
+                const onConnect = () => {
+                    if (this.client) {
+                        console.log("onConnect", this.id);
+                        runInAction(() => {
+                            this.isConnected = true;
+                        });
+                        this.client!.off("connect", onConnect);
+                        resolve();
+                    } else {
+                        reject(`client is undefined ${this.id}`);
+                    }
+                };
+
+                const onError = (err: Error) => {
+                    //console.log("onError", this.id);
+
+                    this.client!.off("error", onError);
+                    this.client = undefined;
+
+                    runInAction(() => {
+                        this.isConnected = false;
+                        this.error = err.toString();
+                    });
+                    reject(err.toString());
+                };
+
+                this.client!.on("connect", onConnect);
+                this.client!.on("error", onError);
+            });
+        }
     }
 
     subscribe(topic: string) {
@@ -1352,8 +1342,9 @@ class MQTTConnection {
     }
 
     disconnect() {
-        //console.log("disconnect called", this.id);
+        console.log("disconnect called", this.id);
         if (this.client) {
+            console.log("end called", this.id);
             this.client.end();
         }
     }

@@ -673,10 +673,11 @@ export function sendMqttEvent(
     const EEZ_MQTT_EVENT_CLOSE = 2;
     const EEZ_MQTT_EVENT_DISCONNECT = 3;
     const EEZ_MQTT_EVENT_OFFLINE = 4;
-    const EEZ_MQTT_EVENT_ERROR = 5;
-    const EEZ_MQTT_EVENT_MESSAGE = 6;
+    const EEZ_MQTT_EVENT_END = 5;
+    const EEZ_MQTT_EVENT_ERROR = 6;
+    const EEZ_MQTT_EVENT_MESSAGE = 7;
 
-    let eventType = 0;
+    let eventType = -1;
     if (eventName == "connect") {
         eventType = EEZ_MQTT_EVENT_CONNECT;
     } else if (eventName == "reconnect") {
@@ -691,6 +692,11 @@ export function sendMqttEvent(
         eventType = EEZ_MQTT_EVENT_ERROR;
     } else if (eventName == "message") {
         eventType = EEZ_MQTT_EVENT_MESSAGE;
+    } else if (eventName == "end") {
+        eventType = EEZ_MQTT_EVENT_END;
+    }
+    if (eventType == -1) {
+        return;
     }
 
     let eventDataPtr1;

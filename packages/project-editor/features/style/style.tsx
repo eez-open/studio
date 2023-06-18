@@ -28,7 +28,8 @@ import {
     propertyNotFoundMessage,
     updateObject,
     propertyNotSetMessage,
-    createObject
+    createObject,
+    isArray
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -1240,6 +1241,9 @@ export class Style extends EezObject {
         // since getParent is not observable, we need to do this
         // to invalidate all computed observables when parent changes
         const styleArray = getParent(this) as Style[];
+        if (!isArray(styleArray)) {
+            return undefined;
+        }
         styleArray.indexOf(this);
 
         const object = getParent(styleArray);
