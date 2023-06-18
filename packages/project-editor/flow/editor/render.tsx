@@ -165,7 +165,7 @@ export const ComponentEnclosure = observer(
             return 0;
         }
 
-        updateComponentGeometry() {
+        updateComponentGeometry = () => {
             if (this.updateComponentTimeout) {
                 clearTimeout(this.updateComponentTimeout);
                 this.updateComponentTimeout = undefined;
@@ -206,14 +206,14 @@ export const ComponentEnclosure = observer(
 
                 return;
             }
-        }
+        };
 
         componentDidMount() {
-            this.updateComponentGeometry();
+            setTimeout(this.updateComponentGeometry, 0);
         }
 
         componentDidUpdate() {
-            this.updateComponentGeometry();
+            setTimeout(this.updateComponentGeometry, 0);
         }
 
         componentWillUnmount() {

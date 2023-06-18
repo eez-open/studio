@@ -2,6 +2,16 @@
 @import "animate";
 @import "../../../node_modules/react-toastify/dist/ReactToastify.css";
 
+@font-face {
+    font-family: "EEZ Studio Font";
+    src: url(Roboto-Regular.ttf);
+}
+
+@font-face {
+    font-family: "EEZ Studio Font Monospace";
+    src: url(RobotoMono-Regular.ttf);
+}
+
 * {
     user-select: none;
 }
@@ -3287,7 +3297,7 @@ button.EezStudio_Action {
                 }
 
                 textarea.pre {
-                    font-family: var(--bs-font-monospace);
+                    font-family: "EEZ Studio Font Monospace";
                     font-size: 0.875em;
                 }
             }
@@ -3438,7 +3448,7 @@ button.EezStudio_Action {
                     overflow: visible;
                     white-space: nowrap;
                     font-size: 80%;
-                    font-family: monospace;
+                    font-family: "EEZ Studio Font Monospace";
                 }
             }
         }
@@ -3503,7 +3513,7 @@ button.EezStudio_Action {
                         overflow: visible;
                         white-space: nowrap;
                         font-size: 80%;
-                        font-family: monospace;
+                        font-family: "EEZ Studio Font Monospace";
                     }
                 }
             }
@@ -4442,7 +4452,7 @@ button.EezStudio_Action {
 
     textarea {
         margin-bottom: 10px;
-        font-family: var(--bs-font-monospace);
+        font-family: "EEZ Studio Font Monospace";
         font-size: 0.875em;
     }
 
@@ -4867,7 +4877,13 @@ button.EezStudio_Action {
 
     box-sizing: border-box;
 
-    font-family: "Open Sans", "Roboto", "Helvetica Neue", Arial;
+    font-family: "EEZ Studio Font" !important;
+
+    pre {
+        font-family: "EEZ Studio Font Monospace" !important;
+        font-size: 80%;
+    }
+
     font-size: 0.8rem;
 
     .EezStudio_ComponentEnclosure {
@@ -5044,7 +5060,7 @@ button.EezStudio_Action {
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow: ellipsis;
-                    font-family: var(--bs-font-monospace);
+                    font-family: "EEZ Studio Font Monospace";
                     font-size: 0.875em;
                     max-width: 100%;
                     display: inline-block;
@@ -5063,7 +5079,7 @@ button.EezStudio_Action {
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow: ellipsis;
-                    font-family: var(--bs-font-monospace);
+                    font-family: "EEZ Studio Font Monospace";
                     font-size: 0.875em;
                 }
             }
