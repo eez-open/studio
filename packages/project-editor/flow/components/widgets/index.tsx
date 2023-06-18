@@ -1765,7 +1765,7 @@ export class DisplayDataWidget extends Widget {
 
         properties: [
             Object.assign(
-                makeStylePropertyInfo("focusStyle"),
+                makeStylePropertyInfo("focusStyle", "Focused style"),
                 { hideInPropertyGrid: isNotV1Project },
                 {
                     isOptional: true
@@ -2036,7 +2036,7 @@ export class TextWidget extends Widget {
                 hideInPropertyGrid: isNotFirmwareProject
             },
             Object.assign(
-                makeStylePropertyInfo("focusStyle"),
+                makeStylePropertyInfo("focusStyle", "Focused style"),
                 { hideInPropertyGrid: isNotV1Project },
                 {
                     isOptional: true

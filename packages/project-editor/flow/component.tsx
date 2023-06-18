@@ -2635,7 +2635,7 @@ export class Widget extends Component {
             makeDataPropertyInfo("visible", {
                 hideInPropertyGrid: isLVGLProject
             }),
-            makeStylePropertyInfo("style", "Normal style"),
+            makeStylePropertyInfo("style", "Default style"),
             {
                 name: "styleUI",
                 type: PropertyType.Any,

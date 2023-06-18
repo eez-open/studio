@@ -146,15 +146,6 @@ const TreeRow = observer(
                 onDrag={onDrag}
                 onDragEnd={onDragEnd}
             >
-                {onEditItem && (
-                    <Icon
-                        icon="material:edit"
-                        size={18}
-                        className="EditIcon"
-                        onClick={() => onEditItem(treeAdapter.getItemId(item))}
-                    />
-                )}
-
                 {triangle}
 
                 {renderItem ? (
@@ -163,6 +154,15 @@ const TreeRow = observer(
                     <span style={{ flex: 1 }}>
                         {treeAdapter.itemToString(item)}
                     </span>
+                )}
+
+                {onEditItem && (
+                    <Icon
+                        icon="material:edit"
+                        size={18}
+                        className="EditIcon"
+                        onClick={() => onEditItem(treeAdapter.getItemId(item))}
+                    />
                 )}
             </div>
         );
