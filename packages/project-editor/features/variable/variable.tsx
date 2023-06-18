@@ -216,6 +216,11 @@ export class Variable extends EezObject {
                 </>
             );
         },
+        propertiesPanelLabel: (variable: Variable) => {
+            return `${
+                ProjectEditor.getFlow(variable) ? "Local" : "Global"
+            } variable: ${variable.name}`;
+        },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
         },
@@ -889,6 +894,9 @@ export class Structure extends EezObject implements IStructure {
                 typeClass: StructureField
             }
         ],
+        propertiesPanelLabel: (structure: Structure) => {
+            return `Structure: ${structure.name}`;
+        },
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
                 dialogDefinition: {
@@ -1037,6 +1045,9 @@ export class Enum extends EezObject {
                 typeClass: EnumMember
             }
         ],
+        propertiesPanelLabel: (enumObject: Enum) => {
+            return `Enum: ${enumObject.name}`;
+        },
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
                 dialogDefinition: {

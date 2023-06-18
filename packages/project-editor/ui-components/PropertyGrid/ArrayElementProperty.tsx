@@ -39,6 +39,7 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 
 import {
+    getFormText,
     isArrayElementPropertyVisible,
     isHighlightedProperty,
     isPropertyInError
@@ -396,6 +397,8 @@ export const ArrayProperty = observer(
                 }
             }
 
+            const formText = getFormText(this.props);
+
             return (
                 <>
                     <div
@@ -407,11 +410,7 @@ export const ArrayProperty = observer(
                         {toolbar}
                         {content}
                     </div>
-                    {this.props.propertyInfo.formText && (
-                        <div className="form-text">
-                            {this.props.propertyInfo.formText}
-                        </div>
-                    )}
+                    {formText && <div className="form-text">{formText}</div>}
                 </>
             );
         }

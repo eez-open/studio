@@ -37,6 +37,7 @@ import {
 } from "project-editor/flow/expression/ExpressionBuilder";
 
 import {
+    getFormText,
     getObjectPropertyValue,
     getPropertyValue,
     getPropertyValueAsString
@@ -485,6 +486,8 @@ export const Property = observer(
                 );
             } else if (propertyInfo.type === PropertyType.MultilineText) {
                 if (!readOnly && isOnSelectAvailable) {
+                    const formText = getFormText(this.props);
+
                     return (
                         <>
                             <div
@@ -521,10 +524,8 @@ export const Property = observer(
                                     &hellip;
                                 </button>
                             </div>
-                            {this.props.propertyInfo.formText && (
-                                <div className="form-text">
-                                    {this.props.propertyInfo.formText}
-                                </div>
+                            {formText && (
+                                <div className="form-text">{formText}</div>
                             )}
                         </>
                     );

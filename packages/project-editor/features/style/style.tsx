@@ -977,6 +977,9 @@ export class Style extends EezObject {
                 jsObject.borderRadius = jsObject.borderRadius.toString();
             }
         },
+        propertiesPanelLabel: (style: Style) => {
+            return `Project style: ${style.name}`;
+        },
         isPropertyMenuSupported: true,
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({

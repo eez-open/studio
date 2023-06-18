@@ -217,7 +217,9 @@ export interface PropertyInfo {
 
     visitProperty?: (parentObject: IEezObject) => EezValueObject[];
 
-    formText?: string;
+    formText?:
+        | string
+        | ((object: IEezObject | undefined) => string | undefined);
 
     propertyNameAbove?: boolean;
 }
@@ -306,6 +308,7 @@ export interface ClassInfo {
     ) => any;
     label?: (object: IEezObject) => string;
     listLabel?: (object: IEezObject, collapsed: boolean) => React.ReactNode;
+    propertiesPanelLabel?: (object: IEezObject) => React.ReactNode;
 
     parentClassInfo?: ClassInfo;
 

@@ -113,7 +113,7 @@ import {
     FLOW_EVENT_KEYDOWN
 } from "project-editor/flow/runtime/flow-events";
 
-const NOT_NAMED_LABEL = "<not named>";
+const NOT_NAMED_LABEL = "";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3603,21 +3603,8 @@ export class NoopActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
-        check: (
-            inputActionComponent: InputActionComponent,
-            messages: IMessage[]
-        ) => {
-            if (!inputActionComponent.name) {
-                messages.push(
-                    propertyNotSetMessage(inputActionComponent, "name")
-                );
-            }
-        },
         label: (component: InputActionComponent) => {
-            if (!component.name) {
-                return NOT_NAMED_LABEL;
-            }
-            return component.name;
+            return component.name ?? "";
         },
         icon: (
             <svg

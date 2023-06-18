@@ -151,6 +151,9 @@ export class Glyph extends EezObject {
                 ? formatEncoding(glyph.encoding)
                 : "";
         },
+        propertiesPanelLabel: (glyph: Glyph) => {
+            return `Font character: ${Glyph.classInfo.label!(glyph)}`;
+        },
         properties: [
             {
                 name: "encoding",
@@ -1138,6 +1141,9 @@ export class Font extends EezObject {
                 }
             }
         ],
+        propertiesPanelLabel: (font: Font) => {
+            return `Font: ${font.name}`;
+        },
         beforeLoadHook: (font: Font, fontJs: Partial<Font>) => {
             if ((fontJs as any).renderEngine != undefined) {
                 fontJs.renderingEngine = (fontJs as any).renderEngine;

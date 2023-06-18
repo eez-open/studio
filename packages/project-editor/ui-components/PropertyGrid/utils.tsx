@@ -5,7 +5,8 @@ import {
     getKey,
     isPropertyHidden,
     isProperAncestor,
-    getProperty
+    getProperty,
+    PropertyProps
 } from "project-editor/core/object";
 
 import {
@@ -135,4 +136,16 @@ export function isHighlightedProperty(
                 getProperty(object, propertyInfo.name)
             ))
     );
+}
+
+export function getFormText(props: PropertyProps) {
+    if (!props.propertyInfo.formText) {
+        return undefined;
+    }
+
+    if (typeof props.propertyInfo.formText === "string") {
+        return props.propertyInfo.formText;
+    }
+
+    return props.propertyInfo.formText(props.objects[0]);
 }

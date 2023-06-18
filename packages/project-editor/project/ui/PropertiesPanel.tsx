@@ -4,7 +4,11 @@ import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
 import { getParent } from "project-editor/core/object";
-import { EezValueObject, getLabel, isObjectExists } from "project-editor/store";
+import {
+    EezValueObject,
+    getPropertiesPanelLabel,
+    isObjectExists
+} from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 
 export const PropertiesPanel = observer(
@@ -41,7 +45,7 @@ export const PropertiesPanel = observer(
                     object = getParent(object);
                 }
 
-                title = getLabel(object);
+                title = getPropertiesPanelLabel(object);
             } else {
                 title = "Multiple objects selected";
             }

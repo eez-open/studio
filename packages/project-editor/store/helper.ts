@@ -349,6 +349,14 @@ export function getLabel(object: IEezObject): string {
     return getClass(object).name;
 }
 
+export function getPropertiesPanelLabel(object: IEezObject) {
+    const classInfo = getClassInfo(object);
+    if (classInfo.propertiesPanelLabel) {
+        return classInfo.propertiesPanelLabel(object);
+    }
+    return getLabel(object);
+}
+
 export function getListLabel(object: IEezObject, collapsed: boolean) {
     const listLabel = getClassInfo(object).listLabel;
     if (listLabel) {

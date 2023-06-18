@@ -25,7 +25,8 @@ import {
     PropertyType,
     EezObject,
     ClassInfo,
-    IMessage
+    IMessage,
+    IEezObject
 } from "project-editor/core/object";
 import {
     ActionComponent,
@@ -42,10 +43,7 @@ import {
     COMPONENT_TYPE_MQTT_UNSUBSCRIBE
 } from "project-editor/flow/components/component_types";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import {
-    isDashboardProject,
-    isNotDashboardProject
-} from "project-editor/project/project-type-traits";
+import { isDashboardProject } from "project-editor/project/project-type-traits";
 import {
     createObject,
     getAncestorOfType,
@@ -101,8 +99,10 @@ export class MQTTInitActionComponent extends ActionComponent {
                     name: "protocol",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    formText: `"mqtt", "mqtts", "ws", "wss", "tcp", "ssl", "wx" or "wxs"`,
-                    hideInPropertyGrid: isNotDashboardProject
+                    formText: (object: IEezObject) =>
+                        isDashboardProject(object)
+                            ? `"mqtt", "mqtts", "ws", "wss", "tcp", "ssl", "wx" or "wxs"`
+                            : `"mqtt" or "mqtts"`
                 },
                 "string"
             ),
@@ -140,7 +140,10 @@ export class MQTTInitActionComponent extends ActionComponent {
             )
         ],
         defaultValue: {
-            protocol: `"mqtt"`
+            protocol: `"mqtt"`,
+            port: 1883,
+            userName: `""`,
+            password: `""`
         },
         icon: MQTT_ICON,
         componentHeaderColor,
@@ -1204,8 +1207,7 @@ class MQTTConnection {
             host: this.constructorParams.host,
             port: this.constructorParams.port,
             username: this.constructorParams.userName,
-            password: this.constructorParams.password,
-            connectTimeout: 3000
+            password: this.constructorParams.password
         });
 
         this.client.on("connect", () => {

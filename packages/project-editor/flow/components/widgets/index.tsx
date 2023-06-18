@@ -6788,12 +6788,14 @@ function TextInputWidgetInput({
     value,
     flowContext,
     textInputWidget,
-    placeholder
+    placeholder,
+    password
 }: {
     value: string;
     flowContext: IFlowContext;
     textInputWidget: TextInputWidget;
     placeholder: string;
+    password: boolean;
 }) {
     const ref = React.useRef<HTMLInputElement>(null);
     const [cursor, setCursor] = React.useState<number | null>(null);
@@ -6822,7 +6824,7 @@ function TextInputWidgetInput({
         <>
             <input
                 ref={ref}
-                type="text"
+                type={password ? "password" : "text"}
                 value={value}
                 placeholder={placeholder}
                 onChange={event => {
@@ -6990,6 +6992,22 @@ export class TextInputWidget extends Widget {
         return "";
     }
 
+    getPassword(flowContext: IFlowContext) {
+        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.password) {
+                try {
+                    return evalProperty(flowContext, this, "password");
+                } catch (err) {
+                    //console.error(err);
+                }
+            }
+
+            return "";
+        }
+
+        return "";
+    }
+
     render(
         flowContext: IFlowContext,
         width: number,
@@ -7005,6 +7023,7 @@ export class TextInputWidget extends Widget {
                     textInputWidget={this}
                     value={value}
                     placeholder={placeholder}
+                    password={this.password}
                 />
                 {super.render(flowContext, width, height)}
             </>

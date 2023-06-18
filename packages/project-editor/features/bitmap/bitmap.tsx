@@ -238,6 +238,9 @@ export class Bitmap extends EezObject {
                         : true
             }
         ],
+        propertiesPanelLabel: (bitmap: Bitmap) => {
+            return `Bitmap: ${bitmap.name}`;
+        },
         check: (bitmap: Bitmap, messages: IMessage[]) => {
             const projectStore = getProjectStore(bitmap);
 
