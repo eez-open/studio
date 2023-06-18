@@ -1216,6 +1216,10 @@ class MQTTConnection {
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
             }
+
+            runInAction(() => {
+                this.isConnected = true;
+            });
         });
 
         this.client.on("reconnect", () => {
@@ -1232,6 +1236,10 @@ class MQTTConnection {
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "close", null);
             }
+
+            runInAction(() => {
+                this.isConnected = false;
+            });
         });
 
         this.client.on("disconnect", () => {
