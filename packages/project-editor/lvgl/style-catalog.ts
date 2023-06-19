@@ -1230,7 +1230,7 @@ export const text_font_property_info: LVGLPropertyInfo = {
                 id: font.name,
                 label: font.name
             })),
-            ...BUILT_IN_FONTS.map(id => ({ id }))
+            ...BUILT_IN_FONTS.map(id => ({ id, label: id }))
         ];
     },
     lvglStyleProp: {

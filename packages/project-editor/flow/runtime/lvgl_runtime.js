@@ -4456,6 +4456,9 @@ var _lvglObjSetLocalStylePropPtr = Module["_lvglObjSetLocalStylePropPtr"] = crea
 var _lvglObjGetStylePropBuiltInFont = Module["_lvglObjGetStylePropBuiltInFont"] = createExportWrapper("lvglObjGetStylePropBuiltInFont");
 
 /** @type {function(...*):?} */
+var _lvglObjGetStylePropFontAddr = Module["_lvglObjGetStylePropFontAddr"] = createExportWrapper("lvglObjGetStylePropFontAddr");
+
+/** @type {function(...*):?} */
 var _lvglObjSetLocalStylePropBuiltInFont = Module["_lvglObjSetLocalStylePropBuiltInFont"] = createExportWrapper("lvglObjSetLocalStylePropBuiltInFont");
 
 /** @type {function(...*):?} */

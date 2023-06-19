@@ -377,6 +377,11 @@ EM_PORT_API(int32_t) lvglObjGetStylePropBuiltInFont(lv_obj_t *obj, lv_part_t par
     return -1;
 }
 
+EM_PORT_API(const void *) lvglObjGetStylePropFontAddr(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+    lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+    return value.ptr;
+}
+
 EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_prop_t prop, int font_index, lv_style_selector_t selector) {
     lv_style_value_t value;
     value.ptr = BUILT_IN_FONTS[font_index];

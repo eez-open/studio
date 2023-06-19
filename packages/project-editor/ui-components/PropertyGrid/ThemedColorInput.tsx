@@ -19,6 +19,7 @@ import { closest } from "eez-studio-shared/dom";
 
 export const ThemedColorInput = observer(
     class ThemedColorInput extends React.Component<{
+        inputRef?: (ref: any) => void;
         value: any;
         onChange: (newValue: any) => void;
         readOnly: boolean;
@@ -195,6 +196,7 @@ export const ThemedColorInput = observer(
             return (
                 <div className="input-group">
                     <input
+                        ref={this.props.inputRef}
                         className="form-control"
                         style={{
                             color: color && isDark(color) ? "#fff" : undefined,

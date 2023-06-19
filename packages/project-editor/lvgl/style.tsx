@@ -2,6 +2,7 @@ import { MenuItem } from "@electron/remote";
 import React from "react";
 import { computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
 import {
     ClassInfo,
@@ -16,12 +17,11 @@ import {
 } from "project-editor/core/object";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
-import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { createObject } from "project-editor/store";
+import { createObject, LayoutModels } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
@@ -443,14 +443,37 @@ export const LVGLStylesNavigation = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "styles") {
+                return (
+                    <LVGLStylesTreeNavigation
+                        id={"lvgl-styles"}
+                        navigationObject={
+                            this.context.project.lvglStyles.styles
+                        }
+                        selectedObject={
+                            this.context.navigationStore.selectedStyleObject
+                        }
+                    />
+                );
+            }
+
+            if (component === "preview") {
+                return <LVGLSelectedStyleEditor />;
+            }
+
+            return null;
+        };
+
         render() {
             return (
-                <LVGLStylesTreeNavigation
-                    id={"lvgl-styles"}
-                    navigationObject={this.context.project.lvglStyles.styles}
-                    selectedObject={
-                        this.context.navigationStore.selectedStyleObject
-                    }
+                <FlexLayout.Layout
+                    model={this.context.layoutModels.lvglStyles}
+                    factory={this.factory}
+                    realtimeResize={true}
+                    font={LayoutModels.FONT_SUB}
                 />
             );
         }
@@ -458,7 +481,7 @@ export const LVGLStylesNavigation = observer(
 );
 
 export const LVGLSelectedStyleEditor = observer(
-    class LVGLSelectedStyleEditor extends EditorComponent {
+    class LVGLSelectedStyleEditor extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -519,7 +542,8 @@ export const LVGLSelectedStyleEditor = observer(
                         alignContent: "center",
                         justifyContent: "center",
                         width: "100%",
-                        height: "100%"
+                        height: "100%",
+                        padding: 10
                     }}
                 >
                     <canvas
@@ -527,7 +551,9 @@ export const LVGLSelectedStyleEditor = observer(
                         width={this.runtime.displayWidth}
                         height={this.runtime.displayHeight}
                         style={{
-                            imageRendering: "pixelated"
+                            imageRendering: "pixelated",
+                            width: "100%",
+                            height: "100%"
                         }}
                     ></canvas>
                 </div>

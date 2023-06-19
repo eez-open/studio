@@ -186,6 +186,7 @@ export class LayoutModels extends AbstractLayoutModels {
     }
 
     styles: FlexLayout.Model;
+    lvglStyles: FlexLayout.Model;
     bitmaps: FlexLayout.Model;
     fonts: FlexLayout.Model;
     themes: FlexLayout.Model;
@@ -694,6 +695,58 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.styles,
                 set: action(model => (this.styles = model))
+            },
+            {
+                name: "lvglStyles",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: false,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 75,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Styles",
+                                                component: "styles"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: false,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 25,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Preview",
+                                                component: "preview"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.lvglStyles,
+                set: action(model => (this.lvglStyles = model))
             },
             {
                 name: "themes",

@@ -50,6 +50,7 @@ export abstract class LVGLPageRuntime {
             fontPtrPromise: Promise<number>;
         }
     >();
+    fontAddressToFont = new Map<number, Font>();
 
     unusedFontPtrs: number[] = [];
 
@@ -175,10 +176,17 @@ export abstract class LVGLPageRuntime {
         const fontPtr = await cashed.fontPtrPromise;
 
         if (cashed.lvglBinFile == font.lvglBinFile) {
+            runInAction(() => {
+                this.fontAddressToFont.set(fontPtr, font);
+            });
+
             return fontPtr;
         }
 
         this.fontsCache.delete(font);
+        runInAction(() => {
+            this.fontAddressToFont.delete(fontPtr);
+        });
 
         if (this.unusedFontPtrs.indexOf(fontPtr) == -1) {
             this.unusedFontPtrs.push(fontPtr);
@@ -785,6 +793,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 });
 
                 this.selectedStyle;
+                this.project._store.uiStateStore.lvglState;
 
                 // set all flags to HIDDEN, except selected widget
                 // also, set useStyle
@@ -803,8 +812,19 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                             lvglWidget.type == this.selectedStyle.forWidgetType
                         ) {
                             lvglWidget.useStyle = this.selectedStyle.name;
+
+                            // "DEFAULT",
+                            // "CHECKED",
+                            // "PRESSED",
+                            // "CHECKED|PRESSED",
+                            // "DISABLED",
+                            // "FOCUSED"
+                            lvglWidget.states =
+                                this.project._store.uiStateStore.lvglState;
                         } else {
                             lvglWidget.useStyle = "";
+                            lvglWidget.states = "";
+
                             flags.push("HIDDEN");
                         }
 

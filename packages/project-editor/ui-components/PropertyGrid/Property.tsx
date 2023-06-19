@@ -127,6 +127,14 @@ export const Property = observer(
         combineCommands = () =>
             this.context.undoManager.setCombineCommands(true);
 
+        onInputKeyDown = (event: JQuery.KeyDownEvent) => {
+            if (event.key == "Escape") {
+                if (this.context.undoManager.commands.length > 0) {
+                    this.context.undoManager.undo();
+                }
+            }
+        };
+
         componentDidMount() {
             this.updateChangeDocumentObserver();
 
@@ -137,6 +145,7 @@ export const Property = observer(
             if (el) {
                 $(el).on("focus", this.combineCommands);
                 $(el).on("blur", this.combineCommands);
+                $(el).on("keydown", this.onInputKeyDown);
             }
 
             if (this.textarea) {
@@ -159,6 +168,7 @@ export const Property = observer(
             if (el) {
                 $(el).off("focus", this.combineCommands);
                 $(el).off("blur", this.combineCommands);
+                $(el).off("keydown", this.onInputKeyDown);
             }
         }
 
@@ -893,6 +903,7 @@ export const Property = observer(
             } else if (propertyInfo.type === PropertyType.ThemedColor) {
                 return (
                     <ThemedColorInput
+                        inputRef={(ref: any) => (this.input = ref)}
                         value={this._value || ""}
                         onChange={this.changeValue}
                         readOnly={readOnly}

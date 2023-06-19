@@ -171,6 +171,16 @@ export function getStylePropDefaultValue(
 
                 if (fontIndex != -1) {
                     return BUILT_IN_FONTS[fontIndex];
+                } else {
+                    let fontAddr = runtime.wasm._lvglObjGetStylePropFontAddr(
+                        lvglObj,
+                        getPartCode(part),
+                        propertyInfo.lvglStyleProp.code
+                    );
+                    const font = runtime.fontAddressToFont.get(fontAddr);
+                    if (font) {
+                        return font.name;
+                    }
                 }
             } else {
                 let num = runtime.wasm._lvglObjGetStylePropNum(
