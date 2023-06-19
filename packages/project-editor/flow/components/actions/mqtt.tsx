@@ -1193,7 +1193,7 @@ class MQTTConnection {
     get status() {
         return {
             label: `${this.constructorParams.protocol}://${this.constructorParams.host}:${this.constructorParams.port}`,
-            image: "data:image/png;base64,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",
+            image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsIAAA7CARUoSoAAAAItSURBVEhL1dZNSBVRGMbxmcjCiFz14aJVlKtcVFjUJghCIlq5aBHoQiwoyJaRCzdRUUhQUIuIyKiEdoLuolCQEgQzyk8KjTZhidEnwe3/nJl3ermc8m5c9MCPmTtn5rz3zMw596alUilZzqzIt8uWYgRpmp5ncxQ/4YelL/EJ9/AQ87CkOIMT4VOS/MIq9NDvuXBEBfIiL/VxCW/Qjmr4tMG+mMwU/boCW7ETB3EKdzEFu8h7jr3w0XUandrHYwViWYdDeAT/DeUbTsPnAL5jOlZAw9b9+1v2oB++iFyGzzFER9CHEfTiAhpRg/KcxGf4Ilfh0xIrMAN/kUyjE7Xw2Yc5+HM7UCRWQJ35C7x3aIVPPWbhzzuCkFgBPczj6MIQyh+q3MEaWBqgOWLteo03IVrAR5NrF26jvJCe1VpYmuHbr2PJAj778Qq+kx74ZeYBrO0r6mMF9CbcQAs264CLHvIgrBM5C8s2LMDabsUK6P7ZCR9wCf413YgXsHMWsR2Wa7C2iViBcXeCGcYWWHbjC6y9G5Yd0CzW8ehEixWQUWyA5QqsTROuDopW1gHoeFGgkt8Dve8Xs92Qm9DtUfQ2Hc52Q8ePs90/qfQHR+uLXltFE/JpthuiBc7yLN9qNCGVFqhCU7Yb8iTfKrpFWnWVt/iBaAF18q9o/bFM5FtFr/D6bDf5CBUoVmVf4D40fD3s12V0XPd9NZT30OSbzK2Eokk2Bk28kP/9X0WS/AaVCm1sgeHGuwAAAABJRU5ErkJggg==",
             color: this.error ? "red" : this.isConnected ? "green" : "gray",
             error: this.error
         };
@@ -1281,8 +1281,6 @@ class MQTTConnection {
         });
 
         this.client.on("end", () => {
-            console.log("end event", this.id);
-
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "end", null);
             }
@@ -1352,9 +1350,7 @@ class MQTTConnection {
     }
 
     disconnect() {
-        console.log("disconnect called", this.id);
         if (this.client) {
-            console.log("end called", this.id);
             this.client.end();
         }
     }
