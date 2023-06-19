@@ -1569,6 +1569,20 @@ class WizardModel {
         this.changeFolder(
             this.section == "templates" ? "_allTemplates" : "_allExamples"
         );
+
+        if (
+            this.section == "templates" &&
+            this.templateProjectTypes.length == 0 &&
+            this.exampleProjectTypes.get("_allExamples")!.length > 0
+        ) {
+            this.section = "examples";
+        } else if (
+            this.section == "examples" &&
+            this.exampleProjectTypes.get("_allExamples")!.length == 0 &&
+            this.templateProjectTypes.length > 0
+        ) {
+            this.section = "templates";
+        }
     }
 
     isGitProject(projectType: IProjectType) {
