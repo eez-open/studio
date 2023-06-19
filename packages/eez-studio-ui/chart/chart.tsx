@@ -3485,10 +3485,8 @@ export const ChartsView = observer(
                 firstChartController.chartView &&
                 firstChartController.chartView.svg;
             if (svg) {
-                const chartViewRect = svg.getBoundingClientRect();
-
-                const chartViewWidth = chartViewRect.width;
-                const chartViewHeight = chartViewRect.height;
+                const chartViewWidth = svg.clientWidth;
+                const chartViewHeight = svg.clientHeight;
 
                 if (
                     (chartViewWidth &&

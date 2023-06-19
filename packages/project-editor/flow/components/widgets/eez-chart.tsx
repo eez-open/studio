@@ -41,13 +41,16 @@ export class EEZChartWidget extends Widget {
                 type: PropertyType.Enum,
                 enumItems: [
                     {
-                        id: "single"
+                        id: "single",
+                        label: "Single"
                     },
                     {
-                        id: "multi"
+                        id: "multi",
+                        label: "Multichart"
                     },
                     {
-                        id: "dlog"
+                        id: "dlog",
+                        label: "DLOG"
                     }
                 ],
                 propertyGridGroup: specificGroup
@@ -155,7 +158,6 @@ class EEZChart {
     }
 
     createChart = () => {
-        console.log("createChart");
         let chart: Waveform | MultiWaveform | DlogWaveform;
         if (this.chartType == "single") {
             chart = this.createGenericWaveform({
@@ -704,14 +706,12 @@ const EEZChartElement = observer(
         }
 
         render() {
-            const { flowContext, width, height } = this.props;
+            const { flowContext } = this.props;
 
             return (
                 <div
                     style={{
-                        pointerEvents: flowContext.flowState ? "all" : "none",
-                        width: width,
-                        height: height
+                        pointerEvents: flowContext.flowState ? "all" : "none"
                     }}
                 >
                     {this.props.eezChart.chart && (
