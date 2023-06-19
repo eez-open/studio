@@ -11,11 +11,16 @@ interface IWaveform {
     openConfigurationDialog?: () => void;
 }
 
+export interface IToolbarOptions {
+    showConfigureButton: boolean;
+}
+
 export const WaveformToolbar = observer(
     class WaveformToolbar extends React.Component<
         {
             chartsController: IChartsController;
             waveform: IWaveform;
+            options?: IToolbarOptions;
         },
         {}
     > {
@@ -29,14 +34,16 @@ export const WaveformToolbar = observer(
             return (
                 <React.Fragment>
                     <Toolbar>
-                        {this.props.waveform.openConfigurationDialog && (
-                            <ButtonAction
-                                text="Configure"
-                                className="btn-primary"
-                                title="Configure chart"
-                                onClick={this.configureChart}
-                            />
-                        )}
+                        {this.props.waveform.openConfigurationDialog &&
+                            (!this.props.options ||
+                                this.props.options.showConfigureButton) && (
+                                <ButtonAction
+                                    text="Configure"
+                                    className="btn-primary"
+                                    title="Configure chart"
+                                    onClick={this.configureChart}
+                                />
+                            )}
                     </Toolbar>
                     <Toolbar>
                         <ButtonAction

@@ -54,6 +54,7 @@ import "project-editor/flow/components/actions/json";
 import "project-editor/flow/components/actions/python";
 import "project-editor/flow/components/actions/mqtt";
 
+import "project-editor/flow/components/widgets/eez-chart";
 import "project-editor/flow/components/widgets/markdown";
 import "project-editor/flow/components/widgets/plotly";
 import "project-editor/flow/components/widgets/terminal";

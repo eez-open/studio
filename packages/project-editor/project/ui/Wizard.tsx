@@ -378,15 +378,20 @@ class WizardModel {
                 const general = eezProjectJson.settings?.general;
 
                 if (general) {
-                    templateProject._projectType =
-                        PROJECT_TYPE_NAMES[general.projectType as ProjectType];
-                    templateProject._description = general.description;
-                    templateProject._keywords = general.keywords;
-                    templateProject._displayWidth = general.displayWidth;
-                    templateProject._displayHeight = general.displayHeight;
-                    templateProject._targetPlatform = general.targetPlatform;
-                    templateProject._targetPlatformLink =
-                        general.targetPlatformLink;
+                    runInAction(() => {
+                        templateProject._projectType =
+                            PROJECT_TYPE_NAMES[
+                                general.projectType as ProjectType
+                            ];
+                        templateProject._description = general.description;
+                        templateProject._keywords = general.keywords;
+                        templateProject._displayWidth = general.displayWidth;
+                        templateProject._displayHeight = general.displayHeight;
+                        templateProject._targetPlatform =
+                            general.targetPlatform;
+                        templateProject._targetPlatformLink =
+                            general.targetPlatformLink;
+                    });
                 }
             } catch (err) {
                 console.error(err);

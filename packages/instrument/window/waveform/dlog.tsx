@@ -65,7 +65,10 @@ import { FileHistoryItem } from "instrument/window/history/items/file";
 
 import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
-import { WaveformToolbar } from "instrument/window/waveform/toolbar";
+import {
+    IToolbarOptions,
+    WaveformToolbar
+} from "instrument/window/waveform/toolbar";
 
 import {
     Unit,
@@ -405,7 +408,8 @@ export class DlogWaveform extends FileHistoryItem {
 
     constructor(
         store: IStore,
-        activityLogEntry: IActivityLogEntry | FileHistoryItem
+        activityLogEntry: IActivityLogEntry | FileHistoryItem,
+        private options?: { toolbar?: IToolbarOptions }
     ) {
         super(store, activityLogEntry);
 
@@ -844,6 +848,7 @@ export class DlogWaveform extends FileHistoryItem {
             <WaveformToolbar
                 chartsController={chartsController}
                 waveform={this}
+                options={this.options?.toolbar}
             />
         );
     }

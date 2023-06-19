@@ -56,7 +56,10 @@ import { ChartPreview } from "instrument/window/chart-preview";
 import { FileHistoryItem } from "instrument/window/history/items/file";
 
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
-import { WaveformToolbar } from "instrument/window/waveform/toolbar";
+import {
+    IToolbarOptions,
+    WaveformToolbar
+} from "instrument/window/waveform/toolbar";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformAxisModel } from "instrument/window/waveform/WaveformAxisModel";
@@ -137,7 +140,8 @@ export class Waveform extends FileHistoryItem {
 
     constructor(
         store: IStore,
-        activityLogEntry: IActivityLogEntry | FileHistoryItem
+        activityLogEntry: IActivityLogEntry | FileHistoryItem,
+        private options?: { toolbar?: IToolbarOptions }
     ) {
         super(store, activityLogEntry);
 
@@ -585,6 +589,7 @@ export class Waveform extends FileHistoryItem {
             <WaveformToolbar
                 chartsController={chartsController}
                 waveform={this}
+                options={this.options?.toolbar}
             />
         );
     }

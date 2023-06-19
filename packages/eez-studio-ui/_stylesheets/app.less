@@ -5121,6 +5121,21 @@ button.EezStudio_Action {
             overflow: auto !important;
         }
 
+        &.EEZChartWidget {
+            & > div {
+                width: 100%;
+                height: 100%;
+                & > .EezStudio_ChartPreview {
+                    width: 100%;
+                    height: 100%;
+                    & > .EezStudio_ChartView {
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+            }
+        }
+
         &.enabled-breakpoint::before,
         &.disabled-breakpoint::before {
             z-index: 1;

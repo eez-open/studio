@@ -54,7 +54,10 @@ import { WaveformDefinitionProperties } from "instrument/window/waveform/Wavefor
 import { WaveformAxisModel } from "instrument/window/waveform/WaveformAxisModel";
 import { ViewOptions } from "instrument/window/waveform/ViewOptions";
 import { WaveformTimeAxisModel } from "instrument/window/waveform/time-axis";
-import { WaveformToolbar } from "instrument/window/waveform/toolbar";
+import {
+    IToolbarOptions,
+    WaveformToolbar
+} from "instrument/window/waveform/toolbar";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 import type { IAppStore } from "instrument/window/history/history";
 
@@ -143,7 +146,11 @@ export class MultiWaveform extends HistoryItem {
     dispose3: IReactionDisposer | undefined;
     dispose4: IReactionDisposer | undefined;
 
-    constructor(store: IStore, activityLogEntry: IActivityLogEntry) {
+    constructor(
+        store: IStore,
+        activityLogEntry: IActivityLogEntry,
+        private options?: { toolbar?: IToolbarOptions }
+    ) {
         super(store, activityLogEntry);
 
         makeObservable(this, {
@@ -387,6 +394,7 @@ export class MultiWaveform extends HistoryItem {
             <WaveformToolbar
                 chartsController={chartsController}
                 waveform={this}
+                options={this.options?.toolbar}
             />
         );
     }
