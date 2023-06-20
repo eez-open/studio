@@ -25,35 +25,38 @@ interface ICatalogVersion {
 }
 
 class ExamplesCatalog {
+    catalogAtStart: ExampleProject[] = [];
+
     catalog: ExampleProject[] = [];
     catalogVersion: ICatalogVersion;
 
     constructor() {
         makeObservable(this, {
+            catalogAtStart: observable,
             catalog: observable
         });
     }
 
-    load() {
-        this._loadCatalog()
-            .then(catalog => {
-                runInAction(() => (this.catalog = catalog));
-            })
-            .catch(error =>
-                notification.error(
-                    `Failed to load eez-project examples catalog (${error})`
-                )
+    async load() {
+        try {
+            const catalog = await this._loadCatalog();
+            runInAction(() => {
+                this.catalogAtStart = catalog;
+                this.catalog = catalog;
+            });
+        } catch (error) {
+            notification.error(
+                `Failed to load eez-project examples catalog (${error})`
             );
+        }
 
-        this._loadCatalogVersion()
-            .then(catalogVersion => {
-                runInAction(() => (this.catalogVersion = catalogVersion));
-
-                this.checkNewVersionOfCatalog();
-            })
-            .catch(error =>
-                notification.error(`Failed to load catalog version (${error})`)
-            );
+        try {
+            const catalogVersion = await this._loadCatalogVersion();
+            runInAction(() => (this.catalogVersion = catalogVersion));
+            this.checkNewVersionOfCatalog();
+        } catch (error) {
+            notification.error(`Failed to load catalog version (${error})`);
+        }
     }
 
     get catalogPath() {

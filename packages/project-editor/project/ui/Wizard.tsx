@@ -449,8 +449,10 @@ class WizardModel {
         const map = new Map<string, IProjectType[]>();
 
         const _allExamples: IProjectType[] = [];
-
         map.set("_allExamples", _allExamples);
+
+        const _newExamples: IProjectType[] = [];
+        map.set("_newExamples", _newExamples);
 
         const examples = examplesCatalog.catalog
             .slice()
@@ -498,6 +500,24 @@ class WizardModel {
             projectTypes.push(projectType);
 
             _allExamples.push(projectType);
+
+            if (
+                !examplesCatalog.catalogAtStart.find(exampleAtStart => {
+                    const eezProjectDownloadUrlAtStart =
+                        exampleAtStart.repository.replace(
+                            "github.com",
+                            "raw.githubusercontent.com"
+                        ) +
+                        "/master/" +
+                        exampleAtStart.eezProjectPath;
+
+                    return (
+                        eezProjectDownloadUrlAtStart == eezProjectDownloadUrl
+                    );
+                })
+            ) {
+                _newExamples.push(projectType);
+            }
         });
 
         return map;
@@ -507,18 +527,28 @@ class WizardModel {
         const rootNode: ITreeNode = {
             id: "_root",
             label: "Root",
-            children: [
-                {
-                    id: "_allExamples",
-                    label: "All Examples",
-                    children: [],
-                    selected: this.folder == "_allExamples",
-                    expanded: true
-                }
-            ],
+            children: [],
             selected: false,
             expanded: true
         };
+
+        if (this.exampleProjectTypes.get("_newExamples")!.length > 0) {
+            rootNode.children.push({
+                id: "_newExamples",
+                label: "New Examples",
+                children: [],
+                selected: this.folder == "_newExamples",
+                expanded: true
+            });
+        }
+
+        rootNode.children.push({
+            id: "_allExamples",
+            label: "All Examples",
+            children: [],
+            selected: this.folder == "_allExamples",
+            expanded: true
+        });
 
         this.exampleProjectTypes.get("_allExamples")!.forEach(example => {
             const parts = example.folder!.split("/");
@@ -554,6 +584,20 @@ class WizardModel {
 
         function sortChildren(node: ITreeNode) {
             node.children.sort((a, b) => {
+                if (a.id == "_newExamples") {
+                    return -1;
+                }
+                if (b.id == "_newExamples") {
+                    return 1;
+                }
+
+                if (a.id == "_allExamples") {
+                    return -1;
+                }
+                if (b.id == "_allExamples") {
+                    return 1;
+                }
+
                 return stringCompare(a.label as string, b.label as string);
             });
 
@@ -570,6 +614,7 @@ class WizardModel {
                         <Count
                             label={child.label as string}
                             count={projectTypes.length}
+                            attention={child.id == "_newExamples"}
                         />
                     );
                 }
@@ -678,6 +723,7 @@ class WizardModel {
                         <Count
                             label="All Templates"
                             count={this.allTemplateProjectTypes.length}
+                            attention={false}
                         ></Count>
                     ),
                     children: [],
@@ -694,6 +740,7 @@ class WizardModel {
                         <Count
                             label="Builtin Templates"
                             count={this.standardProjectTypes.length}
+                            attention={false}
                         ></Count>
                     ),
                     children: [],
@@ -710,6 +757,7 @@ class WizardModel {
                         <Count
                             label="BB3 Script Templates"
                             count={this.bb3ProjectTypes.length}
+                            attention={false}
                         ></Count>
                     ),
                     children: [],
@@ -726,6 +774,7 @@ class WizardModel {
                         <Count
                             label="From envox.hr/gitea"
                             count={this.templateProjectTypes.length}
+                            attention={false}
                         ></Count>
                     ),
                     children: [],
@@ -2391,6 +2440,7 @@ export const NewProjectWizard = observer(
                                               .length
                                         : undefined
                                 }
+                                attention={false}
                             />
                         </div>
                         <div
@@ -2408,6 +2458,11 @@ export const NewProjectWizard = observer(
                                               "_allExamples"
                                           )!.length
                                         : undefined
+                                }
+                                attention={
+                                    wizardModel.exampleProjectTypes.get(
+                                        "_newExamples"
+                                    )!.length > 0
                                 }
                             />
                         </div>
@@ -2611,10 +2666,25 @@ export async function confirmOverwrite(description: string) {
 }
 
 const Count = observer(
-    ({ label, count }: { label: string; count: number | undefined }) => {
+    ({
+        label,
+        count,
+        attention
+    }: {
+        label: string;
+        count: number | undefined;
+        attention: boolean;
+    }) => {
         return (
             <>
-                {label}
+                <span>
+                    {label}{" "}
+                    {attention && (
+                        <div className="EezStudio_AttentionContainer">
+                            <div className="EezStudio_AttentionDiv" />
+                        </div>
+                    )}
+                </span>
                 {count != undefined && (
                     <span
                         className={classNames(
