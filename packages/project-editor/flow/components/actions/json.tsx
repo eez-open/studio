@@ -78,12 +78,19 @@ registerActionComponents("Dashboard Specific", [
                 isOptionalOutput: false
             }
         ],
-        defaults: {},
+        defaults: {
+            indentation: "2"
+        },
         properties: [
             {
                 name: "value",
                 type: "expression",
                 valueType: "any"
+            },
+            {
+                name: "indentation",
+                type: "expression",
+                valueType: "integer"
             }
         ],
         bodyPropertyName: "value",
@@ -94,8 +101,10 @@ registerActionComponents("Dashboard Specific", [
                 return;
             }
 
+            const indentation = context.evalProperty("indentation");
+
             try {
-                const result = JSON.stringify(toJS(value));
+                const result = JSON.stringify(toJS(value), null, indentation);
                 context.propagateValue("result", result);
                 context.propagateValueThroughSeqout();
             } catch (err) {

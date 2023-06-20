@@ -641,17 +641,23 @@ export class ListWidget extends Widget {
         const iterators =
             flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-        return _range(flowContext.flowState ? dataValue.length : 1).map(i => (
-            <ListWidgetItem
-                key={i}
-                flowContext={flowContext}
-                listWidget={this}
-                itemWidget={itemWidget}
-                i={i}
-                gap={this.gap || 0}
-                iterators={iterators}
-            />
-        ));
+        return (
+            <>
+                {_range(flowContext.flowState ? dataValue.length : 1).map(i => (
+                    <ListWidgetItem
+                        key={i}
+                        flowContext={flowContext}
+                        listWidget={this}
+                        itemWidget={itemWidget}
+                        i={i}
+                        gap={this.gap || 0}
+                        iterators={iterators}
+                    />
+                ))}
+
+                {super.render(flowContext, width, height)}
+            </>
+        );
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -830,18 +836,24 @@ export class GridWidget extends Widget {
         const iterators =
             flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
 
-        return _range(flowContext.flowState ? dataValue.length : 1).map(i => (
-            <GridWidgetItem
-                key={i}
-                flowContext={flowContext}
-                gridWidget={this}
-                itemWidget={itemWidget}
-                i={i}
-                width={width}
-                height={height}
-                iterators={iterators}
-            />
-        ));
+        return (
+            <>
+                {_range(flowContext.flowState ? dataValue.length : 1).map(i => (
+                    <GridWidgetItem
+                        key={i}
+                        flowContext={flowContext}
+                        gridWidget={this}
+                        itemWidget={itemWidget}
+                        i={i}
+                        width={width}
+                        height={height}
+                        iterators={iterators}
+                    />
+                ))}
+
+                {super.render(flowContext, width, height)}
+            </>
+        );
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
