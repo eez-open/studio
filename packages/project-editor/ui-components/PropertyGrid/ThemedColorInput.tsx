@@ -167,7 +167,7 @@ export const ThemedColorInput = observer(
                     : getThemedColor(this.context, value);
 
             if (!isValid(color)) {
-                color = undefined;
+                color = settingsController.isDarkTheme ? "black" : "white";
             }
 
             const portal = ReactDOM.createPortal(
