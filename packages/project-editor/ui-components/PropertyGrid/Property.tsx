@@ -66,6 +66,8 @@ export const Property = observer(
 
         resizeObserver: ResizeObserver;
 
+        disposeEventHandlers: (() => void) | undefined;
+
         constructor(props: PropertyProps) {
             super(props);
 
@@ -111,19 +113,6 @@ export const Property = observer(
             });
         }
 
-        componentDidUpdate(prevProps: PropertyProps) {
-            if (
-                !arrayCompareShallow(prevProps.objects, this.props.objects) ||
-                prevProps.propertyInfo != this.props.propertyInfo
-            ) {
-                this.updateChangeDocumentObserver();
-            }
-
-            if (this.textarea) {
-                this.resizeTextArea();
-            }
-        }
-
         combineCommands = () =>
             this.context.undoManager.setCombineCommands(true);
 
@@ -135,10 +124,12 @@ export const Property = observer(
             }
         };
 
-        componentDidMount() {
-            this.updateChangeDocumentObserver();
+        addEventHandlers() {
+            if (this.disposeEventHandlers) {
+                this.disposeEventHandlers();
+            }
 
-            let el =
+            const el =
                 this.props.propertyInfo.type != PropertyType.Boolean
                     ? this.input || this.textarea || this.select
                     : undefined;
@@ -146,7 +137,19 @@ export const Property = observer(
                 $(el).on("focus", this.combineCommands);
                 $(el).on("blur", this.combineCommands);
                 $(el).on("keydown", this.onInputKeyDown);
+
+                this.disposeEventHandlers = () => {
+                    $(el).off("focus", this.combineCommands);
+                    $(el).off("blur", this.combineCommands);
+                    $(el).off("keydown", this.onInputKeyDown);
+                };
             }
+        }
+
+        componentDidMount() {
+            this.updateChangeDocumentObserver();
+
+            this.addEventHandlers();
 
             if (this.textarea) {
                 this.resizeTextArea();
@@ -154,21 +157,30 @@ export const Property = observer(
             }
         }
 
+        componentDidUpdate(prevProps: PropertyProps) {
+            if (
+                !arrayCompareShallow(prevProps.objects, this.props.objects) ||
+                prevProps.propertyInfo != this.props.propertyInfo
+            ) {
+                this.updateChangeDocumentObserver();
+            }
+
+            this.addEventHandlers();
+
+            if (this.textarea) {
+                this.resizeTextArea();
+            }
+        }
+
         componentWillUnmount() {
             this.changeDocumentDisposer();
 
-            if (this.textarea) {
-                this.resizeObserver.unobserve(this.textarea);
+            if (this.disposeEventHandlers) {
+                this.disposeEventHandlers();
             }
 
-            let el =
-                this.props.propertyInfo.type != PropertyType.Boolean
-                    ? this.input || this.textarea || this.select
-                    : undefined;
-            if (el) {
-                $(el).off("focus", this.combineCommands);
-                $(el).off("blur", this.combineCommands);
-                $(el).off("keydown", this.onInputKeyDown);
+            if (this.textarea) {
+                this.resizeObserver.unobserve(this.textarea);
             }
         }
 

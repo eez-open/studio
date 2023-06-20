@@ -610,10 +610,6 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                                 propertyValues as any
                                             )[propertyInfo.name];
 
-                                            this.context.undoManager.setCombineCommands(
-                                                true
-                                            );
-
                                             stylesDefinitions.forEach(
                                                 (stylesDefinition, i) => {
                                                     this.context.updateObject(
@@ -629,10 +625,6 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                                         }
                                                     );
                                                 }
-                                            );
-
-                                            this.context.undoManager.setCombineCommands(
-                                                false
                                             );
                                         }}
                                         readOnly={

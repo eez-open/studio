@@ -820,11 +820,12 @@ export class TreeAdapter {
     onDoubleClickCallback: ((object: IEezObject) => void) | undefined;
 
     get draggable() {
-        return (
-            (this.sortDirection === undefined ||
-                this.sortDirection === "none") &&
-            !this.searchText
-        );
+        // return (
+        //     (this.sortDirection === undefined ||
+        //         this.sortDirection === "none") &&
+        //     !this.searchText
+        // );
+        return true;
     }
 
     get allRows() {

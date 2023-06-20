@@ -15,6 +15,7 @@ import { SearchInput } from "eez-studio-ui/search-input";
 
 import { getId, IEezObject } from "project-editor/core/object";
 import {
+    SortDirectionType,
     TreeAdapter,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
@@ -29,6 +30,7 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { DropFile, Tree } from "project-editor/ui-components/Tree";
+import { SortControl } from "project-editor/ui-components/ListNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,6 +131,7 @@ export const LVGLStylesTreeNavigation = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        sortDirection: SortDirectionType = "none";
         searchText: string = "";
 
         dispose1: IReactionDisposer;
@@ -140,6 +143,7 @@ export const LVGLStylesTreeNavigation = observer(
             this.readFromLocalStorage();
 
             makeObservable(this, {
+                sortDirection: observable,
                 searchText: observable,
                 editable: computed,
                 selectedObject: computed,
@@ -151,9 +155,15 @@ export const LVGLStylesTreeNavigation = observer(
 
             this.dispose1 = reaction(
                 () => ({
+                    sortDirection: this.sortDirection,
                     searchText: this.searchText
                 }),
                 arg => {
+                    localStorage.setItem(
+                        "TreeNavigationSortDirection" + this.props.id,
+                        arg.sortDirection
+                    );
+
                     localStorage.setItem(
                         "TreeNavigationSearchText" + this.props.id,
                         arg.searchText
@@ -163,6 +173,13 @@ export const LVGLStylesTreeNavigation = observer(
         }
 
         readFromLocalStorage() {
+            const sortDirectionStr = localStorage.getItem(
+                "TreeNavigationSortDirection" + this.props.id
+            );
+            if (sortDirectionStr) {
+                this.sortDirection = sortDirectionStr as SortDirectionType;
+            }
+
             this.searchText =
                 localStorage.getItem(
                     "TreeNavigationSearchText" + this.props.id
@@ -219,7 +236,7 @@ export const LVGLStylesTreeNavigation = observer(
                 undefined,
                 undefined,
                 true,
-                undefined,
+                this.sortDirection,
                 undefined,
                 this.onClickItem,
                 this.onDoubleClickItem,
@@ -317,6 +334,13 @@ export const LVGLStylesTreeNavigation = observer(
             return (
                 <div className="EezStudio_ProjectEditor_LVGLStylesTreeNavigation">
                     <div className="EezStudio_Title">
+                        <SortControl
+                            direction={this.sortDirection}
+                            onDirectionChanged={action(
+                                (direction: SortDirectionType) =>
+                                    (this.sortDirection = direction)
+                            )}
+                        />
                         {(this.props.searchInput == undefined ||
                             this.props.searchInput) && (
                             <SearchInput

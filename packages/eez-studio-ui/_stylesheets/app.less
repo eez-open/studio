@@ -7033,6 +7033,31 @@ button.EezStudio_Action {
         min-height: 28px;
     }
 
+    .EezStudio_SortControl {
+        font-weight: 600;
+        color: @darkTextColor;
+
+        width: 19px;
+
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-position-y: 2px;
+        padding-left: 20px;
+        cursor: pointer;
+
+        &.sort-asc {
+            background-image: url("../_images/col_sort_asc.png");
+        }
+
+        &.sort-desc {
+            background-image: url("../_images/col_sort_desc.png");
+        }
+
+        &.sort-none {
+            background-image: url("../_images/col_sort_enabled.png");
+        }
+    }
+
     .EezStudio_SearchInput_Container {
         margin-left: 4px;
         margin-right: 4px;
