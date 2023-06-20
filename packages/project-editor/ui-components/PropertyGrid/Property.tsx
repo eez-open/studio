@@ -113,10 +113,19 @@ export const Property = observer(
             });
         }
 
-        combineCommands = () =>
+        onFocus = (event: JQuery.FocusEvent) =>
             this.context.undoManager.setCombineCommands(true);
 
+        onBlur = (event: JQuery.BlurEvent) =>
+            this.context.undoManager.setCombineCommands(false);
+
         onInputKeyDown = (event: JQuery.KeyDownEvent) => {
+            if (event.target.readOnly && event.key == "Delete") {
+                event.preventDefault();
+                event.stopPropagation();
+                return;
+            }
+
             if (event.key == "Escape") {
                 if (this.context.undoManager.commands.length > 0) {
                     this.context.undoManager.undo();
@@ -134,13 +143,13 @@ export const Property = observer(
                     ? this.input || this.textarea || this.select
                     : undefined;
             if (el) {
-                $(el).on("focus", this.combineCommands);
-                $(el).on("blur", this.combineCommands);
+                $(el).on("focus", this.onFocus);
+                $(el).on("blur", this.onBlur);
                 $(el).on("keydown", this.onInputKeyDown);
 
                 this.disposeEventHandlers = () => {
-                    $(el).off("focus", this.combineCommands);
-                    $(el).off("blur", this.combineCommands);
+                    $(el).off("focus", this.onFocus);
+                    $(el).off("blur", this.onBlur);
                     $(el).off("keydown", this.onInputKeyDown);
                 };
             }
