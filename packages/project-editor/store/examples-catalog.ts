@@ -30,6 +30,8 @@ class ExamplesCatalog {
     catalog: ExampleProject[] = [];
     catalogVersion: ICatalogVersion;
 
+    onNewCatalog: () => void | undefined;
+
     constructor() {
         makeObservable(this, {
             catalogAtStart: observable,
@@ -179,7 +181,13 @@ class ExamplesCatalog {
 
             const catalog = JSON.parse(files[0].data);
 
-            runInAction(() => (this.catalog = catalog));
+            runInAction(() => {
+                this.catalog = catalog;
+            });
+
+            if (this.onNewCatalog) {
+                this.onNewCatalog();
+            }
 
             await writeJsObjectToFile(this.catalogPath, this.catalog);
 

@@ -231,6 +231,16 @@ class WizardModel {
         });
 
         this.loadOptions();
+
+        examplesCatalog.onNewCatalog = () => {
+            if (this.exampleProjectTypes.get("_newExamples")!.length > 0) {
+                runInAction(() => {
+                    this.section = "examples";
+                    this.folder = "_newExamples";
+                    this.type = this.projectTypes[0].id;
+                });
+            }
+        };
     }
 
     loadOptions() {
