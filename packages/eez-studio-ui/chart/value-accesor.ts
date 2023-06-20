@@ -180,7 +180,7 @@ export function initValuesAccesor(
 
         waveformData = value;
     } else if (format === WaveformFormat.JS_NUMBERS) {
-        length = object.length;
+        length = values.length;
         value = (index: number) => {
             return values[offset + index * scale];
         };

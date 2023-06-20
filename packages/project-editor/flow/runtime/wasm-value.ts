@@ -254,6 +254,12 @@ export function createWasmValue(
         return WasmFlowRuntime._createDateValue(value.getTime());
     }
 
+    if (value instanceof Buffer || value instanceof Uint8Array) {
+        const bufferPtr = WasmFlowRuntime._malloc(value.length);
+        WasmFlowRuntime.HEAPU8.set(value, bufferPtr);
+        return WasmFlowRuntime._createBlobValue(bufferPtr, value.length);
+    }
+
     if (valueTypeIndex != undefined) {
         const arrayValue = createJsArrayValue(
             valueTypeIndex,

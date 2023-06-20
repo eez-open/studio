@@ -69,7 +69,8 @@ registerActionComponents("File", [
             {
                 name: "encoding",
                 type: "expression",
-                valueType: "string"
+                valueType: "string",
+                formText: `"ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1"`
             }
         ],
         execute: (context: IDashboardComponentContext) => {
@@ -112,9 +113,11 @@ registerActionComponents("File", [
             (async function () {
                 try {
                     const fs = await import("fs");
-                    const content = await fs.promises.readFile(
+                    let content = await fs.promises.readFile(
                         filePathValue as string,
-                        encodingValue as any
+                        encodingValue == "binary"
+                            ? undefined
+                            : (encodingValue as any)
                     );
                     context.propagateValue("content", content);
                     context.propagateValueThroughSeqout();
@@ -147,7 +150,8 @@ registerActionComponents("File", [
             {
                 name: "encoding",
                 type: "expression",
-                valueType: "string"
+                valueType: "string",
+                formText: `"ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1"`
             }
         ],
         execute: (context: IDashboardComponentContext) => {

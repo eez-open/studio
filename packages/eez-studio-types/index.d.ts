@@ -215,6 +215,7 @@ export interface IComponentPropertyBase {
     name: string;
     displayName?: string;
     enabled?: (...props: string[]) => boolean;
+    formText?: string;
 }
 
 export interface IExpressionComponentProperty extends IComponentPropertyBase {
@@ -513,6 +514,7 @@ export interface IWasmFlowRuntime {
     _createArrayValue(arraySize: number, arrayType: number): number;
     _createStreamValue(value: number): number;
     _createDateValue(value: number): number;
+    _createBlobValue(bufferPtr: number, bufferLen: number): number;
 
     _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
 

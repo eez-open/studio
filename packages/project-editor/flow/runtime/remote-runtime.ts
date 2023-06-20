@@ -39,7 +39,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import { InputActionComponent } from "project-editor/flow/components/actions";
-import { IEezObject } from "project-editor/core/object";
+import { getProperty, IEezObject } from "project-editor/core/object";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -560,7 +560,7 @@ export class RemoteRuntime extends RuntimeBase {
         widget: Widget,
         propertyName: string
     ) {
-        let expr = (widget as any)[propertyName];
+        let expr = getProperty(widget, propertyName);
         return evalExpression(flowContext, widget, expr);
     }
 

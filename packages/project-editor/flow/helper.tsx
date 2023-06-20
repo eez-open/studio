@@ -9,6 +9,7 @@ import type {
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { evalConstantExpression } from "project-editor/flow/expression";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getProperty } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +18,7 @@ export function evalProperty(
     widget: Widget,
     propertyName: string
 ) {
-    let expr = (widget as any)[propertyName];
+    let expr = getProperty(widget, propertyName);
     if (!expr) {
         return undefined;
     }

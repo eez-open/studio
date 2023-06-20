@@ -5237,6 +5237,9 @@ var _createStreamValue = Module["_createStreamValue"] = createExportWrapper("cre
 var _createDateValue = Module["_createDateValue"] = createExportWrapper("createDateValue");
 
 /** @type {function(...*):?} */
+var _createBlobValue = Module["_createBlobValue"] = createExportWrapper("createBlobValue");
+
+/** @type {function(...*):?} */
 var _arrayValueSetElementValue = Module["_arrayValueSetElementValue"] = createExportWrapper("arrayValueSetElementValue");
 
 /** @type {function(...*):?} */

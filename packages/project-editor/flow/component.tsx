@@ -2012,108 +2012,32 @@ export class Component extends EezObject {
                         continue;
                     }
 
-                    if (isFlowProperty(component, propertyInfo, ["input"])) {
-                        const value = getProperty(component, propertyInfo.name);
-                        if (value != undefined && value !== "") {
-                            try {
-                                if (
-                                    propertyInfo.expressionIsConstant === true
-                                ) {
-                                    evalConstantExpression(
-                                        projectStore.project,
-                                        value
-                                    );
-                                } else {
-                                    checkExpression(component, value);
-                                }
-                            } catch (err) {
-                                messages.push(
-                                    new Message(
-                                        MessageType.ERROR,
-                                        `Invalid expression: ${err}`,
-                                        getChildOfObject(
-                                            component,
-                                            propertyInfo.name
-                                        )
-                                    )
-                                );
-                            }
-                        } else if (
-                            !(component instanceof ProjectEditor.WidgetClass) &&
-                            !isPropertyHidden(component, propertyInfo)
-                        ) {
-                            messages.push(
-                                propertyNotSetMessage(
-                                    component,
-                                    propertyInfo.name
-                                )
-                            );
-                        }
-                    } else if (
-                        isFlowProperty(component, propertyInfo, ["assignable"])
+                    if (
+                        propertyInfo.type == PropertyType.Array &&
+                        propertyInfo.hasExpressionProperties
                     ) {
                         const value = getProperty(component, propertyInfo.name);
-                        if (value != undefined && value !== "") {
-                            try {
-                                checkAssignableExpression(component, value);
-                            } catch (err) {
-                                messages.push(
-                                    new Message(
-                                        MessageType.ERROR,
-                                        `Invalid assignable expression: ${err}`,
-                                        getChildOfObject(
-                                            component,
-                                            propertyInfo.name
-                                        )
-                                    )
+
+                        for (const object of value) {
+                            for (const propertyInfo2 of propertyInfo.typeClass!
+                                .classInfo.properties) {
+                                checkProperty(
+                                    projectStore,
+                                    component,
+                                    messages,
+                                    object,
+                                    propertyInfo2
                                 );
                             }
-                        } else if (
-                            !(component instanceof ProjectEditor.WidgetClass) &&
-                            !isPropertyHidden(component, propertyInfo)
-                        ) {
-                            messages.push(
-                                propertyNotSetMessage(
-                                    component,
-                                    propertyInfo.name
-                                )
-                            );
                         }
-                    } else if (
-                        isFlowProperty(component, propertyInfo, [
-                            "template-literal"
-                        ])
-                    ) {
-                        const value = getProperty(component, propertyInfo.name);
-                        if (value != undefined && value !== "") {
-                            try {
-                                checkTemplateLiteralExpression(
-                                    component,
-                                    value
-                                );
-                            } catch (err) {
-                                messages.push(
-                                    new Message(
-                                        MessageType.ERROR,
-                                        `Invalid template literal: ${err}`,
-                                        getChildOfObject(
-                                            component,
-                                            propertyInfo.name
-                                        )
-                                    )
-                                );
-                            }
-                        } else if (
-                            !(component instanceof ProjectEditor.WidgetClass) &&
-                            !isPropertyHidden(component, propertyInfo)
-                        ) {
-                            messages.push(
-                                propertyNotSetMessage(
-                                    component,
-                                    propertyInfo.name
-                                )
-                            );
-                        }
+                    } else {
+                        checkProperty(
+                            projectStore,
+                            component,
+                            messages,
+                            component,
+                            propertyInfo
+                        );
                     }
                 }
             }
@@ -3962,6 +3886,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         displayName: propertyDefinition.displayName,
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
+                        formText: propertyDefinition.formText,
                         hideInPropertyGrid
                     },
                     propertyDefinition.valueType
@@ -3975,6 +3900,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         displayName: propertyDefinition.displayName,
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
+                        formText: propertyDefinition.formText,
                         hideInPropertyGrid
                     },
                     propertyDefinition.valueType
@@ -3987,6 +3913,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                     displayName: propertyDefinition.displayName,
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
+                    formText: propertyDefinition.formText,
                     hideInPropertyGrid
                 })
             );
@@ -3997,6 +3924,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: PropertyType.Enum,
                 enumItems: propertyDefinition.enumItems,
                 propertyGridGroup: specificGroup,
+                formText: propertyDefinition.formText,
                 hideInPropertyGrid
             });
         } else if (propertyDefinition.type === "inline-code") {
@@ -4013,6 +3941,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 displayName: propertyDefinition.displayName,
                 type: languageToType[propertyDefinition.language],
                 propertyGridGroup: specificGroup,
+                formText: propertyDefinition.formText,
                 hideInPropertyGrid
             });
         } else if (propertyDefinition.type === "list") {
@@ -4100,6 +4029,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: PropertyType.Array,
                 typeClass: listItemClass,
                 propertyGridGroup: specificGroup,
+                formText: propertyDefinition.formText,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
@@ -4111,6 +4041,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 displayName: propertyDefinition.displayName,
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
+                formText: propertyDefinition.formText,
                 hideInPropertyGrid
             });
         }
@@ -4338,4 +4269,78 @@ export function registerActionComponents(
 
 function isActionComponent(component: Component) {
     return component instanceof ActionComponent;
+}
+
+function checkProperty(
+    projectStore: ProjectStore,
+    component: Component,
+    messages: IMessage[],
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (isFlowProperty(object, propertyInfo, ["input"])) {
+        const value = getProperty(object, propertyInfo.name);
+        if (value != undefined && value !== "") {
+            try {
+                if (propertyInfo.expressionIsConstant === true) {
+                    evalConstantExpression(projectStore.project, value);
+                } else {
+                    checkExpression(component, value);
+                }
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(object, propertyInfo.name)
+                    )
+                );
+            }
+        } else if (
+            !(object instanceof ProjectEditor.WidgetClass) &&
+            !isPropertyHidden(object, propertyInfo)
+        ) {
+            messages.push(propertyNotSetMessage(object, propertyInfo.name));
+        }
+    } else if (isFlowProperty(object, propertyInfo, ["assignable"])) {
+        const value = getProperty(object, propertyInfo.name);
+        if (value != undefined && value !== "") {
+            try {
+                checkAssignableExpression(component, value);
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid assignable expression: ${err}`,
+                        getChildOfObject(object, propertyInfo.name)
+                    )
+                );
+            }
+        } else if (
+            !(object instanceof ProjectEditor.WidgetClass) &&
+            !isPropertyHidden(object, propertyInfo)
+        ) {
+            messages.push(propertyNotSetMessage(object, propertyInfo.name));
+        }
+    } else if (isFlowProperty(object, propertyInfo, ["template-literal"])) {
+        const value = getProperty(object, propertyInfo.name);
+        if (value != undefined && value !== "") {
+            try {
+                checkTemplateLiteralExpression(component, value);
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid template literal: ${err}`,
+                        getChildOfObject(object, propertyInfo.name)
+                    )
+                );
+            }
+        } else if (
+            !(object instanceof ProjectEditor.WidgetClass) &&
+            !isPropertyHidden(object, propertyInfo)
+        ) {
+            messages.push(propertyNotSetMessage(object, propertyInfo.name));
+        }
+    }
 }

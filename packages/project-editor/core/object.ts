@@ -222,6 +222,8 @@ export interface PropertyInfo {
         | ((object: IEezObject | undefined) => string | undefined);
 
     propertyNameAbove?: boolean;
+
+    hasExpressionProperties?: boolean;
 }
 
 export type InheritedValue =

@@ -13,6 +13,7 @@ import {
 } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { ValueType } from "eez-studio-types";
+import { getProperty } from "project-editor/core/object";
 
 export class DebugInfoRuntime extends RuntimeBase {
     pumpTimeoutId: any;
@@ -103,7 +104,7 @@ export class DebugInfoRuntime extends RuntimeBase {
         widget: Widget,
         propertyName: string
     ) {
-        let expr = (widget as any)[propertyName];
+        let expr = getProperty(widget, propertyName);
         return evalExpression(flowContext, widget, expr);
     }
 

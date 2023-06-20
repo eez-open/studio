@@ -1,14 +1,23 @@
 import React from "react";
 import { observer } from "mobx-react";
+import { computed, makeObservable, observable, runInAction } from "mobx";
 
 import {
     registerClass,
     makeDerivedClassInfo,
     ProjectType,
-    PropertyType
+    PropertyType,
+    EezObject,
+    ClassInfo,
+    PropertyInfo,
+    findPropertyByNameInClassInfo
 } from "project-editor/core/object";
 
-import { Widget } from "project-editor/flow/component";
+import {
+    Widget,
+    makeDataPropertyInfo,
+    makeExpressionProperty
+} from "project-editor/flow/component";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
@@ -20,13 +29,111 @@ import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 
 import { Waveform } from "instrument/window/waveform/generic";
 import { MultiWaveform } from "instrument/window/waveform/multi";
+import { DlogWaveform } from "instrument/window/waveform/dlog";
 
 import { ChartPreview } from "instrument/window/chart-preview";
-import { DlogWaveform } from "instrument/window/waveform/dlog";
-import { computed, makeObservable, observable, runInAction } from "mobx";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { evalProperty } from "project-editor/flow/helper";
+import { UNITS } from "eez-studio-shared/units";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class WaveformDefinition extends EezObject {
+    chartData: string;
+
+    format: string;
+    samplingRate: string;
+    unitName: string;
+    color: string;
+    label: string;
+    offset: string;
+    scale: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "chartData",
+                    displayName: "Data",
+                    type: PropertyType.MultilineText
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "format",
+                    type: PropertyType.MultilineText,
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "samplingRate",
+                    type: PropertyType.MultilineText
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "unitName",
+                    displayName: "Unit",
+                    type: PropertyType.MultilineText,
+                    formText: `"voltage", "current", "watt", "power", "time", "frequency", "joule"`
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "color",
+                    displayName: "Color",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "offset",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "scale",
+                    type: PropertyType.MultilineText
+                },
+                "string"
+            )
+        ],
+        defaultValue: {},
+        listLabel: (waveformDefinition: WaveformDefinition) =>
+            waveformDefinition.label
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            chartData: observable,
+
+            format: observable,
+            samplingRate: observable,
+            unitName: observable,
+            color: observable,
+            label: observable,
+            offset: observable,
+            scale: observable
+        });
+    }
+}
 
 export class EEZChartWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -36,24 +143,123 @@ export class EEZChartWidget extends Widget {
         componentPaletteGroupName: "!1Visualiser",
 
         properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true
+            }),
             {
                 name: "chartType",
+                displayName: "Chart mode",
                 type: PropertyType.Enum,
                 enumItems: [
                     {
                         id: "single",
-                        label: "Single"
+                        label: "Single chart"
                     },
                     {
                         id: "multi",
-                        label: "Multichart"
+                        label: "Multiple charts"
                     },
                     {
                         id: "dlog",
-                        label: "DLOG"
+                        label: "EEZ DLOG"
                     }
                 ],
+                enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "chartData",
+                    displayName: "Data",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType == "multi"
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "format",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "samplingRate",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "unitName",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single",
+                    formText: `"voltage", "current", "watt", "power", "time", "frequency", "joule"`
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "color",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "offset",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "scale",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType !== "single"
+                },
+                "string"
+            ),
+            {
+                name: "charts",
+                type: PropertyType.Array,
+                typeClass: WaveformDefinition,
+                propertyGridGroup: specificGroup,
+                arrayItemOrientation: "vertical",
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: [],
+                hasExpressionProperties: true
             }
         ],
 
@@ -72,6 +278,38 @@ export class EEZChartWidget extends Widget {
             </svg>
         ),
 
+        getAdditionalFlowProperties: (widget: EEZChartWidget) => {
+            const properties: PropertyInfo[] = [];
+
+            for (let i = 0; i < widget.charts.length; i++) {
+                for (const propertyName of [
+                    "chartData",
+                    "format",
+                    "samplingRate",
+                    "unitName",
+                    "color",
+                    "label",
+                    "offset",
+                    "scale"
+                ]) {
+                    properties.push(
+                        Object.assign(
+                            {},
+                            findPropertyByNameInClassInfo(
+                                WaveformDefinition.classInfo,
+                                propertyName
+                            ),
+                            {
+                                name: `charts[${i}].${propertyName}`
+                            }
+                        )
+                    );
+                }
+            }
+
+            return properties;
+        },
+
         execute: (context: IDashboardComponentContext) => {}
     });
 
@@ -80,42 +318,156 @@ export class EEZChartWidget extends Widget {
 
         makeObservable(this, {
             chartType: observable,
-            eezChart: computed
+
+            chartData: observable,
+
+            format: observable,
+            samplingRate: observable,
+            unitName: observable,
+            color: observable,
+            label: observable,
+            offset: observable,
+            scale: observable,
+
+            charts: observable
         });
     }
 
     chartType: "single" | "multi" | "dlog";
 
-    // data
+    chartData: string;
 
-    // format
-    // samplingRate
-    // unitName
-    // color
-    // colorInverse
-    // label
-    // offset
-    // scale
+    format: string;
+    samplingRate: string;
+    unitName: string;
+    color: string;
+    label: string;
+    offset: string;
+    scale: string;
 
-    // viewOptions
-
-    get eezChart() {
-        return new EEZChart(this.chartType);
-    }
+    charts: WaveformDefinition[];
 
     render(
         flowContext: IFlowContext,
         width: number,
         height: number
     ): React.ReactNode {
+        const eezChart = computed(() => {
+            if (this.chartType === "single") {
+                return new SingleEEZChart(
+                    flowContext,
+                    this,
+                    evalProperty(flowContext, this, "chartData") ??
+                        (!flowContext.flowState
+                            ? EEZChart.genData(1000, Math.sin)
+                            : undefined),
+                    evalProperty(flowContext, this, "format") ??
+                        (!flowContext.flowState ? "double" : undefined),
+                    evalProperty(flowContext, this, "samplingRate") ??
+                        (!flowContext.flowState ? 1000 : undefined),
+                    evalProperty(flowContext, this, "unitName") ??
+                        (!flowContext.flowState ? "voltage" : undefined),
+                    evalProperty(flowContext, this, "color") ??
+                        (!flowContext.flowState ? "#bb8100" : undefined),
+                    evalProperty(flowContext, this, "label") ??
+                        (!flowContext.flowState
+                            ? "Channel 1 Voltage"
+                            : undefined),
+                    evalProperty(flowContext, this, "offset") ??
+                        (!flowContext.flowState ? 0 : undefined),
+                    evalProperty(flowContext, this, "scale") ??
+                        (!flowContext.flowState ? 1 : undefined)
+                );
+            }
+
+            if (this.chartType === "multi") {
+                return new MultiEEZChart(
+                    flowContext,
+                    this,
+                    this.charts.map((chart, i) => ({
+                        data:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].chartData`
+                            ) ??
+                            (!flowContext.flowState
+                                ? EEZChart.genData(1000, Math.sin)
+                                : undefined),
+                        format:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].format`
+                            ) ??
+                            (!flowContext.flowState ? "double" : undefined),
+                        samplingRate:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].samplingRate`
+                            ) ?? (!flowContext.flowState ? 1000 : undefined),
+                        unitName: evalProperty(
+                            flowContext,
+                            this,
+                            `charts[${i}].unitName`
+                        ),
+                        color:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].color`
+                            ) ??
+                            (!flowContext.flowState ? "#bb8100" : undefined),
+                        label:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].label`
+                            ) ??
+                            (!flowContext.flowState
+                                ? "Channel 1 Voltage"
+                                : undefined),
+                        offset:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].offset`
+                            ) ?? (!flowContext.flowState ? 0 : undefined),
+                        scale:
+                            evalProperty(
+                                flowContext,
+                                this,
+                                `charts[${i}].scale`
+                            ) ?? (!flowContext.flowState ? 1 : undefined)
+                    }))
+                );
+            }
+
+            const data = evalProperty(flowContext, this, "chartData");
+
+            return new DLOGEEZChart(
+                flowContext,
+                this,
+                flowContext.flowState
+                    ? data
+                    : EEZChart.genDlogData(
+                          "45455a2d444c4f4702000200f8000000030001070002472691640b0003000000000000f03f04000400070005330000000700060000000004000a0807000b0ad7a33c04000f0007000c0000000007000d0000803f03000e05001e010105001f0113080020010000000008002101000020420f002201444350343035202331205505002301010c00250100000000000000000c002601000000000000f03f05001e020305001f02130800200200000000080021020100a0400f002202444350343035202331204905002302010c00250200000000000000000c002602000000000000f03f040024000600320195010600330103030000370000295c0d4101002040295c0d4101002040295c0d41010020407b14d640ad1cfa3fcdcca040518db73f48e10441c1ca1140295c0d4101002040295c0d4101002040295c0d41010020407b14a24090c2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f40713da640ea26b93f713de640806afc3f295c0d4101002040295c0d41cff71f40295c0d41518d1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d4101002040295c0d41010020406666a640c74bbf3f713de640806afc3f295c0d4101002040295c0d4101002040295c0d419eef1f4085eba140ea26b93f6666e640b39d0740295c0d41cff71f40295c0d4101002040295c0d410100204085eba140f2d2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f406666a640ea26b93f6666e6401e5afc3f295c0d41cff71f40295c0d4101002040295c0d41ee7c1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d41cff71f40295c0d41cff71f406666a6402a5cbf3f713de640806afc3f"
+                      )
+            );
+        }).get();
+
         return (
-            <EEZChartElement
-                widget={this}
-                flowContext={flowContext}
-                width={width}
-                height={height}
-                eezChart={this.eezChart}
-            ></EEZChartElement>
+            <>
+                <EEZChartElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                    eezChart={eezChart}
+                ></EEZChartElement>
+                {super.render(flowContext, width, height)}
+            </>
         );
     }
 }
@@ -146,208 +498,28 @@ interface IViewOptions {
     showZoomButtons: boolean;
 }
 
-class EEZChart {
+abstract class EEZChart {
     chart: Waveform | MultiWaveform | DlogWaveform | undefined;
 
-    constructor(public chartType: "single" | "multi" | "dlog") {
+    constructor(
+        public flowContext: IFlowContext,
+        public widget: EEZChartWidget
+    ) {
         makeObservable(this, {
             chart: observable
         });
 
-        setTimeout(this.createChart, 0);
+        setTimeout(() => {
+            const chart = this.createChart();
+            runInAction(() => {
+                this.chart = chart;
+            });
+        }, 0);
     }
 
-    createChart = () => {
-        let chart: Waveform | MultiWaveform | DlogWaveform;
-        if (this.chartType == "single") {
-            chart = this.createGenericWaveform({
-                id: "0",
-                data: EEZChart.genData(
-                    WaveformFormat.FLOATS_64BIT,
-                    1000,
-                    Math.sin
-                ),
-                samplingRate: 10,
-                format: WaveformFormat.FLOATS_64BIT,
-                unitName: "volt",
-                color: "#bb8100",
-                colorInverse: "#bb8100",
-                label: "Channel 1",
-                offset: 0,
-                scale: 1,
-                viewOptions: {
-                    axesLines: {
-                        type: "dynamic",
-                        steps: {
-                            x: [],
-                            y: []
-                        },
-                        majorSubdivision: {
-                            horizontal: 24,
-                            vertical: 8
-                        },
-                        minorSubdivision: {
-                            horizontal: 5,
-                            vertical: 5
-                        },
-                        snapToGrid: true,
-                        defaultZoomMode: "all"
-                    },
-                    showAxisLabels: true,
-                    showZoomButtons: true
-                },
-                measurements: undefined,
-                rulers: undefined
-            });
-        } else if (this.chartType == "multi") {
-            chart = this.createMultiWaveform({
-                id: "0",
-                waveforms: [
-                    this.createGenericWaveform({
-                        id: "1",
-                        data: EEZChart.genData(
-                            WaveformFormat.FLOATS_64BIT,
-                            1000,
-                            Math.sin
-                        ),
-                        samplingRate: 10,
-                        format: WaveformFormat.FLOATS_64BIT,
-                        unitName: "current",
-                        color: "#0081bbbb",
-                        colorInverse: "#0081bb",
-                        label: "Channel 1 Current",
-                        offset: 0,
-                        scale: 1,
-                        viewOptions: {
-                            axesLines: {
-                                type: "dynamic",
-                                steps: {
-                                    x: [],
-                                    y: []
-                                },
-                                majorSubdivision: {
-                                    horizontal: 24,
-                                    vertical: 8
-                                },
-                                minorSubdivision: {
-                                    horizontal: 5,
-                                    vertical: 5
-                                },
-                                snapToGrid: true,
-                                defaultZoomMode: "all"
-                            },
-                            showAxisLabels: true,
-                            showZoomButtons: true
-                        },
-                        measurements: undefined,
-                        rulers: undefined
-                    }),
-                    this.createGenericWaveform({
-                        id: "2",
-                        data: EEZChart.genData(
-                            WaveformFormat.FLOATS_64BIT,
-                            1000,
-                            Math.cos
-                        ),
-                        samplingRate: 10,
-                        format: WaveformFormat.FLOATS_64BIT,
-                        unitName: "volt",
-                        color: "#bb8100",
-                        colorInverse: "#bb8100",
-                        label: "Channel 1 Voltage",
-                        offset: 0,
-                        scale: 1,
-                        viewOptions: {
-                            axesLines: {
-                                type: "dynamic",
-                                steps: {
-                                    x: [],
-                                    y: []
-                                },
-                                majorSubdivision: {
-                                    horizontal: 24,
-                                    vertical: 8
-                                },
-                                minorSubdivision: {
-                                    horizontal: 5,
-                                    vertical: 5
-                                },
-                                snapToGrid: true,
-                                defaultZoomMode: "all"
-                            },
-                            showAxisLabels: true,
-                            showZoomButtons: true
-                        },
-                        measurements: undefined,
-                        rulers: undefined
-                    })
-                ],
-                viewOptions: {
-                    axesLines: {
-                        type: "dynamic",
-                        steps: {
-                            x: [],
-                            y: []
-                        },
-                        majorSubdivision: {
-                            horizontal: 24,
-                            vertical: 8
-                        },
-                        minorSubdivision: {
-                            horizontal: 5,
-                            vertical: 5
-                        },
-                        snapToGrid: true,
-                        defaultZoomMode: "all"
-                    },
-                    showAxisLabels: true,
-                    showZoomButtons: true
-                },
-                measurements: undefined,
-                rulers: undefined
-            });
-        } else {
-            chart = this.createDlogWaveform({
-                id: "0",
-                data: EEZChart.genDlogData(
-                    "45455a2d444c4f4702000a0030010000310001446576696365206e616d65203d206665743234303b205564732c6d6178203d2031353b2049642c6d6178203d203504000a0107000b52b6b23b04000f0107000c000080bf07000d268a963f06000e55647305001e00030800200000000000080021000000b04006002200496405002300000a0022015567733d315605002301010a0022025567733d325605002302010a0022035567733d335605002303010a0022045567733d345605002304010a0022055567733d355605002305010a0022065567733d365605002306010a0022075567733d375605002307010a0022085567733d385605002308010a0022095567733d395605002309010b00220a5567733d3130560500230a010400240106003201950106003301070200000000000bd7a33b0bd7233c90c2753c0bd7a33ccecccc3c90c2f53c2a5c0f3d0bd7233dec51383dcecc4c3d0bd7a33b0bd7233c90c2753c0bd7a33ccecccc3c90c2f53c2a5c0f3d0bd7233dec51383dcecc4c3d0bd7a33b32082c3cb7f37d3c3208ac3cf5fdd43c2506013d508d173d32082c3d5d8f423d3e0a573d0bd7a33b32082c3cb7f37d3c3208ac3cf5fdd43c2506013d508d173d32082c3d5d8f423d3e0a573d0bd7a33b32082c3cb7f37d3c3208ac3cf5fdd43c2506013d508d173d32082c3d5d8f423d3e0a573d0bd7a33b32082c3cb7f37d3c3208ac3cf5fdd43c2506013d508d173d32082c3d5d8f423d3e0a573d5939b43b5939343c032b873c5939b43caf47e13c032b073d2eb21d3d5939343d84c04a3daf47613d5939b43b5939343c032b873c5939b43caf47e13c032b073d2eb21d3d5939343d84c04a3daf47613d5939b43b5939343c032b873c5939b43caf47e13c032b073d2eb21d3d5939343d84c04a3daf47613d5939b43b5939343c032b873c5939b43caf47e13c032b073d2eb21d3d5939343d84c04a3daf47613d5939b43b806a3c3c96438b3c806abc3cd678e93ce04f0d3d55e3253d806a3c3df5fd543d20856b3d5939b43b806a3c3c96438b3c806abc3cd678e93ce04f0d3d55e3253d806a3c3df5fd543d20856b3d5939b43b806a3c3c96438b3c806abc3cd678e93ce04f0d3d55e3253d806a3c3df5fd543d20856b3da79bc43ba79b443cbd74933ca79bc43c90c2f53cbd74133d32082c3da79b443d1c2f5d3d90c2753da79bc43ba79b443cbd74933ca79bc43c90c2f53cbd74133d32082c3da79b443d1c2f5d3d90c2753da79bc43ba79b443cbd74933ca79bc43c90c2f53cbd74133d32082c3da79b443d1c2f5d3d90c2753da79bc43ba79b443cbd74933ca79bc43c90c2f53cbd74133d32082c3da79b443d1c2f5d3d90c2753da79bc43bcecc4c3c508d973ccecccc3cb7f3fd3c9a99193d5939343dcecc4c3d8c6c673d0100803da79bc43bcecc4c3c508d973ccecccc3cb7f3fd3c9a99193d5939343dcecc4c3d8c6c673d0100803da79bc43bcecc4c3c508d973ccecccc3cb7f3fd3c9a99193d5939343dcecc4c3d8c6c673d0100803df5fdd43bf5fd543c77be9f3cf5fdd43cb91e053d77be1f3d365e3a3df5fd543db39d6f3db91e853df5fdd43bf5fd543c77be9f3cf5fdd43cb91e053d77be1f3d365e3a3df5fd543db39d6f3db91e853df5fdd43bf5fd543c77be9f3cf5fdd43cb91e053d77be1f3d365e3a3df5fd543db39d6f3db91e853df5fdd43b1c2f5d3c0bd7a33c1c2fdd3c4c37093d55e3253d5d8f423d1c2f5d3d24db793d713d8a3df5fdd43b1c2f5d3c0bd7a33c1c2fdd3c4c37093d55e3253d5d8f423d1c2f5d3d24db793d713d8a3df5fdd43b1c2f5d3c0bd7a33c1c2fdd3c4c37093d55e3253d5d8f423d1c2f5d3d24db793d713d8a3d4260e53b4260653c3208ac3c4260e53c2a5c0f3d32082c3d3ab4483d4260653d2506813d2a5c8f3d4260e53b4260653c3208ac3c4260e53c2a5c0f3d32082c3d3ab4483d4260653d2506813d2a5c8f3d4260e53b4260653c3208ac3c4260e53c2a5c0f3d32082c3d3ab4483d4260653d2506813d2a5c8f3d4260e53b69916d3cc520b03c6991ed3cbd74133d0f2d323d61e5503d69916d3dde24863de27a943d4260e53b69916d3cc520b03c6991ed3cbd74133d0f2d323d61e5503d69916d3dde24863de27a943d90c2f53b90c2753cec51b83c90c2f53c9a99193dec51383d3e0a573d90c2753d713d8a3d9a99993d90c2f53b90c2753cec51b83c90c2f53c9a99193dec51383d3e0a573d90c2753d713d8a3d9a99993d90c2f53b90c2753cec51b83c90c2f53c9a99193dec51383d3e0a573d90c2753d713d8a3d9a99993d90c2f53bb7f37d3c806abc3cb7f3fd3c2eb21d3dc9763e3d653b5f3db7f37d3d2a5c8f3d53b89e3d90c2f53bb7f37d3c806abc3cb7f3fd3c2eb21d3dc9763e3d653b5f3db7f37d3d2a5c8f3d53b89e3d90c2f53bb7f37d3c806abc3cb7f3fd3c2eb21d3dc9763e3d653b5f3db7f37d3d2a5c8f3d53b89e3d6f12033c6f12833ca79bc43c6f12033d0bd7233da79b443d4260653d6f12833dbd74933d0bd7a33d6f12033c6f12833ca79bc43c6f12033d0bd7233da79b443d4260653d6f12833dbd74933d0bd7a33d6f12033c032b873c3ab4c83c032b073d9eef273d84c04a3d69916d3d032b873d7593983dc3f5a83d6f12033c032b873c3ab4c83c032b073d9eef273d84c04a3d69916d3d032b873d7593983dc3f5a83d6f12033c032b873c3ab4c83c032b073d9eef273d84c04a3d69916d3d032b873d7593983dc3f5a83d96430b3c96438b3c61e5d03c96430b3d7c142e3d61e5503d47b6733d96438b3d09ac9c3d7c14ae3d96430b3c96438b3c61e5d03c96430b3d7c142e3d61e5503d47b6733d96438b3d09ac9c3d7c14ae3d96430b3c2a5c8f3cf5fdd43c2a5c0f3d0f2d323d3e0a573d6ee77b3d2a5c8f3dc1caa13d3433b33d96430b3c2a5c8f3cf5fdd43c2a5c0f3d0f2d323d3e0a573d6ee77b3d2a5c8f3dc1caa13d3433b33dbd74133cbd74933c1c2fdd3cbd74133dec51383d1c2f5d3d2506813dbd74933d55e3a53dec51b83dbd74133cbd74933c1c2fdd3cbd74133dec51383d1c2f5d3d2506813dbd74933d55e3a53dec51b83dbd74133c508d973caf47e13c508d173d806a3c3df953633db91e853d508d973d0d02ab3da570bd3dbd74133c508d973caf47e13c508d173d806a3c3df953633db91e853d508d973d0d02ab3da570bd3dbd74133c508d973caf47e13c508d173d806a3c3df953633db91e853d508d973d0d02ab3da570bd3de4a51b3ce4a59b3cd678e93ce4a51b3d5d8f423dd678693d2731883de4a59b3da01aaf3d5d8fc23de4a51b3ce4a59b3cd678e93ce4a51b3d5d8f423dd678693d2731883de4a59b3da01aaf3d5d8fc23de4a51b3c77be9f3c6991ed3c77be1f3df0a7463db39d6f3dbb498c3d77be9f3d5939b43d15aec73de4a51b3c77be9f3c6991ed3c77be1f3df0a7463db39d6f3dbb498c3d77be9f3d5939b43d15aec73d0bd7233c0bd7a33c90c2f53c0bd7233dcecc4c3d90c2753d2a5c8f3d0bd7a33dec51b83dcecccc3d0bd7233c0bd7a33c90c2f53c0bd7233dcecc4c3d90c2753d2a5c8f3d0bd7a33dec51b83dcecccc3d0bd7233c9eefa73c24dbf93c9eef273d61e5503d6ee77b3dbd74933d9eefa73da570bd3d86ebd13d0bd7233c9eefa73c24dbf93c9eef273d61e5503d6ee77b3dbd74933d9eefa73da570bd3d86ebd13d32082c3c3208ac3c2506013d32082c3d3e0a573d2506813d2c87963d3208ac3d3889c13d3e0ad73d32082c3c3208ac3c2506013d32082c3d3e0a573d2506813d2c87963d3208ac3d3889c13d3e0ad73d32082c3cc520b03c6f12033dc520303dd2225b3d9418843dbf9f9a3dc520b03df0a7c63df728dc3d5939343c5939b43c032b073d5939343daf47613d032b873d2eb29d3d5939b43d84c0ca3daf47e13d5939343c5939b43c032b073d5939343daf47613d032b873d2eb29d3d5939b43d84c0ca3daf47e13d5939343cec51b83c4c37093dec51383d4260653d713d8a3dc1caa13dec51b83d3cdfcf3d6766e63d5939343cec51b83c4c37093dec51383d4260653d713d8a3dc1caa13dec51b83d3cdfcf3d6766e63d806a3c3c806abc3ce04f0d3d806a3c3d20856b3de04f8d3d30dda43d806abc3dd0f7d33d2085eb3d806a3c3c806abc3ce04f0d3d806a3c3d20856b3de04f8d3d30dda43d806abc3dd0f7d33d2085eb3d806a3c3c1383c03c2a5c0f3d1383403db39d6f3d4e62903dc3f5a83d1383c03d8816d93dd8a3f03da79b443ca79bc43cbd74133da79b443d90c2753dbd74933d3208ac3da79bc43d1c2fdd3d90c2f53da79b443ca79bc43cbd74133da79b443d90c2753dbd74933d3208ac3da79bc43d1c2fdd3d90c2f53da79b443c3ab4c83c0781153d3ab4483d24db793d2c87963dc520b03d3ab4c83dd44de23d49e1fa3da79b443c3ab4c83c0781153d3ab4483d24db793d2c87963dc520b03d3ab4c83dd44de23d49e1fa3dcecc4c3ccecccc3c9a99193dcecc4c3d0100803d9a99993d3433b33dcecccc3d6766e63d0100003ececc4c3c61e5d03ce4a51b3d61e5503d4a0c823d09ac9c3dc74bb73d61e5d03d2085eb3d5d8f023ececc4c3c61e5d03ce4a51b3d61e5503d4a0c823d09ac9c3dc74bb73d61e5d03d2085eb3d5d8f023ef5fd543cf5fdd43c77be1f3df5fd543db91e853d77be9f3d365eba3df5fdd43db39def3db91e053ef5fd543c8816d93cc1ca213d8816593d032b873de6d0a23dc976be3d8816d93d6bbcf43d15ae073ef5fd543c8816d93cc1ca213d8816593d032b873de6d0a23dc976be3d8816d93d6bbcf43d15ae073e1c2f5d3c1c2fdd3c55e3253d1c2f5d3d713d8a3d55e3a53d3889c13d1c2fdd3dffd4f83d713d0a3e1c2f5d3caf47e13c9eef273daf47613dbb498c3dc3f5a83dcca1c53daf47e13db7f3fd3dcdcc0c3e1c2f5d3caf47e13c9eef273daf47613dbb498c3dc3f5a83dcca1c53daf47e13db7f3fd3dcdcc0c3e4260653c4260e53c32082c3d4260653d2a5c8f3d3208ac3d3ab4c83d4260e53d2506013e2a5c0f3e4260653cd678e93c7c142e3dd678693d7368913da01aaf3dcecccc3dd678e93d8295033e86eb113e4260653cd678e93c7c142e3dd678693d7368913da01aaf3dcecccc3dd678e93d8295033e86eb113e69916d3c6991ed3c0f2d323d69916d3de27a943d0f2db23d3cdfcf3d6991ed3dcba1053ee27a143e69916d3cfda9f13c5939343dfda9713d2c87963d7e3fb53dd0f7d33dfda9f13d2731083e3e0a173e90c2753c90c2f53cec51383d90c2753d9a99993dec51b83d3e0ad73d90c2f53d713d0a3e9a99193e90c2753c90c2f53cec51383d90c2753d9a99993dec51b83d3e0ad73d90c2f53d713d0a3e9a99193e90c2753c24dbf93c365e3a3d24db793de4a59b3d5b64bb3dd222db3d24dbf93dcdcc0c3ef6281c3eb7f37d3cb7f3fd3cc9763e3db7f37d3d53b89e3dc976be3d4035de3db7f3fd3d17d90e3e53b81e3eb7f37d3c2506013d1383403d2506813d9cc4a03d3889c13dd44de23d2506013e7368113eaf47213e6f12833c6f12033da79b443d6f12833d0bd7a33da79bc43d4260e53d6f12033ebd74133e0bd7233e6f12833c6f12033da79b443d6f12833d0bd7a33da79bc43d4260e53d6f12033ebd74133e0bd7233e6f12833cb91e053df0a7463db91e853d55e3a53d15aec73dd678e93db91e053e1904163e6766263e032b873c032b073d84c04a3d032b873dc3f5a83d84c0ca3d458bec3d032b073e6310183ec3f5283e032b873c4c37093dcecc4c3d4c37893d0d02ab3df2d2cd3dd8a3f03d4c37093ebf9f1a3e1f852b3e96438b3c96430b3d61e5503d96438b3d7c14ae3d61e5d03d47b6f33d96430b3e09ac1c3e7c142e3e96438b3c96430b3d61e5503d96438b3d7c14ae3d61e5d03d47b6f33d96430b3e09ac1c3e7c142e3e96438b3ce04f0d3dabf1523de04f8d3dc520b03dd0f7d33ddacef73de04f0d3e653b1f3ed8a3303e2a5c8f3c2a5c0f3d3e0a573d2a5c8f3d3433b33d3e0ad73d49e1fa3d2a5c0f3eaf47213e3433333e2a5c8f3c7368113d8816593d7368913d7e3fb53dad1cda3ddcf9fe3d7368113e0bd7233e90c2353ebd74933cbd74133d1c2f5d3dbd74933dec51b83d1c2fdd3d2506013ebd74133e55e3253eec51383ebd74933c0781153d653b5f3d0781953d365eba3d8a41e03d6f12033e0781153eb172283e48e13a3e508d973c508d173df953633d508d973da570bd3df953e33da69b043e508d173efb7e2a3ea5703d3e508d973c9a99193d4260653d9a99993dee7cbf3d6766e63df0a7063e9a99193e570e2d3e0100403ee4a59b3ce4a51b3dd678693de4a59b3d5d8fc23dd678e93d2731083ee4a51b3ea01a2f3e5d8f423ee4a59b3c2eb21d3d20856b3d2eb29d3da79bc43d458bec3d713d0a3e2eb21d3efda9313eb91e453e77be9f3c77be1f3db39d6f3d77be9f3d15aec73db39def3da8c60b3e77be1f3e46b6333e15ae473e77be9f3cc1ca213dfda9713dc1caa13d5fbac93d22b0f23df2d20d3ec1ca213ea345363e713d4a3e0bd7a33c0bd7233d90c2753d0bd7a33dcecccc3d90c2f53d2a5c0f3e0bd7233eec51383ececc4c3e0bd7a33c55e3253ddace773d55e3a53d17d9ce3dffd4f83d7368113e55e3253e48e13a3e2a5c4f3e9eefa73c9eef273d6ee77b3d9eefa73d86ebd13d6ee7fb3dabf1123e9eef273e92ed3c3e86eb513e9eefa73ce8fb293db7f37d3de8fba93dd0f7d33ddcf9fe3df4fd143ee8fb293eee7c3f3ee27a543e3208ac3c32082c3d2506813d3208ac3d3e0ad73d2506013e2c87163e32082c3e3889413e3e0a573e3208ac3c7c142e3d4a0c823d7c14ae3d8816d93d5d8f023e7593183e7c142e3e9418443e9a99593ec520b03cc520303d9418843dc520b03df728dc3d9418043ead1c1a3ec520303ede24463ef7285c3ec520b03c0f2d323db91e853d0f2db23d4035de3dcba1053ef6281c3e0f2d323e3ab4483e53b85e3e5939b43c5939343d032b873d5939b43daf47e13d032b073e2eb21d3e5939343e84c04a3eaf47613e5939b43ca345363d2731883da345b63df953e33d3ab4083e77be1f3ea345363ee04f4d3e0bd7633eec51b83cec51383d713d8a3dec51b83d6766e63d713d0a3eaf47213eec51383e2a5c4f3e6766663eec51b83c365e3a3d96438b3d365eba3db172e83da8c60b3ef853233e365e3a3e86eb513ec3f5683e806abc3cc9763e3d05568e3dc976be3d6991ed3d17d90e3e79e9263ec9763e3e2c87563e7c146e3e1383c03c1383403d4e62903d1383c03dd8a3f03d4e62103eb172283e1383403e7693583ed8a3703e1383c03c5d8f423d7368913d5d8fc23d22b0f23d86eb113efb7e2a3e5d8f423ed2225b3e3433733ea79bc43ca79b443dbd74933da79bc43d90c2f53dbd74133e32082c3ea79b443e1c2f5d3e90c2753ea79bc43cf0a7463de27a943df0a7c63ddacef73df4fd143e7c142e3ef0a7463e78be5f3eed51783e3ab4c83c84c04a3d508d973d84c0ca3d92edfc3d6310183efda9313e84c04a3e1e5a643ea5707d3ececccc3ccecc4c3d9a99993dcecccc3d0100003e9a99193e3433333ececc4c3e6766663e0100803ececccc3c17d94e3dbf9f9a3d17d9ce3d2506013ed2221b3e7e3f353e17d94e3ec3f5683eaf47813e61e5d03c61e5503d09ac9c3d61e5d03d5d8f023e09ac1c3eb5c8363e61e5503e0d026b3e5d8f823ef5fdd43cf5fd543d77be9f3df5fdd43db91e053e77be1f3e365e3a3ef5fd543eb39d6f3eb91e853ef5fdd43c3e0a573d9cc4a03d3e0ad73dde24063eaf47213e806a3c3e3e0a573e0f2d723e6766863e8816d93c8816593de6d0a23d8816d93d15ae073ee6d0223eb7f33d3e8816593e5939743e15ae873e1c2fdd3c1c2f5d3d55e3a53d1c2fdd3d713d0a3e55e3253e3889413e1c2f5d3effd4783e713d8a3e1c2fdd3c653b5f3d79e9a63d653bdf3d96430b3e8c6c273e8295433e653b5f3e5b647b3e1f858b3eaf47e13caf47613dc3f5a83daf47e13dcdcc0c3ec3f5283eb91e453eaf47613ea5707d3ecdcc8c3e4260e53c4260653d3208ac3d4260e53d2a5c0f3e32082c3e3ab4483e4260653e2506813e2a5c8f3e4260e53c8c6c673d570ead3d8c6ce73d4e62103e69912d3e84c04a3e8c6c673ed34d823ed8a3903ed678e93c20856b3dc520b03d2085eb3dabf1123ed8a3303e05564e3e20856b3ea69b843e3433933e6991ed3c69916d3d0f2db23d6991ed3de27a143e0f2d323e3cdf4f3e69916d3ecba1853ee27a943e6991ed3cb39d6f3d3433b33db39def3d0781153e46b6333e86eb513eb39d6f3e79e9863e90c2953efda9f13c47b6733da345b63d47b6f33d6310183eb5c8363e0781553e47b6733e4c37893eec51983e90c2f53c90c2753dec51b83d90c2f53d9a99193eec51383e3e0a573e90c2753e713d8a3e9a99993e24dbf93c24db793d5b64bb3d24dbf93df6281c3e5b643b3ebf9f5a3e24db793e448b8c3ef6289c3eb7f3fd3cb7f37d3dc976be3db7f3fd3d53b81e3ec9763e3e40355e3eb7f37d3e17d98e3e53b89e3eb7f3fd3c0100803dee7cbf3d0100003e77be1f3e0100403e8a41603e0100803ec520903e0100a03e2506013d4a0c823d5d8fc23d4a0c023ed44d223e6f12433e0bd7633e4a0c823e986e923e5d8fa23e6f12033d6f12833da79bc43d6f12033e0bd7233ea79b443e4260653e6f12833ebd74933e0bd7a33eb91e053db91e853d15aec73db91e053e6766263e15ae473ec3f5683eb91e853e90c2953e6766a63e032b073d032b873d84c0ca3d032b073ec3f5283e84c04a3e458b6c3e032b873e6310983ec3f5a83e032b073d2731883da9c6cb3d2731083ee8fb293ebb494c3e8e976e3e2731883e1158993e713daa3e4c37093d713d8a3d17d9ce3d713d0a3e448b2c3e2a5c4f3e0f2d723e713d8a3ee4a59b3ecdccac3e96430b3dbb498c3d86ebd13dbb490c3ea01a2f3e986e523e90c2753ebb498c3eb7f39d3e2a5caf3ee04f0d3de04f8d3dd0f7d33de04f0d3ed8a3303ed0f7533ec84b773ee04f8d3edcf99e3ed8a3b03e2a5c0f3d2a5c8f3d3e0ad73d2a5c0f3e3433333e3e0a573e49e17a3e2a5c8f3eaf47a13e3433b33e7368113d7368913dad1cda3d7368113e90c2353ead1c5a3eca767e3e7368913e8295a33e90c2b53ebd74133dbd74933d1c2fdd3dbd74133eec51383e1c2f5d3e2506813ebd74933e55e3a53eec51b83ebd74133de27a943d4035de3de27a143e1158393e53b85e3e4a0c823ee27a943e032ba73e9a99b93e0781153d2c87963daf47e13d2c87163e6de73b3ec1ca613e0bd7833e2c87963ed678a93ef728bc3e508d173d7593983d1e5ae43d7593183ec9763e3e30dd643ecba1853e7593983ea9c6ab3e53b8be3e9a99193dbf9f9a3d8c6ce73dbf9f1a3e2606413e9fef673e8c6c873ebf9f9a3e7c14ae3eaf47c13ee4a51b3d09ac9c3dfb7eea3d09ac1c3e8295433e0d026b3e4c37893e09ac9c3e4f62b03e0bd7c33e2eb21d3d53b89e3d6991ed3d53b81e3ede24463e7c146e3e0d028b3e53b89e3e21b0b23e6766c63e77be1f3d9cc4a03dd8a3f03d9cc4203e3ab4483eea26713ecdcc8c3e9cc4a03ef4fdb43ec3f5c83ec1ca213de6d0a23d47b6f33de6d0223e96434b3e5939743e8e978e3ee6d0a23ec74bb73e2085cb3e0bd7233d30dda43db5c8f63d30dd243ef2d24d3ec84b773e4e62903e30dda43e9a99b93e7c14ce3e55e3253d79e9a63d24dbf93d79e9263e4f62503e365e7a3e0f2d923e79e9a63e6de7bb3ed8a3d03e9eef273dc3f5a83d92edfc3dc3f5283eabf1523ea5707d3ecff7933ec3f5a83e4035be3e3433d33ee8fb293d0d02ab3d0100003e0d022b3e0781553e8a41803e90c2953e0d02ab3e1383c03e90c2d53e32082c3d570ead3d3889013e570e2d3e6310583ec1ca813e508d973e570ead3ee6d0c23eec51d83e7c142e3da01aaf3d6f12033ea01a2f3ebf9f5a3ef853833e1158993ea01aaf3eb91ec53e49e1da3ec520303dea26b13da69b043eea26313e1c2f5d3e30dd843ed2229b3eea26b13e8c6cc73ea570dd3e5939343d5939b43d032b073e5939343eaf47613e032b873e2eb29d3e5939b43e84c0ca3eaf47e13ea345363da345b63d3ab4083ea345363e0bd7633e3ab4883eee7c9f3ea345b63e570ecd3e0bd7e33eec51383dec51b83d713d0a3eec51383e6766663e713d8a3eaf47a13eec51b83e2a5ccf3e6766e63e365e3a3d365eba3da8c60b3e365e3a3ec3f5683ea8c68b3e6f12a33e365eba3efda9d13ec3f5e83e806a3c3da570bd3df2d20d3ea5703d3e458b6c3e7b148e3e55e3a53ea570bd3e7e3fd53ececcec3ec9763e3dee7cbf3d2a5c0f3eee7c3f3ea11a6f3eb39d8f3e15aea73eee7cbf3e518dd73e2a5cef3e1383403d3889c13d61e5103e3889413efda9713eea26913ed678a93e3889c13e24dbd93e86ebf13ea79b443da79bc43dbd74133ea79b443e90c2753ebd74933e3208ac3ea79bc43e1c2fdd3e90c2f53ef0a7463df0a7c63df4fd143ef0a7463eed51783ef4fd943ef2d2ad3ef0a7c63eee7cdf3eed51f83e3ab4483d5fbac93d3e0a173e5fba493e6ee77b3ec74b973ed8a3b03e5fbac93e7012e33ef728fc3e84c04a3da9c6cb3d7593183ea9c64b3eca767e3effd4983e986eb23ea9c6cb3e4260e53e53b8fe3e17d94e3d17d9ce3dd2221b3e17d94e3eaf47813ed2229b3ef4fdb43e17d9ce3e3ab4e83eaf47013f61e5503d61e5d03d09ac1c3e61e5503e5d8f823e09ac9c3eb5c8b63e61e5d03e0d02eb3e5d8f023fabf1523dd0f7d33d53b81e3ed0f7533e1d5a843edcf99e3e9a99b93ed0f7d33e8e97ee3ee27a043ff5fd543d1904d63d8a41203e1904563ecba1853e1383a03e5b64bb3e1904d63e61e5f03e90c2053f8816593d8816d93de6d0223e8816593e15ae873ee6d0a23eb7f3bd3e8816d93e5939f43e15ae073fd2225b3df728dc3d30dd243ef7285c3ed678893eb91ea53e9cc4c03ef728dc3edacef73e9a99093f1c2f5d3d4035de3d6766263e40355e3e84c08a3ef0a7a63e5d8fc23e4035de3ead1cfa3e48e10a3faf47613daf47e13dc3f5283eaf47613ecdcc8c3ec3f5a83eb91ec53eaf47e13ea570fd3ecdcc0c3ff953633d1e5ae43d0d022b3e1e5a643e8e978e3e9643ab3e9eefc73e1e5ae43e1383003f52b80e3f8c6c673d8c6ce73d69912d3e8c6c673ed8a3903e6991ad3efb7eca3e8c6ce73e0f2d023fd8a3103fd678693dfb7eea3db39d2f3efb7e6a3e986e923e3cdfaf3ee04fcd3efb7eea3ecff7033f5d8f123f20856b3d458bec3dea26313e458b6c3e46b6933e7368b13ea11acf3e458bec3eb91e053f0bd7133fb39d6f3db39def3d46b6333eb39d6f3e90c2953e46b6b33efda9d13eb39def3eb5c8063f90c2153ffda9713d22b0f23d90c2353e22b0723e508d973e1904b63ee27ad43e22b0f23e7593083f15ae173f90c2753d90c2f53dec51383e90c2753e9a99993eec51b83e3e0ad73e90c2f53e713d0a3f9a99193fdace773dffd4f83d365e3a3effd4783e5b649b3ebf9fba3e24dbd93effd4f83e32080c3f1f851b3f6ee77b3d6ee7fb3d92ed3c3e6ee77b3ea4709d3e92edbc3e806adc3e6ee7fb3e2eb20d3fa4701d3f0100803d0100003e0100403e0100803e0100a03e0100c03e0100e03e0100003f0100103f0100203f2506813d3889013e4b0c423e3889813ec1caa13ed44dc23ee6d0e23e3889013fc1ca113f86eb213f6f12833d6f12033ea79b443e6f12833e0bd7a33ea79bc43e4260e53e6f12033fbd74133f0bd7233f9418843da69b043ef0a7463ea69b843ecba1a53e7ae9c63e2831e83ea69b043f7e3f153f90c2253fde24863dde24063e4d37493ede24863e15aea73e4d37c93e84c0ea3ede24063f79e9163f15ae273f2731883d2731083ebb494c3e2731883e713daa3ebb49cc3e0556ee3e2731083f4c37193f713d2a3f4c37893d5fba093e05564e3e5fba893e3208ac3e8e97ce3eea26f13e5fba093f0d021b3ff6282c3f96438b3da8c60b3e7468513ea8c68b3e8e97ae3efda9d13e6bbcf43ea8c60b3fe04f1d3f53b82e3fe04f8d3de04f0d3ed0f7533ee04f8d3ed8a3b03ed0f7d33ec84bf73ee04f0d3fdcf91e3fd8a3303f05568e3d17d90e3e1904563e17d98e3e986eb23ea345d63ead1cfa3e17d90e3f9cc4203f5d8f323f4e62903d61e5103e8816593e61e5903ef4fdb43e1158d93e2eb2fd3e61e5103f6f12233fb91e353f986e923dabf1123ef7285c3eabf1923e518db73e806adc3ed8a3003fabf1123f4260253f15ae373fe27a943de27a143e53b85e3ee27a943e9a99b93e53b8de3e86eb013fe27a143f3e0a273f9a99393f2c87963d2c87163ec1ca613e2c87963ef728bc3ec1cae13e46b6033f2c87163f1158293ff7283c3f7593983d7593183e30dd643e7593983e53b8be3e30dde43e0781053f7593183fe4a52b3f53b83e3f9a99993dad1c1a3e7ae9663ead1c9a3e1383c03e032be73e79e9063fad1c1a3fa5702d3fd8a3403fe4a59b3df6281c3ee8fb693ef6289c3e6f12c33e723dea3e3ab4083ff6281c3f77be2f3f3433433f2eb29d3d40351e3e570e6d3e40359e3ecca1c53ee04fed3efa7e0a3f40351e3f4a0c323f90c2453f77be9f3d8a41203ec620703e8a41a03e2831c83e4f62f03ebb490c3f8a41203f1d5a343fec51483fc1caa13dd44d223e3433733ed44da23e84c0ca3ebd74f33e7b140e3fd44d223ff0a7363f48e14a3f0bd7a33d1d5a243ea345763e1d5aa43ee04fcd3e2c87f63e3cdf0f3f1d5a243fc3f5383fa5704d3f55e3a53d6766263e1158793e6766a63e3cdfcf3e9b99f93efca9113f6766263f96433b3f0100503f9eefa73db172283e806a7c3eb172a83e986ed23e09acfc3ebd74133fb172283f69913d3f5d8f523fe8fba93dfb7e2a3eef7c7f3efb7eaa3ef5fdd43e78beff3e7e3f153ffb7e2a3f3cdf3f3fb91e553f3208ac3d448b2c3eaf47813e448bac3e518dd73e7368013f3e0a173f448b2c3f0f2d423f15ae573fa01aaf3da01a2f3ef853833ea01aaf3e49e1da3ef853033f4c37193fa01a2f3ff4fd443f49e15a3fea26b13dea26313e30dd843eea26b13ea570dd3e30dd043f0d021b3fea26313fc74b473fa5705d3f3433b33d3433333e6766863e3433b33e0100e03e6766063fcdcc1c3f3433333f9a99493f0100603f7e3fb53d90c2353e2731883e90c2b53e7012e33eec51083fa01a1f3f90c2353f448b4c3f3433633fc74bb73ddace373e5fba893edaceb73ecca1e53e23db093f61e5203fdace373f17d94e3f90c2653f365eba3d365e3a3ea8c68b3e365eba3ec3f5e83ea8c60b3f6f12233f365e3a3ffda9513fc3f5683f806abc3d806a3c3ee04f8d3e806abc3e2085eb3ee04f0d3f30dd243f806a3c3fd0f7533f20856b3fc976be3ddcf93e3ea01a8f3edcf9be3e8e97ee3e653b0f3f032b273fdcf93e3f7ae9563f53b86e3f3889c13d3889413eea26913e3889c13e86ebf13eea26113f1158293f3889413f5fba593f86eb713f8295c33d9418443eabf1923e9418c43ef5fdf43e6f12133fe4a52b3f9418443f09ac5c3fb91e753fcca1c53dde24463ee27a943ede24c63e518df73ea69b143fa5702d3fde24463fdcf95e3f15ae773f3ab4c83d3ab4483e2c87963e3ab4c83e49e1fa3e2c87163fb39d2f3f3ab4483fc1ca613f49e17a3f84c0ca3d96434b3eec51983e9643cb3eb7f3fd3eb172183f86eb313f96434b3f6bbc643f7c147e3ff2d2cd3df2d24d3e365e9a3ef2d2cd3ed8a3003f365e1a3f9418343ff2d24d3f518d673fd8a3803f3cdfcf3d4f62503ef6289c3e4f62d03e0f2d023fbb491c3f6766363f4f62503ffb7e6a3f713d823fabf1d23dabf1523e40359e3eabf1d23e0bd7033f40351e3f7593383fabf1523fe04f6d3f0bd7833f1904d63d1904563e1383a03e1904d63e90c2053f1383203f96433b3f1904563f9dc4703f90c2853f6310d83d7693583ed44da23e7693d83ec74b073f986e223f69913d3f7693583f47b6733f2a5c873fd222db3dd2225b3e1d5aa43ed222db3ec3f5083f1d5a243f78be3f3fd2225b3f2c87763fc3f5883f4035de3d40355e3ef0a7a63e4035de3e48e10a3ff0a7263f986e423f40355e3fe8fb793f48e18a3f8a41e03d9dc4603eb172a83e9dc4e03e806a0c3f7593283f6bbc443f9dc4603f92ed7c3fe27a8c3ff953e33d0bd7633e84c0aa3e0bd7e33e05560e3f48e12a3f8c6c473f0bd7633f2731803f67668e3f6766e63d6766663ecdccac3e6766e63e0100103fcdcc2c3f9a99493f6766663f9a99813f0100903fd678e93dd678693ea01aaf3ed678e93e86eb113fa01a2f3fbb494c3fd678693ff853833f86eb913f458bec3d458b6c3e7368b13e458bec3e0bd7133f7368313fdcf94e3f458b6c3f570e853f0bd7933fb39def3db39d6f3e46b6b33eb39def3e90c2153f46b6333ffda9513fb39d6f3fb5c8863f90c2953f22b0f23d22b0723e1904b63e22b0f23e15ae173f1904363f1e5a543f22b0723f1383883f15ae973f90c2f53d90c2753eec51b83e90c2f53e9a99193fec51383f3e0a573f90c2753f713d8a3f9a99993fffd4f83dffd4783ebf9fba3effd4f83e1f851b3fbf9f3a3f5fba593fffd4783fcff78b3f1f859b3f6ee7fb3d6ee77b3e92edbc3e6ee7fb3ea4701d3f92ed3c3f806a5c3f6ee77b3f2eb28d3fa4709d3fdcf9fe3ddcf97e3e653bbf3edcf9fe3e2a5c1f3f653b3f3fa11a5f3fdcf97e3f8c6c8f3f2a5c9f3f2506013e2506813e3889c13e2506013faf47213f3889413fc1ca613f2506813fea26913faf47a13f5d8f023ee6d0823e9418c43ee6d0023fbd74233f5939443ff5fd643fe6d0823f3433933f1f85a33f9418043e1d5a843e6766c63e1d5a043f4260253f2c87463f15ae673f1d5a843f92ed943fa570a53fde24063ede24863e4d37c93ede24063f15ae273f4d37493f84c06a3fde24863f79e9963f15aea73f15ae073e15ae873e2085cb3e15ae073f9a99293f20854b3fa5706d3f15ae873fd8a3983f9a99a93f4c37093ed678893e7c14ce3ed678093fa9c62b3f40354e3fd8a3703fd678893f21b09a3f0bd7ab3f96430b3e96438b3e61e5d03e96430b3f7c142e3f61e5503f47b6733f96438b3f09ac9c3f7c14ae3fcdcc0c3e570e8d3ebd74d33e570e0d3f8a41303f8295533f7ae9763f570e8d3f53b89e3fec51b03f17d90e3e17d98e3ea345d63e17d90e3f5d8f323fa345563fe8fb793f17d98e3f3ab4a03f5d8fb23f4e62103ed8a3903effd4d83ed8a3103f6bbc343fc3f5583f1c2f7d3fd8a3903f84c0a23fceccb43f986e123e986e923ee4a5db3e986e123f3e0a373fe4a55b3fc520803f986e923f6bbca43f3e0ab73fcff7133e5939943e4035de3e5939143f4d37393f05565e3f5fba813f5939943fb5c8a63faf47b93f1904163e1904963e2606e13e1904163f1f853b3f2606613f9643833f1904963f9cc4a83f1f85bb3f6310183e6310983e9418e43e6310183f7c143e3f9418643f570e853f6310983f6f12ab3f7c14be3f9a99193e23db993ef1a7e63e23db193f8a41403fb5c8663ff0a7863f23db993fb91ead3fec51c03fe4a51b3e6de79b3e5fbae93e6de71b3fe6d0423f24db693fb172883f6de79b3f8c6caf3f48e1c23f2eb21d3eb7f39d3ececcec3eb7f31d3f4260453f92ed6c3f713d8a3fb7f39d3f5fbab13fa570c53f77be1f3e77be9f3eb39def3e77be1f3f15ae473fb39d6f3fa8c68b3f77be9f3f46b6b33f15aec73fc1ca213ec1caa13e22b0f23ec1ca213f713d4a3f22b0723f69918d3fc1caa13f1904b63f713dca3f0bd7233e0bd7a33e90c2f53e0bd7233fcecc4c3f90c2753f2a5c8f3f0bd7a33fec51b83fcecccc3f55e3253e55e3a53effd4f83e55e3253f2a5c4f3fffd4783fea26913f55e3a53fbf9fba3f2a5ccf3f9eef273e9eefa73e6ee7fb3e9eef273f86eb513f6ee77b3fabf1923f9eefa73f92edbc3f86ebd13fe8fb293e713daa3e653bff3e713d2a3f6bbc543f2a5c7f3ff4fd943f713daa3f518dbf3fceccd43f32082c3ebb49ac3eea26013fbb492c3fc84b573f4c37813fb5c8963fbb49ac3f24dbc13f2a5cd73f8e972e3e8e97ae3eabf1023f8e972e3f723d5a3fabf1823f9cc4983f8e97ae3f806ac43f723dda3fd8a3303ed8a3b03ee27a043fd8a3303fcecc5c3fe27a843f5d8f9a3fd8a3b03f53b8c63fceccdc3f21b0323eabf1b23ede24063fabf1323fb39d5f3f4035863fa79b9c3fabf1b23f1158c93f15aedf3f7e3f353e7e3fb53e9eef073f7e3f353f5d8f623f9eef873f8e979e3f7e3fb53f6de7cb3f5d8fe23fc74b373e518db73e9a99093f518d373f4260653ffca9893fd8a3a03f518db73f2c87ce3fa570e53f24db393e24dbb93e5b640b3f24db393fec51683f5b648b3fbf9fa23f24dbb93f8816d13fec51e83f6de73b3ef728bc3e570e0d3ff7283c3fd2226b3fb91e8d3f09aca43ff728bc3f46b6d33f3433eb3fc9763e3ec976be3e17d90e3fc9763e3f7c146e3f17d98e3ff0a7a63fc976be3fa345d63f7c14ee3f2606413e2606c13e9cc4103f2606413faf47713f9cc4903f61e5a83f2606c13fea26d93faf47f13f6f12433ef953c33e986e123ff953433f9418743ffa7e923fabf1aa3ff953c33fa9c6db3ff728f43fcca1453e55e3c53e1d5a143f55e3453fc84b773f806a943f1b2fad3f55e3c53ff1a7de3f2a5cf73f2831483eb172c83ea245163fb172483ffb7e7a3f0556963f8c6caf3fb172c83f3889e13f5d8ffa3f84c04a3e0d02cb3e2831183f0d024b3f2eb27d3f8a41983ffda9b13f0d02cb3f806ae43f90c2fd3fe04f4d3e6991cd3ead1c1a3f69914d3fb172803f0f2d9a3f6de7b33f6991cd3fc84be73fe27a00403cdf4f3ec520d03e32081c3fc520503f4a0c823f94189c3fde24b63fc520d03f0f2dea3f7b140240986e523e22b0d23eb7f31d3f22b0523fe4a5833f19049e3f4f62b83f22b0d23f570eed3f15ae0340f5fd543e7e3fd53e3cdf1f3f7e3f553f7d3f853f9eef9f3fbf9fba3f7e3fd53f9fefef3faf4705406310583e6310d83e4a0c223f6310583f3e0a873f4a0ca23f570ebd3f6310d83f7012f33f3e0a0740bf9f5a3e49e1da3e9418243f49e15a3f9cc4883ff628a43f518dbf3f49e1da3fa345f63fcdcc08401c2f5d3ea570dd3e1904263fa5705d3f365e8a3f7c14a63fc1cac13fa570dd3fea26f93f67660a408a41603e8a41e03e2831283f8a41603ff6288c3f2831a83f5939c43f8a41e03fbb49fc3ff6280c40e6d0623e7012e33e713d2a3f7012633f55e38d3fd44daa3f53b8c63f7012e33fef7cff3f86eb0d4055e3653ede24e63e448b2c3fde24663fdace8f3fa79bac3f7368c93fde24e63fd67801400bd70f40c3f5683ec3f5e83e53b82e3fc3f5683f9a99913f53b8ae3f0bd7cb3fc3f5e83f3e0a03409a99114020856b3ea9c6eb3e9cc4303fa9c66b3ff853933fffd4b03f0556ce3fa9c6eb3fd8a304402a5c13408e976e3e17d9ee3e6f12333f17d96e3f7e3f953fd222b33f2606d13f17d9ee3f365e0640af471540fda9713e86ebf13e4260353f86eb713f032b973fa570b53f46b6d33f86ebf13f94180840343317406bbc743ef5fdf43e15ae373ff5fd743f8816993f78beb73f6766d63ff5fdf43ff2d20940b91e1940dace773e6310f83ee8fb393f6310783f0d029b3f4a0cba3f8816d93f6310f83f508d0b403e0a1b4049e17a3ed222fb3ebb493c3fd2227b3f92ed9c3f1d5abc3fa9c6db3fd222fb3faf470d40c3f51c40ca767e3eca76fe3e17d93e3fca767e3f3e0a9f3f17d9be3ff1a7de3fca76fe3fd1220f403e0a1f409cc4803e9cc4003fea26413f9cc4803fc3f5a03fea26c13f1158e13f9cc4004030dd1040c3f52040d34d823e986e023f8295433f986e823f0d02a33fe4a5c33fbb49e43f986e024084c012403e0a23409418843e9418043fde24463f9418843fb91ea53fde24c63f032be73f94180440a69b1440b91e2540cba1853e90c2053f7693483f90c2853f032ba73fd8a3c83fad1cea3f90c20540fa7e1640343327408c6c873e8c6c073fd2224b3f8c6c873faf47a93fd222cb3ff5fdec3f8c6c07401d5a1840af472940c3f5883e8816093f69914d3f8816893ff853ab3fcca1cd3f9fefef3f88160940713d1a402a5c2b4084c08a3e48e10a3f8a41503f48e18a3f6991ad3fec51d03f7012f33f48e10a408a411c409a992d40448b8c3e09ac0c3fabf1523f09ac8c3fdaceaf3f0d02d33f4035f63f09ac0c40a2451e400bd72f4005568e3e05560e3f0781553f05568e3f86ebb13f0781d53f8816f93f05560e40c520204086eb3140c520903ec520103f2831583fc520903ff628b43f2831d83f5939fc3fc52010400f2d2240f628344086eb913e4a0c123f0d025b3f4a0c923f2c87b63f6f12db3fb39dff3f4a0c1240ec5124405d8f364046b6933e0bd7133f2eb25d3f0bd7933f9cc4b83f90c2dd3f426001400bd7134005562640cecc384090c2953e90c2153fd8a3603f90c2953f3433bb3fd8a3e03f3e0a034090c215401383284034333b40508d973e15ae173fbd74633f15ae973f6991bd3f2085e33f6bbc044015ae1740f0a72a409a993d401158993ed678193fde24663fd678993fdacebf3f4035e63fd34d0640d678194009ac2c400bd73f405b649b3e1f851b3f4d37693f1f859b3f365ec23faf47e93f941808401f851b40dcf92e4067664240a4709d3ea4701d3ff7286c3fa4709d3fceccc43ff728ec3f90c20940a4701d40ea263140cecc4440ee7c9f3eee7c1f3f653b6f3fee7c9f3f2a5cc73f653bef3f508d0b40ee7c1f40bd7433402a5c4740af47a13e7368213f4b0c723f7368a13f5fbac93fad1cf23f7d3f0d40736821409a99354090c24940f853a33ebd74233fb91e753fbd74a33fbb49cc3f1c2ff53f3e0a0f40bd7423406de73740ec514c404260a53e0781253f2831783f0781a53f17d9ce3f8a41f83fffd410400781254040353a4049e14e4015aea73e15ae273f20857b3f15aea73f9a99d13f2085fb3f53b8124015ae274009ac3c409a9951405fbaa93e5fba293f8e977e3f5fbaa93ff728d43f8e97fe3f138314405fba2940dcf93e40f7285440a9c6ab3e6de72b3f61e5803f6de7ab3f17d9d63f92ed0040986e16406de72b407368414049e156407c14ae3e7c142e3f5d8f823f7c14ae3f9a99d93f5d8f0240ec5118407c142e403cdf43409a995940c520b03e8a41303ff628843f8a41b03fbb49dc3f27310440713d1a408a413040d44d4640ec515c40986eb23e5d8f323f55e3853f5d8fb23f032bdf3f86eb05408a411c405d8f324061e5484034335f406bbcb43e6bbc343f508d873f6bbcb43f86ebe13f508d0740de241e406bbc34402a5c4b4086eb61403e0ab73e3e0a373faf47893f3e0ab73fcecce43faf470940f62820403e0a3740b7f34d40cecc64401158b93e1158393f0d028b3f1158b93f15aee73f0d020b400f2d224011583940448b504015ae6740e4a5bb3ee4a53b3f6bbc8c3fe4a5bb3f5d8fea3f6bbc0c4028312440e4a53b40d22253405d8f6a40b7f3bd3e7c143e3f2c878e3f7c14be3f6991ed3f5d8f0e40055626407c143e4024db55409b996d401383c03e1383403f4e62903f1383c03fd8a3f03f4e621040b172284013834040a79b5840d8a37040e6d0c23eabf1423f0f2d923fabf1c23fe4a5f33f403512408e972a40abf14240f9535b4015ae73404260c53e4260453f3208943f4260c53f53b8f63f320814403ab42c40426045407c145e4053b8764015aec73edace473ff2d2953fdacec73f5fbaf93f23db154017d92e40dace4740cecc604090c27940713dca3e365e4a3f77be973f365eca3f92edfc3fa9c6174088163140365e4a4015ae6340c4f57c40cecccc3e92ed4c3ffda9993f92edcc3f631000402eb21940f953334092ed4c405d8f66407b1480402a5ccf3eee7c4f3f82959b3fee7ccf3ffca90140b39d1b4069913540ee7c4f40a570694015ae81400f2dd23e0f2d523fcba19d3f0f2dd23f295c0340cba11d406de737400f2d5240e27a6c40295c83406bbcd43e30dd543fb39d9f3f30ddd43f25060540e4a51f40a3453a4030dd5440ef7c6f403e0a8540518dd73e518d573ffda9a13f518dd73f52b806402eb22140a79b3c40518d57402c87724052b88640ad1cda3e723d5a3fe4a5a33f723dda3f4e62084046b62340dcf93e40723d5a40388975406766884092eddc3e92ed5c3f2eb2a53f92eddc3f7b140a405fba2540e04f414092ed5c40769378407b148a4078bedf3e78be5f3fdacea73f78bedf3f0bd70b400bd72740a9c6434078be5f4078be7b400bd78b405d8fe23e5d8f623f86eba93f5d8fe23f9a990d40b7f32940713d46405d8f62407ae97e409a998d404260e53e0781653f9418ac3f0781e53f8c6c0f40f6282c40ffd4484007816540a01a8140a4708f402831e83eec51683f4035ae3fec51e83f1b2f1140a2452e40c74b4b40ec51684021b08240343391409643eb3e96436b3fb172b03f9643eb3f3e0a1340e27a304024db4d4096436b401d5a84403e0a93400556ee3e05566e3f84c0b23f0556ee3fc3f51440b5c83240448b504005566e407b148640c3f59440ea26f13eaf47713f92edb43faf47f13fb5c81640f4fd3440d2225340af4771405fba8740cdcc96405939f43e1e5a743f653bb73f1e5af43f3ab41840c74b3740f3d255401e5a7440bd74894053b89840c84bf73e8c6c773f3889b93f8c6cf73fbf9f1a409a993940138358408c6c77401b2f8b40d8a39a40365efa3efb7e7a3f0bd7bb3ffb7efa3f448b1c406de73b4034335b40fb7e7a4079e98c405d8f9c402eb2fd3e2eb27d3fa345be3f2eb2fd3f5d8f1e40d44d3e40e8fb5d402eb27d4052b88e405d8f9e400100003f0100803f0100c03f01000040010020400100404001006040d0f77f40010090400100a0400100003f0100803f6310c03f3208004032082040320840403208604019048040631090400100a0400100003f0100803f0100c03f9fefff3fcff71f4001004040010060409fef7f40e8fb8f400100a0400100003f0100803f9eefbf3f9fefff3fcff71f40d0f73f409fef5f4001008040cff78f400100a0400100003f0100803f6310c03f0100004032082040320840406310604032088040320890400100a0400100003f0100803f0100c03f01000040cff71f40d0f73f40010060409fef7f40cff78f400100a0400100003f0100803f0100c03f9fefff3fcff71f40d0f73f40d0f75f4001008040cff78f400100a0400100003f0100803f0100c03f3208004032082040320840403208604001008040320890400100a0400100003f0100803f9eefbf3f01000040cff71f40d0f73f409fef5f40d0f77f40cff78f400100a0400100003f0100803f0100c03f9fefff3fcff71f409eef3f409fef5f40d0f77f40e8fb8f400100a0400100003f0100803f0100c03f0100004001002040320840403208604001008040010090400100a0400100003f0100803f6310c03f3208004032082040320840406310604019048040010090400100a0400100003f0100803f0100c03f3208004032082040631040403208604019048040190490400100a0400100003f0100803f0100c03f0100004001002040d0f73f40d0f75f40d0f77f40cff78f400100a0400100003f0100803f0100c03f010000400100204032084040d0f75f4019048040010090400100a0400100003f0100803f0100c03f01000040cff71f40d0f73f40d0f75f40d0f77f40b7f38f400100a0400100003f0100803f0100c03f010000400100204001004040d0f75f4019048040e8fb8f400100a0400100003f0100803f0100c03f0100004001002040010040400100604019048040010090400100a0400100003f0100803f0100c03f9fefff3fcff71f40d0f73f40d0f75f4001008040e8fb8f400100a0400100003f0100803f0100c03f0100004001002040010040400100604001008040010090400100a0400100003f0100803f0100c03f9fefff3fcff71f40d0f73f40d0f75f4001008040e8fb8f400100a0400100003f0100803f0100c03f0100004001002040010040400100604019048040190490400100a0400100003f0100803f0100c03f0100004001002040010040400100604019048040010090400100a0400100003f0100803f0100c03f01000040cff71f40d0f73f409fef5f40d0f77f40e8fb8f400100a0400100003f0100803f0100c03f01000040cff71f4001004040d0f75f409fef7f40cff78f400100a0400100003f0100803f6310c03f3208004032082040320840403208604032088040190490400100a0400100003f0100803f0100c03f9fefff3fcff71f4001004040d0f75f40d0f77f40010090400100a0400100003f0100803f0100c03f9fefff3fcff71f40d0f73f40d0f75f409fef7f40010090400100a0400100003f0100803f0100c03f0100004001002040010040400100604019048040010090400100a0400100003f0100803f0100c03f0100004001002040010040400100604019048040010090400100a0400100003f0100803f0100c03f3208004032082040320840406310604019048040010090400100a0400100003f0100803f6310c03f3208004032082040010040403208604032088040190490400100a0400100003f0100803f0100c03f0100004001002040010040400100604001008040190490400100a040"
-                ),
-                viewOptions: {
-                    axesLines: {
-                        type: "dynamic",
-                        steps: {
-                            x: [],
-                            y: []
-                        },
-                        majorSubdivision: {
-                            horizontal: 24,
-                            vertical: 8
-                        },
-                        minorSubdivision: {
-                            horizontal: 5,
-                            vertical: 5
-                        },
-                        snapToGrid: true,
-                        defaultZoomMode: "all"
-                    },
-                    showAxisLabels: true,
-                    showZoomButtons: true
-                },
-                measurements: undefined,
-                rulers: undefined
-            });
-        }
+    abstract createChart(): Waveform | MultiWaveform | DlogWaveform | undefined;
 
-        runInAction(() => {
-            this.chart = chart;
-        });
-    };
-
-    static genData(
-        format: WaveformFormat,
-        dataLength: number,
-        fn: (x: number) => number
-    ) {
+    static genData(dataLength: number, fn: (x: number) => number) {
         const data = Buffer.alloc(dataLength * 8);
         for (let i = 0; i < dataLength; i++) {
             data.writeDoubleLE(fn((2 * Math.PI * i) / dataLength), i * 8);
@@ -378,7 +550,19 @@ class EEZChart {
                 return undefined;
             },
             updateObject: (object, options) => {
-                //console.log("updateObject", object, options);
+                // const message = JSON.parse(object.message);
+                // const measurements = JSON.stringify(message.measurements);
+                // if (
+                //     this.widget.measurements &&
+                //     this.flowContext.projectStore.runtime!
+                // ) {
+                //     this.flowContext.projectStore.runtime!.assignProperty(
+                //         this.flowContext,
+                //         this.widget,
+                //         "measurements",
+                //         measurements
+                //     );
+                // }
             },
             deleteObject: (object, options) => {
                 console.log("deleteObject", object, options);
@@ -410,56 +594,6 @@ class EEZChart {
         };
     }
 
-    /*
-{
-    "state": "success",
-    "fileType": { "mime": "application/eez-raw" },
-    "description": "Channel: 1, Sampling rate: 125000000, Preamble: 0,2,7500000,1,8.000000e-09,-3.000002e-02,0,1.039844e-01,0,97",
-    "waveformDefinition": {
-        "samplingRate": 125000000,
-        "format": 2,
-        "unitName": "amp",
-        "color": "#FBFB00",
-        "colorInverse": "#AEAE00",
-        "label": "Channel 1",
-        "offset": -10.086486800000001,
-        "scale": 0.1039844,
-        "cachedMinValue": 49,
-        "cachedMaxValue": 146
-    },
-    "viewOptions": {
-        "axesLines": {
-            "type": "dynamic",
-            "majorSubdivision": { "horizontal": 12, "vertical": 8 },
-            "minorSubdivision": { "horizontal": 5, "vertical": 5 }
-        },
-        "showAxisLabels": true,
-        "showZoomButtons": true
-    },
-    "horizontalScale": 0.005,
-    "verticalScale": 2,
-    "dataLength": 7500000,
-    "note": "[{\"insert\":\"Current harmonics, DCM224 2 x 60 W, DCP405 140 W + \"},{\"attributes\":{\"bold\":true},\"insert\":\"10u2 only\"},{\"insert\":\"\\n\"}]",
-    "measurements": {
-        "measurements": [
-            {
-                "measurementId": "12712f20-8456-462b-cc9c-4d22508e223d",
-                "measurementFunctionId": "rms"
-            },
-            {
-                "measurementId": "cf224fbc-c4bf-4ff3-a7ce-47bd11a83225",
-                "measurementFunctionId": "fft",
-                "parameters": {
-                    "xAxis": "harmonics",
-                    "yAxis": "linear",
-                    "numHarmonics": "100"
-                }
-            }
-        ],
-        "chartPanelsViewState": "[{\"type\":\"stack\",\"isClosable\":true,\"reorderEnabled\":true,\"title\":\"\",\"activeItemIndex\":0,\"content\":[{\"type\":\"component\",\"componentName\":\"MeasurementValue\",\"id\":\"cf224fbc-c4bf-4ff3-a7ce-47bd11a83225\",\"componentState\":{\"measurementId\":\"cf224fbc-c4bf-4ff3-a7ce-47bd11a83225\"},\"title\":\"FFT\",\"isClosable\":false,\"reorderEnabled\":true}]}]"
-    }
-}
-*/
     createGenericWaveform({
         id,
         data,
@@ -467,7 +601,6 @@ class EEZChart {
         samplingRate,
         unitName,
         color,
-        colorInverse,
         label,
         offset,
         scale,
@@ -506,7 +639,7 @@ class EEZChart {
                     format,
                     unitName,
                     color,
-                    colorInverse,
+                    colorInverse: color,
                     label,
                     offset,
                     scale,
@@ -526,6 +659,210 @@ class EEZChart {
             }
         });
     }
+}
+
+class SingleEEZChart extends EEZChart {
+    constructor(
+        flowContext: IFlowContext,
+        widget: EEZChartWidget,
+        public data: any,
+        public format: string,
+        public samplingRate: number,
+        public unitName: string,
+        public color: string,
+        public label: string,
+        public offset: number,
+        public scale: number
+    ) {
+        super(flowContext, widget);
+    }
+
+    createChart = () => {
+        if (!this.data) {
+            return undefined;
+        }
+
+        let format =
+            this.format == "float"
+                ? WaveformFormat.FLOATS_32BIT
+                : this.format == "double"
+                ? WaveformFormat.FLOATS_64BIT
+                : this.format == "rigol-byte"
+                ? WaveformFormat.RIGOL_BYTE
+                : this.format == "rigol-word"
+                ? WaveformFormat.RIGOL_WORD
+                : this.format == "csv"
+                ? WaveformFormat.CSV_STRING
+                : WaveformFormat.JS_NUMBERS;
+
+        if (Array.isArray(this.data)) {
+            format = WaveformFormat.JS_NUMBERS;
+        }
+
+        const unitName =
+            Object.keys(UNITS).indexOf(this.unitName) == -1
+                ? "unknown"
+                : this.unitName;
+
+        return this.createGenericWaveform({
+            id: "0",
+
+            data: this.data,
+
+            samplingRate: this.samplingRate,
+            format,
+            unitName,
+            color: this.color,
+            colorInverse: this.color,
+            label: this.label,
+            offset: this.offset,
+            scale: this.scale,
+
+            viewOptions: {
+                axesLines: {
+                    type: "dynamic",
+                    steps: {
+                        x: [],
+                        y: []
+                    },
+                    majorSubdivision: {
+                        horizontal: 24,
+                        vertical: 8
+                    },
+                    minorSubdivision: {
+                        horizontal: 5,
+                        vertical: 5
+                    },
+                    snapToGrid: true,
+                    defaultZoomMode: "all"
+                },
+                showAxisLabels: true,
+                showZoomButtons: true
+            },
+            measurements: undefined,
+            rulers: undefined
+        });
+    };
+}
+
+class MultiEEZChart extends EEZChart {
+    constructor(
+        flowContext: IFlowContext,
+        widget: EEZChartWidget,
+        public waveformDefinitions: {
+            data: any;
+            format: string;
+            samplingRate: number;
+            unitName: string;
+            color: string;
+            label: string;
+            offset: number;
+            scale: number;
+        }[]
+    ) {
+        super(flowContext, widget);
+    }
+
+    createChart = () => {
+        const waveformDefinitions = this.waveformDefinitions.filter(
+            waveformDefinition => waveformDefinition.data
+        );
+
+        if (waveformDefinitions.length === 0) {
+            return undefined;
+        }
+
+        return this.createMultiWaveform({
+            id: "0",
+            waveforms: waveformDefinitions.map((waveformDefinition, i) => {
+                let format =
+                    waveformDefinition.format == "float"
+                        ? WaveformFormat.FLOATS_32BIT
+                        : waveformDefinition.format == "double"
+                        ? WaveformFormat.FLOATS_64BIT
+                        : waveformDefinition.format == "rigol-byte"
+                        ? WaveformFormat.RIGOL_BYTE
+                        : waveformDefinition.format == "rigol-word"
+                        ? WaveformFormat.RIGOL_WORD
+                        : waveformDefinition.format == "csv"
+                        ? WaveformFormat.CSV_STRING
+                        : WaveformFormat.JS_NUMBERS;
+
+                if (Array.isArray(waveformDefinition.data)) {
+                    format = WaveformFormat.JS_NUMBERS;
+                }
+
+                const unitName =
+                    Object.keys(UNITS).indexOf(waveformDefinition.unitName) ==
+                    -1
+                        ? "unknown"
+                        : waveformDefinition.unitName;
+
+                return this.createGenericWaveform({
+                    id: i.toString(),
+
+                    data: waveformDefinition.data,
+
+                    samplingRate: waveformDefinition.samplingRate,
+                    format,
+                    unitName,
+                    color: waveformDefinition.color,
+                    colorInverse: waveformDefinition.color,
+                    label: waveformDefinition.label,
+                    offset: waveformDefinition.offset,
+                    scale: waveformDefinition.scale,
+
+                    viewOptions: {
+                        axesLines: {
+                            type: "dynamic",
+                            steps: {
+                                x: [],
+                                y: []
+                            },
+                            majorSubdivision: {
+                                horizontal: 24,
+                                vertical: 8
+                            },
+                            minorSubdivision: {
+                                horizontal: 5,
+                                vertical: 5
+                            },
+                            snapToGrid: true,
+                            defaultZoomMode: "all"
+                        },
+                        showAxisLabels: true,
+                        showZoomButtons: true
+                    },
+                    measurements: undefined,
+                    rulers: undefined
+                });
+            }),
+
+            viewOptions: {
+                axesLines: {
+                    type: "dynamic",
+                    steps: {
+                        x: [],
+                        y: []
+                    },
+                    majorSubdivision: {
+                        horizontal: 24,
+                        vertical: 8
+                    },
+                    minorSubdivision: {
+                        horizontal: 5,
+                        vertical: 5
+                    },
+                    snapToGrid: true,
+                    defaultZoomMode: "all"
+                },
+                showAxisLabels: true,
+                showZoomButtons: true
+            },
+            measurements: undefined,
+            rulers: undefined
+        });
+    };
 
     createMultiWaveform({
         id,
@@ -577,35 +914,51 @@ class EEZChart {
             }
         });
     }
-
-    /*
-{
-    "state": "success",
-    "dataLength": 6624,
-    "fileType": { "ext": "dlog", "mime": "application/eez-dlog" },
-    "measurements": {
-        "measurements": [
-            {
-                "measurementId": "aff6252d-b09a-470f-c60f-fe502def5bc2",
-                "measurementFunctionId": "fft"
-            },
-            {
-                "measurementId": "3f06816e-5df4-4d12-d146-bc1c3576d0e3",
-                "measurementFunctionId": "average"
-            }
-        ],
-        "chartPanelsViewState": "[{\"type\":\"stack\",\"isClosable\":true,\"reorderEnabled\":true,\"title\":\"\",\"activeItemIndex\":0,\"content\":[{\"type\":\"component\",\"componentName\":\"MeasurementValue\",\"id\":\"aff6252d-b09a-470f-c60f-fe502def5bc2\",\"componentState\":{\"measurementId\":\"aff6252d-b09a-470f-c60f-fe502def5bc2\"},\"title\":\"FFT (Ugs=1V)\",\"isClosable\":false,\"reorderEnabled\":true}]}]"
-    },
-    "rulers": {
-        "xAxisRulersEnabled": true,
-        "x1": 14.000000208616257,
-        "x2": 14.000000208616257,
-        "yAxisRulersEnabled": [],
-        "y1": [],
-        "y2": []
-    }
 }
-*/
+
+class DLOGEEZChart extends EEZChart {
+    constructor(
+        flowContext: IFlowContext,
+        widget: EEZChartWidget,
+        public data: any
+    ) {
+        super(flowContext, widget);
+    }
+
+    createChart() {
+        if (!this.data) {
+            return undefined;
+        }
+
+        return this.createDlogWaveform({
+            id: "0",
+            data: this.data,
+            viewOptions: {
+                axesLines: {
+                    type: "dynamic",
+                    steps: {
+                        x: [],
+                        y: []
+                    },
+                    majorSubdivision: {
+                        horizontal: 24,
+                        vertical: 8
+                    },
+                    minorSubdivision: {
+                        horizontal: 5,
+                        vertical: 5
+                    },
+                    snapToGrid: true,
+                    defaultZoomMode: "all"
+                },
+                showAxisLabels: true,
+                showZoomButtons: true
+            },
+            measurements: undefined,
+            rulers: undefined
+        });
+    }
+
     createDlogWaveform({
         id,
         data,
@@ -627,7 +980,7 @@ class EEZChart {
             type: "instrument/file-download",
             message: JSON.stringify({
                 state: "success",
-                dataLength: data.length,
+                dataLength: data?.length ?? 0,
                 fileType: { ext: "dlog", mime: "application/eez-dlog" },
                 viewOptions,
                 measurements,

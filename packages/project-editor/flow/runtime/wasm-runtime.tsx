@@ -808,7 +808,9 @@ export class WasmRuntime extends RemoteRuntime {
             }
         }
 
-        await this.projectStore.runtimeSettings.savePersistentVariables();
+        if (!this.error) {
+            await this.projectStore.runtimeSettings.savePersistentVariables();
+        }
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
@@ -1579,13 +1581,20 @@ class ComponentProperties {
     private getPropertyIndex(component: Component, propertyName: string) {
         const classInfo = getClassInfo(component);
 
-        const properties = classInfo.properties.filter(propertyInfo =>
+        let properties = classInfo.properties.filter(propertyInfo =>
             isFlowProperty(component, propertyInfo, [
                 "input",
                 "template-literal",
                 "assignable"
             ])
         );
+
+        if (classInfo.getAdditionalFlowProperties) {
+            properties = [
+                ...properties,
+                ...classInfo.getAdditionalFlowProperties(component)
+            ];
+        }
 
         return properties.findIndex(property => property.name == propertyName);
     }

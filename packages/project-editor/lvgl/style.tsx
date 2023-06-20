@@ -539,7 +539,10 @@ export const LVGLSelectedStyleEditor = observer(
                     style={{
                         width: "100%",
                         height: "100%",
-                        padding: 10
+                        padding: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
                     }}
                 >
                     <canvas
@@ -547,7 +550,9 @@ export const LVGLSelectedStyleEditor = observer(
                         width={this.runtime.displayWidth}
                         height={this.runtime.displayHeight}
                         style={{
-                            imageRendering: "pixelated"
+                            imageRendering: "pixelated",
+                            maxWidth: "100%",
+                            maxHeight: "100%"
                         }}
                     ></canvas>
                 </div>
