@@ -14,6 +14,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { settingsController } from "home/settings";
 import { action, observable, makeObservable } from "mobx";
 import { closest } from "eez-studio-shared/dom";
+import tinycolor from "tinycolor2";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -199,8 +200,10 @@ export const ThemedColorInput = observer(
                         ref={this.props.inputRef}
                         className="form-control"
                         style={{
-                            color: color && isDark(color) ? "#fff" : undefined,
-                            backgroundColor: color
+                            color: isDark(tinycolor(color).toHexString())
+                                ? "#fff"
+                                : undefined,
+                            backgroundColor: tinycolor(color).toHexString()
                         }}
                         type="text"
                         value={value}
