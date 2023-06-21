@@ -196,6 +196,7 @@ const FADE_MODES = {
 };
 
 export class LVGLChangeScreenActionType extends LVGLActionType {
+    showPreviousScreen: boolean;
     screen: string;
     fadeMode: keyof typeof FADE_MODES;
     speed: number;
@@ -204,6 +205,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
     constructor() {
         super();
         makeObservable(this, {
+            showPreviousScreen: observable,
             screen: observable,
             fadeMode: observable,
             speed: observable,
@@ -214,9 +216,17 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
     static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
         properties: [
             {
+                name: "showPreviousScreen",
+                displayName: "Previous screen",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
                 name: "screen",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "userPages"
+                referencedObjectCollectionPath: "userPages",
+                hideInPropertyGrid: (action: LVGLChangeScreenActionType) =>
+                    action.showPreviousScreen
             },
             {
                 name: "fadeMode",
@@ -239,6 +249,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
         ],
         defaultValue: {
             fadeMode: "FADE_IN",
+            showPreviousScreen: false,
             speed: 200,
             delay: 0
         },
@@ -248,17 +259,23 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
             }
             let singleItem =
                 (getParent(action) as LVGLActionType[]).length == 1;
-            return `${singleItem ? "" : "Change screen: "}Screen=${humanize(
-                action.screen
-            )}, Speed=${action.speed} ms, Delay=${action.delay} ms`;
+            return `${singleItem ? "" : "Change screen: "}${
+                action.showPreviousScreen
+                    ? "Previous Screen"
+                    : `Screen=${action.screen}`
+            }, Speed=${action.speed} ms, Delay=${action.delay} ms`;
         },
         check: (object: LVGLChangeScreenActionType, messages: IMessage[]) => {
-            if (!object.screen) {
-                messages.push(propertyNotSetMessage(object, "screen"));
-            } else {
-                let page = findPage(getProject(object), object.screen);
-                if (!page) {
-                    messages.push(propertyNotFoundMessage(object, "screen"));
+            if (!object.showPreviousScreen) {
+                if (!object.screen) {
+                    messages.push(propertyNotSetMessage(object, "screen"));
+                } else {
+                    let page = findPage(getProject(object), object.screen);
+                    if (!page) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "screen")
+                        );
+                    }
                 }
             }
         }
@@ -266,9 +283,15 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
 
     override build(assets: Assets, dataBuffer: DataBuffer) {
         // screen
-        let screen: number = 0;
-        if (this.screen) {
-            screen = assets.getPageIndex(this, "screen");
+        let screen: number;
+        if (this.showPreviousScreen) {
+            screen = -1;
+        } else {
+            if (this.screen) {
+                screen = assets.getPageIndex(this, "screen");
+            } else {
+                screen = 0;
+            }
         }
         dataBuffer.writeInt32(screen);
 

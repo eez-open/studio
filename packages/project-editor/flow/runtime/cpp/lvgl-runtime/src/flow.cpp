@@ -22,8 +22,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int16_t currentPageId = -1;
-
 bool is_editor = false;
 
 uint32_t screenLoad_animType = 0;
@@ -375,9 +373,8 @@ void doAnimateFlowState(eez::flow::FlowState *flowState) {
 }
 
 void doAnimate() {
-    if (currentPageId != -1) {
-        unsigned pageIndex = currentPageId - 1;
-        auto flowState = eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+    if (g_currentScreen != -1) {
+        auto flowState = eez::flow::getPageFlowState(eez::g_mainAssets, g_currentScreen);
         doAnimateFlowState(flowState);
     }
 }
@@ -717,8 +714,8 @@ void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t
     screenLoad_animType = animType;
     screenLoad_speed = speed;
     screenLoad_delay = delay;
-    eez::flow::onPageChanged(currentPageId, pageId);
-    currentPageId = pageId;
+    eez::flow::onPageChanged(g_currentScreen + 1, pageId);
+    g_currentScreen = pageId - 1;
 }
 
 EM_PORT_API(void) stopScript() {
@@ -813,8 +810,8 @@ extern "C" bool flowTick() {
 }
 
 void flowOnPageLoadedStudio(unsigned pageIndex) {
-    if (currentPageId == -1) {
-        currentPageId = pageIndex + 1;
+    if (g_currentScreen == -1) {
+        g_currentScreen = pageIndex;
     }
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
 }
