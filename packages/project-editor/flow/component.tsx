@@ -30,7 +30,8 @@ import {
     FlowPropertyType,
     setParent,
     IMessage,
-    IPropertyGridGroupDefinition
+    IPropertyGridGroupDefinition,
+    isPropertyOptional
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -3871,11 +3872,17 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
 
     for (const propertyDefinition of propertyDefinitions) {
         let hideInPropertyGrid;
-
         const enabled = propertyDefinition.enabled;
         if (enabled) {
             hideInPropertyGrid = (object: any, propertyInfo: PropertyInfo) =>
                 enabled(...(object?._props ?? []));
+        }
+
+        let isOptional;
+        const optional = propertyDefinition.optional;
+        if (optional) {
+            isOptional = (object: any, propertyInfo: PropertyInfo) =>
+                optional(...(object?._props ?? []));
         }
 
         if (propertyDefinition.type === "expression") {
@@ -3887,7 +3894,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
                         formText: propertyDefinition.formText,
-                        hideInPropertyGrid
+                        hideInPropertyGrid,
+                        isOptional
                     },
                     propertyDefinition.valueType
                 )
@@ -3901,7 +3909,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
                         formText: propertyDefinition.formText,
-                        hideInPropertyGrid
+                        hideInPropertyGrid,
+                        isOptional
                     },
                     propertyDefinition.valueType
                 )
@@ -3914,7 +3923,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     formText: propertyDefinition.formText,
-                    hideInPropertyGrid
+                    hideInPropertyGrid,
+                    isOptional
                 })
             );
         } else if (propertyDefinition.type === "enum") {
@@ -3925,7 +3935,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 enumItems: propertyDefinition.enumItems,
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid
+                hideInPropertyGrid,
+                isOptional
             });
         } else if (propertyDefinition.type === "inline-code") {
             const languageToType = {
@@ -3942,7 +3953,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: languageToType[propertyDefinition.language],
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid
+                hideInPropertyGrid,
+                isOptional
             });
         } else if (propertyDefinition.type === "list") {
             const listItemProperties = propertyDefinition.properties;
@@ -4033,7 +4045,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid
+                hideInPropertyGrid,
+                isOptional
             });
         } else if (propertyDefinition.type == "boolean") {
             properties.push({
@@ -4042,7 +4055,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid
+                hideInPropertyGrid,
+                isOptional
             });
         }
     }
@@ -4297,6 +4311,7 @@ function checkProperty(
                 );
             }
         } else if (
+            !isPropertyOptional(object, propertyInfo) &&
             !(object instanceof ProjectEditor.WidgetClass) &&
             !isPropertyHidden(object, propertyInfo)
         ) {
@@ -4317,6 +4332,7 @@ function checkProperty(
                 );
             }
         } else if (
+            !isPropertyOptional(object, propertyInfo) &&
             !(object instanceof ProjectEditor.WidgetClass) &&
             !isPropertyHidden(object, propertyInfo)
         ) {
@@ -4337,6 +4353,7 @@ function checkProperty(
                 );
             }
         } else if (
+            !isPropertyOptional(object, propertyInfo) &&
             !(object instanceof ProjectEditor.WidgetClass) &&
             !isPropertyHidden(object, propertyInfo)
         ) {

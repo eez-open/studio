@@ -1,7 +1,8 @@
 import type {
     IDashboardComponentContext,
     ValueType,
-    IWasmFlowRuntime
+    IWasmFlowRuntime,
+    IType
 } from "eez-studio-types";
 import {
     createWasmValue,
@@ -242,6 +243,25 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
 
         this.WasmFlowRuntime._valueFree(valuePtr);
+    }
+
+    getOutputType(outputName: string): IType | undefined {
+        const flowIndex = this.getFlowIndex();
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const componentIndex = this.getComponentIndex();
+        const component = flow.components[componentIndex];
+        const outputIndex = component.outputIndexes[outputName];
+        if (outputIndex == undefined) {
+            return undefined;
+        }
+        const output = component.outputs[outputIndex];
+
+        const valueTypeIndex = output.valueTypeIndex;
+        if (valueTypeIndex == -1) {
+            return undefined;
+        }
+
+        return this.WasmFlowRuntime.assetsMap.types[valueTypeIndex];
     }
 
     propagateValue(outputName: string, value: any) {

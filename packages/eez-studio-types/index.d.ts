@@ -215,6 +215,7 @@ export interface IComponentPropertyBase {
     name: string;
     displayName?: string;
     enabled?: (...props: string[]) => boolean;
+    optional?: (...props: string[]) => boolean;
     formText?: string;
 }
 
@@ -704,6 +705,8 @@ export interface IDashboardComponentContext {
         fieldName: string,
         value: any
     ) => void;
+
+    getOutputType: (outputName: string) => IType | undefined;
 
     propagateValue: (outputName: string, value: any) => void;
     propagateValueThroughSeqout: () => void;
