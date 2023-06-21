@@ -55,30 +55,11 @@ export const ThemedColorInput = observer(
 
         onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             const color = event.target.value;
-            // const color16bits = to16bitsColor(color);
-            // if (!compareColors(color, color16bits)) {
-            //     await info(
-            //         "Selected color is using more then 16 bits (i.e. 5-6-5 RGB color scheme).",
-            //         "It will be saved as is but it will be truncated to 16 bits before displaying and building."
-            //     );
-            // }
             this.props.onChange(color);
         };
 
-        combine: boolean = false;
-
         onChangeColor = (color: string, completed: boolean) => {
-            if (!this.combine) {
-                this.context.undoManager.setCombineCommands(true);
-                this.combine = true;
-            }
-
             this.props.onChange(color);
-
-            if (completed) {
-                this.context.undoManager.setCombineCommands(false);
-                this.combine = false;
-            }
         };
 
         constructor(props: {
@@ -103,6 +84,7 @@ export const ThemedColorInput = observer(
                     this.onDocumentPointerDown,
                     true
                 );
+                document.removeEventListener("keydown", this.onKeyDown, true);
             }
 
             this.dropDownOpen = open;
@@ -113,6 +95,7 @@ export const ThemedColorInput = observer(
                     this.onDocumentPointerDown,
                     true
                 );
+                document.addEventListener("keydown", this.onKeyDown, true);
             }
         }
 
@@ -128,6 +111,12 @@ export const ThemedColorInput = observer(
             }
 
             this.setDropDownOpen(!this.dropDownOpen);
+
+            if (this.dropDownOpen) {
+                this.context.undoManager.setCombineCommands(true);
+            } else {
+                this.context.undoManager.setCombineCommands(false);
+            }
 
             if (this.dropDownOpen) {
                 const rectButton = buttonEl.getBoundingClientRect();
@@ -153,6 +142,15 @@ export const ThemedColorInput = observer(
                     event.stopPropagation();
                     this.setDropDownOpen(false);
                 }
+            }
+        });
+
+        onKeyDown = action((event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                this.context.undoManager.undo();
+                this.setDropDownOpen(false);
+            } else if (event.key == "Enter") {
+                this.setDropDownOpen(false);
             }
         });
 

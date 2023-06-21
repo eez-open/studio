@@ -848,16 +848,6 @@ export class TreeAdapter {
                 itemChildren = itemChildren.filter(item => filter(item.object));
             }
 
-            if (searchText) {
-                itemChildren = itemChildren.filter(item => {
-                    return (
-                        objectToString(item.object)
-                            .toLowerCase()
-                            .indexOf(searchText.toLowerCase()) != -1
-                    );
-                });
-            }
-
             if (sortDirection === "asc") {
                 itemChildren = itemChildren.sort((a, b) =>
                     stringCompare(getLabel(a.object), getLabel(b.object))
@@ -890,7 +880,7 @@ export class TreeAdapter {
                         collapsable: false
                     };
 
-                    children.push(row);
+                    const savedIndex = children.length;
 
                     const maxLevelReached =
                         maxLevel !== undefined && level === maxLevel;
@@ -908,6 +898,16 @@ export class TreeAdapter {
                         !maxLevelReached &&
                         (childItems.length > 0 ||
                             canContainChildren(childItem.object));
+
+                    if (
+                        savedIndex < children.length ||
+                        !searchText ||
+                        objectToString(row.item.object)
+                            .toLowerCase()
+                            .indexOf(searchText.toLowerCase()) != -1
+                    ) {
+                        children.splice(savedIndex, 0, row);
+                    }
                 }
             });
         }
