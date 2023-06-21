@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
@@ -94,53 +94,67 @@ const StylesNavigation = observer(
 export function drawStylePreview(
     canvas: HTMLCanvasElement,
     style: Style,
-    text: string
+    text: string,
+    inverse: boolean
 ) {
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (ctx) {
         ctx.save();
-        if (canvas.width > canvas.height) {
+        if (style.blinkProperty) {
             drawText(
                 ctx,
                 text,
                 0,
                 0,
-                canvas.width / 2 - 4,
+                canvas.width,
                 canvas.height,
                 style,
-                false
-            );
-            drawText(
-                ctx,
-                text,
-                canvas.width / 2 + 4,
-                0,
-                canvas.width / 2 - 4,
-                canvas.height,
-                style,
-                true
+                inverse
             );
         } else {
-            drawText(
-                ctx,
-                text,
-                0,
-                0,
-                canvas.width,
-                canvas.height / 2 - 4,
-                style,
-                false
-            );
-            drawText(
-                ctx,
-                text,
-                0,
-                canvas.height / 2 + 4,
-                canvas.width,
-                canvas.height / 2 - 4,
-                style,
-                true
-            );
+            if (canvas.width > canvas.height) {
+                drawText(
+                    ctx,
+                    text,
+                    0,
+                    0,
+                    canvas.width / 2 - 4,
+                    canvas.height,
+                    style,
+                    false
+                );
+                drawText(
+                    ctx,
+                    text,
+                    canvas.width / 2 + 4,
+                    0,
+                    canvas.width / 2 - 4,
+                    canvas.height,
+                    style,
+                    true
+                );
+            } else {
+                drawText(
+                    ctx,
+                    text,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height / 2 - 4,
+                    style,
+                    false
+                );
+                drawText(
+                    ctx,
+                    text,
+                    0,
+                    canvas.height / 2 + 4,
+                    canvas.width,
+                    canvas.height / 2 - 4,
+                    style,
+                    true
+                );
+            }
         }
         ctx.restore();
     }
@@ -156,6 +170,32 @@ const StyleEditor = observer(
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
+
+        inverse: boolean = false;
+        interval: any;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                inverse: observable
+            });
+        }
+
+        componentDidMount(): void {
+            this.interval = setInterval(
+                action(() => {
+                    this.inverse = !this.inverse;
+                }),
+                400
+            );
+        }
+
+        componentWillUnmount(): void {
+            if (this.interval) {
+                clearInterval(this.interval);
+            }
+        }
 
         get style() {
             const navigationStore = this.context.navigationStore;
@@ -201,7 +241,7 @@ const StyleEditor = observer(
                 let canvas = document.createElement("canvas");
                 canvas.width = width;
                 canvas.height = height;
-                drawStylePreview(canvas, style, text);
+                drawStylePreview(canvas, style, text, this.inverse);
 
                 return (
                     <img
