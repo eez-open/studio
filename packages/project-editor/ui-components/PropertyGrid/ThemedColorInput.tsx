@@ -147,7 +147,9 @@ export const ThemedColorInput = observer(
 
         onKeyDown = action((event: KeyboardEvent) => {
             if (event.key === "Escape") {
-                this.context.undoManager.undo();
+                if (this.context.undoManager.commands.length > 0) {
+                    this.context.undoManager.undo();
+                }
                 this.setDropDownOpen(false);
             } else if (event.key == "Enter") {
                 this.setDropDownOpen(false);
