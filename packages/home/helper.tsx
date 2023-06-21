@@ -2,6 +2,7 @@ import { ProjectType } from "project-editor/project/project";
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
+    LVGL_PROJECT_ICON,
     MICROPYTHON_ICON,
     APPLET_ICON
 } from "project-editor/ui-components/icons";
@@ -12,7 +13,7 @@ export function getProjectIcon(
     size: number
 ) {
     if (projectType == ProjectType.LVGL) {
-        return "../eez-studio-ui/_images/eez-project-lvgl.png";
+        return LVGL_PROJECT_ICON(size);
     }
 
     const isProject = filePath.endsWith(".eez-project");

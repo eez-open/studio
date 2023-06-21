@@ -13,6 +13,16 @@ export function capitalize(string: string | undefined): string {
 }
 
 export function humanize(string: string | number | undefined): string {
+    function underscore(string: string | undefined): string {
+        string = string || "";
+        string = string.toString(); // might be a number
+        string = string.trim();
+        string = string.replace(/([a-z\d])([A-Z]+)/g, "$1_$2");
+        string = string.replace(/[-\s]+/g, "_").toLowerCase();
+
+        return string;
+    }
+
     string = string || "";
     string = string.toString(); // might be a number
     string = string.trim();

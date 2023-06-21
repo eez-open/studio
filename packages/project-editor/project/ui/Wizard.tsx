@@ -37,6 +37,7 @@ import classNames from "classnames";
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
+    LVGL_PROJECT_ICON,
     MICROPYTHON_ICON,
     APPLET_ICON
 } from "project-editor/ui-components/icons";
@@ -662,7 +663,7 @@ class WizardModel {
             {
                 id: "LVGL",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
-                image: "../eez-studio-ui/_images/eez-project-lvgl.png",
+                image: LVGL_PROJECT_ICON(128),
                 projectName: "LVGL",
                 description: "Start your new LVGL project development here."
             }
