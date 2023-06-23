@@ -393,14 +393,14 @@ export class Assets {
             }
         }
 
-        if (missingIDs.length > 0) {
-            this.projectStore.outputSectionsStore.write(
-                Section.OUTPUT,
-                MessageType.WARNING,
-                `Missing styles with following ID's: ${missingIDs.join(", ")}`,
-                this.rootProject.styles
-            );
-        }
+        // if (missingIDs.length > 0) {
+        //     this.projectStore.outputSectionsStore.write(
+        //         Section.OUTPUT,
+        //         MessageType.WARNING,
+        //         `Missing styles with following ID's: ${missingIDs.join(", ")}`,
+        //         this.rootProject.styles
+        //     );
+        // }
 
         //
         // fonts

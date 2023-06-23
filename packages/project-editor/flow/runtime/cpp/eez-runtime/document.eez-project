@@ -6,15 +6,12 @@
       "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "firmware",
-      "imports": [
-        {
-          "objID": "70e48ba1-a593-86b0-e5d5-53724a68d9a2",
-          "projectFilePath": "gui\\gui.eez-project"
-        }
-      ],
+      "extensions": [],
+      "imports": [],
       "flowSupport": true,
       "displayWidth": 480,
-      "displayHeight": 272
+      "displayHeight": 272,
+      "resourceFiles": []
     },
     "build": {
       "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
@@ -28,7 +25,7 @@
         {
           "objID": "aff564fb-7760-21b3-77eb-25a9ffc7ca8e",
           "fileName": "gui/document.h",
-          "template": "#pragma once\n\n#include <eez/gui/data.h>\n#include <eez/gui/widget.h>\n\nnamespace eez {\nnamespace gui {\n\n//${eez-studio DATA_ENUM}\n\n//${eez-studio DATA_FUNCS_DECL}\n\n//${eez-studio DATA_ARRAY_DECL}\n\n//${eez-studio ACTIONS_ENUM}\n\n//${eez-studio ACTIONS_FUNCS_DECL}\n\n//${eez-studio ACTIONS_ARRAY_DECL}\n\n//${eez-studio GUI_FONTS_ENUM}\n\n//${eez-studio GUI_BITMAPS_ENUM}\n\n//${eez-studio GUI_STYLES_ENUM}\n\n//${eez-studio GUI_THEMES_ENUM}\n\n//${eez-studio GUI_COLORS_ENUM}\n\n//${eez-studio GUI_PAGES_ENUM}\n\n//${eez-studio GUI_ASSETS_DECL_COMPRESSED}\n\n} // namespace gui\n} // namespace eez\n"
+          "template": "#pragma once\n\n#define EEZ_GUI_DOCUMENT_API_VERSION 1\n\n#include <eez/gui/data.h>\n#include <eez/gui/widget.h>\n\nnamespace eez {\nnamespace gui {\n\n//${eez-studio DATA_ENUM}\n\n//${eez-studio DATA_FUNCS_DECL}\n\n//${eez-studio DATA_ARRAY_DECL}\n\n//${eez-studio ACTIONS_ENUM}\n\n//${eez-studio ACTIONS_FUNCS_DECL}\n\n//${eez-studio ACTIONS_ARRAY_DECL}\n\n//${eez-studio GUI_FONTS_ENUM}\n\n//${eez-studio GUI_BITMAPS_ENUM}\n\n//${eez-studio GUI_STYLES_ENUM}\n\n//${eez-studio GUI_THEMES_ENUM}\n\n//${eez-studio GUI_COLORS_ENUM}\n\n//${eez-studio GUI_PAGES_ENUM}\n\n//${eez-studio GUI_ASSETS_DECL_COMPRESSED}\n\n} // namespace gui\n} // namespace eez\n"
         },
         {
           "objID": "1cc9aae6-a588-d56b-2532-8bc0f671da17",
@@ -36,17 +33,308 @@
           "template": "#include \"document.h\"\n\nnamespace eez {\nnamespace gui {\n\n//${eez-studio DATA_ARRAY_DEF}\n\n//${eez-studio ACTIONS_ARRAY_DEF}\n\n//${eez-studio GUI_ASSETS_DEF_COMPRESSED}\n\n} // namespace gui\n} // namespace eez\n"
         }
       ],
-      "destinationFolder": "."
+      "destinationFolder": ".",
+      "lvglInclude": "lvgl/lvgl.h"
     }
   },
   "variables": {
     "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
-    "globalVariables": [],
+    "globalVariables": [
+      {
+        "objID": "1da3ad95-b754-4403-c51f-e9645dba1f19",
+        "id": 1,
+        "name": "alert_message",
+        "description": "Message in alert dialog",
+        "type": "string",
+        "defaultValue": "\"Are you sure?\"",
+        "native": true
+      },
+      {
+        "objID": "df008a3d-c825-453a-a365-4533174befe2",
+        "id": 2,
+        "name": "keypad_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "6ba74580-7d6e-437c-e8b5-6b62a35b6ad7",
+        "id": 3,
+        "name": "keypad_edit_unit",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "6b03e4f1-bb37-4ce1-94b0-3c0451e4f554",
+        "id": 4,
+        "name": "keypad_sign_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "938f9f1a-bbcf-45cc-873e-4589241ae818",
+        "id": 5,
+        "name": "keypad_unit_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "183a461a-b2a7-43d3-95cf-ebfe7d883342",
+        "id": 6,
+        "name": "keypad_dot_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "9a5806c5-2c86-49e2-dced-1e3a613486e7",
+        "id": 7,
+        "name": "keypad_option1_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "be2382cf-a170-4a19-f719-52a2ab18944c",
+        "id": 8,
+        "name": "keypad_option1_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "0eb476ff-fc4f-43e3-fe07-3b9ef6da3a34",
+        "id": 9,
+        "name": "keypad_option2_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "019bae59-908e-456b-98be-78af357b35f6",
+        "id": 10,
+        "name": "keypad_option2_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "873a5947-bd84-46d6-a66a-c68aa522db91",
+        "id": 11,
+        "name": "keypad_option3_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "f6ba0c31-8076-4f01-f84e-f438ba72e0f4",
+        "id": 12,
+        "name": "keypad_option3_text",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "181af8af-b092-4c63-ce20-b16de63e03cb",
+        "id": 13,
+        "name": "keypad_mode",
+        "type": "integer",
+        "defaultValue": "0",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "d4d96ebb-c118-451e-c02e-a6cd0efe7e7b",
+        "id": 14,
+        "name": "keypad_ok_enabled",
+        "type": "boolean",
+        "defaultValue": "false",
+        "persistent": false,
+        "native": true
+      },
+      {
+        "objID": "75bcb40c-0373-4c1a-e75a-01bc0014d4d6",
+        "id": 15,
+        "name": "keypad_label",
+        "type": "string",
+        "defaultValue": "\"\"",
+        "persistent": false,
+        "native": true
+      }
+    ],
     "structures": [],
     "enums": []
   },
-  "actions": [],
-  "pages": [
+  "actions": [
+    {
+      "objID": "68d13bad-6e1b-4d80-f4dd-858c8535d778",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 1,
+      "name": "yes",
+      "implementationType": "native"
+    },
+    {
+      "objID": "2fa151bf-38a1-47d8-a2e8-4960df4b64ba",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 2,
+      "name": "no",
+      "implementationType": "native"
+    },
+    {
+      "objID": "0c4e3207-16c8-4e24-f1ed-21a17b0eef03",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 3,
+      "name": "cancel",
+      "implementationType": "native"
+    },
+    {
+      "objID": "dfd0b890-7958-49da-c471-5351d6491816",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 4,
+      "name": "edit",
+      "implementationType": "native"
+    },
+    {
+      "objID": "6ca659b8-9635-449e-f756-ba43c514e126",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 5,
+      "name": "drag_overlay",
+      "implementationType": "native"
+    },
+    {
+      "objID": "bfeae8fc-5133-4c04-fb5d-181ef06eecd3",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 6,
+      "name": "scroll",
+      "implementationType": "native"
+    },
+    {
+      "objID": "ec1e21fa-8e2d-422c-89c4-23339ba9dac1",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 7,
+      "name": "keypad_key",
+      "implementationType": "native"
+    },
+    {
+      "objID": "084ed7f4-7c2d-497f-a738-4de753e8ada6",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 8,
+      "name": "keypad_back",
+      "implementationType": "native"
+    },
+    {
+      "objID": "87c2df62-7a8a-4e5d-cbdb-12aab44bd7d2",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 9,
+      "name": "keypad_unit",
+      "implementationType": "native"
+    },
+    {
+      "objID": "50cad3db-8969-4963-8a17-05ae83d72607",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 10,
+      "name": "keypad_option1",
+      "implementationType": "native"
+    },
+    {
+      "objID": "d586aa94-2054-435a-82dc-1ab0f233f298",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 11,
+      "name": "keypad_option2",
+      "implementationType": "native"
+    },
+    {
+      "objID": "d72ba49d-3d0a-4a80-aedb-8d84a47271d2",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 12,
+      "name": "keypad_option3",
+      "implementationType": "native"
+    },
+    {
+      "objID": "febc7cb7-33e2-4ce4-9204-28371f7be7bd",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 13,
+      "name": "keypad_sign",
+      "implementationType": "native"
+    },
+    {
+      "objID": "295a18fb-a069-4d6f-fe39-797ba5848a18",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 14,
+      "name": "keypad_ok",
+      "implementationType": "native"
+    },
+    {
+      "objID": "6ce22888-0f4c-4449-817c-4c7305f0d4d8",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 15,
+      "name": "keypad_cancel",
+      "implementationType": "native"
+    },
+    {
+      "objID": "a0049cc6-4b29-42a9-bf62-aa919a01ac68",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 16,
+      "name": "toggle_keypad_mode",
+      "implementationType": "native"
+    },
+    {
+      "objID": "9b4336d9-265a-4ac1-bcb1-e21b7434a4c5",
+      "components": [],
+      "connectionLines": [],
+      "localVariables": [],
+      "id": 17,
+      "name": "keypad_space",
+      "implementationType": "native"
+    }
+  ],
+  "userPages": [
     {
       "objID": "dc8c5e32-a2aa-9d2d-a70b-4d971f3c2b8d",
       "components": [],
@@ -109,21 +397,216 @@
       }
     }
   ],
+  "userWidgets": [],
   "styles": [
     {
-      "objID": "31a9ed91-e76f-1ca8-83ce-be9258fc0205",
-      "name": "value_label",
-      "inheritFrom": "default",
+      "objID": "df50e7ed-6b1a-48e2-ed95-f7a69ac0a059",
+      "id": 1,
+      "name": "default",
+      "description": "",
+      "childStyles": [
+        {
+          "objID": "48cf4dce-3cdb-4d09-b90e-a1b4453f2c22",
+          "id": 21,
+          "name": "background",
+          "childStyles": [],
+          "backgroundColor": "background",
+          "backgroundImage": ""
+        },
+        {
+          "objID": "ee6ed11c-853c-4f56-9421-b99ba72a6170",
+          "id": 22,
+          "name": "button",
+          "childStyles": [
+            {
+              "objID": "d7043926-1979-4e5b-8517-4ba0e4109d8b",
+              "id": 23,
+              "name": "button_disabled",
+              "childStyles": [],
+              "color": "button_disabled_text",
+              "backgroundColor": "button_disabled_background",
+              "activeColor": "button_disabled_text",
+              "activeBackgroundColor": "button_disabled_background",
+              "borderColor": "button_disabled_border"
+            },
+            {
+              "objID": "3c824ff1-707d-40b5-aa8c-493321895dba",
+              "id": 25,
+              "name": "message_box_info_button",
+              "childStyles": [],
+              "alwaysBuild": true,
+              "padding": "8 16 8 16"
+            },
+            {
+              "objID": "5a264484-4d25-4b2e-9a8a-ada9ce5c877d",
+              "id": 4,
+              "name": "message_box_error_button",
+              "childStyles": [],
+              "alwaysBuild": true,
+              "padding": "8 16 8 16"
+            },
+            {
+              "objID": "afafaa4b-3650-47ff-c52c-ba50917f638e",
+              "id": 13,
+              "name": "message_box_question_button",
+              "childStyles": [],
+              "alwaysBuild": true,
+              "padding": "0 4",
+              "margin": "0"
+            }
+          ],
+          "color": "button_text",
+          "backgroundColor": "button_background",
+          "activeColor": "button_text",
+          "activeBackgroundColor": "button_active_background",
+          "borderSize": "2",
+          "borderRadius": "8",
+          "borderColor": "button_border"
+        },
+        {
+          "objID": "e7443bbc-bb5a-40c2-e0f0-3f79cfff890f",
+          "id": 17,
+          "name": "drop_down_list",
+          "childStyles": [
+            {
+              "objID": "4a554774-469b-45a7-e9c4-bfdc616aa926",
+              "id": 5,
+              "name": "drop_down_list_popup_container",
+              "childStyles": [
+                {
+                  "objID": "9adbc4fa-ad1b-4e38-a0d8-c0da14b4aefb",
+                  "id": 7,
+                  "name": "drop_down_list_popup_item",
+                  "childStyles": [
+                    {
+                      "objID": "2becabb2-5873-460a-b874-d808b505b1c1",
+                      "id": 9,
+                      "name": "drop_down_list_disabled_popup_item",
+                      "childStyles": [],
+                      "alwaysBuild": true,
+                      "color": "drop_down_list_color_disabled"
+                    }
+                  ],
+                  "alwaysBuild": true,
+                  "padding": "6"
+                }
+              ],
+              "alwaysBuild": true,
+              "color": "drop_down_list_color",
+              "backgroundColor": "drop_down_list_background",
+              "activeColor": "drop_down_list_background",
+              "activeBackgroundColor": "drop_down_list_color",
+              "borderColor": "drop_down_list_border",
+              "padding": "12"
+            }
+          ],
+          "color": "drop_down_list_color",
+          "backgroundColor": "drop_down_list_background",
+          "activeColor": "drop_down_list_color",
+          "activeBackgroundColor": "drop_down_list_active_background",
+          "borderColor": "drop_down_list_border"
+        },
+        {
+          "objID": "d9ff99b0-5bfe-4899-cbe5-a6f9cbfda1f3",
+          "id": 18,
+          "name": "roller",
+          "childStyles": [
+            {
+              "objID": "c408c9bf-c4df-40e0-f1c8-2b98995a832f",
+              "id": 19,
+              "name": "roller_selected_value",
+              "childStyles": [],
+              "borderSize": "2",
+              "borderRadius": "4",
+              "borderColor": "#c0c0c0"
+            },
+            {
+              "objID": "829edda1-2851-40f0-debe-f762d5731bc3",
+              "id": 20,
+              "name": "roller_unselected_value",
+              "childStyles": [],
+              "color": "#808080"
+            }
+          ]
+        },
+        {
+          "objID": "c5483e62-833b-4407-9861-a816b7b74e13",
+          "id": 15,
+          "name": "slider",
+          "childStyles": [],
+          "color": "slider_widget_color",
+          "backgroundColor": "slider_widget_background"
+        },
+        {
+          "objID": "ff06728d-2090-46fd-ddb1-8880d166ca0b",
+          "id": 16,
+          "name": "switch",
+          "childStyles": [],
+          "color": "switch_widget_color",
+          "backgroundColor": "switch_widget_background_off",
+          "activeColor": "switch_widget_color",
+          "activeBackgroundColor": "switch_widget_background_on",
+          "focusColor": "switch_widget_color",
+          "borderSize": "2",
+          "borderColor": "switch_widget_border",
+          "padding": "3 0"
+        },
+        {
+          "objID": "04b9fed1-620c-49ff-8ac8-21c75d7cd71e",
+          "id": 2,
+          "name": "message_box_info",
+          "childStyles": [],
+          "alwaysBuild": true,
+          "padding": "20",
+          "margin": "20"
+        },
+        {
+          "objID": "efbeaadc-f441-402a-b949-83a3184c8353",
+          "id": 3,
+          "name": "message_box_error",
+          "childStyles": [],
+          "alwaysBuild": true,
+          "color": "dark_text",
+          "backgroundColor": "error",
+          "activeColor": "error",
+          "activeBackgroundColor": "dark_text",
+          "padding": "20",
+          "margin": "20"
+        },
+        {
+          "objID": "44d97c7f-915b-4e21-a608-a8c241c51f39",
+          "id": 12,
+          "name": "message_box_question_container",
+          "childStyles": [
+            {
+              "objID": "94b74813-a475-4d71-eaf4-b842cabf0b44",
+              "id": 11,
+              "name": "message_box_question_message",
+              "childStyles": [],
+              "alwaysBuild": true,
+              "alignVertical": "top",
+              "color": "text",
+              "backgroundColor": "background",
+              "activeColor": "background",
+              "activeBackgroundColor": "text",
+              "padding": "0 0 10 0",
+              "margin": "0"
+            }
+          ],
+          "alwaysBuild": true,
+          "padding": "20",
+          "margin": "20"
+        }
+      ],
       "font": "medium",
-      "alignHorizontal": "right"
-    },
-    {
-      "objID": "5be8c5f6-f7c5-f8c9-b40d-525ce216b494",
-      "name": "value",
-      "inheritFrom": "default",
-      "font": "medium",
-      "alignHorizontal": "left",
-      "padding": "0 0 0 5"
+      "alignHorizontal": "center",
+      "alignVertical": "center",
+      "color": "text",
+      "backgroundColor": "background",
+      "activeColor": "background",
+      "activeBackgroundColor": "text",
+      "borderColor": "border",
+      "padding": "0"
     }
   ],
   "fonts": [
@@ -2064,6 +2547,184 @@
         }
       ],
       "alwaysBuild": false
+    },
+    {
+      "objID": "c4b79c1b-4116-49f6-be38-f18a8957cb15",
+      "id": 2,
+      "name": "shadow",
+      "renderingEngine": "freetype",
+      "source": {
+        "objID": "ea4cb029-f649-419f-b79a-e8a331195575",
+        "filePath": "fonts\\fontawesome-webfont.ttf",
+        "size": 14
+      },
+      "bpp": 8,
+      "height": 20,
+      "ascent": 20,
+      "descent": 0,
+      "glyphs": [
+        {
+          "objID": "b1fd7dce-0bea-41ea-e409-f89619520595",
+          "encoding": 32,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "0000000000000000000303030303060606060606000000000000030606060a0a0a0a0a0a0a0a0a0a000000000306060a10101010171717171717171700000003060a10171b1e21212828282828282828000003060a101b000000000000000000000000000000060a101b280000000000000000000000000000030a101b28390000000000000000000000000000060a1721364e000000000000000000000000000006101b2c445f000000000000000000000000000306101e324e7000000000000000000000000000030a102139587a00000000000000000000000000060a10213d5f8400000000000000000000000000060a1728405f8b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
+          },
+          "source": {
+            "objID": "ac0173b8-792b-4b33-9ae3-3c4e30318b2a",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 32
+          }
+        },
+        {
+          "objID": "f16663eb-bbe1-487d-ea23-c297b636eca6",
+          "encoding": 33,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "06060606060606060606060606060606060606060a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a171717171717171717171717171717171717171728282828282828282828282828282828282828280000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "source": {
+            "objID": "d18f3e0f-4320-4e51-890d-fc2c3d1d2ad0",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 33
+          }
+        },
+        {
+          "objID": "6a5cdf71-315b-4fe4-f4d4-5be0f72bce87",
+          "encoding": 34,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "06060606060603030303030000000000000000000a0a0a0a0a0a0a0a0a0a060606030000000000001717171717171717101010100a06060300000000282828282828282821211e1b17100a0603000000000000000000000000000000001b100a0603000000000000000000000000000000281b100a0600000000000000000000000000000039281b100a0300000000000000000000000000004e3621170a0600000000000000000000000000005f442c1b10060000000000000000000000000000704e321e100603000000000000000000000000007a583921100a0300000000000000000000000000845f3d21100a06000000000000000000000000008b5f4028170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
+          },
+          "source": {
+            "objID": "f95d3f6c-cb65-42c1-86a4-992e88bbd683",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 34
+          }
+        },
+        {
+          "objID": "7701ed90-ecdd-4dc2-b990-6593d715c557",
+          "encoding": 35,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000"
+          },
+          "source": {
+            "objID": "b995f718-9e9f-4de3-c099-b8998db9c270",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 35
+          }
+        },
+        {
+          "objID": "7e134cb9-2feb-4f20-c96b-e842e1ef04ea",
+          "encoding": 36,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06"
+          },
+          "source": {
+            "objID": "3ce79899-7c2f-4a7f-e241-331b864640f2",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 36
+          }
+        },
+        {
+          "objID": "540dc756-8424-42ba-9ad4-955d7cc95602",
+          "encoding": 37,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668e00000000000000000000000000060a172844668b00000000000000000000000000060a172844668b00000000000000000000000000060a1728405f8b00000000000000000000000000060a10213d5f84f8000000000000000000000000030a102139587ac5fb00000000000000000000000306101e324e708eb0c8ddeaf4f4fbfbfbfbfbfb0006101b2c445f7a99adbeccd2d6dddddddddddd00060a1721364e667a8e9faab0b4b4b4b4b4b4b400030a101b28394e5f707a84888b8b8b8e8e8e8e0000060a101b2836444e585f5f66666666666666000003060a101b212c32393d404444444444444400000003060a10171b1e21212828282828282828000000000306060a101010101717171717171b1b000000000000030606060a0a0a0a0a0a0a0d0d0d000000000000000000030303030306060a0a0a0a"
+          },
+          "source": {
+            "objID": "3dc7d4eb-795b-450c-eec2-2160847b1838",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 37
+          }
+        },
+        {
+          "objID": "98341aa0-e4b2-4c18-d6a6-6cb03b603b2d",
+          "encoding": 38,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000fbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbddddddddddddddddddddddddddddddddddddddddb4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b48e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e6666666666666666666666666666666666666666444444444444444444444444444444444444444428282828282828282828282828282828282828281b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
+          },
+          "source": {
+            "objID": "167b7360-e23e-4472-99be-69bf1d7930d5",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 38
+          }
+        },
+        {
+          "objID": "805f5632-4f42-42e7-a089-2448b3f4bcd1",
+          "encoding": 39,
+          "x": 0,
+          "y": 0,
+          "width": 20,
+          "height": 20,
+          "dx": 20,
+          "glyphBitmap": {
+            "width": 20,
+            "height": 20,
+            "pixelArray": "000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008e664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b664428170a06000000000000000000000000008b5f4028170a06000000000000000000000000f8845f3d21100a060000000000000000000000fbc57a583921100a03fbfbfbfbfbfbf4f4eaddc8b08e704e321e100603ddddddddddddd6d2ccbead997a5f442c1b100600b4b4b4b4b4b4b4b0aa9f8e7a664e3621170a06008e8e8e8e8b8b8b88847a705f4e39281b100a0300666666666666665f5f584e4436281b100a06000044444444444444403d39322c211b100a06030000282828282828282821211e1b17100a06030000001b17171717171717101010100a060603000000000d0d0a0a0a0a0a0a0a0a060606030000000000000a0a0a0606060303030303000000000000000000"
+          },
+          "source": {
+            "objID": "f1b11bd5-19b3-4905-a668-100a07609adc",
+            "filePath": "fonts\\fontawesome-webfont.ttf",
+            "size": 14,
+            "encoding": 39
+          }
+        }
+      ],
+      "alwaysBuild": true
     }
   ],
   "bitmaps": [],
@@ -2130,10 +2791,6 @@
       "name": "error"
     },
     {
-      "objID": "d7415fa8-de06-41cf-baef-39cb19c879e3",
-      "name": "note"
-    },
-    {
       "objID": "fd1d3927-8215-fff3-e85c-e67b16910e20",
       "name": "switch_widget_color"
     },
@@ -2174,26 +2831,6 @@
       "name": "drop_down_list_border"
     },
     {
-      "objID": "faf9f894-9b12-582e-4734-d7a88a4598b0",
-      "name": "text_input_color"
-    },
-    {
-      "objID": "5051e432-4dab-7d88-7d60-ed247b3b372f",
-      "name": "text_input_color_disabled"
-    },
-    {
-      "objID": "0f6f5174-39ad-a284-213d-d3a6c244e635",
-      "name": "text_input_background"
-    },
-    {
-      "objID": "baab95e4-de93-5c06-07b7-5d5fd4f10d32",
-      "name": "text_input_active_background"
-    },
-    {
-      "objID": "25ca2245-85fc-3052-6ab3-8635921ba053",
-      "name": "text_input_border"
-    },
-    {
       "objID": "ec09e8d8-3a03-dbc0-a0c7-81dcc2fbabbf",
       "name": "drop_down_list_active_background"
     }
@@ -2218,7 +2855,6 @@
         "#202020",
         "#808080",
         "#ffa3a3",
-        "#fce440",
         "#ffffff",
         "#0080ff",
         "#808080",
@@ -2228,11 +2864,6 @@
         "#404040",
         "#808080",
         "#ffffff",
-        "#404040",
-        "#404040",
-        "#808080",
-        "#ffffff",
-        "#c0c0c0",
         "#404040",
         "#c0c0c0"
       ]

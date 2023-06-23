@@ -2928,6 +2928,9 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                 "array:string"
             )
         ],
+        defaultValue: {
+            messageType: MESSAGE_BOX_TYPE_INFO
+        },
         icon: (
             <svg
                 viewBox="0 0 24 24"

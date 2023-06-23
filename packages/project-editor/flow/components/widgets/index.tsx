@@ -3090,8 +3090,9 @@ export class ButtonWidget extends Widget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 64,
+            width: 80,
             height: 40,
+            data: `"Buttton"`,
             eventHandlers: [
                 {
                     eventName: "CLICKED",
@@ -7274,13 +7275,13 @@ export class RollerWidget extends Widget {
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          useStyle: "roller_widget"
+                          useStyle: "roller"
                       },
                       selectedValueStyle: {
-                          useStyle: "roller_widget_selected_value"
+                          useStyle: "roller_selected_value"
                       },
                       unselectedValueStyle: {
-                          useStyle: "roller_widget_unselected_value"
+                          useStyle: "roller_unselected_value"
                       }
                   }
                 : {};
@@ -7431,7 +7432,7 @@ export class SwitchWidget extends Widget {
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          useStyle: "switch_widget"
+                          useStyle: "switch"
                       }
                   }
                 : {};
@@ -7563,7 +7564,7 @@ export class SliderWidget extends Widget {
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
-                          useStyle: "slider_widget"
+                          useStyle: "slider"
                       }
                   }
                 : {};
@@ -7722,8 +7723,26 @@ export class DropDownListWidget extends Widget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 64,
+            width: 120,
             height: 32
+        },
+
+        componentDefaultValue: (projectStore: ProjectStore) => {
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          useStyle: "default"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
+                ? {
+                      style: {
+                          useStyle: "drop_down_list"
+                      }
+                  }
+                : {};
         },
 
         icon: (
