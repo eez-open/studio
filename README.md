@@ -6,9 +6,16 @@ The contributors are listed in CONTRIB.TXT. This project uses the GPL v3 license
 EEZ Studio uses the [C4.1 (Collective Code Construction Contract)](http://rfc.zeromq.org/spec:22) process for contributions.
 To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-open/studio/issues).
 
+### Links
+
+* [Discord](https://discord.gg/dhYMnCB) server
+* [Twitter](https://twitter.com/envox) <img src="https://about.twitter.com/etc/designs/about2-twitter/public/img/favicon.ico" width="16" />
+* [YouTube](https://www.youtube.com/c/eezopen) channel
+* [Liberpay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
+
 ## Introduction
 
-The EEZ Studio is an open source cross-platform modular visual low-code development tool and [SCPI](https://www.ivifoundation.org/scpi/) controller for [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and other T&M devices that support SCPI from manufacturers such as Keysight, Rigol, Siglent, etc.
+EEZ Studio is a free and open source cross-platform low-code tool for embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple devices and T&M equipment including [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and any other T&M devices that support [SCPI](https://www.ivifoundation.org/scpi/) from manufacturers such as Keysight, Rigol, Siglent, etc.
 
 ### EEZ Studio _Project_
 
@@ -24,23 +31,6 @@ The EEZ Studio is an open source cross-platform modular visual low-code developm
 -   Flowchart based low-code programming for desktop dashboard
 
 ![Flow](images/flow_intro.png)
-
-New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) fund from NLnet, which will enable quick and easy creation of flow diagrams using ready-made components. The target for executing the flow chart can be PC or EEZ BB3. This will be realized in the following milestones:
-
--   [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
--   [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
--   [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
--   [M4](https://github.com/eez-open/studio/issues/134) - Debugger for PC
--   [M5](https://github.com/eez-open/studio/issues/135) - Debugger for BB3
--   [M6](https://github.com/eez-open/studio/releases/tag/0.9.90) - EEZ flow engine unification
--   [M7](https://github.com/eez-open/studio/releases/tag/v0.9.91) - Multilanguage support in project
--   [M8](https://github.com/eez-open/studio/releases/tag/v0.9.92) - Widgets advanced control
--   [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
--   [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
--   [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
--   [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - LVGL integration
--   [M13](https://github.com/eez-open/studio/releases/tag/v0.9.98) - Standalone Flow dashboard
--   [M14](https://github.com/eez-open/studio/releases/tag/v0.9.99) - Home page modifications and enhancements
 
 ### EEZ Studio _Instrument_
 
@@ -65,14 +55,23 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 
 ---
 
-**Scheduled for future releases:**
+New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) and [NGI0 Entrust](https://nlnet.nl/project/EEZ-Studio/#ack) funds from NLnet. The following milestones have been achieved so far:
 
--   Support for other connections (i.e. VXI-11, USBTMC, IVI) using 3rd party open source
--   Instrument extensions for popular instruments from other vendors
--   Print and PDF export
--   (External) Data logger functionality
--   Protocol analyzer using 3rd party open source
--   Import/export of all working data (i.e. measurements, session history, shortcuts, settings, etc.) for archiving purposes or easier integration with e.g. [ELN](https://en.wikipedia.org/wiki/Electronic_lab_notebook)s
+-   [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
+-   [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
+-   [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
+-   [M4](https://github.com/eez-open/studio/issues/134) - Debugger for PC
+-   [M5](https://github.com/eez-open/studio/issues/135) - Debugger for BB3
+-   [M6](https://github.com/eez-open/studio/releases/tag/0.9.90) - EEZ flow engine unification
+-   [M7](https://github.com/eez-open/studio/releases/tag/v0.9.91) - Multilanguage support in project
+-   [M8](https://github.com/eez-open/studio/releases/tag/v0.9.92) - Widgets advanced control
+-   [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
+-   [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
+-   [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
+-   [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - LVGL integration
+-   [M13](https://github.com/eez-open/studio/releases/tag/v0.9.98) - Standalone Flow dashboard
+-   [M14](https://github.com/eez-open/studio/releases/tag/v0.9.99) - Home page modifications and enhancements
+-   [M15](https://github.com/eez-open/studio/releases/tag/v0.10.1) - Enhancements (more examples, extension manager, MQTT)
 
 ## Installation
 
