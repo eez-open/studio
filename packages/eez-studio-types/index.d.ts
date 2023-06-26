@@ -87,7 +87,7 @@ export interface DialogDefinition {
 }
 
 export interface IEnumItem {
-    id: string;
+    id: string | number;
     label: string;
 }
 

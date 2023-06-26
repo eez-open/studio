@@ -33,7 +33,7 @@ import { Loader } from "eez-studio-ui//loader";
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IEnumItem {
-    id: string;
+    id: string | number;
     label: string;
     image?: string;
 }

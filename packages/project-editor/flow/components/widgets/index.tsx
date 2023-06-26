@@ -2952,8 +2952,6 @@ export class BitmapWidget extends Widget {
                             const h = height;
                             const style = this.style;
 
-                            const inverse = false;
-
                             if (bitmap) {
                                 const imageElement = bitmap.imageElement;
                                 if (!imageElement) {
@@ -2998,16 +2996,16 @@ export class BitmapWidget extends Widget {
                                     y_offset = y1;
                                 }
 
-                                if (inverse) {
-                                    draw.setBackColor(style.colorProperty);
-                                    draw.setColor(
-                                        style.backgroundColorProperty
+                                if (bitmap.backgroundColor !== "transparent") {
+                                    ctx.fillStyle = bitmap.backgroundColor;
+                                    ctx.fillRect(
+                                        x_offset,
+                                        y_offset,
+                                        width,
+                                        height
                                     );
                                 } else {
-                                    draw.setBackColor(
-                                        style.backgroundColorProperty
-                                    );
-                                    draw.setColor(style.colorProperty);
+                                    ctx.clearRect(0, 0, width, height);
                                 }
 
                                 draw.drawBitmap(

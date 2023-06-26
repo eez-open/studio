@@ -32,7 +32,8 @@ import {
     getProjectStore,
     getUniquePropertyValue,
     Message,
-    ProjectStore
+    ProjectStore,
+    propertyNotSetMessage
 } from "project-editor/store";
 
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -46,6 +47,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
     BitmapColorFormat,
+    isDashboardProject,
     isLVGLProject
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
@@ -94,7 +96,7 @@ const ExportBitmapFilePropertyGridUI = observer(
             return (
                 <div style={{ marginTop: 10 }}>
                     <Button color="primary" size="small" onClick={this.export}>
-                        Export bitmap file...
+                        Export Bitmap File...
                     </Button>
                 </div>
             );
@@ -123,6 +125,34 @@ export const CF_TRUE_COLOR_ALPHA = 32;
 export const CF_TRUE_COLOR_CHROMA = 33;
 
 export const CF_RGB565A8 = 16;
+
+const LVGL_COLOR_FORMATS = [
+    { id: CF_ALPHA_1_BIT, label: "ALPHA 1 BIT" },
+    { id: CF_ALPHA_2_BIT, label: "ALPHA 2 BIT" },
+    { id: CF_ALPHA_4_BIT, label: "ALPHA 4 BIT" },
+    { id: CF_ALPHA_8_BIT, label: "ALPHA 8 BIT" },
+
+    { id: CF_INDEXED_1_BIT, label: "INDEXED 1 BIT" },
+    { id: CF_INDEXED_2_BIT, label: "INDEXED 2 BIT" },
+    { id: CF_INDEXED_4_BIT, label: "INDEXED 4 BIT" },
+    { id: CF_INDEXED_8_BIT, label: "INDEXED 8 BIT" },
+
+    { id: CF_RAW, label: "RAW" },
+    { id: CF_RAW_CHROMA, label: "RAW CHROMA" },
+    { id: CF_RAW_ALPHA, label: "RAW ALPHA" },
+
+    { id: CF_TRUE_COLOR, label: "TRUE COLOR" },
+    {
+        id: CF_TRUE_COLOR_ALPHA,
+        label: "TRUE COLOR ALPHA"
+    },
+    {
+        id: CF_TRUE_COLOR_CHROMA,
+        label: "TRUE COLOR CHROMA"
+    },
+
+    { id: CF_RGB565A8, label: "RGB565A8" }
+];
 
 export class Bitmap extends EezObject {
     id: number | undefined;
@@ -159,7 +189,8 @@ export class Bitmap extends EezObject {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (bitmap: Bitmap) =>
+                    isLVGLProject(bitmap) || isDashboardProject(bitmap)
             },
             {
                 name: "name",
@@ -184,46 +215,25 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Enum,
                 enumItems: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap)
-                        ? [
-                              { id: CF_ALPHA_1_BIT, label: "ALPHA 1 BIT" },
-                              { id: CF_ALPHA_2_BIT, label: "ALPHA 2 BIT" },
-                              { id: CF_ALPHA_4_BIT, label: "ALPHA 4 BIT" },
-                              { id: CF_ALPHA_8_BIT, label: "ALPHA 8 BIT" },
-
-                              { id: CF_INDEXED_1_BIT, label: "INDEXED 1 BIT" },
-                              { id: CF_INDEXED_2_BIT, label: "INDEXED 2 BIT" },
-                              { id: CF_INDEXED_4_BIT, label: "INDEXED 4 BIT" },
-                              { id: CF_INDEXED_8_BIT, label: "INDEXED 8 BIT" },
-
-                              { id: CF_RAW, label: "RAW" },
-                              { id: CF_RAW_CHROMA, label: "RAW CHROMA" },
-                              { id: CF_RAW_ALPHA, label: "RAW ALPHA" },
-
-                              { id: CF_TRUE_COLOR, label: "TRUE COLOR" },
-                              {
-                                  id: CF_TRUE_COLOR_ALPHA,
-                                  label: "TRUE COLOR ALPHA"
-                              },
-                              {
-                                  id: CF_TRUE_COLOR_CHROMA,
-                                  label: "TRUE COLOR CHROMA"
-                              },
-
-                              { id: CF_RGB565A8, label: "RGB565A8" }
-                          ]
+                        ? LVGL_COLOR_FORMATS
                         : [{ id: 16 }, { id: 32 }],
-                defaultValue: 16
+                defaultValue: 16,
+                hideInPropertyGrid: isDashboardProject
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "allStyles",
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (bitmap: Bitmap) =>
+                    isLVGLProject(bitmap) ||
+                    isDashboardProject(bitmap) ||
+                    bitmap.bpp == 32
             },
             {
                 name: "alwaysBuild",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: object =>
+                    isLVGLProject(object) || isDashboardProject(object)
             },
             {
                 name: "customUI",
@@ -243,6 +253,10 @@ export class Bitmap extends EezObject {
         },
         check: (bitmap: Bitmap, messages: IMessage[]) => {
             const projectStore = getProjectStore(bitmap);
+
+            if (!bitmap.image) {
+                messages.push(propertyNotSetMessage(bitmap, "image"));
+            }
 
             ProjectEditor.checkAssetId(
                 projectStore,
@@ -283,6 +297,15 @@ export class Bitmap extends EezObject {
                             }
                         },
                         ...(projectStore.projectTypeTraits.isLVGL
+                            ? [
+                                  {
+                                      name: "bpp",
+                                      displayName: "Color format",
+                                      type: "enum",
+                                      enumItems: LVGL_COLOR_FORMATS
+                                  } as IFieldProperties
+                              ]
+                            : projectStore.projectTypeTraits.isDashboard
                             ? []
                             : [
                                   {
@@ -295,12 +318,13 @@ export class Bitmap extends EezObject {
                     ]
                 },
                 values: {
-                    bpp: 32
+                    bpp: projectStore.projectTypeTraits.isLVGL
+                        ? CF_TRUE_COLOR_ALPHA
+                        : 32
                 }
             });
 
             const name: string = result.values.name;
-
             const bpp: number = result.values.bpp;
 
             return createBitmap(
@@ -308,7 +332,7 @@ export class Bitmap extends EezObject {
                 result.values.imageFilePath,
                 undefined,
                 name,
-                projectStore.projectTypeTraits.isLVGL ? undefined : bpp
+                bpp
             );
         },
         icon: "material:image",
@@ -366,7 +390,11 @@ export class Bitmap extends EezObject {
     private _imageElementImage: string;
 
     get backgroundColor() {
-        if (!isLVGLProject(this) && this.bpp !== 32) {
+        if (
+            !isLVGLProject(this) &&
+            !isDashboardProject(this) &&
+            this.bpp !== 32
+        ) {
             const style = findStyle(
                 ProjectEditor.getProject(this),
                 this.style || "default"

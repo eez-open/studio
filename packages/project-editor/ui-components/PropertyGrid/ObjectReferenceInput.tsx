@@ -75,7 +75,7 @@ export const ObjectReferenceInput = observer(
                             .toLowerCase()
                             .indexOf(this.searchText.toLowerCase()) != -1
                 )
-                .sort();
+                .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         }
 
         onChange = (event: React.ChangeEvent<HTMLInputElement>) => {

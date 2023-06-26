@@ -151,6 +151,7 @@ export const ImageProperty = observer(
                                         }
                                     }
                                 }}
+                                title="Select image file"
                             >
                                 &hellip;
                             </button>
@@ -162,6 +163,7 @@ export const ImageProperty = observer(
                                 onClick={() => {
                                     changeValue(undefined);
                                 }}
+                                title="Remove image"
                             >
                                 <Icon icon="material:close" size={16} />
                             </button>
