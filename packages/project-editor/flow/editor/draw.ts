@@ -225,7 +225,7 @@ export function drawGlyph(
                             pixelData[i++] = bgColorRgb.g;
                             pixelData[i++] = bgColorRgb.b;
                         }
-                        i++;
+                        pixelData[i++] = 255;
                     }
                     i += offset;
                 }

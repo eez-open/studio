@@ -74,6 +74,13 @@ input::placeholder {
     transform: rotate(-90deg);
 }
 
+.form-switch {
+    input {
+        width: 2.3rem !important;
+        height: 1.15rem !important;
+    }
+}
+
 #EezStudio_Content {
     position: absolute;
     left: 0;
@@ -3207,10 +3214,6 @@ button.EezStudio_Action {
     .form-switch {
         display: inline-flex;
         align-items: end;
-        input {
-            width: 2.3rem;
-            height: 1.15rem;
-        }
     }
 
     .dropdown-toggle {
@@ -7083,5 +7086,11 @@ button.EezStudio_Action {
                 margin-right: 0;
             }
         }
+    }
+}
+
+.EezStudio_NewFontDialog {
+    td:first-child {
+        min-width: 145px;
     }
 }

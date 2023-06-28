@@ -8,6 +8,10 @@ export function LabelWithProgress({
     label: string;
     progress: number;
 }) {
+    if (isNaN(progress)) {
+        progress = 0;
+    }
+
     progress *= 100;
     return (
         <div className="EezStudio_LabelWithProgress">

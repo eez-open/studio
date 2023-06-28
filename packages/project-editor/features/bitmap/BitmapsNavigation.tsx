@@ -3,7 +3,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
-import { LayoutModels } from "project-editor/store";
+import { LayoutModels, isObjectExists } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Bitmap, createBitmap } from "./bitmap";
 
@@ -103,7 +103,7 @@ const BitmapEditor = observer(
             const bitmap =
                 this.context.navigationStore.selectedBitmapObject.get() as Bitmap;
 
-            if (!bitmap || !bitmap.imageElement) {
+            if (!bitmap || !isObjectExists(bitmap) || !bitmap.imageElement) {
                 return null;
             }
 

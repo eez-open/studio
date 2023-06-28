@@ -150,6 +150,7 @@ export interface DialogDefinition {
     size?: "small" | "medium" | "large";
     fields: IFieldProperties[];
     error?: string;
+    className?: string;
 }
 
 export interface GenericDialogResult {
@@ -668,6 +669,7 @@ export const GenericDialog = observer(
                         }
                         onOk={this.props.onOk && this.onOk}
                         onCancel={this.props.onCancel}
+                        className={this.props.dialogDefinition.className}
                     >
                         {this.props.dialogDefinition.error && (
                             <div className="alert alert-danger">

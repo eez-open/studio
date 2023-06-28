@@ -13,6 +13,8 @@ export interface IWindowSate {
     modified: boolean;
     undo: string | null;
     redo: string | null;
+    isDebuggerActive: boolean;
+    hasExtensionDefinitions: boolean;
 }
 
 export interface IWindowParams {
@@ -82,7 +84,9 @@ export function createWindow(params: IWindowParams) {
             state: {
                 modified: false,
                 undo: null,
-                redo: null
+                redo: null,
+                isDebuggerActive: false,
+                hasExtensionDefinitions: false
             },
             focused: false,
             activeTabType: undefined
@@ -220,15 +224,20 @@ ipcMain.on(
             projectFilePath: string;
             undo: string | null;
             redo: string | null;
+            isDebuggerActive: boolean;
+            hasExtensionDefinitions: boolean;
         }
     ) => {
+        console.log(state);
         const window = findWindowByWebContents(event.sender);
         if (window) {
             runInAction(() => {
                 window.state = {
                     modified: state.modified,
                     undo: state.undo,
-                    redo: state.redo
+                    redo: state.redo,
+                    isDebuggerActive: state.isDebuggerActive,
+                    hasExtensionDefinitions: state.hasExtensionDefinitions
                 };
             });
         }

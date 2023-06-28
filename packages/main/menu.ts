@@ -269,14 +269,17 @@ function buildFileMenu(win: IWindow | undefined) {
                         loadDebugInfo(filePaths[0], focusedWindow);
                     }
                 }
-            },
-            {
-                label: "Save Debug Info...",
-                click: async function (item: any, focusedWindow: any) {
-                    saveDebugInfo(focusedWindow);
-                }
             }
         );
+
+        if (win.state.isDebuggerActive) {
+            fileMenuSubmenu.push({
+                label: "Save Debug Info...",
+                click: function (item: any, focusedWindow: any) {
+                    saveDebugInfo(focusedWindow);
+                }
+            });
+        }
     }
 
     fileMenuSubmenu.push(
@@ -349,26 +352,31 @@ function buildFileMenu(win: IWindow | undefined) {
                         focusedWindow.webContents.send("build");
                     }
                 }
-            },
-            {
-                label: "Build Extensions",
-                click: function (item: any, focusedWindow: any) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("build-extensions");
-                    }
-                }
-            },
-            {
-                label: "Build and Install Extensions",
-                click: function (item: any, focusedWindow: any) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send(
-                            "build-and-install-extensions"
-                        );
-                    }
-                }
             }
         );
+
+        if (win.state.hasExtensionDefinitions) {
+            fileMenuSubmenu.push(
+                {
+                    label: "Build Extensions",
+                    click: function (item: any, focusedWindow: any) {
+                        if (focusedWindow) {
+                            focusedWindow.webContents.send("build-extensions");
+                        }
+                    }
+                },
+                {
+                    label: "Build and Install Extensions",
+                    click: function (item: any, focusedWindow: any) {
+                        if (focusedWindow) {
+                            focusedWindow.webContents.send(
+                                "build-and-install-extensions"
+                            );
+                        }
+                    }
+                }
+            );
+        }
     } else if (win?.activeTabType === "instrument") {
         fileMenuSubmenu.push(
             {

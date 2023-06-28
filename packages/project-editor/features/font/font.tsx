@@ -42,7 +42,8 @@ import {
 } from "project-editor/store";
 import {
     isLVGLProject,
-    isNotV1Project
+    isNotV1Project,
+    isV1Project
 } from "project-editor/project/project-type-traits";
 
 import type { Project } from "project-editor/project/project";
@@ -98,6 +99,11 @@ export class GlyphSource extends EezObject {
             },
             {
                 name: "size",
+                displayName: (object: IEezObject) =>
+                    ProjectEditor.getProjectStore(object).projectTypeTraits
+                        .isLVGL
+                        ? "Font size (pixels)"
+                        : "Font size (points)",
                 type: PropertyType.Number
             },
             {
@@ -891,6 +897,11 @@ export class FontSource extends EezObject {
             },
             {
                 name: "size",
+                displayName: (object: IEezObject) =>
+                    ProjectEditor.getProjectStore(object).projectTypeTraits
+                        .isLVGL
+                        ? "Font size (pixels)"
+                        : "Font size (points)",
                 type: PropertyType.Number,
                 readOnlyInPropertyGrid: isLVGLProject
             }
@@ -1029,13 +1040,10 @@ export class Font extends EezObject {
                     {
                         id: "opentype",
                         label: "OpenType"
-                    },
-                    {
-                        id: "LVGL",
-                        label: "LVGL"
                     }
                 ],
-                readOnlyInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (font: Font) => isLVGLProject(font),
+                enumDisallowUndefined: true
             },
             {
                 name: "source",
@@ -1053,13 +1061,15 @@ export class Font extends EezObject {
                 type: PropertyType.Enum,
                 enumItems: [{ id: 1 }, { id: 8 }],
                 defaultValue: 1,
-                readOnlyInPropertyGrid: true
+                readOnlyInPropertyGrid: true,
+                hideInPropertyGrid: isNotV1Project
             },
             {
                 name: "threshold",
                 type: PropertyType.Number,
                 defaultValue: 128,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (font: Font) =>
+                    isLVGLProject(font) || font.bpp == 8
             },
             {
                 name: "height",
@@ -1113,13 +1123,15 @@ export class Font extends EezObject {
                 name: "lvglRanges",
                 displayName: "Ranges",
                 type: PropertyType.String,
-                computed: true
+                computed: true,
+                hideInPropertyGrid: object => !isLVGLProject(object)
             },
             {
                 name: "lvglSymbols",
                 displayName: "Symbols",
                 type: PropertyType.String,
-                computed: true
+                computed: true,
+                hideInPropertyGrid: object => !isLVGLProject(object)
             },
             {
                 name: "lvglBinFile",
@@ -1216,6 +1228,7 @@ export class Font extends EezObject {
                                 },
                                 {
                                     name: "size",
+                                    displayName: "Font size (pixels)",
                                     type: "number"
                                 },
                                 {
@@ -1274,7 +1287,7 @@ export class Font extends EezObject {
                                 },
                                 {
                                     name: "filePath",
-                                    displayName: "Based on font",
+                                    displayName: "Font file",
                                     type: AbsoluteFileInput,
                                     validators: [validators.required],
                                     options: {
@@ -1303,10 +1316,12 @@ export class Font extends EezObject {
                                     name: "bpp",
                                     displayName: "Bits per pixel",
                                     type: "enum",
-                                    enumItems: [1, 8]
+                                    enumItems: [1, 8],
+                                    visible: () => isV1Project(parent)
                                 },
                                 {
                                     name: "size",
+                                    displayName: "Font size (points)",
                                     type: "number"
                                 },
                                 {
@@ -1317,7 +1332,8 @@ export class Font extends EezObject {
                                 {
                                     name: "createGlyphs",
                                     displayName: "Create characters",
-                                    type: "boolean"
+                                    type: "boolean",
+                                    checkboxStyleSwitch: true
                                 },
                                 {
                                     name: "fromGlyph",
@@ -1335,9 +1351,11 @@ export class Font extends EezObject {
                                     name: "createBlankGlyphs",
                                     displayName: "Create blank characters",
                                     type: "boolean",
-                                    visible: isCreateGlyphs
+                                    visible: isCreateGlyphs,
+                                    checkboxStyleSwitch: true
                                 }
-                            ]
+                            ],
+                            className: "EezStudio_NewFontDialog"
                         },
                         values: {
                             renderingEngine: "opentype",

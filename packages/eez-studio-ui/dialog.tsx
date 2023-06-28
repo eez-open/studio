@@ -90,6 +90,7 @@ export const Dialog = observer(
         additionalButtons?: IDialogButton[];
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
+        className?: string;
     }> {
         disableButtons = false;
         open = true;
@@ -188,6 +189,7 @@ export const Dialog = observer(
                     buttons={buttons}
                     additionalFooterControl={this.props.additionalFooterControl}
                     backdrop={this.props.backdrop}
+                    className={this.props.className}
                 >
                     {this.props.children}
                 </BootstrapDialog>
@@ -226,6 +228,7 @@ export const BootstrapDialog = observer(
         children?: React.ReactNode;
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
+        className?: string;
     }> {
         div: HTMLDivElement | null = null;
         form: HTMLFormElement | null = null;
@@ -361,10 +364,14 @@ export const BootstrapDialog = observer(
                 );
             }
 
-            let formClassName = classNames("modal-dialog", {
-                "modal-lg": props.size === "large",
-                "modal-sm": props.size === "small"
-            });
+            let formClassName = classNames(
+                "modal-dialog",
+                this.props.className,
+                {
+                    "modal-lg": props.size === "large",
+                    "modal-sm": props.size === "small"
+                }
+            );
 
             return (
                 <div

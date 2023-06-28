@@ -16,7 +16,8 @@ import {
     LayoutModels,
     objectToJS,
     getProjectStore,
-    createObject
+    createObject,
+    isObjectExists
 } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
 import * as notification from "eez-studio-ui/notification";
@@ -77,7 +78,16 @@ export const FontEditor = observer(
         }
 
         get selectedGlyph() {
-            return this.context.navigationStore.selectedGlyphObject.get() as Glyph;
+            const selectedGlyph =
+                this.context.navigationStore.selectedGlyphObject.get() as Glyph;
+            if (
+                !selectedGlyph ||
+                !isObjectExists(selectedGlyph) ||
+                selectedGlyph.font != this.font
+            ) {
+                return undefined;
+            }
+            return selectedGlyph;
         }
 
         componentDidMount() {
@@ -194,22 +204,8 @@ export const FontEditor = observer(
                             }
                         },
                         {
-                            name: "renderingEngine",
-                            displayName: "Rendering engine",
-                            type: "enum",
-                            enumItems: [
-                                { id: "freetype", label: "FreeType" },
-                                { id: "opentype", label: "OpenType" }
-                            ]
-                        },
-                        {
-                            name: "bpp",
-                            displayName: "Bits per pixel",
-                            type: "enum",
-                            enumItems: [1, 8]
-                        },
-                        {
                             name: "size",
+                            displayName: "Font size (points)",
                             type: "number",
                             validators: [
                                 validators.required,
@@ -253,9 +249,7 @@ export const FontEditor = observer(
                 },
                 values: {
                     filePath: this.font.source?.filePath ?? "",
-                    renderingEngine: this.font.renderingEngine,
                     size: this.font.source?.size ?? 14,
-                    bpp: this.font.bpp,
                     threshold: this.font.threshold ?? 128,
                     fromGlyph: 32,
                     toGlyph: 127,
@@ -298,8 +292,8 @@ export const FontEditor = observer(
                             result.values.filePath
                         ),
                         relativeFilePath: result.values.filePath,
-                        renderingEngine: result.values.renderingEngine,
-                        bpp: result.values.bpp,
+                        renderingEngine: this.font.renderingEngine,
+                        bpp: this.font.bpp,
                         size: result.values.size,
                         threshold: result.values.threshold,
                         createGlyphs: true,
@@ -677,16 +671,7 @@ export const FontEditor = observer(
             }
 
             if (component === "editor") {
-                return (
-                    <GlyphEditor
-                        glyph={
-                            this.context.navigationStore
-                                .selectedGlyphObject as IObservableValue<
-                                Glyph | undefined
-                            >
-                        }
-                    />
-                );
+                return <GlyphEditor />;
             }
 
             return null;
@@ -714,9 +699,7 @@ export const FontEditor = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const GlyphEditor = observer(
-    class GlyphEditor extends React.Component<{
-        glyph: IObservableValue<Glyph | undefined>;
-    }> {
+    class GlyphEditor extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -741,8 +724,27 @@ const GlyphEditor = observer(
             });
         }
 
+        get font() {
+            return this.context.navigationStore.selectedFontObject.get() as
+                | Font
+                | undefined;
+        }
+
+        get selectedGlyph() {
+            const selectedGlyph =
+                this.context.navigationStore.selectedGlyphObject.get() as Glyph;
+            if (
+                !selectedGlyph ||
+                !isObjectExists(selectedGlyph) ||
+                selectedGlyph.font != this.font
+            ) {
+                return undefined;
+            }
+            return selectedGlyph;
+        }
+
         togglePixel() {
-            const glyph = this.props.glyph.get();
+            const glyph = this.selectedGlyph;
             if (glyph && this.hitTestResult) {
                 let glyphBitmap = glyph.glyphBitmap;
                 if (!glyphBitmap) {
@@ -779,7 +781,7 @@ const GlyphEditor = observer(
         }
 
         selectPixel(event: any) {
-            const glyph = this.props.glyph.get();
+            const glyph = this.selectedGlyph;
             if (glyph) {
                 this.hitTestResult = glyph.editorImageHitTest(
                     event.nativeEvent.offsetX + $(this.div).scrollLeft(),
@@ -835,8 +837,12 @@ const GlyphEditor = observer(
         };
 
         render() {
+            const glyph = this.selectedGlyph;
+            if (!glyph) {
+                return null;
+            }
+
             var glyphImage: JSX.Element | undefined;
-            const glyph = this.props.glyph.get();
             if (glyph) {
                 glyphImage = (
                     <img

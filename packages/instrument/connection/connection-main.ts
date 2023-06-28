@@ -412,6 +412,11 @@ export class Connection
             }
         } else {
             let index = this.data.indexOf("\n");
+
+            if (index == -1) {
+                index = this.data.indexOf("\r");
+            }
+
             if (index !== -1) {
                 index++;
                 let data = this.data.substr(0, index);

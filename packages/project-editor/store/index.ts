@@ -489,7 +489,10 @@ export class ProjectStore {
                 (this.undoManager &&
                     this.undoManager.canRedo &&
                     this.undoManager.redoDescription) ||
-                null
+                null,
+            isDebuggerActive: this.runtime && this.runtime.isDebuggerActive,
+            hasExtensionDefinitions:
+                this.project.extensionDefinitions?.length > 0
         });
     }
 

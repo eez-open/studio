@@ -576,36 +576,56 @@ export const BooleanProperty = observer(
         {}
     > {
         render() {
-            const innerInput = (
-                <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={this.props.value}
-                    onChange={event =>
-                        this.props.onChange(event.target.checked)
-                    }
-                    role={this.props.checkboxStyleSwitch ? "switch" : undefined}
-                />
-            );
-
-            const input = this.props.checkboxStyleSwitch ? (
-                <div className="form-check form-switch">&nbsp;{innerInput}</div>
-            ) : (
-                innerInput
-            );
-
-            return (
-                <PropertyEnclosure style={this.props.style}>
-                    <td colSpan={2}>
-                        <div className="form-check">
-                            <label className="form-check-label">
-                                {input}
-                                {this.props.name}
-                            </label>
-                        </div>
-                    </td>
-                </PropertyEnclosure>
-            );
+            if (this.props.checkboxStyleSwitch) {
+                return (
+                    <PropertyEnclosure style={this.props.style}>
+                        <td>{this.props.name}</td>
+                        <td>
+                            <div
+                                className="form-check form-switch"
+                                style={{
+                                    minHeight: "auto",
+                                    marginBottom: 0
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={this.props.value}
+                                    onChange={event =>
+                                        this.props.onChange(
+                                            event.target.checked
+                                        )
+                                    }
+                                />
+                            </div>
+                        </td>
+                    </PropertyEnclosure>
+                );
+            } else {
+                return (
+                    <PropertyEnclosure style={this.props.style}>
+                        <td colSpan={2}>
+                            <div className="form-check">
+                                <label className="form-check-label">
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        checked={this.props.value}
+                                        onChange={event =>
+                                            this.props.onChange(
+                                                event.target.checked
+                                            )
+                                        }
+                                        role="switch"
+                                    />
+                                    {this.props.name}
+                                </label>
+                            </div>
+                        </td>
+                    </PropertyEnclosure>
+                );
+            }
         }
     }
 );
