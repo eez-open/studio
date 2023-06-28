@@ -44,6 +44,7 @@ export class Language extends EezObject {
         properties: [
             {
                 name: "languageID",
+                displayName: "Language ID",
                 type: PropertyType.String,
                 unique: true
             }
@@ -310,6 +311,7 @@ export class TextResource extends EezObject {
                     fields: [
                         {
                             name: "name",
+                            displayName: "Resource ID",
                             type: "string",
                             validators: [
                                 validators.required,

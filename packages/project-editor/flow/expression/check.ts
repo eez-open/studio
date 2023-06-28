@@ -289,6 +289,28 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                 if (node.arguments[0].type == "Literal") {
                     node.valueType = node.arguments[0].value;
                 }
+            } else if (functionName == "Flow.translate") {
+                const project = ProjectEditor.getProject(component);
+
+                const nodeArgument = node.arguments[0];
+                if (
+                    nodeArgument.type != "Literal" ||
+                    nodeArgument.valueType != "string"
+                ) {
+                    throw `invalid text resource ID`;
+                }
+
+                if (
+                    !project.texts ||
+                    !project.texts.resources.find(
+                        textResource =>
+                            textResource.resourceID == nodeArgument.value
+                    )
+                ) {
+                    throw `text resource ID '${nodeArgument.value}' not found`;
+                }
+
+                return;
             }
 
             node.arguments.forEach(checkNode);

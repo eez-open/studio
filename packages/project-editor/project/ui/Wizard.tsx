@@ -1025,7 +1025,7 @@ class WizardModel {
                 });
 
                 req.addEventListener("error", error => {
-                    reject(error);
+                    reject("Network error");
                 });
 
                 req.send();
@@ -1057,7 +1057,7 @@ class WizardModel {
             });
 
             req.addEventListener("error", error => {
-                reject(error);
+                reject("Network error");
             });
 
             req.send();
@@ -1188,7 +1188,7 @@ class WizardModel {
             });
 
             req.addEventListener("error", error => {
-                reject(error);
+                reject("Network error");
             });
 
             req.send();

@@ -324,6 +324,38 @@ function buildExpressionNode(
                 value: assets.getTypeIndex(node.valueType),
                 valueType: "integer"
             };
+        } else if (functionName == "Flow.translate") {
+            const nodeArgument = node.arguments[0];
+            if (
+                nodeArgument.type != "Literal" ||
+                nodeArgument.valueType != "string"
+            ) {
+                makePushConstantInstruction(assets, "", "string");
+            } else {
+                if (assets.projectStore.project.texts) {
+                    return [
+                        makePushConstantInstruction(
+                            assets,
+                            assets.projectStore.project.texts.resources.findIndex(
+                                textResource =>
+                                    textResource.resourceID ==
+                                    nodeArgument.value
+                            ),
+                            "integer"
+                        ),
+                        makeOperationInstruction(
+                            operationIndexes["Flow.translate"]
+                        )
+                    ];
+                }
+                return [
+                    makePushConstantInstruction(
+                        assets,
+                        nodeArgument.value,
+                        "string"
+                    )
+                ];
+            }
         }
 
         return [
