@@ -32,11 +32,18 @@ export function deserializePixelArray(pixelArray: string | number[]) {
     if (pixelArray.length == 0) {
         return [];
     }
-    const pixelArrayAsNumberArray = new Array(pixelArray.length / 2);
-    for (let i = 0; i < pixelArrayAsNumberArray.length; i++) {
-        pixelArrayAsNumberArray[i] = parseInt(pixelArray.substr(2 * i, 2), 16);
+    try {
+        const pixelArrayAsNumberArray = new Array(pixelArray.length / 2);
+        for (let i = 0; i < pixelArrayAsNumberArray.length; i++) {
+            pixelArrayAsNumberArray[i] = parseInt(
+                pixelArray.substr(2 * i, 2),
+                16
+            );
+        }
+        return pixelArrayAsNumberArray;
+    } catch (e) {
+        return [];
     }
-    return pixelArrayAsNumberArray;
 }
 
 export function getPixel(

@@ -843,8 +843,13 @@ export class Glyph extends EezObject {
 
             for (let x = 0; x < width; x++) {
                 for (let y = 0; y < height; y++) {
+                    const r = buffer[(y * width + x) * 4 + 0];
+                    const g = buffer[(y * width + x) * 4 + 1];
+                    const b = buffer[(y * width + x) * 4 + 2];
+                    const a = buffer[(y * width + x) * 4 + 3];
+
                     pixelArray[y * width + x] =
-                        255 - buffer[(y * width + x) * 4];
+                        (255 - (r + g + b) / 3) * (a / 255);
                 }
             }
 

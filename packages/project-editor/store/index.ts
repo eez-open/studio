@@ -492,7 +492,7 @@ export class ProjectStore {
                 null,
             isDebuggerActive: this.runtime && this.runtime.isDebuggerActive,
             hasExtensionDefinitions:
-                this.project.extensionDefinitions?.length > 0
+                this.project?.extensionDefinitions?.length > 0
         });
     }
 

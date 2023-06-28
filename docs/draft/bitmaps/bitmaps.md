@@ -43,3 +43,25 @@ Posebno za EEZ-GUI projekt imamo ove dodatne propertije:
 A za LVGL projekt imamo ovaj dodatni properti:
 
 -   Color format: https://docs.lvgl.io/8.3/overview/image.html#color-formats
+
+```
+LV_IMG_CF_ALPHA_1_BIT              "ALPHA 1 BIT"
+LV_IMG_CF_ALPHA_2_BIT              "ALPHA 2 BIT"
+LV_IMG_CF_ALPHA_4_BIT              "ALPHA 4 BIT"
+LV_IMG_CF_ALPHA_8_BIT              "ALPHA 8 BIT"
+
+LV_IMG_CF_INDEXED_1_BIT            "INDEXED 1 BIT"
+LV_IMG_CF_INDEXED_2_BIT            "INDEXED 2 BIT"
+LV_IMG_CF_INDEXED_4_BIT            "INDEXED 4 BIT"
+LV_IMG_CF_INDEXED_8_BIT            "INDEXED 8 BIT"
+
+LV_IMG_CF_RAW                      "RAW"
+LV_IMG_CF_RAW_CHROMA               "RAW CHROMA"
+LV_IMG_CF_RAW_ALPHA                "RAW ALPHA"
+
+LV_IMG_CF_TRUE_COLOR               "TRUE COLOR"
+LV_IMG_CF_TRUE_COLOR_ALPHA         "TRUE COLOR ALPHA"
+LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED  "TRUE COLOR CHROMA"
+
+LV_IMG_CF_RGB565A8                 "RGB565A8"
+```

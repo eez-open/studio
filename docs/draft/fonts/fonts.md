@@ -22,6 +22,20 @@ Dodavanje novog fonta:
 
 ![Alt text](image-6.png)
 
+-   Nakon što se font kreira možemo dodavati još karaktera ili brisati pojedinačne karaktere:
+
+![Alt text](image-9.png)
+
+-   Za Dodavanje karaktera imamo 3 opcije:
+
+![Alt text](image-10.png)
+
+3 opcija (add missing characters) je prisutna samo ako se koristi multilanguage (Texts panel) i postoji karakter u nekom od stringova koji nije prisutan u fontu.
+
+-   Postoji i uređivanje karaktera koji je selektiran, ali za sada se može samo paliti i gasiti pojedinačni pixeli. Ono što nam fali je paleta nijansi sive tako da možemo postaviti nijansu sive pojedinačnog pixela
+
+-   Također se može bitmapa selektiranog karaktera kopirati na clipboard sa Ctrl+C ili uzeti sa clipboarda sa Ctrl+V
+
 # LVGL
 
 -   Koristi se ovaj library: https://github.com/lvgl/lv_font_conv
