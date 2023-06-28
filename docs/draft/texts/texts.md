@@ -19,3 +19,9 @@ U expressionima ako želimo koristiti neki lokalizirani tekst onda to možemo na
 Jasno je da je jednostavije koristiti `T"<text resource ID>"` pa se to i preporuča.
 
 Ako za neki jezik trenutno ne postoji prijevod onda će se koristiti sam text resource ID, pa je zgodno da taj ID bude npr. isti kao i prijevod za neki od jezika npr. Engleski.
+
+Imamo dva example za multi language koji koristi Texts feature:
+
+![Alt text](image-1.png)
+
+Jedan je Dashboard, a drugi EEZ-GUI projekt. LVGL za sada nije podržan.
