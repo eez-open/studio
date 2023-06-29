@@ -65,7 +65,8 @@ export const enum ProjectType {
     RESOURCE = "resource",
     APPLET = "applet",
     DASHBOARD = "dashboard",
-    LVGL = "lvgl"
+    LVGL = "lvgl",
+    IEXT = "iext"
 }
 
 ////////////////////////////////////////////////////////////////////////////////

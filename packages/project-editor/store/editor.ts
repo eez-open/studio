@@ -215,11 +215,23 @@ export class EditorsStore {
         if (this.openInitialEditorsAtStart) {
             this.openInitialEditorsAtStart = false;
 
-            if (this.projectStore.project.readme) {
+            if (
+                this.projectStore.projectTypeTraits.isIEXT &&
+                this.projectStore.project.extensionDefinitions?.length > 0
+            ) {
+                runInAction(() => {
+                    this.projectStore.navigationStore.selectedExtensionDefinitionObject.set(
+                        this.projectStore.project.extensionDefinitions[0]
+                    );
+                });
+            } else if (this.projectStore.project.readme) {
                 this.openEditor(this.projectStore.project.readme);
-            } else if (this.projectStore.project.pages) {
+            } else if (
+                this.projectStore.project.pages &&
+                this.projectStore.project.pages.length > 0
+            ) {
                 this.openEditor(this.projectStore.project.pages[0]);
-            } else if (this.projectStore.project.pages) {
+            } else {
                 this.openEditor(this.projectStore.project.settings);
             }
         }

@@ -689,6 +689,11 @@ export class ProjectStore {
     }
 
     async build() {
+        if (this.projectTypeTraits.isIEXT) {
+            this.buildExtensions();
+            return;
+        }
+
         const result = await ProjectEditor.build.buildProject(
             this,
             "buildFiles"
@@ -709,6 +714,10 @@ export class ProjectStore {
     }
 
     buildExtensions() {
+        this.layoutModels.selectTab(
+            this.layoutModels.root,
+            LayoutModels.OUTPUT_TAB_ID
+        );
         ProjectEditor.build.buildExtensions(this);
     }
 

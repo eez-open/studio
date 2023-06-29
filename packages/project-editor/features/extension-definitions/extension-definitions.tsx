@@ -308,6 +308,14 @@ export class ExtensionDefinition extends EezObject {
                 );
             }
 
+            if (!object.idfName) {
+                messages.push(propertyNotSetMessage(object, "idfName"));
+            }
+
+            if (!object.idfShortName) {
+                messages.push(propertyNotSetMessage(object, "idfShortName"));
+            }
+
             const projectStore = getProjectStore(object);
 
             let extensionDefinitions =

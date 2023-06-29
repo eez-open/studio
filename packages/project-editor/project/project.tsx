@@ -575,7 +575,8 @@ export const PROJECT_TYPE_NAMES = {
     [ProjectType.RESOURCE]: "BB3 MicroPython Script",
     [ProjectType.APPLET]: "BB3 Applet",
     [ProjectType.DASHBOARD]: "Dashboard",
-    [ProjectType.LVGL]: "LVGL"
+    [ProjectType.LVGL]: "LVGL",
+    [ProjectType.IEXT]: "IEXT"
 };
 
 export class General extends EezObject {
@@ -634,6 +635,10 @@ export class General extends EezObject {
                     {
                         id: ProjectType.LVGL,
                         label: PROJECT_TYPE_NAMES[ProjectType.LVGL]
+                    },
+                    {
+                        id: ProjectType.IEXT,
+                        label: PROJECT_TYPE_NAMES[ProjectType.IEXT]
                     }
                 ],
                 readOnlyInPropertyGrid: (general: General) =>
@@ -693,7 +698,10 @@ export class General extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 formText:
-                    "After adding an extension, you need to reload the project to see the changes. To reload the project select 'Reload Project' from the 'File' menu."
+                    "After adding an extension, you need to reload the project to see the changes. To reload the project select 'Reload Project' from the 'File' menu.",
+                hideInPropertyGrid: (general: General) =>
+                    ProjectEditor.getProjectStore(general).projectTypeTraits
+                        .isIEXT
             },
             {
                 name: "imports",
@@ -705,7 +713,8 @@ export class General extends EezObject {
                     const projectStore = getProjectStore(general);
                     return (
                         !!getProject(general).masterProject ||
-                        projectStore.projectTypeTraits.isApplet
+                        projectStore.projectTypeTraits.isApplet ||
+                        projectStore.projectTypeTraits.isIEXT
                     );
                 }
             },
@@ -1569,6 +1578,14 @@ export class Project extends EezObject {
 
         enableTabOnBorder(
             this._store.layoutModels.rootEditor,
+            LayoutModels.STYLES_TAB_ID,
+            LayoutModels.STYLES_TAB,
+            FlexLayout.DockLocation.RIGHT,
+            !this.projectTypeTraits.isIEXT
+        );
+
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditor,
             LayoutModels.FONTS_TAB_ID,
             LayoutModels.FONTS_TAB,
             FlexLayout.DockLocation.RIGHT,
@@ -1581,6 +1598,14 @@ export class Project extends EezObject {
             LayoutModels.BITMAPS_TAB,
             FlexLayout.DockLocation.RIGHT,
             this.bitmaps != undefined
+        );
+
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.THEMES_TAB_ID,
+            LayoutModels.THEMES_TAB,
+            FlexLayout.DockLocation.RIGHT,
+            !this.projectTypeTraits.isLVGL && !this.projectTypeTraits.isIEXT
         );
 
         enableTabOnBorder(
@@ -1609,6 +1634,14 @@ export class Project extends EezObject {
 
         enableTabOnBorder(
             this._store.layoutModels.rootEditor,
+            LayoutModels.CHANGES_TAB_ID,
+            LayoutModels.CHANGES_TAB,
+            FlexLayout.DockLocation.LEFT,
+            this.changes != undefined
+        );
+
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditorForIEXT,
             LayoutModels.CHANGES_TAB_ID,
             LayoutModels.CHANGES_TAB,
             FlexLayout.DockLocation.LEFT,

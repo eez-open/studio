@@ -109,6 +109,14 @@ const ProjectFeature = observer(
                     }
                 }
 
+                if (this.context.projectTypeTraits.isIEXT) {
+                    if (
+                        this.props.projectFeature.key == "extensionDefinitions"
+                    ) {
+                        mandatory = true;
+                    }
+                }
+
                 if (mandatory) {
                     button = (
                         <button
@@ -345,7 +353,9 @@ export const SettingsContent = observer(
                         if (extension.key == "extensionDefinitions") {
                             return (
                                 this.context.project.settings.general
-                                    .projectType == ProjectType.FIRMWARE
+                                    .projectType == ProjectType.FIRMWARE ||
+                                this.context.project.settings.general
+                                    .projectType == ProjectType.IEXT
                             );
                         }
 
@@ -374,6 +384,21 @@ export const SettingsContent = observer(
                                 extension.key == "extensionDefinitions" ||
                                 extension.key == "scpi" ||
                                 extension.key == "shortcuts"
+                            ) {
+                                return false;
+                            }
+                        } else if (this.context.projectTypeTraits.isIEXT) {
+                            if (
+                                extension.key == "userPages" ||
+                                extension.key == "userWidgets" ||
+                                extension.key == "actions" ||
+                                extension.key == "variables" ||
+                                extension.key == "styles" ||
+                                extension.key == "lvglStyles" ||
+                                extension.key == "fonts" ||
+                                extension.key == "bitmaps" ||
+                                extension.key == "texts" ||
+                                extension.key == "micropython"
                             ) {
                                 return false;
                             }

@@ -218,7 +218,9 @@ export const ListNavigation = observer(
         }
 
         componentDidMount() {
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            if (this.listAdapter.allRows.length > 0) {
+                this.context.navigationStore.setInitialSelectedPanel(this);
+            }
         }
 
         componentDidUpdate() {

@@ -58,9 +58,9 @@ export class LayoutModels extends AbstractLayoutModels {
     static STYLES_TAB_ID = "styles";
     static FONTS_TAB_ID = "fonts";
     static BITMAPS_TAB_ID = "bitmaps";
+    static THEMES_TAB_ID = "themes";
     static TEXTS_TAB_ID = "texts";
     static SCPI_TAB_ID = "scpi";
-    static SHORTCUTS_TAB_ID = "shortcuts";
     static EXTENSION_DEFINITIONS_TAB_ID = "iext";
     static CHANGES_TAB_ID = "changes";
     static MICRO_PYTHON_TAB_ID = "micro-python";
@@ -122,6 +122,7 @@ export class LayoutModels extends AbstractLayoutModels {
         type: "tab",
         enableClose: false,
         name: "Themes",
+        id: LayoutModels.THEMES_TAB_ID,
         component: "themesSideView",
         icon: "svg:palette"
     };
@@ -180,8 +181,13 @@ export class LayoutModels extends AbstractLayoutModels {
     };
 
     rootEditor: FlexLayout.Model;
+    rootEditorForIEXT: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
+
     get root() {
+        if (this.projectStore.projectTypeTraits.isIEXT) {
+            return this.rootEditorForIEXT;
+        }
         return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
     }
 
@@ -221,20 +227,17 @@ export class LayoutModels extends AbstractLayoutModels {
             }
         ];
 
-        const rightBorderChildren = [
-            LayoutModels.STYLES_TAB,
-            LayoutModels.FONTS_TAB,
-            LayoutModels.BITMAPS_TAB,
-            LayoutModels.BREAKPOINTS_TAB
-        ];
-        if (!this.projectStore.projectTypeTraits.isLVGL) {
-            rightBorderChildren.push(LayoutModels.THEMES_TAB);
-        }
         borders.push({
             type: "border",
             location: "right",
             size: 240,
-            children: rightBorderChildren
+            children: [
+                LayoutModels.STYLES_TAB,
+                LayoutModels.FONTS_TAB,
+                LayoutModels.BITMAPS_TAB,
+                LayoutModels.BREAKPOINTS_TAB,
+                LayoutModels.THEMES_TAB
+            ]
         });
 
         borders.push({
@@ -282,6 +285,67 @@ export class LayoutModels extends AbstractLayoutModels {
                 LayoutModels.EXTENSION_DEFINITIONS_TAB,
                 LayoutModels.CHANGES_TAB
             ]
+        });
+
+        return borders;
+    }
+
+    get bordersIEXT() {
+        const borders: FlexLayout.IJsonBorderNode[] = [
+            {
+                type: "border",
+                location: "top",
+                children: []
+            }
+        ];
+
+        borders.push({
+            type: "border",
+            location: "right",
+            size: 240,
+            children: []
+        });
+
+        borders.push({
+            type: "border",
+            location: "bottom",
+            children: [
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Checks",
+                    id: LayoutModels.CHECKS_TAB_ID,
+                    component: "checksMessages"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Output",
+                    id: LayoutModels.OUTPUT_TAB_ID,
+                    component: "outputMessages"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "Search",
+                    id: LayoutModels.SEARCH_TAB_ID,
+                    component: "search"
+                },
+                {
+                    type: "tab",
+                    enableClose: false,
+                    name: "References",
+                    id: LayoutModels.REFERENCES_TAB_ID,
+                    component: "references"
+                }
+            ]
+        });
+
+        borders.push({
+            type: "border",
+            location: "left",
+            size: 240,
+            children: [LayoutModels.CHANGES_TAB]
         });
 
         return borders;
@@ -395,6 +459,74 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.rootEditor,
                 set: action(model => (this.rootEditor = model))
+            },
+            {
+                name: "rootEditorForIEXT",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: this.bordersIEXT,
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                weight: 20,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 1,
+                                        enableClose: false,
+                                        children: [
+                                            LayoutModels.EXTENSION_DEFINITIONS_TAB
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 5,
+                                        enableClose: false,
+                                        children: [LayoutModels.SCPI_TAB]
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                weight: 60,
+                                enableClose: false,
+                                enableTabStrip: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        component: "editors"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "row",
+                                weight: 25,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 2,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Properties",
+                                                id: LayoutModels.PROPERTIES_TAB_ID,
+                                                component: "propertiesPanel",
+                                                icon: "svg:properties"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.rootEditorForIEXT,
+                set: action(model => (this.rootEditorForIEXT = model))
             },
             {
                 name: "rootRuntime",

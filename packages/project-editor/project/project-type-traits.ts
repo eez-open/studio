@@ -56,6 +56,10 @@ class ProjectTypeTraits {
         return false;
     }
 
+    get isIEXT() {
+        return false;
+    }
+
     get hasFlowSupport() {
         return false;
     }
@@ -242,6 +246,18 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class IEXTProjectTypeTraits extends ProjectTypeTraits {
+    override get id() {
+        return 7;
+    }
+
+    override get isIEXT() {
+        return true;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function isDashboardProject(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return project.projectTypeTraits.isDashboard;
@@ -341,5 +357,7 @@ export function createProjectTypeTraits(project: Project) {
         return new DashboardProjectTypeTraits(project);
     if (projectType === ProjectType.LVGL)
         return new LVGLProjectTypeTraits(project);
+    if (projectType === ProjectType.IEXT)
+        return new IEXTProjectTypeTraits(project);
     return new ProjectTypeTraits(project);
 }

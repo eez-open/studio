@@ -39,7 +39,8 @@ import {
     EEZ_GUI_PROJECT_ICON,
     LVGL_PROJECT_ICON,
     MICROPYTHON_ICON,
-    APPLET_ICON
+    APPLET_ICON,
+    IEXT_PROJECT_ICON
 } from "project-editor/ui-components/icons";
 import { Icon } from "eez-studio-ui/icon";
 import {
@@ -53,6 +54,7 @@ import {
     ProjectType
 } from "project-editor/project/project";
 import { homeLayoutModels } from "home/home-layout-models";
+import { guid } from "eez-studio-shared/guid";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -666,6 +668,13 @@ class WizardModel {
                 image: LVGL_PROJECT_ICON(128),
                 projectName: "LVGL",
                 description: "Start your new LVGL project development here."
+            },
+            {
+                id: "IEXT",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.IEXT],
+                image: IEXT_PROJECT_ICON(128),
+                projectName: "IEXT",
+                description: "Start your new IEXT project development here."
             }
         ].filter(projectType => this.searchFilter(projectType));
     }
@@ -1534,10 +1543,39 @@ class WizardModel {
                         }
                     }
 
+                    let projectTemplateStr = JSON.stringify(
+                        projectTemplate,
+                        undefined,
+                        2
+                    );
+
+                    if (this.type == "IEXT") {
+                        projectTemplateStr = projectTemplateStr.replace(
+                            new RegExp(/\{\{iext-name\}\}/, "g"),
+                            this.name!
+                        );
+                        projectTemplateStr = projectTemplateStr.replace(
+                            new RegExp(/\{\{iext-build-configuration\}\}/, "g"),
+                            this.name!
+                        );
+                        projectTemplateStr = projectTemplateStr.replace(
+                            new RegExp(/\{\{iext-extension-name\}\}/, "g"),
+                            this.name!
+                        );
+                        projectTemplateStr = projectTemplateStr.replace(
+                            new RegExp(/\{\{iext-guid\}\}/, "g"),
+                            guid()
+                        );
+                        projectTemplateStr = projectTemplateStr.replace(
+                            new RegExp(/\{\{iext-sdl-friendly-name\}\}/, "g"),
+                            ""
+                        );
+                    }
+
                     try {
                         await fs.promises.writeFile(
                             projectFilePath,
-                            JSON.stringify(projectTemplate, undefined, 2),
+                            projectTemplateStr,
                             "utf8"
                         );
                     } catch (err) {

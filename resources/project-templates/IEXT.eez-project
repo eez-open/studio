@@ -1,0 +1,66 @@
+{
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
+      "projectVersion": "v3",
+      "projectType": "iext",
+      "extensions": [],
+      "imports": [],
+      "description": "",
+      "resourceFiles": []
+    },
+    "build": {
+      "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",
+      "configurations": [{
+          "name": "{{iext-build-configuration}}",
+          "description": "",
+          "properties": "{\n  \"connection\": {\n    \"serial\": {\n      \"baudRates\": [9600, 19200, 38400, 57600]\n    }\n  },\n  \"channels\": [\n    { \"color\": \"#FBFB00\", \"colorInverse\": \"#AEAE00\" },\n    { \"color\": \"#03FFFF\", \"colorInverse\": \"#00B5B5\" }\n  ]\n}"
+        }],
+      "files": [],
+      "lvglInclude": "lvgl/lvgl.h"
+    }
+  },
+  "variables": {
+    "objID": "c6c71e16-53e1-217f-d03b-cef56c6b037a",
+    "globalVariables": [],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "userPages": [],
+  "userWidgets": [],
+  "styles": [],
+  "scpi": {
+    "objID": "74471993-6514-4662-eba2-abe3ef9ba3d8",
+    "subsystems": [],
+    "enums": []
+  },
+  "shortcuts": {
+    "objID": "2ba62058-fe42-4c67-f77d-53d7a8cf201c",
+    "shortcuts": []
+  },
+  "extensionDefinitions": [
+    {
+      "name": "{{iext-name}}",
+      "description": "",
+      "buildConfiguration": "{{iext-build-configuration}}",
+      "image": "",
+      "extensionName": "{{iext-extension-name}}",
+      "idn": "",
+      "idfName": "",
+      "idfShortName": "",
+      "idfFirmwareVersion": "(unknown)",
+      "idfGuid": "{{iext-guid}}",
+      "idfRevisionNumber": "1.0.0",
+      "idfDescription": "",
+      "idfSupportedModels": "",
+      "idfRevisionComments": "No comment",
+      "idfAuthor": "",
+      "sdlFriendlyName": "{{iext-sdl-friendly-name}}"
+    }
+  ],
+  "colors": [],
+  "themes": []
+}
