@@ -49,6 +49,7 @@ import {
     EncodingRange,
     extractFont
 } from "project-editor/features/font/font-extract";
+import { fileExistsSync } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,12 +158,26 @@ export const FontEditor = observer(
         }
 
         onAddGlyph() {
+            const projectStore = this.context;
+
             function is1BitPerPixel(obj: IEezObject) {
                 return getProperty(obj, "bpp") === 1;
             }
 
             function isAddOptionRange(obj: IEezObject) {
                 return getProperty(obj, "addOption") == "range";
+            }
+
+            function fontFileExists(object: any, ruleName: string) {
+                const filePath = object[ruleName];
+
+                if (
+                    !fileExistsSync(projectStore.getAbsoluteFilePath(filePath))
+                ) {
+                    return "File not found";
+                }
+
+                return null;
             }
 
             const missingEncodings = getMissingEncodings(this.font);
@@ -192,7 +207,7 @@ export const FontEditor = observer(
                         {
                             name: "filePath",
                             type: RelativeFileInput,
-                            validators: [validators.required],
+                            validators: [validators.required, fontFileExists],
                             options: {
                                 filters: [
                                     {
@@ -284,8 +299,6 @@ export const FontEditor = observer(
                     } else {
                         encodings = missingEncodings;
                     }
-
-                    console.log(result.values.filePath);
 
                     return extractFont({
                         absoluteFilePath: this.context.getAbsoluteFilePath(
