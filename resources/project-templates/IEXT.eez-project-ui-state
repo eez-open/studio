@@ -332,7 +332,8 @@
                   "component": "editors",
                   "enableClose": false
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "tabset",
@@ -922,10 +923,23 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "selected": -1,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
-              "children": []
+              "children": [
+                {
+                  "type": "tab",
+                  "id": "#1bda63f8-44d3-4151-8691-421a3f4cff61",
+                  "name": "Settings",
+                  "component": "editor",
+                  "config": {
+                    "objectPath": "[C:/work/eez/studio/resources/project-templates/IEXT.eez-project]:/settings",
+                    "subObjectPath": "[C:/work/eez/studio/resources/project-templates/IEXT.eez-project]:/settings",
+                    "permanent": false
+                  },
+                  "icon": "material:settings"
+                }
+              ],
+              "active": true
             }
           ]
         }

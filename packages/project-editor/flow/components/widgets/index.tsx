@@ -2768,6 +2768,15 @@ const BitmapWidgetPropertyGridUI = observer(
                 return null;
             }
 
+            const widget = this.props.objects[0] as Widget;
+
+            if (
+                widget.width == imageElement.width &&
+                widget.height == imageElement.height
+            ) {
+                return null;
+            }
+
             return (
                 <Button
                     color="primary"

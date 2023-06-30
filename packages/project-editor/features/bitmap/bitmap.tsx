@@ -96,7 +96,7 @@ const ExportBitmapFilePropertyGridUI = observer(
             return (
                 <div style={{ marginTop: 10 }}>
                     <Button color="primary" size="small" onClick={this.export}>
-                        Export Bitmap File...
+                        Export Bitmap File
                     </Button>
                 </div>
             );
@@ -231,6 +231,7 @@ export class Bitmap extends EezObject {
             },
             {
                 name: "alwaysBuild",
+                displayName: "Always add to the generated code",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: object =>
                     isLVGLProject(object) || isDashboardProject(object)

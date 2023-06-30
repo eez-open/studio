@@ -693,6 +693,7 @@ const cssPreviewProperty: PropertyInfo = {
 
 const alwaysBuildProperty: PropertyInfo = {
     name: "alwaysBuild",
+    displayName: "Always add to the generated code",
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: false,

@@ -956,7 +956,7 @@ const ExportFontFilePropertyGridUI = observer(
             return (
                 <div style={{ marginTop: 10 }}>
                     <Button color="primary" size="small" onClick={this.export}>
-                        Export font file...
+                        Export Font File
                     </Button>
                 </div>
             );
@@ -1116,6 +1116,7 @@ export class Font extends EezObject {
             },
             {
                 name: "alwaysBuild",
+                displayName: "Always add to the generated code",
                 type: PropertyType.Boolean,
                 hideInPropertyGrid: isLVGLProject
             },
