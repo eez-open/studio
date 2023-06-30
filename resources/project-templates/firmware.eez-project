@@ -11,7 +11,12 @@
       "flowSupport": true,
       "displayWidth": 480,
       "displayHeight": 272,
-      "resourceFiles": []
+      "resourceFiles": [
+        {
+          "objID": "f46b37f8-a4a4-40dd-fbb1-82766f204215",
+          "filePath": "Oswald-Medium.ttf"
+        }
+      ]
     },
     "build": {
       "objID": "72794a43-a0fc-13c2-7eb5-67dd952141a4",

@@ -1572,6 +1572,21 @@ class WizardModel {
                         );
                     }
 
+                    if (this.type == "firmware") {
+                        const fontFileName = "Oswald-Medium.ttf";
+                        const fontFileRelativePath = `project-templates/${fontFileName}`;
+                        const fontFileSrcPath = isDev
+                            ? resolve(
+                                  `${sourceRootDir()}/../resources/${fontFileRelativePath}`
+                              )
+                            : `${process.resourcesPath!}/${fontFileRelativePath}`;
+                        const fontFileDestPath = `${this.projectFolderPath}/${fontFileName}`;
+                        await fs.promises.copyFile(
+                            fontFileSrcPath,
+                            fontFileDestPath
+                        );
+                    }
+
                     try {
                         await fs.promises.writeFile(
                             projectFilePath,
