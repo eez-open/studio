@@ -4,7 +4,8 @@ import {
     EEZ_GUI_PROJECT_ICON,
     LVGL_PROJECT_ICON,
     MICROPYTHON_ICON,
-    APPLET_ICON
+    APPLET_ICON,
+    IEXT_PROJECT_ICON
 } from "project-editor/ui-components/icons";
 
 export function getProjectIcon(
@@ -12,6 +13,10 @@ export function getProjectIcon(
     projectType: string,
     size: number
 ) {
+    if (projectType == ProjectType.IEXT) {
+        return IEXT_PROJECT_ICON(size);
+    }
+
     if (projectType == ProjectType.LVGL) {
         return LVGL_PROJECT_ICON(size);
     }

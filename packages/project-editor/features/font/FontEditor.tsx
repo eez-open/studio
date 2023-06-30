@@ -371,7 +371,7 @@ export const FontEditor = observer(
 
                             if (errorMessage) {
                                 notification.error(
-                                    `Adding characters failed: ${errorMessage}!`
+                                    `Adding characters failed: ${errorMessage}`
                                 );
                             } else {
                                 notification.error(`Adding characters failed!`);

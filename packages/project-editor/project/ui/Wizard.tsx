@@ -1891,6 +1891,9 @@ const ProjectTypeComponent = observer(
                 );
             }
 
+            const imageZoomEnabled =
+                selected && wizardModel.section == "examples";
+
             return (
                 <div
                     key={projectType.id}
@@ -1905,12 +1908,17 @@ const ProjectTypeComponent = observer(
                         wizardModel.changeType(projectType.id);
                     }}
                 >
-                    <div className="EezStudio_NewProjectWizard_ProjectType_Image">
+                    <div
+                        className={classNames(
+                            "EezStudio_NewProjectWizard_ProjectType_Image",
+                            { imageZoomEnabled }
+                        )}
+                    >
                         <Icon
                             icon={projectType.image}
                             size={128}
                             onClick={
-                                selected
+                                imageZoomEnabled
                                     ? action(() => (this.zoomed = true))
                                     : undefined
                             }
