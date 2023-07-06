@@ -11,6 +11,7 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 * [Discord](https://discord.gg/dhYMnCB) server
 * [Twitter](https://twitter.com/envox) <img src="https://about.twitter.com/etc/designs/about2-twitter/public/img/favicon.ico" width="16" />
 * [YouTube](https://www.youtube.com/c/eezopen) channel
+* [Mastodon](https://mastodon.social/@envox)
 * [Liberpay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
 
 ## Introduction
