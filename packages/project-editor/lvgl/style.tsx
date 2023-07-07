@@ -22,7 +22,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject, LayoutModels } from "project-editor/store";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { Icon } from "eez-studio-ui/icon";

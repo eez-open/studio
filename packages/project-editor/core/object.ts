@@ -577,7 +577,7 @@ export interface IObjectClassInfo {
 }
 
 export function getClassesDerivedFrom(
-    projectStore: ProjectStore,
+    projectStore: ProjectStore | undefined,
     parentClass: EezClass
 ) {
     const derivedClasses: IObjectClassInfo[] = [];
@@ -593,15 +593,17 @@ export function getClassesDerivedFrom(
         }
     }
 
-    for (const [
-        className,
-        objectClass
-    ] of projectStore.importedActionComponentClasses) {
-        derivedClasses.push({
-            id: className,
-            name: className,
+    if (projectStore) {
+        for (const [
+            className,
             objectClass
-        });
+        ] of projectStore.importedActionComponentClasses) {
+            derivedClasses.push({
+                id: className,
+                name: className,
+                objectClass
+            });
+        }
     }
 
     return derivedClasses;

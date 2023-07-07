@@ -57,7 +57,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 import { Flow } from "project-editor/flow/flow";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
-import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component_types";
+import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";

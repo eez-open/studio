@@ -16,7 +16,7 @@ import {
 import { ActionComponent } from "project-editor/flow/component";
 
 import { ValueType } from "project-editor/features/variable/value-type";
-import { COMPONENT_TYPE_LVGL_ACTION } from "project-editor/flow/components/component_types";
+import { COMPONENT_TYPE_LVGL_ACTION } from "project-editor/flow/components/component-types";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { humanize } from "eez-studio-shared/string";

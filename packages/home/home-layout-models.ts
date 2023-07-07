@@ -213,6 +213,40 @@ export class LayoutModels extends AbstractLayoutModels {
         ]
     };
 
+    static DOCUMENTATION_BROWSER_TOC_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        enableTabStrip: false,
+        enableDrag: false,
+        enableDrop: false,
+        enableClose: false,
+        weight: 33,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "TOC",
+                component: "TOC"
+            }
+        ]
+    };
+
+    static DOCUMENTATION_BROWSER_CONTENT_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        enableTabStrip: false,
+        enableDrag: false,
+        enableDrop: false,
+        enableClose: false,
+        weight: 67,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Content",
+                component: "Content"
+            }
+        ]
+    };
+
     constructor() {
         super();
 
@@ -251,6 +285,8 @@ export class LayoutModels extends AbstractLayoutModels {
     instrumentProperties: FlexLayout.Model;
 
     extensionManager: FlexLayout.Model;
+
+    documentationBrowser: FlexLayout.Model;
 
     get models(): ILayoutModel[] {
         const global = {
@@ -400,6 +436,23 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.extensionManager,
                 set: action(model => (this.extensionManager = model))
+            },
+            {
+                name: "documentationBrowser",
+                version: 3,
+                json: {
+                    global,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            LayoutModels.DOCUMENTATION_BROWSER_TOC_TABSET,
+                            LayoutModels.DOCUMENTATION_BROWSER_CONTENT_TABSET
+                        ]
+                    }
+                },
+                get: () => this.documentationBrowser,
+                set: action(model => (this.documentationBrowser = model))
             }
         ];
     }

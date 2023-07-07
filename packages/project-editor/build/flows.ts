@@ -36,7 +36,7 @@ import {
     buildVariableFlowValue
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
-import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
+import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component-types";
 import {
     BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES,

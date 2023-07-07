@@ -23,7 +23,7 @@ import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/util
 import { ValueType } from "eez-studio-types";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { humanize } from "eez-studio-shared/string";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 
 export type LVGLPropertyType = "literal" | "expression";
 

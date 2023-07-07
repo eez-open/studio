@@ -69,7 +69,7 @@ import {
 import { isTimelineEditorActive } from "project-editor/flow/timeline";
 
 import { escapeCString } from "project-editor/build/helper";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
@@ -119,7 +119,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/components/actions";
 import { Assets, DataBuffer } from "project-editor/build/assets";
-import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component_types";
+import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component-types";
 import { visitObjects } from "project-editor/core/search";
 import { validators } from "eez-studio-shared/validation";
 

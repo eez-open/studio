@@ -1,12 +1,12 @@
 import React from "react";
 import { action, computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import {
+import type {
     IWaveformRenderJobSpecification,
-    renderWaveformPath,
     ILineController,
     IWaveform
 } from "eez-studio-ui/chart/chart";
+import { renderWaveformPath } from "./renderWaveformPath";
 import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 interface IWaveformLineController extends ILineController {

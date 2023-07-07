@@ -76,7 +76,7 @@ import type {
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
-import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component_types";
+import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component-types";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     buildAssignableExpression,
@@ -97,7 +97,7 @@ import {
     migrateType
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
-import { getComponentName } from "./editor/ComponentsPalette";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type {

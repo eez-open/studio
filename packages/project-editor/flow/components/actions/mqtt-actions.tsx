@@ -41,7 +41,7 @@ import {
     COMPONENT_TYPE_MQTT_PUBLISH,
     COMPONENT_TYPE_MQTT_SUBSCRIBE,
     COMPONENT_TYPE_MQTT_UNSUBSCRIBE
-} from "project-editor/flow/components/component_types";
+} from "project-editor/flow/components/component-types";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
 import {

@@ -78,7 +78,7 @@ import {
     NamingConvention,
     TAB
 } from "project-editor/build/helper";
-import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component_types";
+import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component-types";
 
 import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 

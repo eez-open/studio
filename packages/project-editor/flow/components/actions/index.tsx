@@ -99,7 +99,7 @@ import {
     COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
     COMPONENT_TYPE_SORT_ARRAY_ACTION,
     COMPONENT_TYPE_TEST_AND_SET_ACTION
-} from "project-editor/flow/components/component_types";
+} from "project-editor/flow/components/component-types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { LANGUAGE_ICON, LOG_ICON } from "project-editor/ui-components/icons";

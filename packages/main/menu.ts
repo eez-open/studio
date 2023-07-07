@@ -762,17 +762,30 @@ function buildMacOSWindowMenu(
 function buildHelpMenu(
     win: IWindow | undefined
 ): Electron.MenuItemConstructorOptions {
+    const helpMenuSubmenu: Electron.MenuItemConstructorOptions[] = [];
+
+    helpMenuSubmenu.push({
+        label: "Documentation",
+        accelerator: "F1",
+        click: function (item: any, focusedWindow: any) {
+            focusedWindow.webContents.send("show-documentation-browser");
+        }
+    });
+
+    helpMenuSubmenu.push({
+        type: "separator"
+    });
+
+    helpMenuSubmenu.push({
+        label: "About",
+        click: showAboutBox
+    });
+
     return {
         label: "Help",
         role: "help",
-        submenu: [
-            {
-                label: "About",
-                click: showAboutBox
-            }
-        ]
+        submenu: helpMenuSubmenu
     };
-    1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

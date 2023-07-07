@@ -68,8 +68,8 @@ import {
 import type { IVariable } from "project-editor/flow/flow-interfaces";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { COMPONENT_TYPE_SCPI_ACTION } from "project-editor/flow/components/component_types";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { COMPONENT_TYPE_SCPI_ACTION } from "project-editor/flow/components/component-types";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 import type { WorkerToRenderMessage } from "eez-studio-types";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";

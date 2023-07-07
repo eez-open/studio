@@ -154,7 +154,7 @@ import {
     WIDGET_TYPE_DROP_DOWN_LIST,
     WIDGET_TYPE_LINE_CHART,
     WIDGET_TYPE_QR_CODE
-} from "project-editor/flow/components/component_types";
+} from "project-editor/flow/components/component-types";
 import {
     buildExpression,
     checkExpression,
@@ -179,7 +179,7 @@ import {
     LINE_CHART_ICON,
     USER_WIDGET_ICON
 } from "project-editor/ui-components/icons";
-import { getComponentName } from "project-editor/flow/editor/ComponentsPalette";
+import { getComponentName } from "project-editor/flow/components/components-registry";
 import type { IDashboardComponentContext } from "eez-studio-types";
 import type { Page } from "project-editor/features/page/page";
 import { visitObjects } from "project-editor/core/search";
