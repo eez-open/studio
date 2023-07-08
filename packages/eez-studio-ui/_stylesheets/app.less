@@ -7122,6 +7122,11 @@ button.EezStudio_Action {
         .form-check {
             margin: 0;
             min-height: 0;
+            margin-right: 10px;
+        }
+
+        .form-check:last-child {
+            margin-right: 0;
         }
     }
 
@@ -7180,24 +7185,43 @@ button.EezStudio_Action {
                 background-color: @backgroundColor;
                 overflow: auto;
 
-                h3 {
-                    display: flex;
-                    align-items: center;
+                .EezStudio_Component_Documentation_TitleEnclosure {
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid @borderColor;
+                    margin-bottom: 20px;
 
-                    img,
-                    svg {
-                        height: 40px;
-                        object-fit: contain;
-                        margin-right: 4px;
+                    .EezStudio_Component_Documentation_Title {
+                        display: flex;
+                        align-items: center;
+                        font-size: 32px;
+                        border-radius: 8px;
+                        padding: 5px 15px;
+                        width: fit-content;
+
+                        img,
+                        svg {
+                            height: 36px;
+                            object-fit: contain;
+                            margin-right: 10px;
+                        }
                     }
-
-                    padding-bottom: 5px;
-                    border-bottom: 2px solid @borderColor;
-                    margin-bottom: 5px;
                 }
 
-                h4 {
-                    text-transform: uppercase;
+                .EezStudio_Component_Documentation_Body {
+                    .EezStudio_Component_Documentation_BodySection {
+                        div:first-child {
+                            font-size: 18px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                        }
+                        div:nth-child(2) {
+                            padding-left: 10px;
+                        }
+                        margin-bottom: 15px;
+                    }
+                    .EezStudio_Component_Documentation_BodySection:last-child {
+                        margin-bottom: 0;
+                    }
                 }
             }
         }

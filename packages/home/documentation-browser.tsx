@@ -19,6 +19,7 @@ import { homeLayoutModels } from "home/home-layout-models";
 import {
     IObjectClassInfo,
     ProjectType,
+    getObjectPropertyDisplayName,
     isProperSubclassOf,
     setParent
 } from "project-editor/core/object";
@@ -43,6 +44,10 @@ import { ProjectStore, createObject, loadProject } from "project-editor/store";
 import { isDev } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 import type { Component } from "project-editor/flow/component";
+import {
+    getInputDisplayName,
+    getOutputDisplayName
+} from "project-editor/flow/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +84,7 @@ export class ComponentInfo {
     group: string;
     name: string;
     icon: any;
+    titleStyle: React.CSSProperties | undefined;
     componentClasses: {
         eezgui?: IObjectClassInfo;
         lvgl?: IObjectClassInfo;
@@ -142,6 +148,7 @@ class Model {
     documentationBrowserClosed = true;
     selectedNode: TreeNodeData | undefined;
     groupByProjectType = false;
+    showGroups = true;
     searchText = "";
     selectedProjectType: ProjectType = ProjectType.DASHBOARD;
 
@@ -153,6 +160,7 @@ class Model {
         makeObservable(this, {
             selectedNode: observable,
             groupByProjectType: observable,
+            showGroups: observable,
             searchText: observable,
             selectedProjectType: observable,
             allComponents: computed,
@@ -199,7 +207,8 @@ class Model {
                 ProjectEditor.ActionComponentClass
             )
         ].forEach(componentClass => {
-            const { label, icon } = getComponentVisualData(componentClass);
+            const { label, icon, titleStyle } =
+                getComponentVisualData(componentClass);
 
             let componentInfo = componentsMap.get(label);
 
@@ -219,6 +228,7 @@ class Model {
                 componentInfo.group = getComponentGroupName(componentClass);
                 componentInfo.name = label;
                 componentInfo.icon = icon;
+                componentInfo.titleStyle = titleStyle;
                 componentInfo.componentClasses = {};
             }
 
@@ -350,13 +360,31 @@ class Model {
             components: ComponentInfo[],
             type: "widget" | "action"
         ): ITreeNode<SectionTreeNodeData> => {
-            const componentPaletteGroupNames = getGroupsByComponentInfo(
-                components.filter(componentInfo => componentInfo.type === type)
+            components = components.filter(
+                componentInfo => componentInfo.type === type
             );
 
-            const groupEntries = [
-                ...componentPaletteGroupNames.entries()
-            ].sort();
+            let children;
+            if (this.showGroups) {
+                const componentPaletteGroupNames =
+                    getGroupsByComponentInfo(components);
+
+                const groupEntries = [
+                    ...componentPaletteGroupNames.entries()
+                ].sort();
+
+                children = groupEntries.map(groupEntry =>
+                    getComponentGroupTreeChild(id, groupEntry[0], groupEntry[1])
+                );
+            } else {
+                children = components
+                    .map(componentInfo => getComponentTreeChild(componentInfo))
+                    .sort((a, b) => {
+                        return a.data!.componentInfo.name.localeCompare(
+                            b.data!.componentInfo.name
+                        );
+                    });
+            }
 
             return {
                 id,
@@ -366,9 +394,7 @@ class Model {
                         <span title={label}>{label}</span>
                     </span>
                 ),
-                children: groupEntries.map(groupEntry =>
-                    getComponentGroupTreeChild(id, groupEntry[0], groupEntry[1])
-                ),
+                children,
                 selected: this.selectedNode?.id === id,
                 expanded: true,
                 data: {
@@ -402,16 +428,16 @@ class Model {
                 ),
                 children: [
                     getComponentSectionTreeChild(
-                        projectType + "__widgetComponents",
-                        "WIDGETS",
-                        components,
-                        "widget"
-                    ),
-                    getComponentSectionTreeChild(
                         projectType + "__actionComponents",
                         "ACTIONS",
                         components,
                         "action"
+                    ),
+                    getComponentSectionTreeChild(
+                        projectType + "__widgetComponents",
+                        "WIDGETS",
+                        components,
+                        "widget"
                     )
                 ],
                 selected: this.selectedNode?.id === id,
@@ -460,16 +486,16 @@ class Model {
                 label: "Root",
                 children: [
                     getComponentSectionTreeChild(
-                        "__widgetComponents",
-                        "WIDGETS",
-                        this.allComponents,
-                        "widget"
-                    ),
-                    getComponentSectionTreeChild(
                         "__actionComponents",
                         "ACTIONS",
                         this.allComponents,
                         "action"
+                    ),
+                    getComponentSectionTreeChild(
+                        "__widgetComponents",
+                        "WIDGETS",
+                        this.allComponents,
+                        "widget"
                     )
                 ],
                 selected: false,
@@ -531,6 +557,25 @@ export const DocumentationBrowser = observer(
             return (
                 <div className="EezStudio_DocumentationBrowser">
                     <div className="EezStudio_DocumentationBrowser_Toolbar">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                id="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
+                                type="checkbox"
+                                checked={model.showGroups}
+                                onChange={action(
+                                    event =>
+                                        (model.showGroups =
+                                            event.target.checked)
+                                )}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
+                            >
+                                Show groups
+                            </label>
+                        </div>
                         <div className="form-check">
                             <input
                                 className="form-check-input"
@@ -787,7 +832,10 @@ const ComponentHelp = observer(
 
         removeComponentObject() {
             if (this._componentObject) {
-                this.props.projectStore.project.userPages[0].components = [];
+                this.props.projectStore.project.userPages[0].components.splice(
+                    0,
+                    1
+                );
 
                 runInAction(() => {
                     this._componentObject = undefined;
@@ -823,51 +871,121 @@ const ComponentHelp = observer(
 
             return (
                 <div className="EezStudio_Component_Documentation">
-                    <h3>
-                        <div>{componentInfo.icon}</div>
-                        <div>{componentInfo.name}</div>
-                    </h3>
+                    <div className="EezStudio_Component_Documentation_TitleEnclosure">
+                        <div
+                            className="EezStudio_Component_Documentation_Title"
+                            style={componentInfo.titleStyle}
+                        >
+                            <div>{componentInfo.icon}</div>
+                            <div>{componentInfo.name}</div>
+                        </div>
+                    </div>
 
-                    <h4>Description</h4>
-                    <h4>Parameters</h4>
-                    <ul>
-                        {classInfo.properties
-                            .filter(
-                                property => property.expressionType != undefined
-                            )
-                            .map(property => (
-                                <li key={property.name}>
-                                    {property.name}: {property.expressionType}
-                                </li>
-                            ))}
-                    </ul>
-                    <h4>Inputs</h4>
-                    {this.componentObject && (
-                        <ul>
-                            {this.componentObject.getInputs().map(input => (
-                                <li key={input.name}>
-                                    {input.name}: type={input.type}, optional=
-                                    {input.isOptionalInput ? "yes" : "no"},
-                                    sequence=
-                                    {input.isSequenceInput ? "yes" : "no"}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <h4>Outputs</h4>
-                    {this.componentObject && (
-                        <ul>
-                            {this.componentObject.getOutputs().map(output => (
-                                <li key={output.name}>
-                                    {output.name}: type={output.type}, optional=
-                                    {output.isOptionalOutput ? "yes" : "no"},
-                                    sequence=
-                                    {output.isSequenceOutput ? "yes" : "no"}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <h4>Examples</h4>
+                    <div className="EezStudio_Component_Documentation_Body">
+                        <div className="EezStudio_Component_Documentation_BodySection">
+                            <div>Description</div>
+                            <div>
+                                Lorem ipsum dolor sit amet, consectetur
+                                adipiscing elit. Duis ut ligula mollis, pretium
+                                nulla sed, viverra est. Donec porttitor, tortor
+                                ut imperdiet interdum, leo elit tristique orci,
+                                eu laoreet magna odio in dolor. Nulla posuere
+                                mauris sit amet nulla pulvinar, ut scelerisque
+                                nunc rutrum. In varius faucibus efficitur.
+                                Mauris venenatis ac dui sit amet ornare.
+                                Suspendisse nec luctus ipsum. Nullam augue
+                                mauris, laoreet et turpis vel, maximus ultricies
+                                eros. Aenean ac dui in urna lobortis feugiat.
+                                Mauris aliquam mattis tempor. Vivamus faucibus,
+                                felis sed mattis interdum, velit nisl dignissim
+                                lectus, nec blandit est erat eu nulla.
+                            </div>
+                        </div>
+                        <div className="EezStudio_Component_Documentation_BodySection">
+                            <div>Parameters</div>
+                            <div>
+                                {this.componentObject && (
+                                    <ul>
+                                        {classInfo.properties
+                                            .filter(
+                                                property =>
+                                                    property.expressionType !=
+                                                    undefined
+                                            )
+                                            .map(property => (
+                                                <li key={property.name}>
+                                                    {getObjectPropertyDisplayName(
+                                                        this.componentObject!,
+                                                        property
+                                                    )}
+                                                    : {property.expressionType}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                        <div className="EezStudio_Component_Documentation_BodySection">
+                            <div>Inputs</div>
+                            <div>
+                                {this.componentObject && (
+                                    <ul>
+                                        {this.componentObject
+                                            .getInputs()
+                                            .map(input => (
+                                                <li key={input.name}>
+                                                    {getInputDisplayName(
+                                                        this.componentObject,
+                                                        input.name
+                                                    )}
+                                                    : type={input.type},
+                                                    optional=
+                                                    {input.isOptionalInput
+                                                        ? "yes"
+                                                        : "no"}
+                                                    , sequence=
+                                                    {input.isSequenceInput
+                                                        ? "yes"
+                                                        : "no"}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                        <div className="EezStudio_Component_Documentation_BodySection">
+                            <div>Outputs</div>
+                            <div>
+                                {this.componentObject && (
+                                    <ul>
+                                        {this.componentObject
+                                            .getOutputs()
+                                            .map(output => (
+                                                <li key={output.name}>
+                                                    {getOutputDisplayName(
+                                                        this.componentObject,
+                                                        output.name
+                                                    )}
+                                                    : type={output.type},
+                                                    optional=
+                                                    {output.isOptionalOutput
+                                                        ? "yes"
+                                                        : "no"}
+                                                    , sequence=
+                                                    {output.isSequenceOutput
+                                                        ? "yes"
+                                                        : "no"}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                        <div className="EezStudio_Component_Documentation_BodySection">
+                            <div>Examples</div>
+                            <div></div>
+                        </div>
+                    </div>
                 </div>
             );
         }
