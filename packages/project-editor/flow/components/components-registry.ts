@@ -106,6 +106,41 @@ export function getAllComponentClasses(
     return [...stockComponents, ...userWidgets, ...userActions];
 }
 
+export function getComponentGroupName(
+    componentClass: IObjectClassInfo
+): string {
+    const parts = componentClass.name.split("/");
+
+    let groupName: string | undefined;
+
+    if (parts.length == 1) {
+        groupName =
+            componentClass.componentPaletteGroupName != undefined
+                ? componentClass.componentPaletteGroupName
+                : componentClass.objectClass.classInfo
+                      .componentPaletteGroupName;
+        if (groupName) {
+            if (!groupName.startsWith("!")) {
+                groupName = "!4" + groupName;
+            }
+        } else {
+            if (componentClass.name.endsWith("Widget")) {
+                groupName = "!1Basic";
+            } else if (componentClass.name.endsWith("ActionComponent")) {
+                groupName = "!3Basic";
+            } else {
+                groupName = "!5Other components";
+            }
+        }
+    } else if (parts.length == 2) {
+        groupName = "!6" + parts[0];
+    } else {
+        groupName = "!1Basic";
+    }
+
+    return groupName;
+}
+
 // Groups sort order:
 //  !1 -> "Common Widgets" and odther LVGL widget groups
 //  !2 -> "LVGL Actions"
@@ -149,39 +184,14 @@ export function getGroups(
             }
         }
 
-        const parts = componentClass.name.split("/");
-        let groupName;
-        if (parts.length == 1) {
-            groupName =
-                componentClass.componentPaletteGroupName != undefined
-                    ? componentClass.componentPaletteGroupName
-                    : componentClass.objectClass.classInfo
-                          .componentPaletteGroupName;
-            if (groupName) {
-                if (!groupName.startsWith("!")) {
-                    groupName = "!4" + groupName;
-                }
-            } else {
-                if (componentClass.name.endsWith("Widget")) {
-                    groupName = "!1Basic";
-                } else if (componentClass.name.endsWith("ActionComponent")) {
-                    groupName = "!3Basic";
-                } else {
-                    groupName = "!5Other components";
-                }
-            }
-        } else if (parts.length == 2) {
-            groupName = "!6" + parts[0];
-        }
+        const groupName = getComponentGroupName(componentClass);
 
-        if (groupName) {
-            let componentClasses = groups.get(groupName);
-            if (!componentClasses) {
-                componentClasses = [];
-                groups.set(groupName, componentClasses);
-            }
-            componentClasses.push(componentClass);
+        let componentClasses = groups.get(groupName);
+        if (!componentClasses) {
+            componentClasses = [];
+            groups.set(groupName, componentClasses);
         }
+        componentClasses.push(componentClass);
     });
 
     return groups;

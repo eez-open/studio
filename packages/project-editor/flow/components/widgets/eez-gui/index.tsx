@@ -4850,8 +4850,6 @@ export class InputEmbeddedWidget extends Widget {
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
                 stroke="currentColor"
@@ -5504,7 +5502,7 @@ export class DropDownListWidget extends Widget {
 
         componentPaletteGroupName: "!1Input",
 
-        componentPaletteLabel: "DropDown",
+        componentPaletteLabel: "Dropdown",
 
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 

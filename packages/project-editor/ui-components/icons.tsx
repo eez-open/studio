@@ -2101,8 +2101,7 @@ export const RUN_ICON = (
 
 export const LANGUAGE_ICON = (
     <svg
-        width="24"
-        height="24"
+        viewBox="0 0 24 24"
         strokeWidth="2"
         stroke="currentColor"
         fill="none"
@@ -2702,7 +2701,7 @@ export const JSON_ICON = (
 );
 
 export const CSV_ICON = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" fill="none">
         <path
             fill="#000"
             d="M13.5 3.5h.5v-.207l-.146-.147-.354.354Zm-3-3 .354-.354L10.707 0H10.5v.5Zm-4 6V6H6v.5h.5Zm0 2H6V9h.5v-.5Zm2 0H9V8h-.5v.5Zm0 2v.5H9v-.5h-.5Zm2-1H10v.207l.146.147.354-.354Zm1 1-.354.354.354.353.354-.353-.354-.354Zm1-1 .354.354.146-.147V9.5h-.5Zm-10-3V6H2v.5h.5Zm0 4H2v.5h.5v-.5ZM2 5V1.5H1V5h1Zm11-1.5V5h1V3.5h-1ZM2.5 1h8V0h-8v1Zm7.646-.146 3 3 .708-.708-3-3-.708.708ZM2 1.5a.5.5 0 0 1 .5-.5V0A1.5 1.5 0 0 0 1 1.5h1ZM1 12v1.5h1V12H1Zm1.5 3h10v-1h-10v1ZM14 13.5V12h-1v1.5h1ZM12.5 15a1.5 1.5 0 0 0 1.5-1.5h-1a.5.5 0 0 1-.5.5v1ZM1 13.5A1.5 1.5 0 0 0 2.5 15v-1a.5.5 0 0 1-.5-.5H1ZM9 6H6.5v1H9V6Zm-3 .5v2h1v-2H6ZM6.5 9h2V8h-2v1ZM8 8.5v2h1v-2H8Zm.5 1.5H6v1h2.5v-1ZM10 6v3.5h1V6h-1Zm.146 3.854 1 1 .708-.708-1-1-.708.708Zm1.708 1 1-1-.708-.708-1 1 .708.708ZM13 9.5V6h-1v3.5h1ZM5 6H2.5v1H5V6Zm-3 .5v4h1v-4H2Zm.5 4.5H5v-1H2.5v1Z"
@@ -2712,8 +2711,7 @@ export const CSV_ICON = (
 
 export const SWITCH_WIDGET_ICON = (
     <svg
-        width="24"
-        height="24"
+        viewBox="0 0 24 24"
         strokeWidth="2"
         stroke="currentColor"
         fill="none"
@@ -2723,5 +2721,55 @@ export const SWITCH_WIDGET_ICON = (
         <path d="M0 0h24v24H0z" stroke="none" />
         <circle cx="8" cy="12" r="2" />
         <rect x="2" y="6" width="20" height="12" rx="6" />
+    </svg>
+);
+
+export const FOLDER_ICON = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <rect
+            width="25"
+            height="16"
+            x="3"
+            y="12"
+            rx="1.25"
+            ry="1.25"
+            opacity=".2"
+        />
+        <path
+            d="M3 21.75c0 .692.558 1.25 1.25 1.25h22.5c.692 0 1.25-.558 1.25-1.25V8.25C28 7.558 27.442 7 26.75 7H14v-.75C14 5.558 13.443 5 12.75 5h-8.5C3.558 5 3 5.558 3 6.25"
+            fill="#dd772f"
+        />
+        <rect
+            width="25"
+            height="16"
+            x="3"
+            y="10"
+            rx="1.25"
+            ry="1.25"
+            opacity=".2"
+        />
+        <rect
+            width="21"
+            height="10"
+            x="5"
+            y="9"
+            rx="1.25"
+            ry="1.25"
+            fill="#e4e4e4"
+        />
+        <rect
+            width="25"
+            height="16"
+            x="3"
+            y="11"
+            rx="1.25"
+            ry="1.25"
+            fill="#ee923a"
+        />
+        <path
+            d="M4.25 5C3.558 5 3 5.558 3 6.25v1C3 6.558 3.558 6 4.25 6h8.5c.693 0 1.25.558 1.25 1.25V8h12.75c.692 0 1.25.557 1.25 1.25v-1C28 7.558 27.442 7 26.75 7H14v-.75C14 5.558 13.443 5 12.75 5h-8.5z"
+            opacity=".1"
+            fill="#fff"
+        />
     </svg>
 );

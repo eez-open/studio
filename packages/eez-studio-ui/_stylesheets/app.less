@@ -7103,13 +7103,103 @@ button.EezStudio_Action {
 }
 
 .EezStudio_DocumentationBrowser {
-    .EezStudio_DocumentationBrowser_ComponentTreeNode {
-        & > img,
-        & > svg {
-            flex-shrink: 0;
-            height: 20px;
-            object-fit: contain;
-            margin-right: 4px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_DocumentationBrowser_Toolbar {
+        flex: 0;
+        background-color: @panelHeaderColor;
+        padding: 10px;
+        display: flex;
+        border: 1px solid @borderColor;
+
+        .form-check {
+            margin: 0;
+            min-height: 0;
+        }
+    }
+
+    .EezStudio_DocumentationBrowser_Content {
+        flex: 1;
+        position: relative;
+
+        .EezStudio_DocumentationBrowser_Content_TreeContainer {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+
+            display: flex;
+            flex-direction: column;
+
+            .EezStudio_SearchInput_Container {
+                border-bottom: 1px solid @borderColor;
+            }
+
+            .EezStudio_DocumentationBrowser_ComponentTreeNode {
+                & > img,
+                & > svg {
+                    flex-shrink: 0;
+                    height: 20px;
+                    object-fit: contain;
+                    margin-right: 4px;
+                }
+            }
+        }
+
+        .EezStudio_DocumentationBrowser_Content_Help {
+            background-color: @panelHeaderColor;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            .nav {
+                flex: 0;
+                padding-top: 5px;
+                padding-left: 5px;
+                .nav-link {
+                    color: @textColor;
+                }
+            }
+
+            .EezStudio_Component_Documentation {
+                flex: 1;
+                padding: 10px;
+                background-color: @backgroundColor;
+                overflow: auto;
+
+                h3 {
+                    display: flex;
+                    align-items: center;
+
+                    img,
+                    svg {
+                        height: 40px;
+                        object-fit: contain;
+                        margin-right: 4px;
+                    }
+
+                    padding-bottom: 5px;
+                    border-bottom: 2px solid @borderColor;
+                    margin-bottom: 5px;
+                }
+
+                h4 {
+                    text-transform: uppercase;
+                }
+            }
         }
     }
 }
