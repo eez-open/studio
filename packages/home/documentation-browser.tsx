@@ -1,7 +1,15 @@
 import React from "react";
-import { action, computed, makeObservable, observable } from "mobx";
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
+import fs from "fs";
+import { resolve } from "path";
 
 import { showDialog } from "eez-studio-ui/dialog";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
@@ -9,10 +17,10 @@ import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { homeLayoutModels } from "home/home-layout-models";
 
 import {
-    ClassInfo,
     IObjectClassInfo,
     ProjectType,
-    isProperSubclassOf
+    isProperSubclassOf,
+    setParent
 } from "project-editor/core/object";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -31,6 +39,10 @@ import {
     LVGL_PROJECT_ICON
 } from "project-editor/ui-components/icons";
 import classNames from "classnames";
+import { ProjectStore, createObject, loadProject } from "project-editor/store";
+import { isDev } from "eez-studio-shared/util-electron";
+import { sourceRootDir } from "eez-studio-shared/util";
+import type { Component } from "project-editor/flow/component";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -133,6 +145,10 @@ class Model {
     searchText = "";
     selectedProjectType: ProjectType = ProjectType.DASHBOARD;
 
+    dashboardProjectStore: ProjectStore;
+    eezguiProjectStore: ProjectStore;
+    lvglProjectStore: ProjectStore;
+
     constructor() {
         makeObservable(this, {
             selectedNode: observable,
@@ -143,6 +159,33 @@ class Model {
             rootNode: computed,
             selectNode: action
         });
+
+        this.createProjectStores();
+    }
+
+    async createProjectStores() {
+        this.dashboardProjectStore = await this.createProjectStore("dashboard");
+        this.eezguiProjectStore = await this.createProjectStore("firmware");
+        this.lvglProjectStore = await this.createProjectStore("LVGL");
+    }
+
+    async createProjectStore(type: string) {
+        const relativePath = `project-templates/${type}.eez-project`;
+
+        const jsonStr = await fs.promises.readFile(
+            isDev
+                ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
+                : `${process.resourcesPath!}/${relativePath}`,
+            "utf8"
+        );
+
+        const projectStore = await ProjectStore.create();
+
+        const project = loadProject(projectStore, jsonStr);
+
+        projectStore.setProject(project, "");
+
+        return projectStore;
     }
 
     get allComponents(): ComponentInfo[] {
@@ -608,18 +651,17 @@ const Content = observer(
                 }
             }
 
-            let classInfo: ClassInfo;
+            let projectStore: ProjectStore;
+            let componentClass: IObjectClassInfo;
             if (selectedProjectType === ProjectType.DASHBOARD) {
-                classInfo =
-                    componentInfo.componentClasses.dashboard!.objectClass
-                        .classInfo;
+                componentClass = componentInfo.componentClasses.dashboard!;
+                projectStore = model.dashboardProjectStore;
             } else if (selectedProjectType === ProjectType.FIRMWARE) {
-                classInfo =
-                    componentInfo.componentClasses.eezgui!.objectClass
-                        .classInfo;
+                componentClass = componentInfo.componentClasses.eezgui!;
+                projectStore = model.eezguiProjectStore;
             } else {
-                classInfo =
-                    componentInfo.componentClasses.lvgl!.objectClass.classInfo;
+                componentClass = componentInfo.componentClasses.lvgl!;
+                projectStore = model.lvglProjectStore;
             }
 
             return (
@@ -685,7 +727,8 @@ const Content = observer(
                     </ul>
                     <ComponentHelp
                         componentInfo={componentInfo}
-                        classInfo={classInfo}
+                        componentClass={componentClass}
+                        projectStore={projectStore}
                     />
                 </div>
             );
@@ -698,10 +741,85 @@ const Content = observer(
 const ComponentHelp = observer(
     class ComponentHelp extends React.Component<{
         componentInfo: ComponentInfo;
-        classInfo: ClassInfo;
+        componentClass: IObjectClassInfo;
+        projectStore: ProjectStore;
     }> {
+        _componentObject: Component | undefined;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                _componentObject: observable
+            });
+        }
+
+        createComponentObject() {
+            this.removeComponentObject();
+
+            const componentObject = createObject<Component>(
+                this.props.projectStore,
+                Object.assign(
+                    {},
+                    this.props.componentClass.objectClass.classInfo
+                        .defaultValue,
+                    {
+                        type: this.props.componentClass.name
+                    }
+                ),
+                this.props.componentClass.objectClass,
+                undefined,
+                true
+            );
+
+            setParent(
+                componentObject,
+                this.props.projectStore.project.userPages[0].components
+            );
+            this.props.projectStore.project.userPages[0].components.push(
+                componentObject
+            );
+
+            runInAction(() => {
+                this._componentObject = componentObject;
+            });
+        }
+
+        removeComponentObject() {
+            if (this._componentObject) {
+                this.props.projectStore.project.userPages[0].components = [];
+
+                runInAction(() => {
+                    this._componentObject = undefined;
+                });
+            }
+        }
+
+        componentDidMount() {
+            this.createComponentObject();
+        }
+
+        componentDidUpdate() {
+            if (
+                this._componentObject != undefined &&
+                this._componentObject.type != this.props.componentClass.name
+            ) {
+                this.createComponentObject();
+            }
+        }
+
+        componentWillUnmount() {
+            this.removeComponentObject();
+        }
+
+        get componentObject() {
+            return this._componentObject;
+        }
+
         render() {
-            const { componentInfo, classInfo } = this.props;
+            const { componentInfo, componentClass } = this.props;
+
+            const classInfo = componentClass.objectClass.classInfo;
 
             return (
                 <div className="EezStudio_Component_Documentation">
@@ -718,11 +836,37 @@ const ComponentHelp = observer(
                                 property => property.expressionType != undefined
                             )
                             .map(property => (
-                                <li key={property.name}>{property.name}</li>
+                                <li key={property.name}>
+                                    {property.name}: {property.expressionType}
+                                </li>
                             ))}
                     </ul>
                     <h4>Inputs</h4>
+                    {this.componentObject && (
+                        <ul>
+                            {this.componentObject.getInputs().map(input => (
+                                <li key={input.name}>
+                                    {input.name}: type={input.type}, optional=
+                                    {input.isOptionalInput ? "yes" : "no"},
+                                    sequence=
+                                    {input.isSequenceInput ? "yes" : "no"}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                     <h4>Outputs</h4>
+                    {this.componentObject && (
+                        <ul>
+                            {this.componentObject.getOutputs().map(output => (
+                                <li key={output.name}>
+                                    {output.name}: type={output.type}, optional=
+                                    {output.isOptionalOutput ? "yes" : "no"},
+                                    sequence=
+                                    {output.isSequenceOutput ? "yes" : "no"}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                     <h4>Examples</h4>
                 </div>
             );
