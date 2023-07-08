@@ -1,6 +1,6 @@
 import { visitObjects } from "project-editor/core/search";
 import { updateObject } from "project-editor/store";
-import { RectangleWidget } from "project-editor/flow/components/widgets";
+import { RectangleWidget } from "project-editor/flow/components/widgets/eez-gui";
 import {
     Project,
     ProjectType,

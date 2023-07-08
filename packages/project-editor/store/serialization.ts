@@ -474,3 +474,7 @@ export function wireSourceChanged(
         newSourceName
     });
 }
+
+export function getSerializationProject() {
+    return currentProject!;
+}

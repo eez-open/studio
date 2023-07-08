@@ -31,23 +31,26 @@ import { Font } from "project-editor/features/font/font";
 import { Style } from "project-editor/features/style/style";
 import { Page /*, PageOrientation*/ } from "project-editor/features/page/page";
 import { Widget, Component } from "project-editor/flow/component";
+
 import {
-    BarGraphWidget,
-    BitmapWidget,
-    ButtonWidget,
     ContainerWidget,
-    DisplayDataWidget,
     UserWidgetWidget,
-    ListGraphWidget,
     ListWidget,
-    MultilineTextWidget,
+    SelectWidget
+} from "project-editor/flow/components/widgets";
+import {
+    BitmapWidget,
     RectangleWidget,
-    SelectWidget,
     TextWidget,
+    BarGraphWidget,
+    DisplayDataWidget,
+    ListGraphWidget,
+    MultilineTextWidget,
     ToggleButtonWidget,
     UpDownWidget,
-    YTGraphWidget
-} from "project-editor/flow/components/widgets";
+    YTGraphWidget,
+    ButtonWidget
+} from "project-editor/flow/components/widgets/eez-gui";
 
 ////////////////////////////////////////////////////////////////////////////////
 

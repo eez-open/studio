@@ -43,6 +43,11 @@ import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
+// ACTIONS
+import {
+    OutputActionComponent,
+    CallActionActionComponent
+} from "project-editor/flow/components/actions";
 import "project-editor/flow/components/actions/stream";
 import "project-editor/flow/components/actions/execute-command";
 import "project-editor/flow/components/actions/file";
@@ -54,14 +59,22 @@ import "project-editor/flow/components/actions/json";
 import "project-editor/flow/components/actions/python";
 import "project-editor/flow/components/actions/mqtt-actions";
 import "project-editor/flow/components/actions/csv";
-
-import "project-editor/flow/components/widgets/eez-chart";
-import "project-editor/flow/components/widgets/markdown";
-import "project-editor/flow/components/widgets/plotly";
-import "project-editor/flow/components/widgets/terminal";
-
-import "project-editor/lvgl/widgets";
 import "project-editor/lvgl/actions";
+
+// WIDGETS
+import {
+    ContainerWidget,
+    UserWidgetWidget,
+    ListWidget,
+    SelectWidget
+} from "project-editor/flow/components/widgets";
+import "project-editor/flow/components/widgets/dashboard";
+import "project-editor/flow/components/widgets/eez-gui";
+import {
+    LVGLWidget,
+    LVGLPanelWidget,
+    LVGLUserWidgetWidget
+} from "project-editor/lvgl/widgets";
 
 import { getBitmapData } from "project-editor/features/bitmap/bitmap";
 import {
@@ -80,23 +93,8 @@ import {
 } from "project-editor/project/ui/EditorComponentFactory";
 import { browseGlyph } from "project-editor/features/font/FontEditor";
 import { Variable } from "project-editor/features/variable/variable";
-import {
-    OutputActionComponent,
-    CallActionActionComponent
-} from "project-editor/flow/components/actions";
-import {
-    ContainerWidget,
-    UserWidgetWidget,
-    ListWidget,
-    SelectWidget
-} from "project-editor/flow/components/widgets";
 import { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
-import {
-    LVGLWidget,
-    LVGLPanelWidget,
-    LVGLUserWidgetWidget
-} from "project-editor/lvgl/widgets";
 import { LVGLStyle } from "project-editor/lvgl/style";
 import { Property } from "./ui-components/PropertyGrid/Property";
 import { getProjectStore } from "project-editor/store";

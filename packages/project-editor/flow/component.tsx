@@ -149,7 +149,10 @@ import {
     getOutputDisplayName
 } from "project-editor/flow/helper";
 
-import { wireSourceChanged } from "project-editor/store/serialization";
+import {
+    getSerializationProject,
+    wireSourceChanged
+} from "project-editor/store/serialization";
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +276,45 @@ function getClassFromType(projectStore: ProjectStore, type: string) {
     }
 
     let componentClass;
+
+    const projectTypeTraits =
+        projectStore.project?.projectTypeTraits ||
+        getSerializationProject().projectTypeTraits;
+    if (projectTypeTraits.isDashboard) {
+        if (
+            type + "Widget" == "DropDownListWidget" ||
+            type == "DropDownListWidget"
+        ) {
+            type = "DropDownListDashboardWidget";
+        } else if (
+            type + "Widget" == "QRCodeWidget" ||
+            type == "QRCodeWidget"
+        ) {
+            type = "QRCodeDashboardWidget";
+        } else if (
+            type + "Widget" == "ProgressWidget" ||
+            type == "ProgressWidget"
+        ) {
+            type = "ProgressDashboardWidget";
+        } else if (
+            type + "Widget" == "ButtonWidget" ||
+            type == "ButtonWidget"
+        ) {
+            type = "ButtonDashboardWidget";
+        } else if (type + "Widget" == "TextWidget" || type == "TextWidget") {
+            type = "TextDashboardWidget";
+        } else if (
+            type + "Widget" == "BitmapWidget" ||
+            type == "BitmapWidget"
+        ) {
+            type = "BitmapDashboardWidget";
+        } else if (
+            type + "Widget" == "RectangleWidget" ||
+            type == "RectangleWidget"
+        ) {
+            type = "RectangleDashboardWidget";
+        }
+    }
 
     componentClass = findClass(type + "Widget");
     if (componentClass) {

@@ -111,7 +111,10 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { humanize } from "eez-studio-shared/string";
 import { checkExpression } from "project-editor/flow/expression";
 import { Button } from "eez-studio-ui/button";
-import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
+import {
+    SWITCH_WIDGET_ICON,
+    USER_WIDGET_ICON
+} from "project-editor/ui-components/icons";
 import {
     EndActionComponent,
     InputActionComponent,
@@ -3588,20 +3591,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
             clickableFlag: true
         },
 
-        icon: (
-            <svg
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path d="M0 0h24v24H0z" stroke="none" />
-                <circle cx="8" cy="12" r="2" />
-                <rect x="2" y="6" width="20" height="12" rx="6" />
-            </svg>
-        ),
+        icon: SWITCH_WIDGET_ICON,
 
         lvgl: {
             parts: ["MAIN", "INDICATOR", "KNOB"],

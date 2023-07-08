@@ -29,25 +29,29 @@ import { Font } from "project-editor/features/font/font";
 import { Theme } from "project-editor/features/style/theme";
 import { Action } from "project-editor/features/action/action";
 import { Widget } from "project-editor/flow/component";
+
 import {
-    BarGraphWidget,
-    BitmapWidget,
-    ButtonWidget,
     ContainerWidget,
-    DisplayDataWidget,
     UserWidgetWidget,
-    ListGraphWidget,
     ListWidget,
-    MultilineTextWidget,
-    RectangleWidget,
     SelectWidget,
+    GridWidget
+} from "project-editor/flow/components/widgets";
+import {
+    BitmapWidget,
+    RectangleWidget,
     TextWidget,
+    BarGraphWidget,
+    DisplayDataWidget,
+    ListGraphWidget,
+    MultilineTextWidget,
     ToggleButtonWidget,
     UpDownWidget,
-    GridWidget,
     ButtonGroupWidget,
+    ButtonWidget,
     ScrollBarWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui";
+
 import { propertyNotFoundMessage, Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import { build as buildVariables } from "project-editor/build/v2/variables";

@@ -203,6 +203,7 @@ input::placeholder {
 
     .EezStudio_TreeRowEnclosure {
         .EezStudio_TreeRow {
+            width: 100%;
             &.EezStudio_Selected {
                 background-color: @nonFocusedSelectionBackgroundColor;
                 color: @nonFocusedSelectionColor;
@@ -5057,7 +5058,8 @@ button.EezStudio_Action {
         }
 
         &.Button,
-        &.ButtonWidget {
+        &.ButtonWidget,
+        &.ButtonDashboardWidget {
             > button {
                 width: 100%;
                 height: 100%;
@@ -5077,7 +5079,8 @@ button.EezStudio_Action {
         }
 
         &.Text,
-        &.TextWidget {
+        &.TextWidget,
+        &.TextDashboardWidget {
             > span {
                 width: 100%;
                 height: 100%;
@@ -5101,7 +5104,7 @@ button.EezStudio_Action {
             }
         }
 
-        &.ProgressWidget {
+        &.ProgressDashboardWidget {
             .progress {
                 height: 100%;
             }
@@ -5117,7 +5120,7 @@ button.EezStudio_Action {
             }
         }
 
-        &.DropDownListWidget {
+        &.DropDownListDashboardWidget {
             select {
                 display: block;
                 width: 100%;
