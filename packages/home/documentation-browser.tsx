@@ -4,6 +4,7 @@ import {
     computed,
     makeObservable,
     observable,
+    reaction,
     runInAction
 } from "mobx";
 import { observer } from "mobx-react";
@@ -147,8 +148,8 @@ type DocumentationTreeNode = ITreeNode<TreeNodeData>;
 class Model {
     documentationBrowserClosed = true;
     selectedNode: TreeNodeData | undefined;
-    groupByProjectType = false;
     showGroups = true;
+    groupByProjectType = false;
     searchText = "";
     selectedProjectType: ProjectType = ProjectType.DASHBOARD;
 
@@ -157,6 +158,24 @@ class Model {
     lvglProjectStore: ProjectStore;
 
     constructor() {
+        const showGroups = window.localStorage.getItem(
+            "DocumentationBrowser.showGroups"
+        );
+        if (showGroups != undefined) {
+            this.showGroups = showGroups == "true";
+        } else {
+            this.showGroups = true;
+        }
+
+        const groupByProjectType = window.localStorage.getItem(
+            "DocumentationBrowser.groupByProjectType"
+        );
+        if (groupByProjectType != undefined) {
+            this.groupByProjectType = groupByProjectType == "true";
+        } else {
+            this.groupByProjectType = false;
+        }
+
         makeObservable(this, {
             selectedNode: observable,
             groupByProjectType: observable,
@@ -169,6 +188,26 @@ class Model {
         });
 
         this.createProjectStores();
+
+        reaction(
+            () => this.showGroups,
+            showGroups => {
+                window.localStorage.setItem(
+                    "DocumentationBrowser.showGroups",
+                    showGroups ? "true" : "false"
+                );
+            }
+        );
+
+        reaction(
+            () => this.groupByProjectType,
+            groupByProjectType => {
+                window.localStorage.setItem(
+                    "DocumentationBrowser.groupByProjectType",
+                    groupByProjectType ? "true" : "false"
+                );
+            }
+        );
     }
 
     async createProjectStores() {
@@ -291,28 +330,45 @@ class Model {
     }
 
     get rootNode(): DocumentationTreeNode {
+        const getChildrenCountDeep = (children: ITreeNode[]): number => {
+            let count = 0;
+
+            children.forEach(child => {
+                count += getChildrenCountDeep(child.children);
+                if (child.data?.kind == "component") {
+                    count++;
+                }
+            });
+
+            return count;
+        };
+
         const getComponentTreeChild = (
+            idPrefix: string,
             componentInfo: ComponentInfo
         ): ITreeNode<ComponentTreeNodeData> => {
+            let id = idPrefix + componentInfo.id;
             return {
-                id: componentInfo.id,
+                id,
                 label: (
                     <span className="EezStudio_DocumentationBrowser_ComponentTreeNode">
-                        {typeof componentInfo.icon === "string" ? (
-                            <img src={componentInfo.icon} />
-                        ) : (
-                            componentInfo.icon
-                        )}
-                        <span title={componentInfo.name}>
-                            {componentInfo.name}
+                        <span>
+                            {typeof componentInfo.icon === "string" ? (
+                                <img src={componentInfo.icon} />
+                            ) : (
+                                componentInfo.icon
+                            )}
+                            <span title={componentInfo.name}>
+                                {componentInfo.name}
+                            </span>
                         </span>
                     </span>
                 ),
                 children: [],
-                selected: this.selectedNode?.id === componentInfo.id,
+                selected: this.selectedNode?.id === id,
                 expanded: false,
                 data: {
-                    id: componentInfo.id,
+                    id: id,
                     kind: "component",
                     componentInfo
                 }
@@ -320,12 +376,14 @@ class Model {
         };
 
         const getComponentGroupTreeChild = (
-            id: string,
+            idPrefix: string,
             groupName: string,
             groupComponents: ComponentInfo[]
         ): ITreeNode<GroupTreeNodeData> => {
+            let id = idPrefix + "_" + groupName;
+
             let children = groupComponents
-                .map(componentInfo => getComponentTreeChild(componentInfo))
+                .map(componentInfo => getComponentTreeChild(id, componentInfo))
                 .sort((a, b) => {
                     return a.data!.componentInfo.name.localeCompare(
                         b.data!.componentInfo.name
@@ -335,18 +393,23 @@ class Model {
             let label = getComponentGroupDisplayName(groupName);
 
             return {
-                id: id + "_" + groupName,
+                id,
                 label: (
                     <span className="EezStudio_DocumentationBrowser_ComponentTreeNode">
-                        {FOLDER_ICON}
-                        <span title={label}>{label}</span>
+                        <span>
+                            {FOLDER_ICON}
+                            <span title={label}>{label}</span>
+                        </span>
+                        <span className="badge bg-secondary">
+                            {getChildrenCountDeep(children)}
+                        </span>
                     </span>
                 ),
                 children,
-                selected: this.selectedNode?.id === id + "_" + groupName,
+                selected: this.selectedNode?.id === id,
                 expanded: true,
                 data: {
-                    id: id + "_" + groupName,
+                    id: id,
                     kind: "group",
                     groupName,
                     groupComponents
@@ -355,11 +418,13 @@ class Model {
         };
 
         const getComponentSectionTreeChild = (
-            id: string,
+            idPrefix: string,
             label: string,
             components: ComponentInfo[],
             type: "widget" | "action"
         ): ITreeNode<SectionTreeNodeData> => {
+            let id = idPrefix;
+
             components = components.filter(
                 componentInfo => componentInfo.type === type
             );
@@ -378,7 +443,9 @@ class Model {
                 );
             } else {
                 children = components
-                    .map(componentInfo => getComponentTreeChild(componentInfo))
+                    .map(componentInfo =>
+                        getComponentTreeChild(id, componentInfo)
+                    )
                     .sort((a, b) => {
                         return a.data!.componentInfo.name.localeCompare(
                             b.data!.componentInfo.name
@@ -390,8 +457,13 @@ class Model {
                 id,
                 label: (
                     <span className="EezStudio_DocumentationBrowser_ComponentTreeNode">
-                        {FOLDER_ICON}
-                        <span title={label}>{label}</span>
+                        <span>
+                            {FOLDER_ICON}
+                            <span title={label}>{label}</span>
+                        </span>
+                        <span className="badge bg-secondary">
+                            {getChildrenCountDeep(children)}
+                        </span>
                     </span>
                 ),
                 children,
@@ -418,28 +490,35 @@ class Model {
                     ? this.eezguiComponents
                     : this.lvglComponents;
 
+            const children = [
+                getComponentSectionTreeChild(
+                    projectType + "__actionComponents",
+                    "ACTIONS",
+                    components,
+                    "action"
+                ),
+                getComponentSectionTreeChild(
+                    projectType + "__widgetComponents",
+                    "WIDGETS",
+                    components,
+                    "widget"
+                )
+            ];
+
             return {
                 id,
                 label: (
                     <span className="EezStudio_DocumentationBrowser_ComponentTreeNode">
-                        {icon}
-                        <span title={label}>{label}</span>
+                        <span>
+                            {icon}
+                            <span title={label}>{label}</span>
+                        </span>
+                        <span className="badge bg-secondary">
+                            {getChildrenCountDeep(children)}
+                        </span>
                     </span>
                 ),
-                children: [
-                    getComponentSectionTreeChild(
-                        projectType + "__actionComponents",
-                        "ACTIONS",
-                        components,
-                        "action"
-                    ),
-                    getComponentSectionTreeChild(
-                        projectType + "__widgetComponents",
-                        "WIDGETS",
-                        components,
-                        "widget"
-                    )
-                ],
+                children,
                 selected: this.selectedNode?.id === id,
                 expanded: true,
                 data: {

@@ -7149,9 +7149,26 @@ button.EezStudio_Action {
                 border-bottom: 1px solid @borderColor;
             }
 
+            .EezStudio_TreeRow {
+                display: flex;
+                align-items: center;
+
+                > span:first-child {
+                    flex: 0;
+                }
+
+                > span:nth-child(2) {
+                    flex: 1;
+                }
+            }
+
             .EezStudio_DocumentationBrowser_ComponentTreeNode {
-                & > img,
-                & > svg {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                & > span > img,
+                & > span > svg {
                     flex-shrink: 0;
                     height: 20px;
                     object-fit: contain;
