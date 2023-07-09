@@ -7,10 +7,10 @@ import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 import {
     IEezObject,
     PropertyType,
-    IPropertyGridGroupDefinition,
     getParent,
     getKey,
-    isAnyPropertyReadOnly
+    isAnyPropertyReadOnly,
+    PropertyInfo
 } from "project-editor/core/object";
 import {
     isValue,
@@ -29,6 +29,7 @@ import { groupCollapsedStore } from "./GroupCollapsedStore";
 import { PropertyEnclosure } from "./PropertyEnclosure";
 import { GroupTitle } from "./GroupTitle";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getPropertyGroups } from "./groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -117,6 +118,150 @@ export const PropertyGrid = observer(
             }
         };
 
+        renderProperty(
+            objects: IEezObject[],
+            propertyInfo: PropertyInfo,
+            readOnly: boolean,
+            isPropertyMenuSupported: boolean,
+            highlightedPropertyName: string | undefined
+        ) {
+            const colSpan =
+                propertyInfo.propertyGridColSpan ||
+                (propertyInfo.type === PropertyType.Boolean &&
+                    !propertyInfo.checkboxStyleSwitch) ||
+                (propertyInfo.type === PropertyType.Any &&
+                    !propertyInfo.propertyGridColumnComponent) ||
+                (propertyInfo.propertyGridCollapsable &&
+                    (!propertyCollapsedStore.isCollapsed(
+                        objects[0],
+                        propertyInfo
+                    ) ||
+                        !propertyInfo.propertyGridCollapsableDefaultPropertyName)) ||
+                propertyInfo.propertyGridRowComponent;
+
+            const propertyReadOnly = isAnyPropertyReadOnly(
+                objects,
+                propertyInfo
+            );
+
+            const propertyProps = {
+                propertyInfo,
+                objects,
+                updateObject: this.updateObject,
+                readOnly: readOnly || propertyReadOnly,
+                collapsed: false
+            };
+
+            let propertyMenuEnabled;
+
+            if (
+                !readOnly &&
+                (propertyInfo.inheritable ||
+                    (propertyInfo.propertyMenu &&
+                        propertyInfo.propertyMenu(propertyProps).length > 0))
+            ) {
+                propertyMenuEnabled = true;
+            } else {
+                propertyMenuEnabled = false;
+            }
+
+            const propertyGroup = propertyInfo.propertyGridGroup;
+
+            const collapsed = this.props.collapsed
+                ? true
+                : propertyGroup &&
+                  groupCollapsedStore.isCollapsed(propertyGroup)
+                ? true
+                : false;
+
+            propertyProps.collapsed = collapsed;
+
+            let property;
+            if (colSpan) {
+                property = (
+                    <td
+                        className={classNames({
+                            "embedded-property-cell":
+                                propertyInfo.type === PropertyType.Object
+                        })}
+                        colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
+                        style={
+                            propertyInfo.type === PropertyType.Array ||
+                            propertyInfo.type === PropertyType.Any
+                                ? {
+                                      width: "100%"
+                                  }
+                                : undefined
+                        }
+                    >
+                        <Property {...propertyProps} />
+                    </td>
+                );
+            } else {
+                if (propertyInfo.propertyNameAbove) {
+                    property = (
+                        <React.Fragment>
+                            <td colSpan={2}>
+                                <Property {...propertyProps} />
+                            </td>
+                        </React.Fragment>
+                    );
+                } else {
+                    property = (
+                        <React.Fragment>
+                            <td className="property-name">
+                                <PropertyName {...propertyProps} />
+                            </td>
+
+                            <td>
+                                <Property {...propertyProps} />
+                            </td>
+                        </React.Fragment>
+                    );
+                }
+            }
+
+            const propertyComponent = (
+                <PropertyEnclosure
+                    key={propertyInfo.name}
+                    objects={objects}
+                    propertyInfo={propertyInfo}
+                    highlightedPropertyName={highlightedPropertyName}
+                    property={property}
+                    isPropertyMenuSupported={isPropertyMenuSupported}
+                    propertyMenuEnabled={propertyMenuEnabled}
+                    readOnly={propertyProps.readOnly}
+                    updateObject={this.updateObject}
+                    style={{
+                        visibility: collapsed ? "collapse" : "visible"
+                    }}
+                />
+            );
+
+            if (propertyInfo.propertyNameAbove) {
+                return (
+                    <React.Fragment key={propertyInfo.name}>
+                        <tr
+                            style={{
+                                visibility: collapsed ? "collapse" : "visible"
+                            }}
+                        >
+                            <td
+                                className="property-name"
+                                colSpan={2}
+                                style={{ paddingTop: 8 }}
+                            >
+                                <PropertyName {...propertyProps} />
+                            </td>
+                        </tr>
+                        {propertyComponent}
+                    </React.Fragment>
+                );
+            }
+
+            return propertyComponent;
+        }
+
         render() {
             let objects = this.objects;
 
@@ -124,9 +269,16 @@ export const PropertyGrid = observer(
                 return null;
             }
 
+            //
             const readOnly =
                 this.props.readOnly || isAnyObjectReadOnly(objects);
 
+            //
+            const isPropertyMenuSupported = !objects.find(
+                object => !getClassInfo(object).isPropertyMenuSupported
+            );
+
+            //
             let highlightedPropertyName: string | undefined;
             if (objects.length === 1) {
                 let object;
@@ -140,232 +292,11 @@ export const PropertyGrid = observer(
                 objects = [object];
             }
 
-            //let properties: JSX.Element[] = [];
-
-            interface IGroupProperties {
-                group: IPropertyGridGroupDefinition;
-                properties: React.ReactNode[];
-            }
-
-            const groupPropertiesArray: IGroupProperties[] = [];
-
-            let groupForPropertiesWithoutGroupSpecified:
-                | IGroupProperties
-                | undefined;
-
-            const isPropertyMenuSupported = !objects.find(
-                object => !getClassInfo(object).isPropertyMenuSupported
-            );
-
             let properties = getCommonProperties(objects);
 
-            for (let propertyInfo of properties) {
-                const colSpan =
-                    propertyInfo.propertyGridColSpan ||
-                    (propertyInfo.type === PropertyType.Boolean &&
-                        !propertyInfo.checkboxStyleSwitch) ||
-                    (propertyInfo.type === PropertyType.Any &&
-                        !propertyInfo.propertyGridColumnComponent) ||
-                    (propertyInfo.propertyGridCollapsable &&
-                        (!propertyCollapsedStore.isCollapsed(
-                            objects[0],
-                            propertyInfo
-                        ) ||
-                            !propertyInfo.propertyGridCollapsableDefaultPropertyName)) ||
-                    propertyInfo.propertyGridRowComponent;
-
-                const propertyReadOnly = isAnyPropertyReadOnly(
-                    objects,
-                    propertyInfo
-                );
-
-                const propertyProps = {
-                    propertyInfo,
-                    objects,
-                    updateObject: this.updateObject,
-                    readOnly: readOnly || propertyReadOnly,
-                    collapsed: false
-                };
-
-                let propertyMenuEnabled;
-
-                if (
-                    !readOnly &&
-                    (propertyInfo.inheritable ||
-                        (propertyInfo.propertyMenu &&
-                            propertyInfo.propertyMenu(propertyProps).length >
-                                0))
-                ) {
-                    propertyMenuEnabled = true;
-                } else {
-                    propertyMenuEnabled = false;
-                }
-
-                const propertyGroup = propertyInfo.propertyGridGroup;
-
-                const collapsed = this.props.collapsed
-                    ? true
-                    : propertyGroup &&
-                      groupCollapsedStore.isCollapsed(propertyGroup)
-                    ? true
-                    : false;
-
-                propertyProps.collapsed = collapsed;
-
-                let property;
-                if (colSpan) {
-                    property = (
-                        <td
-                            className={classNames({
-                                "embedded-property-cell":
-                                    propertyInfo.type === PropertyType.Object
-                            })}
-                            colSpan={
-                                propertyInfo.propertyGridCollapsable ? 3 : 2
-                            }
-                            style={
-                                propertyInfo.type === PropertyType.Array ||
-                                propertyInfo.type === PropertyType.Any
-                                    ? {
-                                          width: "100%"
-                                      }
-                                    : undefined
-                            }
-                        >
-                            <Property {...propertyProps} />
-                        </td>
-                    );
-                } else {
-                    if (propertyInfo.propertyNameAbove) {
-                        property = (
-                            <React.Fragment>
-                                <td colSpan={2}>
-                                    <Property {...propertyProps} />
-                                </td>
-                            </React.Fragment>
-                        );
-                    } else {
-                        property = (
-                            <React.Fragment>
-                                <td className="property-name">
-                                    <PropertyName {...propertyProps} />
-                                </td>
-
-                                <td>
-                                    <Property {...propertyProps} />
-                                </td>
-                            </React.Fragment>
-                        );
-                    }
-                }
-
-                const propertyComponent = (
-                    <PropertyEnclosure
-                        key={propertyInfo.name}
-                        objects={objects}
-                        propertyInfo={propertyInfo}
-                        highlightedPropertyName={highlightedPropertyName}
-                        property={property}
-                        isPropertyMenuSupported={isPropertyMenuSupported}
-                        propertyMenuEnabled={propertyMenuEnabled}
-                        readOnly={propertyProps.readOnly}
-                        updateObject={this.updateObject}
-                        style={{
-                            visibility: collapsed ? "collapse" : "visible"
-                        }}
-                    />
-                );
-
-                let properties;
-
-                if (propertyGroup) {
-                    let groupProperties = groupPropertiesArray.find(
-                        groupProperties =>
-                            groupProperties.group.id === propertyGroup.id
-                    );
-
-                    if (!groupProperties) {
-                        groupProperties = {
-                            group: propertyGroup,
-                            properties: []
-                        };
-                        groupPropertiesArray.push(groupProperties);
-                    }
-
-                    properties = groupProperties.properties;
-                } else {
-                    if (!groupForPropertiesWithoutGroupSpecified) {
-                        groupForPropertiesWithoutGroupSpecified = {
-                            group: {
-                                id: "",
-                                title: ""
-                            },
-                            properties: []
-                        };
-                        groupPropertiesArray.push(
-                            groupForPropertiesWithoutGroupSpecified
-                        );
-                    }
-                    properties =
-                        groupForPropertiesWithoutGroupSpecified.properties;
-                }
-
-                if (propertyInfo.propertyNameAbove) {
-                    properties.push(
-                        <tr
-                            key={propertyInfo.name + "_above"}
-                            style={{
-                                visibility: collapsed ? "collapse" : "visible"
-                            }}
-                        >
-                            <td
-                                className="property-name"
-                                colSpan={2}
-                                style={{ paddingTop: 8 }}
-                            >
-                                <PropertyName {...propertyProps} />
-                            </td>
-                        </tr>
-                    );
-                }
-
-                properties.push(propertyComponent);
-            }
-
-            let maxPosition = 0;
-
-            groupPropertiesArray.forEach(groupProperties => {
-                if (groupProperties.group.position != undefined) {
-                    let position;
-                    if (typeof groupProperties.group.position == "number") {
-                        position = groupProperties.group.position;
-                    } else {
-                        position = groupProperties.group.position(objects[0]);
-                    }
-                    if (position > maxPosition) {
-                        maxPosition = position;
-                    }
-                }
-            });
-
-            groupPropertiesArray.sort(
-                (a: IGroupProperties, b: IGroupProperties) => {
-                    const aPosition =
-                        a.group.position !== undefined
-                            ? typeof a.group.position == "number"
-                                ? a.group.position
-                                : a.group.position(objects[0])
-                            : maxPosition + 1;
-
-                    const bPosition =
-                        b.group.position !== undefined
-                            ? typeof b.group.position == "number"
-                                ? b.group.position
-                                : b.group.position(objects[0])
-                            : maxPosition + 1;
-
-                    return aPosition - bPosition;
-                }
+            const groupPropertiesArray = getPropertyGroups(
+                objects[0],
+                properties
             );
 
             const rows = groupPropertiesArray.map(groupProperties => {
@@ -376,13 +307,29 @@ export const PropertyGrid = observer(
                                 group={groupProperties.group}
                                 object={objects[0]}
                             />
-                            {groupProperties.properties}
+                            {groupProperties.properties.map(property =>
+                                this.renderProperty(
+                                    objects,
+                                    property,
+                                    readOnly,
+                                    isPropertyMenuSupported,
+                                    highlightedPropertyName
+                                )
+                            )}
                         </React.Fragment>
                     );
                 } else {
                     return (
                         <React.Fragment key={groupProperties.group.id}>
-                            {groupProperties.properties}
+                            {groupProperties.properties.map(property =>
+                                this.renderProperty(
+                                    objects,
+                                    property,
+                                    readOnly,
+                                    isPropertyMenuSupported,
+                                    highlightedPropertyName
+                                )
+                            )}
                         </React.Fragment>
                     );
                 }

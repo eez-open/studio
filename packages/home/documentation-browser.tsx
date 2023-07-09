@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import {
     action,
     computed,
@@ -20,6 +20,7 @@ import { homeLayoutModels } from "home/home-layout-models";
 import {
     IObjectClassInfo,
     ProjectType,
+    PropertyInfo,
     getObjectPropertyDisplayName,
     isProperSubclassOf,
     setParent
@@ -41,7 +42,12 @@ import {
     LVGL_PROJECT_ICON
 } from "project-editor/ui-components/icons";
 import classNames from "classnames";
-import { ProjectStore, createObject, loadProject } from "project-editor/store";
+import {
+    ProjectStore,
+    createObject,
+    getCommonProperties,
+    loadProject
+} from "project-editor/store";
 import { isDev } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 import type { Component } from "project-editor/flow/component";
@@ -49,6 +55,8 @@ import {
     getInputDisplayName,
     getOutputDisplayName
 } from "project-editor/flow/helper";
+import { getPropertyGroups } from "project-editor/ui-components/PropertyGrid/groups";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -135,6 +143,7 @@ interface ComponentTreeNodeData {
     id: string;
     kind: "component";
     componentInfo: ComponentInfo;
+    projectType: ProjectType;
 }
 
 type TreeNodeData =
@@ -292,14 +301,33 @@ class Model {
                     componentInfo.componentClasses.lvgl = componentClass;
                 }
             } else {
-                componentInfo.componentClasses.dashboard = componentClass;
+                if (
+                    componentInfo.type != "widget" ||
+                    (componentClass.objectClass.classInfo.flowComponentId ==
+                        undefined &&
+                        !isProperSubclassOf(
+                            componentClass.objectClass.classInfo,
+                            ProjectEditor.LVGLWidgetClass.classInfo
+                        ))
+                ) {
+                    componentInfo.componentClasses.dashboard = componentClass;
+                }
 
                 if (
                     componentClass.objectClass.classInfo.flowComponentId !=
                     undefined
                 ) {
                     componentInfo.componentClasses.eezgui = componentClass;
-                    componentInfo.componentClasses.lvgl = componentClass;
+
+                    if (
+                        componentInfo.type != "widget" ||
+                        isProperSubclassOf(
+                            componentClass.objectClass.classInfo,
+                            ProjectEditor.LVGLWidgetClass.classInfo
+                        )
+                    ) {
+                        componentInfo.componentClasses.lvgl = componentClass;
+                    }
                 }
             }
         });
@@ -345,7 +373,8 @@ class Model {
 
         const getComponentTreeChild = (
             idPrefix: string,
-            componentInfo: ComponentInfo
+            componentInfo: ComponentInfo,
+            projectType: ProjectType
         ): ITreeNode<ComponentTreeNodeData> => {
             let id = idPrefix + componentInfo.id;
             return {
@@ -370,7 +399,8 @@ class Model {
                 data: {
                     id: id,
                     kind: "component",
-                    componentInfo
+                    componentInfo,
+                    projectType
                 }
             };
         };
@@ -378,12 +408,15 @@ class Model {
         const getComponentGroupTreeChild = (
             idPrefix: string,
             groupName: string,
-            groupComponents: ComponentInfo[]
+            groupComponents: ComponentInfo[],
+            projectType: ProjectType
         ): ITreeNode<GroupTreeNodeData> => {
             let id = idPrefix + "_" + groupName;
 
             let children = groupComponents
-                .map(componentInfo => getComponentTreeChild(id, componentInfo))
+                .map(componentInfo =>
+                    getComponentTreeChild(id, componentInfo, projectType)
+                )
                 .sort((a, b) => {
                     return a.data!.componentInfo.name.localeCompare(
                         b.data!.componentInfo.name
@@ -421,7 +454,8 @@ class Model {
             idPrefix: string,
             label: string,
             components: ComponentInfo[],
-            type: "widget" | "action"
+            type: "widget" | "action",
+            projectType: ProjectType
         ): ITreeNode<SectionTreeNodeData> => {
             let id = idPrefix;
 
@@ -439,12 +473,17 @@ class Model {
                 ].sort();
 
                 children = groupEntries.map(groupEntry =>
-                    getComponentGroupTreeChild(id, groupEntry[0], groupEntry[1])
+                    getComponentGroupTreeChild(
+                        id,
+                        groupEntry[0],
+                        groupEntry[1],
+                        projectType
+                    )
                 );
             } else {
                 children = components
                     .map(componentInfo =>
-                        getComponentTreeChild(id, componentInfo)
+                        getComponentTreeChild(id, componentInfo, projectType)
                     )
                     .sort((a, b) => {
                         return a.data!.componentInfo.name.localeCompare(
@@ -495,13 +534,15 @@ class Model {
                     projectType + "__actionComponents",
                     "ACTIONS",
                     components,
-                    "action"
+                    "action",
+                    projectType
                 ),
                 getComponentSectionTreeChild(
                     projectType + "__widgetComponents",
                     "WIDGETS",
                     components,
-                    "widget"
+                    "widget",
+                    projectType
                 )
             ];
 
@@ -568,13 +609,15 @@ class Model {
                         "__actionComponents",
                         "ACTIONS",
                         this.allComponents,
-                        "action"
+                        "action",
+                        ProjectType.UNDEFINED
                     ),
                     getComponentSectionTreeChild(
                         "__widgetComponents",
                         "WIDGETS",
                         this.allComponents,
-                        "widget"
+                        "widget",
+                        ProjectType.UNDEFINED
                     )
                 ],
                 selected: false,
@@ -639,39 +682,38 @@ export const DocumentationBrowser = observer(
                         <div className="form-check">
                             <input
                                 className="form-check-input"
-                                id="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
-                                type="checkbox"
-                                checked={model.showGroups}
-                                onChange={action(
-                                    event =>
-                                        (model.showGroups =
-                                            event.target.checked)
-                                )}
-                            />
-                            <label
-                                className="form-check-label"
-                                htmlFor="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
-                            >
-                                Show groups
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
                                 id="EezStudio_DocumentationBrowser_Toolbar_GroupByProjectType"
                                 type="checkbox"
                                 checked={model.groupByProjectType}
-                                onChange={action(
-                                    event =>
-                                        (model.groupByProjectType =
-                                            event.target.checked)
-                                )}
+                                onChange={action(event => {
+                                    model.groupByProjectType =
+                                        event.target.checked;
+                                    model.selectedNode = undefined;
+                                })}
                             />
                             <label
                                 className="form-check-label"
                                 htmlFor="EezStudio_DocumentationBrowser_Toolbar_GroupByProjectType"
                             >
                                 Group by project type
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                id="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
+                                type="checkbox"
+                                checked={model.showGroups}
+                                onChange={action(event => {
+                                    model.showGroups = event.target.checked;
+                                    model.selectedNode = undefined;
+                                })}
+                            />
+                            <label
+                                className="form-check-label"
+                                htmlFor="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
+                            >
+                                Group by component groups
                             </label>
                         </div>
                     </div>
@@ -737,14 +779,21 @@ const Content = observer(
             }
 
             const componentInfo = model.selectedNode.componentInfo;
+            const projectType = model.selectedNode.projectType;
 
             const isDashboardComponent =
+                (projectType == ProjectType.DASHBOARD ||
+                    projectType == ProjectType.UNDEFINED) &&
                 componentInfo.componentClasses.dashboard != undefined;
 
             const isEezGuiComponent =
+                (projectType == ProjectType.FIRMWARE ||
+                    projectType == ProjectType.UNDEFINED) &&
                 componentInfo.componentClasses.eezgui != undefined;
 
             const isLVGLComponent =
+                (projectType == ProjectType.LVGL ||
+                    projectType == ProjectType.UNDEFINED) &&
                 componentInfo.componentClasses.lvgl != undefined;
 
             let selectedProjectType = model.selectedProjectType;
@@ -790,65 +839,67 @@ const Content = observer(
 
             return (
                 <div className="EezStudio_DocumentationBrowser_Content_Help">
-                    <ul className="nav nav-tabs">
-                        {isDashboardComponent && (
-                            <li className="nav-item">
-                                <a
-                                    className={classNames("nav-link", {
-                                        active:
-                                            selectedProjectType ==
-                                            ProjectType.DASHBOARD
-                                    })}
-                                    href="#"
-                                    onClick={action(
-                                        () =>
-                                            (model.selectedProjectType =
-                                                ProjectType.DASHBOARD)
-                                    )}
-                                >
-                                    {DASHBOARD_PROJECT_ICON(24)} Dashboard
-                                </a>
-                            </li>
-                        )}
-                        {isEezGuiComponent && (
-                            <li className="nav-item">
-                                <a
-                                    className={classNames("nav-link", {
-                                        active:
-                                            selectedProjectType ==
-                                            ProjectType.FIRMWARE
-                                    })}
-                                    href="#"
-                                    onClick={action(
-                                        () =>
-                                            (model.selectedProjectType =
-                                                ProjectType.FIRMWARE)
-                                    )}
-                                >
-                                    {EEZ_GUI_PROJECT_ICON(24)} EEZ-GUI
-                                </a>
-                            </li>
-                        )}
-                        {isLVGLComponent && (
-                            <li className="nav-item">
-                                <a
-                                    className={classNames("nav-link", {
-                                        active:
-                                            selectedProjectType ==
-                                            ProjectType.LVGL
-                                    })}
-                                    href="#"
-                                    onClick={action(
-                                        () =>
-                                            (model.selectedProjectType =
-                                                ProjectType.LVGL)
-                                    )}
-                                >
-                                    {LVGL_PROJECT_ICON(24)} LVGL
-                                </a>
-                            </li>
-                        )}
-                    </ul>
+                    {projectType == ProjectType.UNDEFINED && (
+                        <ul className="nav nav-tabs">
+                            {isDashboardComponent && (
+                                <li className="nav-item">
+                                    <a
+                                        className={classNames("nav-link", {
+                                            active:
+                                                selectedProjectType ==
+                                                ProjectType.DASHBOARD
+                                        })}
+                                        href="#"
+                                        onClick={action(
+                                            () =>
+                                                (model.selectedProjectType =
+                                                    ProjectType.DASHBOARD)
+                                        )}
+                                    >
+                                        {DASHBOARD_PROJECT_ICON(24)} Dashboard
+                                    </a>
+                                </li>
+                            )}
+                            {isEezGuiComponent && (
+                                <li className="nav-item">
+                                    <a
+                                        className={classNames("nav-link", {
+                                            active:
+                                                selectedProjectType ==
+                                                ProjectType.FIRMWARE
+                                        })}
+                                        href="#"
+                                        onClick={action(
+                                            () =>
+                                                (model.selectedProjectType =
+                                                    ProjectType.FIRMWARE)
+                                        )}
+                                    >
+                                        {EEZ_GUI_PROJECT_ICON(24)} EEZ-GUI
+                                    </a>
+                                </li>
+                            )}
+                            {isLVGLComponent && (
+                                <li className="nav-item">
+                                    <a
+                                        className={classNames("nav-link", {
+                                            active:
+                                                selectedProjectType ==
+                                                ProjectType.LVGL
+                                        })}
+                                        href="#"
+                                        onClick={action(
+                                            () =>
+                                                (model.selectedProjectType =
+                                                    ProjectType.LVGL)
+                                        )}
+                                    >
+                                        {LVGL_PROJECT_ICON(24)} LVGL
+                                    </a>
+                                </li>
+                            )}
+                        </ul>
+                    )}
                     <ComponentHelp
                         componentInfo={componentInfo}
                         componentClass={componentClass}
@@ -944,9 +995,11 @@ const ComponentHelp = observer(
         }
 
         render() {
-            const { componentInfo, componentClass } = this.props;
+            const { componentInfo } = this.props;
 
-            const classInfo = componentClass.objectClass.classInfo;
+            if (!this.componentObject) {
+                return null;
+            }
 
             return (
                 <div className="EezStudio_Component_Documentation">
@@ -961,111 +1014,226 @@ const ComponentHelp = observer(
                     </div>
 
                     <div className="EezStudio_Component_Documentation_Body">
-                        <div className="EezStudio_Component_Documentation_BodySection">
-                            <div>Description</div>
-                            <div>
-                                Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Duis ut ligula mollis, pretium
-                                nulla sed, viverra est. Donec porttitor, tortor
-                                ut imperdiet interdum, leo elit tristique orci,
-                                eu laoreet magna odio in dolor. Nulla posuere
-                                mauris sit amet nulla pulvinar, ut scelerisque
-                                nunc rutrum. In varius faucibus efficitur.
-                                Mauris venenatis ac dui sit amet ornare.
-                                Suspendisse nec luctus ipsum. Nullam augue
-                                mauris, laoreet et turpis vel, maximus ultricies
-                                eros. Aenean ac dui in urna lobortis feugiat.
-                                Mauris aliquam mattis tempor. Vivamus faucibus,
-                                felis sed mattis interdum, velit nisl dignissim
-                                lectus, nec blandit est erat eu nulla.
-                            </div>
-                        </div>
-                        <div className="EezStudio_Component_Documentation_BodySection">
-                            <div>Parameters</div>
-                            <div>
-                                {this.componentObject && (
-                                    <ul>
-                                        {classInfo.properties
-                                            .filter(
-                                                property =>
-                                                    property.expressionType !=
-                                                    undefined
-                                            )
-                                            .map(property => (
-                                                <li key={property.name}>
-                                                    {getObjectPropertyDisplayName(
-                                                        this.componentObject!,
-                                                        property
-                                                    )}
-                                                    : {property.expressionType}
-                                                </li>
-                                            ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </div>
-                        <div className="EezStudio_Component_Documentation_BodySection">
-                            <div>Inputs</div>
-                            <div>
-                                {this.componentObject && (
-                                    <ul>
-                                        {this.componentObject
-                                            .getInputs()
-                                            .map(input => (
-                                                <li key={input.name}>
-                                                    {getInputDisplayName(
-                                                        this.componentObject,
-                                                        input.name
-                                                    )}
-                                                    : type={input.type},
-                                                    optional=
-                                                    {input.isOptionalInput
-                                                        ? "yes"
-                                                        : "no"}
-                                                    , sequence=
-                                                    {input.isSequenceInput
-                                                        ? "yes"
-                                                        : "no"}
-                                                </li>
-                                            ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </div>
-                        <div className="EezStudio_Component_Documentation_BodySection">
-                            <div>Outputs</div>
-                            <div>
-                                {this.componentObject && (
-                                    <ul>
-                                        {this.componentObject
-                                            .getOutputs()
-                                            .map(output => (
-                                                <li key={output.name}>
-                                                    {getOutputDisplayName(
-                                                        this.componentObject,
-                                                        output.name
-                                                    )}
-                                                    : type={output.type},
-                                                    optional=
-                                                    {output.isOptionalOutput
-                                                        ? "yes"
-                                                        : "no"}
-                                                    , sequence=
-                                                    {output.isSequenceOutput
-                                                        ? "yes"
-                                                        : "no"}
-                                                </li>
-                                            ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </div>
-                        <div className="EezStudio_Component_Documentation_BodySection">
-                            <div>Examples</div>
-                            <div></div>
-                        </div>
+                        <BodySection title="Description">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing
+                            elit. Duis ut ligula mollis, pretium nulla sed,
+                            viverra est. Donec porttitor, tortor ut imperdiet
+                            interdum, leo elit tristique orci, eu laoreet magna
+                            odio in dolor. Nulla posuere mauris sit amet nulla
+                            pulvinar, ut scelerisque nunc rutrum. In varius
+                            faucibus efficitur. Mauris venenatis ac dui sit amet
+                            ornare. Suspendisse nec luctus ipsum. Nullam augue
+                            mauris, laoreet et turpis vel, maximus ultricies
+                            eros. Aenean ac dui in urna lobortis feugiat. Mauris
+                            aliquam mattis tempor. Vivamus faucibus, felis sed
+                            mattis interdum, velit nisl dignissim lectus, nec
+                            blandit est erat eu nulla.
+                        </BodySection>
+
+                        <ComponentProperties
+                            componentObject={this.componentObject}
+                        />
+                        <ComponentInputs
+                            componentObject={this.componentObject}
+                        />
+                        <ComponentOutputs
+                            componentObject={this.componentObject}
+                        />
+
+                        <BodySection title="Examples"></BodySection>
                     </div>
                 </div>
+            );
+        }
+    }
+);
+
+const BodySection = observer(
+    class BodySection extends React.Component<
+        React.PropsWithChildren<{
+            title: string;
+        }>
+    > {
+        render() {
+            return (
+                <div className="EezStudio_Component_Documentation_BodySection">
+                    <div>{this.props.title}</div>
+                    <div>{this.props.children}</div>
+                </div>
+            );
+        }
+    }
+);
+
+const ComponentProperties = observer(
+    class ComponentProperties extends React.Component<{
+        componentObject: Component;
+    }> {
+        render() {
+            const { componentObject } = this.props;
+
+            const properties = getCommonProperties([componentObject]);
+
+            const groupPropertiesArray = getPropertyGroups(
+                componentObject,
+                properties
+            );
+
+            const id = guid();
+
+            return (
+                <BodySection title="Properties">
+                    <div className="accordion" id={id}>
+                        {groupPropertiesArray.map((groupProperties, i) => {
+                            const headingId = `${id}_h_${groupProperties.group.id}`;
+                            const collapseId = `${id}_c_${groupProperties.group.id}`;
+
+                            return (
+                                <div
+                                    key={groupProperties.group.id}
+                                    className="accordion-item"
+                                >
+                                    <h2
+                                        className="accordion-header"
+                                        id={headingId}
+                                    >
+                                        <button
+                                            className={
+                                                i == 0
+                                                    ? "accordion-button"
+                                                    : "accordion-button collapsed"
+                                            }
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target={`#${collapseId}`}
+                                            aria-expanded={
+                                                i == 0 ? "true" : "false"
+                                            }
+                                            aria-controls={collapseId}
+                                        >
+                                            {groupProperties.group.title ||
+                                                "Other"}
+                                        </button>
+                                    </h2>
+                                    <div
+                                        id={collapseId}
+                                        className={
+                                            i == 0
+                                                ? "accordion-collapse collapse show"
+                                                : "accordion-collapse collapse"
+                                        }
+                                        aria-labelledby={headingId}
+                                        data-bs-parent={`#${id}`}
+                                    >
+                                        <div className="accordion-body">
+                                            <dl>
+                                                {groupProperties.properties.map(
+                                                    property => (
+                                                        <ComponentProperty
+                                                            componentObject={
+                                                                componentObject
+                                                            }
+                                                            property={property}
+                                                            key={property.name}
+                                                        />
+                                                    )
+                                                )}
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </BodySection>
+            );
+        }
+    }
+);
+
+const ComponentProperty = observer(
+    class ComponentProperty extends React.Component<{
+        componentObject: Component;
+        property: PropertyInfo;
+    }> {
+        render() {
+            const { componentObject, property } = this.props;
+            return (
+                <>
+                    <dt>
+                        {getObjectPropertyDisplayName(
+                            componentObject,
+                            property
+                        )}
+                    </dt>
+                    <dd>{property.expressionType}</dd>
+                </>
+            );
+        }
+    }
+);
+
+const ComponentInputs = observer(
+    class ComponentInputs extends React.Component<{
+        componentObject: Component;
+    }> {
+        render() {
+            const { componentObject } = this.props;
+
+            return (
+                <BodySection title="Inputs">
+                    <dl>
+                        {componentObject.getInputs().map(input => (
+                            <Fragment key={input.name}>
+                                <dt>
+                                    {getInputDisplayName(
+                                        componentObject,
+                                        input.name
+                                    )}
+                                </dt>
+                                <dd>
+                                    type={input.type}, optional=
+                                    {input.isOptionalInput ? "yes" : "no"},
+                                    sequence=
+                                    {input.isSequenceInput ? "yes" : "no"}
+                                </dd>
+                            </Fragment>
+                        ))}
+                    </dl>
+                </BodySection>
+            );
+        }
+    }
+);
+
+const ComponentOutputs = observer(
+    class ComponentOutputs extends React.Component<{
+        componentObject: Component;
+    }> {
+        render() {
+            const { componentObject } = this.props;
+
+            return (
+                <BodySection title="outputs">
+                    <dl>
+                        {componentObject.getOutputs().map(output => (
+                            <Fragment key={output.name}>
+                                <dt>
+                                    {getOutputDisplayName(
+                                        componentObject,
+                                        output.name
+                                    )}
+                                </dt>
+                                <dd>
+                                    type={output.type}, optional=
+                                    {output.isOptionalOutput ? "yes" : "no"},
+                                    sequence=
+                                    {output.isSequenceOutput ? "yes" : "no"}
+                                </dd>
+                            </Fragment>
+                        ))}
+                    </dl>
+                </BodySection>
             );
         }
     }

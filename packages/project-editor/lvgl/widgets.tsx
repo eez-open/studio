@@ -3915,7 +3915,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: rollerGroup
+                    propertyGridGroup: dropdownGroup
                 }
             ),
             ...makeLvglExpressionProperty(
