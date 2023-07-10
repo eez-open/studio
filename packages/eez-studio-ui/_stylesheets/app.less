@@ -3538,7 +3538,7 @@ button.EezStudio_Action {
     table {
         margin-bottom: 0;
         width: 100%;
-        border: 1px solid #ddd;
+        border: 1px solid @borderColor;
     }
 
     thead {
@@ -3547,10 +3547,10 @@ button.EezStudio_Action {
     }
 
     th {
-        background-color: #eee;
+        background-color: @panelHeaderColor;
         height: 32px;
         padding-top: 4px;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid @borderColor;
     }
 
     thead,
@@ -3586,6 +3586,14 @@ button.EezStudio_Action {
     thead {
         th {
             float: left;
+        }
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        .badge {
+            margin-left: 5px;
         }
     }
 }
@@ -7117,7 +7125,14 @@ button.EezStudio_Action {
         background-color: @panelHeaderColor;
         padding: 10px;
         display: flex;
+        align-items: center;
+        justify-content: space-between;
         border: 1px solid @borderColor;
+
+        & > div {
+            display: flex;
+            align-items: center;
+        }
 
         .form-check {
             margin: 0;
@@ -7126,6 +7141,14 @@ button.EezStudio_Action {
         }
 
         .form-check:last-child {
+            margin-right: 0;
+        }
+
+        button {
+            margin-right: 10px;
+        }
+
+        button:last-child {
             margin-right: 0;
         }
     }
@@ -7176,70 +7199,74 @@ button.EezStudio_Action {
                 }
             }
         }
+    }
+}
 
-        .EezStudio_DocumentationBrowser_Content_Help {
-            background-color: @panelHeaderColor;
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
+.EezStudio_DocumentationBrowser_Content_Help {
+    background-color: @panelHeaderColor;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .nav {
+        flex: 0;
+        padding-top: 5px;
+        padding-left: 5px;
+        .nav-link {
+            color: @textColor;
+        }
+    }
+
+    .EezStudio_Component_Documentation {
+        flex: 1;
+        padding: 10px;
+        background-color: @backgroundColor;
+        overflow: auto;
+
+        .EezStudio_Component_Documentation_TitleEnclosure {
+            padding-bottom: 10px;
+            border-bottom: 1px solid @borderColor;
+            margin-bottom: 20px;
+
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
 
-            .nav {
-                flex: 0;
-                padding-top: 5px;
-                padding-left: 5px;
-                .nav-link {
-                    color: @textColor;
+            .EezStudio_Component_Documentation_Title {
+                display: flex;
+                align-items: center;
+                font-size: 32px;
+                border-radius: 8px;
+                padding: 5px 15px;
+                width: fit-content;
+
+                img,
+                svg {
+                    height: 36px;
+                    object-fit: contain;
+                    margin-right: 10px;
                 }
             }
+        }
 
-            .EezStudio_Component_Documentation {
-                flex: 1;
-                padding: 10px;
-                background-color: @backgroundColor;
-                overflow: auto;
-
-                .EezStudio_Component_Documentation_TitleEnclosure {
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid @borderColor;
-                    margin-bottom: 20px;
-
-                    .EezStudio_Component_Documentation_Title {
-                        display: flex;
-                        align-items: center;
-                        font-size: 32px;
-                        border-radius: 8px;
-                        padding: 5px 15px;
-                        width: fit-content;
-
-                        img,
-                        svg {
-                            height: 36px;
-                            object-fit: contain;
-                            margin-right: 10px;
-                        }
-                    }
+        .EezStudio_Component_Documentation_Body {
+            .EezStudio_Component_Documentation_BodySection {
+                & > div:first-child {
+                    font-size: 18px;
+                    font-weight: bold;
+                    text-transform: uppercase;
                 }
-
-                .EezStudio_Component_Documentation_Body {
-                    .EezStudio_Component_Documentation_BodySection {
-                        & > div:first-child {
-                            font-size: 18px;
-                            font-weight: bold;
-                            text-transform: uppercase;
-                        }
-                        & > div:nth-child(2) {
-                            padding-left: 10px;
-                        }
-                        margin-bottom: 15px;
-                    }
-                    .EezStudio_Component_Documentation_BodySection:last-child {
-                        margin-bottom: 0;
-                    }
+                & > div:nth-child(2) {
+                    padding-left: 10px;
                 }
+                margin-bottom: 15px;
+            }
+            .EezStudio_Component_Documentation_BodySection:last-child {
+                margin-bottom: 0;
             }
         }
     }

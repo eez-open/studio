@@ -1357,8 +1357,8 @@ export const ImportScpiDocDialog = observer(
                                     className={
                                         "ml-2 badge rounded-pill" +
                                         (this.activeTab === section
-                                            ? " bg-light"
-                                            : " bg-dark")
+                                            ? " bg-dark"
+                                            : " bg-secondary")
                                     }
                                 >
                                     {this.changes[section].length}
