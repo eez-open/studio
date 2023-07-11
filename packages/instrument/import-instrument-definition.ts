@@ -120,7 +120,7 @@ export function importInstrumentDefinition(
                     enumItems: [
                         {
                             id: "extension",
-                            label: "Workbench extension"
+                            label: "Instrument Extension (IEXT)"
                         },
                         {
                             id: "project",

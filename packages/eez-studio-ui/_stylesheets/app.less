@@ -7203,7 +7203,15 @@ button.EezStudio_Action {
 }
 
 .EezStudio_DocumentationBrowser_Content_Help {
-    background-color: @panelHeaderColor;
+    background-color: @backgroundColor;
+    min-height: 100%;
+}
+
+.EezStudio_DocumentationBrowser_Content_Help.generateHTML {
+    visibility: hidden;
+}
+
+.EezStudio_DocumentationBrowser_Content_Help {
     position: absolute;
     left: 0;
     top: 0;

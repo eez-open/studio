@@ -58,6 +58,33 @@ export const enum PropertyType {
     Null
 }
 
+export const TYPE_NAMES: { [key in PropertyType]: string } = {
+    [PropertyType.Array]: "Array",
+    [PropertyType.Object]: "Object",
+    [PropertyType.Boolean]: "Boolean",
+    [PropertyType.Number]: "Number",
+    [PropertyType.Enum]: "Enum",
+    [PropertyType.String]: "String",
+    [PropertyType.MultilineText]: "MultilineText",
+    [PropertyType.Image]: "Image",
+    [PropertyType.Color]: "Color",
+    [PropertyType.ThemedColor]: "ThemedColor",
+    [PropertyType.RelativeFolder]: "RelativeFolder",
+    [PropertyType.RelativeFile]: "RelativeFile",
+    [PropertyType.ObjectReference]: "ObjectReference",
+    [PropertyType.JSON]: "JSON",
+    [PropertyType.JavaScript]: "JavaScript",
+    [PropertyType.CSS]: "CSS",
+    [PropertyType.Python]: "Python",
+    [PropertyType.CPP]: "CPP",
+    [PropertyType.GUID]: "GUID",
+    [PropertyType.StringArray]: "StringArray",
+    [PropertyType.ConfigurationReference]: "ConfigurationReference",
+    [PropertyType.Any]: "Any",
+    [PropertyType.LVGLWidget]: "LVGLWidget",
+    [PropertyType.Null]: "Null"
+};
+
 export const enum ProjectType {
     UNDEFINED = "undefined",
     FIRMWARE = "firmware",

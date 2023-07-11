@@ -122,6 +122,11 @@ export function copyFile(srcFilePath: string, destFilePath: string) {
     return copy(srcFilePath, destFilePath);
 }
 
+export function copyDir(srcPath: string, destPath: string) {
+    const { copy } = require("fs-extra");
+    return copy(srcPath, destPath);
+}
+
 export function getFileSizeInBytes(filePath: string) {
     return new Promise<number>((resolve, reject) => {
         fs.stat(filePath, function (err: any, stats: any) {

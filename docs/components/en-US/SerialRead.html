@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>SerialRead</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<style>
+.EezStudio_DocumentationBrowser_Content_Help {
+    background-color: #f0f0f0;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .nav {
+    flex: 0;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .nav
+    .nav-link {
+    color: #212529;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation {
+    flex: 1;
+    padding: 10px;
+    background-color: #fff;
+    overflow: auto;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title {
+    display: flex;
+    align-items: center;
+    font-size: 32px;
+    border-radius: 8px;
+    padding: 5px 15px;
+    width: fit-content;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title
+    img,
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title
+    svg {
+    height: 36px;
+    object-fit: contain;
+    margin-right: 10px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_Body
+    .EezStudio_Component_Documentation_BodySection {
+    margin-bottom: 15px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_Body
+    .EezStudio_Component_Documentation_BodySection
+    > div:first-child {
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_Body
+    .EezStudio_Component_Documentation_BodySection
+    > div:nth-child(2) {
+    padding-left: 10px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_Body
+    .EezStudio_Component_Documentation_BodySection:last-child {
+    margin-bottom: 0;
+}
+</style>
+</head>
+
+<body>
+<div class="EezStudio_DocumentationBrowser_Content_Help generateHTML"><ul class="nav nav-tabs" id="component-content-tab" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#component-content-tab-pane-dashboard" type="button" role="tab" aria-controls="component-content-tab-pane-dashboard" aria-selected="true"><svg viewBox="0 0 560 510" width="24" height="24"><g><path d="M509.09 0A50.91 50.91 0 0 1 560 50.91v305.454a50.91 50.91 0 0 1-50.91 50.909H330.91v50.909h50.908v50.909H178.182v-50.91h50.909v-50.908H50.909C22.655 407.273 0 384.363 0 356.363V50.91A50.733 50.733 0 0 1 50.91 0h458.18" stroke-width="25.4545" fill="#adb5bd" fill-opacity="1"></path><path d="M527.5 368.937h-495v-334h495z" fill="#fefefe" fill-opacity="1" stroke-width="1.23022"></path><path d="M54.633 102.161h70v70h-70zM54.592 192.49h70v70h-70zM54.93 281.458h70v70h-70z" fill="#502d16" fill-opacity="1" stroke-width="24.7486"></path><path d="M32.5 34.937h495v46h-495v-46" fill="#d4aa00" fill-opacity="1" stroke-width="22.4944"></path><circle cx="240.475" cy="182.325" r="68.5" fill="#502d16" fill-opacity="1" stroke="#000" stroke-width="0" stroke-linecap="square" stroke-opacity="1" paint-order="fill markers stroke"></circle><circle cx="414.7" cy="182.325" r="68.5" fill="#502d16" fill-opacity="1" stroke="#000" stroke-width="0" stroke-linecap="square" stroke-opacity="1" paint-order="fill markers stroke"></circle></g></svg> Dashboard</button></li></ul><div class="tab-content" id="component-content-tab-content"><div class="tab-pane fade show active" id="component-content-tab-pane-dashboard" role="tabpanel" aria-labelledby="component-content-tab-pane-dashboard"><div class="EezStudio_Component_Documentation"><div class="EezStudio_Component_Documentation_TitleEnclosure"><div class="EezStudio_Component_Documentation_Title" style="background-color: rgb(204, 163, 186); color: rgb(0, 0, 0);"><div><svg viewBox="0 0 68.792 34.396"><g stroke="#000"><g fill="none" stroke-width="1.5"><g transform="translate(-14.994 -163.072)" stroke-linecap="round" paint-order="fill markers stroke"><circle cx="43.765" cy="180.27" r="7.955"></circle><circle cx="67.686" cy="180.27" r="7.955"></circle></g><path d="M16.68 8.334v17.727M40.731 8.334v17.727M64.967 8.334v17.727"></path></g><path d="m11.939 279.802-8.362 8.362V271.44z" transform="translate(0 -262.604)" font-weight="400" font-size="26.758" font-family="Webdings" letter-spacing="0" word-spacing="0" stroke-width=".794" style="line-height: 130%; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-numeric: normal; font-feature-settings: normal; text-align: start;"></path></g></svg></div><div>SerialRead</div></div></div><div class="EezStudio_Component_Documentation_Body"><div class="EezStudio_Component_Documentation_BodySection"><div>Description</div><div><div class="alert alert-danger" role="alert">No description</div></div></div><div class="EezStudio_Component_Documentation_BodySection"><div>Properties</div><div><div class="accordion" id="dashboard-component-properties-"><div class="accordion-item"><h2 class="accordion-header" id="dashboard-component-properties-_h_general"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-component-properties-_c_general" aria-expanded="true" aria-controls="dashboard-component-properties-_c_general">General</button></h2><div id="dashboard-component-properties-_c_general" class="accordion-collapse collapse show" aria-labelledby="dashboard-component-properties-_h_general" data-bs-parent="#dashboard-component-properties-"><div class="accordion-body"><dl><dt>Description <span style="font-weight: normal; font-style: italic;">String</span></dt><dd><div class="markdown"><p>Ovo je description komponente</p></div></dd></dl></div></div></div><div class="accordion-item"><h2 class="accordion-header" id="dashboard-component-properties-_h_specific"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-component-properties-_c_specific" aria-expanded="false" aria-controls="dashboard-component-properties-_c_specific">Specific</button></h2><div id="dashboard-component-properties-_c_specific" class="accordion-collapse collapse" aria-labelledby="dashboard-component-properties-_h_specific" data-bs-parent="#dashboard-component-properties-"><div class="accordion-body"><dl><dt>Connection <span style="font-weight: normal; font-style: italic;">EXPRESSSION(object:SerialConnection)</span></dt><dd><div class="alert alert-danger" role="alert">No property description</div></dd></dl></div></div></div><div class="accordion-item"><h2 class="accordion-header" id="dashboard-component-properties-_h_flow"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-component-properties-_c_flow" aria-expanded="false" aria-controls="dashboard-component-properties-_c_flow">Flow</button></h2><div id="dashboard-component-properties-_c_flow" class="accordion-collapse collapse" aria-labelledby="dashboard-component-properties-_h_flow" data-bs-parent="#dashboard-component-properties-"><div class="accordion-body"><dl><dt>Inputs <span style="font-weight: normal; font-style: italic;">Array</span></dt><dd><div class="markdown"><p>Ovo su inputi.</p></div></dd><dt>Outputs <span style="font-weight: normal; font-style: italic;">Array</span></dt><dd><div class="markdown"><p>Ovo su outputi.</p></div></dd><dt>Catch error <span style="font-weight: normal; font-style: italic;">Boolean</span></dt><dd><div class="markdown"><p>Ovo je catch error.</p></div></dd></dl></div></div></div><div class="accordion-item"><h2 class="accordion-header" id="dashboard-component-properties-_h_geometry"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dashboard-component-properties-_c_geometry" aria-expanded="false" aria-controls="dashboard-component-properties-_c_geometry">Position and size</button></h2><div id="dashboard-component-properties-_c_geometry" class="accordion-collapse collapse" aria-labelledby="dashboard-component-properties-_h_geometry" data-bs-parent="#dashboard-component-properties-"><div class="accordion-body"><dl><dt>Left <span style="font-weight: normal; font-style: italic;">Number</span></dt><dd><div class="markdown"><p>X pozicija komponente.</p>
+<p><img src="images/align_and_distribute.png" alt="Alt text"></p></div></dd><dt>Top <span style="font-weight: normal; font-style: italic;">Number</span></dt><dd><div class="markdown"><p>Y pozicija komponente.</p></div></dd></dl></div></div></div></div></div></div><div class="EezStudio_Component_Documentation_BodySection"><div>Inputs</div><div><dl><dt>seqin <span style="font-weight: normal; font-style: italic;">SEQ | OPTIONAL</span></dt><dd><div class="alert alert-danger" role="alert">No input description</div></dd></dl></div></div><div class="EezStudio_Component_Documentation_BodySection"><div>outputs</div><div><dl><dt>seqout <span style="font-weight: normal; font-style: italic;">SEQ | OPTIONAL</span></dt><dd><div class="alert alert-danger" role="alert">No output description</div></dd><dt>data <span style="font-weight: normal; font-style: italic;">DATA(string) | MANDATORY</span></dt><dd><div class="alert alert-danger" role="alert">No output description</div></dd></dl></div></div><div class="EezStudio_Component_Documentation_BodySection"><div>Examples</div><div><div class="alert alert-danger" role="alert">No examples</div></div></div></div></div></div></div></div>
+</body>
+
+</html>

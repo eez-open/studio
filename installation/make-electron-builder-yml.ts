@@ -178,6 +178,7 @@ const productName = "EEZ Studio";
 let files = [
     "build/**",
     "libs/**",
+    "help/**",
     "icon.icns",
     "icon.ico",
     "LICENSE.TXT",
