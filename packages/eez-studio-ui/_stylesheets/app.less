@@ -7176,11 +7176,15 @@ button.EezStudio_Action {
                 display: flex;
                 align-items: center;
 
-                > span:first-child {
+                > .EezStudio_TreeRowTriangle {
                     flex: 0;
                 }
 
-                > span:nth-child(2) {
+                > .EezStudio_TreeRowLabel_Triangle {
+                    flex: 1;
+                }
+
+                > .EezStudio_TreeRowLabel {
                     flex: 1;
                 }
             }
@@ -7198,6 +7202,19 @@ button.EezStudio_Action {
                     margin-right: 4px;
                 }
             }
+        }
+    }
+
+    .EezStudio_DocumentationBrowser_Stat {
+        display: flex;
+        align-items: center;
+
+        span {
+            margin-right: 5px;
+        }
+
+        span:last-child {
+            margin-right: 0;
         }
     }
 }

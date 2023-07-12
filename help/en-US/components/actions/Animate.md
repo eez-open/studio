@@ -38,7 +38,7 @@ A standard sequence input.
 
 A standard sequence output.
 
-# EXAMPLES
+# EXAMPLES [DRAFT]
 
 -   Animation
 -   sld-eez-flow-demo

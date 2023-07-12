@@ -17,7 +17,7 @@ import { getModel } from "./model";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface MarkdownDescription {
+export interface MarkdownDescription {
     draft: boolean;
     raw: string;
 }
@@ -384,6 +384,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
         builder.addEmptyLine();
         if (markdown && markdown.examples) {
             builder.addRaw(markdown.examples.raw);
+            builder.addEmptyLine();
         }
         return builder.markdown;
     }
@@ -523,7 +524,7 @@ async function generateParentMarkdownFiles(
 
         builder.addHeading(1, "PROPERTIES");
         builder.addEmptyLine();
-        properties.forEach(property => {
+        properties.forEach((property, i) => {
             builder.addHeading(
                 2,
                 property +
@@ -532,6 +533,9 @@ async function generateParentMarkdownFiles(
             builder.addEmptyLine();
             if (markdown && markdown.properties[property]) {
                 builder.addRaw(markdown.properties[property].raw);
+                if (i == properties.length - 1) {
+                    builder.addEmptyLine();
+                }
             }
         });
 

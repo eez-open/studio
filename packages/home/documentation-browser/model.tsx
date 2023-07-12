@@ -47,6 +47,7 @@ import {
     getInputDisplayName,
     getOutputDisplayName
 } from "project-editor/flow/helper";
+import { Icon } from "eez-studio-ui/icon";
 
 interface ProjectTypeNodeData {
     id: string;
@@ -103,7 +104,13 @@ class Model {
 
     loading: boolean = true;
 
-    docCounters: {
+    actionDocCounters: {
+        total: number;
+        drafts: number;
+        completed: number;
+    };
+
+    widgetDocCounters: {
         total: number;
         drafts: number;
         completed: number;
@@ -516,16 +523,46 @@ class Model {
     }
 
     updateDocCounters() {
-        this.docCounters = {
+        this.actionDocCounters = {
             total: 0,
             drafts: 0,
             completed: 0
         };
+
+        this.widgetDocCounters = {
+            total: 0,
+            drafts: 0,
+            completed: 0
+        };
+
         for (const componentInfo of this.allComponentsNoSearchFilter) {
             componentInfo.updateDocCounters();
-            this.docCounters.total += componentInfo.docCounters.total;
-            this.docCounters.drafts += componentInfo.docCounters.drafts;
-            this.docCounters.completed += componentInfo.docCounters.completed;
+
+            if (componentInfo.type == "action") {
+                this.actionDocCounters.total++;
+                this.actionDocCounters.drafts +=
+                    componentInfo.docCounters.drafts ==
+                    componentInfo.docCounters.total
+                        ? 1
+                        : 0;
+                this.actionDocCounters.completed +=
+                    componentInfo.docCounters.completed ==
+                    componentInfo.docCounters.total
+                        ? 1
+                        : 0;
+            } else {
+                this.widgetDocCounters.total++;
+                this.widgetDocCounters.drafts +=
+                    componentInfo.docCounters.drafts ==
+                    componentInfo.docCounters.total
+                        ? 1
+                        : 0;
+                this.widgetDocCounters.completed +=
+                    componentInfo.docCounters.completed ==
+                    componentInfo.docCounters.total
+                        ? 1
+                        : 0;
+            }
         }
     }
 
@@ -588,6 +625,31 @@ class Model {
                             <span title={componentInfo.name}>
                                 {componentInfo.name}
                             </span>
+                        </span>
+                        <span>
+                            {componentInfo.docCounters.total -
+                                componentInfo.docCounters.completed -
+                                componentInfo.docCounters.drafts >
+                                0 && (
+                                <span className="badge bg-danger">
+                                    {componentInfo.docCounters.total -
+                                        componentInfo.docCounters.completed -
+                                        componentInfo.docCounters.drafts}
+                                </span>
+                            )}
+                            {componentInfo.docCounters.drafts > 0 && (
+                                <span className="badge bg-warning">
+                                    {componentInfo.docCounters.drafts}
+                                </span>
+                            )}
+                            {componentInfo.docCounters.completed ==
+                                componentInfo.docCounters.total && (
+                                <Icon
+                                    icon="material:check_circle"
+                                    style={{ color: "green" }}
+                                    size={20}
+                                />
+                            )}
                         </span>
                     </span>
                 ),

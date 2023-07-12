@@ -39,7 +39,9 @@ export const DocumentationBrowser = observer(
         };
 
         render() {
-            if (getModel().loading) {
+            const model = getModel();
+
+            if (model.loading) {
                 return <Loader />;
             }
 
@@ -52,11 +54,11 @@ export const DocumentationBrowser = observer(
                                     className="form-check-input"
                                     id="EezStudio_DocumentationBrowser_Toolbar_GroupByProjectType"
                                     type="checkbox"
-                                    checked={getModel().groupByProjectType}
+                                    checked={model.groupByProjectType}
                                     onChange={action(event => {
-                                        getModel().groupByProjectType =
+                                        model.groupByProjectType =
                                             event.target.checked;
-                                        getModel().selectedNode = undefined;
+                                        model.selectedNode = undefined;
                                     })}
                                 />
                                 <label
@@ -71,11 +73,10 @@ export const DocumentationBrowser = observer(
                                     className="form-check-input"
                                     id="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
                                     type="checkbox"
-                                    checked={getModel().showGroups}
+                                    checked={model.showGroups}
                                     onChange={action(event => {
-                                        getModel().showGroups =
-                                            event.target.checked;
-                                        getModel().selectedNode = undefined;
+                                        model.showGroups = event.target.checked;
+                                        model.selectedNode = undefined;
                                     })}
                                 />
                                 <label
@@ -86,6 +87,56 @@ export const DocumentationBrowser = observer(
                                 </label>
                             </div>
                         </div>
+                        {isDev && (
+                            <div className="EezStudio_DocumentationBrowser_Stat">
+                                <span>Actions</span>
+                                {model.actionDocCounters.total -
+                                    model.actionDocCounters.completed -
+                                    model.actionDocCounters.drafts >
+                                    0 && (
+                                    <span className="badge bg-danger">
+                                        {model.actionDocCounters.total -
+                                            model.actionDocCounters.completed -
+                                            model.actionDocCounters.drafts}
+                                    </span>
+                                )}
+                                {model.actionDocCounters.drafts > 0 && (
+                                    <span className="badge bg-warning">
+                                        {model.actionDocCounters.drafts}
+                                    </span>
+                                )}
+                                {model.actionDocCounters.completed > 0 && (
+                                    <span className="badge bg-success">
+                                        {model.actionDocCounters.completed}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                        {isDev && (
+                            <div className="EezStudio_DocumentationBrowser_Stat">
+                                <span>Widgets</span>
+                                {model.widgetDocCounters.total -
+                                    model.widgetDocCounters.completed -
+                                    model.widgetDocCounters.drafts >
+                                    0 && (
+                                    <span className="badge bg-danger">
+                                        {model.widgetDocCounters.total -
+                                            model.widgetDocCounters.completed -
+                                            model.widgetDocCounters.drafts}
+                                    </span>
+                                )}
+                                {model.widgetDocCounters.drafts > 0 && (
+                                    <span className="badge bg-warning">
+                                        {model.widgetDocCounters.drafts}
+                                    </span>
+                                )}
+                                {model.widgetDocCounters.completed > 0 && (
+                                    <span className="badge bg-success">
+                                        {model.widgetDocCounters.completed}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         {isDev && (
                             <div>
                                 <button
@@ -126,24 +177,26 @@ export const DocumentationBrowser = observer(
 const TOC = observer(
     class TOC extends React.Component {
         render() {
+            const model = getModel();
+
             return (
                 <div className="EezStudio_DocumentationBrowser_Content_TreeContainer">
                     <SearchInput
-                        searchText={getModel().searchText}
+                        searchText={model.searchText}
                         onClear={action(() => {
-                            getModel().searchText = "";
+                            model.searchText = "";
                         })}
                         onChange={action(
                             event =>
-                                (getModel().searchText = $(
+                                (model.searchText = $(
                                     event.target
                                 ).val() as string)
                         )}
                     />
                     <Tree
-                        rootNode={getModel().rootNode}
+                        rootNode={model.rootNode}
                         selectNode={node => {
-                            getModel().selectNode(node);
+                            model.selectNode(node);
                         }}
                         showOnlyChildren={true}
                         style={{ height: "100%", overflow: "auto" }}

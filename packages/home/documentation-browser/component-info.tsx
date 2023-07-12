@@ -6,7 +6,7 @@ import {
     setParent
 } from "project-editor/core/object";
 
-import { MarkdownData } from "./doc-markdown";
+import { MarkdownData, MarkdownDescription } from "./doc-markdown";
 import { projectTypeToString } from "./helper";
 import { markdownToHTML } from "./doc-markdown";
 import { ProjectStore, createObject } from "project-editor/store";
@@ -85,53 +85,107 @@ export class ComponentInfo {
     };
 
     updateDocCounters() {
-        this.docCounters = {
-            total: 0,
-            drafts: 0,
-            completed: 0
-        };
+        let total = 0;
+        let drafts = 0;
+        let completed = 0;
 
         if (this.dashboard) {
-            this.dashboard.docCounters = {
-                total: 0,
-                drafts: 0,
-                completed: 0
-            };
+            this.dashboard.docCounters = this.getDocCounters(
+                this.dashboard,
+                ProjectType.DASHBOARD
+            );
+            total += this.dashboard.docCounters.total;
+            drafts += this.dashboard.docCounters.drafts;
+            completed += this.dashboard.docCounters.completed;
         }
 
         if (this.eezgui) {
-            this.eezgui.docCounters = {
-                total: 0,
-                drafts: 0,
-                completed: 0
-            };
+            this.eezgui.docCounters = this.getDocCounters(
+                this.eezgui,
+                ProjectType.FIRMWARE
+            );
+            total += this.eezgui.docCounters.total;
+            drafts += this.eezgui.docCounters.drafts;
+            completed += this.eezgui.docCounters.completed;
         }
 
         if (this.lvgl) {
-            this.lvgl.docCounters = {
-                total: 0,
-                drafts: 0,
-                completed: 0
-            };
+            this.lvgl.docCounters = this.getDocCounters(
+                this.lvgl,
+                ProjectType.LVGL
+            );
+            total += this.lvgl.docCounters.total;
+            drafts += this.lvgl.docCounters.drafts;
+            completed += this.lvgl.docCounters.completed;
         }
+
+        this.docCounters = {
+            total,
+            drafts,
+            completed
+        };
     }
 
-    renderDescription(projectType: ProjectType, generateHTML: boolean) {
-        const type = projectTypeToString(projectType);
+    getDocCounters(
+        projectTypeComponentInfo: IProjectTypeComponentInfo,
+        projectType: ProjectType
+    ) {
+        let total = 0;
+        let drafts = 0;
+        let completed = 0;
 
-        let common = this.common.markdown?.description?.raw;
-        let specific = this[type]?.markdown?.description?.raw;
+        function inc(markdown?: {
+            common: MarkdownDescription | undefined;
+            specific: MarkdownDescription | undefined;
+        }) {
+            total++;
 
-        let text;
-        if (common != undefined) {
-            text = common;
+            if (markdown?.common || markdown?.specific) {
+                if (markdown?.common?.draft || markdown?.specific?.draft) {
+                    drafts++;
+                } else {
+                    completed++;
+                }
+            }
         }
 
-        if (specific != undefined) {
+        inc(this.getDescriptionMarkdown(projectType));
+
+        for (const propertyName of projectTypeComponentInfo.properties) {
+            inc(this.getPropertyDescriptionMarkdown(projectType, propertyName));
+        }
+
+        for (const inputName of projectTypeComponentInfo.inputs) {
+            inc(this.getInputDescriptionMarkdown(projectType, inputName));
+        }
+
+        for (const outputName of projectTypeComponentInfo.outputs) {
+            inc(this.getOutputDescriptionMarkdown(projectType, outputName));
+        }
+
+        inc(this.getExamplesMarkdown(projectType));
+
+        return { total, drafts, completed };
+    }
+
+    renderMarkdown(
+        markdown: {
+            common: MarkdownDescription | undefined;
+            specific: MarkdownDescription | undefined;
+        },
+        generateHTML: boolean
+    ) {
+        let text: string | undefined;
+
+        if (markdown.common != undefined) {
+            text = markdown.common.raw;
+        }
+
+        if (markdown.specific != undefined) {
             if (text == undefined) {
-                text = specific;
+                text = markdown.specific.raw;
             } else {
-                text += specific;
+                text += markdown.specific.raw;
             }
         }
 
@@ -152,60 +206,44 @@ export class ComponentInfo {
         );
     }
 
-    renderPropertyDescription(
-        projectType: ProjectType,
-        propertyName: string,
-        generateHTML: boolean
-    ) {
+    getDescriptionMarkdown(projectType: ProjectType) {
         const type = projectTypeToString(projectType);
 
-        let common = this.common.markdown?.properties[propertyName]?.raw;
-        let specific = this[type]?.markdown?.properties[propertyName]?.raw;
+        let common = this.common.markdown?.description;
+        let specific = this[type]?.markdown?.description;
 
-        let text;
-        if (common != undefined) {
-            text = common;
-        }
+        return { common, specific };
+    }
 
-        if (specific != undefined) {
-            if (text == undefined) {
-                text = specific;
-            } else {
-                text += specific;
-            }
-        }
-
-        if (text == undefined) {
-            const parentPropertyDescription =
-                this.renderParentPropertyDescription(
-                    projectType,
-                    propertyName,
-                    generateHTML
-                );
-            if (parentPropertyDescription) {
-                return parentPropertyDescription;
-            }
-
-            return (
-                <div className="alert alert-danger" role="alert">
-                    No property description
-                </div>
-            );
-        }
-
-        return (
-            <div
-                className="markdown"
-                style={{ visibility: generateHTML ? undefined : "hidden" }}
-                dangerouslySetInnerHTML={markdownToHTML(text)}
-            />
+    renderDescription(projectType: ProjectType, generateHTML: boolean) {
+        return this.renderMarkdown(
+            this.getDescriptionMarkdown(projectType),
+            generateHTML
         );
     }
 
-    renderParentPropertyDescription(
+    getPropertyDescriptionMarkdown(
         projectType: ProjectType,
-        propertyName: string,
-        generateHTML: boolean
+        propertyName: string
+    ) {
+        const type = projectTypeToString(projectType);
+
+        let common = this.common.markdown?.properties[propertyName];
+        let specific = this[type]?.markdown?.properties[propertyName];
+
+        if (common || specific) {
+            return { common, specific };
+        }
+
+        return this.getParentPropertyDescriptionMarkdown(
+            projectType,
+            propertyName
+        );
+    }
+
+    getParentPropertyDescriptionMarkdown(
+        projectType: ProjectType,
+        propertyName: string
     ) {
         const type = projectTypeToString(projectType);
 
@@ -213,45 +251,41 @@ export class ComponentInfo {
 
         let common;
         for (parent = this.common.parent; parent; parent = parent.parent) {
-            common = parent.markdown?.properties[propertyName]?.raw;
+            common = parent.markdown?.properties[propertyName];
             if (common != undefined) {
                 break;
             }
         }
 
         let specific;
-
         for (parent = this[type]?.parent; parent; parent = parent.parent) {
-            specific = parent.markdown?.properties[propertyName]?.raw;
+            specific = parent.markdown?.properties[propertyName];
             if (specific != undefined) {
                 break;
             }
         }
 
-        let text;
-        if (common != undefined) {
-            text = common;
-        }
+        return { common, specific };
+    }
 
-        if (specific != undefined) {
-            if (text == undefined) {
-                text = specific;
-            } else {
-                text += specific;
-            }
-        }
-
-        if (text == undefined) {
-            return undefined;
-        }
-
-        return (
-            <div
-                className="markdown"
-                style={{ visibility: generateHTML ? undefined : "hidden" }}
-                dangerouslySetInnerHTML={markdownToHTML(text)}
-            />
+    renderPropertyDescription(
+        projectType: ProjectType,
+        propertyName: string,
+        generateHTML: boolean
+    ) {
+        return this.renderMarkdown(
+            this.getPropertyDescriptionMarkdown(projectType, propertyName),
+            generateHTML
         );
+    }
+
+    getInputDescriptionMarkdown(projectType: ProjectType, inputName: string) {
+        const type = projectTypeToString(projectType);
+
+        let common = this.common.markdown?.inputs[inputName];
+        let specific = this[type]?.markdown?.inputs[inputName];
+
+        return { common, specific };
     }
 
     renderInputDescription(
@@ -259,39 +293,19 @@ export class ComponentInfo {
         inputName: string,
         generateHTML: boolean
     ) {
+        return this.renderMarkdown(
+            this.getInputDescriptionMarkdown(projectType, inputName),
+            generateHTML
+        );
+    }
+
+    getOutputDescriptionMarkdown(projectType: ProjectType, outputName: string) {
         const type = projectTypeToString(projectType);
 
-        let common = this.common.markdown?.inputs[inputName]?.raw;
-        let specific = this[type]?.markdown?.inputs[inputName]?.raw;
+        let common = this.common.markdown?.outputs[outputName];
+        let specific = this[type]?.markdown?.outputs[outputName];
 
-        let text;
-        if (common != undefined) {
-            text = common;
-        }
-
-        if (specific != undefined) {
-            if (text == undefined) {
-                text = specific;
-            } else {
-                text += specific;
-            }
-        }
-
-        if (text == undefined) {
-            return (
-                <div className="alert alert-danger" role="alert">
-                    No input description
-                </div>
-            );
-        }
-
-        return (
-            <div
-                className="markdown"
-                style={{ visibility: generateHTML ? undefined : "hidden" }}
-                dangerouslySetInnerHTML={markdownToHTML(text)}
-            />
-        );
+        return { common, specific };
     }
 
     renderOutputDescription(
@@ -299,74 +313,25 @@ export class ComponentInfo {
         outputName: string,
         generateHTML: boolean
     ) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.outputs[outputName]?.raw;
-        let specific = this[type]?.markdown?.outputs[outputName]?.raw;
-
-        let text;
-        if (common != undefined) {
-            text = common;
-        }
-
-        if (specific != undefined) {
-            if (text == undefined) {
-                text = specific;
-            } else {
-                text += specific;
-            }
-        }
-
-        if (text == undefined) {
-            return (
-                <div className="alert alert-danger" role="alert">
-                    No output description
-                </div>
-            );
-        }
-
-        return (
-            <div
-                className="markdown"
-                style={{ visibility: generateHTML ? undefined : "hidden" }}
-                dangerouslySetInnerHTML={markdownToHTML(text)}
-            />
+        return this.renderMarkdown(
+            this.getOutputDescriptionMarkdown(projectType, outputName),
+            generateHTML
         );
     }
 
-    renderExamples(projectType: ProjectType, generateHTML: boolean) {
+    getExamplesMarkdown(projectType: ProjectType) {
         const type = projectTypeToString(projectType);
 
-        let common = this.common.markdown?.examples?.raw;
-        let specific = this[type]?.markdown?.examples?.raw;
+        let common = this.common.markdown?.examples;
+        let specific = this[type]?.markdown?.examples;
 
-        let text;
-        if (common != undefined) {
-            text = common;
-        }
+        return { common, specific };
+    }
 
-        if (specific != undefined) {
-            if (text == undefined) {
-                text = specific;
-            } else {
-                text += specific;
-            }
-        }
-
-        if (text == undefined) {
-            return (
-                <div className="alert alert-danger" role="alert">
-                    No examples
-                </div>
-            );
-        }
-
-        return (
-            <div
-                className="markdown"
-                style={{ visibility: generateHTML ? undefined : "hidden" }}
-                dangerouslySetInnerHTML={markdownToHTML(text)}
-            />
+    renderExamples(projectType: ProjectType, generateHTML: boolean) {
+        return this.renderMarkdown(
+            this.getExamplesMarkdown(projectType),
+            generateHTML
         );
     }
 }
