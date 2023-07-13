@@ -13,35 +13,7 @@ import { getModel } from "./model";
 import { ComponentContent } from "./components/ComponentContent";
 import { sourceRootDir } from "eez-studio-shared/util";
 
-async function generateHTMLFile(
-    componentInfo: ComponentInfo,
-    filePath: string
-) {
-    const div = document.createElement("div");
-    document.body.appendChild(div);
-
-    const root = createRoot(div);
-
-    root.render(
-        <ComponentContent
-            componentInfo={componentInfo}
-            projectType={ProjectType.UNDEFINED}
-            generateHTML={true}
-        />
-    );
-
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    const html = `<!DOCTYPE html>
-<html lang="en">
-
-<head>
-<meta charset="UTF-8">
-<title>${componentInfo.name}</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-<style>
-.EezStudio_DocumentationBrowser_Content_Help {
+const CSS = `.EezStudio_DocumentationBrowser_Content_Help {
     background-color: #f0f0f0;
     position: absolute;
     left: 0;
@@ -131,12 +103,57 @@ async function generateHTMLFile(
     .EezStudio_Component_Documentation_Body
     .EezStudio_Component_Documentation_BodySection:last-child {
     margin-bottom: 0;
-}
+}`;
+
+const SCRIPT = "";
+
+async function generateHTMLFile(
+    componentInfo: ComponentInfo,
+    filePath: string
+) {
+    const div = document.createElement("div");
+    document.body.appendChild(div);
+
+    const root = createRoot(div);
+
+    root.render(
+        <ComponentContent
+            componentInfo={componentInfo}
+            projectType={ProjectType.UNDEFINED}
+            generateHTML={true}
+        />
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<title>${componentInfo.name}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+<style>
+
+${CSS}
+
 </style>
+
 </head>
 
 <body>
+
 ${div.innerHTML}
+
+<script>
+
+${SCRIPT}
+
+</script>
+
 </body>
 
 </html>
@@ -152,7 +169,7 @@ export async function generateHTMLFilesForAllComponents() {
         autoClose: false
     });
 
-    const folderPath = `${sourceRootDir()}/../docs/components/en-US`;
+    const folderPath = `${sourceRootDir()}/../docs/components/html/en-US`;
 
     const model = getModel();
 
