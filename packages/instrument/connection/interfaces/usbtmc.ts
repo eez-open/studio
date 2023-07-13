@@ -269,7 +269,10 @@ export class Instrument {
             if (this.idVendor === undefined || this.idProduct === undefined) {
                 throw new UsbtmcException("No device specified", "init");
             } else {
-                this.device = usb.findByIds(this.idVendor, this.idProduct);
+                (this.device as any) = usb.findByIds(
+                    this.idVendor,
+                    this.idProduct
+                );
                 if (!this.device) {
                     throw new UsbtmcException("Device not found", "init");
                 }
@@ -300,7 +303,7 @@ export class Instrument {
     ) {
         return new Promise<{
             err: any;
-            buffer: Buffer | undefined;
+            buffer: number | Buffer | undefined;
         }>(resolve => {
             this.device.timeout = this._timeout;
             this.device.controlTransfer(
@@ -453,7 +456,7 @@ export class Instrument {
             const usb = getUsbModule();
 
             for (let i = 0; i < 40; i++) {
-                this.device = usb.findByIds(0x0957, new_id);
+                (this.device as any) = usb.findByIds(0x0957, new_id);
                 if (this.device) {
                     break;
                 }
@@ -470,21 +473,24 @@ export class Instrument {
         this.device.open();
 
         // find first USBTMC interface
-        for (let iface of this.device.interfaces) {
-            if (
-                iface.descriptor.bInterfaceClass === USBTMC_bInterfaceClass &&
-                iface.descriptor.bInterfaceSubClass ===
-                    USBTMC_bInterfaceSubClass
-            ) {
-                // USBTMC device
-                //this.cfg = ???;
-                this.iface = iface;
-                break;
-            } else if (this.device.deviceDescriptor.idVendor === 0x1334) {
-                // Advantest
-                //this.cfg = ???;
-                this.iface = iface;
-                break;
+        if (this.device.interfaces) {
+            for (let iface of this.device.interfaces) {
+                if (
+                    iface.descriptor.bInterfaceClass ===
+                        USBTMC_bInterfaceClass &&
+                    iface.descriptor.bInterfaceSubClass ===
+                        USBTMC_bInterfaceSubClass
+                ) {
+                    // USBTMC device
+                    //this.cfg = ???;
+                    this.iface = iface;
+                    break;
+                } else if (this.device.deviceDescriptor.idVendor === 0x1334) {
+                    // Advantest
+                    //this.cfg = ???;
+                    this.iface = iface;
+                    break;
+                }
             }
         }
 
@@ -531,7 +537,7 @@ export class Instrument {
         for (let i = 0; i < this.iface.endpoints.length; i++) {
             if (
                 this.iface.endpoints[i].transferType ===
-                usb.LIBUSB_TRANSFER_TYPE_BULK
+                usb.usb.LIBUSB_TRANSFER_TYPE_BULK
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.bulk_in_ep = this.iface.endpoints[
@@ -544,7 +550,7 @@ export class Instrument {
                 }
             } else if (
                 this.iface.endpoints[i].transferType ===
-                usb.LIBUSB_TRANSFER_TYPE_INTERRUPT
+                usb.usb.LIBUSB_TRANSFER_TYPE_INTERRUPT
             ) {
                 if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
                     this.interrupt_in_ep = this.iface.endpoints[
@@ -638,6 +644,7 @@ export class Instrument {
         if (
             !result.err &&
             result.buffer &&
+            result.buffer instanceof Buffer &&
             result.buffer[0] == USBTMC_STATUS_SUCCESS
         ) {
             this.bcdUSBTMC = (result.buffer[3] << 8) + result.buffer[2];
@@ -686,6 +693,7 @@ export class Instrument {
             if (
                 result.err ||
                 !result.buffer ||
+                !(result.buffer instanceof Buffer) ||
                 result.buffer[0] != USBTMC_STATUS_SUCCESS
             ) {
                 throw new UsbtmcException("Pulse failed", "pulse");
@@ -1086,6 +1094,7 @@ export class Instrument {
         if (
             !result.err &&
             result.buffer &&
+            result.buffer instanceof Buffer &&
             result.buffer[0] == USBTMC_STATUS_SUCCESS
         ) {
             // Initiate clear succeeded, wait for completion
@@ -1105,6 +1114,7 @@ export class Instrument {
                 if (
                     !result.err &&
                     result.buffer &&
+                    result.buffer instanceof Buffer &&
                     result.buffer[0] != USBTMC_STATUS_PENDING
                 ) {
                     break;
@@ -1147,6 +1157,7 @@ export class Instrument {
         if (
             !result.err &&
             result.buffer &&
+            result.buffer instanceof Buffer &&
             result.buffer[0] == USBTMC_STATUS_SUCCESS
         ) {
             // Initiate abort bulk out succeeded, wait for completion
@@ -1166,6 +1177,7 @@ export class Instrument {
                 if (
                     !result.err &&
                     result.buffer &&
+                    result.buffer instanceof Buffer &&
                     result.buffer[0] != USBTMC_STATUS_PENDING
                 ) {
                     break;
@@ -1203,6 +1215,7 @@ export class Instrument {
         if (
             !result.err &&
             result.buffer &&
+            result.buffer instanceof Buffer &&
             result.buffer[0] == USBTMC_STATUS_SUCCESS
         ) {
             // Initiate abort bulk in succeeded, wait for completion
@@ -1222,6 +1235,7 @@ export class Instrument {
                 if (
                     !result.err &&
                     result.buffer &&
+                    result.buffer instanceof Buffer &&
                     result.buffer[0] != USBTMC_STATUS_PENDING
                 ) {
                     break;
