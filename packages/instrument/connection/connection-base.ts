@@ -83,7 +83,7 @@ export abstract class ConnectionBase {
     // only in renderer
     abstract get interfaceInfo(): string | undefined;
     abstract acquire(traceEnabled: boolean): Promise<void>;
-    abstract command(command: string): void;
+    abstract command(command: string): Promise<void>;
     abstract query(query: string): Promise<any>;
     abstract upload(
         instructions: IFileUploadInstructions,

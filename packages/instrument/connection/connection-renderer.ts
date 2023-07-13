@@ -22,6 +22,8 @@ import { activityLogStore } from "instrument/window/history/activity-log";
 export class IpcConnection extends ConnectionBase {
     static ipcConnections = new Map<string, IpcConnection>();
 
+    traceEnabled: boolean = true;
+
     state: ConnectionState = ConnectionState.IDLE;
     errorCode: ConnectionErrorCode = ConnectionErrorCode.NONE;
     error: string | undefined;
@@ -232,6 +234,13 @@ export class IpcConnection extends ConnectionBase {
             }
         }
 
+        if (!this.traceEnabled) {
+            if (!options) {
+                options = {};
+            }
+            options.log = false;
+        }
+
         ipcRenderer.send("instrument/connection/send", {
             instrumentId: this.instrument.id,
             command,
@@ -313,10 +322,11 @@ export class IpcConnection extends ConnectionBase {
             getCurrentWindow().id,
             traceEnabled
         );
+        this.traceEnabled = traceEnabled;
     }
 
-    command(command: string) {
-        this.send(command);
+    async command(command: string) {
+        await this.send(command);
     }
 
     query(query: string) {
@@ -360,6 +370,7 @@ export class IpcConnection extends ConnectionBase {
 
     release() {
         this.doRelease();
+        this.traceEnabled = true;
     }
 }
 

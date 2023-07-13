@@ -946,7 +946,6 @@ export function isObjectReferencable(object: IEezObject) {
                 propertyInfo => propertyInfo.name === part
             );
             if (!propertyInfo || !propertyInfo.typeClass) {
-                console.log(classInfo.properties, part, propertyInfo);
                 break;
             }
             classInfo = propertyInfo.typeClass.classInfo;

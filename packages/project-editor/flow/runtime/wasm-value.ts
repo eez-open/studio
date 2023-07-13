@@ -375,10 +375,9 @@ export function getValue(
         const refPtr = WasmFlowRuntime.HEAP32[offset >> 2];
         const ptr = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 2];
         const len = WasmFlowRuntime.HEAP32[(refPtr >> 2) + 3];
-        const value = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            value[i] = WasmFlowRuntime.HEAP8[ptr + i];
-        }
+        const value = new Uint8Array(
+            WasmFlowRuntime.HEAPU8.slice(ptr, ptr + len)
+        );
         return {
             value,
             valueType: "blob"

@@ -703,7 +703,7 @@ export class Connection
         return undefined;
     }
     async acquire(traceEnabled: boolean) {}
-    command(command: string) {}
+    async command(command: string) {}
     async query(query: string) {}
     upload(
         instructions: IFileUploadInstructions,

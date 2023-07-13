@@ -22,7 +22,10 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import type { IStore } from "eez-studio-shared/store";
-import type { IActivityLogEntry } from "instrument/window/history/activity-log";
+import {
+    activityLogStore,
+    type IActivityLogEntry
+} from "instrument/window/history/activity-log";
 import type { IAppStore } from "instrument/window/history/history";
 import type { IDashboardComponentContext } from "eez-studio-types";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
@@ -162,6 +165,10 @@ export class EEZChartWidget extends Widget {
                     {
                         id: "dlog",
                         label: "EEZ DLOG"
+                    },
+                    {
+                        id: "history-item",
+                        label: "Instrument History Item"
                     }
                 ],
                 enumDisallowUndefined: true,
@@ -174,7 +181,8 @@ export class EEZChartWidget extends Widget {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (widget: EEZChartWidget) =>
-                        widget.chartType == "multi"
+                        widget.chartType == "multi" ||
+                        widget.chartType == "history-item"
                 },
                 "any"
             ),
@@ -259,8 +267,21 @@ export class EEZChartWidget extends Widget {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hasExpressionProperties: true
-            }
+                hasExpressionProperties: true,
+                hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    widget.chartType !== "multi"
+            },
+            makeExpressionProperty(
+                {
+                    name: "historyItemID",
+                    displayName: "History item ID",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                        widget.chartType != "history-item"
+                },
+                "string"
+            )
         ],
 
         defaultValue: {
@@ -329,11 +350,13 @@ export class EEZChartWidget extends Widget {
             offset: observable,
             scale: observable,
 
-            charts: observable
+            charts: observable,
+
+            historyItemID: observable
         });
     }
 
-    chartType: "single" | "multi" | "dlog";
+    chartType: "single" | "multi" | "dlog" | "history-item";
 
     chartData: string;
 
@@ -347,116 +370,13 @@ export class EEZChartWidget extends Widget {
 
     charts: WaveformDefinition[];
 
+    historyItemID: string;
+
     render(
         flowContext: IFlowContext,
         width: number,
         height: number
     ): React.ReactNode {
-        const eezChart = computed(() => {
-            if (this.chartType === "single") {
-                return new SingleEEZChart(
-                    flowContext,
-                    this,
-                    evalProperty(flowContext, this, "chartData") ??
-                        (!flowContext.flowState
-                            ? EEZChart.genData(1000, Math.sin)
-                            : undefined),
-                    evalProperty(flowContext, this, "format") ??
-                        (!flowContext.flowState ? "double" : undefined),
-                    evalProperty(flowContext, this, "samplingRate") ??
-                        (!flowContext.flowState ? 1000 : undefined),
-                    evalProperty(flowContext, this, "unitName") ??
-                        (!flowContext.flowState ? "voltage" : undefined),
-                    evalProperty(flowContext, this, "color") ??
-                        (!flowContext.flowState ? "#bb8100" : undefined),
-                    evalProperty(flowContext, this, "label") ??
-                        (!flowContext.flowState
-                            ? "Channel 1 Voltage"
-                            : undefined),
-                    evalProperty(flowContext, this, "offset") ??
-                        (!flowContext.flowState ? 0 : undefined),
-                    evalProperty(flowContext, this, "scale") ??
-                        (!flowContext.flowState ? 1 : undefined)
-                );
-            }
-
-            if (this.chartType === "multi") {
-                return new MultiEEZChart(
-                    flowContext,
-                    this,
-                    this.charts.map((chart, i) => ({
-                        data:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].chartData`
-                            ) ??
-                            (!flowContext.flowState
-                                ? EEZChart.genData(1000, Math.sin)
-                                : undefined),
-                        format:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].format`
-                            ) ??
-                            (!flowContext.flowState ? "double" : undefined),
-                        samplingRate:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].samplingRate`
-                            ) ?? (!flowContext.flowState ? 1000 : undefined),
-                        unitName: evalProperty(
-                            flowContext,
-                            this,
-                            `charts[${i}].unitName`
-                        ),
-                        color:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].color`
-                            ) ??
-                            (!flowContext.flowState ? "#bb8100" : undefined),
-                        label:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].label`
-                            ) ??
-                            (!flowContext.flowState
-                                ? "Channel 1 Voltage"
-                                : undefined),
-                        offset:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].offset`
-                            ) ?? (!flowContext.flowState ? 0 : undefined),
-                        scale:
-                            evalProperty(
-                                flowContext,
-                                this,
-                                `charts[${i}].scale`
-                            ) ?? (!flowContext.flowState ? 1 : undefined)
-                    }))
-                );
-            }
-
-            const data = evalProperty(flowContext, this, "chartData");
-
-            return new DLOGEEZChart(
-                flowContext,
-                this,
-                flowContext.flowState
-                    ? data
-                    : EEZChart.genDlogData(
-                          "45455a2d444c4f4702000200f8000000030001070002472691640b0003000000000000f03f04000400070005330000000700060000000004000a0807000b0ad7a33c04000f0007000c0000000007000d0000803f03000e05001e010105001f0113080020010000000008002101000020420f002201444350343035202331205505002301010c00250100000000000000000c002601000000000000f03f05001e020305001f02130800200200000000080021020100a0400f002202444350343035202331204905002302010c00250200000000000000000c002602000000000000f03f040024000600320195010600330103030000370000295c0d4101002040295c0d4101002040295c0d41010020407b14d640ad1cfa3fcdcca040518db73f48e10441c1ca1140295c0d4101002040295c0d4101002040295c0d41010020407b14a24090c2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f40713da640ea26b93f713de640806afc3f295c0d4101002040295c0d41cff71f40295c0d41518d1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d4101002040295c0d41010020406666a640c74bbf3f713de640806afc3f295c0d4101002040295c0d4101002040295c0d419eef1f4085eba140ea26b93f6666e640b39d0740295c0d41cff71f40295c0d4101002040295c0d410100204085eba140f2d2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f406666a640ea26b93f6666e6401e5afc3f295c0d41cff71f40295c0d4101002040295c0d41ee7c1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d41cff71f40295c0d41cff71f406666a6402a5cbf3f713de640806afc3f"
-                      )
-            );
-        }).get();
-
         return (
             <>
                 <EEZChartElement
@@ -464,7 +384,6 @@ export class EEZChartWidget extends Widget {
                     flowContext={flowContext}
                     width={width}
                     height={height}
-                    eezChart={eezChart}
                 ></EEZChartElement>
                 {super.render(flowContext, width, height)}
             </>
@@ -500,6 +419,7 @@ interface IViewOptions {
 
 abstract class EEZChart {
     chart: Waveform | MultiWaveform | DlogWaveform | undefined;
+    _store: IStore | undefined;
 
     constructor(
         public flowContext: IFlowContext,
@@ -532,6 +452,10 @@ abstract class EEZChart {
     }
 
     get store(): IStore {
+        if (this._store) {
+            return this._store;
+        }
+
         return {
             storeName: "dummy",
             storeVersion: 0,
@@ -699,10 +623,11 @@ class SingleEEZChart extends EEZChart {
             format = WaveformFormat.JS_NUMBERS;
         }
 
+        const unitNameLowerCase = this.unitName.toLowerCase();
         const unitName =
-            Object.keys(UNITS).indexOf(this.unitName) == -1
+            Object.keys(UNITS).indexOf(unitNameLowerCase) == -1
                 ? "unknown"
-                : this.unitName;
+                : unitNameLowerCase;
 
         return this.createGenericWaveform({
             id: "0",
@@ -998,6 +923,31 @@ class DLOGEEZChart extends EEZChart {
     }
 }
 
+class HistoryItemEEZChart extends EEZChart {
+    constructor(
+        flowContext: IFlowContext,
+        widget: EEZChartWidget,
+        public historyItemID: string
+    ) {
+        super(flowContext, widget);
+
+        this._store = activityLogStore;
+    }
+
+    createChart = () => {
+        const activityLogEntry = activityLogStore.findById(this.historyItemID);
+        if (!activityLogEntry) {
+            return undefined;
+        }
+
+        return new Waveform(this.store, activityLogEntry, {
+            toolbar: {
+                showConfigureButton: true
+            }
+        });
+    };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const EEZChartElement = observer(
@@ -1006,8 +956,18 @@ const EEZChartElement = observer(
         flowContext: IFlowContext;
         width: number;
         height: number;
-        eezChart: EEZChart;
     }> {
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                eezChart: computed
+            });
+        }
+
+        cacheHistoryItemID: any;
+        cacheChart: any;
+
         get appStore(): IAppStore {
             return {
                 selectHistoryItemsSpecification: undefined,
@@ -1058,6 +1018,152 @@ const EEZChartElement = observer(
             };
         }
 
+        get eezChart() {
+            const { widget, flowContext } = this.props;
+
+            if (widget.chartType === "single") {
+                return new SingleEEZChart(
+                    flowContext,
+                    widget,
+                    evalProperty(flowContext, widget, "chartData") ??
+                        (!flowContext.flowState
+                            ? EEZChart.genData(1000, Math.sin)
+                            : undefined),
+                    evalProperty(flowContext, widget, "format") ??
+                        (!flowContext.flowState ? "double" : undefined),
+                    evalProperty(flowContext, widget, "samplingRate") ??
+                        (!flowContext.flowState ? 1000 : undefined),
+                    evalProperty(flowContext, widget, "unitName") ??
+                        (!flowContext.flowState ? "voltage" : undefined),
+                    evalProperty(flowContext, widget, "color") ??
+                        (!flowContext.flowState ? "#bb8100" : undefined),
+                    evalProperty(flowContext, widget, "label") ??
+                        (!flowContext.flowState
+                            ? "Channel 1 Voltage"
+                            : undefined),
+                    evalProperty(flowContext, widget, "offset") ??
+                        (!flowContext.flowState ? 0 : undefined),
+                    evalProperty(flowContext, widget, "scale") ??
+                        (!flowContext.flowState ? 1 : undefined)
+                );
+            }
+
+            if (widget.chartType === "multi") {
+                return new MultiEEZChart(
+                    flowContext,
+                    widget,
+                    widget.charts.map((chart, i) => ({
+                        data:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].chartData`
+                            ) ??
+                            (!flowContext.flowState
+                                ? EEZChart.genData(1000, Math.sin)
+                                : undefined),
+                        format:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].format`
+                            ) ??
+                            (!flowContext.flowState ? "double" : undefined),
+                        samplingRate:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].samplingRate`
+                            ) ?? (!flowContext.flowState ? 1000 : undefined),
+                        unitName: evalProperty(
+                            flowContext,
+                            widget,
+                            `charts[${i}].unitName`
+                        ),
+                        color:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].color`
+                            ) ??
+                            (!flowContext.flowState ? "#bb8100" : undefined),
+                        label:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].label`
+                            ) ??
+                            (!flowContext.flowState
+                                ? "Channel 1 Voltage"
+                                : undefined),
+                        offset:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].offset`
+                            ) ?? (!flowContext.flowState ? 0 : undefined),
+                        scale:
+                            evalProperty(
+                                flowContext,
+                                widget,
+                                `charts[${i}].scale`
+                            ) ?? (!flowContext.flowState ? 1 : undefined)
+                    }))
+                );
+            }
+
+            if (widget.chartType === "history-item") {
+                if (flowContext.flowState) {
+                    const historyItemID = evalProperty(
+                        flowContext,
+                        widget,
+                        "historyItemID"
+                    );
+
+                    if (
+                        historyItemID != undefined &&
+                        historyItemID == this.cacheHistoryItemID
+                    ) {
+                        return this.cacheChart;
+                    }
+
+                    this.cacheHistoryItemID = historyItemID;
+                    this.cacheChart = new HistoryItemEEZChart(
+                        flowContext,
+                        widget,
+                        historyItemID
+                    );
+
+                    return this.cacheChart;
+                }
+
+                return new SingleEEZChart(
+                    flowContext,
+                    widget,
+                    EEZChart.genData(1000, Math.sin),
+                    "double",
+                    1000,
+                    "voltage",
+                    "#bb8100",
+                    "Channel 1 Voltage",
+                    0,
+                    1
+                );
+            }
+
+            const data = evalProperty(flowContext, widget, "chartData");
+
+            return new DLOGEEZChart(
+                flowContext,
+                widget,
+                flowContext.flowState
+                    ? data
+                    : EEZChart.genDlogData(
+                          "45455a2d444c4f4702000200f8000000030001070002472691640b0003000000000000f03f04000400070005330000000700060000000004000a0807000b0ad7a33c04000f0007000c0000000007000d0000803f03000e05001e010105001f0113080020010000000008002101000020420f002201444350343035202331205505002301010c00250100000000000000000c002601000000000000f03f05001e020305001f02130800200200000000080021020100a0400f002202444350343035202331204905002302010c00250200000000000000000c002602000000000000f03f040024000600320195010600330103030000370000295c0d4101002040295c0d4101002040295c0d41010020407b14d640ad1cfa3fcdcca040518db73f48e10441c1ca1140295c0d4101002040295c0d4101002040295c0d41010020407b14a24090c2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f40713da640ea26b93f713de640806afc3f295c0d4101002040295c0d41cff71f40295c0d41518d1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d4101002040295c0d41010020406666a640c74bbf3f713de640806afc3f295c0d4101002040295c0d4101002040295c0d419eef1f4085eba140ea26b93f6666e640b39d0740295c0d41cff71f40295c0d4101002040295c0d410100204085eba140f2d2b53f1f85f740f2d21140295c0d4101002040295c0d4101002040295c0d419eef1f406666a640ea26b93f6666e6401e5afc3f295c0d41cff71f40295c0d4101002040295c0d41ee7c1f407b14a240ea26b93f1f85f740e4a50740295c0d4101002040295c0d41cff71f40295c0d41cff71f406666a6402a5cbf3f713de640806afc3f"
+                      )
+            );
+        }
+
         render() {
             const { flowContext } = this.props;
 
@@ -1067,10 +1173,10 @@ const EEZChartElement = observer(
                         pointerEvents: flowContext.flowState ? "all" : "none"
                     }}
                 >
-                    {this.props.eezChart.chart && (
+                    {this.eezChart.chart && (
                         <ChartPreview
                             appStore={this.appStore}
-                            data={this.props.eezChart.chart}
+                            data={this.eezChart.chart}
                         />
                     )}
                 </div>

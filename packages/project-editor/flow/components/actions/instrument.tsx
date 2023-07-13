@@ -62,6 +62,7 @@ import {
 import {
     IObjectVariableValue,
     IObjectVariableValueConstructorParams,
+    isStructType,
     registerObjectVariableType,
     ValueType
 } from "project-editor/features/variable/value-type";
@@ -75,6 +76,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { TextAction, IconAction } from "eez-studio-ui/action";
 import { ConnectionParameters } from "instrument/connection/interface";
+import { activityLogStore, log } from "instrument/window/history/activity-log";
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -801,6 +804,662 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 registerClass(
     "ConnectInstrumentActionComponent",
     ConnectInstrumentActionComponent
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class GetInstrumentPropertiesActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            )
+        ],
+        defaultValue: {
+            customOutputs: [
+                {
+                    name: "properties",
+                    type: "any"
+                }
+            ]
+        },
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 231.621 231.616"
+            >
+                <path
+                    fill="none"
+                    d="M137.566 14.85 9.656 142.76l79.196 79.2L216.766 94.045c-8.852-14.042-6.946-32.655 5.023-44.62L182.192 9.827c-11.973 11.969-30.586 13.879-44.626 5.023zM51.598 129.108l79.68-79.683 5.656 5.656-79.68 79.683-5.656-5.656zm28.28 28.285-5.655-5.656 54.226-54.23 5.657 5.656-54.227 54.23zm22.63 22.625-5.656-5.656 68.367-68.37 5.656 5.655-68.367 68.371zm92.855-127.765a15.89 15.89 0 0 1-4.687 11.312 15.948 15.948 0 0 1-11.313 4.68 15.952 15.952 0 0 1-11.316-4.68c-6.234-6.242-6.234-16.39 0-22.625 6.242-6.238 16.387-6.246 22.629 0a15.877 15.877 0 0 1 4.687 11.313z"
+                />
+                <path
+                    fill="none"
+                    d="M173.703 46.596c-3.117 3.118-3.117 8.192 0 11.313 3.125 3.117 8.2 3.117 11.317 0 1.511-1.512 2.343-3.52 2.343-5.656s-.832-4.145-2.343-5.657c-3.118-3.117-8.2-3.12-11.317 0z"
+                />
+                <path d="M230.45 46.772 184.843 1.167c-.813-.813-1.926-1.204-3.07-1.164a4.008 4.008 0 0 0-2.91 1.527 29.51 29.51 0 0 1-2.329 2.64c-9.972 9.97-25.86 10.961-36.968 2.325a3.994 3.994 0 0 0-5.286.328L1.172 139.933a3.998 3.998 0 0 0 0 5.656l84.852 84.855a3.997 3.997 0 0 0 5.656 0L224.793 97.331a4.002 4.002 0 0 0 .328-5.286c-8.64-11.105-7.644-26.996 2.324-36.964a28.046 28.046 0 0 1 2.626-2.32 3.996 3.996 0 0 0 .378-5.989zm-13.684 47.274L88.852 221.96l-79.196-79.2 127.91-127.91c14.04 8.856 32.653 6.946 44.626-5.023l39.597 39.598c-11.968 11.965-13.875 30.578-5.023 44.62z" />
+                <path d="M168.047 40.94c-6.235 6.235-6.235 16.383 0 22.625a15.952 15.952 0 0 0 11.316 4.68c4.094 0 8.192-1.559 11.313-4.68a15.89 15.89 0 0 0 4.687-11.312c0-4.278-1.664-8.293-4.687-11.313-6.242-6.246-16.387-6.238-22.63 0zm19.316 11.313a7.946 7.946 0 0 1-2.343 5.656c-3.118 3.117-8.192 3.117-11.317 0-3.117-3.121-3.117-8.196 0-11.313 3.118-3.12 8.2-3.117 11.317 0a7.946 7.946 0 0 1 2.343 5.657zM51.596 129.11l79.68-79.68 5.657 5.656-79.681 79.68zM74.22 151.741l54.228-54.228 5.656 5.656-54.228 54.228zM96.849 174.363l68.369-68.37 5.656 5.657-68.369 68.369z" />
+            </svg>
+        ),
+        componentHeaderColor: "#FDD0A2",
+        componentPaletteGroupName: "Instrument",
+        check: (
+            component: GetInstrumentPropertiesActionComponent,
+            messages: IMessage[]
+        ) => {
+            const output = component.customOutputs.find(
+                output => output.name == "properties"
+            );
+            if (output) {
+                if (!isStructType(output.type)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Output "properties" must be of struct type`,
+                            component
+                        )
+                    );
+                }
+            } else {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Output "properties" not found`,
+                        component
+                    )
+                );
+            }
+        },
+        execute: (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const instrumentObject = instruments.get(instrument.id);
+            if (!instrumentObject) {
+                context.throwError(`Instrument ${instrument.id} not found`);
+                return;
+            }
+
+            context.propagateValue("properties", instrumentObject.properties);
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    instrument: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrument: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+registerClass(
+    "GetInstrumentPropertiesActionComponent",
+    GetInstrumentPropertiesActionComponent
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class AddToInstrumentHistoryActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            ),
+            {
+                name: "itemType",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "chart"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "chartDescription",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartData",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "blob"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartSamplingRate",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartOffset",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartScale",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartFormat",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    },
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartUnit",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    },
+                    formText: `"voltage", "current", "watt", "power", "time", "frequency", "joule"`
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartColor",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartColorInverse",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartLabel",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartMajorSubdivisionHorizontal",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartMajorSubdivisionVertical",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartMinorSubdivisionHorizontal",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartMinorSubdivisionVertical",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartHorizontalScale",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "chartVerticalScale",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "chart";
+                    }
+                },
+                "double"
+            )
+        ],
+        defaultValue: {},
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+                <path d="M99 60H68V29h-8v39h39zM20 60h8v8h-8z" />
+                <path d="M64 127c34.8 0 63-28.2 63-63S98.8 1 64 1 1 29.2 1 64s28.2 63 63 63zM64 9c30.3 0 55 24.7 55 55s-24.7 55-55 55S9 94.3 9 64 33.7 9 64 9z" />
+            </svg>
+        ),
+        componentHeaderColor: "#FDD0A2",
+        componentPaletteGroupName: "Instrument",
+        execute: (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const chartDescription =
+                context.evalProperty<string>("chartDescription");
+            if (chartDescription == undefined) {
+                context.throwError(`Invalid Chart description property`);
+                return;
+            }
+
+            const chartData = context.evalProperty<Uint8Array>("chartData");
+            if (chartData == undefined) {
+                context.throwError(`Invalid Chart data property`);
+                return;
+            }
+
+            const chartSamplingRate =
+                context.evalProperty<number>("chartSamplingRate");
+            if (chartSamplingRate == undefined) {
+                context.throwError(`Invalid Chart sampling rate property`);
+                return;
+            }
+
+            const chartOffset = context.evalProperty<number>("chartOffset");
+            if (chartOffset == undefined) {
+                context.throwError(`Invalid Chart offet property`);
+                return;
+            }
+
+            const chartScale = context.evalProperty<number>("chartScale");
+            if (chartScale == undefined) {
+                context.throwError(`Invalid Chart scale property`);
+                return;
+            }
+
+            const chartFormatStr = context.evalProperty<string>("chartFormat");
+            if (chartFormatStr == undefined) {
+                context.throwError(`Invalid Chart format property`);
+                return;
+            }
+            let chartFormat =
+                chartFormatStr == "float"
+                    ? WaveformFormat.FLOATS_32BIT
+                    : chartFormatStr == "double"
+                    ? WaveformFormat.FLOATS_64BIT
+                    : chartFormatStr == "rigol-byte"
+                    ? WaveformFormat.RIGOL_BYTE
+                    : chartFormatStr == "rigol-word"
+                    ? WaveformFormat.RIGOL_WORD
+                    : chartFormatStr == "csv"
+                    ? WaveformFormat.CSV_STRING
+                    : WaveformFormat.JS_NUMBERS;
+
+            const chartUnit = context.evalProperty<string>("chartUnit");
+            if (chartUnit == undefined) {
+                context.throwError(`Invalid Chart unit property`);
+                return;
+            }
+
+            const chartColor = context.evalProperty<string>("chartColor");
+            if (chartColor == undefined) {
+                context.throwError(`Invalid Chart color property`);
+                return;
+            }
+
+            const chartColorInverse =
+                context.evalProperty<string>("chartColorInverse");
+            if (chartColorInverse == undefined) {
+                context.throwError(`Invalid Chart color inverse property`);
+                return;
+            }
+
+            const chartLabel = context.evalProperty<string>("chartLabel");
+            if (chartLabel == undefined) {
+                context.throwError(`Invalid Chart label property`);
+                return;
+            }
+
+            const chartMajorSubdivisionHorizontal =
+                context.evalProperty<number>("chartMajorSubdivisionHorizontal");
+            if (chartMajorSubdivisionHorizontal == undefined) {
+                context.throwError(
+                    `Invalid Chart major subdivision horizontal property`
+                );
+                return;
+            }
+
+            const chartMajorSubdivisionVertical = context.evalProperty<number>(
+                "chartMajorSubdivisionVertical"
+            );
+            if (chartMajorSubdivisionVertical == undefined) {
+                context.throwError(
+                    `Invalid Chart major subdivision vertical property`
+                );
+                return;
+            }
+
+            const chartMinorSubdivisionHorizontal =
+                context.evalProperty<number>("chartMinorSubdivisionHorizontal");
+            if (chartMinorSubdivisionHorizontal == undefined) {
+                context.throwError(
+                    `Invalid Chart minor subdivision horizontal property`
+                );
+                return;
+            }
+
+            const chartMinorSubdivisionVertical = context.evalProperty<number>(
+                "chartMinorSubdivisionVertical"
+            );
+            if (chartMinorSubdivisionVertical == undefined) {
+                context.throwError(
+                    `Invalid Chart minor subdivision vertical property`
+                );
+                return;
+            }
+
+            const chartHorizontalScale = context.evalProperty<number>(
+                "chartHorizontalScale"
+            );
+            if (chartHorizontalScale == undefined) {
+                context.throwError(`Invalid Chart horizontal scale property`);
+                return;
+            }
+
+            const chartVerticalScale =
+                context.evalProperty<number>("chartVerticalScale");
+            if (chartVerticalScale == undefined) {
+                context.throwError(`Invalid Chart vertical scale property`);
+                return;
+            }
+
+            const message: any = {
+                state: "success",
+                fileType: { mime: "application/eez-raw" },
+                description: chartDescription,
+                waveformDefinition: {
+                    samplingRate: chartSamplingRate,
+                    format: chartFormat,
+                    unitName: chartUnit.toLowerCase(),
+                    color: chartColor,
+                    colorInverse: chartColorInverse,
+                    label: chartLabel,
+                    offset: chartOffset,
+                    scale: chartScale
+                },
+                viewOptions: {
+                    axesLines: {
+                        type: "fixed",
+                        majorSubdivision: {
+                            horizontal: chartMajorSubdivisionHorizontal,
+                            vertical: chartMajorSubdivisionVertical
+                        },
+                        minorSubdivision: {
+                            horizontal: chartMinorSubdivisionHorizontal,
+                            vertical: chartMinorSubdivisionVertical
+                        }
+                    }
+                },
+                horizontalScale: chartHorizontalScale,
+                verticalScale: chartVerticalScale
+            };
+
+            message.dataLength = chartData.length;
+
+            const historyId = log(
+                activityLogStore,
+                {
+                    oid: instrument.id,
+                    type: "instrument/file-download",
+                    message: JSON.stringify(message),
+                    data: chartData
+                },
+                {
+                    undoable: false
+                }
+            );
+
+            context.propagateValue("id", historyId);
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    instrument: string;
+    itemType: string;
+
+    chartDescription: string;
+    chartData: string;
+    chartSamplingRate: string;
+    chartOffset: string;
+    chartScale: string;
+    chartFormat: string;
+    chartUnit: string;
+    chartColor: string;
+    chartColorInverse: string;
+    chartLabel: string;
+    chartMajorSubdivisionHorizontal: string;
+    chartMajorSubdivisionVertical: string;
+    chartMinorSubdivisionHorizontal: string;
+    chartMinorSubdivisionVertical: string;
+    chartHorizontalScale: string;
+    chartVerticalScale: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrument: observable,
+
+            itemType: observable,
+
+            chartDescription: observable,
+            chartData: observable,
+            chartSamplingRate: observable,
+            chartOffset: observable,
+            chartScale: observable,
+            chartFormat: observable,
+            chartUnit: observable,
+            chartColor: observable,
+            chartColorInverse: observable,
+            chartLabel: observable,
+            chartMajorSubdivisionHorizontal: observable,
+            chartMajorSubdivisionVertical: observable,
+            chartMinorSubdivisionHorizontal: observable,
+            chartMinorSubdivisionVertical: observable,
+            chartHorizontalScale: observable,
+            chartVerticalScale: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
+                name: "id",
+                type: "string",
+                isSequenceOutput: false,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+registerClass(
+    "AddToInstrumentHistoryActionComponent",
+    AddToInstrumentHistoryActionComponent
 );
 
 ////////////////////////////////////////////////////////////////////////////////

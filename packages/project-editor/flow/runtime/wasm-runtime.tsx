@@ -1,4 +1,11 @@
 import React from "react";
+import {
+    makeObservable,
+    observable,
+    runInAction,
+    IObservableValue
+} from "mobx";
+
 import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
@@ -61,7 +68,6 @@ import {
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { makeObservable, observable, runInAction } from "mobx";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IObjectVariableType,
@@ -75,6 +81,10 @@ import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
 import { getClassByName } from "project-editor/core/object";
 import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
+import {
+    activityLogStore,
+    logDelete
+} from "instrument/window/history/activity-log";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -385,6 +395,7 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             if (workerToRenderMessage.propertyValues) {
+                // console.log(workerToRenderMessage.propertyValues);
                 this.componentProperties.valuesFromWorker(
                     workerToRenderMessage.propertyValues
                 );
@@ -903,7 +914,7 @@ export class WasmRuntime extends RemoteRuntime {
                 //console.log("SCPI result", result);
             } else {
                 //console.log("SCPI command", command);
-                connection.command(command);
+                await connection.command(command);
                 result = "";
             }
         } catch (err) {
@@ -918,7 +929,13 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         if (result instanceof FileHistoryItem) {
-            result = result.data;
+            const data = result.data;
+
+            logDelete(activityLogStore, result, {
+                undoable: false
+            });
+
+            result = data;
         }
 
         let data: RendererToWorkerMessage;
@@ -1318,7 +1335,7 @@ class ComponentProperties {
         }
     >();
     evalProperties: IEvalProperty[] | undefined;
-    propertyValues: ValueWithType[] = [];
+    propertyValues: IObservableValue<ValueWithType>[] = [];
     nextPropertyValueIndex: number = 0;
 
     // assign
@@ -1476,7 +1493,7 @@ class ComponentProperties {
 
         if (propertyValueIndex < this.propertyValues.length) {
             // get evaluated value
-            return this.propertyValues[propertyValueIndex].value;
+            return this.propertyValues[propertyValueIndex].get().value;
         }
 
         // not evaluated yet
@@ -1485,23 +1502,26 @@ class ComponentProperties {
 
     valuesFromWorker(widgetPropertyValues: IPropertyValue[]) {
         if (widgetPropertyValues.length > 0) {
-            runInAction(() => {
-                for (const propertyValue of widgetPropertyValues) {
-                    for (
-                        let i = this.propertyValues.length;
-                        i < propertyValue.propertyValueIndex;
-                        i++
-                    ) {
-                        this.propertyValues[i] = {
+            for (const propertyValue of widgetPropertyValues) {
+                for (
+                    let i = this.propertyValues.length;
+                    i < propertyValue.propertyValueIndex + 1;
+                    i++
+                ) {
+                    runInAction(() => {
+                        this.propertyValues[i] = observable.box({
                             value: undefined,
                             valueType: "undefined"
-                        };
-                    }
-
-                    this.propertyValues[propertyValue.propertyValueIndex] =
-                        propertyValue.valueWithType;
+                        });
+                    });
                 }
-            });
+
+                runInAction(() => {
+                    this.propertyValues[propertyValue.propertyValueIndex].set(
+                        propertyValue.valueWithType
+                    );
+                });
+            }
         }
     }
 

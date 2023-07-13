@@ -255,11 +255,61 @@ export function createWasmWorker(
             newPropertyValue.propertyValueIndex
         );
 
+        function equal(oldValue: any, newValue: any) {
+            if (
+                oldValue instanceof Uint8Array &&
+                newValue instanceof Uint8Array
+            ) {
+                if (oldValue.length != newValue.length) {
+                    console.log("diff size");
+                    return false;
+                }
+                for (let i = 0; i < oldValue.length; i++) {
+                    if (newValue[i] != oldValue[i]) {
+                        console.log("diff elem");
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            if (typeof oldValue !== typeof newValue) {
+                return false;
+            }
+
+            if (typeof oldValue == "string" || typeof oldValue == "number") {
+                return oldValue == newValue;
+            }
+
+            if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+                if (oldValue.length != newValue.length) {
+                    return false;
+                }
+
+                for (let i = 0; i < oldValue.length; i++) {
+                    if (
+                        typeof newValue[i] == "object" &&
+                        typeof oldValue[i] == "object"
+                    ) {
+                        // optimization: skip deep comparison of object elements
+                        continue;
+                    }
+                    if (newValue[i] != oldValue[i]) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return deepEqual(oldValue, newValue);
+        }
+
         if (
             oldPropertyValue &&
             oldPropertyValue.valueWithType.valueType ==
                 newPropertyValue.valueWithType.valueType &&
-            deepEqual(
+            equal(
                 oldPropertyValue.valueWithType.value,
                 newPropertyValue.valueWithType.value
             )
