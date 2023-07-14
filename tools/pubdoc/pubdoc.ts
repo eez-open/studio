@@ -63,7 +63,7 @@ if (!password) {
                 );
 
                 if (!article.id) {
-                    console.log(`Creating article: ${title}`);
+                    console.log(`Creating: ${title}`);
                     try {
                         const id = await wpClient.createArticle(
                             title,
@@ -80,7 +80,7 @@ if (!password) {
                 } else {
                     if (article.sha256 !== postsha256) {
                         try {
-                            console.log(`Updating article: ${title}`);
+                            console.log(`Updating: ${title}`);
                             await wpClient.updateArticle(
                                 article.id,
                                 title,

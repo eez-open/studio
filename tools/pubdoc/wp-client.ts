@@ -29,38 +29,6 @@ export class WPClient {
         //     .then((result: any) => console.log(result));
     }
 
-    async createPage(title: string, content: string, slug: string) {
-        return new Promise<number>(resolve => {
-            this.wp
-                .pages()
-                .create({
-                    // "title" and "content" are the only required properties
-                    title,
-                    content,
-                    slug
-                })
-                .then(function (page) {
-                    resolve(page.id);
-                });
-        });
-    }
-
-    async updatePage(id: number, title: string, content: string, slug: string) {
-        return new Promise<void>(resolve => {
-            this.wp
-                .pages()
-                .id(id)
-                .update({
-                    title,
-                    content,
-                    slug
-                })
-                .then(function (response) {
-                    resolve();
-                });
-        });
-    }
-
     async createArticle(
         title: string,
         content: string,
