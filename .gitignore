@@ -44,3 +44,5 @@ packages/project-editor/flow/runtime/cpp/lvgl-runtime/build
 npm-module/packages
 npm-module/libs
 npm-module/resources
+
+tools/pubdoc/build

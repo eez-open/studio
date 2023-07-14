@@ -31,7 +31,9 @@
         "dist-raspbian": "USE_SYSTEM_FPM=true npm run dist",
         "tsc-version": "tsc --version",
         "electron-version": "electron --version",
-        "publish-types": "cd packages/eez-studio-types && npm publish"
+        "publish-types": "cd packages/eez-studio-types && npm publish",
+        "pubdoc-dev": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/dev.json",
+        "pubdoc-prod": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/prod.json"
     },
     "prettier": {
         "printWidth": 80,
@@ -73,6 +75,7 @@
         "@types/serialport": "^8.0.2",
         "@types/sha256": "^0.2.0",
         "@types/tinycolor2": "^1.4.3",
+        "@types/wpapi": "^1.1.1",
         "@types/xml-formatter": "^2.1.1",
         "@types/xterm": "^3.0.0",
         "electron": "20.3.8",
@@ -91,7 +94,9 @@
         "request": "^2.88.2",
         "request-promise-native": "^1.0.8",
         "run-script-os": "^1.1.6",
-        "typescript": "^4.9.5"
+        "sha256": "^0.2.0",
+        "typescript": "^4.9.5",
+        "wpapi": "^1.2.2"
     },
     "dependencies": {
         "@electron/remote": "^2.0.9",
@@ -148,7 +153,6 @@
         "react-window": "^1.8.8",
         "rimraf": "^3.0.2",
         "serialport": "^10.4.0",
-        "sha256": "^0.2.0",
         "showdown": "^1.9.1",
         "simple-git": "^3.10.0",
         "tinycolor2": "^1.4.1",

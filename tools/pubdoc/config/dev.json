@@ -1,0 +1,40 @@
+{
+    "server": {
+        "address": "https://dev.envox.eu/wp-json",
+        "username": "mvladic"
+    },
+    "filePathBase": "../../../docs/components/html/en-US/",
+    "toc": {
+        "action": [
+            {
+                "category": {
+                    "name": "Common",
+                    "id": 205
+                },
+                "articles": [
+                    {
+                        "content": "Start.html",
+                        "status": "publish",
+                        "id": 354620,
+                        "sha256": "da616a3ef4fbbabf2909e056dd46f7c0013518abeb6623c6be6f5065ae435819"
+                    }
+                ]
+            },
+            {
+                "category": {
+                    "name": "GUI",
+                    "id": 207
+                },
+                "articles": [
+                    {
+                        "content": "Animate.html",
+                        "status": "publish",
+                        "id": 354619,
+                        "sha256": "3ee610da52ed83731e4bdfdabf1985d1ae36a768d96aa322eddb73c9580c6ee6"
+                    }
+                ]
+            }
+        ],
+        "widget": []
+    }
+}
