@@ -7,10 +7,10 @@ export class WPClient {
 
     wp: WPAPI;
 
-    constructor(private server: Server, password: string) {
+    constructor(private server: Server, username: string, password: string) {
         this.wp = new WPAPI({
             endpoint: this.server.address,
-            username: this.server.username,
+            username: username,
             password: password
         });
 

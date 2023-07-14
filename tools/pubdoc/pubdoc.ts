@@ -7,8 +7,6 @@ import { Config } from "./types";
 var sha256 = require("sha256");
 
 let configFilePath;
-
-// print process.argv
 for (let i = 2; i < argv.length; ) {
     if (argv[i] === "--config") {
         configFilePath = argv[i + 1];
@@ -17,16 +15,24 @@ for (let i = 2; i < argv.length; ) {
         i++;
     }
 }
-
 if (!configFilePath) {
     console.error("Missing --config parameter");
-    console.error(`Windows PowerShell: $env:WP_PASSWORD="password"`);
+    process.exit(1);
+}
+
+const username = process.env.WP_USERNAME;
+if (!username) {
+    console.log("Missing WP_USERNAME environment variable");
+    console.error(`\tWindows PowerShell: $env:WP_USERNAME="username"`);
+    console.error(`\tLinux: export WP_USERNAME=username`);
     process.exit(1);
 }
 
 const password = process.env.WP_PASSWORD;
 if (!password) {
     console.log("Missing WP_PASSWORD environment variable");
+    console.error(`\tWindows PowerShell: $env:WP_PASSWORD="password"`);
+    console.error(`\tLinux: export WP_PASSWORD=password`);
     process.exit(1);
 }
 
@@ -34,7 +40,9 @@ if (!password) {
     let configFile = await fs.promises.readFile(configFilePath, "utf8");
     let config: Config = JSON.parse(configFile);
 
-    const wpClient = new WPClient(config.server, password);
+    const wpClient = new WPClient(config.server, username, password);
+
+    let changed = false;
 
     for (const key in config.toc) {
         for (let group of config.toc[key]) {
@@ -74,6 +82,7 @@ if (!password) {
                         );
                         article.id = id;
                         article.sha256 = postsha256;
+                        changed = true;
                     } catch (err) {
                         console.error(err);
                     }
@@ -90,6 +99,7 @@ if (!password) {
                                 article.status
                             );
                             article.sha256 = postsha256;
+                            changed = true;
                         } catch (err) {
                             console.error(err);
                         }
@@ -99,9 +109,11 @@ if (!password) {
         }
     }
 
-    await fs.promises.writeFile(
-        configFilePath,
-        JSON.stringify(config, null, 4),
-        "utf-8"
-    );
+    if (changed) {
+        await fs.promises.writeFile(
+            configFilePath,
+            JSON.stringify(config, null, 4),
+            "utf-8"
+        );
+    }
 })();

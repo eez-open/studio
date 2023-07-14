@@ -1,7 +1,6 @@
 {
     "server": {
-        "address": "https://dev.envox.eu/wp-json",
-        "username": "mvladic"
+        "address": "https://dev.envox.eu/wp-json"
     },
     "filePathBase": "../../../docs/components/html/en-US/",
     "toc": {
