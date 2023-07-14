@@ -2,35 +2,26 @@ import React from "react";
 
 import {
     IObjectClassInfo,
-    ProjectType,
+    PropertyInfo,
     setParent
 } from "project-editor/core/object";
 
 import { MarkdownData, MarkdownDescription } from "./doc-markdown";
-import { projectTypeToString } from "./helper";
 import { markdownToHTML } from "./doc-markdown";
 import { ProjectStore, createObject } from "project-editor/store";
-import { Component } from "project-editor/flow/component";
+import {
+    Component,
+    ComponentInput,
+    ComponentOutput
+} from "project-editor/flow/component";
 
 export interface IProjectTypeComponentInfoParent {
-    properties: string[];
+    properties: {
+        name: string;
+        metaInfo: PropertyInfo;
+    }[];
     markdown?: MarkdownData;
     parent: IProjectTypeComponentInfoParent | undefined;
-}
-
-interface IProjectTypeComponentInfo {
-    componentClass: IObjectClassInfo;
-    componentObject: Component;
-    properties: string[];
-    inputs: string[];
-    outputs: string[];
-    parent: IProjectTypeComponentInfoParent;
-    markdown?: MarkdownData;
-    docCounters: {
-        total: number;
-        drafts: number;
-        completed: number;
-    };
 }
 
 export class ComponentInfo {
@@ -41,14 +32,31 @@ export class ComponentInfo {
     icon: any;
     titleStyle: React.CSSProperties | undefined;
 
+    componentObject: Component;
+
+    properties: {
+        name: string;
+        metaInfo: PropertyInfo;
+    }[];
+
+    inputs: {
+        name: string;
+        metaInfo: ComponentInput;
+    }[];
+
+    outputs: {
+        name: string;
+        metaInfo: ComponentOutput;
+    }[];
+
     common: {
         markdown?: MarkdownData;
         parent: IProjectTypeComponentInfoParent;
     };
 
-    dashboard?: IProjectTypeComponentInfo;
-    eezgui?: IProjectTypeComponentInfo;
-    lvgl?: IProjectTypeComponentInfo;
+    dashboard: boolean;
+    eezgui: boolean;
+    lvgl: boolean;
 
     docCounters: {
         total: number;
@@ -89,59 +97,11 @@ export class ComponentInfo {
         let drafts = 0;
         let completed = 0;
 
-        if (this.dashboard) {
-            this.dashboard.docCounters = this.getDocCounters(
-                this.dashboard,
-                ProjectType.DASHBOARD
-            );
-            total += this.dashboard.docCounters.total;
-            drafts += this.dashboard.docCounters.drafts;
-            completed += this.dashboard.docCounters.completed;
-        }
-
-        if (this.eezgui) {
-            this.eezgui.docCounters = this.getDocCounters(
-                this.eezgui,
-                ProjectType.FIRMWARE
-            );
-            total += this.eezgui.docCounters.total;
-            drafts += this.eezgui.docCounters.drafts;
-            completed += this.eezgui.docCounters.completed;
-        }
-
-        if (this.lvgl) {
-            this.lvgl.docCounters = this.getDocCounters(
-                this.lvgl,
-                ProjectType.LVGL
-            );
-            total += this.lvgl.docCounters.total;
-            drafts += this.lvgl.docCounters.drafts;
-            completed += this.lvgl.docCounters.completed;
-        }
-
-        this.docCounters = {
-            total,
-            drafts,
-            completed
-        };
-    }
-
-    getDocCounters(
-        projectTypeComponentInfo: IProjectTypeComponentInfo,
-        projectType: ProjectType
-    ) {
-        let total = 0;
-        let drafts = 0;
-        let completed = 0;
-
-        function inc(markdown?: {
-            common: MarkdownDescription | undefined;
-            specific: MarkdownDescription | undefined;
-        }) {
+        function inc(markdown?: MarkdownDescription | undefined) {
             total++;
 
-            if (markdown?.common || markdown?.specific) {
-                if (markdown?.common?.draft || markdown?.specific?.draft) {
+            if (markdown) {
+                if (markdown.draft) {
                     drafts++;
                 } else {
                     completed++;
@@ -149,44 +109,33 @@ export class ComponentInfo {
             }
         }
 
-        inc(this.getDescriptionMarkdown(projectType));
+        inc(this.getDescriptionMarkdown());
 
-        for (const propertyName of projectTypeComponentInfo.properties) {
-            inc(this.getPropertyDescriptionMarkdown(projectType, propertyName));
+        for (const property of this.properties) {
+            inc(this.getPropertyDescriptionMarkdown(property.name));
         }
 
-        for (const inputName of projectTypeComponentInfo.inputs) {
-            inc(this.getInputDescriptionMarkdown(projectType, inputName));
+        for (const input of this.inputs) {
+            inc(this.getInputDescriptionMarkdown(input.name));
         }
 
-        for (const outputName of projectTypeComponentInfo.outputs) {
-            inc(this.getOutputDescriptionMarkdown(projectType, outputName));
+        for (const output of this.outputs) {
+            inc(this.getOutputDescriptionMarkdown(output.name));
         }
 
-        inc(this.getExamplesMarkdown(projectType));
+        inc(this.getExamplesMarkdown());
 
-        return { total, drafts, completed };
+        this.docCounters = { total, drafts, completed };
     }
 
     renderMarkdown(
-        markdown: {
-            common: MarkdownDescription | undefined;
-            specific: MarkdownDescription | undefined;
-        },
+        markdown: MarkdownDescription | undefined,
         generateHTML: boolean
     ) {
         let text: string | undefined;
 
-        if (markdown.common != undefined) {
-            text = markdown.common.raw;
-        }
-
-        if (markdown.specific != undefined) {
-            if (text == undefined) {
-                text = markdown.specific.raw;
-            } else {
-                text += markdown.specific.raw;
-            }
+        if (markdown != undefined) {
+            text = markdown.raw;
         }
 
         if (text == undefined) {
@@ -206,132 +155,72 @@ export class ComponentInfo {
         );
     }
 
-    getDescriptionMarkdown(projectType: ProjectType) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.description;
-        let specific = this[type]?.markdown?.description;
-
-        return { common, specific };
+    getDescriptionMarkdown() {
+        return this.common.markdown?.description;
     }
 
-    renderDescription(projectType: ProjectType, generateHTML: boolean) {
+    renderDescription(generateHTML: boolean) {
         return this.renderMarkdown(
-            this.getDescriptionMarkdown(projectType),
+            this.common.markdown?.description,
             generateHTML
         );
     }
 
-    getPropertyDescriptionMarkdown(
-        projectType: ProjectType,
-        propertyName: string
-    ) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.properties[propertyName];
-        let specific = this[type]?.markdown?.properties[propertyName];
-
-        if (common || specific) {
-            return { common, specific };
+    getPropertyDescriptionMarkdown(propertyName: string) {
+        const markdown = this.common.markdown?.properties[propertyName];
+        if (markdown) {
+            return markdown;
         }
-
-        return this.getParentPropertyDescriptionMarkdown(
-            projectType,
-            propertyName
-        );
+        return this.getParentPropertyDescriptionMarkdown(propertyName);
     }
 
-    getParentPropertyDescriptionMarkdown(
-        projectType: ProjectType,
-        propertyName: string
-    ) {
-        const type = projectTypeToString(projectType);
-
+    getParentPropertyDescriptionMarkdown(propertyName: string) {
         let parent: IProjectTypeComponentInfoParent | undefined;
 
-        let common;
         for (parent = this.common.parent; parent; parent = parent.parent) {
-            common = parent.markdown?.properties[propertyName];
-            if (common != undefined) {
-                break;
+            const markdown = parent.markdown?.properties[propertyName];
+            if (markdown) {
+                return markdown;
             }
         }
 
-        let specific;
-        for (parent = this[type]?.parent; parent; parent = parent.parent) {
-            specific = parent.markdown?.properties[propertyName];
-            if (specific != undefined) {
-                break;
-            }
-        }
-
-        return { common, specific };
+        return undefined;
     }
 
-    renderPropertyDescription(
-        projectType: ProjectType,
-        propertyName: string,
-        generateHTML: boolean
-    ) {
+    renderPropertyDescription(propertyName: string, generateHTML: boolean) {
         return this.renderMarkdown(
-            this.getPropertyDescriptionMarkdown(projectType, propertyName),
+            this.getPropertyDescriptionMarkdown(propertyName),
             generateHTML
         );
     }
 
-    getInputDescriptionMarkdown(projectType: ProjectType, inputName: string) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.inputs[inputName];
-        let specific = this[type]?.markdown?.inputs[inputName];
-
-        return { common, specific };
+    getInputDescriptionMarkdown(inputName: string) {
+        return this.common.markdown?.inputs[inputName];
     }
 
-    renderInputDescription(
-        projectType: ProjectType,
-        inputName: string,
-        generateHTML: boolean
-    ) {
+    renderInputDescription(inputName: string, generateHTML: boolean) {
         return this.renderMarkdown(
-            this.getInputDescriptionMarkdown(projectType, inputName),
+            this.getInputDescriptionMarkdown(inputName),
             generateHTML
         );
     }
 
-    getOutputDescriptionMarkdown(projectType: ProjectType, outputName: string) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.outputs[outputName];
-        let specific = this[type]?.markdown?.outputs[outputName];
-
-        return { common, specific };
+    getOutputDescriptionMarkdown(outputName: string) {
+        return this.common.markdown?.outputs[outputName];
     }
 
-    renderOutputDescription(
-        projectType: ProjectType,
-        outputName: string,
-        generateHTML: boolean
-    ) {
+    renderOutputDescription(outputName: string, generateHTML: boolean) {
         return this.renderMarkdown(
-            this.getOutputDescriptionMarkdown(projectType, outputName),
+            this.getOutputDescriptionMarkdown(outputName),
             generateHTML
         );
     }
 
-    getExamplesMarkdown(projectType: ProjectType) {
-        const type = projectTypeToString(projectType);
-
-        let common = this.common.markdown?.examples;
-        let specific = this[type]?.markdown?.examples;
-
-        return { common, specific };
+    getExamplesMarkdown() {
+        return this.common.markdown?.examples;
     }
 
-    renderExamples(projectType: ProjectType, generateHTML: boolean) {
-        return this.renderMarkdown(
-            this.getExamplesMarkdown(projectType),
-            generateHTML
-        );
+    renderExamples(generateHTML: boolean) {
+        return this.renderMarkdown(this.getExamplesMarkdown(), generateHTML);
     }
 }

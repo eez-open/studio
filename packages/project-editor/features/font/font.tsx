@@ -99,12 +99,16 @@ export class GlyphSource extends EezObject {
             },
             {
                 name: "size",
-                displayName: (object: IEezObject) =>
-                    ProjectEditor.getProjectStore(object).projectTypeTraits
-                        .isLVGL
-                        ? "Font size (pixels)"
-                        : "Font size (points)",
-                type: PropertyType.Number
+                displayName: "Font size",
+                type: PropertyType.Number,
+                formText: object => {
+                    return object
+                        ? ProjectEditor.getProjectStore(object)
+                              .projectTypeTraits.isLVGL
+                            ? "In pixels"
+                            : "In points"
+                        : undefined;
+                }
             },
             {
                 name: "encoding",
@@ -902,13 +906,17 @@ export class FontSource extends EezObject {
             },
             {
                 name: "size",
-                displayName: (object: IEezObject) =>
-                    ProjectEditor.getProjectStore(object).projectTypeTraits
-                        .isLVGL
-                        ? "Font size (pixels)"
-                        : "Font size (points)",
+                displayName: "Font size",
                 type: PropertyType.Number,
-                readOnlyInPropertyGrid: isLVGLProject
+                readOnlyInPropertyGrid: isLVGLProject,
+                formText: object => {
+                    return object
+                        ? ProjectEditor.getProjectStore(object)
+                              .projectTypeTraits.isLVGL
+                            ? "In pixels"
+                            : "In points"
+                        : undefined;
+                }
             }
         ]
     };

@@ -8,6 +8,10 @@
 
 ## Text
 
+## Ignore luminocity
+
+## Focused style
+
 # INPUTS
 
 # OUTPUTS

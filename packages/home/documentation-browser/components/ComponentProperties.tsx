@@ -1,38 +1,35 @@
 import React from "react";
 import { observer } from "mobx-react";
-import {
-    ProjectType,
-    PropertyInfo,
-    TYPE_NAMES,
-    getObjectPropertyDisplayName
-} from "project-editor/core/object";
-import { getCommonProperties } from "project-editor/store";
-import type { Component } from "project-editor/flow/component";
+import { PropertyInfo, TYPE_NAMES } from "project-editor/core/object";
 import { getPropertyGroups } from "project-editor/ui-components/PropertyGrid/groups";
 import { ComponentInfo } from "../component-info";
 import { BodySection } from "./BodySection";
-import { projectTypeToString } from "../helper";
 
 export const ComponentProperties = observer(
     class ComponentProperties extends React.Component<{
         componentInfo: ComponentInfo;
-        projectType: ProjectType;
-        componentObject: Component;
         generateHTML: boolean;
     }> {
         render() {
-            const { componentObject } = this.props;
+            const { componentInfo } = this.props;
 
-            const properties = getCommonProperties([componentObject]);
+            const properties = [
+                ...componentInfo.properties,
+                ...componentInfo.common.parent.properties
+            ];
 
             const groupPropertiesArray = getPropertyGroups(
-                componentObject,
-                properties
+                componentInfo.componentObject,
+                properties.map(property => property.metaInfo)
             );
 
-            const id = `${projectTypeToString(
-                this.props.projectType
-            )}-component-properties-`;
+            const id = `component-properties-`;
+
+            function getProperty(propertyInfo: PropertyInfo) {
+                return componentInfo.properties.find(
+                    property => property.metaInfo == propertyInfo
+                )!;
+            }
 
             return (
                 <BodySection title="Properties">
@@ -84,17 +81,11 @@ export const ComponentProperties = observer(
                                                     property => (
                                                         <ComponentProperty
                                                             componentInfo={
-                                                                this.props
-                                                                    .componentInfo
+                                                                componentInfo
                                                             }
-                                                            projectType={
-                                                                this.props
-                                                                    .projectType
-                                                            }
-                                                            componentObject={
-                                                                componentObject
-                                                            }
-                                                            property={property}
+                                                            property={getProperty(
+                                                                property
+                                                            )}
                                                             key={property.name}
                                                             generateHTML={
                                                                 this.props
@@ -118,30 +109,28 @@ export const ComponentProperties = observer(
 const ComponentProperty = observer(
     class ComponentProperty extends React.Component<{
         componentInfo: ComponentInfo;
-        projectType: ProjectType;
-        componentObject: Component;
-        property: PropertyInfo;
+        property: {
+            name: string;
+            metaInfo: PropertyInfo;
+        };
         generateHTML: boolean;
     }> {
         render() {
-            const { componentObject, property } = this.props;
+            const { property } = this.props;
 
-            const propertyName = getObjectPropertyDisplayName(
-                componentObject,
-                property
-            );
+            const propertyName = property.name;
 
             let propertyDescription;
-            if (property.expressionType) {
-                propertyDescription = `EXPRESSSION(${property.expressionType})`;
+            if (property.metaInfo.expressionType) {
+                propertyDescription = `EXPRESSSION(${property.metaInfo.expressionType})`;
             } else {
-                propertyDescription = TYPE_NAMES[property.type];
+                propertyDescription = TYPE_NAMES[property.metaInfo.type];
             }
 
             return (
                 <>
                     <dt>
-                        {propertyName}{" "}
+                        <h3>{propertyName}</h3>
                         <span
                             style={{
                                 fontWeight: "normal",
@@ -153,7 +142,6 @@ const ComponentProperty = observer(
                     </dt>
                     <dd>
                         {this.props.componentInfo.renderPropertyDescription(
-                            this.props.projectType,
                             propertyName,
                             this.props.generateHTML
                         )}

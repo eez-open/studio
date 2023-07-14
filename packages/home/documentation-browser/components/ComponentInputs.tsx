@@ -1,37 +1,29 @@
 import React, { Fragment } from "react";
 import { observer } from "mobx-react";
-import { ProjectType } from "project-editor/core/object";
-import type { Component } from "project-editor/flow/component";
-import { getInputDisplayName } from "project-editor/flow/helper";
 import { ComponentInfo } from "../component-info";
 import { BodySection } from "./BodySection";
 
 export const ComponentInputs = observer(
     class ComponentInputs extends React.Component<{
         componentInfo: ComponentInfo;
-        projectType: ProjectType;
-        componentObject: Component;
         generateHTML: boolean;
     }> {
         render() {
-            const { componentObject } = this.props;
+            const { componentInfo } = this.props;
 
             return (
                 <BodySection title="Inputs">
                     <dl>
-                        {componentObject.getInputs().map(input => {
-                            const inputName = getInputDisplayName(
-                                componentObject,
-                                input.name
-                            );
+                        {componentInfo.inputs.map(input => {
+                            const inputName = input.name;
 
                             let inputDescription;
-                            if (input.isSequenceInput) {
+                            if (input.metaInfo.isSequenceInput) {
                                 inputDescription = "SEQ";
                             } else {
-                                inputDescription = `DATA(${input.type})`;
+                                inputDescription = `DATA(${input.metaInfo.type})`;
                             }
-                            if (input.isOptionalInput) {
+                            if (input.metaInfo.isOptionalInput) {
                                 inputDescription += ` | OPTIONAL`;
                             } else {
                                 inputDescription += ` | MANDATORY`;
@@ -40,7 +32,7 @@ export const ComponentInputs = observer(
                             return (
                                 <Fragment key={input.name}>
                                     <dt>
-                                        {inputName}{" "}
+                                        <h2>{inputName}</h2>
                                         <span
                                             style={{
                                                 fontWeight: "normal",
@@ -52,7 +44,6 @@ export const ComponentInputs = observer(
                                     </dt>
                                     <dd>
                                         {this.props.componentInfo.renderInputDescription(
-                                            this.props.projectType,
                                             inputName,
                                             this.props.generateHTML
                                         )}

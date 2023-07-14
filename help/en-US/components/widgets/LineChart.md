@@ -20,6 +20,26 @@
 
 ## Margin
 
+## Show title
+
+## Show X axis
+
+## Show Y axis
+
+## Show grid
+
+## Marker
+
+## Title style
+
+## Legend style
+
+## X axis style
+
+## Y axis style
+
+## Marker style
+
 # INPUTS
 
 ## reset

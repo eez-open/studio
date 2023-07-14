@@ -89,7 +89,6 @@ class Model {
     showGroups = true;
     groupByProjectType = false;
     searchText = "";
-    selectedProjectType: ProjectType = ProjectType.DASHBOARD;
 
     dashboardProjectStore: ProjectStore;
     eezguiProjectStore: ProjectStore;
@@ -178,10 +177,7 @@ class Model {
 
         for (const entry1 of model.parentInfoMap) {
             for (const entry2 of entry1[1]) {
-                entry2[1].markdown = await readParentMarkdown(
-                    entry1[0],
-                    entry2[0]
-                );
+                entry2[1].markdown = await readParentMarkdown(entry1[0]);
             }
         }
 
@@ -288,40 +284,55 @@ class Model {
                 ProjectEditor.ActionComponentClass
             )
         ]) {
-            const { label, icon, titleStyle } =
+            let { label, icon, titleStyle } =
                 getComponentVisualData(componentClass);
 
-            let componentInfo = componentsMap.get(label);
-
-            if (!componentInfo) {
-                componentInfo = new ComponentInfo();
-
-                componentsMap.set(label, componentInfo);
-                components.push(componentInfo);
-
-                componentInfo.id = "component_" + label;
-                componentInfo.type = isProperSubclassOf(
-                    componentClass.objectClass.classInfo,
-                    ProjectEditor.WidgetClass.classInfo
-                )
-                    ? "widget"
-                    : "action";
-                componentInfo.group = getComponentGroupName(componentClass);
-                componentInfo.name = label;
-                componentInfo.icon = icon;
-                componentInfo.titleStyle = titleStyle;
-                componentInfo.common = {
-                    markdown: await readMarkdown(
-                        componentInfo,
-                        ProjectType.UNDEFINED
-                    ),
-                    parent: getParentInfo(
-                        componentClass.objectClass.classInfo.parentClassInfo!,
-                        undefined,
-                        ProjectType.UNDEFINED
-                    )
-                };
+            if (
+                componentClass.objectClass.classInfo.parentClassInfo ==
+                ProjectEditor.LVGLWidgetClass.classInfo
+            ) {
+                label = "LVGL " + label;
             }
+
+            async function getOrCreateComponentInfo() {
+                let componentInfo = componentsMap.get(label);
+
+                if (!componentInfo) {
+                    componentInfo = new ComponentInfo();
+
+                    componentsMap.set(label, componentInfo);
+                    components.push(componentInfo);
+
+                    componentInfo.id = "component_" + label;
+                    componentInfo.type = isProperSubclassOf(
+                        componentClass.objectClass.classInfo,
+                        ProjectEditor.WidgetClass.classInfo
+                    )
+                        ? "widget"
+                        : "action";
+                    componentInfo.group = getComponentGroupName(componentClass);
+                    componentInfo.name = label;
+                    componentInfo.icon = icon;
+                    componentInfo.titleStyle = titleStyle;
+                    componentInfo.common = {
+                        markdown: await readMarkdown(componentInfo),
+                        parent: getParentInfo(
+                            componentClass.objectClass.classInfo
+                                .parentClassInfo!,
+                            undefined,
+                            ProjectType.UNDEFINED
+                        )
+                    };
+
+                    componentInfo.properties = [];
+                    componentInfo.inputs = [];
+                    componentInfo.outputs = [];
+                }
+
+                return componentInfo;
+            }
+
+            const componentInfo = await getOrCreateComponentInfo();
 
             const enabledInComponentPalette =
                 componentClass.objectClass.classInfo.enabledInComponentPalette;
@@ -381,11 +392,15 @@ class Model {
             function getClassProperties(
                 classInfo: ClassInfo,
                 componentObject: Component
-            ): string[] {
-                const doGetProperties = (classInfo: ClassInfo): string[] => {
-                    return classInfo.properties.map(property =>
-                        getObjectPropertyDisplayName(componentObject, property)
-                    );
+            ) {
+                const doGetProperties = (classInfo: ClassInfo) => {
+                    return classInfo.properties.map(property => ({
+                        name: getObjectPropertyDisplayName(
+                            componentObject,
+                            property
+                        ),
+                        metaInfo: property
+                    }));
                 };
 
                 const parentProperties = classInfo.parentClassInfo
@@ -394,7 +409,61 @@ class Model {
                 const properties = doGetProperties(classInfo);
 
                 return properties.filter(
-                    property => !parentProperties.includes(property)
+                    property =>
+                        parentProperties.find(
+                            parentProperty =>
+                                parentProperty.name == property.name
+                        ) == undefined
+                );
+            }
+
+            function register(componentObject: Component) {
+                componentInfo.properties.push(
+                    ...getClassProperties(
+                        componentClass.objectClass.classInfo,
+                        componentObject
+                    ).filter(
+                        property =>
+                            componentInfo.properties.find(
+                                x => x.name == property.name
+                            ) == undefined
+                    )
+                );
+
+                componentInfo.inputs.push(
+                    ...componentObject
+                        .getInputs()
+                        .map(input => ({
+                            name: getInputDisplayName(
+                                componentObject,
+                                input.name
+                            ),
+                            metaInfo: input
+                        }))
+                        .filter(
+                            input =>
+                                componentInfo.inputs.find(
+                                    x => x.name == input.name
+                                ) == undefined
+                        )
+                );
+
+                componentInfo.outputs.push(
+                    ...componentObject
+                        .getOutputs()
+                        .map(output => ({
+                            name: getOutputDisplayName(
+                                componentObject,
+                                output.name
+                            ),
+                            metaInfo: output
+                        }))
+                        .filter(
+                            output =>
+                                componentInfo.outputs.find(
+                                    x => x.name == output.name
+                                ) == undefined
+                        )
                 );
             }
 
@@ -404,38 +473,9 @@ class Model {
                     componentClass
                 );
 
-                componentInfo.dashboard = {
-                    componentClass,
-                    componentObject,
-                    properties: getClassProperties(
-                        componentClass.objectClass.classInfo,
-                        componentObject
-                    ),
-                    inputs: componentObject
-                        .getInputs()
-                        .map(input =>
-                            getInputDisplayName(componentObject, input.name)
-                        ),
-                    outputs: componentObject
-                        .getOutputs()
-                        .map(output =>
-                            getOutputDisplayName(componentObject, output.name)
-                        ),
-                    parent: getParentInfo(
-                        componentClass.objectClass.classInfo.parentClassInfo!,
-                        componentObject,
-                        ProjectType.DASHBOARD
-                    ),
-                    markdown: await readMarkdown(
-                        componentInfo,
-                        ProjectType.DASHBOARD
-                    ),
-                    docCounters: {
-                        total: 0,
-                        drafts: 0,
-                        completed: 0
-                    }
-                };
+                register(componentObject);
+
+                componentInfo.dashboard = true;
             }
 
             if (isEEZGUIComponent) {
@@ -444,38 +484,9 @@ class Model {
                     componentClass
                 );
 
-                componentInfo.eezgui = {
-                    componentClass,
-                    componentObject,
-                    properties: getClassProperties(
-                        componentClass.objectClass.classInfo,
-                        componentObject
-                    ),
-                    inputs: componentObject
-                        .getInputs()
-                        .map(input =>
-                            getInputDisplayName(componentObject, input.name)
-                        ),
-                    outputs: componentObject
-                        .getOutputs()
-                        .map(output =>
-                            getOutputDisplayName(componentObject, output.name)
-                        ),
-                    parent: getParentInfo(
-                        componentClass.objectClass.classInfo.parentClassInfo!,
-                        componentObject,
-                        ProjectType.FIRMWARE
-                    ),
-                    markdown: await readMarkdown(
-                        componentInfo,
-                        ProjectType.FIRMWARE
-                    ),
-                    docCounters: {
-                        total: 0,
-                        drafts: 0,
-                        completed: 0
-                    }
-                };
+                register(componentObject);
+
+                componentInfo.eezgui = true;
             }
 
             if (isLVGLComponent) {
@@ -484,38 +495,9 @@ class Model {
                     componentClass
                 );
 
-                componentInfo.lvgl = {
-                    componentClass,
-                    componentObject,
-                    properties: getClassProperties(
-                        componentClass.objectClass.classInfo,
-                        componentObject
-                    ),
-                    inputs: componentObject
-                        .getInputs()
-                        .map(input =>
-                            getInputDisplayName(componentObject, input.name)
-                        ),
-                    outputs: componentObject
-                        .getOutputs()
-                        .map(output =>
-                            getOutputDisplayName(componentObject, output.name)
-                        ),
-                    parent: getParentInfo(
-                        componentClass.objectClass.classInfo.parentClassInfo!,
-                        componentObject,
-                        ProjectType.LVGL
-                    ),
-                    markdown: await readMarkdown(
-                        componentInfo,
-                        ProjectType.LVGL
-                    ),
-                    docCounters: {
-                        total: 0,
-                        drafts: 0,
-                        completed: 0
-                    }
-                };
+                register(componentObject);
+
+                componentInfo.lvgl = true;
             }
         }
 

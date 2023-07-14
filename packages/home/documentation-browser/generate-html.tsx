@@ -6,35 +6,12 @@ import { copyDir } from "eez-studio-shared/util-electron";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { ProjectType } from "project-editor/core/object";
-
 import { ComponentInfo } from "./component-info";
 import { getModel } from "./model";
 import { ComponentContent } from "./components/ComponentContent";
 import { sourceRootDir } from "eez-studio-shared/util";
 
-const CSS = `.EezStudio_DocumentationBrowser_Content_Help {
-    background-color: #f0f0f0;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .nav {
-    flex: 0;
-    padding-top: 5px;
-    padding-left: 5px;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .nav
-    .nav-link {
-    color: #212529;
-}
-.EezStudio_DocumentationBrowser_Content_Help
+const CSS = `.EezStudio_DocumentationBrowser_Content_Help
     .EezStudio_Component_Documentation {
     flex: 1;
     padding: 10px;
@@ -74,7 +51,37 @@ const CSS = `.EezStudio_DocumentationBrowser_Content_Help {
     svg {
     height: 36px;
     object-fit: contain;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title
+    > div:last-child {
+    padding-left: 10px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title_ProjectTypes
+    img,
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title_ProjectTypes
+    svg {
     margin-right: 10px;
+}
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title_ProjectTypes
+    img:last_child,
+.EezStudio_DocumentationBrowser_Content_Help
+    .EezStudio_Component_Documentation
+    .EezStudio_Component_Documentation_TitleEnclosure
+    .EezStudio_Component_Documentation_Title_ProjectTypes
+    svg:last_child {
+    margin-right: 0;
 }
 .EezStudio_DocumentationBrowser_Content_Help
     .EezStudio_Component_Documentation
@@ -105,8 +112,6 @@ const CSS = `.EezStudio_DocumentationBrowser_Content_Help {
     margin-bottom: 0;
 }`;
 
-const SCRIPT = "";
-
 async function generateHTMLFile(
     componentInfo: ComponentInfo,
     filePath: string
@@ -117,45 +122,25 @@ async function generateHTMLFile(
     const root = createRoot(div);
 
     root.render(
-        <ComponentContent
-            componentInfo={componentInfo}
-            projectType={ProjectType.UNDEFINED}
-            generateHTML={true}
-        />
+        <ComponentContent componentInfo={componentInfo} generateHTML={true} />
     );
 
     await new Promise(resolve => setTimeout(resolve, 10));
 
     const html = `<!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <title>${componentInfo.name}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-
 <style>
-
 ${CSS}
-
 </style>
-
 </head>
-
 <body>
-
 ${div.innerHTML}
-
-<script>
-
-${SCRIPT}
-
-</script>
-
 </body>
-
 </html>
 `;
 

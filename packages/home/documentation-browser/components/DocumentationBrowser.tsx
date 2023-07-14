@@ -224,7 +224,6 @@ const Content = observer(
             return (
                 <ComponentContent
                     componentInfo={model.selectedNode.componentInfo}
-                    projectType={model.selectedNode.projectType}
                     generateHTML={false}
                 />
             );

@@ -1,37 +1,29 @@
 import React, { Fragment } from "react";
 import { observer } from "mobx-react";
-import { ProjectType } from "project-editor/core/object";
-import type { Component } from "project-editor/flow/component";
-import { getOutputDisplayName } from "project-editor/flow/helper";
 import { ComponentInfo } from "../component-info";
 import { BodySection } from "./BodySection";
 
 export const ComponentOutputs = observer(
     class ComponentOutputs extends React.Component<{
         componentInfo: ComponentInfo;
-        projectType: ProjectType;
-        componentObject: Component;
         generateHTML: boolean;
     }> {
         render() {
-            const { componentObject } = this.props;
+            const { componentInfo } = this.props;
 
             return (
-                <BodySection title="outputs">
+                <BodySection title="Outputs">
                     <dl>
-                        {componentObject.getOutputs().map(output => {
-                            const outputName = getOutputDisplayName(
-                                componentObject,
-                                output.name
-                            );
+                        {componentInfo.outputs.map(output => {
+                            const outputName = output.name;
 
                             let outputDescription;
-                            if (output.isSequenceOutput) {
+                            if (output.metaInfo.isSequenceOutput) {
                                 outputDescription = "SEQ";
                             } else {
-                                outputDescription = `DATA(${output.type})`;
+                                outputDescription = `DATA(${output.metaInfo.type})`;
                             }
-                            if (output.isOptionalOutput) {
+                            if (output.metaInfo.isOptionalOutput) {
                                 outputDescription += ` | OPTIONAL`;
                             } else {
                                 outputDescription += ` | MANDATORY`;
@@ -40,7 +32,7 @@ export const ComponentOutputs = observer(
                             return (
                                 <Fragment key={output.name}>
                                     <dt>
-                                        {outputName}{" "}
+                                        <h2>{outputName}</h2>
                                         <span
                                             style={{
                                                 fontWeight: "normal",
@@ -52,7 +44,6 @@ export const ComponentOutputs = observer(
                                     </dt>
                                     <dd>
                                         {this.props.componentInfo.renderOutputDescription(
-                                            this.props.projectType,
                                             outputName,
                                             this.props.generateHTML
                                         )}

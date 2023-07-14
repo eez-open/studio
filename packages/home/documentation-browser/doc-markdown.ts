@@ -12,7 +12,6 @@ import {
     ComponentInfo,
     IProjectTypeComponentInfoParent
 } from "./component-info";
-import { projectTypeToString } from "./helper";
 import { getModel } from "./model";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,113 +209,35 @@ export async function doReadMarkdown(
 }
 
 export async function readMarkdown(
-    componentInfo: ComponentInfo,
-    projectType: ProjectType
+    componentInfo: ComponentInfo
 ): Promise<MarkdownData | undefined> {
     const filePathPrefix = `${sourceRootDir()}/../help/en-US/components/${
         componentInfo.type
     }s/${componentInfo.name}`;
 
-    if (projectType == ProjectType.UNDEFINED) {
-        return doReadMarkdown(resolve(`${filePathPrefix}.md`));
-    } else {
-        return doReadMarkdown(
-            resolve(`${filePathPrefix}-${projectTypeToString(projectType)}.md`)
-        );
-    }
+    return doReadMarkdown(resolve(`${filePathPrefix}.md`));
 }
 
 export async function readParentMarkdown(
-    className: string,
-    projectType: ProjectType
+    className: string
 ): Promise<MarkdownData | undefined> {
     const filePathPrefix = `${sourceRootDir()}/../help/en-US/components/${className}`;
-
-    if (projectType == ProjectType.UNDEFINED) {
-        return doReadMarkdown(resolve(`${filePathPrefix}.md`));
-    } else {
-        return doReadMarkdown(
-            resolve(`${filePathPrefix}-${projectTypeToString(projectType)}.md`)
-        );
-    }
+    return doReadMarkdown(resolve(`${filePathPrefix}.md`));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 async function generateMarkdownFiles(componentInfo: ComponentInfo) {
-    function getProperties(): {
-        common: string[];
-        dashboard: string[];
-        eezgui: string[];
-        lvgl: string[];
-    } {
-        const dashboard = componentInfo.dashboard?.properties ?? [];
-        const eezgui = componentInfo.eezgui?.properties ?? [];
-        const lvgl = componentInfo.lvgl?.properties ?? [];
-
-        const common = dashboard.filter(
-            property =>
-                (!componentInfo.dashboard || dashboard.includes(property)) &&
-                (!componentInfo.eezgui || eezgui.includes(property)) &&
-                (!componentInfo.lvgl || lvgl.includes(property))
-        );
-
-        return {
-            common,
-            dashboard,
-            eezgui,
-            lvgl
-        };
+    function getProperties() {
+        return componentInfo.properties.map(property => property.name);
     }
 
-    function getInputs(): {
-        common: string[];
-        dashboard: string[];
-        eezgui: string[];
-        lvgl: string[];
-    } {
-        const dashboard = componentInfo.dashboard?.inputs ?? [];
-        const eezgui = componentInfo.eezgui?.inputs ?? [];
-        const lvgl = componentInfo.lvgl?.inputs ?? [];
-
-        const common = dashboard.filter(
-            input =>
-                (!componentInfo.dashboard || dashboard.includes(input)) &&
-                (!componentInfo.eezgui || eezgui.includes(input)) &&
-                (!componentInfo.lvgl || lvgl.includes(input))
-        );
-
-        return {
-            common,
-            dashboard,
-            eezgui,
-            lvgl
-        };
+    function getInputs() {
+        return componentInfo.inputs.map(input => input.name);
     }
 
-    function getOutputs(): {
-        common: string[];
-        dashboard: string[];
-        eezgui: string[];
-        lvgl: string[];
-    } {
-        const dashboard = componentInfo.dashboard?.outputs ?? [];
-        const eezgui = componentInfo.eezgui?.outputs ?? [];
-        const lvgl = componentInfo.lvgl?.outputs ?? [];
-
-        const common = dashboard.filter(
-            output =>
-                (!componentInfo.dashboard || dashboard.includes(output)) &&
-                (!componentInfo.eezgui || eezgui.includes(output)) &&
-                (!componentInfo.lvgl || lvgl.includes(output))
-        );
-
-        return {
-            common,
-            dashboard,
-            eezgui,
-            lvgl
-        };
+    function getOutputs() {
+        return componentInfo.outputs.map(output => output.name);
     }
 
     function getMarkdown(
@@ -392,36 +313,9 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
     function getCommonMarkdown() {
         return getMarkdown(
             componentInfo.common.markdown,
-            properties.common,
-            inputs.common,
-            outputs.common
-        );
-    }
-
-    function getDashboardMarkdown() {
-        return getMarkdown(
-            componentInfo.dashboard?.markdown,
-            properties.dashboard,
-            inputs.dashboard,
-            outputs.dashboard
-        );
-    }
-
-    function getEezguiMarkdown() {
-        return getMarkdown(
-            componentInfo.eezgui?.markdown,
-            properties.eezgui,
-            inputs.eezgui,
-            outputs.eezgui
-        );
-    }
-
-    function getLvglMarkdown() {
-        return getMarkdown(
-            componentInfo.lvgl?.markdown,
-            properties.lvgl,
-            inputs.lvgl,
-            outputs.lvgl
+            properties,
+            inputs,
+            outputs
         );
     }
 
@@ -442,48 +336,6 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
     } catch (e) {
         notification.error("Error writing common markdown file");
     }
-
-    if (
-        (componentInfo.dashboard ? 1 : 0) +
-            (componentInfo.eezgui ? 1 : 0) +
-            (componentInfo.lvgl ? 1 : 0) >
-        1
-    ) {
-        if (componentInfo.dashboard) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-dashboard.md`),
-                    getDashboardMarkdown(),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing dashboard markdown file");
-            }
-        }
-        if (componentInfo.eezgui) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-eezgui.md`),
-                    getEezguiMarkdown(),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing eez-gui markdown file");
-            }
-        }
-
-        if (componentInfo.lvgl) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-lvgl.md`),
-                    getLvglMarkdown(),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing lvgl markdown file");
-            }
-        }
-    }
 }
 
 async function generateParentMarkdownFiles(
@@ -496,9 +348,18 @@ async function generateParentMarkdownFiles(
         eezgui: string[];
         lvgl: string[];
     } {
-        const dashboard = map.get(ProjectType.DASHBOARD)?.properties ?? [];
-        const eezgui = map.get(ProjectType.FIRMWARE)?.properties ?? [];
-        const lvgl = map.get(ProjectType.LVGL)?.properties ?? [];
+        const dashboard =
+            map
+                .get(ProjectType.DASHBOARD)
+                ?.properties.map(property => property.name) ?? [];
+        const eezgui =
+            map
+                .get(ProjectType.FIRMWARE)
+                ?.properties.map(property => property.name) ?? [];
+        const lvgl =
+            map
+                .get(ProjectType.LVGL)
+                ?.properties.map(property => property.name) ?? [];
 
         const common = dashboard.filter(
             property =>
@@ -557,47 +418,6 @@ async function generateParentMarkdownFiles(
         );
     } catch (e) {
         notification.error("Error writing common markdown file");
-    }
-
-    if (map.size > 2) {
-        const dashboard = map.get(ProjectType.DASHBOARD);
-        if (dashboard) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-dashboard.md`),
-                    getMarkdown(dashboard.markdown, properties.dashboard),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing dashboard markdown file");
-            }
-        }
-
-        const eezgui = map.get(ProjectType.FIRMWARE);
-        if (eezgui) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-eezgui.md`),
-                    getMarkdown(eezgui.markdown, properties.dashboard),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing eez-gui markdown file");
-            }
-        }
-
-        const lvgl = map.get(ProjectType.LVGL);
-        if (lvgl) {
-            try {
-                await fs.promises.writeFile(
-                    resolve(`${filePathPrefix}-lvgl.md`),
-                    getMarkdown(lvgl.markdown, properties.dashboard),
-                    "utf8"
-                );
-            } catch (e) {
-                notification.error("Error writing lvgl markdown file");
-            }
-        }
     }
 }
 

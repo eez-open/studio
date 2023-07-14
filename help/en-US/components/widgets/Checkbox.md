@@ -2,6 +2,10 @@
 
 # PROPERTIES
 
+## Value
+
+## Label
+
 # INPUTS
 
 # OUTPUTS

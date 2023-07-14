@@ -1,53 +1,28 @@
 import React from "react";
-
-import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import { IObjectClassInfo, ProjectType } from "project-editor/core/object";
+
+import { sourceRootDir } from "eez-studio-shared/util";
+
+import {
+    DASHBOARD_PROJECT_ICON,
+    EEZ_GUI_PROJECT_ICON,
+    LVGL_PROJECT_ICON
+} from "project-editor/ui-components/icons";
+
 import { ComponentInfo } from "../component-info";
 import { ComponentInputs } from "./ComponentInputs";
 import { ComponentOutputs } from "./ComponentOutputs";
 import { ComponentProperties } from "./ComponentProperties";
 import { BodySection } from "./BodySection";
-import { projectTypeToString } from "../helper";
-import { sourceRootDir } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 export const ComponentHelp = observer(
     class ComponentHelp extends React.Component<{
         componentInfo: ComponentInfo;
-        componentClass: IObjectClassInfo;
-        projectType: ProjectType;
         generateHTML: boolean;
     }> {
         divRef = React.createRef<HTMLDivElement>();
         dispose: (() => void) | undefined;
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                markdown: computed
-            });
-        }
-
-        get componentObject() {
-            return this.props.componentInfo[
-                projectTypeToString(this.props.projectType)
-            ]?.componentObject;
-        }
-
-        get markdown() {
-            if (this.props.projectType == ProjectType.DASHBOARD) {
-                return this.props.componentInfo.dashboard?.markdown;
-            }
-            if (this.props.projectType == ProjectType.FIRMWARE) {
-                return this.props.componentInfo.eezgui?.markdown;
-            }
-            if (this.props.projectType == ProjectType.LVGL) {
-                return this.props.componentInfo.lvgl?.markdown;
-            }
-            return undefined;
-        }
 
         fixMarkdown() {
             if (this.dispose) {
@@ -120,9 +95,9 @@ export const ComponentHelp = observer(
         render() {
             const { componentInfo } = this.props;
 
-            if (!this.componentObject) {
-                return null;
-            }
+            const isDashboardComponent = componentInfo.dashboard != undefined;
+            const isEezGuiComponent = componentInfo.eezgui != undefined;
+            const isLVGLComponent = componentInfo.lvgl != undefined;
 
             return (
                 <div
@@ -137,38 +112,35 @@ export const ComponentHelp = observer(
                             <div>{componentInfo.icon}</div>
                             <div>{componentInfo.name}</div>
                         </div>
+                        <div className="EezStudio_Component_Documentation_Title_ProjectTypes">
+                            {isDashboardComponent && DASHBOARD_PROJECT_ICON(36)}
+                            {isEezGuiComponent && EEZ_GUI_PROJECT_ICON(36)}
+                            {isLVGLComponent && LVGL_PROJECT_ICON(36)}
+                        </div>
                     </div>
 
                     <div className="EezStudio_Component_Documentation_Body">
                         <BodySection title="Description">
                             {this.props.componentInfo.renderDescription(
-                                this.props.projectType,
                                 this.props.generateHTML
                             )}
                         </BodySection>
 
                         <ComponentProperties
                             componentInfo={this.props.componentInfo}
-                            projectType={this.props.projectType}
-                            componentObject={this.componentObject}
                             generateHTML={this.props.generateHTML}
                         />
                         <ComponentInputs
                             componentInfo={this.props.componentInfo}
-                            projectType={this.props.projectType}
-                            componentObject={this.componentObject}
                             generateHTML={this.props.generateHTML}
                         />
                         <ComponentOutputs
                             componentInfo={this.props.componentInfo}
-                            projectType={this.props.projectType}
-                            componentObject={this.componentObject}
                             generateHTML={this.props.generateHTML}
                         />
 
                         <BodySection title="Examples">
                             {this.props.componentInfo.renderExamples(
-                                this.props.projectType,
                                 this.props.generateHTML
                             )}
                         </BodySection>

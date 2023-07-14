@@ -2,6 +2,10 @@
 
 # PROPERTIES
 
+## Min
+
+## Max
+
 # INPUTS
 
 # OUTPUTS

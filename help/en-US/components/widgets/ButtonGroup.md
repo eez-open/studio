@@ -2,6 +2,8 @@
 
 # PROPERTIES
 
+## Selected style
+
 # INPUTS
 
 # OUTPUTS
