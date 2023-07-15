@@ -107,7 +107,16 @@ const ComponentProperty = observer(
 
             let propertyDescription;
             if (property.metaInfo.expressionType) {
-                propertyDescription = `EXPRESSSION(${property.metaInfo.expressionType})`;
+                if (property.metaInfo.flowProperty == "assignable") {
+                    propertyDescription = `ASSIGNABLE EXPRESSSION (${property.metaInfo.expressionType})`;
+                } else if (
+                    property.metaInfo.flowProperty == "template-literal" ||
+                    property.metaInfo.flowProperty == "scpi-template-literal"
+                ) {
+                    propertyDescription = `TEMPLATE LITERAL (${property.metaInfo.expressionType})`;
+                } else {
+                    propertyDescription = `EXPRESSSION (${property.metaInfo.expressionType})`;
+                }
             } else {
                 propertyDescription = TYPE_NAMES[property.metaInfo.type];
             }

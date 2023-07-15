@@ -34,6 +34,8 @@ export interface MarkdownData {
         [name: string]: MarkdownDescription;
     };
     examples?: MarkdownDescription;
+
+    lineEndings: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,10 +43,10 @@ export interface MarkdownData {
 class MarkdownBuilder {
     _markdown: string[] = [];
 
-    constructor() {}
+    constructor(public lineEndings: string) {}
 
     get markdown() {
-        return this._markdown.join("\n");
+        return this._markdown.join(this.lineEndings);
     }
 
     addLine(line: string) {
@@ -60,11 +62,11 @@ class MarkdownBuilder {
     }
 
     addRaw(lines: string) {
-        if (lines.endsWith("\n")) {
-            lines = lines.substring(0, lines.length - 1);
+        if (lines.endsWith(this.lineEndings)) {
+            lines = lines.substring(0, lines.length - this.lineEndings.length);
         }
 
-        lines.split("\n").forEach(line => {
+        lines.split(this.lineEndings).forEach(line => {
             this.addLine(line);
         });
     }
@@ -197,17 +199,30 @@ export async function doReadMarkdown(
         }
     }
 
+    let lineEndings: string;
+
     try {
         const markdown = await fs.promises.readFile(filePath, "utf8");
+
+        var temp = markdown.indexOf("\n");
+        if (temp > 0 && markdown[temp - 1] === "\r") {
+            lineEndings = "\r\n";
+        } else {
+            lineEndings = "\n";
+        }
+
         read(markdown);
-    } catch (e) {}
+    } catch (e) {
+        lineEndings = "\n";
+    }
 
     return {
         description,
         properties,
         inputs,
         outputs,
-        examples
+        examples,
+        lineEndings
     };
 }
 
@@ -249,7 +264,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
         inputs: string[],
         outputs: string[]
     ) {
-        const builder = new MarkdownBuilder();
+        const builder = new MarkdownBuilder(markdown?.lineEndings ?? "\n");
 
         builder.addHeading(
             1,
@@ -344,7 +359,7 @@ async function generateParentMarkdownFiles(
         markdown: MarkdownData | undefined,
         properties: string[]
     ) {
-        const builder = new MarkdownBuilder();
+        const builder = new MarkdownBuilder(markdown?.lineEndings ?? "\n");
 
         builder.addHeading(1, "PROPERTIES");
         builder.addEmptyLine();

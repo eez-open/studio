@@ -10,8 +10,6 @@
 
 ## Step
 
-## Version
-
 # INPUTS
 
 ## start
