@@ -101,6 +101,8 @@ export const ComponentHelp = observer(
                 componentInfo.isEezGuiComponent != undefined;
             const isLVGLComponent = componentInfo.isLVGLComponent != undefined;
 
+            componentInfo.readAllMarkdown();
+
             return (
                 <div
                     ref={this.divRef}

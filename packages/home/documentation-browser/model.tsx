@@ -37,8 +37,12 @@ import {
 } from "project-editor/ui-components/icons";
 
 import { getGroupsByComponentInfo } from "./helper";
-import { readMarkdown, readParentMarkdown } from "./doc-markdown";
-import { ComponentInfo, IParentComponentInfo } from "./component-info";
+import {
+    readMarkdown,
+    readParentMarkdown,
+    setupMarkdownWatcher
+} from "./doc-markdown";
+import { ComponentInfo, ParentComponentInfo } from "./component-info";
 import { Component } from "project-editor/flow/component";
 import {
     getInputDisplayName,
@@ -93,7 +97,7 @@ class Model {
 
     allComponentsNoSearchFilter: ComponentInfo[];
 
-    parentInfoMap = new Map<string, IParentComponentInfo>();
+    parentInfoMap = new Map<string, ParentComponentInfo>();
 
     loading: boolean = true;
 
@@ -175,9 +179,15 @@ class Model {
 
         this.updateDocCounters();
 
+        this.allComponentsNoSearchFilter.forEach(componentInfo =>
+            componentInfo.makeObservable()
+        );
+
         runInAction(() => {
             this.loading = false;
         });
+
+        setupMarkdownWatcher();
     }
 
     async createProjectStore(type: string) {
@@ -235,7 +245,7 @@ class Model {
         const getParentInfo = (
             classInfo: ClassInfo,
             componentObject: Component
-        ): IParentComponentInfo => {
+        ): ParentComponentInfo => {
             let className;
             if (classInfo == ProjectEditor.ActionComponentClass.classInfo) {
                 className = "ActionComponent";
@@ -271,10 +281,7 @@ class Model {
                     }
                 }
             } else {
-                parentInfo = {
-                    properties,
-                    parent
-                };
+                parentInfo = new ParentComponentInfo(properties, parent);
 
                 this.parentInfoMap.set(className, parentInfo);
             }
@@ -490,6 +497,23 @@ class Model {
         }
 
         this.allComponentsNoSearchFilter = components;
+    }
+
+    async reloadMarkdown() {
+        for (const componentInfo of model.allComponentsNoSearchFilter) {
+            const markdown = await readMarkdown(componentInfo);
+
+            runInAction(() => {
+                componentInfo.markdown = markdown;
+            });
+        }
+
+        for (const entry of model.parentInfoMap) {
+            const markdown = await readParentMarkdown(entry[0]);
+            runInAction(() => {
+                entry[1].markdown = markdown;
+            });
+        }
     }
 
     updateDocCounters() {

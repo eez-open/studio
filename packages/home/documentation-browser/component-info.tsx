@@ -1,4 +1,5 @@
 import React from "react";
+import { makeObservable, observable } from "mobx";
 
 import {
     IObjectClassInfo,
@@ -20,11 +21,17 @@ export interface IComponentInfoProperty {
     metaInfo: PropertyInfo;
 }
 
-export interface IParentComponentInfo {
-    properties: IComponentInfoProperty[];
-
+export class ParentComponentInfo {
     markdown?: MarkdownData;
-    parent: IParentComponentInfo | undefined;
+
+    constructor(
+        public properties: IComponentInfoProperty[],
+        public parent: ParentComponentInfo | undefined
+    ) {
+        makeObservable(this, {
+            markdown: observable
+        });
+    }
 }
 
 export class ComponentInfo {
@@ -50,7 +57,7 @@ export class ComponentInfo {
     }[];
 
     markdown?: MarkdownData;
-    parent: IParentComponentInfo;
+    parent: ParentComponentInfo;
 
     docCounters: {
         total: number;
@@ -58,9 +65,19 @@ export class ComponentInfo {
         completed: number;
     };
 
+    constructor() {}
+
+    makeObservable() {
+        makeObservable(this, {
+            markdown: observable,
+            parent: observable,
+            docCounters: observable
+        });
+    }
+
     get allProperties() {
         const getParentProperties = (
-            parentComponentInfo: IParentComponentInfo
+            parentComponentInfo: ParentComponentInfo
         ): IComponentInfoProperty[] => {
             return [
                 ...parentComponentInfo.properties,
@@ -133,6 +150,20 @@ export class ComponentInfo {
         this.docCounters = { total, drafts, completed };
     }
 
+    readAllMarkdown() {
+        this.getDescriptionMarkdown();
+        for (const property of this.allProperties) {
+            this.getPropertyDescriptionMarkdown(property.name);
+        }
+        for (const input of this.inputs) {
+            this.getInputDescriptionMarkdown(input.name);
+        }
+        for (const output of this.outputs) {
+            this.getOutputDescriptionMarkdown(output.name);
+        }
+        this.getExamplesMarkdown();
+    }
+
     renderMarkdown(
         markdown: MarkdownDescription | undefined,
         generateHTML: boolean
@@ -177,7 +208,7 @@ export class ComponentInfo {
     }
 
     getParentPropertyDescriptionMarkdown(propertyName: string) {
-        let parent: IParentComponentInfo | undefined;
+        let parent: ParentComponentInfo | undefined;
 
         for (parent = this.parent; parent; parent = parent.parent) {
             const markdown = parent.markdown?.properties[propertyName];

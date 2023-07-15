@@ -75,6 +75,10 @@ export function initValuesAccesor(
     },
     disableNaNs: boolean = false
 ) {
+    if (!object.values) {
+        console.log(object);
+    }
+
     const values = object.values || [];
     const format = object.format;
     const offset = object.offset;

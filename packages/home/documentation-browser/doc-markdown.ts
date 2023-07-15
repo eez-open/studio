@@ -1,13 +1,18 @@
 import fs from "fs";
 import { resolve } from "path";
 import { marked } from "marked";
+import { FSWatcher, watch } from "chokidar";
 
 import * as notification from "eez-studio-ui/notification";
 
 import { sourceRootDir } from "eez-studio-shared/util";
 
-import { ComponentInfo, IParentComponentInfo } from "./component-info";
+import { ComponentInfo, ParentComponentInfo } from "./component-info";
 import { getModel } from "./model";
+
+let watcher: FSWatcher | undefined;
+
+const markdownFiles = new Set<string>();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +89,8 @@ export function markdownToHTML(markdown: string) {
 export async function doReadMarkdown(
     filePath: string
 ): Promise<MarkdownData | undefined> {
+    markdownFiles.add(filePath);
+
     let description: MarkdownDescription | undefined;
     const properties: {
         [name: string]: MarkdownDescription;
@@ -330,7 +337,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
 
 async function generateParentMarkdownFiles(
     className: string,
-    parentComponentInfo: IParentComponentInfo
+    parentComponentInfo: ParentComponentInfo
 ) {
     function getMarkdown(
         markdown: MarkdownData | undefined,
@@ -375,6 +382,11 @@ async function generateParentMarkdownFiles(
 }
 
 export async function generateMarkdownFilesForAllComponents() {
+    if (watcher) {
+        watcher.close();
+        watcher = undefined;
+    }
+
     let model = getModel();
 
     for (const componentInfo of model.allComponentsNoSearchFilter) {
@@ -391,4 +403,22 @@ export async function generateMarkdownFilesForAllComponents() {
     }
 
     notification.info("Done.");
+
+    setupMarkdownWatcher();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function setupMarkdownWatcher() {
+    if (watcher) {
+        return;
+    }
+
+    watcher = watch([...markdownFiles.values()]);
+
+    watcher.on("change", () => {
+        console.log("Markdown file changed.");
+        let model = getModel();
+        model.reloadMarkdown();
+    });
 }
