@@ -539,9 +539,10 @@ class Model {
             if (componentInfo.type == "action") {
                 actionDocCounters.total++;
                 actionDocCounters.drafts +=
+                    componentInfo.docCounters.drafts > 0 &&
                     componentInfo.docCounters.drafts ==
-                    componentInfo.docCounters.total -
-                        componentInfo.docCounters.completed
+                        componentInfo.docCounters.total -
+                            componentInfo.docCounters.completed
                         ? 1
                         : 0;
                 actionDocCounters.completed +=
