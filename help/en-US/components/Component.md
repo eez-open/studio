@@ -10,8 +10,6 @@ Poravnavanje i distribucija komponenti.
 
 X pozicija komponente.
 
-![Alt text](images/align_and_distribute.png)
-
 ## Top [DRAFT]
 
 Y pozicija komponente.

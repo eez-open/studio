@@ -24,6 +24,13 @@ export interface Config {
             }
         ];
     };
+
+    images: {
+        fileName: string;
+        id?: number;
+        sha256?: string;
+        source_url?: string;
+    }[];
 }
 
 export type Server = Config["server"];

@@ -1,4 +1,5 @@
 import React from "react";
+import { resolve } from "path";
 import { createRoot } from "react-dom/client";
 import fs from "fs";
 
@@ -10,107 +11,6 @@ import { ComponentInfo } from "./component-info";
 import { getModel } from "./model";
 import { ComponentContent } from "./components/ComponentContent";
 import { sourceRootDir } from "eez-studio-shared/util";
-
-const CSS = `.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation {
-    flex: 1;
-    padding: 10px;
-    background-color: #fff;
-    overflow: auto;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure {
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e0e0e0;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title {
-    display: flex;
-    align-items: center;
-    font-size: 32px;
-    border-radius: 8px;
-    padding: 5px 15px;
-    width: fit-content;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title
-    img,
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title
-    svg {
-    height: 36px;
-    object-fit: contain;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title
-    > div:last-child {
-    padding-left: 10px;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title_ProjectTypes
-    img,
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title_ProjectTypes
-    svg {
-    margin-right: 10px;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title_ProjectTypes
-    img:last_child,
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_TitleEnclosure
-    .EezStudio_Component_Documentation_Title_ProjectTypes
-    svg:last_child {
-    margin-right: 0;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_Body
-    .EezStudio_Component_Documentation_BodySection {
-    margin-bottom: 15px;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_Body
-    .EezStudio_Component_Documentation_BodySection
-    > div:first-child {
-    font-size: 18px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_Body
-    .EezStudio_Component_Documentation_BodySection
-    > div:nth-child(2) {
-    padding-left: 10px;
-}
-.EezStudio_DocumentationBrowser_Content_Help
-    .EezStudio_Component_Documentation
-    .EezStudio_Component_Documentation_Body
-    .EezStudio_Component_Documentation_BodySection:last-child {
-    margin-bottom: 0;
-}`;
 
 async function generateHTMLFile(
     componentInfo: ComponentInfo,
@@ -126,6 +26,12 @@ async function generateHTMLFile(
     );
 
     await new Promise(resolve => setTimeout(resolve, 10));
+
+    const cssFilePath = resolve(
+        `${sourceRootDir()}/eez-studio-ui/_stylesheets/component-doc.css`
+    );
+    console.log(cssFilePath);
+    let CSS = await fs.promises.readFile(cssFilePath, "utf8");
 
     const html = `<!DOCTYPE html>
 <html lang="en">
