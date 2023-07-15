@@ -415,7 +415,7 @@ export function setupMarkdownWatcher() {
         return;
     }
 
-    if (!isDev()) {
+    if (!isDev) {
         return;
     }
 
