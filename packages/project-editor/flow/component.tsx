@@ -1745,6 +1745,7 @@ export class Component extends EezObject {
             },
             {
                 name: "centerWidgetUI",
+                displayName: "Center widget",
                 type: PropertyType.Any,
                 propertyGridGroup: geometryGroup,
                 computed: true,
