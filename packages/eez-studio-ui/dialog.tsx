@@ -16,6 +16,7 @@ export interface IDialogOptions {
         title: string;
         width: number;
         height?: number;
+        modeless?: boolean;
         onclosed?: () => void;
     };
     fieldsEnclosureDiv?: React.ComponentType<{ children?: React.ReactNode }>;
@@ -38,32 +39,34 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
 
         const jsPanel: any = (window as any).jsPanel;
 
-        const dialog = jsPanel.modal.create({
-            container: "#EezStudio_Content",
-            theme: "primary",
-            headerTitle: opts.jsPanel.title,
-            panelSize: {
-                width: Math.min(
-                    Math.round(window.innerWidth * 0.9),
-                    opts.jsPanel.width
-                ),
-                height: opts.jsPanel.height
-                    ? Math.min(
-                          Math.round(window.innerHeight * 0.9),
-                          opts.jsPanel.height
-                      )
-                    : Math.round(window.innerHeight * 0.9)
-            },
-            content: element,
-            headerControls: {
-                minimize: "remove",
-                smallify: "remove"
-            },
-            dragit: {},
-            resizeit: {},
-            closeOnBackdrop: false,
-            onclosed: opts.jsPanel.onclosed
-        });
+        const dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
+            {
+                container: "#EezStudio_Content",
+                theme: "primary",
+                headerTitle: opts.jsPanel.title,
+                panelSize: {
+                    width: Math.min(
+                        Math.round(window.innerWidth * 0.9),
+                        opts.jsPanel.width
+                    ),
+                    height: opts.jsPanel.height
+                        ? Math.min(
+                              Math.round(window.innerHeight * 0.9),
+                              opts.jsPanel.height
+                          )
+                        : Math.round(window.innerHeight * 0.9)
+                },
+                content: element,
+                headerControls: {
+                    minimize: "remove",
+                    smallify: "remove"
+                },
+                dragit: {},
+                resizeit: {},
+                closeOnBackdrop: false,
+                onclosed: opts.jsPanel.onclosed
+            }
+        );
         return [dialog, element, root];
     } else {
         document.body.appendChild(element);

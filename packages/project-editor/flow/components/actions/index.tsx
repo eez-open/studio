@@ -41,6 +41,7 @@ import {
     Component,
     ComponentInput,
     ComponentOutput,
+    CustomOutput,
     componentOutputUnique,
     makeAssignableExpressionProperty,
     makeExpressionProperty,
@@ -2611,6 +2612,23 @@ export class LoopActionComponent extends ActionComponent {
                 jsObject.to = jsObject.to + " - 1";
             }
         },
+        check: (object: LoopActionComponent, messages: IMessage[]) => {
+            if (
+                object.variableOutput &&
+                object.variableOutput.type != "integer" &&
+                object.variableOutput.type != "float" &&
+                object.variableOutput.type != "double"
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Output "${object.variableOutput.name}" type must be integer, float or double`,
+                        getChildOfObject(object.variableOutput, "name")
+                    )
+                );
+            }
+        },
+
         icon: (
             <svg
                 viewBox="0 0 24 24"
@@ -2667,17 +2685,19 @@ export class LoopActionComponent extends ActionComponent {
         ];
     }
 
+    get variableOutput(): CustomOutput | undefined {
+        return this.customOutputs.find(
+            output => output.name == this.variable.trim()
+        );
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
-                isOptionalOutput: this.customOutputs.find(
-                    output => output.name == this.variable.trim()
-                )
-                    ? true
-                    : false
+                isOptionalOutput: this.variableOutput != undefined
             },
             {
                 name: "done",
