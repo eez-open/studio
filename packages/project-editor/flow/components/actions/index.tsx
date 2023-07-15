@@ -2673,7 +2673,11 @@ export class LoopActionComponent extends ActionComponent {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
-                isOptionalOutput: false
+                isOptionalOutput: this.customOutputs.find(
+                    output => output.name == this.variable.trim()
+                )
+                    ? true
+                    : false
             },
             {
                 name: "done",
