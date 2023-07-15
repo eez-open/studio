@@ -1711,12 +1711,14 @@ export class Component extends EezObject {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isActionComponent,
                 hideInDocumentation: "action"
             },
             {

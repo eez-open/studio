@@ -2,17 +2,17 @@
 
 ## Align and distribute [DRAFT]
 
-Poravnavanje i distribucija komponenti.
+Ikone za poravnavanje i distribucija komponenti. Ikone za poravnavanje se pojavljuju kad je selektirano dvije ili više komponenti, a ikone za distribuciju kad je selektirano tri ili više komponenti.
 
 ![Alt text](images/align_and_distribute.png)
 
 ## Left [DRAFT]
 
-X pozicija komponente.
+X pozicija komponente u odnosu na page ili parent komponetu.
 
 ## Top [DRAFT]
 
-Y pozicija komponente.
+Y pozicija komponente u odnosu na page ili parent widgeta.
 
 ## Width [DRAFT]
 
@@ -24,19 +24,17 @@ Visina komponente.
 
 ## Absolute position [DRAFT]
 
-Apsolutna pozicija komponente.
+Apsolutna pozicija komponente u odnosu na page. Ovaj property je read-only.
 
 ## Center widget ui [DRAFT]
 
-Centriranje widgeta.
+Centriranje widgeta unutar stranice ili parent widgeta.
 
 ## Inputs [DRAFT]
 
-Ovo su dodatni inputi komponente, koje korisnik može dodati po želji kako bi se kroz njih primili dodatni podaci potrebni prilikom evaluacije expressiona u propertijima. Za svaki input se zadaje name i type. Name se koristi prilikom referenciranja inputa unutar expressiona. A type služi kod project checkinga kako bi se provjerilio da li je na input spojena data linija koja prenosi podatak tog tipa.
+Ovo su dodatni inputi komponente koje korisnik može dodati po želji kako bi se kroz njih primili dodatni podaci potrebni prilikom evaluacije expressiona u propertijima. Za svaki input se zadaje name i type. Name se koristi prilikom referenciranja inputa unutar expressiona. A type služi kod project checkinga kako bi se provjerilio da li je na input spojena data linija koja prenosi podatak tog tipa.
 
-## Outputs [DRAFT]
-
-Ovo su outputi.
+## Outputs
 
 ## Catch error [DRAFT]
 
