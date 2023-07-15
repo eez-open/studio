@@ -138,6 +138,8 @@ class Model {
             showGroups: observable,
             searchText: observable,
             loading: observable,
+            actionDocCounters: observable,
+            widgetDocCounters: observable,
             allComponents: computed,
             rootNode: computed,
             selectNode: action
@@ -514,16 +516,18 @@ class Model {
                 entry[1].markdown = markdown;
             });
         }
+
+        this.updateDocCounters();
     }
 
     updateDocCounters() {
-        this.actionDocCounters = {
+        const actionDocCounters = {
             total: 0,
             drafts: 0,
             completed: 0
         };
 
-        this.widgetDocCounters = {
+        const widgetDocCounters = {
             total: 0,
             drafts: 0,
             completed: 0
@@ -533,30 +537,36 @@ class Model {
             componentInfo.updateDocCounters();
 
             if (componentInfo.type == "action") {
-                this.actionDocCounters.total++;
-                this.actionDocCounters.drafts +=
+                actionDocCounters.total++;
+                actionDocCounters.drafts +=
                     componentInfo.docCounters.drafts ==
-                    componentInfo.docCounters.total
+                    componentInfo.docCounters.total -
+                        componentInfo.docCounters.completed
                         ? 1
                         : 0;
-                this.actionDocCounters.completed +=
+                actionDocCounters.completed +=
                     componentInfo.docCounters.completed ==
                     componentInfo.docCounters.total
                         ? 1
                         : 0;
             } else {
-                this.widgetDocCounters.total++;
-                this.widgetDocCounters.drafts +=
+                widgetDocCounters.total++;
+                widgetDocCounters.drafts +=
                     componentInfo.docCounters.drafts ==
                     componentInfo.docCounters.total
                         ? 1
                         : 0;
-                this.widgetDocCounters.completed +=
+                widgetDocCounters.completed +=
                     componentInfo.docCounters.completed ==
                     componentInfo.docCounters.total
                         ? 1
                         : 0;
             }
+
+            runInAction(() => {
+                this.actionDocCounters = actionDocCounters;
+                this.widgetDocCounters = widgetDocCounters;
+            });
         }
     }
 

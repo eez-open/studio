@@ -1,5 +1,5 @@
 import React from "react";
-import { makeObservable, observable } from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
 
 import {
     IObjectClassInfo,
@@ -147,7 +147,9 @@ export class ComponentInfo {
         }
         inc(this.getExamplesMarkdown());
 
-        this.docCounters = { total, drafts, completed };
+        runInAction(() => {
+            this.docCounters = { total, drafts, completed };
+        });
     }
 
     readAllMarkdown() {
