@@ -9,6 +9,7 @@ import { sourceRootDir } from "eez-studio-shared/util";
 
 import { ComponentInfo, ParentComponentInfo } from "./component-info";
 import { getModel } from "./model";
+import { isDev } from "eez-studio-shared/util-electron";
 
 let watcher: FSWatcher | undefined;
 
@@ -411,6 +412,10 @@ export async function generateMarkdownFilesForAllComponents() {
 
 export function setupMarkdownWatcher() {
     if (watcher) {
+        return;
+    }
+
+    if (!isDev()) {
         return;
     }
 
