@@ -217,7 +217,7 @@ class Model {
             componentObject: Component
         ) => {
             return classInfo.properties
-                .filter(property => !property.hideInDocumentation)
+                .filter(property => property.hideInDocumentation != "all")
                 .map(property => ({
                     name: getObjectPropertyDisplayName(
                         componentObject,

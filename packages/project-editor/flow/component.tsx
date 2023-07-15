@@ -1679,7 +1679,7 @@ export class Component extends EezObject {
                 name: "type",
                 type: PropertyType.Enum,
                 hideInPropertyGrid: true,
-                hideInDocumentation: true
+                hideInDocumentation: "all"
             },
             {
                 name: "alignAndDistribute",
@@ -1710,31 +1710,36 @@ export class Component extends EezObject {
             {
                 name: "left",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInDocumentation: "action"
             },
             {
                 name: "top",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInDocumentation: "action"
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent
+                hideInPropertyGrid: isActionComponent,
+                hideInDocumentation: "action"
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent
+                hideInPropertyGrid: isActionComponent,
+                hideInDocumentation: "action"
             },
             {
                 name: "absolutePosition",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
-                hideInPropertyGrid: isActionComponent
+                hideInPropertyGrid: isActionComponent,
+                hideInDocumentation: "action"
             },
             {
                 name: "centerWidgetUI",
@@ -1750,7 +1755,8 @@ export class Component extends EezObject {
                         propertyGridObjects.length == 1 &&
                         propertyGridObjects[0] instanceof Widget
                     );
-                }
+                },
+                hideInDocumentation: "action"
             },
             {
                 name: "customInputs",

@@ -2602,7 +2602,7 @@ export class LoopActionComponent extends ActionComponent {
             {
                 name: "version",
                 type: PropertyType.Number,
-                hideInDocumentation: true
+                hideInDocumentation: "all"
             }
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {

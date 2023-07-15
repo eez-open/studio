@@ -87,7 +87,9 @@ export class ComponentInfo {
             ];
         };
 
-        return [...this.properties, ...getParentProperties(this.parent)];
+        return [...this.properties, ...getParentProperties(this.parent)].filter(
+            property => !(property.metaInfo.hideInDocumentation === this.type)
+        );
     }
 
     static createComponentObject = (
