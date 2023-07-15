@@ -682,11 +682,7 @@ class Model {
                 .map(componentInfo =>
                     getComponentTreeChild(id, componentInfo, projectType)
                 )
-                .sort((a, b) => {
-                    return a.data!.componentInfo.name.localeCompare(
-                        b.data!.componentInfo.name
-                    );
-                });
+                .sort(componentsNameCompare);
 
             let label = getComponentGroupDisplayName(groupName);
 
@@ -750,11 +746,7 @@ class Model {
                     .map(componentInfo =>
                         getComponentTreeChild(id, componentInfo, projectType)
                     )
-                    .sort((a, b) => {
-                        return a.data!.componentInfo.name.localeCompare(
-                            b.data!.componentInfo.name
-                        );
-                    });
+                    .sort(componentsNameCompare);
             }
 
             return {
@@ -919,4 +911,15 @@ export function getModel() {
         model = new Model();
     }
     return model;
+}
+
+function componentsNameCompare(
+    a: DocumentationTreeNode,
+    b: DocumentationTreeNode
+) {
+    function getComponentName(x: ITreeNode) {
+        return x.data!.componentInfo.name.toLowerCase();
+    }
+
+    return getComponentName(a).localeCompare(getComponentName(b));
 }
