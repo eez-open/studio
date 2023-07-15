@@ -1,8 +1,10 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { PropertyInfo, TYPE_NAMES } from "project-editor/core/object";
-import { getPropertyGroups } from "project-editor/ui-components/PropertyGrid/groups";
-import { ComponentInfo } from "../component-info";
+import {
+    IPropertyGridGroupDefinition,
+    TYPE_NAMES
+} from "project-editor/core/object";
+import { ComponentInfo, IComponentInfoProperty } from "../component-info";
 import { BodySection } from "./BodySection";
 
 export const ComponentProperties = observer(
@@ -13,23 +15,11 @@ export const ComponentProperties = observer(
         render() {
             const { componentInfo } = this.props;
 
-            const properties = [
-                ...componentInfo.properties,
-                ...componentInfo.common.parent.properties
-            ];
-
             const groupPropertiesArray = getPropertyGroups(
-                componentInfo.componentObject,
-                properties.map(property => property.metaInfo)
+                componentInfo.allProperties
             );
 
             const id = `component-properties-`;
-
-            function getProperty(propertyInfo: PropertyInfo) {
-                return componentInfo.properties.find(
-                    property => property.metaInfo == propertyInfo
-                )!;
-            }
 
             return (
                 <BodySection title="Properties">
@@ -83,9 +73,7 @@ export const ComponentProperties = observer(
                                                             componentInfo={
                                                                 componentInfo
                                                             }
-                                                            property={getProperty(
-                                                                property
-                                                            )}
+                                                            property={property}
                                                             key={property.name}
                                                             generateHTML={
                                                                 this.props
@@ -109,10 +97,7 @@ export const ComponentProperties = observer(
 const ComponentProperty = observer(
     class ComponentProperty extends React.Component<{
         componentInfo: ComponentInfo;
-        property: {
-            name: string;
-            metaInfo: PropertyInfo;
-        };
+        property: IComponentInfoProperty;
         generateHTML: boolean;
     }> {
         render() {
@@ -151,3 +136,87 @@ const ComponentProperty = observer(
         }
     }
 );
+
+interface IGroupProperties {
+    group: IPropertyGridGroupDefinition;
+    properties: IComponentInfoProperty[];
+}
+
+function getPropertyGroups(properties: IComponentInfoProperty[]) {
+    const groupPropertiesArray: IGroupProperties[] = [];
+
+    let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
+
+    for (let property of properties) {
+        const propertyInfo = property.metaInfo;
+        const propertyGroup = propertyInfo.propertyGridGroup;
+
+        let propertiesInGroup: IComponentInfoProperty[];
+
+        if (propertyGroup) {
+            let groupProperties = groupPropertiesArray.find(
+                groupProperties => groupProperties.group.id === propertyGroup.id
+            );
+
+            if (!groupProperties) {
+                groupProperties = {
+                    group: propertyGroup,
+                    properties: []
+                };
+                groupPropertiesArray.push(groupProperties);
+            }
+
+            propertiesInGroup = groupProperties.properties;
+        } else {
+            if (!groupForPropertiesWithoutGroupSpecified) {
+                groupForPropertiesWithoutGroupSpecified = {
+                    group: {
+                        id: "",
+                        title: ""
+                    },
+                    properties: []
+                };
+
+                groupPropertiesArray.push(
+                    groupForPropertiesWithoutGroupSpecified
+                );
+            }
+            propertiesInGroup =
+                groupForPropertiesWithoutGroupSpecified.properties;
+        }
+
+        propertiesInGroup.push(property);
+    }
+
+    let maxPosition = 0;
+
+    groupPropertiesArray.forEach(groupProperties => {
+        if (groupProperties.group.position != undefined) {
+            let position;
+            if (typeof groupProperties.group.position == "number") {
+                position = groupProperties.group.position;
+            }
+            if (position != undefined && position > maxPosition) {
+                maxPosition = position;
+            }
+        }
+    });
+
+    groupPropertiesArray.sort((a: IGroupProperties, b: IGroupProperties) => {
+        const aPosition =
+            a.group.position !== undefined &&
+            typeof a.group.position == "number"
+                ? a.group.position
+                : maxPosition + 1;
+
+        const bPosition =
+            b.group.position !== undefined &&
+            typeof b.group.position == "number"
+                ? b.group.position
+                : maxPosition + 1;
+
+        return aPosition - bPosition;
+    });
+
+    return groupPropertiesArray;
+}

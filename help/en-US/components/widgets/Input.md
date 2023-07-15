@@ -16,6 +16,8 @@
 
 ## Name
 
+## Type
+
 # INPUTS
 
 # OUTPUTS

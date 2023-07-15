@@ -95,9 +95,11 @@ export const ComponentHelp = observer(
         render() {
             const { componentInfo } = this.props;
 
-            const isDashboardComponent = componentInfo.dashboard != undefined;
-            const isEezGuiComponent = componentInfo.eezgui != undefined;
-            const isLVGLComponent = componentInfo.lvgl != undefined;
+            const isDashboardComponent =
+                componentInfo.isDashboardComponent != undefined;
+            const isEezGuiComponent =
+                componentInfo.isEezGuiComponent != undefined;
+            const isLVGLComponent = componentInfo.isLVGLComponent != undefined;
 
             return (
                 <div

@@ -6,12 +6,7 @@ import * as notification from "eez-studio-ui/notification";
 
 import { sourceRootDir } from "eez-studio-shared/util";
 
-import { ProjectType } from "project-editor/project/project";
-
-import {
-    ComponentInfo,
-    IProjectTypeComponentInfoParent
-} from "./component-info";
+import { ComponentInfo, IParentComponentInfo } from "./component-info";
 import { getModel } from "./model";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,12 +306,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
     }
 
     function getCommonMarkdown() {
-        return getMarkdown(
-            componentInfo.common.markdown,
-            properties,
-            inputs,
-            outputs
-        );
+        return getMarkdown(componentInfo.markdown, properties, inputs, outputs);
     }
 
     const properties = getProperties();
@@ -340,43 +330,8 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
 
 async function generateParentMarkdownFiles(
     className: string,
-    map: Map<ProjectType, IProjectTypeComponentInfoParent>
+    parentComponentInfo: IParentComponentInfo
 ) {
-    function getProperties(): {
-        common: string[];
-        dashboard: string[];
-        eezgui: string[];
-        lvgl: string[];
-    } {
-        const dashboard =
-            map
-                .get(ProjectType.DASHBOARD)
-                ?.properties.map(property => property.name) ?? [];
-        const eezgui =
-            map
-                .get(ProjectType.FIRMWARE)
-                ?.properties.map(property => property.name) ?? [];
-        const lvgl =
-            map
-                .get(ProjectType.LVGL)
-                ?.properties.map(property => property.name) ?? [];
-
-        const common = dashboard.filter(
-            property =>
-                (!map.get(ProjectType.DASHBOARD) ||
-                    dashboard.includes(property)) &&
-                (!map.get(ProjectType.FIRMWARE) || eezgui.includes(property)) &&
-                (!map.get(ProjectType.LVGL) || lvgl.includes(property))
-        );
-
-        return {
-            common,
-            dashboard,
-            eezgui,
-            lvgl
-        };
-    }
-
     function getMarkdown(
         markdown: MarkdownData | undefined,
         properties: string[]
@@ -403,16 +358,14 @@ async function generateParentMarkdownFiles(
         return builder.markdown;
     }
 
-    const properties = getProperties();
-
     const filePathPrefix = `${sourceRootDir()}/../help/en-US/components/${className}`;
 
     try {
         await fs.promises.writeFile(
             resolve(`${filePathPrefix}.md`),
             getMarkdown(
-                map.get(ProjectType.UNDEFINED)!.markdown,
-                properties.common
+                parentComponentInfo.markdown,
+                parentComponentInfo.properties.map(property => property.name)
             ),
             "utf8"
         );

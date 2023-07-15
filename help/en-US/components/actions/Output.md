@@ -4,6 +4,8 @@
 
 ## Name
 
+## Type
+
 # INPUTS
 
 ## seqin

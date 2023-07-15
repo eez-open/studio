@@ -252,6 +252,8 @@ export interface PropertyInfo {
     propertyNameAbove?: boolean;
 
     hasExpressionProperties?: boolean;
+
+    hideInDocumentation?: boolean;
 }
 
 export type InheritedValue =

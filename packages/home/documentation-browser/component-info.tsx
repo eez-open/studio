@@ -15,13 +15,16 @@ import {
     ComponentOutput
 } from "project-editor/flow/component";
 
-export interface IProjectTypeComponentInfoParent {
-    properties: {
-        name: string;
-        metaInfo: PropertyInfo;
-    }[];
+export interface IComponentInfoProperty {
+    name: string;
+    metaInfo: PropertyInfo;
+}
+
+export interface IParentComponentInfo {
+    properties: IComponentInfoProperty[];
+
     markdown?: MarkdownData;
-    parent: IProjectTypeComponentInfoParent | undefined;
+    parent: IParentComponentInfo | undefined;
 }
 
 export class ComponentInfo {
@@ -32,37 +35,43 @@ export class ComponentInfo {
     icon: any;
     titleStyle: React.CSSProperties | undefined;
 
-    componentObject: Component;
+    isDashboardComponent: boolean;
+    isEezGuiComponent: boolean;
+    isLVGLComponent: boolean;
 
-    properties: {
-        name: string;
-        metaInfo: PropertyInfo;
-    }[];
-
+    properties: IComponentInfoProperty[];
     inputs: {
         name: string;
         metaInfo: ComponentInput;
     }[];
-
     outputs: {
         name: string;
         metaInfo: ComponentOutput;
     }[];
 
-    common: {
-        markdown?: MarkdownData;
-        parent: IProjectTypeComponentInfoParent;
-    };
-
-    dashboard: boolean;
-    eezgui: boolean;
-    lvgl: boolean;
+    markdown?: MarkdownData;
+    parent: IParentComponentInfo;
 
     docCounters: {
         total: number;
         drafts: number;
         completed: number;
     };
+
+    get allProperties() {
+        const getParentProperties = (
+            parentComponentInfo: IParentComponentInfo
+        ): IComponentInfoProperty[] => {
+            return [
+                ...parentComponentInfo.properties,
+                ...(parentComponentInfo.parent
+                    ? getParentProperties(parentComponentInfo.parent)
+                    : [])
+            ];
+        };
+
+        return [...this.properties, ...getParentProperties(this.parent)];
+    }
 
     static createComponentObject = (
         projectStore: ProjectStore,
@@ -110,19 +119,15 @@ export class ComponentInfo {
         }
 
         inc(this.getDescriptionMarkdown());
-
-        for (const property of this.properties) {
+        for (const property of this.allProperties) {
             inc(this.getPropertyDescriptionMarkdown(property.name));
         }
-
         for (const input of this.inputs) {
             inc(this.getInputDescriptionMarkdown(input.name));
         }
-
         for (const output of this.outputs) {
             inc(this.getOutputDescriptionMarkdown(output.name));
         }
-
         inc(this.getExamplesMarkdown());
 
         this.docCounters = { total, drafts, completed };
@@ -156,18 +161,15 @@ export class ComponentInfo {
     }
 
     getDescriptionMarkdown() {
-        return this.common.markdown?.description;
+        return this.markdown?.description;
     }
 
     renderDescription(generateHTML: boolean) {
-        return this.renderMarkdown(
-            this.common.markdown?.description,
-            generateHTML
-        );
+        return this.renderMarkdown(this.markdown?.description, generateHTML);
     }
 
     getPropertyDescriptionMarkdown(propertyName: string) {
-        const markdown = this.common.markdown?.properties[propertyName];
+        const markdown = this.markdown?.properties[propertyName];
         if (markdown) {
             return markdown;
         }
@@ -175,9 +177,9 @@ export class ComponentInfo {
     }
 
     getParentPropertyDescriptionMarkdown(propertyName: string) {
-        let parent: IProjectTypeComponentInfoParent | undefined;
+        let parent: IParentComponentInfo | undefined;
 
-        for (parent = this.common.parent; parent; parent = parent.parent) {
+        for (parent = this.parent; parent; parent = parent.parent) {
             const markdown = parent.markdown?.properties[propertyName];
             if (markdown) {
                 return markdown;
@@ -195,7 +197,7 @@ export class ComponentInfo {
     }
 
     getInputDescriptionMarkdown(inputName: string) {
-        return this.common.markdown?.inputs[inputName];
+        return this.markdown?.inputs[inputName];
     }
 
     renderInputDescription(inputName: string, generateHTML: boolean) {
@@ -206,7 +208,7 @@ export class ComponentInfo {
     }
 
     getOutputDescriptionMarkdown(outputName: string) {
-        return this.common.markdown?.outputs[outputName];
+        return this.markdown?.outputs[outputName];
     }
 
     renderOutputDescription(outputName: string, generateHTML: boolean) {
@@ -217,7 +219,7 @@ export class ComponentInfo {
     }
 
     getExamplesMarkdown() {
-        return this.common.markdown?.examples;
+        return this.markdown?.examples;
     }
 
     renderExamples(generateHTML: boolean) {

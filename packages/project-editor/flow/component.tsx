@@ -1678,7 +1678,8 @@ export class Component extends EezObject {
             {
                 name: "type",
                 type: PropertyType.Enum,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                hideInDocumentation: true
             },
             {
                 name: "alignAndDistribute",

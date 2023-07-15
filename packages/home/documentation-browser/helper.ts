@@ -1,5 +1,3 @@
-import { ProjectType } from "project-editor/project/project";
-
 import { ComponentInfo } from "./component-info";
 
 export function getGroupsByComponentInfo(components: ComponentInfo[]) {
@@ -17,14 +15,4 @@ export function getGroupsByComponentInfo(components: ComponentInfo[]) {
     });
 
     return groups;
-}
-
-export function projectTypeToString(
-    projectType: ProjectType
-): "dashboard" | "eezgui" | "lvgl" {
-    return projectType == ProjectType.DASHBOARD
-        ? "dashboard"
-        : projectType == ProjectType.FIRMWARE
-        ? "eezgui"
-        : "lvgl";
 }

@@ -1,9 +1,5 @@
 # PROPERTIES
 
-## Type [DRAFT]
-
-Ovo je tip komponente.
-
 ## Align and distribute [DRAFT]
 
 Poravnavanje i distribucija komponenti.
