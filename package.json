@@ -97,7 +97,6 @@
         "request": "^2.88.2",
         "request-promise-native": "^1.0.8",
         "run-script-os": "^1.1.6",
-        "sha256": "^0.2.0",
         "typescript": "^4.9.5",
         "wpapi": "^1.2.2"
     },
@@ -156,6 +155,7 @@
         "react-window": "^1.8.8",
         "rimraf": "^3.0.2",
         "serialport": "^10.4.0",
+        "sha256": "^0.2.0",
         "showdown": "^1.9.1",
         "simple-git": "^3.10.0",
         "tinycolor2": "^1.4.1",
