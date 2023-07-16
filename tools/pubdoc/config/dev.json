@@ -15,7 +15,7 @@
                         "content": "Start.html",
                         "status": "publish",
                         "id": 354620,
-                        "sha256": "07b69b1da3457fa281fa4a611ef1db423cb8f3fab681a67fe6b0801cf9babc65"
+                        "sha256": "2ea700f2738199a8ac62f0faff2c20b9223bdce39a2593becfdd0ab0bcd5e5b9"
                     }
                 ]
             },
@@ -29,7 +29,7 @@
                         "content": "Animate.html",
                         "status": "publish",
                         "id": 354619,
-                        "sha256": "4ca60c8dd7c7020fb3c96aec86a28c5c019f1f65c4e0f9754f53b6259d9876c5"
+                        "sha256": "e22614f901c9675f515c20210bf3f55ea65e000654fe5454f8baebc22d3acec7"
                     }
                 ]
             }
@@ -48,6 +48,12 @@
             "id": 354906,
             "source_url": "https://dev.envox.eu/wp-content/uploads/0997778e0c9914d4bee41745ba18c2a0c82b838a9b6d9ee55f0831dc7ca38e3c-animation.png",
             "sha256": "0997778e0c9914d4bee41745ba18c2a0c82b838a9b6d9ee55f0831dc7ca38e3c"
+        },
+        {
+            "fileName": "widget_centering.png",
+            "id": 355183,
+            "source_url": "https://dev.envox.eu/wp-content/uploads/e34326507e4a12b81b4c69582ac9e627748f4c72c43d4f5aa35400c1a99392e4-widget_centering.png",
+            "sha256": "e34326507e4a12b81b4c69582ac9e627748f4c72c43d4f5aa35400c1a99392e4"
         }
     ]
 }
