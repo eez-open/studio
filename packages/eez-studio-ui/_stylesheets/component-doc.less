@@ -5,6 +5,14 @@
         background-color: @backgroundColor;
         overflow: auto;
 
+        .markdown {
+            margin-left: 1rem;
+        }
+
+        .EezStudio_Component_Documentation_BodySection > div > div.markdown {
+            margin-left: 0;
+        }
+
         .EezStudio_Component_Documentation_TitleEnclosure {
             padding-bottom: 10px;
             border-bottom: 1px solid @borderColor;
@@ -57,7 +65,7 @@
                     text-transform: uppercase;
                 }
                 & > div:nth-child(2) {
-                    padding-left: 10px;
+                    padding-left: 1rem;
                 }
                 margin-bottom: 15px;
 
