@@ -257,6 +257,10 @@ export class ComponentInfo {
         return this.markdown?.examples;
     }
 
+    isEmptyExamples() {
+        return this.markdown?.examples?.empty;
+    }
+
     renderExamples(generateHTML: boolean) {
         return this.renderMarkdown(this.getExamplesMarkdown(), generateHTML);
     }

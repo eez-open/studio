@@ -19,6 +19,7 @@ const markdownFiles = new Set<string>();
 
 export interface MarkdownDescription {
     draft: boolean;
+    empty: boolean;
     raw: string;
 }
 
@@ -64,6 +65,8 @@ class MarkdownBuilder {
     addRaw(lines: string) {
         if (lines.endsWith(this.lineEndings)) {
             lines = lines.substring(0, lines.length - this.lineEndings.length);
+        } else if (lines.endsWith("\n")) {
+            lines = lines.substring(0, lines.length - 1);
         }
 
         lines.split(this.lineEndings).forEach(line => {
@@ -109,6 +112,7 @@ export async function doReadMarkdown(
     let state = "";
     let data: string | undefined;
     let draft = false;
+    let empty = false;
     let field = "";
 
     function read(markdown: string) {
@@ -124,31 +128,37 @@ export async function doReadMarkdown(
             }
 
             if (state == "description") {
-                description = data ? { draft, raw: data } : undefined;
+                description = data
+                    ? { draft, empty: false, raw: data }
+                    : undefined;
                 state = "";
             } else if (state == "properties") {
                 if (field) {
                     if (data) {
-                        properties[field] = { draft, raw: data };
+                        properties[field] = { draft, empty: false, raw: data };
                     }
                     field = "";
                 }
             } else if (state == "inputs") {
                 if (field) {
                     if (data) {
-                        inputs[field] = { draft, raw: data };
+                        inputs[field] = { draft, empty: false, raw: data };
                     }
                     field = "";
                 }
             } else if (state == "outputs") {
                 if (field) {
                     if (data) {
-                        outputs[field] = { draft, raw: data };
+                        outputs[field] = { draft, empty: false, raw: data };
                     }
                     field = "";
                 }
             } else if (state == "examples") {
-                examples = data ? { draft, raw: data } : undefined;
+                examples = data
+                    ? { draft, empty, raw: data }
+                    : empty
+                    ? { draft, empty, raw: "" }
+                    : undefined;
                 state = "";
             }
 
@@ -161,6 +171,7 @@ export async function doReadMarkdown(
                     state = "description";
                     data = undefined;
                     draft = lexeme.text.indexOf("DRAFT") != -1;
+                    empty = lexeme.text.indexOf("EMPTY") != -1;
                 } else if (lexeme.text == "PROPERTIES") {
                     state = "properties";
                     field = "";
@@ -174,6 +185,7 @@ export async function doReadMarkdown(
                     state = "examples";
                     data = undefined;
                     draft = lexeme.text.indexOf("DRAFT") != -1;
+                    empty = lexeme.text.indexOf("EMPTY") != -1;
                 }
             } else if (lexeme.depth == 2) {
                 if (
@@ -188,9 +200,17 @@ export async function doReadMarkdown(
                             .substring(0, text.length - "[DRAFT]".length)
                             .trim();
                         draft = true;
+                        empty = false;
+                    } else if (text.endsWith("[EMPTY]")) {
+                        field = text
+                            .substring(0, text.length - "[EMPTY]".length)
+                            .trim();
+                        draft = false;
+                        empty = true;
                     } else {
                         field = text;
                         draft = false;
+                        empty = false;
                     }
 
                     data = undefined;
@@ -318,7 +338,12 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
 
         builder.addHeading(
             1,
-            "EXAMPLES" + (markdown?.examples?.draft ? " [DRAFT]" : "")
+            "EXAMPLES" +
+                (markdown?.examples?.draft
+                    ? " [DRAFT]"
+                    : markdown?.examples?.empty
+                    ? " [EMPTY]"
+                    : "")
         );
         builder.addEmptyLine();
         if (markdown && markdown.examples) {

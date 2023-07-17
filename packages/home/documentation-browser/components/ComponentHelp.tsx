@@ -143,11 +143,13 @@ export const ComponentHelp = observer(
                             generateHTML={this.props.generateHTML}
                         />
 
-                        <BodySection title="Examples">
-                            {this.props.componentInfo.renderExamples(
-                                this.props.generateHTML
-                            )}
-                        </BodySection>
+                        {!this.props.componentInfo.isEmptyExamples() && (
+                            <BodySection title="Examples">
+                                {this.props.componentInfo.renderExamples(
+                                    this.props.generateHTML
+                                )}
+                            </BodySection>
+                        )}
                     </div>
                 </div>
             );
