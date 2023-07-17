@@ -1,15 +1,23 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Dodaje data output u user akciju ili user widget.
 
 # PROPERTIES
 
-## Name
+## Name [DRAFT]
 
-## Type
+Naziv output.
+
+## Type [DRAFT]
+
+Data type outputa.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+Kroz ovaj input se prima podatak koji se onda proslijeđuje pozivatelju user akcije.
 
 # OUTPUTS
 
-# EXAMPLES
+# EXAMPLES [EMPTY]

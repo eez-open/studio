@@ -1,17 +1,27 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcija evaluira zadani expression i rezultat proslijeđuje na data output.
 
 # PROPERTIES
 
-## Expression
+## Expression [DRAFT]
+
+Expression koji se evauluira.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-## result
+A standard sequence output.
 
-# EXAMPLES
+## result [DRAFT]
+
+Output kroz koji se proslijeđuje vrijednost evaluiranog expressiona.
+
+# EXAMPLES [EMPTY]

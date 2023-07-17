@@ -158,7 +158,7 @@ export class DashboardProject {
                         </div>
                     )}
                     <button className="btn btn-primary" onClick={this.reload}>
-                        Restart
+                        Start
                     </button>
                 </div>
             );

@@ -6,10 +6,6 @@ If you want to instantly jump to a certain position (`To` property), you should 
 
 The expression `Flow.pageTimelinePosition()` can be used for the `From` property and in that case the animation will start from the current position.
 
-Evo jedna slika:
-
-![Alt text](../images/animation.png)
-
 # PROPERTIES
 
 ## From [DRAFT]

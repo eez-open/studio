@@ -14,14 +14,8 @@
 
 ## Password
 
-## Name
-
-## Type
-
 # INPUTS
 
 # OUTPUTS
-
-## seqout
 
 # EXAMPLES

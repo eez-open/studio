@@ -428,6 +428,7 @@ export class WatchVariableActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "variable",
+                    displayName: "Expression",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },

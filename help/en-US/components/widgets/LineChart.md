@@ -6,9 +6,17 @@
 
 ## Lines
 
-## Title
+## Show title
 
 ## Show legend
+
+## Show X axis
+
+## Show Y axis
+
+## Show grid
+
+## Title
 
 ## Y axis range option
 
@@ -19,14 +27,6 @@
 ## Max points
 
 ## Margin
-
-## Show title
-
-## Show X axis
-
-## Show Y axis
-
-## Show grid
 
 ## Marker
 

@@ -43,7 +43,11 @@ import {
     setupMarkdownWatcher
 } from "./doc-markdown";
 import { ComponentInfo, ParentComponentInfo } from "./component-info";
-import { Component } from "project-editor/flow/component";
+import {
+    Component,
+    CustomInput,
+    CustomOutput
+} from "project-editor/flow/component";
 import {
     getInputDisplayName,
     getOutputDisplayName
@@ -311,8 +315,17 @@ class Model {
                 label = "LVGL " + label;
             }
 
+            const componentInfoType = isProperSubclassOf(
+                componentClass.objectClass.classInfo,
+                ProjectEditor.WidgetClass.classInfo
+            )
+                ? "widget"
+                : "action";
+
             async function getOrCreateComponentInfo() {
-                let componentInfo = componentsMap.get(label);
+                let componentInfo = componentsMap.get(
+                    label + componentInfoType
+                );
 
                 if (!componentInfo) {
                     componentInfo = new ComponentInfo();
@@ -321,12 +334,7 @@ class Model {
                     components.push(componentInfo);
 
                     componentInfo.id = "component_" + label;
-                    componentInfo.type = isProperSubclassOf(
-                        componentClass.objectClass.classInfo,
-                        ProjectEditor.WidgetClass.classInfo
-                    )
-                        ? "widget"
-                        : "action";
+                    componentInfo.type = componentInfoType;
                     componentInfo.group = getComponentGroupName(componentClass);
                     componentInfo.name = label;
                     componentInfo.icon = icon;
@@ -415,6 +423,7 @@ class Model {
                 componentInfo.inputs.push(
                     ...componentObject
                         .getInputs()
+                        .filter(input => !(input instanceof CustomInput))
                         .map(input => ({
                             name: getInputDisplayName(
                                 componentObject,
@@ -433,6 +442,7 @@ class Model {
                 componentInfo.outputs.push(
                     ...componentObject
                         .getOutputs()
+                        .filter(output => !(output instanceof CustomOutput))
                         .map(output => ({
                             name: getOutputDisplayName(
                                 componentObject,

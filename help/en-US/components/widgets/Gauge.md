@@ -2,16 +2,6 @@
 
 # PROPERTIES
 
-## Title
-
-## Min range
-
-## Max range
-
-## Color
-
-## Margin
-
 ## Min
 
 ## Max
