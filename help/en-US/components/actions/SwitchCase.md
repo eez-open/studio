@@ -9,7 +9,7 @@ Evaluira redom expressione (`When`) iz liste `Cases` i kada se naiđe na rezulta
 Svaki element ove liste sadrži:
 
 -   `When` - expression za koji se provjerava da li je true
--   `Then output` - naziv outputa kroz koji se nastavalja izvršavanje flowa ako je izraz `When` expression true.
+-   `Then output` - naziv outputa kroz koji se nastavalja izvršavanje flowa ako je expression `When` true.
 -   `With value` - opcionalno se razultat ovog expressiona, ako je zadan, proslijeđuje na output - inače se proslijeđuje `true`.
 
 # INPUTS
