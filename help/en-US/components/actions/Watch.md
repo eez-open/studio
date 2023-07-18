@@ -1,27 +1,27 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija, za cijelo vrijeme trajanja izvršavanja flowa, u pozadini evaluira zadani expression i ako je došlo do promjene rezultata proslijeđuje ga na data output. Na početku, kod pokretanja flowa, expression se evaluira i proslijeđuje na data output, a kasnije samo ako je došlo do promjene.
+This action, for the entire duration of Flow execution, evaluates the default expression in the background and if there is a change in the result, it forwards it to the data output. At the beginning, when the Flow is started, the expression is evaluated and forwarded to the data output, and later only if some change has occurred.
 
 # PROPERTIES
 
-## Expression [DRAFT]
+## Expression
 
-Expression koji se evauluira.
+Expression to be evaluated.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## changed [DRAFT]
+## changed
 
-Output kroz koji se proslijeđuje vrijednost evaluiranog expressiona jednom na početku i kasnije samo ako je došlo do promjene u rezultatu.
+Output through which the value of the evolved expression is passed once at the start and later only if there was some change in the result.
 
 # EXAMPLES [EMPTY]

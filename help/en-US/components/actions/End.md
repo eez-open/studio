@@ -1,18 +1,20 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija se koristi za prekidanje izvršavanja flowa.
+It is used to terminate the execution of a Flow.
 
-Ako se ova akcija nalazi unutar stranice to znači kraj izvršavanja aplikacije. Ako je riječ o dashboard projektu koji se izvršava unutar project editora, to znači prelazak iz Run moda u Edit mode. Ako je riječ o dashboardu koji se izvršava na instrumentu, izvršavanje će biti prekinuto i pojaviti će se Start button s kojim se Dasboard može ponovno pokrenuti. Ako je riječ o Dashboardu kao standalone aplikaciji onda će aplikacija biti ugašena.
+If it is inside the page, it means the end of the application execution. If it is a _Dashboard_ project that is executed within the project editor, this means switching from _Run_ mode to _Edit_ mode. 
+If it is a _Dashboard_ running on the instrument, the execution will be interrupted and a _Start_ button will appear with which the _Dasboard_ can be restarted.
+If it is _Dashboard_ as a standalone application then the application will be closed.
 
-Ako se ova akcija nalazi unutar User akcije to znači kraj izvršavanja user akcije i aktiviranje standardne sequence linije na mjestu gdje je user akcija pozvana.
+If it is used within a User action, it means the end of the execution of the User action and the activation of the standard sequence line at the point where the User action was called.
 
-Ova akcija nema efekta ako se nalazi unutar user widget flowa.
+This Action has no effect if it is inside a User widget in Flow.
 
 # PROPERTIES
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 

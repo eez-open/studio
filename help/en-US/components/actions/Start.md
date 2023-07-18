@@ -1,6 +1,5 @@
-# DESCRIPTION [DRAFT]
-
-Ova akcija se izvršava prva kod startanja flowa. Izlaz iz ove akcije spojite na prvu slijedeću akciju koju želite izvršiti.
+# DESCRIPTION
+This action is executed first when Flow is started. Connect the output from this action to the first next action you want to perform.
 
 # PROPERTIES
 
@@ -9,7 +8,6 @@ Ova akcija se izvršava prva kod startanja flowa. Izlaz iz ove akcije spojite na
 # OUTPUTS
 
 ## seqout
-
-Spojite ovaj output na akciju za koju želite da se prva izvršu kod startanja flowa.
+Connect this output to the action you want to be executed first when the Flow starts.
 
 # EXAMPLES [EMPTY]
