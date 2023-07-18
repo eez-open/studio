@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Pridružuje novu vrijednost jednoj ili više varijabli.
+It is used to set a new value to one or more variables.
 
 # PROPERTIES
 
-## Entries [DRAFT]
+## Entries
 
-Lista pridruživanja. Svaki element liste sadrži zadani naziv varijable kojoj se pridružuje nova vrijednost, a koja se dobija evaluacijom zadanog expressiona.
+List of variables to be set. Each element of the list contains a given variable name to which a new value is added, which is obtained by evaluating the given expression.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

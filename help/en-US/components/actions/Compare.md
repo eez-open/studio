@@ -1,26 +1,25 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Uspoređuje expressione u ovisnosti o operatoru i ako je rezultat `true` izlazi na `True` output, inače izlazi na `False` output¸
+Compares expressions depending on the operator and if the result is `true` Flow execution continues through `True` output, otherwise `False` output is used.
 
 # PROPERTIES
 
-## A [DRAFT]
+## A
 
-Expression na lijevoj strani usporedbe.
+Expression on the left side of the comparison.
 
-## B [DRAFT]
+## B
 
-Expression na desnoj strani usporedbe.
+Expression on the right side of the comparison.  
+It is not used if the operator is `NOT`.
 
-Ako je operator NOT onda se ovaj expression ne koristi.
+## C
 
-## C [DRAFT]
+This expression is used only in the case of the `BETWEEN` operator, then it is checked whether `A >= B` and `A <= C`.
 
-Ovaj expression se koristi samo u slučaju BETWEEN operatora, tada se gleda da li je A >= B i A <= C.
+## Operator
 
-## Operator [DRAFT]
-
-Jedan od mogućih operatora:
+It is possible to use one of the following operators:
 
 -   `=`: A is equal to B, i.e. `A == B``
 -   `<`: A is less than B, i.e. `A < B``
@@ -36,22 +35,22 @@ Jedan od mogućih operatora:
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## True [DRAFT]
+## True
 
-Izlazi se na ovaj output ako je rezultat usporedbe `true`.
+Output that will be used to continue execution of the Flow if the value of the expression is `true`.
 
-## False [DRAFT]
+## False
 
-Izlazi se na ovaj output ako je rezultat usporedbe `false`.
+Output that will be used to continue execution of the Flow if the value of the expression is `false`.
 
 # EXAMPLES [EMPTY]

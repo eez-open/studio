@@ -1,18 +1,18 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Evaluira se zadani expression i ako je true izlazi se na `Yes` output, inače na `No` output. Barem jedan od ta dva outputa mora biti linijom spojen na neki input.
+The set expression is evaluated and if it is `true`, the Flow execution continues through the `Yes` output, otherwise on the `No` output. At least one of those two outputs must be connected by a line to an input.
 
-By default, kada se ova akcija doda u flow, dodan je `Value` input i za njega se provjerava da li je `true` ili `false`. Ako se želi provjeriti neki drugi expression slobodno izbrišite taj input u Flow sekciji propertija i unesite expression koji želite.
+By default, when this action is added to the Flow, a `Value` input is added and it is tested whether it is `true` or `false`. If we want to test another expression, we should delete that input in the Flow section of the property and enter the expression we want.
 
 # PROPERTIES
 
-## Value [DRAFT]
+## Value
 
-Expression čiji se rezultat testira.
+Expression whose result is tested.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
@@ -22,16 +22,16 @@ Input preko kojeg se prima Value koji se testira. Ovaj input se može obrisati (
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## Yes [DRAFT]
+## Yes
 
-Output na koji se izlazi ako je vrijednost expressiona `true`.
+Output that will be used to continue execution of the Flow if the value of the expression is `true`.
 
-## No [DRAFT]
+## No
 
-Output na koji se izlazi ako je vrijednost expression `false`.
+Output that will be used to continue execution of the Flow if the value of the expression is `false`.
 
 # EXAMPLES [EMPTY]

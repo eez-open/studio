@@ -1,23 +1,23 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Dodaje data input u user akciju ili user widget.
+Adds data input to a user action or user widget.
 
 # PROPERTIES
 
-## Name [DRAFT]
+## Name
 
-Naziv inputa.
+Input name.
 
-## Type [DRAFT]
+## Type
 
-Data type inputa.
+Input data type.
 
 # INPUTS
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-Kroz ovaj output se proslijeđuje primljeni podatak od strane pozivatelja user akcije.
+The data received by the caller of the user action is passed through this output.
 
 # EXAMPLES [EMPTY]
