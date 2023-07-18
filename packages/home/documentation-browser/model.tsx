@@ -43,11 +43,7 @@ import {
     setupMarkdownWatcher
 } from "./doc-markdown";
 import { ComponentInfo, ParentComponentInfo } from "./component-info";
-import {
-    Component,
-    CustomInput,
-    CustomOutput
-} from "project-editor/flow/component";
+import { Component } from "project-editor/flow/component";
 import {
     getInputDisplayName,
     getOutputDisplayName
@@ -305,6 +301,17 @@ class Model {
                 ProjectEditor.ActionComponentClass
             )
         ]) {
+            if (
+                componentClass.objectClass.classInfo ==
+                    ProjectEditor.CallActionActionComponentClass.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    ProjectEditor.UserWidgetWidgetClass.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    ProjectEditor.LVGLUserWidgetWidgetClass.classInfo
+            ) {
+                continue;
+            }
+
             let { label, icon, titleStyle } =
                 getComponentVisualData(componentClass);
 
@@ -423,7 +430,6 @@ class Model {
                 componentInfo.inputs.push(
                     ...componentObject
                         .getInputs()
-                        .filter(input => !(input instanceof CustomInput))
                         .map(input => ({
                             name: getInputDisplayName(
                                 componentObject,
@@ -442,7 +448,6 @@ class Model {
                 componentInfo.outputs.push(
                     ...componentObject
                         .getOutputs()
-                        .filter(output => !(output instanceof CustomOutput))
                         .map(output => ({
                             name: getOutputDisplayName(
                                 componentObject,

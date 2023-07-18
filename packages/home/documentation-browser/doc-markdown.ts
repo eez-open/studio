@@ -346,7 +346,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
                     : "")
         );
         builder.addEmptyLine();
-        if (markdown && markdown.examples) {
+        if (markdown && markdown.examples && !markdown.examples.empty) {
             builder.addRaw(markdown.examples.raw);
             builder.addEmptyLine();
         }

@@ -703,9 +703,12 @@ export abstract class DebuggerConnectionBase {
         }
 
         if (str[0] == '"') {
-            return this.parseStringDebuggerValue(
-                str.substring(1, str.length - 1)
-            );
+            try {
+                return JSON.parse(str);
+            } catch (err) {
+                console.log("UNEXPECTED!", err, str);
+                return str;
+            }
         }
 
         if (str[0] == "{") {

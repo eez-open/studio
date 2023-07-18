@@ -1,17 +1,29 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcija se koristi za izvršavanje određeno dijela flowa zadani broj puta.
+
+![Alt text](../images/counter.png)
 
 # PROPERTIES
 
-## Count value
+## Count value [DRAFT]
+
+Expression koji definira broj ponavljanja.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-## done
+Na ovaj izlaz se izlazi sve dok nije obavljen zadani broj ponavljanje.
 
-# EXAMPLES
+## done [DRAFT]
+
+Na ovaj izlaz se izlazi kada je obavljen zadani broj ponavljanja.
+
+# EXAMPLES [EMPTY]

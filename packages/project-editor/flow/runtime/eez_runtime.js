@@ -1168,23 +1168,23 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  58952: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 59058: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 59094: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 59131: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 59171: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 59228: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 59287: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
- 59360: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 59401: ($0, $1, $2, $3, $4) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4); },  
- 59476: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
- 59637: ($0) => { startToDebuggerMessage($0); },  
- 59669: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 59744: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 59819: ($0) => { finishToDebuggerMessage($0); },  
- 59852: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
- 59899: ($0, $1) => { onArrayValueFree($0, $1); },  
- 59929: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
+  58968: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 59074: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 59110: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 59147: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 59187: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 59244: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 59303: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
+ 59376: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 59417: ($0, $1, $2, $3, $4) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4); },  
+ 59492: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
+ 59653: ($0) => { startToDebuggerMessage($0); },  
+ 59685: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 59760: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 59835: ($0) => { finishToDebuggerMessage($0); },  
+ 59868: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
+ 59915: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 59945: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
 };
 
 
@@ -5210,6 +5210,9 @@ var ___wasm_call_ctors = Module["___wasm_call_ctors"] = createExportWrapper("__w
 var _onMqttEvent = Module["_onMqttEvent"] = createExportWrapper("onMqttEvent");
 
 /** @type {function(...*):?} */
+var _malloc = Module["_malloc"] = createExportWrapper("malloc");
+
+/** @type {function(...*):?} */
 var _createUndefinedValue = Module["_createUndefinedValue"] = createExportWrapper("createUndefinedValue");
 
 /** @type {function(...*):?} */
@@ -5271,9 +5274,6 @@ var _getStringParam = Module["_getStringParam"] = createExportWrapper("getString
 
 /** @type {function(...*):?} */
 var _getExpressionListParam = Module["_getExpressionListParam"] = createExportWrapper("getExpressionListParam");
-
-/** @type {function(...*):?} */
-var _malloc = Module["_malloc"] = createExportWrapper("malloc");
 
 /** @type {function(...*):?} */
 var _freeExpressionListParam = Module["_freeExpressionListParam"] = createExportWrapper("freeExpressionListParam");

@@ -19,5 +19,3 @@ A standard sequence input.
 # OUTPUTS
 
 # EXAMPLES [EMPTY]
-
-

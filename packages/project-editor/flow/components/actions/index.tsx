@@ -1790,6 +1790,7 @@ export class SortArrayActionComponent extends ActionComponent {
 
 export class ReadSettingActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "Dashboard Specific",
         properties: [
             makeExpressionProperty(
                 {
@@ -1868,6 +1869,7 @@ export class ReadSettingActionComponent extends ActionComponent {
 
 export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "Dashboard Specific",
         properties: [
             makeExpressionProperty(
                 {
@@ -3826,12 +3828,8 @@ export class CommentActionComponent extends ActionComponent {
             {
                 name: "text",
                 type: PropertyType.String,
-                hideInPropertyGrid: true
-            },
-            {
-                name: "description",
-                type: PropertyType.String,
-                hideInPropertyGrid: () => true
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
             }
         ],
         beforeLoadHook: (

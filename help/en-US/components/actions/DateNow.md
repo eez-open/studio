@@ -1,15 +1,23 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcija šalje trenutno vrijeme (data type je Date) kroz `value` data output.
 
 # PROPERTIES
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-## value
+A standard sequence output.
 
-# EXAMPLES
+## value [DRAFT]
+
+Data output kroz koji se šalje trenutno vrijeme.
+
+# EXAMPLES [EMPTY]
