@@ -1,6 +1,6 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija lovi (catch) sve greške koje su nastale unutar flowa u kojem se nalazi ili unutar svih child flowova koji su nastali njegovim izvršavanjem (child flow se npr. kreira kada se pozove neka user akcija).
+This Action catches all errors that occurred within the Flow in which it is located, or within any of the Child flows that were created by its execution (for example, a Child flow is created when a User action is called).
 
 # PROPERTIES
 
@@ -8,12 +8,12 @@ Ova akcija lovi (catch) sve greške koje su nastale unutar flowa u kojem se nala
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## Message [DRAFT]
+## Message
 
-Kroz ovaj izlaz se šalje opis greške koja se ulovila.
+The output through which the description of the caught error is sent.
 
 # EXAMPLES [EMPTY]

@@ -1,19 +1,19 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija baca (throws) error koji se onda može loviti (catch) preko CatchError akcije unutar istog flowa u kojem se nalazi ova akcija, ili unutar njegovog parent flowa, tj. bilo kojeg ancestors flowa.
+This Action throws an error that can then be caught via the _CatchError_ action within the same flow in which this action is located, or within its parent Flow, i.e. of any ancestors Flow.
 
 # PROPERTIES
 
-## Message [DRAFT]
+## Message
 
-Tekstualna poruka koja opisuje vrstu greške, ovu poruku prima CatchError akcija.
+A text message describing the type of error, this message will be received by the _CatchError_ Action.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 # EXAMPLES [EMPTY]

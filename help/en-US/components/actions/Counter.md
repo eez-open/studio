@@ -1,29 +1,29 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija se koristi za izvršavanje određeno dijela flowa zadani broj puta.
+Used to execute a specific part of the Flow a given number of times.
 
 ![Alt text](../images/counter.png)
 
 # PROPERTIES
 
-## Count value [DRAFT]
+## Count value
 
-Expression koji definira broj ponavljanja.
+Expression that defines the number of repetitions in the loop.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-Na ovaj izlaz se izlazi sve dok nije obavljen zadani broj ponavljanje.
+Flow execution continues through this output until the given number of repetitions has been completed.
 
-## done [DRAFT]
+## done
 
-Na ovaj izlaz se izlazi kada je obavljen zadani broj ponavljanja.
+Flow execution continues through this output when the given number of repetitions has been completed.
 
 # EXAMPLES [EMPTY]

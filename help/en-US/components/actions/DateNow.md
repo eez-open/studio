@@ -1,23 +1,23 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija šalje trenutno vrijeme (data type je Date) kroz `value` data output.
+Passes the current time (data type is `Date`) through the `value` data output.
 
 # PROPERTIES
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## value [DRAFT]
+## value
 
-Data output kroz koji se šalje trenutno vrijeme.
+Data output through which the current time is passed.
 
 # EXAMPLES [EMPTY]

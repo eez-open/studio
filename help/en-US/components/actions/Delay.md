@@ -1,23 +1,23 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija se koristi ako se želi ubaciti pauza u izvršavanje flowa.
+This Action is used when we want to insert a pause in Flow execution.
 
 # PROPERTIES
 
-## Milliseconds [DRAFT]
+## Milliseconds
 
-Koliko milisekundi će se čekati u ovaj akciji prije nego što se iziđe na sekvencijalni output `seqout`.
+Pause duration in milliseconds before Flow execution resumes through sequential output `seqout`.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-A standard sequence input. Kroz ovaj output se izlazi kad istekne zadani broj milisekundi.
+A standard sequence output.
 
 # EXAMPLES [EMPTY]

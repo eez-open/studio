@@ -1,29 +1,31 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ispituje `boolean` varijablu i ako je `false` onda je postavlja na `true` i izlazi na sekvencijalni output (`seqout`), a ako je `true` onda se ponovno stavlja u flow execution queue, tj. ova akcija čeka dok varijabla ne postane `false`. Ovo testiranje i postavljanje se obavalja **as a single atomic (non-interruptable) operation**, pa je ova akcija pogodna za slučaj kada se želi biti siguran da u nekom trenutku se kroz određeni dio flowa prolazi samo jednom. U tom slučaju negdje na ulazu u taj dio flowa treba postaviti ovu akciju i na izlazu iz flowa treba ponovno varijablu postaviti na `false` sa `SetVariable` akcijom.
+It tests the `boolean` variable and if it is `false` then it is set to `true` and output to the sequential output (`seqout`), and if it is `true` then it is put back into the Flow execution queue, i.e. this action waits until the variable becomes `false`.  
+This testing and setup is done **as a single atomic (non-interruptable) operation**, so this Action is suitable for the case when you want to make sure that at some point you only go through a certain part of the Flow once. In that case, this Action should be set before entering that part of the Flow, and at the exit from the Flow, the variable should be set to `false` again with the _SetVariable_ Action.
 
 ![Alt text](../images/test_and_set.png)
 
 # PROPERTIES
 
-## Variable [DRAFT]
+## Variable
 
-Varijabla koja se testira i postavlja.
+The variable to be tested and set.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequential input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-Na ovaj sekvencijalni output se izlazi kada varijabla postane `false`.
+Flow execution continues through this sequential output when the variable becomes `false`.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Tetris
 
-    U `do_action` user akciji, koja se poziva kada se detektira da je prisnuta neka tipka na tikovnici, na ulazu imamo TestAndSet akciju nad `busy` varijablom, a na izlazu se `busy` varijabla postavlja na false. Na ovaj način smo sigurni da se neće desiti da u isto vrijeme paralelno izvršavamo dvije akcije.
+    In the `do_action` User action, which is called when it is detected that some key on the keyboard is pressed, the TestAndSet action on the `busy` variable is used at the beginning, and before the exit the `busy` variable is set to `false`.
+	In this way, it is ensured that two Actions are not executed simultaneously.

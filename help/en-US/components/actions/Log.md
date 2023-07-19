@@ -1,26 +1,26 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Evaluira se zadani expression i rezultat se ispisuje u Logs panel.
+The set expression is evaluated and the result is displayed in the _Logs_ panel.
 
 # PROPERTIES
 
-## Value [DRAFT]
+## Value
 
-Expression čiji se rezultat ispisuje u Logs panel.
+Expression whose result will be displayed in the _Logs_ panel.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-## value [DRAFT]
+## value
 
-Input preko kojeg se prima Value koji se ispisuje u Log panel. Ovaj input se može obrisati (briše se u Flow - Inputs listi) ako nije potreban, tj. ako se ispisuje neki drugi expression.
+The input through which the Value that is displayed in the _Log_ panel is received. This input can be deleted (it is deleted in the Flow - Inputs list) if it is not needed, i.e. if some other expression is displayed.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

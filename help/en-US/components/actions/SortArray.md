@@ -1,52 +1,52 @@
 # DESCRIPTION
 
-Sortira array varijablu i rezultat vraća kroz data output - znači ne radi in-place sortiranje, tj. ne modificira sadržaj array varijable. Dopušteni tipovi arraya su:
+It sorts the array variable and returns the result through the data output: it does not do in-place sorting, i.e. it does not modify the content of the array variable. Allowed array types are:
 
 -   `array:integer`
 -   `array:float`
 -   `array:double`
 -   `array:struct`
 
-Ako se sortira array koji je tipa `array:struct` onda se mora zadati i `Structure  name` i `Structure field name` po kojem se sortira.
+If an array of type `array:struct` is sorted, then the `Structure name` and `Structure field name` by which it is sorted must also be specified.
 
-Postoje i dvije opcije: da li se želi Ascending/Descending sortiranje i da li se ignorira case ako se sortiraju stringovi.
+There are also two options: whether Ascending/Descending sorting is desired and whether letter case is ignored if strings are sorted.
 
 # PROPERTIES
 
-## Array [DRAFT]
+## Array
 
-Array varijabla koja se sortira.
+Array variable to be sorted.
 
-## Structure name [DRAFT]
+## Structure name
 
-U slučaju da je array varijable tipa `array:struct`, ovdje treba odabrati naziv strukture.
+Select the name of the structure here when the array is a variable of type `array:struct`.
 
-## Structure field name [DRAFT]
+## Structure field name
 
-U slučaju da je array varijable tipa `array:struct`, ovdje traba odabrati naziv fielda po kojem se sortira.
+Select the name of the field to be sorted by if the array is a variable of type `array:struct`.
 
-## Ascending [DRAFT]
+## Ascending
 
-Da li se radi ascending ili descending sortiranje.
+Sorting mode selection (ascending if enabled, otherwise descending).
 
-## Ignore case [DRAFT]
+## Ignore case
 
-Da li se ignorira case u slučaju ako se sortiraju stringovi.
+Specifies whether letter case is ignored if strings are sorted or not.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## result [DRAFT]
+## result
 
-Output kroz koji se šalje sortirani array.
+Output through which the sorted array is passed.
 
 # EXAMPLES [EMPTY]

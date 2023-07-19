@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija ne radi ništa, tj. samo nastavi izvršavanje kroz `seqout`.
+This action does nothing, i.e. Flow execution continues through `seqout`.
 
 # PROPERTIES
 
-## Name [DRAFT]
+## Name
 
-Naziv koji se ispisuje u prikazu komponente unutar flowa.
+The name displayed in the component view within the Flow.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output
 

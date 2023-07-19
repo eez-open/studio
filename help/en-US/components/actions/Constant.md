@@ -1,33 +1,33 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija šalje konstantnu kroz `value` data output.
+Passes the set constant through the `value` data output.
 
 # PROPERTIES
 
-## Value [DRAFT]
+## Value
 
-Expression čiji rezultat se šalje na `value` output. Ovaj expression ne smije koristiti varijable. Primjer:
+Expression whose result is sent to `value` output. This expression must not use variables. Some examples:
 
--   "string"
--   42
--   3.14159265
--   true
--   Math.sin(0.5)
+-   `"string"`
+-   `42`
+-   `3.14159265`
+-   `true`
+-   `Math.sin(0.5)`
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## value [DRAFT]
+## value
 
-Data output kroz koji se šalje konstanta.
+Data output through which the set constant is passed.
 
 # EXAMPLES [EMPTY]

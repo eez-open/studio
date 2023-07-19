@@ -1,13 +1,13 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova komponenta nema nikakav efekt na runtime i služi samo za dodavanje komentara u flow.
+This Action has no effect on the Flow execution, but only serves to add comments to the Flow.
 
 ![Alt text](../images/comment.png)
 
-# PROPERTIES
+# PROPERTIES [EMPTY]
 
-# INPUTS
+# INPUTS [EMPTY]
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 # EXAMPLES [EMPTY]
