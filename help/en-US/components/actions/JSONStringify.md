@@ -1,32 +1,32 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Konvertira flow value u JSON string i šalje ga na `result` output.
+Converts the Flow `Value` to a JSON string and sends it to the `result` output.
 
 # PROPERTIES
 
-## Value [DRAFT]
+## Value
 
-Ovo je flow value koji se konvertira u JSON string.
+Flow value that will be converted into a JSON string.
 
-## Indentation [DRAFT]
+## Indentation
 
-Indentacija koja se koristiti u kreiranom JSON stringu.
+The indentation to be used in the generated JSON string.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## result [DRAFT]
+## result
 
-Kroz ovaj output se šalje konstruirani JSON string.
+The constructed JSON string is sent through this output.
 
 # EXAMPLES [DRAFT]
 

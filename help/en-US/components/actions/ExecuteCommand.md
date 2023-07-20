@@ -1,40 +1,40 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija izvršava eksternu komandu, tj. program, koji se može nalaziti u PATH-u ili se može zadati puni path do komande.
+The action is used to execute an external command, i.e. program, which can be in the PATH or the full path to the command can be specified.
 
 # PROPERTIES
 
-## Command [DRAFT]
+## Command
 
-Naziv komande, odnosno puni file path do komande koja se želi izvršiti.
+The name of the command, i.e. the full file path to the command to be executed.
 
-## Arguments [DRAFT]
+## Arguments
 
-Array of string arguments koji se prosljeđuje komandi.
+Array of string arguments that is passed to the command.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## stdout [DRAFT]
+## stdout
 
-Kroz ovaj output se šalje `stream` value od `stdout`. Taj `stream` value se može skupljati u string sa `CollectStream` akcijom, preusmjeriti u Terminal widget, parsirati sa RegExp akcijom, itd.
+The `stream` value from `stdout` is sent through this output. That `stream` value can be collected into a string with the _CollectStream_ Action, redirected to a _Terminal_ widget, parsed with the _RegExp_ Action, etc.
 
-## stderr [DRAFT]
+## stderr
 
-Kroz ovaj output se šalje `stream` value od `stderr`. Taj `stream` value se može skupljati u string sa `CollectStream` akcijom, preusmjeriti u Terminal widget, parsirati sa RegExp akcijom, itd.
+The `stream` value of `stderr` is sent through this output. That `stream` value can be collected into a string with the _CollectStream_ Action, redirected to a _Terminal_ widget, parsed with the _RegExp_ Action, etc.
 
-## finished [DRAFT]
+## finished
 
-Ako je komanda uspješno završila, izlazi se kroz ovaj output. Ako je došlo do greške onda se throwa error koji se može loviti ako se enejbla "Catch error".
+If the command completed successfully, Flow execution continues through this output. If an error has occurred, an error is thrown that can be caught if `Catch error' is enabled.
 
 # EXAMPLES [DRAFT]
 

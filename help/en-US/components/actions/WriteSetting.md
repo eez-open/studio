@@ -1,26 +1,28 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija će, za zadani key name i value, dodati taj key u .eez-project-runtime-settings fajl (to je isti fajl u koji se spremaju i persistent varijable), ili će updejtati vrijednost tog keya ako već postoji.
+This Action will add the set `Key` to the _.eez-project-runtime-settings_ file (it's the same file where persistent variables are saved), or it will update the value with `Value` of that key if it already exists.
+
+NOTE: _WriteSetting_ and _ReadSetting_ Actions are used to save and retrieve from the _eez-project-runtime-settings_ file all those settings that we want to survive the _Dashboard_ project restart. It is more convenient to use persistent variables, because in that case we do not have to execute a special Action for saving and retrieving.
 
 # PROPERTIES
 
-## Key [DRAFT]
+## Key
 
-String koji sadrži naziv ključa koji želite dodati/updejtati.
+A string containing the name of the key to be added/updated.
 
-## Value [DRAFT]
+## Value
 
-Value koji želite dati ključu koji stvarate/updejtate.
+The value of the key that will be created or updated.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

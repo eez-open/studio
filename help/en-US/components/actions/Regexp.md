@@ -1,58 +1,56 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Pretražuje, zadani string ili stream, koristeći pattern napisan prema pravilima regular expression sintakse.
+Searches a set string or stream, using a pattern written according to the rules of the regular expression syntax.
 
 # PROPERTIES
 
-## Pattern [DRAFT]
+## Pattern
 
-Regular expression koji se koristi za pretraživanje.
+Regular expression used for searching.
 
-## Text [DRAFT]
+## Text
 
-Text koji se pretražuje, može biti string ili stream.
+The text to be searched can be a string or a stream.
 
-## Global [DRAFT]
+## Global
 
-Opcija s kojem se bira da li se traži samo prvi pojavljivanje patterna ili svako pojavljivanje patterne.
+This option determines whether only the first occurrence of the pattern or every occurrence of the pattern is searched.
 
-## Case insensitive [DRAFT]
+## Case insensitive
 
-Opcija s kojom se bira da li je pretraživanje case sensitive ili insensitive?
+This option determines whether the search will be case sensitive or not.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
-A standard sequence input. Na ovaj input je potrebno ući jednom na početku.
+A standard sequence input. This input needs to be used once at the beginning.
 
-## next [DRAFT]
+## next
 
-Kroz ovaj input je potrebno ući kada se želi dobiti slijedeći match.
+Use this input to get the next match.
 
-## stop [DRAFT]
+## stop
 
-Kroz ovaj input je potrebno ući kada se želi prekinuti daljnje pretraživanje - nakon čega se odmah izlazi na `done` output.
+Use this input when we want to stop further searching, after which the Flow execution will immediately continue through the `done` output.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## match [DRAFT]
+## match
 
-Kroz ovaj output se šalje match u obliku `struct:$RegexpMatch` vrijednosti.
-
-`$RegexpMatch` struktura ima ove fieldove:
+Search match in the form of `struct:$RegexpMatch` value is sent through this output. The `$RegexpMatch` structure has the following fields:
 
 -   `index` (`integer`) - The 0-based index of the match in the string.
 -   `texts` (`array:string`) - The array that has the matched text as the first item, and then one item for each [capturing group](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions/Groups_and_backreferences) of the matched text.
 -   `indices` (`array:array:integer`) - It is an array where each entry represents the bounds of a substring match. The index of each element in this array corresponds to the index of the respective substring match in the `texts` array. In other words, the first indices entry represents the entire match, the second indices entry represents the first capturing group, etc. Each entry itself is a two-element array, where the first number represents the match's start index, and the second number, its end index.
 
-## done [DRAFT]
+## done
 
-Kroz ovaj output se izlazi kada je pretraživanje završeno, tj. više ne postoji niti jedan match.
+Flow execution continues through this output when the search is complete, i.e. there are no more matches.
 
 # EXAMPLES [DRAFT]
 
