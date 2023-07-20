@@ -1892,6 +1892,7 @@ export class ReadSettingActionComponent extends ActionComponent {
 export class WriteSettingsActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         componentPaletteGroupName: "Dashboard Specific",
+        componentPaletteLabel: "WriteSetting",
         properties: [
             makeExpressionProperty(
                 {
