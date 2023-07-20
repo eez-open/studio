@@ -159,4 +159,13 @@ export class RuntimeSettings {
             notification.error("Failed to save runtime settings: " + err);
         }
     }
+
+    readSettings(key: string) {
+        return this.settings[key];
+    }
+
+    writeSettings(key: string, value: any) {
+        this.settings[key] = value;
+        this.modified = true;
+    }
 }

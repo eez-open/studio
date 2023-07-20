@@ -51,7 +51,7 @@ const TIME_OF_LAST_DATABASE_COMPACT_OPERATION_ITEM_NAME =
     "/home/settings/timeOfLastDatabaseCompactOperation";
 
 export const COMPACT_DATABASE_MESSAGE =
-    "It is advisable to compact database every 30 days.";
+    "It is recommended to compact the database every 30 days.";
 
 ////////////////////////////////////////////////////////////////////////////////
 

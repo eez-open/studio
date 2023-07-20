@@ -515,7 +515,8 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
                 monospaceFont: true,
-                disableSpellcheck: true
+                disableSpellcheck: true,
+                flowProperty: "template-literal"
             }
         ],
         beforeLoadHook: (
@@ -1806,7 +1807,28 @@ export class ReadSettingActionComponent extends ActionComponent {
                 <path d="M135 156L277 14q14-14 35-14t35 14l77 77-212 212-77-76q-14-15-14-36t14-35zm520 168l210-210q14-14 24.5-10t10.5 25l-2 599q-1 20-15.5 35T847 778l-597 1q-21 0-25-10.5t10-24.5l208-208-154-155 212-212zM50 879h1000q21 0 35.5 14.5T1100 929v250H0V929q0-21 14.5-35.5T50 879zm850 100v50h100v-50H900z" />
             </svg>
         ),
-        componentHeaderColor: "#C0DEED"
+        componentHeaderColor: "#C0DEED",
+        execute: (context: IDashboardComponentContext) => {
+            let key = context.evalProperty<string>("key");
+
+            if (
+                key == undefined ||
+                typeof key != "string" ||
+                key.trim() == ""
+            ) {
+                context.throwError(`Invalid key property`);
+                return;
+            }
+
+            key = key.trim();
+
+            context.propagateValue(
+                "value",
+                context.WasmFlowRuntime.readSettings(key) || null
+            );
+
+            context.propagateValueThroughSeqout();
+        }
     });
 
     key: string;
@@ -1837,7 +1859,7 @@ export class ReadSettingActionComponent extends ActionComponent {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
-                isOptionalOutput: false
+                isOptionalOutput: true
             },
             {
                 name: "value",
@@ -1893,7 +1915,27 @@ export class WriteSettingsActionComponent extends ActionComponent {
                 <path d="M350 0l599 2q20 1 35 15.5T999 53l1 597q0 21-10.5 25T965 665L757 457 602 611 390 399l155-154L335 35q-14-14-10-24.5T350 0zm174 688l-76 77q-15 14-36 14t-35-14L235 623q-14-14-14-35t14-35l77-77zM50 900h1000q21 0 35.5 14.5T1100 950v250H0V950q0-21 14.5-35.5T50 900zm850 100v50h100v-50H900z" />
             </svg>
         ),
-        componentHeaderColor: "#C0DEED"
+        componentHeaderColor: "#C0DEED",
+        execute: (context: IDashboardComponentContext) => {
+            let key = context.evalProperty<string>("key");
+
+            if (
+                key == undefined ||
+                typeof key != "string" ||
+                key.trim() == ""
+            ) {
+                context.throwError(`Invalid key property`);
+                return;
+            }
+
+            key = key.trim();
+
+            let value = context.evalProperty<any>("value");
+
+            context.WasmFlowRuntime.writeSettings(key, value);
+
+            context.propagateValueThroughSeqout();
+        }
     });
 
     key: string;
@@ -1914,7 +1956,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
                 name: "@seqin",
                 type: "any" as ValueType,
                 isSequenceInput: true,
-                isOptionalInput: false
+                isOptionalInput: true
             },
             ...super.getInputs()
         ];
@@ -1926,7 +1968,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
                 name: "@seqout",
                 type: "null" as ValueType,
                 isSequenceOutput: true,
-                isOptionalOutput: false
+                isOptionalOutput: true
             },
             ...super.getOutputs()
         ];

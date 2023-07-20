@@ -496,6 +496,9 @@ export interface IWasmFlowRuntime {
 
     onRuntimeTerminate: () => void;
 
+    readSettings: (key: string) => any;
+    writeSettings: (key: string, value: any) => any;
+
     // eez framework API
     _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number): void;
     _mainLoop(): boolean;

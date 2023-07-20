@@ -48,8 +48,8 @@ import {
     OutputActionComponent,
     CallActionActionComponent
 } from "project-editor/flow/components/actions";
-import "project-editor/flow/components/actions/stream";
 import "project-editor/flow/components/actions/execute-command";
+import "project-editor/flow/components/actions/stream";
 import "project-editor/flow/components/actions/file";
 import "project-editor/flow/components/actions/instrument";
 import "project-editor/flow/components/actions/regexp";

@@ -223,7 +223,13 @@ export class WasmRuntime extends RemoteRuntime {
             this.projectStore.projectTypeTraits.isLVGL,
             this.displayWidth,
             this.displayHeight,
-            (className: string) => getClassByName(this.projectStore, className)
+            (className: string) => getClassByName(this.projectStore, className),
+            (key: string) => {
+                return this.projectStore.runtimeSettings.readSettings(key);
+            },
+            (key: string, value: any) => {
+                this.projectStore.runtimeSettings.writeSettings(key, value);
+            }
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {

@@ -195,7 +195,9 @@ export function createWasmWorker(
     lvgl: boolean,
     displayWidth: number,
     displayHeight: number,
-    getClassByName: (className: string) => any
+    getClassByName: (className: string) => any,
+    readSettings: (key: string) => any,
+    writeSettings: (key: string, value: any) => any
 ) {
     let WasmFlowRuntime: IWasmFlowRuntime;
 
@@ -210,6 +212,8 @@ export function createWasmWorker(
     }
 
     WasmFlowRuntime.getClassByName = getClassByName;
+    WasmFlowRuntime.readSettings = readSettings;
+    WasmFlowRuntime.writeSettings = writeSettings;
 
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 
