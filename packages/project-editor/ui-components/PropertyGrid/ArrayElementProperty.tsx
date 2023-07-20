@@ -1129,7 +1129,10 @@ const ArrayElementPropertyHorizontalOrientation = observer(
                                 justifyContent: "center"
                             }}
                         >
-                            <div className="eez-flow-editor-capture-pointers">
+                            <div
+                                className="eez-flow-editor-capture-pointers"
+                                style={{ width: "100%" }}
+                            >
                                 <Property
                                     propertyInfo={propertyInfo}
                                     objects={[object]}
