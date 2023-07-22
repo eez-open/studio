@@ -1,44 +1,44 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 Sends HTTP requests and returns the response.
 
 # PROPERTIES
 
-## Method [DRAFT]
+## Method
 
-HTTP metoda koja se koristi: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, CONNECT ili TRACE.
+HTTP methods used: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, CONNECT or TRACE.
 
-## Url [DRAFT]
+## Url
 
 The url of the request.
 
-## Headers [DRAFT]
+## Headers
 
-Lista headera koji se šalju na server. Za svaki item treba postaviti naziv headera i string vrijednost.
+List of headers sent to the server. A header name and a string value should be set for each item.
 
-## Body [DRAFT]
+## Body
 
-Body koji se šalje na server ako je odabrana POST, PUT ili PATCH metoda.
+The body of the message that is sent to the server if the POST, PUT or PATCH method is selected.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## status [DRAFT]
+## status
 
 The [status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) of the response.
 
-## result [DRAFT]
+## result
 
-The body of the response.
+Message body of received response.
 
 # EXAMPLES [DRAFT]
 

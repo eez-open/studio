@@ -1,34 +1,34 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 Reads the contents of a file as either a string or blob and sends it to the `content` output
 
 # PROPERTIES
 
-## File path [DRAFT]
+## File path
 
 The full path of the file to be read.
 
-## Encoding [DRAFT]
+## Encoding
 
-Encoding of the input data. Possible values are: "ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1".
+Encoding of the input data. Possible values are: `"ascii"`, `"base64"`, `"hex"`, `"ucs2"`, `"ucs-2"`, `"utf16le"`, `"utf-16le"`, `"utf8"`, `"utf-8"`, `"binary"` or `"latin1"`.
 
-If encoding is "binary" then the blob value is returned, otherwise the string value is returned.
+If encoding is `"binary"` then the blob value is returned, otherwise the string value is returned.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## content [DRAFT]
+## content
 
-Kroz ovaj ouput se šalje pročitani sadržaj fajla.
+The read content of the file is sent through this output.
 
 # EXAMPLES [DRAFT]
 

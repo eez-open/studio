@@ -1,30 +1,30 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 Writes data to a file, replacing the file if it already exists. Data can be a string or a blob.
 
 # PROPERTIES
 
-## File path [DRAFT]
+## File path
 
 The full path of the file to be written.
 
-## Content [DRAFT]
+## Content
 
-The content to be written, either string or blob. If content is blob then `encoding` property is ignored.
+The content to be written can be a string or a blob. If the content is a blob, the `encoding` property is ignored.
 
-## Encoding [DRAFT]
+## Encoding
 
-Encoding of the content. Possible values are: "ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1".
+Encoding of the content. Possible values are: `"ascii"`, `"base64"`, `"hex"`, `"ucs2"`, `"ucs-2"`, `"utf16le"`, `"utf-16le"`, `"utf8"`, `"utf-8"`, `"binary"` or `"latin1"`.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

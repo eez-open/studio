@@ -1,23 +1,23 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Otvara sistemski file open dialog i šalje odabrani file path na `file_path` output.
+Displays the system file open dialog and sends the set file path to the `file_path` output.
 
 # PROPERTIES
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## file_path [DRAFT]
+## file_path
 
-Na ovaj output se šalje odabrani file path.
+Output to which the set file path is sent.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES [EMPTY]

@@ -1,42 +1,42 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 Converts the Flow value to a CSV string and sends it to the `result` output.
 
 # PROPERTIES
 
-## Input [DRAFT]
+## Input
 
 Flow value that will be converted into a CSV string.
 
-## Delimiter [DRAFT]
+## Delimiter
 
-Defines the character used to delimitate the fields inside a CSV record. Default is `","`.
+Defines the character used to delimit fields within a CSV record. The default delimiter is `","`.
 
-## Header [DRAFT]
+## Header
 
-If set to `true` this option will generate the column names in the first emitted record.
+If it is set to `True`, the first record will contain the names of the columns.
 
-## Quoted [DRAFT]
+## Quoted
 
-If set to `true` this option will quote all the non-empty fields even when there is no character requiring quotes.
+If it is set to `True`, all non-empty fields will be quoted even if there are no characters that require quoting.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-## input [DRAFT]
+## input
 
-The input through which the Flow value which will be converted to CSV string is received. This input can be deleted (we delete it in the Flow - Inputs list) if it is not needed, i.e. if we want to parse a string obtained by evaluating an arbitrary expression set through `Input` property.
+The Flow value to be converted into a CSV string is received through this Input. This Input can be deleted (we delete it in the Flow - inputs list) if it is not needed, i.e. if we want to parse the string obtained by evaluating an arbitrary expression set through the `Input` property.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## result [DRAFT]
+## result
 
 The constructed CSV string is sent through this output.
 

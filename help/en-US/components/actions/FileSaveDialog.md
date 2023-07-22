@@ -1,28 +1,28 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Otvara sistemski file save dialog i šalje odabrani file path na `file_path` output.
+Displays the system file save dialog and sends the set file path to the `file_path` output.
 
 # PROPERTIES
 
-## File name [DRAFT]
+## File name
 
-File name to use by default.
+The file name to be used by default.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## file_path [DRAFT]
+## file_path
 
-Na ovaj output se šalje odabrani file path.
+Output to which the set file path is sent.
 
 # EXAMPLES [DRAFT]
 

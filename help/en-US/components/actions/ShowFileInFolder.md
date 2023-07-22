@@ -1,24 +1,24 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Shows the given file in a system file manager. If possible, selects the file.
+Displays the set file in the system file manager. When possible, the set file will also be selected.
 
 # PROPERTIES
 
-## File path [DRAFT]
+## File path
 
-File path koji treba prikazati u file manageru.
+Path to the file that will be displayed in the system file manager.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-A standard sequence output.
+## seqout
 
-## seqout [DRAFT]
+A standard sequence output.
 
 # EXAMPLES [DRAFT]
 

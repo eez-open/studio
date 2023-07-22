@@ -18,7 +18,7 @@ A standard sequence input.
 
 ## value
 
-Input preko kojeg se prima Value koji se testira. Ovaj input se može obrisati (briše se u Flow - Inputs listi) ako nije potreban, tj. ako se želi testirati neki drugi expression.
+The input through which the Value to be tested is received. This input can be deleted (we delete it in the Flow - Inputs list) if it is not needed, i.e. if you want to test another expression.
 
 # OUTPUTS
 
