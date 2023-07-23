@@ -70,8 +70,6 @@ import type { IVariable } from "project-editor/flow/flow-interfaces";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { COMPONENT_TYPE_SCPI_ACTION } from "project-editor/flow/components/component-types";
-import { getComponentName } from "project-editor/flow/components/components-registry";
-import type { WorkerToRenderMessage } from "eez-studio-types";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { TextAction, IconAction } from "eez-studio-ui/action";
@@ -305,6 +303,7 @@ export const SelectInstrumentDialog = observer(
         instruments: ObservableMap<string, InstrumentObject>;
         instrument?: InstrumentObject;
         callback: (instrument: InstrumentObject | undefined) => void;
+        selectAndConnect: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -459,7 +458,6 @@ export const SelectInstrumentDialog = observer(
 
                             return;
                         } catch (err) {
-                            console.log("trace 6");
                             await new Promise<void>(resolve =>
                                 setTimeout(resolve, 100)
                             );
@@ -479,7 +477,7 @@ export const SelectInstrumentDialog = observer(
                 return false;
             }
 
-            if (instrument.isConnected) {
+            if (instrument.isConnected || !this.props.selectAndConnect) {
                 this.props.callback(instrument);
                 return true;
             }
@@ -572,7 +570,8 @@ export const SelectInstrumentDialog = observer(
 export async function showSelectInstrumentDialog(
     projectStore: ProjectStore | undefined,
     name?: string,
-    instrumentId?: string | null
+    instrumentId?: string | null,
+    selectAndConnect?: boolean
 ) {
     return new Promise<InstrumentObject | undefined>(resolve => {
         const dialog = (
@@ -585,6 +584,9 @@ export async function showSelectInstrumentDialog(
                 callback={instrument => {
                     resolve(instrument);
                 }}
+                selectAndConnect={
+                    selectAndConnect == undefined ? true : selectAndConnect
+                }
             />
         );
         if (projectStore) {
@@ -615,7 +617,27 @@ export class SelectInstrumentActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#FDD0A2",
-        componentPaletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument",
+        execute: async (context: IDashboardComponentContext) => {
+            try {
+                context.startAsyncExecution();
+                const instrument = await showSelectInstrumentDialog(
+                    undefined,
+                    undefined,
+                    undefined,
+                    false
+                );
+                context.endAsyncExecution();
+
+                if (instrument) {
+                    context.propagateValue("instrument", instrument);
+                }
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.endAsyncExecution();
+                context.throwError(err.toString());
+            }
+        }
     });
 
     getInputs() {
@@ -661,7 +683,8 @@ export class GetInstrumentActionComponent extends ActionComponent {
         properties: [
             makeExpressionProperty(
                 {
-                    name: "id",
+                    name: "instrumentId",
+                    displayName: "Instrument ID",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
@@ -674,8 +697,36 @@ export class GetInstrumentActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#FDD0A2",
-        componentPaletteGroupName: "Instrument"
+        componentPaletteGroupName: "Instrument",
+        execute: (context: IDashboardComponentContext) => {
+            const instrumentId = context.evalProperty<string>("instrumentId");
+
+            if (instrumentId == undefined || typeof instrumentId != "string") {
+                context.throwError(`Invalid Instrument ID property`);
+                return;
+            }
+
+            const instrument = instruments.get(instrumentId);
+
+            if (!instrument) {
+                context.throwError("Instrument not found");
+                return;
+            }
+
+            context.propagateValue("instrument", instrument);
+            context.propagateValueThroughSeqout();
+        }
     });
+
+    instrumentId: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrumentId: observable
+        });
+    }
 
     getInputs() {
         return [
@@ -724,19 +775,19 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
                 "object:Instrument"
             )
         ],
-        label: (component: SCPIActionComponent) => {
-            let name = getComponentName(component.type);
-            if (!component.isInputProperty("instrument")) {
-                return `${name} ${component.instrument}`;
-            }
-            return name;
-        },
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 37.06357192993164 37.06456756591797"
+                viewBox="0 0 24 24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
             >
-                <path d="M6.296 8.535L.619 2.858A1.584 1.584 0 0 1 2.858.618l5.677 5.678c4.34-3.255 10.527-2.908 14.475 1.04L7.336 23.01C3.388 19.062 3.04 12.876 6.296 8.535zm23.432 5.52c3.948 3.947 4.295 10.133 1.04 14.474l5.677 5.677a1.584 1.584 0 1 1-2.24 2.24l-5.676-5.678c-4.341 3.255-10.527 2.908-14.475-1.04l3.358-3.359-2.8-2.799a2.376 2.376 0 1 1 3.36-3.359l2.799 2.8 2.24-2.24-2.8-2.799a2.375 2.375 0 1 1 3.36-3.358l2.798 2.798 3.359-3.358z" />
+                <path stroke="none" d="M0 0h24v24H0z" />
+                <path d="m7 12 5 5-1.5 1.5a3.536 3.536 0 1 1-5-5L7 12zM17 12l-5-5 1.5-1.5a3.536 3.536 0 1 1 5 5L17 12zM3 21l2.5-2.5M18.5 5.5 21 3M10 11l-2 2M13 14l-2 2" />
             </svg>
         ),
         componentHeaderColor: "#FDD0A2",
@@ -756,11 +807,14 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
                 return;
             }
 
-            const data: WorkerToRenderMessage = {
-                connectToInstrumentId: instrument.id
-            };
+            const instrumentObject = instruments.get(instrument.id);
 
-            context.WasmFlowRuntime.postWorkerToRendererMessage(data);
+            if (!instrumentObject) {
+                context.throwError(`Instrument not found`);
+                return;
+            }
+
+            instrumentObject.connection.connect();
 
             context.propagateValueThroughSeqout();
         }
@@ -799,11 +853,142 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
             ...super.getOutputs()
         ];
     }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.instrument) {
+            return null;
+        }
+
+        if (this.customInputs.find(input => input.name == this.instrument)) {
+            return null;
+        }
+
+        return (
+            <div className="body EezStudio_ScpiBody">
+                <pre>{this.instrument}</pre>
+            </div>
+        );
+    }
 }
 
 registerClass(
     "ConnectInstrumentActionComponent",
     ConnectInstrumentActionComponent
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class DisconnectInstrumentActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            )
+        ],
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" />
+                <path d="m20 16-4 4M7 12l5 5-1.5 1.5a3.536 3.536 0 1 1-5-5L7 12zM17 12l-5-5 1.5-1.5a3.536 3.536 0 1 1 5 5L17 12zM3 21l2.5-2.5M18.5 5.5 21 3M10 11l-2 2M13 14l-2 2M16 16l4 4" />
+            </svg>
+        ),
+        componentHeaderColor: "#FDD0A2",
+        componentPaletteGroupName: "Instrument",
+        execute: (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const instrumentObject = instruments.get(instrument.id);
+
+            if (!instrumentObject) {
+                context.throwError(`Instrument not found`);
+                return;
+            }
+
+            instrumentObject.connection.disconnect();
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    instrument: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            instrument: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.instrument) {
+            return null;
+        }
+
+        if (this.customInputs.find(input => input.name == this.instrument)) {
+            return null;
+        }
+
+        return (
+            <div className="body EezStudio_ScpiBody">
+                <pre>{this.instrument}</pre>
+            </div>
+        );
+    }
+}
+
+registerClass(
+    "DisconnectInstrumentActionComponent",
+    DisconnectInstrumentActionComponent
 );
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1039,7 +1224,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     ) => {
                         return component.itemType != "chart";
                     },
-                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv"`
                 },
                 "string"
             ),

@@ -354,13 +354,6 @@ export class WasmRuntime extends RemoteRuntime {
                 return;
             }
 
-            if (workerToRenderMessage.connectToInstrumentId) {
-                this.connectToInstrument(
-                    workerToRenderMessage.connectToInstrumentId
-                );
-                return;
-            }
-
             if (workerToRenderMessage.freeArrayValue) {
                 // console.log(
                 //     "freeArrayValue",
@@ -976,21 +969,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker.postMessage(data);
 
         return;
-    }
-
-    connectToInstrument(instrumentId: string) {
-        for (let i = 0; i < this.globalVariables.length; i++) {
-            const globalVariable = this.globalVariables[i];
-            if (globalVariable.kind == "object") {
-                const instrument = globalVariable.objectVariableValue;
-                if (
-                    instrument instanceof InstrumentObject &&
-                    instrument.id == instrumentId
-                ) {
-                    instrument.connection.connect();
-                }
-            }
-        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////

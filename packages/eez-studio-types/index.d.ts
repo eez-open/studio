@@ -342,9 +342,6 @@ export interface WorkerToRenderMessage {
     // SCPI command to execute (only renderer is able to execute SCPI commands)
     scpiCommand?: ScpiCommand;
 
-    // connect to instrument ID
-    connectToInstrumentId?: string;
-
     // evaluated property values
     propertyValues?: IPropertyValue[];
 
