@@ -99,10 +99,7 @@ export class MQTTInitActionComponent extends ActionComponent {
                     name: "protocol",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    formText: (object: IEezObject) =>
-                        isDashboardProject(object)
-                            ? `"mqtt", "mqtts", "ws", "wss", "tcp", "ssl", "wx" or "wxs"`
-                            : `"mqtt" or "mqtts"`
+                    formText: (object: IEezObject) => `"mqtt" or "mqtts"`
                 },
                 "string"
             ),
@@ -126,7 +123,8 @@ export class MQTTInitActionComponent extends ActionComponent {
                 {
                     name: "userName",
                     type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
+                    propertyGridGroup: specificGroup,
+                    isOptional: true
                 },
                 "string"
             ),
@@ -134,7 +132,8 @@ export class MQTTInitActionComponent extends ActionComponent {
                 {
                     name: "password",
                     type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
+                    propertyGridGroup: specificGroup,
+                    isOptional: true
                 },
                 "string"
             )
@@ -259,8 +258,6 @@ export class MQTTInitActionComponent extends ActionComponent {
     }
 }
 
-registerClass("MQTTInitActionComponent", MQTTInitActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MQTTConnectActionComponent extends ActionComponent {
@@ -325,8 +322,6 @@ export class MQTTConnectActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("MQTTConnectActionComponent", MQTTConnectActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -393,8 +388,6 @@ export class MQTTDisconnectActionComponent extends ActionComponent {
     }
 }
 
-registerClass("MQTTDisconnectActionComponent", MQTTDisconnectActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const MQTT_EVENTS = [
@@ -433,7 +426,24 @@ class EventHandler extends EezObject {
                 name: "eventName",
                 displayName: "Event",
                 type: PropertyType.Enum,
-                enumItems: MQTT_EVENTS,
+                enumItems: (eventHandler: EventHandler) => {
+                    const component =
+                        getAncestorOfType<MQTTEventActionComponent>(
+                            eventHandler,
+                            MQTTEventActionComponent.classInfo
+                        )!;
+
+                    const eventEnumItems = MQTT_EVENTS.filter(
+                        event =>
+                            event.id == eventHandler.eventName ||
+                            !component.eventHandlers.find(
+                                eventHandler =>
+                                    eventHandler.eventName == event.id
+                            )
+                    );
+
+                    return eventEnumItems;
+                },
                 enumDisallowUndefined: true
             },
             {
@@ -475,13 +485,15 @@ class EventHandler extends EezObject {
                 values.handlerType == "action" &&
                 eventHandler.handlerType == "flow"
             ) {
-                const widget = getAncestorOfType<MQTTEventActionComponent>(
+                const component = getAncestorOfType<MQTTEventActionComponent>(
                     eventHandler,
-                    ProjectEditor.WidgetClass.classInfo
+                    MQTTEventActionComponent.classInfo
                 )!;
 
-                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                    widget,
+                ProjectEditor.getFlow(
+                    component
+                ).deleteConnectionLinesFromOutput(
+                    component,
                     eventHandler.eventName
                 );
             } else if (
@@ -702,8 +714,6 @@ export class MQTTEventActionComponent extends ActionComponent {
     }
 }
 
-registerClass("MQTTEventActionComponent", MQTTEventActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MQTTSubscribeActionComponent extends ActionComponent {
@@ -782,8 +792,6 @@ export class MQTTSubscribeActionComponent extends ActionComponent {
     }
 }
 
-registerClass("MQTTSubscribeActionComponent", MQTTSubscribeActionComponent);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class MQTTUnsubscribeActionComponent extends ActionComponent {
@@ -861,8 +869,6 @@ export class MQTTUnsubscribeActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("MQTTUnsubscribeActionComponent", MQTTUnsubscribeActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -952,8 +958,6 @@ export class MQTTPublishActionComponent extends ActionComponent {
         );
     }
 }
-
-registerClass("MQTTPublishActionComponent", MQTTPublishActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1211,7 +1215,7 @@ class MQTTConnection {
         });
 
         this.client.on("connect", () => {
-            //console.log("connect event", this.id);
+            console.log("connect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
@@ -1223,7 +1227,7 @@ class MQTTConnection {
         });
 
         this.client.on("reconnect", () => {
-            //console.log("reconnect event", this.id);
+            console.log("reconnect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "reconnect", null);
@@ -1231,7 +1235,7 @@ class MQTTConnection {
         });
 
         this.client.on("close", () => {
-            //console.log("close event", this.id);
+            console.log("close event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "close", null);
@@ -1243,7 +1247,7 @@ class MQTTConnection {
         });
 
         this.client.on("disconnect", () => {
-            //console.log("disconnect event", this.id);
+            console.log("disconnect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "disconnect", null);
@@ -1251,7 +1255,7 @@ class MQTTConnection {
         });
 
         this.client.on("offline", () => {
-            //console.log("offline event", this.id);
+            console.log("offline event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "offline", null);
@@ -1259,7 +1263,7 @@ class MQTTConnection {
         });
 
         this.client.on("error", err => {
-            //console.log("error event", this.id);
+            console.log("error event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(
@@ -1281,6 +1285,7 @@ class MQTTConnection {
         });
 
         this.client.on("end", () => {
+            console.log("end event", this.id);
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "end", null);
             }
@@ -1494,6 +1499,14 @@ function eez_mqtt_publish(
 
     return MQTT_ERROR_OK;
 }
+
+registerClass("MQTTInitActionComponent", MQTTInitActionComponent);
+registerClass("MQTTEventActionComponent", MQTTEventActionComponent);
+registerClass("MQTTConnectActionComponent", MQTTConnectActionComponent);
+registerClass("MQTTDisconnectActionComponent", MQTTDisconnectActionComponent);
+registerClass("MQTTSubscribeActionComponent", MQTTSubscribeActionComponent);
+registerClass("MQTTUnsubscribeActionComponent", MQTTUnsubscribeActionComponent);
+registerClass("MQTTPublishActionComponent", MQTTPublishActionComponent);
 
 (global as any).eez_mqtt_init = eez_mqtt_init;
 (global as any).eez_mqtt_deinit = eez_mqtt_deinit;

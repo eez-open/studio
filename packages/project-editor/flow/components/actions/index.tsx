@@ -2965,7 +2965,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_SHOW_MESSAGE_BOX_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
         properties: [
             {
                 name: "messageType",
@@ -3084,7 +3085,8 @@ export class ShowKeyboardActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYBOARD_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
         properties: [
             makeExpressionProperty(
                 {
@@ -3212,7 +3214,8 @@ export class ShowKeypadActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_SHOW_KEYPAD_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
         properties: [
             makeExpressionProperty(
                 {

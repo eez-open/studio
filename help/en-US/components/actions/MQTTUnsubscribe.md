@@ -1,17 +1,29 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Unsubscribe from a topic.
 
 # PROPERTIES
 
-## Connection
+## Connection [DRAFT]
 
-## Topic
+MQTT konekcija koja se koristi.
+
+## Topic [DRAFT]
+
+Topic to unsubscribe from.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-# EXAMPLES
+A standard sequence output.
+
+# EXAMPLES [DRAFT]
+
+-   MQTT

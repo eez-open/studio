@@ -1,15 +1,25 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Inicira odspajanje sa servera, koje će biti potvrđeno sa `Close` eventom i nakon toga `End` eventom.
 
 # PROPERTIES
 
-## Connection
+## Connection [DRAFT]
+
+MQTT konekcija sa koje se odspajamo.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-# EXAMPLES
+A standard sequence output. Akcija odmah izlazi na ovaj output, a u pozadini se pokušavamo spojiti na server.
+
+# EXAMPLES [DRAFT]
+
+-   MQTT
