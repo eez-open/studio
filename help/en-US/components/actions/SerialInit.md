@@ -36,8 +36,8 @@ A standard sequence input.
 
 # OUTPUTS
 
-A standard sequence output.
-
 ## seqout [DRAFT]
+
+A standard sequence output.
 
 # EXAMPLES [EMPTY]

@@ -58,7 +58,7 @@ registerActionComponents("Python", [
             },
             {
                 name: "scriptSourceInline",
-                displayName: "Script source",
+                displayName: "Inline script",
                 type: "inline-code",
                 language: "Python",
                 enabled: (...props: string[]) => {
@@ -67,7 +67,7 @@ registerActionComponents("Python", [
             },
             {
                 name: "scriptSourceInlineFromExpression",
-                displayName: "Script source",
+                displayName: "Inline script as expression",
                 type: "expression",
                 valueType: "string",
                 enabled: (...props: string[]) => {
@@ -76,7 +76,7 @@ registerActionComponents("Python", [
             },
             {
                 name: "scriptSourceFile",
-                displayName: "Script source",
+                displayName: "Script file",
                 type: "expression",
                 valueType: "string",
                 enabled: (...props: string[]) => {
