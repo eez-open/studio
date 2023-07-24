@@ -706,6 +706,8 @@ export interface IDashboardComponentContext {
         value: any
     ) => void;
 
+    assignProperty(inputName: string, value: any): void;
+
     getOutputType: (outputName: string) => IType | undefined;
 
     propagateValue: (outputName: string, value: any) => void;

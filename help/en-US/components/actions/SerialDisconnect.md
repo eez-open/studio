@@ -1,15 +1,25 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcije izvršava odspajanje sa serial porta, nakon čega se izlazi na `seqout` output.
 
 # PROPERTIES
 
-## Connection
+## Connection [DRAFT]
+
+MQTT konekcija sa koje se odspajamo.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-# EXAMPLES
+A standard sequence output.
+
+# EXAMPLES [DRAFT]
+
+-   SerialPort

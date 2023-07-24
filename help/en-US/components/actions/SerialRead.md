@@ -1,17 +1,29 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcija šalje read stream na `data` output.
 
 # PROPERTIES
 
-## Connection
+## Connection [DRAFT]
+
+Serial konekcija.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-## data
+A standard sequence output.
 
-# EXAMPLES
+## data [DRAFT]
+
+Output na koji se šalje read stream.
+
+# EXAMPLES [DRAFT]
+
+-   SerialPort

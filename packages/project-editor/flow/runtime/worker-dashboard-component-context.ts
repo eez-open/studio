@@ -232,13 +232,47 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             throw `property "${propertyName}" has no field "${fieldName}"`;
         }
 
-        const valuePtr = createWasmValue(this.WasmFlowRuntime, value);
+        const valuePtr = createWasmValue(
+            this.WasmFlowRuntime,
+            value,
+            valueTypeIndex
+        );
 
         this.WasmFlowRuntime._setPropertyField(
             this.flowStateIndex,
             this.componentIndex,
             propertyIndex,
             fieldIndex,
+            valuePtr
+        );
+
+        this.WasmFlowRuntime._valueFree(valuePtr);
+    }
+
+    assignProperty(propertyName: string, value: any) {
+        const flowIndex = this.getFlowIndex();
+        const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
+        const componentIndex = this.getComponentIndex();
+        const component = flow.components[componentIndex];
+        const propertyIndex = component.propertyIndexes[propertyName];
+        if (propertyIndex == undefined) {
+            this.throwError(`Property "${propertyName}" not found`);
+        }
+
+        const valueTypeIndex =
+            component.properties[propertyIndex].valueTypeIndex;
+
+        const valuePtr = createWasmValue(
+            this.WasmFlowRuntime,
+            value,
+            valueTypeIndex
+        );
+
+        this.WasmFlowRuntime._assignProperty(
+            this.flowStateIndex,
+            this.componentIndex,
+            propertyIndex,
+            0,
             valuePtr
         );
 

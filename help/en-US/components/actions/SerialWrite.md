@@ -1,17 +1,29 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ova akcija šalje string na serial port.
 
 # PROPERTIES
 
-## Connection
+## Connection [DRAFT]
 
-## Data
+Serial konekcija.
+
+## Data [DRAFT]
+
+String koji se šalje na serial port.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## seqout
+## seqout [DRAFT]
 
-# EXAMPLES
+A standard sequence output.
+
+# EXAMPLES [DRAFT]
+
+-   SerialPort

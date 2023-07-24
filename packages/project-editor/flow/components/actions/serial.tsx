@@ -1,4 +1,3 @@
-import React from "react";
 import { action, observable, runInAction, makeObservable, toJS } from "mobx";
 import { Stream } from "stream";
 
@@ -27,212 +26,15 @@ import {
     ValueType
 } from "project-editor/features/variable/value-type";
 import type { IVariable } from "project-editor/flow/flow-interfaces";
+import {
+    SERIAL_STATUS_ICON,
+    SERIAL_CONNECT_ICON,
+    SERIAL_DISCONNECT_ICON,
+    SERIAL_READ_ICON,
+    SERIAL_WRITE_ICON
+} from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const statusIcon: any = (
-    <svg viewBox="0 0 68.792 34.396">
-        <g transform="translate(-21.422 -163.072)" fill="none">
-            <circle
-                style={{
-                    opacity: 1,
-                    fill: "maroon",
-                    fillOpacity: 0,
-                    stroke: "#000",
-                    strokeWidth: "1.5",
-                    strokeLinecap: "round",
-                    strokeLinejoin: "miter",
-                    strokeMiterlimit: 4,
-                    strokeDasharray: "none",
-                    strokeDashoffset: 0,
-                    strokeOpacity: 1,
-                    paintOrder: "fill markers stroke"
-                }}
-                cx="43.765"
-                cy="180.27"
-                r="7.955"
-            />
-            <circle
-                style={{
-                    opacity: 1,
-                    fill: "maroon",
-                    fillOpacity: 0,
-                    stroke: "#000",
-                    strokeWidth: "1.5",
-                    strokeLinecap: "round",
-                    strokeLinejoin: "miter",
-                    strokeMiterlimit: 4,
-                    strokeDasharray: "none",
-                    strokeDashoffset: 0,
-                    strokeOpacity: 1,
-                    paintOrder: "fill markers stroke"
-                }}
-                cx="67.686"
-                cy="180.27"
-                r="7.955"
-            />
-        </g>
-        <path
-            d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"
-            style={{
-                fill: "none",
-                fillRule: "evenodd",
-                stroke: "#000",
-                strokeWidth: "1.5",
-                strokeLinecap: "butt",
-                strokeLinejoin: "miter",
-                strokeMiterlimit: 4,
-                strokeDasharray: "none",
-                strokeOpacity: 1
-            }}
-            transform="translate(-21.422 -163.072)"
-        />
-    </svg>
-);
-
-const connectIcon: any = (
-    <svg viewBox="0 0 68.792 34.396">
-        <g fill="none" stroke="#000" strokeWidth="1.5">
-            <g
-                transform="translate(-29.444 -163.072)"
-                strokeLinecap="round"
-                paintOrder="fill markers stroke"
-            >
-                <circle cx="43.765" cy="180.27" r="7.955" />
-                <circle cx="67.686" cy="180.27" r="7.955" />
-            </g>
-            <path d="M2.23 8.334v17.727M26.282 8.334v17.727M50.517 8.334v17.727" />
-        </g>
-        <path
-            d="m65.856 287.11-7.525 7.526-4.181-4.18v-5.018l4.18 4.168 7.526-7.513z"
-            transform="translate(0 -262.604)"
-            style={{
-                lineHeight: "129.99999523%",
-                fontVariantLigatures: "normal",
-                fontVariantCaps: "normal",
-                fontVariantNumeric: "normal",
-                fontFeatureSettings: "normal",
-                textAlign: "start"
-            }}
-            fontWeight={400}
-            fontSize="26.758"
-            fontFamily="Webdings"
-            letterSpacing={0}
-            wordSpacing={0}
-            strokeWidth=".794"
-        />
-    </svg>
-);
-
-const disconnectIcon: any = (
-    <svg viewBox="0 0 68.792 34.396">
-        <g stroke="#000">
-            <g fill="none" strokeWidth="1.5">
-                <g
-                    transform="translate(-29.444 -163.072)"
-                    strokeLinecap="round"
-                    paintOrder="fill markers stroke"
-                >
-                    <circle cx="43.765" cy="180.27" r="7.955" />
-                    <circle cx="67.686" cy="180.27" r="7.955" />
-                </g>
-                <path d="M2.23 8.334v17.727M26.282 8.334v17.727M50.517 8.334v17.727" />
-            </g>
-            <path
-                d="M66.51 294.872h-1.859l-4.648-4.59-4.59 4.59h-1.917v-1.86l4.59-4.647-4.59-4.59v-1.918h1.917l4.59 4.59 4.648-4.59h1.86v1.918l-4.59 4.59 4.59 4.59z"
-                transform="translate(0 -262.604)"
-                style={{
-                    lineHeight: "129.99999523%",
-                    fontVariantLigatures: "normal",
-                    fontVariantCaps: "normal",
-                    fontVariantNumeric: "normal",
-                    fontFeatureSettings: "normal",
-                    textAlign: "start"
-                }}
-                fontWeight={400}
-                fontSize="19.832"
-                fontFamily="Webdings"
-                letterSpacing={0}
-                wordSpacing={0}
-                strokeWidth=".794"
-            />
-        </g>
-    </svg>
-);
-
-const readIcon: any = (
-    <svg viewBox="0 0 68.792 34.396">
-        <g stroke="#000">
-            <g fill="none" strokeWidth="1.5">
-                <g
-                    transform="translate(-14.994 -163.072)"
-                    strokeLinecap="round"
-                    paintOrder="fill markers stroke"
-                >
-                    <circle cx="43.765" cy="180.27" r="7.955" />
-                    <circle cx="67.686" cy="180.27" r="7.955" />
-                </g>
-                <path d="M16.68 8.334v17.727M40.731 8.334v17.727M64.967 8.334v17.727" />
-            </g>
-            <path
-                d="m11.939 279.802-8.362 8.362V271.44z"
-                transform="translate(0 -262.604)"
-                style={{
-                    lineHeight: "129.99999523%",
-                    fontVariantLigatures: "normal",
-                    fontVariantCaps: "normal",
-                    fontVariantNumeric: "normal",
-                    fontFeatureSettings: "normal",
-                    textAlign: "start"
-                }}
-                fontWeight={400}
-                fontSize="26.758"
-                fontFamily="Webdings"
-                letterSpacing={0}
-                wordSpacing={0}
-                strokeWidth=".794"
-            />
-        </g>
-    </svg>
-);
-
-const writeIcon: any = (
-    <svg viewBox="0 0 68.792 34.396">
-        <g stroke="#000">
-            <g fill="none" strokeWidth="1.5">
-                <g
-                    transform="translate(-28.386 -163.072)"
-                    strokeLinecap="round"
-                    paintOrder="fill markers stroke"
-                >
-                    <circle cx="43.765" cy="180.27" r="7.955" />
-                    <circle cx="67.686" cy="180.27" r="7.955" />
-                </g>
-                <path d="M3.289 8.334v17.727M27.34 8.334v17.727M51.575 8.334v17.727" />
-            </g>
-            <path
-                d="m65.751 279.802-8.361 8.362V271.44z"
-                transform="translate(0 -262.604)"
-                style={{
-                    lineHeight: "129.99999523%",
-                    fontVariantLigatures: "normal",
-                    fontVariantCaps: "normal",
-                    fontVariantNumeric: "normal",
-                    fontFeatureSettings: "normal",
-                    textAlign: "start"
-                }}
-                fontWeight={400}
-                fontSize="26.758"
-                fontFamily="Webdings"
-                letterSpacing={0}
-                wordSpacing={0}
-                strokeWidth=".794"
-            />
-        </g>
-    </svg>
-);
-
-const listPortsIcon = statusIcon;
 
 const componentHeaderColor = "#cca3ba";
 
@@ -258,8 +60,139 @@ registerSystemStructure({
 
 registerActionComponents("Serial Port", [
     {
+        name: "SerialInit",
+        icon: SERIAL_STATUS_ICON as any,
+        componentHeaderColor,
+        bodyPropertyName: "connection",
+        inputs: [],
+        outputs: [],
+        properties: [
+            {
+                name: "connection",
+                type: "assignable-expression",
+                valueType: "object:SerialConnection"
+            },
+
+            {
+                name: "port",
+                type: "expression",
+                valueType: "object:string"
+            },
+
+            {
+                name: "baudRate",
+                type: "expression",
+                valueType: "object:number"
+            },
+
+            {
+                name: "dataBits",
+                type: "expression",
+                valueType: "object:number",
+                formText: `5, 6, 7, 8`
+            },
+
+            {
+                name: "stopBits",
+                type: "expression",
+                valueType: "object:number",
+                formText: `1, 2`
+            },
+
+            {
+                name: "parity",
+                type: "expression",
+                valueType: "object:string",
+                formText: `"none", "even", "mark", "odd", "space"`
+            }
+        ],
+        defaults: {
+            port: `"COM1"`,
+            baudRate: "9600",
+            dataBits: "8",
+            stopBits: "1",
+            parity: `"even"`
+        },
+        execute: (context: IDashboardComponentContext) => {
+            const port = context.evalProperty<string>("port");
+            if (!port || typeof port != "string") {
+                context.throwError(`invalid Port property`);
+                return;
+            }
+
+            const baudRate = context.evalProperty<number>("baudRate");
+            if (
+                baudRate == undefined ||
+                typeof baudRate != "number" ||
+                isNaN(baudRate) ||
+                baudRate <= 0
+            ) {
+                context.throwError(`invalid Baud rate property`);
+                return;
+            }
+
+            const dataBits = context.evalProperty<number>("dataBits");
+            if (
+                dataBits == undefined ||
+                typeof dataBits != "number" ||
+                isNaN(dataBits) ||
+                (dataBits != 8 &&
+                    dataBits != 5 &&
+                    dataBits != 6 &&
+                    dataBits != 5)
+            ) {
+                context.throwError(`invalid Data bits property`);
+                return;
+            }
+
+            const stopBits = context.evalProperty<number>("stopBits");
+            if (
+                stopBits == undefined ||
+                typeof stopBits != "number" ||
+                isNaN(stopBits) ||
+                (stopBits != 1 && stopBits != 2)
+            ) {
+                context.throwError(`invalid Stop bits property`);
+                return;
+            }
+
+            const parity = context.evalProperty<string>("parity");
+            if (
+                !parity ||
+                typeof parity != "string" ||
+                (parity != "none" &&
+                    parity != "even" &&
+                    parity != "mark" &&
+                    parity != "odd" &&
+                    parity != "space")
+            ) {
+                context.throwError(`invalid Partiy property`);
+                return;
+            }
+
+            const constructorParams: SerialConnectionConstructorParams = {
+                port,
+                baudRate,
+                dataBits,
+                stopBits,
+                parity
+            };
+
+            const id = nextSerialConnectionId++;
+            let serialConnection = new SerialConnection(id, constructorParams);
+            serialConnections.set(id, serialConnection);
+
+            context.assignProperty("connection", {
+                id: serialConnection.id,
+                status: serialConnection.status
+            });
+
+            context.propagateValueThroughSeqout();
+        }
+    },
+    {
         name: "SerialConnect",
-        icon: connectIcon,
+        icon: SERIAL_CONNECT_ICON as any,
         componentHeaderColor,
         bodyPropertyName: "connection",
         inputs: [],
@@ -302,11 +235,6 @@ registerActionComponents("Serial Port", [
         },
         onWasmWorkerMessage: async (flowState, message, messageId) => {
             let serialConnection = serialConnections.get(message.id);
-            if (message.id == undefined) {
-                const id = nextSerialConnectionId++;
-                serialConnection = new SerialConnection(id, message);
-                serialConnections.set(id, serialConnection);
-            }
             if (serialConnection) {
                 try {
                     await serialConnection.connect();
@@ -328,7 +256,7 @@ registerActionComponents("Serial Port", [
     },
     {
         name: "SerialDisconnect",
-        icon: disconnectIcon,
+        icon: SERIAL_DISCONNECT_ICON as any,
         componentHeaderColor,
         bodyPropertyName: "connection",
         inputs: [],
@@ -373,7 +301,7 @@ registerActionComponents("Serial Port", [
     },
     {
         name: "SerialRead",
-        icon: readIcon,
+        icon: SERIAL_READ_ICON as any,
         componentHeaderColor,
         inputs: [],
         outputs: [
@@ -446,7 +374,7 @@ registerActionComponents("Serial Port", [
     },
     {
         name: "SerialWrite",
-        icon: writeIcon,
+        icon: SERIAL_WRITE_ICON as any,
         componentHeaderColor,
         bodyPropertyName: "data",
         inputs: [],
@@ -510,7 +438,7 @@ registerActionComponents("Serial Port", [
     },
     {
         name: "SerialListPorts",
-        icon: listPortsIcon,
+        icon: SERIAL_STATUS_ICON as any,
         componentHeaderColor,
         inputs: [],
         outputs: [
@@ -562,7 +490,7 @@ registerObjectVariableType("SerialConnection", {
     ): Promise<SerialConnectionConstructorParams | undefined> => {
         return await showConnectDialog(variable, constructorParams);
         // return {
-        //     port: "COM24",
+        //     port: "COM1",
         //     baudRate: 115200,
         //     dataBits: 8,
         //     parity: "even",

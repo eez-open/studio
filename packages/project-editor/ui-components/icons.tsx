@@ -2773,3 +2773,205 @@ export const FOLDER_ICON = (
         />
     </svg>
 );
+
+export const SERIAL_STATUS_ICON = (
+    <svg viewBox="0 0 68.792 34.396">
+        <g transform="translate(-21.422 -163.072)" fill="none">
+            <circle
+                style={{
+                    opacity: 1,
+                    fill: "maroon",
+                    fillOpacity: 0,
+                    stroke: "#000",
+                    strokeWidth: "1.5",
+                    strokeLinecap: "round",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 4,
+                    strokeDasharray: "none",
+                    strokeDashoffset: 0,
+                    strokeOpacity: 1,
+                    paintOrder: "fill markers stroke"
+                }}
+                cx="43.765"
+                cy="180.27"
+                r="7.955"
+            />
+            <circle
+                style={{
+                    opacity: 1,
+                    fill: "maroon",
+                    fillOpacity: 0,
+                    stroke: "#000",
+                    strokeWidth: "1.5",
+                    strokeLinecap: "round",
+                    strokeLinejoin: "miter",
+                    strokeMiterlimit: 4,
+                    strokeDasharray: "none",
+                    strokeDashoffset: 0,
+                    strokeOpacity: 1,
+                    paintOrder: "fill markers stroke"
+                }}
+                cx="67.686"
+                cy="180.27"
+                r="7.955"
+            />
+        </g>
+        <path
+            d="M31.674 171.406v17.728M55.726 171.406v17.728M79.96 171.406v17.728"
+            style={{
+                fill: "none",
+                fillRule: "evenodd",
+                stroke: "#000",
+                strokeWidth: "1.5",
+                strokeLinecap: "butt",
+                strokeLinejoin: "miter",
+                strokeMiterlimit: 4,
+                strokeDasharray: "none",
+                strokeOpacity: 1
+            }}
+            transform="translate(-21.422 -163.072)"
+        />
+    </svg>
+);
+
+export const SERIAL_CONNECT_ICON = (
+    <svg viewBox="0 0 68.792 34.396">
+        <g fill="none" stroke="#000" strokeWidth="1.5">
+            <g
+                transform="translate(-29.444 -163.072)"
+                strokeLinecap="round"
+                paintOrder="fill markers stroke"
+            >
+                <circle cx="43.765" cy="180.27" r="7.955" />
+                <circle cx="67.686" cy="180.27" r="7.955" />
+            </g>
+            <path d="M2.23 8.334v17.727M26.282 8.334v17.727M50.517 8.334v17.727" />
+        </g>
+        <path
+            d="m65.856 287.11-7.525 7.526-4.181-4.18v-5.018l4.18 4.168 7.526-7.513z"
+            transform="translate(0 -262.604)"
+            style={{
+                lineHeight: "129.99999523%",
+                fontVariantLigatures: "normal",
+                fontVariantCaps: "normal",
+                fontVariantNumeric: "normal",
+                fontFeatureSettings: "normal",
+                textAlign: "start"
+            }}
+            fontWeight={400}
+            fontSize="26.758"
+            fontFamily="Webdings"
+            letterSpacing={0}
+            wordSpacing={0}
+            strokeWidth=".794"
+        />
+    </svg>
+);
+
+export const SERIAL_DISCONNECT_ICON = (
+    <svg viewBox="0 0 68.792 34.396">
+        <g stroke="#000">
+            <g fill="none" strokeWidth="1.5">
+                <g
+                    transform="translate(-29.444 -163.072)"
+                    strokeLinecap="round"
+                    paintOrder="fill markers stroke"
+                >
+                    <circle cx="43.765" cy="180.27" r="7.955" />
+                    <circle cx="67.686" cy="180.27" r="7.955" />
+                </g>
+                <path d="M2.23 8.334v17.727M26.282 8.334v17.727M50.517 8.334v17.727" />
+            </g>
+            <path
+                d="M66.51 294.872h-1.859l-4.648-4.59-4.59 4.59h-1.917v-1.86l4.59-4.647-4.59-4.59v-1.918h1.917l4.59 4.59 4.648-4.59h1.86v1.918l-4.59 4.59 4.59 4.59z"
+                transform="translate(0 -262.604)"
+                style={{
+                    lineHeight: "129.99999523%",
+                    fontVariantLigatures: "normal",
+                    fontVariantCaps: "normal",
+                    fontVariantNumeric: "normal",
+                    fontFeatureSettings: "normal",
+                    textAlign: "start"
+                }}
+                fontWeight={400}
+                fontSize="19.832"
+                fontFamily="Webdings"
+                letterSpacing={0}
+                wordSpacing={0}
+                strokeWidth=".794"
+            />
+        </g>
+    </svg>
+);
+
+export const SERIAL_READ_ICON = (
+    <svg viewBox="0 0 68.792 34.396">
+        <g stroke="#000">
+            <g fill="none" strokeWidth="1.5">
+                <g
+                    transform="translate(-14.994 -163.072)"
+                    strokeLinecap="round"
+                    paintOrder="fill markers stroke"
+                >
+                    <circle cx="43.765" cy="180.27" r="7.955" />
+                    <circle cx="67.686" cy="180.27" r="7.955" />
+                </g>
+                <path d="M16.68 8.334v17.727M40.731 8.334v17.727M64.967 8.334v17.727" />
+            </g>
+            <path
+                d="m11.939 279.802-8.362 8.362V271.44z"
+                transform="translate(0 -262.604)"
+                style={{
+                    lineHeight: "129.99999523%",
+                    fontVariantLigatures: "normal",
+                    fontVariantCaps: "normal",
+                    fontVariantNumeric: "normal",
+                    fontFeatureSettings: "normal",
+                    textAlign: "start"
+                }}
+                fontWeight={400}
+                fontSize="26.758"
+                fontFamily="Webdings"
+                letterSpacing={0}
+                wordSpacing={0}
+                strokeWidth=".794"
+            />
+        </g>
+    </svg>
+);
+
+export const SERIAL_WRITE_ICON = (
+    <svg viewBox="0 0 68.792 34.396">
+        <g stroke="#000">
+            <g fill="none" strokeWidth="1.5">
+                <g
+                    transform="translate(-28.386 -163.072)"
+                    strokeLinecap="round"
+                    paintOrder="fill markers stroke"
+                >
+                    <circle cx="43.765" cy="180.27" r="7.955" />
+                    <circle cx="67.686" cy="180.27" r="7.955" />
+                </g>
+                <path d="M3.289 8.334v17.727M27.34 8.334v17.727M51.575 8.334v17.727" />
+            </g>
+            <path
+                d="m65.751 279.802-8.361 8.362V271.44z"
+                transform="translate(0 -262.604)"
+                style={{
+                    lineHeight: "129.99999523%",
+                    fontVariantLigatures: "normal",
+                    fontVariantCaps: "normal",
+                    fontVariantNumeric: "normal",
+                    fontFeatureSettings: "normal",
+                    textAlign: "start"
+                }}
+                fontWeight={400}
+                fontSize="26.758"
+                fontFamily="Webdings"
+                letterSpacing={0}
+                wordSpacing={0}
+                strokeWidth=".794"
+            />
+        </g>
+    </svg>
+);

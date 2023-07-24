@@ -1182,7 +1182,7 @@ class MQTTConnection {
         public constructorParams: MQTTConnectionConstructorParams,
         public wasmModuleId?: number
     ) {
-        console.log("new MQTTConnection", id);
+        //console.log("new MQTTConnection", id);
         makeObservable(this, {
             error: observable,
             isConnected: observable,
@@ -1215,7 +1215,7 @@ class MQTTConnection {
         });
 
         this.client.on("connect", () => {
-            console.log("connect event", this.id);
+            //console.log("connect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "connect", null);
@@ -1227,7 +1227,7 @@ class MQTTConnection {
         });
 
         this.client.on("reconnect", () => {
-            console.log("reconnect event", this.id);
+            //console.log("reconnect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "reconnect", null);
@@ -1235,7 +1235,7 @@ class MQTTConnection {
         });
 
         this.client.on("close", () => {
-            console.log("close event", this.id);
+            //console.log("close event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "close", null);
@@ -1247,7 +1247,7 @@ class MQTTConnection {
         });
 
         this.client.on("disconnect", () => {
-            console.log("disconnect event", this.id);
+            //console.log("disconnect event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "disconnect", null);
@@ -1255,7 +1255,7 @@ class MQTTConnection {
         });
 
         this.client.on("offline", () => {
-            console.log("offline event", this.id);
+            //console.log("offline event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "offline", null);
@@ -1263,7 +1263,7 @@ class MQTTConnection {
         });
 
         this.client.on("error", err => {
-            console.log("error event", this.id);
+            //console.log("error event", this.id);
 
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(
@@ -1285,7 +1285,7 @@ class MQTTConnection {
         });
 
         this.client.on("end", () => {
-            console.log("end event", this.id);
+            //console.log("end event", this.id);
             if (this.wasmModuleId != undefined) {
                 sendMqttEvent(this.wasmModuleId, this.id, "end", null);
             }
