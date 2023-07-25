@@ -1,40 +1,40 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-S ovom akcijem možemo dodati jedan ili više event handlera koji se mogu primiti od strane MQTT konekcije. Nakon što se izvrši ova akcija može se pozvati MQTTConnect akcija.
+With this Action we can add one or more event handlers that can be received by the MQTT connection. After this Action is executed, the _MQTTConnect_ Action can be called.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija čije evente žalimo handlati.
+MQTT connection to the server whose events are to be handled.
 
 ## Event handlers [DRAFT]
 
-List evenata koje želimo handlati. Za svaki item u listi moramo odabrati `Event`, `Handler type` i opcionalno `Action`. `Event` je vrsta eventa koji želimo handlati i moguće vrijednosti su:
+List of events to be handled. For each item in the list, it will be necessary to select `Event`, `Handler type` and optionally `Action`. `Event' is the type of event we want to handle and the possible values are:
 
--   `Connect`. Emitira se u slučaju uspješnog spajana ili ponovnog spajanja (reconnect).
--   `Reconnect`. Emitira se kada se pokušava ponovno spojiti nakon što je konekcija disconnectana.
--   `Close`. Emitira se nakon što je konekcija disconnectana.
--   `Disconnect`. Emitira se kada se primi disconnect packet od strane brokera.
--   `Offline`. Emitira se kada klijent otiđe offline.
--   `End`. Emitira se kada se izvrši MQTTDisconnect akcija.
--   `Error`. Emitira se kada se klijent ne može spojiti ili je došlo do parsing greške.
--   `Message`. Emitira se kada klijent primit publishani packet od strane servera za topic na koji smo se prethodno predbilježili sa MQTTSubscribe akcijom. Kroz output se šalje podatak tipa `struct:$MQTTMessage`, radi se o sistemskoj strukturi koja ima ove membere:
+- `Connect` - It is sent in case of successful connection or reconnect.
+- `Reconnect` - Sent when attempting to reconnect after a connection has been terminated.
+- `Close` - It is sent after the connection is terminated.
+- `Disconnect` - Sent when a disconnect packet is received by the broker.
+- `Offline` - Sent when the client goes offline.
+- `End` - Sent when the _MQTTDisconnect_ Action is performed.
+- `Error` - Sent when the client cannot connect or a parsing error has occurred.
+- `Message` - It is sent when the client receives a published packet from the server for the topic we previously subscribed to with the _MQTTSubscribe_ Action. Data of the type `struct:$MQTTMessage` is sent through the output, it is a system structure that has these members:
 
-    -   `topic`: Naziv topica za koji je packet publishan.
-    -   `payload`: Sadržaj poruke koja je pristigla.
+     - `topic`: The name of the topic for which the packet was published.
+     - `payload`: Content of the received message.
 
-`Handler type` može biti `Flow` ili `Action`. Ako se odabere `Flow` onda će biti dodan output kroz koji se izlazi ako je event emitiran. A ako se odabere `Action` onda je potrebno još postaviti i `Action`, tj. naziv user akcije koja se izvršava kad dođe event.
+`Handler type` can be `Flow` or `Action`. If `Flow` is selected then an output will be added through which the Flow execution continues if the event is sent. If `Action` is selected, then `Action` must also be set, i.e. the name of the User action that is executed when the event is received.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

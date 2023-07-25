@@ -1,30 +1,30 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija šalje poruku od Flowa prema pokrenutoj Python skripti.
+Sends a message from Flow to a running Python script.
 
 # PROPERTIES
 
-## Handle [DRAFT]
+## Handle
 
-Ovo je handle koji se dobio prilikom izvršavanja PythonRun akcija a služi za targetiranje kojoj skriptu želimo poslati message budući da u nekom trenutku može biti pokrenuto više skripti.
+The handle obtained during the execution of the _PythonRun_ action is used to determine which script we want to send the message to, since multiple scripts can be executed at the same time.
 
-## Message [DRAFT]
+## Message
 
-Message koji se šalje.
+Message to be sent.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-## handle [DRAFT]
+## handle
 
-Handle se može predati i preko ovog inputa. A ako se handle dobija na neki drugi način, npr. iz varijable preko `Handle` propertija, onda se ovaj input može obrisati u "Flow - Inputs" sekciji.
+The handle can also be passed through this input. If the handle is obtained in some other way, e.g. from a variable via the `Handle` property, then this input can be removed in the "Flow - Inputs" section.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

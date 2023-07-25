@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcije izvršava spajanje na serial port. Ako je spajanje uspješno izlazi se kroz `seqout` output, a ako je došlo do greške ona se može loviti ako je `Catch error' enabled.
+Makes a connection to the serial port. If the connection is successful, Flow execution continues through the `seqout` output, and if an error occurred, it can be caught if `Catch error` is enabled.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija na koju se spajamo.
+The name of the connection to be used for serial communication.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

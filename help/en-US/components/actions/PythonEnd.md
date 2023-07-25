@@ -1,26 +1,26 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija zaustavlja pokrenutu python skriptu.
+Stops a running python script.
 
 # PROPERTIES
 
-## Handle [DRAFT]
+## Handle
 
-Ovo je handle koji se dobio prilikom izvršavanja PythonRun akcija a služi za targetiranje koju skriptu želimo zaustaviti budući da u nekom trenutku može biti pokrenuto više skripti.
+The handle obtained during the execution of _PythonRun_ actions, and is used to determine which script we want to stop, since multiple scripts can be executed.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-## handle [DRAFT]
+## handle
 
-Handle se može predati i preko ovog inputa. A ako se handle dobija na neki drugi način, npr. iz varijable preko `Handle` propertija, onda se ovaj input može obrisati u "Flow - Inputs" sekciji.
+The handle can also be passed through this input. If the handle is obtained in some other way, e.g. from a variable via the `Handle` property, then this input can be removed in the "Flow - Inputs" section.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

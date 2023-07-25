@@ -1,42 +1,42 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Kreira i inicijalizira Serial connection object sa konekcijskim parametrima koji se definiraju kroz propertije. Ovu akciju je potrebno prvu izvršiti, a nakon nje treba pozvati SerialConnect akciju.
+Creates and initializes a Serial connection object with connection parameters that are defined through properties. This Action must be executed first, after which the _SerialConnect_ Action must be called.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-Connection object tipa `object:SerialConnection` koji se kreira i inicijalizira.
+Connection object of type `object:SerialConnection` to be created and initialized.
 
-## Port [DRAFT]
+## Port
 
-Path of the serial port.
+Serial port name.
 
-## Baud rate [DRAFT]
+## Baud rate
 
-Port's baud rate.
+Serial port speed.
 
-## Data bits [DRAFT]
+## Data bits
 
-Port's data bits. Possible values: 5, 6, 7, 8.
+Serial port data bits. Allowed values are `5`, `6`, `7` or `8`.
 
-## Stop bits [DRAFT]
+## Stop bits
 
-Port's stop bits. Possible values: 1, 2
+Serial port stop bits. Allowed values are `1` or `2`.
 
-## Parity [DRAFT]
+## Parity
 
-Port's parity. Possible values: "none", "even", "mark", "odd", "space"
+Serial port parity. Allowed values are `"none"`, `"even"`, `"mark"`, `"odd"` or `"space"`
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

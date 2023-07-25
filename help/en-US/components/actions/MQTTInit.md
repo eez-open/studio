@@ -1,42 +1,43 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Kreira i inicijalizira MQTT connection object sa konekcijskim parametrima koji se definiraju kroz propertije. Ovu akciju je potrebno prvu izvršiti, a nakon nje treba pozvati MQTTEvent akciju.
+Creates and initializes an MQTT connection object with connection parameters that are defined through properties.  
+This Action must be executed first, and after it the _MQTTEvent_ Action must be called.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-Connection object tipa `object:MQTTConnection` koji se kreira i inicijalizira.
+Connection object of type `object:MQTTConnection` which will be created and initialized.
 
-## Protocol [DRAFT]
+## Protocol
 
-Protokol koji se koristi. Moguće vrijednosti su `"mqtt"` ili `"mqtts"` (ovo je secure varijanta).
+The protocol used for the connection. Possible values are `"mqtt"` or for secure connection `"mqtts"`
 
-## Host [DRAFT]
+## Host
 
-Naziv server na koji se spajamo.
+The name of the MQTT server to connect to.
 
-## Port [DRAFT]
+## Port
 
-Port na koji se spajamo. Default je 1883.
+The port number that will be used for the connection. The default is `1883`.
 
-## User name [DRAFT]
+## User name
 
-Korisničko ime. Može se ostaviti prazno ako se ne koristi.
+Username to be used for connection authorization. Can be left blank if not used.
 
-## Password [DRAFT]
+## Password
 
-Korisnički password. Može se ostaviti prazno ako se ne koristi.
+User password to be used for connection authorization. Can be left blank if not used.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

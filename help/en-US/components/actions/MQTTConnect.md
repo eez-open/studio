@@ -1,24 +1,24 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Inicira spajanje na MQTT server, ako je spajanje uspješno biti će emitiran Connect event, odnosno Error event ako je došlo do greške. Ako je došlo do greške ili se jednom uspostavljena konekcija prekinula biti će pokušan periodično reconnect dok se konekcija ponovno ne uspostavi, što će biti javljeno sa emitiranim Reconnect eventom. Sve ovo se dešava asinkrono u pozadini, sve dok se ne pozove MQTTDisconnect, a svaka promjena stanja biti će javljena sa eventom koji se može obraditi kroz MQTTEvent akciju.
+This Action initiates a connection to the MQTT server, and if the connection is successful, a Connect event will be sent, or an Error event if an error occurred. If an error occurred or the once established connection was interrupted, a periodic reconnect will be attempted until the connection is re-established, which will be reported by sending a Reconnect event. All this happens asynchronously in the background, until MQTTDisconnect is called, and any state change will be reported with an event that can be processed through the _MQTTEvent_ Action.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija na koju se spajamo.
+The name of the MQTT connection that will be used to establish a connection with the server.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-A standard sequence output. Akcija odmah izlazi na ovaj output, a u pozadini se pokušavamo odspojiti na server.
+A standard sequence output. Flow execution continues immediately through this output, and in the background it tries to establish a connection with the server.
 
 # EXAMPLES [DRAFT]
 

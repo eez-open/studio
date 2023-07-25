@@ -1,46 +1,46 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Pomoću ove akcije možemo dohvati propertije instrumenta koji su definirani unutar IEXT instrument ekstenzije.
+Using this Action, we can retrieve the instrument properties that are defined within the IEXT instrument extension.
 
-Npr., u `Rigol Waveform Data` exampleu želimo dohvatiti koliko kanala instrument ima i koja boja se koristi za svaki od kanala. Prvo, možemo pogladati koje sve propertije ima npr. Rigol DS1000Z instrument:
+For example, in the `Rigol Waveform Data` example, we want to retrieve how many channels the instrument has and what color is used for each channel. First, we can look at all the properties of the Rigol DS1000Z instrument:
 
 ![Alt text](../images/get_instrument_properties_rigol_props.png)
 
-Sada je potrebno definirati Flow variable type u koji želimo pospremiti propertije koji nas zanimaju. U ovom slučaju definiramo type `struct:InstrumentProperties` definiran ovako:
+Now it is necessary to define the Flow variable type in which we want to store the properties we are interested in. In this case, we define the type `struct:InstrumentProperties` defined as follows:
 
 ![Alt text](../images/get_instrument_properties_struct1.png)
 
-Dakle, `InstrumentProperties` strukutra ima jedan member koji se zove `channels` koji je tipa `array:InstrumentPropertiesChannel`, a koji je definiran ovako:
+The `InstrumentProperties` structure has one member called `channels`, which is of type `array:InstrumentPropertiesChannel`, and which is defined as follows:
 
 ![Alt text](../images/get_instrument_properties_struct2.png)
 
-I sada koristeći ovu akciju u jednom koraku možemo dohvatiti informacije o svim kanalima:
+And now using this Action in one step we can retrieve information about all channels:
 
 ![Alt text](../images/get_instrument_properties.png)
 
-Nakon što smo dohvatili propertije, broj kanala možemo saznati sa `Array.length(properties.channels)`, a boju npr. 1. kanala sa: `properties.channels[0].color`.
+After we have retrieved the properties, we can find out the number of channels with `Array.length(properties.channels)`, and the color, for example, of the 1st channel with: `properties.channels[0].color`.
 
 # PROPERTIES
 
-## Instrument [DRAFT]
+## Instrument
 
-Instrument čije propertije želimo dohvatiti.
+The instrument whose properties will be retrieved.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## properties [DRAFT]
+## properties
 
-Na ovaj output se šalju dohvaćeni propertiji.
+Retrieved properties are sent to this output.
 
 # EXAMPLES [DRAFT]
 

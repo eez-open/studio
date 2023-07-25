@@ -1,8 +1,9 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija otvara dialog box za odabir instrumenta. Odabrani instrument se šalje na `instrument` output.
+Opens a dialog box for selecting an instrument. The selected instrument is sent to the `instrument` output.
 
-Ako je za globalnu instrument object varijablu postavljeno da je `Persistent` (tj. pamti se odabir između dva pokretanja dashboarda) onda već kod pokretanja dashboarda se otvara dialog box za odabir instrumenta i onda nije potrebno koristiti ovu akciju. Ali ako ne želimo da se odabir automatski otvara kod pokretanja, onda za globalnu instrument varijablu ne smijemo enejblati `Persistent` checkbox i možemo koristiti ovu akciju kasnije kako bi se odabrao instrument.
+It will not be necessary to use this Action if the global instrument object variable is set to `Persistent`, because the instrument selection dialog box will open immediately when the dashboard is started.
+However, if we don't want the instrument selection dialog box to open automatically at startup, then we must not enable the `Persistent` checkbox for the global instrument variable and we can use this Action later to select the desired instrument.
 
 ![Alt text](../images/select_instrument_persistent_checkbox.png)
 
@@ -10,18 +11,18 @@ Ako je za globalnu instrument object varijablu postavljeno da je `Persistent` (t
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## instrument [DRAFT]
+## instrument
 
-Output na koji se šalje odabrani instrument.
+The selected instrument is sent to this output.
 
 # EXAMPLES [EMPTY]

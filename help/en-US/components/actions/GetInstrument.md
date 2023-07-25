@@ -1,33 +1,33 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Dohvaća instrument objekt preko njegovog ID-ja. Instrument ID se može saznati na ova dva mjesta:
+Retrieves an instrument object by its ID. The instrument ID can be found in these two places: Instrument `Properties` when the instrument is selected on the `Instruments` Home page and in the header of the `Terminal` tab of the instrument.
 
 ![Alt text](../images/get_instrument_id1.png)
 
 ![Alt text](../images/get_instrument_id2.png)
 
-Koristite ovu akciju kada želite pristupiti točno određenom instrumentu, tj. ne želite koristiti dialog box za odabir instrumenta.
+Use this Action when you want to access a specific instrument, i.e. you don't want to use a dialog box as a method for selecting an instrument.
 
 # PROPERTIES
 
-## Instrument ID [DRAFT]
+## Instrument ID
 
-ID od instrumenta čiji objekt želimo dohvatiti.
+The ID of the instrument whose object we want to retrieve.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output
 
-## instrument [DRAFT]
+## instrument
 
-Output na koji se šalje dohvaćeni objekt.
+The retrieved object is sent to this output.
 
 # EXAMPLES [EMPTY]

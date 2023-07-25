@@ -1,106 +1,106 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Pomoću ove akcije možemo dodati novi item u history view od instrumenta. Trenutno, samo chart item možemo dodati, ali u budućnosti će biti podržani i drugi itemi, kao npr. screenshot.
+It is used to add a new item to the _History_ view of the instrument. Currently, only adding chart items is supported.
 
-Npr. u Rigol Waveform Data exampleu imamo ovu akciju:
+For example in the _Rigol Waveform Data_ example we have this Action:
 
 ![Alt text](../images/add_to_instrument_history_action.png)
 
-Koja će dodati chart u history i tamo će taj chart izgledati ovako:
+It is used to add a chart which, after successful addition, will be displayed as follows (example of test signal acquisition):
 
 ![Alt text](../images/add_to_instrument_history_history.png)
 
 # PROPERTIES
 
-## Instrument [DRAFT]
+## Instrument
 
-Instrument u čiji history dodajemo.
+An instrument in whose _History_ an item will be added.
 
-## Item type [DRAFT]
+## Item type
 
-Item type, trenutno to može biti samo "Chart".
+Item type to be added, currently it can only be `"Chart"`.
 
-## Chart description [DRAFT]
+## Chart description
 
-Opis charta koji se prikazuje u historiju instrumenta:
+Description of the chart displayed in the instrument _History_:
 
 ![Alt text](../images/add_to_instrument_history_description.png)
 
-## Chart data [DRAFT]
+## Chart data
 
-Ovo je string ili blob u kojem se nalaze samplovi.
+A string or blob containing the samples that will be displayed in the chart.
 
-## Chart sampling rate [DRAFT]
+## Chart sampling rate
 
-Sampling rate, odnosno broj samplova u sekundi.
+Sampling rate or number of samples per second SPS).
 
-## Chart offset [DRAFT]
+## Chart offset
 
-Kod prikaza sampla se koristi formula `offset + sample_value * scale`.
+Offset value used in formula `offset + sample_value * scale` which transforms sample value to sample position on y axis in the chart.
 
-## Chart scale [DRAFT]
+## Chart scale
 
-Kod prikaza sampla se koristi formula `offset + sample_value * scale`.
+When displaying samples, the formula `offset + sample_value * scale` is used.
 
-## Chart format [DRAFT]
+## Chart format
 
-Format od `Chart data`. Moguće vrijednosti:
+Format from `Chart data`. Possible values:
 
--   `"float"`: "Chart data" mora biti blob u kojem se nalaze 32-bit, little-endian float brojevi
--   `"double"`: "Chart data" mora biti blob u kojem se nalaze 64-bit, little-endian float brojevi
--   `"rigol-byte"`: "Chart data" mora biti blob u kojem su nalazi 8-bitni unsigned integer brojevi
--   `"rigol-word"`: "Chart data" mora biti blob u kojem su nalazi 16-bitni unsigned integer brojevi
--   `"csv"`: "Chart data" mora biti CSV string, uzima se prva kolona
+- `"float"`: "Chart data" must be a blob containing 32-bit, little-endian float numbers
+- `"double"`: "Chart data" must be a blob containing 64-bit, little-endian float numbers
+- `"rigol-byte"`: "Chart data" must be a blob containing 8-bit unsigned integer numbers
+- `"rigol-word"`: "Chart data" must be a blob containing 16-bit unsigned integer numbers
+- `"csv"`: "Chart data" must be a CSV string, the first column is taken
 
-## Chart unit [DRAFT]
+## Chart unit
 
-Unit koji se prikazuje na Y osi. X os je uvijek vrijeme.
+The unit displayed on the Y-axis. The X-axis is always time.
 
-## Chart color [DRAFT]
+## Chart color
 
-Boja linije u chartu ako je selektiran dark backround.
+The color of the line in the chart if a dark background is selected.
 
-## Chart color inverse [DRAFT]
+## Chart color inverse
 
-Boja linije u chartu ako je selektiran light backround.
+The color of the line in the chart if the light background is selected.
 
-## Chart label [DRAFT]
+## Chart label
 
-Labela charta:
+Chart label:
 
 ![Alt text](../images/add_to_instrument_history_label.png)
 
-## Chart major subdivision horizontal [DRAFT]
+## Chart major subdivision horizontal
 
 ![Alt text](../images/add_to_instrument_history_major_subdivision_horizontal.png)
 
-## Chart major subdivision vertical [DRAFT]
+## Chart major subdivision vertical
 
 ![Alt text](../images/add_to_instrument_history_major_subdivision_vertical.png)
 
-## Chart minor subdivision horizontal [DRAFT]
+## Chart minor subdivision horizontal
 
 ![Alt text](../images/add_to_instrument_history_minor_subdivision_horizontal.png)
 
-## Chart minor subdivision vertical [DRAFT]
+## Chart minor subdivision vertical
 
 ![Alt text](../images/add_to_instrument_history_minor_subdivision_vertical.png)
 
-## Chart horizontal scale [DRAFT]
+## Chart horizontal scale
 
-Broj koji definira zoom faktor X osi u default prikazu charta.
+The number that defines the X-axis zoom factor in the default chart view.
 
-## Chart vertical scale [DRAFT]
+## Chart vertical scale
 
-Broj koji definira zoom faktor Y osi u default prikazu charta.
+The number that defines the Y-axis zoom factor in the default chart view.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
-# OUTPUTS [DRAFT]
+# OUTPUTS
 
 A standard sequence output.
 
@@ -108,7 +108,7 @@ A standard sequence output.
 
 ## id [DRAFT]
 
-ID od dodanog history itema. Ovaj podatak možemo npr. koristiti u EEZ Chart widgetu da chart history item prikažemo i unutar dashboarda.
+ID of the added history item. We can, for example, use this data in the `Chart` Widget to display the chart history item inside the dashboard.
 
 # EXAMPLES [DRAFT]
 

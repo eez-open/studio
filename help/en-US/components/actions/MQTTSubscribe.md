@@ -1,16 +1,16 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovu akciju potrebno je izvršiti, odmah nakon uspješnog spajanja na MQTT server, za svaki topic na koji se želimo predbilježiti. Ako je publishan neki packet od strane servera za ovaj topic, informaciju o tome ćemo dobiti preko Message event koristeći MQTTEvent akciju.
+This Action must be performed immediately after successfully connecting to the MQTT server, for each topic to which we want to subscribe. If a packet has been published by the server for this topic, we will receive information about it via the Message event using the _MQTTEvent_ Action.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija koja se koristi.
+The name of the connection to the MQTT server.
 
-## Topic [DRAFT]
+## Topic
 
-Naziv topica na koji se želimo predbilježiti. A subscription may be to an explicit topic, in which case only messages to that topic will be received, or it may include wildcards. Two wildcards are available, `+` or `#`. `+` can be used as a wildcard for a single level of hierarchy. It could be used with the topic above to get information on all computers and hard drives as follows:
+The name of the topic to which we want to subscribe. A subscription may be to an explicit topic, in which case only messages to that topic will be received, or it may include wildcards. Two wildcards are available, `+` or `#`. `+` can be used as a wildcard for a single level of hierarchy. It could be used with the topic above to get information on all computers and hard drives as follows:
 
 `sensors/+/temperature/+`
 
@@ -45,13 +45,13 @@ a/b/c/#
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
