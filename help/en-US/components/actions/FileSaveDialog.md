@@ -24,6 +24,6 @@ A standard sequence output.
 
 Output to which the set file path is sent.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Screen Capture

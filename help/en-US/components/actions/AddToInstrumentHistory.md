@@ -46,11 +46,11 @@ When displaying samples, the formula `offset + sample_value * scale` is used.
 
 Format from `Chart data`. Possible values:
 
-- `"float"`: "Chart data" must be a blob containing 32-bit, little-endian float numbers
-- `"double"`: "Chart data" must be a blob containing 64-bit, little-endian float numbers
-- `"rigol-byte"`: "Chart data" must be a blob containing 8-bit unsigned integer numbers
-- `"rigol-word"`: "Chart data" must be a blob containing 16-bit unsigned integer numbers
-- `"csv"`: "Chart data" must be a CSV string, the first column is taken
+-   `"float"`: "Chart data" must be a blob containing 32-bit, little-endian float numbers
+-   `"double"`: "Chart data" must be a blob containing 64-bit, little-endian float numbers
+-   `"rigol-byte"`: "Chart data" must be a blob containing 8-bit unsigned integer numbers
+-   `"rigol-word"`: "Chart data" must be a blob containing 16-bit unsigned integer numbers
+-   `"csv"`: "Chart data" must be a CSV string, the first column is taken
 
 ## Chart unit
 
@@ -102,14 +102,14 @@ A standard sequence input.
 
 # OUTPUTS
 
+## seqout
+
 A standard sequence output.
 
-## seqout [DRAFT]
-
-## id [DRAFT]
+## id
 
 ID of the added history item. We can, for example, use this data in the `Chart` Widget to display the chart history item inside the dashboard.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Rigol Waveform Data

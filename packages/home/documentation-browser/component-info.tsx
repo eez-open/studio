@@ -181,7 +181,7 @@ export class ComponentInfo {
         if (text == undefined) {
             return (
                 <div className="alert alert-danger" role="alert">
-                    No description
+                    No description yet
                 </div>
             );
         }
@@ -255,6 +255,30 @@ export class ComponentInfo {
 
     getExamplesMarkdown() {
         return this.markdown?.examples;
+    }
+
+    isEmptyProperties() {
+        return this.markdown?.propertiesEmpty;
+    }
+
+    isEmptyProperty(propertyName: string) {
+        return this.markdown?.properties[propertyName]?.empty;
+    }
+
+    isEmptyInputs() {
+        return this.markdown?.inputsEmpty;
+    }
+
+    isEmptyInput(inputName: string) {
+        return this.markdown?.inputs[inputName]?.empty;
+    }
+
+    isEmptyOutputs() {
+        return this.markdown?.outputsEmpty;
+    }
+
+    isEmptyOutput(outputName: string) {
+        return this.markdown?.outputs[outputName]?.empty;
     }
 
     isEmptyExamples() {

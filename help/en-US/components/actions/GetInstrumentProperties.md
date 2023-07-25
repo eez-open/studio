@@ -42,6 +42,6 @@ A standard sequence output.
 
 Retrieved properties are sent to this output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Rigol Waveform Data

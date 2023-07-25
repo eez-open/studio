@@ -40,6 +40,6 @@ The [status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) of t
 
 Message body of received response.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Simple HTTP

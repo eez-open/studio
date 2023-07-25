@@ -30,7 +30,7 @@ A standard sequence output.
 
 The read content of the file is sent through this output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   JSON
 -   CSV

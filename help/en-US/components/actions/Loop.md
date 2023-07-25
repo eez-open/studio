@@ -1,8 +1,8 @@
 # DESCRIPTION
 
-This Action is used to execute a specific part of the Flow in a loop. The Action should be placed at the beginning of the part of the Flow that will be executed in a loop and is entered at the `Start` input, and at the end of that part of the Flow it should be returned to this Action, but now through the `Next` input.  
-Each time the Flow passes through this Action, the value of the set variable will change from the `From` to the `To` value with the `Step` value.  
-Flow execution will go through `(From - To + 1) / Math.abs(step)` times before the iteration completes, and passes through the `Done` output.  
+This Action is used to execute a specific part of the Flow in a loop. The Action should be placed at the beginning of the part of the Flow that will be executed in a loop and is entered at the `Start` input, and at the end of that part of the Flow it should be returned to this Action, but now through the `Next` input.
+Each time the Flow passes through this Action, the value of the set variable will change from the `From` to the `To` value with the `Step` value.
+Flow execution will go through `(From - To + 1) / Math.abs(step)` times before the iteration completes, and passes through the `Done` output.
 If we want to stop the iteration before the `To` value is reached, then we simply don't need to return to the `Next` input. Also, it is possible to use _SetVariable_ to change the variable by which it is iterated, and thus skip one or more steps.
 
 ![Alt text](../images/loop.png)
@@ -47,6 +47,6 @@ Flow execution continues through this output for the duration of the iteration.
 
 Flow execution continues through this output when the iteration is complete.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   Loop

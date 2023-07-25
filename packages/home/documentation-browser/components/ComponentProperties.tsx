@@ -16,7 +16,9 @@ export const ComponentProperties = observer(
             const { componentInfo } = this.props;
 
             const groupPropertiesArray = getPropertyGroups(
-                componentInfo.allProperties
+                componentInfo.allProperties.filter(
+                    property => !componentInfo.isEmptyProperty(property.name)
+                )
             );
 
             const id = `component-properties-`;

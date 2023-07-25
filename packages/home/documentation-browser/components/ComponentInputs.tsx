@@ -14,43 +14,47 @@ export const ComponentInputs = observer(
             return (
                 <BodySection title="Inputs">
                     <dl>
-                        {componentInfo.inputs.map(input => {
-                            const inputName = input.name;
+                        {componentInfo.inputs
+                            .filter(
+                                input => !componentInfo.isEmptyInput(input.name)
+                            )
+                            .map(input => {
+                                const inputName = input.name;
 
-                            let inputDescription;
-                            if (input.metaInfo.isSequenceInput) {
-                                inputDescription = "SEQ";
-                            } else {
-                                inputDescription = `DATA(${input.metaInfo.type})`;
-                            }
-                            if (input.metaInfo.isOptionalInput) {
-                                inputDescription += ` | OPTIONAL`;
-                            } else {
-                                inputDescription += ` | MANDATORY`;
-                            }
+                                let inputDescription;
+                                if (input.metaInfo.isSequenceInput) {
+                                    inputDescription = "SEQ";
+                                } else {
+                                    inputDescription = `DATA(${input.metaInfo.type})`;
+                                }
+                                if (input.metaInfo.isOptionalInput) {
+                                    inputDescription += ` | OPTIONAL`;
+                                } else {
+                                    inputDescription += ` | MANDATORY`;
+                                }
 
-                            return (
-                                <Fragment key={input.name}>
-                                    <dt>
-                                        <h2>{inputName}</h2>
-                                        <span
-                                            style={{
-                                                fontWeight: "normal",
-                                                fontStyle: "italic"
-                                            }}
-                                        >
-                                            {inputDescription}
-                                        </span>
-                                    </dt>
-                                    <dd>
-                                        {this.props.componentInfo.renderInputDescription(
-                                            inputName,
-                                            this.props.generateHTML
-                                        )}
-                                    </dd>
-                                </Fragment>
-                            );
-                        })}
+                                return (
+                                    <Fragment key={input.name}>
+                                        <dt>
+                                            <h2>{inputName}</h2>
+                                            <span
+                                                style={{
+                                                    fontWeight: "normal",
+                                                    fontStyle: "italic"
+                                                }}
+                                            >
+                                                {inputDescription}
+                                            </span>
+                                        </dt>
+                                        <dd>
+                                            {this.props.componentInfo.renderInputDescription(
+                                                inputName,
+                                                this.props.generateHTML
+                                            )}
+                                        </dd>
+                                    </Fragment>
+                                );
+                            })}
                     </dl>
                 </BodySection>
             );

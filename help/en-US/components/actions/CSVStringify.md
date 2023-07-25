@@ -40,6 +40,6 @@ A standard sequence output.
 
 The constructed CSV string is sent through this output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   CSV

@@ -52,7 +52,7 @@ Search match in the form of `struct:$RegexpMatch` value is sent through this out
 
 Flow execution continues through this output when the search is complete, i.e. there are no more matches.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - RegExp String
     - RegExp Stream

@@ -18,6 +18,6 @@ Output data type.
 
 Data is received through this input, which is then forwarded to the caller of the user action.
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 # EXAMPLES [EMPTY]

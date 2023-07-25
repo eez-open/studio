@@ -20,6 +20,6 @@ A standard sequence input.
 
 A standard sequence output. Flow execution continues immediately through this output, and in the background it tries to establish a connection with the server.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   MQTT

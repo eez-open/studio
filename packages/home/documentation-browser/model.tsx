@@ -331,7 +331,7 @@ class Model {
 
             async function getOrCreateComponentInfo() {
                 let componentInfo = componentsMap.get(
-                    label + componentInfoType
+                    componentClass.id
                 );
 
                 if (!componentInfo) {
@@ -340,7 +340,7 @@ class Model {
                     componentsMap.set(label, componentInfo);
                     components.push(componentInfo);
 
-                    componentInfo.id = "component_" + label;
+                    componentInfo.id = "component_" + componentClass.id;
                     componentInfo.type = componentInfoType;
                     componentInfo.group = getComponentGroupName(componentClass);
                     componentInfo.name = label;

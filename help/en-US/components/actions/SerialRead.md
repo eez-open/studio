@@ -24,6 +24,6 @@ A standard sequence output.
 
 Output to which the read stream is sent.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   SerialPort

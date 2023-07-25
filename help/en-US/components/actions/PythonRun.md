@@ -48,6 +48,6 @@ Returns the handle of the running script used in _PythonEnd_ and _PythonSendMess
 
 Everything that is printed to `stdout` within the running Python script will be sent through this output. In this way, the python script sends a message to Flow, and if Flow wants to send a message to the Python script, then the _PythonSendMessage_ Action should be used.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - Charts

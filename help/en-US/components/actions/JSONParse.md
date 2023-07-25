@@ -59,6 +59,6 @@ The definition of that structure looks like this in the Project editor:
 
 ![Alt text](../images/json_countrycity_struct_def.png)
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - JSON

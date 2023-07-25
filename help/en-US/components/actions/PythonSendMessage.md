@@ -28,6 +28,6 @@ The handle can also be passed through this input. If the handle is obtained in s
 
 A standard sequence output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - Charts

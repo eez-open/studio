@@ -36,6 +36,6 @@ The `stream` value of `stderr` is sent through this output. That `stream` value 
 
 If the command completed successfully, Flow execution continues through this output. If an error has occurred, an error is thrown that can be caught if `Catch error' is enabled.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - RegExp Stream

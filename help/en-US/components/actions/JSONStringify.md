@@ -28,6 +28,6 @@ A standard sequence output.
 
 The constructed JSON string is sent through this output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   JSON

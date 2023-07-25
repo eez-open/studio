@@ -1,25 +1,50 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Otvara keyboard page za unos teksta. Keyboard page se mora nalaziti u projektu i mora imati ID 2. Isti Keyboard page također otvara i Input widget.
+
+Pogledati example "Keyboard, Keypad and Message Box" za primjer kako je definiran keyboard page:
+
+![Alt text](../images/show_keyboard.png)
 
 # PROPERTIES
 
-## Label
+## Label [DRAFT]
 
-## Inital text
+Labela koja se prikazuje u keyboard stranici.
 
-## Min chars
+## Inital text [DRAFT]
 
-## Max chars
+Početni tekst koji se uređuje.
 
-## Password
+## Min chars [DRAFT]
+
+Minimalni broj znakova koji mora imati uneseni tekst.
+
+## Max chars [DRAFT]
+
+Maksimalni broj znakova koji može imati uneseni tekst.
+
+## Password [DRAFT]
+
+Da li se unosi password. Ako se unosi password onda će svaki znak tijekom unosa biti zamjenjen sa `*`.
 
 # INPUTS
 
-## seqin
+## seqin [DRAFT]
+
+A standard sequence input.
 
 # OUTPUTS
 
-## result
+## result [DRAFT]
 
-## canceled
+Output na koji se šalje unešeni tekst.
 
-# EXAMPLES
+## canceled [DRAFT]
+
+Output na koji se izlazi ako se pritisne cancel button.
+
+# EXAMPLES [DRAFT]
+
+-   Keyboard, Keypad and Message Box
+-   stm32f469i-disco-eez-flow-demo

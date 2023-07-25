@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-Creates and initializes an MQTT connection object with connection parameters that are defined through properties.  
+Creates and initializes an MQTT connection object with connection parameters that are defined through properties.
 This Action must be executed first, and after it the _MQTTEvent_ Action must be called.
 
 # PROPERTIES
@@ -41,6 +41,6 @@ A standard sequence input.
 
 A standard sequence output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   MQTT

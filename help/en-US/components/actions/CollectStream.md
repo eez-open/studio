@@ -25,6 +25,6 @@ A standard sequence output. Flow execution continues through this output after t
 The concatenated string is sent through this output.
 During the stream lifetime, a string can be sent several times, which will contain all the data collected until then (i.e. the string will grow over time as new data arrives).
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
     - RegExp Stream

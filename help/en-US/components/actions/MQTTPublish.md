@@ -28,6 +28,6 @@ A standard sequence input.
 
 A standard sequence output
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
 -   MQTT

@@ -1,19 +1,27 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
 
 Ova akcija će zamijeniti jedan style s nekim drugim stylom, tako da će svi widgeti koji koriste taj style nakon ove zamjene koristiti novi style. Ova akcija se koristi ako se želi dinamički promjeniti izgled nekog widgeta.
 
 # PROPERTIES
 
-## From style
+## From style [DRAFT]
 
-## To style
+Style koji se zamjenjuje `To` stylom.
 
-# INPUTS [EMPTY]
+## To style [DRAFT]
 
-## seqin
+Style koji zamjenjuje `From` style.
 
-# OUTPUTS [EMPTY]
+# INPUTS
 
-## seqout
+## seqin [DRAFT]
+
+A standard sequence input.
+
+# OUTPUTS
+
+## seqout [DRAFT]
+
+A standard sequence output.
 
 # EXAMPLES [EMPTY]

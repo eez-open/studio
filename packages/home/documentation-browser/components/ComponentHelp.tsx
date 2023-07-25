@@ -130,18 +130,26 @@ export const ComponentHelp = observer(
                             )}
                         </BodySection>
 
-                        <ComponentProperties
-                            componentInfo={this.props.componentInfo}
-                            generateHTML={this.props.generateHTML}
-                        />
-                        <ComponentInputs
-                            componentInfo={this.props.componentInfo}
-                            generateHTML={this.props.generateHTML}
-                        />
-                        <ComponentOutputs
-                            componentInfo={this.props.componentInfo}
-                            generateHTML={this.props.generateHTML}
-                        />
+                        {!this.props.componentInfo.isEmptyProperties() && (
+                            <ComponentProperties
+                                componentInfo={this.props.componentInfo}
+                                generateHTML={this.props.generateHTML}
+                            />
+                        )}
+
+                        {!this.props.componentInfo.isEmptyInputs() && (
+                            <ComponentInputs
+                                componentInfo={this.props.componentInfo}
+                                generateHTML={this.props.generateHTML}
+                            />
+                        )}
+
+                        {!this.props.componentInfo.isEmptyOutputs() && (
+                            <ComponentOutputs
+                                componentInfo={this.props.componentInfo}
+                                generateHTML={this.props.generateHTML}
+                            />
+                        )}
 
                         {!this.props.componentInfo.isEmptyExamples() && (
                             <BodySection title="Examples">

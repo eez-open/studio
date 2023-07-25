@@ -1,17 +1,23 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
 
 Ova akcija postavlja novi aktivni page - prethodni page se skriva a novi page se prikazuje.
 
 # PROPERTIES
 
-## Page
+## Page [DRAFT]
 
-# INPUTS [EMPTY]
+Naziv stranice koja se želi prikazati.
 
-## seqin
+# INPUTS
 
-# OUTPUTS [EMPTY]
+## seqin [DRAFT]
 
-## seqout
+A standard sequence input.
+
+# OUTPUTS
+
+## seqout [DRAFT]
+
+A standard sequence output.
 
 # EXAMPLES [EMPTY]
