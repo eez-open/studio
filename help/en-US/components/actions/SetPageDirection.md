@@ -1,15 +1,17 @@
 # DESCRIPTION
 
+Ova akcija mijenja layout stranice is LTR (left to right) u RTL (right to left) i obrnuto.
+
 # PROPERTIES
 
 ## Direction
 
-# INPUTS
+# INPUTS [EMPTY]
 
 ## seqin
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 ## seqout
 
-# EXAMPLES
+# EXAMPLES [EMPTY]

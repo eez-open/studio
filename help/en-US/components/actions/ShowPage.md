@@ -1,15 +1,17 @@
 # DESCRIPTION
 
+Ova akcija postavlja novi aktivni page - prethodni page se skriva a novi page se prikazuje.
+
 # PROPERTIES
 
 ## Page
 
-# INPUTS
+# INPUTS [EMPTY]
 
 ## seqin
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 ## seqout
 
-# EXAMPLES
+# EXAMPLES [EMPTY]

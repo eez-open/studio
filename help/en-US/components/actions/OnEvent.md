@@ -4,9 +4,9 @@
 
 ## Event
 
-# INPUTS
+# INPUTS [EMPTY]
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 ## seqout
 

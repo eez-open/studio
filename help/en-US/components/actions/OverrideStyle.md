@@ -1,17 +1,19 @@
 # DESCRIPTION
 
+Ova akcija će zamijeniti jedan style s nekim drugim stylom, tako da će svi widgeti koji koriste taj style nakon ove zamjene koristiti novi style. Ova akcija se koristi ako se želi dinamički promjeniti izgled nekog widgeta.
+
 # PROPERTIES
 
 ## From style
 
 ## To style
 
-# INPUTS
+# INPUTS [EMPTY]
 
 ## seqin
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 ## seqout
 
-# EXAMPLES
+# EXAMPLES [EMPTY]
