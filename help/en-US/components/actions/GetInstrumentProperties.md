@@ -44,4 +44,4 @@ Retrieved properties are sent to this output.
 
 # EXAMPLES
 
--   Rigol Waveform Data
+- _Rigol Waveform Data_

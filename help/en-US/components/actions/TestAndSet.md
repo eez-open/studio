@@ -25,7 +25,7 @@ Flow execution continues through this sequential output when the variable become
 
 # EXAMPLES
 
--   Tetris
+- _Tetris_
 
     In the `do_action` User action, which is called when it is detected that some key on the keyboard is pressed, the TestAndSet action on the `busy` variable is used at the beginning, and before the exit the `busy` variable is set to `false`.
 	In this way, it is ensured that two Actions are not executed simultaneously.

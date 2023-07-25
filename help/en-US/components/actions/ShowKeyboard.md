@@ -1,50 +1,50 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Otvara keyboard page za unos teksta. Keyboard page se mora nalaziti u projektu i mora imati ID 2. Isti Keyboard page također otvara i Input widget.
+Opens the keyboard page for text input. The keyboard page must be in the project and its ID must be 2. The keyboard page can also be opened with the _Input_ Widget.
 
-Pogledati example "Keyboard, Keypad and Message Box" za primjer kako je definiran keyboard page:
+See in the _Keyboard, Keypad and Message Box_ example how the keyboard page is defined:
 
 ![Alt text](../images/show_keyboard.png)
 
 # PROPERTIES
 
-## Label [DRAFT]
+## Label
 
-Labela koja se prikazuje u keyboard stranici.
+The label that will be displayed on the keyboard page (e.g. the name of the parameter whose value is entered).
 
-## Inital text [DRAFT]
+## Inital text
 
-Početni tekst koji se uređuje.
+Initial (default) text that will be displayed in the input field.
 
-## Min chars [DRAFT]
+## Min chars
 
-Minimalni broj znakova koji mora imati uneseni tekst.
+Defines the minimum length of the entered text.
 
-## Max chars [DRAFT]
+## Max chars
 
-Maksimalni broj znakova koji može imati uneseni tekst.
+Defines the maximum length of the entered text.
 
-## Password [DRAFT]
+## Password
 
-Da li se unosi password. Ako se unosi password onda će svaki znak tijekom unosa biti zamjenjen sa `*`.
+Used when entering hidden text such as a user's password. When it is enabled, every character will be replaced with `*` when entered.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## result [DRAFT]
+## result
 
-Output na koji se šalje unešeni tekst.
+Output to which the entered text is sent.
 
-## canceled [DRAFT]
+## canceled
 
-Output na koji se izlazi ako se pritisne cancel button.
+Flow execution continues through this output if the cancel button is pressed.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Keyboard, Keypad and Message Box
--   stm32f469i-disco-eez-flow-demo
+-   _Keyboard, Keypad and Message Box_
+-   _stm32f469i-disco-eez-flow-demo_

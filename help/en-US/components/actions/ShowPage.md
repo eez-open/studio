@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija postavlja novi aktivni page - prethodni page se skriva a novi page se prikazuje.
+This Action sets a new active page: the previous page will be hidden and the new page will be displayed.
 
 # PROPERTIES
 
-## Page [DRAFT]
+## Page
 
-Naziv stranice koja se želi prikazati.
+The name of the new page to be displayed.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

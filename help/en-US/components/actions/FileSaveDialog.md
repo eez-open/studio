@@ -26,4 +26,4 @@ Output to which the set file path is sent.
 
 # EXAMPLES
 
--   Screen Capture
+- _Screen Capture_

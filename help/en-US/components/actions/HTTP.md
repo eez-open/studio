@@ -42,4 +42,4 @@ Message body of received response.
 
 # EXAMPLES
 
--   Simple HTTP
+- _Simple HTTP_

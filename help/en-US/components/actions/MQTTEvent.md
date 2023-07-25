@@ -8,9 +8,9 @@ With this Action we can add one or more event handlers that can be received by t
 
 MQTT connection to the server whose events are to be handled.
 
-## Event handlers [DRAFT]
+## Event handlers
 
-List of events to be handled. For each item in the list, it will be necessary to select `Event`, `Handler type` and optionally `Action`. `Event' is the type of event we want to handle and the possible values are:
+List of events to be handled. For each item in the list, it will be necessary to select `Event`, `Handler type` and optionally `Action`. `Event` is the type of event we want to handle and the possible values are:
 
 - `Connect` - It is sent in case of successful connection or reconnect.
 - `Reconnect` - Sent when attempting to reconnect after a connection has been terminated.
@@ -40,4 +40,4 @@ A standard sequence output.
 
 # EXAMPLES
 
--   MQTT
+- _MQTT_

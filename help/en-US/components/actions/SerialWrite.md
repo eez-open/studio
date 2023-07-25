@@ -26,4 +26,4 @@ A standard sequence output.
 
 # EXAMPLES
 
--   SerialPort
+-   _SerialPort_

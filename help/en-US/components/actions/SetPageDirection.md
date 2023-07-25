@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija mijenja layout stranice is LTR (left to right) u RTL (right to left) i obrnuto.
+It is used to change the page layout from LTR (left to right) to RTL (right to left) and vice versa.
 
 # PROPERTIES
 
-## Direction [DRAFT]
+## Direction
 
-Odabrani layout stranice: LTR ili RTL.
+Selected page layout: `LTR` or `RTL`.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

@@ -30,4 +30,4 @@ A standard sequence output
 
 # EXAMPLES
 
--   MQTT
+- _MQTT_

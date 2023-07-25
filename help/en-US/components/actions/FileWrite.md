@@ -30,5 +30,5 @@ A standard sequence output.
 
 # EXAMPLES
 
--   CSV
--   Screen Capture
+- _CSV_
+- _Screen Capture_

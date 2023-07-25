@@ -22,4 +22,4 @@ A standard sequence output.
 
 # EXAMPLES
 
--   Screen Capture
+-   _Screen Capture_

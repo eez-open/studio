@@ -30,4 +30,4 @@ The constructed JSON string is sent through this output.
 
 # EXAMPLES
 
--   JSON
+- _JSON_

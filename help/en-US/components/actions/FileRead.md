@@ -32,6 +32,6 @@ The read content of the file is sent through this output.
 
 # EXAMPLES
 
--   JSON
--   CSV
--   EEZ Chart
+- _JSON_
+- _CSV_
+- _EEZ Chart_

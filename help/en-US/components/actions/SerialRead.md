@@ -26,4 +26,4 @@ Output to which the read stream is sent.
 
 # EXAMPLES
 
--   SerialPort
+-   _SerialPort_

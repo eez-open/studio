@@ -50,4 +50,4 @@ Everything that is printed to `stdout` within the running Python script will be 
 
 # EXAMPLES
 
-    - Charts
+- _Charts_

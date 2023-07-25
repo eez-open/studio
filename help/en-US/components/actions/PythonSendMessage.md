@@ -30,4 +30,4 @@ A standard sequence output.
 
 # EXAMPLES
 
-    - Charts
+- _Charts_

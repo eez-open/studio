@@ -27,4 +27,4 @@ During the stream lifetime, a string can be sent several times, which will conta
 
 # EXAMPLES
 
-    - RegExp Stream
+- _RegExp Stream_

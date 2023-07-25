@@ -38,4 +38,4 @@ If the command completed successfully, Flow execution continues through this out
 
 # EXAMPLES
 
-    - RegExp Stream
+- _RegExp Stream_

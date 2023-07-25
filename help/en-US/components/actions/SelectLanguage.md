@@ -1,26 +1,26 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcije mijenja aktivni language u multilanguage projektima, tj. projektima koji imaju dodan Texts feature. Nakon ovoga svi tekstovi na stranici će biti prikazani u tom jeziku.
+Changes the active language in multilanguage projects, i.e. projects that have the _Texts_ feature added. After this, all texts on the page will be displayed in the newly selected language.
 
 # PROPERTIES
 
-## Language [DRAFT]
+## Language
 
-Language ID koji postaje novi aktivni language.
+ID of the language that will become the new active language.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Multi-Language
--   Multi-Language Dashboard
+-   _Multi-Language_
+-   _Multi-Language Dashboard_

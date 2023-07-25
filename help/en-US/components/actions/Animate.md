@@ -38,5 +38,5 @@ A standard sequence output. It is activated when the animation is finished, ie. 
 
 # EXAMPLES
 
--   Animation
--   sld-eez-flow-demo
+- _Animation_
+- _sld-eez-flow-demo_

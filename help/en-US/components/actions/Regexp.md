@@ -54,5 +54,5 @@ Flow execution continues through this output when the search is complete, i.e. t
 
 # EXAMPLES
 
-    - RegExp String
-    - RegExp Stream
+- _RegExp String_
+- _RegExp Stream_

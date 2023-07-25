@@ -1,70 +1,65 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Izvršava jednu ili više LVGL specific akcija.
+Performs one or more LVGL specific actions.
 
 # PROPERTIES
 
-## Actions [DRAFT]
+## Actions
 
-Lista akcija koje treba izvršiti. Moguće akcije su:
+List of actions to be executed. The following actions are available:
 
--   Change Screen
+- `Change Screen`
+    Changes the active page. The following options are available:
+     - `Previous screen` - if it is checked, it will go to the previous screen, otherwise you should select the page you want to display.
+     - `Screen` - name of the page to be displayed.
+     - `Fade mode'` - selection of animation when moving from the previous page to a new page. The following options are available:
+         - `None` - switch immediately after delay ms
+         - `Over left / Over right / Over top / Over bottom` - move the new page over the others towards the given direction.
+         - `Move Left/Right/Top/Bottom` - move both the old and new pages towards the given direction.
+         - `Fade in / Fade out` - fade the new page over the old page, or vice versa.
+         - `Out left / Out right / Out top / Out bottom` - move out the old page over the current one towards the given direction.
+     - `Speed` - animation duration in milliseconds.
+     - `Delay` - delay in milliseconds before the animation starts.  
 
-    Mijenja aktivni ekran. Postoje ove opcije:
+- `Play Animation`
+    Animates the selected Widget property. The following options are available:
 
-    -   Previous screen: ako je checked onda će se otići na prethodni ekran, inače treba odabrati ekran na koji se želi prikazati.
-    -   Screen: naziv ekrana koji se želi prikazati.
-    -   Fade mode: odabir animacije prilikom prelaska sa prethodnog na novi ekran. Ovo su opcije:
-        -   None: switch immediately after delay ms
-        -   Over Left/Right/Top/Bottom: move the new screen over the other towards the given direction.
-        -   Move Left/Right/Top/Bottom: move both the old and new screens towards the given direction.
-        -   Fade In/Out: fade the new screen over the old screen, or vice versa.
-        -   Out Left/Right/Top/Bottom: move out the old screen over the current towards the given direction.
-    -   Speed: trajanje animacije u milisekundama.
-    -   Delay: delay u milisekundama prije nego što započne animacija.
+   - `Target` - Widget whose property is animated
+   - `Property` - Widget property that is animated.
+   - `Start` - initial property value.
+   - `End` - the final value of the property.
+   - `Delay` - delay in milliseconds before the animation starts.
+   - `Time` - the total duration of the animation in milliseconds.
+   - `Relative` - determines whether `Start` and `End` values are relative to the current value or are absolute values.
+   - `Instant` - if checked apply the start value immediately, otherwise apply the start value after a delay when the animation really starts.
+   - `Path` - determines the animation curve. The following options are available:
+      - `Linear` - calculate the current value of an animation applying linear characteristic
+      - `Ease in` - calculate the current value of an animation slowing down the start phase
+      - `Ease out` - calculate the current value of an animation slowing down the end phase
+      - `Ease in out` - calculate the current value of an animation applying an "S" characteristic (cosine)
+      - `Overshoot` - calculate the current value of an animation with overshoot at the end
+      - `Bounce` - calculate the current value of an animation with 3 bounces
 
--   Play Animation
-
-    Animira odabrani property odabranog widgeta. Postoje ove opcije:
-
-    -   Target: widget čiji property se animira
-    -   Property: property koji se animira.
-    -   Start: početna vrijednost propertija.
-    -   End: krajnja vrijednost propertija.
-    -   Delay: delay u milisekundama prije nego što započne animacija.
-    -   Time: ukupno vrijeme trajanja animacije u milisekundama.
-    -   Relative: da li su Start i End vrijednosti relativne u odnosu na trenutnu vrijednost ili su absolutne vrijednosti.
-    -   Instant: if checked apply the start value immediately, otherwise apply start value after delay when the anim. really starts.
-    -   Path: Određuje krivulju animacije. Moguće opcije su:
-        -   Linear: calculate the current value of an animation applying linear characteristic
-        -   Ease in: calculate the current value of an animation slowing down the start phase
-        -   Ease out: Calculate the current value of an animation slowing down the end phase
-        -   Ease in out: Calculate the current value of an animation applying an "S" characteristic (cosine)
-        -   Overshoot: Calculate the current value of an animation with overshoot at the end
-        -   Bounce: Calculate the current value of an animation with 3 bounces
-
--   Set Property
-
-    Mijenja vrijednost odabranog property za odabrani widget. Postoje ove opcije:
-
-    -   Target type: Vrsta widgeta koja se mijenja.
-    -   Target: widget čiji property se mijenja.
-    -   Property: property koji se mijenja.
-    -   Value: nova vrijednost propertija.
-    -   Animated: ako za property postoji mogućnost animiranja onda se može odabrati da promjena bude animirana. Npr. za Slider, mijenjanje pozicije slidera (Value property) može biti animirana.
+- `Set Property`
+    Changes the value of the selected property for the selected Widget. The following options are available:
+     - `Target type` - The type of Widget that changes.
+     - `Target` - Widget whose property is changed.
+     - `Property` - the property that is being changed.
+     - `Value` - new property value.
+     - `Animated` - if there is a possibility to animate the property, then you can choose to make the change animated. For example for _Slider_, changing position _slider_ (Value property) can be animated.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Change Screen
+- _Change Screen_

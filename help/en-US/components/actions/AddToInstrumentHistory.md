@@ -112,4 +112,4 @@ ID of the added history item. We can, for example, use this data in the `Chart` 
 
 # EXAMPLES
 
--   Rigol Waveform Data
+- _Rigol Waveform Data_

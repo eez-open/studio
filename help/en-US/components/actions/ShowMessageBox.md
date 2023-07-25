@@ -1,45 +1,45 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija prikazuje na ekranu info, error ili question message box.
+This Action is used to display _Info_, _Error_ or _Question_ message boxes.
 
 # PROPERTIES
 
-## Message type [DRAFT]
+## Message type
 
-Postoje tri vrste message boxa:
+Defines the message box that will be displayed:
 
--   Info
+-   `Info`
 
 ![Alt text](../images/show_message_box_info.png)
 
--   Error
+-   `Error`
 
 ![Alt text](../images/show_message_box_error.png)
 
--   Question
+-   `Question`
 
 ![Alt text](../images/show_message_box_question.png)
 
-## Message [DRAFT]
+## Message
 
-Poruka koja se prikazuje.
+The content of the message to be displayed.
 
-## Buttons [DRAFT]
+## Buttons
 
-Ovaj property je potrebno definirati samo za Question message box. Ovdje se očekuje array stringova, gdje se svaki string mapira u button, npr. `["Save", "Don't Save", "Cancel"]`. Za svaki button potrebno je dodati po jedan output u "Flow - Outputs" sekciju, gdje će se kroz njega izaći ako se pritisne taj button.
+This property needs to be defined only for the _Question_ message box. An array of strings is expected here, where each string is mapped to a button, eg `["Save", "Don't Save", "Cancel"]`. It is necessary to add one output in the "Flow - Outputs" section for each button, through which the Flow execution will continue if that button is pressed.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Keyboard, Keypad and Message Box
+-   _Keyboard, Keypad and Message Box_

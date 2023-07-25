@@ -61,4 +61,4 @@ The definition of that structure looks like this in the Project editor:
 
 # EXAMPLES
 
-    - JSON
+- _JSON_

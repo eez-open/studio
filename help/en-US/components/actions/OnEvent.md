@@ -1,37 +1,31 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija služi za obradu eventa koji se može emitirati unutar stranice u kojoj se akcija nalazi.
+It is used to process events that can be broadcast within the page where the Action is located.
 
 # PROPERTIES
 
-## Event [DRAFT]
+## Event
 
-Event koji se obrađuje. Postoje ovi page eventi:
+Event to be processed. The following page events are available:
 
--   Page open
+- `Page open` - emitted when the page becomes active, eg when it is displayed with the `ShowPage' Action.
 
-    Ovaj event se emitira kad stranica postane aktivna, npr. kada se prikaže sa `ShowPage` akcijom.
+- `Page close` - emitted when the page becomes inactive.
 
--   Page close
-
-    Ovaj event se emitira kad stranica postane neaktivna.
-
--   Keydown
-
-    Ovaj event se emitira kad se pritisne tipka na tipkovnici. Na `event` output se šalje string sa [nazivom tipke](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values).
+- `Keydown` - emitted when a key on the keyboard is pressed. A string with [keyboard name](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values) is sent to the `event` output.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-A standard sequence output. Kroz ovaj output se izlazi kada je odabrani event emitiran.
+A standard sequence output. Flow execution continues through this output when the selected event is emitted.
 
-## event [DRAFT]
+## event
 
-Kroz ovaj output se šalje dodatna informacija (ako takva postoji) za emitirani event. Page open i Page close eventi ne šalju ništa kroz ovaj event, a Keydown event šalje string sa [nazivom tipke](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values)
+Through this output, additional information (if any) is sent for the broadcast event. The `Page open` and `Page close` events do not send anything through this event, and the `Keydown` event sends a string with [key name](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values).
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Tetris
+-   _Tetris_
