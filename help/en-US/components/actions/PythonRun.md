@@ -1,52 +1,52 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija pokreće python skriptu i šalje handle pokrenute skripte na `handle` output. Taj handle se koristi u `PythonEnd` akcije ako se želi zaustaviti pokrenuta Python skripta ili u `PythonSendMessage` akciji ako se želi poslati message od Flowa prema Python skripti, a potreban je zato što u nekom trenutku može biti pokrenuto više skripti i preko tog handlea se targetira pokrenuta skripta.
+Runs a python script and sends the handle of the running script to the `handle` output. This handle is used in the `PythonEnd` Action if we want to stop a running Python script or in the `PythonSendMessage` Action if we want to send a message from Flow to a Python script, and it is needed because several scripts can be started at some point and the running script is determined through this handle.
 
 # PROPERTIES
 
-## Script source option [DRAFT]
+## Script source option
 
-Postoje tri opcije kako se može zadati source od python scripte:
+The source of the python script can be specified in three ways:
 
 -   Inline script
 -   Inline script as expression
 -   Script file
 
-## Inline script [DRAFT]
+## Inline script
 
-Ako se za `Script source option` odabralo `Inline script` onda ovdje treba unjeti source code skripte.
+If `Inline script` was selected for `Script source option`, then the source code of the script should be entered here.
 
-## Inline script as expression [DRAFT]
+## Inline script as expression
 
-Ako se za `Script source option` odabralo `Inline script as expression` onda ovdje treba unjeti expression koji kada se evaluira dobije se string koji sadrži source code skripte.
+If `Inline script as expression` was selected for `Script source option`, then here you need to enter an expression that will return a string containing the source code of the script when evaluated.
 
-## Script file [DRAFT]
+## Script file
 
-Ako se za `Script source option` odabralo `Script file` onda ovdje treba unjeti file path do `.py` fajla.
+If `Script file' was selected for `Script source option', then the file path to the `.py' file should be entered here.
 
-## Python path [DRAFT]
+## Python path
 
-Puni path do python komande. Ako se python komanda već nalazi u sistemskom pathu onda se može postaviti na prazan string, tj. `""`.
+The full path to the python command. If the python command is already in the system path, then it can be set to an empty string, i.e. `""`.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## handle [DRAFT]
+## handle
 
-Kroz ovaj output se vraća hanle za pokrenutu skriptu koji se koristi u `PythonEnd` i `PythonSendMessage` akcijama.
+Returns the handle of the running script used in _PythonEnd_ and _PythonSendMessage_ Actions.
 
-## message [DRAFT]
+## message
 
-Kroz ovaj output će biti poslano sve što se printa na stdout unutar pokrenute Python skripte. Na ovaj način python skripta šalje message prema Flowu, a ako Flow želi poslati message Python skripti onda treba koristiti PythonSendMessage akciju.
+Everything that is printed to `stdout` within the running Python script will be sent through this output. In this way, the python script sends a message to Flow, and if Flow wants to send a message to the Python script, then the _PythonSendMessage_ Action should be used.
 
 # EXAMPLES [DRAFT]
 

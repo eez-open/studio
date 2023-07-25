@@ -1,28 +1,28 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija šalje read stream na `data` output.
+Sends the read stream received via the selected serial connection to the `data` output.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-Serial konekcija.
+The name of the serial connection.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## data [DRAFT]
+## data
 
-Output na koji se šalje read stream.
+Output to which the read stream is sent.
 
 # EXAMPLES [DRAFT]
 

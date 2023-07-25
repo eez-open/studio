@@ -1,24 +1,24 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Inicira odspajanje sa servera, koje će biti potvrđeno sa `Close` eventom i nakon toga `End` eventom.
+Initiates the termination of the connection with the server, which will be confirmed with the `Close` event and then the `End` event.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija sa koje se odspajamo.
+The name of the MQTT connection to the server to which the communication will be terminated.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
-A standard sequence output. Akcija odmah izlazi na ovaj output, a u pozadini se pokušavamo spojiti na server.
+A standard sequence output. Flow execution continues immediately through this output, and in the background it tries to disconnect from the server.
 
 # EXAMPLES [DRAFT]
 

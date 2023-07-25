@@ -1,46 +1,47 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Izvršava, na zadanom instrumentu, redom jednu ili više SCPI komanda ili upita. Kada se sve komande/upiti izvrŠe izlazi se na `seqout` output.
+Executes one or more SCPI commands or queries on the selected instrument. When all commands/queries are executed Flow execution continues through `seqout` output.
 
 # PROPERTIES
 
-## Instrument [DRAFT]
+## Instrument
 
-Instrument object na kojem se izvršavaju komande/upiti. Ovaj property je prisutan samo unutar Dashboard projekta gdje se na instrument spajamo remotly, tj. moguće se istovremeno spojiti na više instrumenata. Ako je u pitanju EEZ-GUI projekt, onda ovaj property ne postoji jer uvijek koristimo upravo board na kojem se flow izvršava i njemu šaljemo SCPI komande.
+Instrument object on which commands/queries are executed. This property is only present within the _Dashboard_ project when the instrument is connected remotely, i.e. it is possible to have open connections to several instruments at the same time. If it is an _EEZ-GUI_ project, then this property does not exist because we always use the device on which Flow is executed and we send SCPI commands to it.
 
-## Scpi [DRAFT]
+## Scpi
 
-Lista komandi/upita. Svaka komanda/upit se mora napisati u zasebnoj liniji. Unutar komande/upita se može ubaciti i Flow expression, koji se mora upisati između dvije vitičaste zagrade. Ovo je primjer preuzet iz BB3 Dashboard examplea koji koristi Flow expression unutar SCPI komande:
+List of SCPI commands/queries. Each command/query must be entered as a separate line. A Flow expression can also be inserted inside the command/query, which must be entered between two curly brackets. This is an example taken from the _BB3 Dashboard_ example that uses a Flow expression within an SCPI command:
 
 ![Alt text](../images/scpi_command_expression.png)
 
-Također u gornjem primjeru se dodao Flow Catch Error kako bi se ulovila greška tijekom izvršavanja SCPI komponente.
+Also in the example above, a Flow `Catch Error` has been added to catch an error during the execution of the SCPI component.
 
-Za upit se mora specificirati gdje se šalje rezultat, i tu imamo dvije mogućnosti:
+For an SCPI query, it must be specified where the result is sent, and there we have two options:
 
--   Slanje rezultata na Flow output. Potrebno je dodati novi output koristeći Flow - Outputs sekciju u propertijima ove komponente, i onda treba napisati: `output_name=query?`. Evo jedan primjer, preuzet iz BB3 Dashboard examplea:
+-   Sending results to Flow output. It is necessary to add a new output using the "Flow - Outputs" section in the properties of this component, where it is necessary to write: `output_name=query?`. Here's an example, taken from the _BB3 Dashboard_ example:
 
     ![Alt text](../images/scpi_query_output.png)
 
--   Spremanje rezultata u varijablu. Rezultati se spremi u varijablu tako da se query napiše ovako: `variable_name=query?` ili `{assignable_expression}=query?`. Ova druga forma se koristi kada se sprema npr. u structure member ili array. Ovo su primjeri za obje forme, također preuzeti iz BB3 Dashboard examplea:
+-   Saving the result in a variable. The results are saved in a variable so that the query is written like this: `variable_name=query?` or `{assignable_expression}=query?`.
+This second form is used when it is stored, for example, in a structure member or an array. Here are examples for both forms, also taken from the _BB3 Dashboard_ example:
 
-    -   U ovom primjeru se rezultat `SYSTem:CPU:FIRMware?` upita sprema u `fw_ver` varijablu. Kako je u pitanju prva (jednostavna) forma onda ne treba naziv varijable staviti unutar vitičastih zagrada.
+    -   In this example, the result of the `SYSTem:CPU:FIRMware?` query is saved in the `fw_ver` variable. As it is the first (simple) form, then the name of the variable should not be enclosed in curly brackets.
 
         ![Alt text](../images/scpi_query_variable.png)
 
-    -   U ovom primjeru se izvršavaju 4 upita. Rezultati se spremaju u slots varijablu koja je tipa: `array:struct:Slot`, gdje je Slot structure koji ima `u_min`, `u_max`, `i_min` i `i_max` membere. Ovdje se koristi druga forma i potrebno je asssignable expression staviti unutar vitičastih zagrada. Također ovdje imamo i primjer korištenja expressiona `{ch_idx}` unutar samo upita.
+    -   In this example, four SCPI queries are executed. The results are saved in the slots variable of the type: `array:struct:Slot`, where slots is a structure that has `u_min`, `u_max`, `i_min` and `i_max` members. The second form is used here and the assignable expression must be enclosed in curly brackets. Also here we have an example of using the expression `{ch_idx}` within the query itself.
 
         ![Alt text](../images/scpi_query_expression.png)
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 

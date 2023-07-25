@@ -1,30 +1,30 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Publish a message to a topic.
+Publishing a message in the selected topic.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija koja se koristi.
+The name of the connection to the MQTT server.
 
-## Topic [DRAFT]
+## Topic
 
-Topic pod kojim publishamo poruku.
+The topic under which the message will be published.
 
-## Payload [DRAFT]
+## Payload
 
-Poruka koja se publisha.
+Message to be published.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output
 

@@ -1,27 +1,27 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija dohvaća listu serial portova koji postoje na sistemu i šalje je kroz `ports` output.
+Retrieves the list of serial ports detected on the system and sends it through `ports` output.
 
 # PROPERTIES
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
-## ports [DRAFT]
+## ports
 
-List portova se šalje na ovaj output kao vrijednost tipa `array:$SerialPort`. Sistemska struktura `$SerialPort` ima ove membere:
+A list of ports is sent to this output as a value of type `array:$SerialPort`. The system structure `$SerialPort` has these members:
 
--   `manufacturer`: _string_. Naziv proizvođača uređaja priključenog na port.
--   `serialNumber`: _string_. Serijski broj porta.
--   `path`: _string_. Path of the serial port, koji se koristi u SerialInit akciji.
+- `manufacturer`: _string_. The name of the manufacturer of the device connected to the port.
+- `serialNumber`: _string_. Port serial number.
+- `path`: _string_. Path of the serial port, which is used in the _SerialInit_ Action.
 
 # EXAMPLES [EMPTY]

@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcije izvršava odspajanje sa serial porta, nakon čega se izlazi na `seqout` output.
+Performs disconnection from serial port, after which Flow execution continues through `seqout` output.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-MQTT konekcija sa koje se odspajamo.
+The name of the connection that will be terminated.
 
 # INPUTS
 
-## seqin [DRAFT]
+## seqin
 
 A standard sequence input.
 
 # OUTPUTS
 
-## seqout [DRAFT]
+## seqout
 
 A standard sequence output.
 
