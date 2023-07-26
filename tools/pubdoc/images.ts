@@ -4,7 +4,11 @@ var sha256 = require("sha256");
 import { WPClient } from "./wp-client";
 import { Config } from "./types";
 
-export async function updateImages(config: Config, wpClient: WPClient) {
+export async function updateImages(
+    config: Config,
+    wpClient: WPClient,
+    saveChanges: () => Promise<void>
+) {
     const imagesFolderPath = config.filePathBase + "/images";
 
     const imageFileNames = await fs.promises.readdir(imagesFolderPath);
@@ -15,7 +19,6 @@ export async function updateImages(config: Config, wpClient: WPClient) {
         config.images.push({ fileName });
     }
 
-    let configChanged = false;
     let errorOccurred = false;
 
     for (const image of config.images) {
@@ -53,7 +56,7 @@ export async function updateImages(config: Config, wpClient: WPClient) {
             image.source_url = result.source_url;
             image.sha256 = sha256Hash;
 
-            configChanged = true;
+            await saveChanges();
         } catch (err) {
             console.error(
                 `Failed to upload image "${image.fileName}": ${err.message}`
@@ -64,7 +67,6 @@ export async function updateImages(config: Config, wpClient: WPClient) {
     }
 
     return {
-        configChanged,
         errorOccurred
     };
 }

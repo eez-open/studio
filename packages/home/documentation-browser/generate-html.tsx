@@ -30,8 +30,13 @@ async function generateHTMLFile(
     const cssFilePath = resolve(
         `${sourceRootDir()}/eez-studio-ui/_stylesheets/component-doc.css`
     );
-    console.log(cssFilePath);
     let CSS = await fs.promises.readFile(cssFilePath, "utf8");
+
+    const jsFilePath = resolve(`${sourceRootDir()}/../libs/component-doc.js`);
+    let JS = (await fs.promises.readFile(jsFilePath, "utf8")).replace(
+        /\s+/g,
+        " "
+    );
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -39,10 +44,13 @@ async function generateHTMLFile(
 <meta charset="UTF-8">
 <title>${componentInfo.name}</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
 <style>
 ${CSS}
 </style>
+<script id="component-doc-script">
+${JS}
+</script>
 </head>
 <body>
 ${div.innerHTML}

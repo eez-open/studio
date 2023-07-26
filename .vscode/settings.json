@@ -5,7 +5,7 @@
         "eezstudio-win32-x64": true,
         "eezstudio-linux-x64": true,
         "node_modules": true,
-        "libs": true,
+        "libs": false,
         "build": false,
         "dist": true
     },

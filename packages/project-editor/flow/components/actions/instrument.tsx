@@ -212,7 +212,7 @@ export class SCPIActionComponent extends ActionComponent {
         },
         componentPaletteLabel: "SCPI",
         icon: (
-            <svg viewBox="12 12 232 232">
+            <svg viewBox="12 12 232 232" fill="currentColor">
                 <path d="M180 146h-22v-36h22a34 34 0 1 0-34-34v22h-36V76a34 34 0 1 0-34 34h22v36H76a34 34 0 1 0 34 34v-22h36v22a34 34 0 1 0 34-34Zm-22-70a22 22 0 1 1 22 22h-22ZM54 76a22 22 0 0 1 44 0v22H76a22.025 22.025 0 0 1-22-22Zm44 104a22 22 0 1 1-22-22h22Zm12-70h36v36h-36Zm70 92a22.025 22.025 0 0 1-22-22v-22h22a22 22 0 0 1 0 44Z" />
             </svg>
         ),
@@ -608,6 +608,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 38.26620101928711 38.26569747924805"
+                fill="currentColor"
             >
                 <path
                     fillOpacity=".404"
@@ -692,7 +693,11 @@ export class GetInstrumentActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 448">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 448 448"
+                fill="currentColor"
+            >
                 <path d="M224 144c-44.004 0-80.001 36-80.001 80 0 44.004 35.997 80 80.001 80 44.005 0 79.999-35.996 79.999-80 0-44-35.994-80-79.999-80zm190.938 58.667c-9.605-88.531-81.074-160-169.605-169.599V0h-42.666v33.067c-88.531 9.599-160 81.068-169.604 169.599H0v42.667h33.062c9.604 88.531 81.072 160 169.604 169.604V448h42.666v-33.062c88.531-9.604 160-81.073 169.605-169.604H448v-42.667h-33.062zM224 373.333c-82.137 0-149.334-67.198-149.334-149.333 0-82.136 67.197-149.333 149.334-149.333 82.135 0 149.332 67.198 149.332 149.333S306.135 373.333 224 373.333z" />
             </svg>
         ),
@@ -1017,6 +1022,7 @@ export class GetInstrumentPropertiesActionComponent extends ActionComponent {
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 231.621 231.616"
+                fill="currentColor"
             >
                 <path
                     fill="none"
@@ -1362,7 +1368,11 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
         ],
         defaultValue: {},
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 128 128"
+                fill="currentColor"
+            >
                 <path d="M99 60H68V29h-8v39h39zM20 60h8v8h-8z" />
                 <path d="M64 127c34.8 0 63-28.2 63-63S98.8 1 64 1 1 29.2 1 64s28.2 63 63 63zM64 9c30.3 0 55 24.7 55 55s-24.7 55-55 55S9 94.3 9 64 33.7 9 64 9z" />
             </svg>

@@ -122,7 +122,7 @@ export class StartActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_START_ACTION,
 
         icon: (
-            <svg viewBox="0 0 10.699999809265137 12">
+            <svg viewBox="0 0 10.699999809265137 12" fill="currentColor">
                 <path d="M.5 12c-.3 0-.5-.2-.5-.5V.5C0 .2.2 0 .5 0s.5.2.5.5v11c0 .3-.2.5-.5.5zm10.2-6L4 2v8l6.7-4z" />
             </svg>
         ),
@@ -149,7 +149,7 @@ export class EndActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_END_ACTION,
 
         icon: (
-            <svg viewBox="0 0 10.699999809265137 12">
+            <svg viewBox="0 0 10.699999809265137 12" fill="currentColor">
                 <path d="M6.7 6L0 2v8l6.7-4zm3.5 6c-.3 0-.5-.2-.5-.5V.5c0-.3.2-.5.5-.5s.5.2.5.5v11c0 .3-.3.5-.5.5z" />
             </svg>
         ),
@@ -361,7 +361,7 @@ export class EvalExprActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 1664 1792">
+            <svg viewBox="0 0 1664 1792" fill="currentColor">
                 <path d="M384 1536q0-53-37.5-90.5T256 1408t-90.5 37.5T128 1536t37.5 90.5T256 1664t90.5-37.5T384 1536zm384 0q0-53-37.5-90.5T640 1408t-90.5 37.5T512 1536t37.5 90.5T640 1664t90.5-37.5T768 1536zm-384-384q0-53-37.5-90.5T256 1024t-90.5 37.5T128 1152t37.5 90.5T256 1280t90.5-37.5T384 1152zm768 384q0-53-37.5-90.5T1024 1408t-90.5 37.5T896 1536t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zm-384-384q0-53-37.5-90.5T640 1024t-90.5 37.5T512 1152t37.5 90.5T640 1280t90.5-37.5T768 1152zM384 768q0-53-37.5-90.5T256 640t-90.5 37.5T128 768t37.5 90.5T256 896t90.5-37.5T384 768zm768 384q0-53-37.5-90.5T1024 1024t-90.5 37.5T896 1152t37.5 90.5 90.5 37.5 90.5-37.5 37.5-90.5zM768 768q0-53-37.5-90.5T640 640t-90.5 37.5T512 768t37.5 90.5T640 896t90.5-37.5T768 768zm768 768v-384q0-52-38-90t-90-38-90 38-38 90v384q0 52 38 90t90 38 90-38 38-90zm-384-768q0-53-37.5-90.5T1024 640t-90.5 37.5T896 768t37.5 90.5T1024 896t90.5-37.5T1152 768zm384-320V192q0-26-19-45t-45-19H192q-26 0-45 19t-19 45v256q0 26 19 45t45 19h1280q26 0 45-19t19-45zm0 320q0-53-37.5-90.5T1408 640t-90.5 37.5T1280 768t37.5 90.5T1408 896t90.5-37.5T1536 768zm128-640v1536q0 52-38 90t-90 38H128q-52 0-90-38t-38-90V128q0-52 38-90t90-38h1408q52 0 90 38t38 90z" />
             </svg>
         ),
@@ -553,7 +553,10 @@ export class EvalJSExprActionComponent extends ActionComponent {
             });
         },
         icon: (
-            <svg viewBox="-5 -5 32.556997299194336 27.176000595092773">
+            <svg
+                viewBox="-5 -5 32.556997299194336 27.176000595092773"
+                fill="currentColor"
+            >
                 <path d="M4.912.27h3.751v10.514c0 4.738-2.271 6.392-5.899 6.392-.888 0-2.024-.148-2.764-.395l.42-3.036a6.18 6.18 0 0 0 1.925.296c1.58 0 2.567-.716 2.567-3.282V.27zm7.008 12.785c.987.518 2.567 1.037 4.171 1.037 1.728 0 2.641-.716 2.641-1.826 0-1.012-.79-1.629-2.789-2.32-2.764-.987-4.59-2.517-4.59-4.961C11.353 2.147 13.747 0 17.646 0c1.9 0 3.258.37 4.245.839l-.839 3.011a7.779 7.779 0 0 0-3.455-.79c-1.629 0-2.419.765-2.419 1.604 0 1.061.913 1.53 3.085 2.369 2.937 1.086 4.294 2.616 4.294 4.985 0 2.789-2.122 5.158-6.688 5.158-1.9 0-3.776-.518-4.714-1.037l.765-3.085z" />
             </svg>
         ),
@@ -1529,7 +1532,7 @@ export class ConstantActionComponent extends ActionComponent {
 export class DateNowActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         icon: (
-            <svg viewBox="0 0 36 40">
+            <svg viewBox="0 0 36 40" fill="currentColor">
                 <path d="M12 18H8v4h4v-4zm8 0h-4v4h4v-4zm8 0h-4v4h4v-4zm4-14h-2V0h-4v4H10V0H6v4H4C1.78 4 .02 5.8.02 8L0 36c0 2.2 1.78 4 4 4h28c2.2 0 4-1.8 4-4V8c0-2.2-1.8-4-4-4zm0 32H4V14h28v22z" />
             </svg>
         ),
@@ -1803,7 +1806,7 @@ export class ReadSettingActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 1100 1179">
+            <svg viewBox="0 0 1100 1179" fill="currentColor">
                 <path d="M135 156L277 14q14-14 35-14t35 14l77 77-212 212-77-76q-14-15-14-36t14-35zm520 168l210-210q14-14 24.5-10t10.5 25l-2 599q-1 20-15.5 35T847 778l-597 1q-21 0-25-10.5t10-24.5l208-208-154-155 212-212zM50 879h1000q21 0 35.5 14.5T1100 929v250H0V929q0-21 14.5-35.5T50 879zm850 100v50h100v-50H900z" />
             </svg>
         ),
@@ -1912,7 +1915,7 @@ export class WriteSettingsActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 1100 1200">
+            <svg viewBox="0 0 1100 1200" fill="currentColor">
                 <path d="M350 0l599 2q20 1 35 15.5T999 53l1 597q0 21-10.5 25T965 665L757 457 602 611 390 399l155-154L335 35q-14-14-10-24.5T350 0zm174 688l-76 77q-15 14-36 14t-35-14L235 623q-14-14-14-35t14-35l77-77zM50 900h1000q21 0 35.5 14.5T1100 950v250H0V950q0-21 14.5-35.5T50 900zm850 100v50h100v-50H900z" />
             </svg>
         ),
@@ -2382,7 +2385,7 @@ export class DelayActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 10 10">
+            <svg viewBox="0 0 10 10" fill="currentColor">
                 <path d="M7.5 5.1c0 .3-.2.5-.5.5H5c-.3 0-.5-.2-.5-.5v-2c0-.3.2-.5.5-.5s.5.2.5.5v1.5H7c.2 0 .5.3.5.5zM10 5c0-2.8-2.2-5-5-5S0 2.2 0 5s2.2 5 5 5 5-2.2 5-5zM9 5c0 2.2-1.8 4-4 4S1 7.2 1 5s1.8-4 4-4 4 1.8 4 4z" />
             </svg>
         ),
@@ -2448,7 +2451,7 @@ export class ErrorActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 40 40">
+            <svg viewBox="0 0 40 40" fill="currentColor">
                 <path d="M18 26h4v4h-4zm0-16h4v12h-4zm1.99-10C8.94 0 0 8.95 0 20s8.94 20 19.99 20S40 31.05 40 20 31.04 0 19.99 0zM20 36c-8.84 0-16-7.16-16-16S11.16 4 20 4s16 7.16 16 16-7.16 16-16 16z" />
             </svg>
         ),
@@ -2496,7 +2499,7 @@ export class CatchErrorActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_CATCH_ERROR_ACTION,
         properties: [],
         icon: (
-            <svg viewBox="0 0 40 40">
+            <svg viewBox="0 0 40 40" fill="currentColor">
                 <path d="M20 0C8.96 0 0 8.95 0 20s8.96 20 20 20 20-8.95 20-20S31.04 0 20 0zm2 30h-4v-4h4v4zm0-8h-4V10h4v12z" />
             </svg>
         ),
@@ -2649,7 +2652,8 @@ export class LoopActionComponent extends ActionComponent {
             {
                 name: "version",
                 type: PropertyType.Number,
-                hideInDocumentation: "all"
+                hideInDocumentation: "all",
+                hideInPropertyGrid: true
             }
         ],
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -2895,7 +2899,7 @@ export class ShowPageActionComponent extends ActionComponent {
             }
         },
         icon: (
-            <svg viewBox="0 0 36 36">
+            <svg viewBox="0 0 36 36" fill="currentColor">
                 <path d="M0 20h16V0H0v20zm0 16h16V24H0v12zm20 0h16V16H20v20zm0-36v12h16V0H20z" />
             </svg>
         ),
@@ -3267,7 +3271,7 @@ export class ShowKeypadActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="0 0 50 50">
+            <svg viewBox="0 0 50 50" fill="currentColor">
                 <path d="M5 3c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2h-8zM5 15c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zM5 27c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2H5zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zm16 0c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8zM21 39c-1.103 0-2 .897-2 2v4c0 1.103.897 2 2 2h8c1.103 0 2-.897 2-2v-4c0-1.103-.897-2-2-2h-8z" />
             </svg>
         ),
@@ -3494,7 +3498,11 @@ export class OverrideStyleActionComponent extends ActionComponent {
             }
         ],
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+            >
                 <path d="M16.56 8.94 7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 0 0 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10 10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z" />
                 <path fillOpacity=".36" d="M0 20h24v4H0z" />
             </svg>
@@ -3887,7 +3895,7 @@ export class CommentActionComponent extends ActionComponent {
             }
         },
         icon: (
-            <svg viewBox="0 0 14 13.5">
+            <svg viewBox="0 0 14 13.5" fill="currentColor">
                 <path d="M13 0H1C.45 0 0 .45 0 1v8c0 .55.45 1 1 1h2v3.5L6.5 10H13c.55 0 1-.45 1-1V1c0-.55-.45-1-1-1zm0 9H6l-2 2V9H1V1h12v8z" />
             </svg>
         ),
@@ -4037,7 +4045,7 @@ export class TestAndSetActionComponent extends ActionComponent {
             )
         ],
         icon: (
-            <svg viewBox="-30 -30 421.118 421.118">
+            <svg viewBox="-30 -30 421.118 421.118" fill="currentColor">
                 <path d="M274.765 141.3V94.205C274.765 42.172 232.583 0 180.559 0c-52.032 0-94.205 42.172-94.205 94.205V141.3c-17.34 0-31.4 14.06-31.4 31.4v157.016c0 17.344 14.06 31.402 31.4 31.402h188.411c17.341 0 31.398-14.059 31.398-31.402V172.7c.001-17.34-14.057-31.4-31.398-31.4zM117.756 94.205c0-34.69 28.12-62.803 62.803-62.803 34.685 0 62.805 28.112 62.805 62.803V141.3H117.756V94.205zm157.009 235.51H86.354V172.708h188.411v157.007zm-109.907-67.157v20.054c0 8.664 7.035 15.701 15.701 15.701 8.664 0 15.701-7.037 15.701-15.701v-20.054c9.337-5.441 15.701-15.456 15.701-27.046 0-17.348-14.062-31.41-31.402-31.41-17.34 0-31.4 14.062-31.4 31.41 0 11.59 6.358 21.605 15.699 27.046z" />
             </svg>
         ),

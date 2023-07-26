@@ -10,7 +10,7 @@ export const BodySection = observer(
         render() {
             return (
                 <div className="EezStudio_Component_Documentation_BodySection">
-                    <h1>{this.props.title}</h1>
+                    <h2>{this.props.title}</h2>
                     <div>{this.props.children}</div>
                 </div>
             );

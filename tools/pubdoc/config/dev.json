@@ -7,7 +7,7 @@
         "action": [
             {
                 "category": {
-                    "name": "Common",
+                    "name": "Basic",
                     "id": 205
                 },
                 "articles": [
@@ -28,6 +28,10 @@
                         "status": "publish",
                         "id": 355241,
                         "sha256": "3f29726dedfcc16ee3c840a2b138b9b6156384521791cf5a1d5ea185889c7896"
+                    },
+                    {
+                        "content": "Output.html",
+                        "status": "publish"
                     },
                     {
                         "content": "Evaluate.html",
@@ -150,6 +154,86 @@
                         "status": "publish",
                         "id": 354619,
                         "sha256": "2282066ac53578f8814329b1726ee69e1d54c55d826fc6b619fe53af508b81ac"
+                    },
+                    {
+                        "content": "OnEvent.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "OverrideStyle.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "SelectLanguage.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "SetPageDirection.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "ShowKeyboard.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "ShowKeypad.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "ShowMessageBox.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "ShowPage.html",
+                        "status": "publish"
+                    }
+                ]
+            },
+            {
+                "category": {
+                    "name": "MQTT",
+                    "id": 206
+                },
+                "articles": [
+                    {
+                        "content": "MQTTConnect.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTDisconnect.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTEvent.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTInit.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTPublish.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTSubscribe.html",
+                        "status": "publish"
+                    },
+                    {
+                        "content": "MQTTUnsubscribe.html",
+                        "status": "publish"
+                    }
+                ]
+            },
+            {
+                "category": {
+                    "name": "LVGL",
+                    "id": 208
+                },
+                "articles": [
+                    {
+                        "content": "LVGL.html",
+                        "status": "publish"
                     }
                 ]
             }
@@ -198,6 +282,93 @@
             "id": 355360,
             "source_url": "https://dev.envox.eu/wp-content/uploads/68a102f0eacb8f91fc7e5c0e221e8d2968c767da6b89858f557ecabedb19b2f1-test_and_set.png",
             "sha256": "68a102f0eacb8f91fc7e5c0e221e8d2968c767da6b89858f557ecabedb19b2f1"
+        },
+        {
+            "fileName": "add_to_instrument_history_action.png",
+            "id": 355970,
+            "source_url": "https://dev.envox.eu/wp-content/uploads/83af01247f93030453912538496437ddf1fb8a43b9747ef6b4e232709aff7e82-add_to_instrument_history_action.png",
+            "sha256": "83af01247f93030453912538496437ddf1fb8a43b9747ef6b4e232709aff7e82"
+        },
+        {
+            "fileName": "add_to_instrument_history_description.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_history.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_label.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_major_subdivision_horizontal.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_major_subdivision_vertical.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_minor_subdivision_horizontal.png"
+        },
+        {
+            "fileName": "add_to_instrument_history_minor_subdivision_vertical.png"
+        },
+        {
+            "fileName": "csv_countrycity_struct_def.png"
+        },
+        {
+            "fileName": "csv_result_output_type.png"
+        },
+        {
+            "fileName": "get_instrument_id1.png"
+        },
+        {
+            "fileName": "get_instrument_id2.png"
+        },
+        {
+            "fileName": "get_instrument_properties.png"
+        },
+        {
+            "fileName": "get_instrument_properties_rigol_props.png"
+        },
+        {
+            "fileName": "get_instrument_properties_struct1.png"
+        },
+        {
+            "fileName": "get_instrument_properties_struct2.png"
+        },
+        {
+            "fileName": "json_countrycity_struct_def.png"
+        },
+        {
+            "fileName": "json_result_output_type.png"
+        },
+        {
+            "fileName": "scpi_command_expression.png"
+        },
+        {
+            "fileName": "scpi_query_expression.png"
+        },
+        {
+            "fileName": "scpi_query_output.png"
+        },
+        {
+            "fileName": "scpi_query_variable.png"
+        },
+        {
+            "fileName": "select_instrument_persistent_checkbox.png"
+        },
+        {
+            "fileName": "show_keyboard.png"
+        },
+        {
+            "fileName": "show_keypad.png"
+        },
+        {
+            "fileName": "show_message_box_error.png"
+        },
+        {
+            "fileName": "show_message_box_info.png"
+        },
+        {
+            "fileName": "show_message_box_question.png"
         }
     ]
 }

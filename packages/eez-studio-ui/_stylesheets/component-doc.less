@@ -59,11 +59,14 @@
 
         .EezStudio_Component_Documentation_Body {
             .EezStudio_Component_Documentation_BodySection {
-                & > h1:first-child {
-                    font-size: 18px;
+                & > h2:first-child {
+                    font-size: 12pt;
                     font-weight: bold;
+                    font-style: italic;
                     text-transform: uppercase;
+                    color: @documentationHeadingColor;
                 }
+
                 & > div:nth-child(2) {
                     padding-left: 1rem;
                 }
@@ -71,30 +74,92 @@
 
                 & div > dl > dt {
                     display: flex;
-                    h2 {
-                        margin-bottom: 0;
-                        margin-right: 20px;
-                        font-size: 14px;
-                        line-height: var(--bs-body-line-height);
-                    }
-                    margin-bottom: 10px;
-                }
-
-                .accordion-item {
-                    h2 {
-                        font-size: 14px;
-                    }
-                }
-
-                .accordion-body dt {
-                    display: flex;
                     h3 {
+                        margin-top: 0;
                         margin-bottom: 0;
                         margin-right: 20px;
                         font-size: 14px;
                         line-height: var(--bs-body-line-height);
                     }
+                    p {
+                        margin-bottom: 0;
+                    }
                     margin-bottom: 10px;
+                }
+
+                .EezStudio_Component_Documentation_Properties {
+                    .EezStudio_Component_Documentation_PropertiesGroup {
+                        margin-bottom: 1rem;
+
+                        border: 1px solid @borderColor;
+
+                        h3 {
+                            font-size: 14px;
+                            font-weight: bold;
+                            background-color: @panelHeaderColor;
+                            border-bottom: 1px solid @borderColor;
+                            border-top-left-radius: calc(0.25rem - 1px);
+                            border-top-right-radius: calc(0.25rem - 1px);
+                            margin: 0;
+                            padding: 0.8rem 1.25rem 0.5rem 0;
+                            text-transform: uppercase;
+                            cursor: pointer;
+
+                            display: flex;
+                            align-items: center;
+                        }
+
+                        h3:before {
+                            content: "";
+                            display: block;
+                            width: 24px;
+                            height: 24px;
+                            margin-top: -3px;
+
+                            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewbox='0 0 24 24' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'%3E%3Cpath stroke='none' d='M0 0h24v24H0z'/%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+                                0 0 repeat;
+                            transition-duration: 250ms;
+                            transition-property: transform;
+                        }
+
+                        &.collapsed {
+                            h3 {
+                                background-color: @backgroundColor;
+                                border-bottom: none;
+                            }
+
+                            h3:before {
+                                transform: rotate(-90deg);
+                            }
+
+                            > dl {
+                                display: none;
+                            }
+                        }
+
+                        dl {
+                            margin: 1rem 1.25rem;
+
+                            dt {
+                                display: flex;
+                                h4 {
+                                    margin-bottom: 0;
+                                    margin-top: 0;
+                                    margin-right: 20px;
+                                    font-size: 14px;
+                                    line-height: var(--bs-body-line-height);
+                                }
+                                p {
+                                    margin-bottom: 0;
+                                }
+                                margin-bottom: 10px;
+                            }
+                        }
+                    }
+
+                    .EezStudio_Component_Documentation_PropertiesGroup:last-child {
+                        margin-bottom: 0;
+                    }
                 }
             }
             .EezStudio_Component_Documentation_BodySection:last-child {

@@ -6,6 +6,7 @@ import {
 } from "project-editor/core/object";
 import { ComponentInfo, IComponentInfoProperty } from "../component-info";
 import { BodySection } from "./BodySection";
+import classNames from "classnames";
 
 export const ComponentProperties = observer(
     class ComponentProperties extends React.Component<{
@@ -21,72 +22,39 @@ export const ComponentProperties = observer(
                 )
             );
 
-            const id = `component-properties-`;
-
             return (
                 <BodySection title="Properties">
-                    <div className="accordion" id={id}>
+                    <div className="EezStudio_Component_Documentation_Properties">
                         {groupPropertiesArray.map((groupProperties, i) => {
-                            const headingId = `${id}_h_${groupProperties.group.id}`;
-                            const collapseId = `${id}_c_${groupProperties.group.id}`;
-
                             return (
                                 <div
-                                    key={groupProperties.group.id}
-                                    className="accordion-item"
-                                >
-                                    <h2
-                                        className="accordion-header"
-                                        id={headingId}
-                                    >
-                                        <button
-                                            className={
-                                                i == 0
-                                                    ? "accordion-button"
-                                                    : "accordion-button collapsed"
-                                            }
-                                            type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target={`#${collapseId}`}
-                                            aria-expanded={
-                                                i == 0 ? "true" : "false"
-                                            }
-                                            aria-controls={collapseId}
-                                        >
-                                            {groupProperties.group.title ||
-                                                "Other"}
-                                        </button>
-                                    </h2>
-                                    <div
-                                        id={collapseId}
-                                        className={
-                                            i == 0
-                                                ? "accordion-collapse collapse show"
-                                                : "accordion-collapse collapse"
+                                    className={classNames(
+                                        "EezStudio_Component_Documentation_PropertiesGroup",
+                                        {
+                                            collapsed: i > 0
                                         }
-                                        aria-labelledby={headingId}
-                                        data-bs-parent={`#${id}`}
-                                    >
-                                        <div className="accordion-body">
-                                            <dl>
-                                                {groupProperties.properties.map(
-                                                    property => (
-                                                        <ComponentProperty
-                                                            componentInfo={
-                                                                componentInfo
-                                                            }
-                                                            property={property}
-                                                            key={property.name}
-                                                            generateHTML={
-                                                                this.props
-                                                                    .generateHTML
-                                                            }
-                                                        />
-                                                    )
-                                                )}
-                                            </dl>
-                                        </div>
-                                    </div>
+                                    )}
+                                    key={groupProperties.group.id}
+                                >
+                                    <h3>
+                                        {groupProperties.group.title || "Other"}
+                                    </h3>
+                                    <dl>
+                                        {groupProperties.properties.map(
+                                            property => (
+                                                <ComponentProperty
+                                                    componentInfo={
+                                                        componentInfo
+                                                    }
+                                                    property={property}
+                                                    key={property.name}
+                                                    generateHTML={
+                                                        this.props.generateHTML
+                                                    }
+                                                />
+                                            )
+                                        )}
+                                    </dl>
                                 </div>
                             );
                         })}
@@ -133,7 +101,7 @@ const ComponentProperty = observer(
             return (
                 <>
                     <dt>
-                        <h3>{propertyName}</h3>
+                        <h4>{propertyName}</h4>
                         <span
                             style={{
                                 fontWeight: "normal",

@@ -8,7 +8,7 @@ import { WPClient } from "./wp-client";
 import { Config } from "./types";
 import { updateImages } from "./images";
 
-let configFilePath;
+let configFilePath: string | undefined;
 for (let i = 2; i < argv.length; ) {
     if (argv[i] === "--config") {
         configFilePath = argv[i + 1];
@@ -62,14 +62,16 @@ async function cleanupHtml(htmlStr: string, config: Config) {
         node.remove();
     }
 
-    const link = dom.window.document.head.querySelectorAll("link")[0].outerHTML;
-    const script =
-        dom.window.document.head.querySelectorAll("script")[0].outerHTML;
     const style =
         dom.window.document.head.querySelectorAll("style")[0].outerHTML;
+
+    const script = dom.window.document.head.querySelectorAll(
+        "#component-doc-script"
+    )[0].outerHTML;
+
     const body = dom.window.document.body.innerHTML;
 
-    return link.trim() + script.trim() + style.trim() + body.trim();
+    return style.trim() + script.trim() + body.trim();
 }
 
 (async () => {
@@ -78,15 +80,25 @@ async function cleanupHtml(htmlStr: string, config: Config) {
 
     const wpClient = new WPClient(config.server, username, password);
 
-    let configChanged = false;
+    console.log("Updating images...");
 
-    const updateImagesResult = await updateImages(config, wpClient);
+    const saveChanges = async () => {
+        await fs.promises.writeFile(
+            configFilePath!,
+            JSON.stringify(config, null, 4),
+            "utf-8"
+        );
+    };
 
-    if (updateImagesResult.configChanged) {
-        configChanged = true;
-    }
+    const updateImagesResult = await updateImages(
+        config,
+        wpClient,
+        saveChanges
+    );
 
     if (!updateImagesResult.errorOccurred) {
+        console.log("Updating HTML's...");
+
         for (const key in config.toc) {
             for (let group of config.toc[key]) {
                 for (let article of group.articles) {
@@ -127,7 +139,7 @@ async function cleanupHtml(htmlStr: string, config: Config) {
                             );
                             article.id = id;
                             article.sha256 = postsha256;
-                            configChanged = true;
+                            saveChanges();
                         } catch (err) {
                             console.error("\t" + err);
                         }
@@ -144,7 +156,7 @@ async function cleanupHtml(htmlStr: string, config: Config) {
                                     article.status
                                 );
                                 article.sha256 = postsha256;
-                                configChanged = true;
+                                saveChanges();
                             } catch (err) {
                                 console.error("\t" + err);
                             }
@@ -153,13 +165,5 @@ async function cleanupHtml(htmlStr: string, config: Config) {
                 }
             }
         }
-    }
-
-    if (configChanged) {
-        await fs.promises.writeFile(
-            configFilePath,
-            JSON.stringify(config, null, 4),
-            "utf-8"
-        );
     }
 })();

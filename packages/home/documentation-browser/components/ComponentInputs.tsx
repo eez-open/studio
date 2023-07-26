@@ -36,7 +36,7 @@ export const ComponentInputs = observer(
                                 return (
                                     <Fragment key={input.name}>
                                         <dt>
-                                            <h2>{inputName}</h2>
+                                            <h3>{inputName}</h3>
                                             <span
                                                 style={{
                                                     fontWeight: "normal",

@@ -4,7 +4,7 @@ This Action catches all errors that occurred within the Flow in which it is loca
 
 # PROPERTIES
 
-# INPUTS
+# INPUTS [EMPTY]
 
 # OUTPUTS
 
