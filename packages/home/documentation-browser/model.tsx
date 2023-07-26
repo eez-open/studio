@@ -330,9 +330,7 @@ class Model {
                 : "action";
 
             async function getOrCreateComponentInfo() {
-                let componentInfo = componentsMap.get(
-                    componentClass.id
-                );
+                let componentInfo = componentsMap.get(componentClass.id);
 
                 if (!componentInfo) {
                     componentInfo = new ComponentInfo();
@@ -646,31 +644,34 @@ class Model {
                                 {componentInfo.name}
                             </span>
                         </span>
-                        <span>
-                            {componentInfo.docCounters.total -
-                                componentInfo.docCounters.completed -
-                                componentInfo.docCounters.drafts >
-                                0 && (
-                                <span className="badge bg-danger">
-                                    {componentInfo.docCounters.total -
-                                        componentInfo.docCounters.completed -
-                                        componentInfo.docCounters.drafts}
-                                </span>
-                            )}
-                            {componentInfo.docCounters.drafts > 0 && (
-                                <span className="badge bg-warning">
-                                    {componentInfo.docCounters.drafts}
-                                </span>
-                            )}
-                            {componentInfo.docCounters.completed ==
-                                componentInfo.docCounters.total && (
-                                <Icon
-                                    icon="material:check_circle"
-                                    style={{ color: "green" }}
-                                    size={20}
-                                />
-                            )}
-                        </span>
+                        {isDev && (
+                            <span>
+                                {componentInfo.docCounters.total -
+                                    componentInfo.docCounters.completed -
+                                    componentInfo.docCounters.drafts >
+                                    0 && (
+                                    <span className="badge bg-danger">
+                                        {componentInfo.docCounters.total -
+                                            componentInfo.docCounters
+                                                .completed -
+                                            componentInfo.docCounters.drafts}
+                                    </span>
+                                )}
+                                {componentInfo.docCounters.drafts > 0 && (
+                                    <span className="badge bg-warning">
+                                        {componentInfo.docCounters.drafts}
+                                    </span>
+                                )}
+                                {componentInfo.docCounters.completed ==
+                                    componentInfo.docCounters.total && (
+                                    <Icon
+                                        icon="material:check_circle"
+                                        style={{ color: "green" }}
+                                        size={20}
+                                    />
+                                )}
+                            </span>
+                        )}
                     </span>
                 ),
                 children: [],
