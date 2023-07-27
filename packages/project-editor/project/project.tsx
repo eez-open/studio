@@ -777,10 +777,18 @@ export class General extends EezObject {
             },
             {
                 name: "targetPlatform",
+                displayName: (general: General) =>
+                    general.projectType == ProjectType.IEXT
+                        ? "Target instrument"
+                        : "Target platform",
                 type: PropertyType.MultilineText
             },
             {
                 name: "targetPlatformLink",
+                displayName: (general: General) =>
+                    general.projectType == ProjectType.IEXT
+                        ? "Target instrument link"
+                        : "Target platform link",
                 type: PropertyType.String
             },
             {
@@ -790,7 +798,9 @@ export class General extends EezObject {
                 defaultValue: [],
                 arrayItemOrientation: "vertical",
                 partOfNavigation: false,
-                enumerable: false
+                enumerable: false,
+                hideInPropertyGrid: (general: General) =>
+                    general.projectType == ProjectType.IEXT
             }
         ],
         check: (general: General, messages: IMessage[]) => {

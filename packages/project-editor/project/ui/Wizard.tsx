@@ -2431,7 +2431,12 @@ function PlatformDescription() {
     return (
         <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
             <h6>
-                <span>Platform Description</span>
+                <span>
+                    {wizardModel.selectedProjectType.projectType == "IEXT"
+                        ? "Instrument"
+                        : "Platform"}{" "}
+                    Description
+                </span>
             </h6>
             <div>
                 <div className="markdown" dangerouslySetInnerHTML={html} />
