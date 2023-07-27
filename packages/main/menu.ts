@@ -17,6 +17,7 @@ import {
 import { settings } from "main/settings";
 import { APP_NAME } from "main/util";
 import { undoManager } from "eez-studio-shared/store";
+import { isDev } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -764,17 +765,18 @@ function buildHelpMenu(
 ): Electron.MenuItemConstructorOptions {
     const helpMenuSubmenu: Electron.MenuItemConstructorOptions[] = [];
 
-    helpMenuSubmenu.push({
-        label: "Documentation",
-        accelerator: "F1",
-        click: function (item: any, focusedWindow: any) {
-            focusedWindow.webContents.send("show-documentation-browser");
-        }
-    });
-
-    helpMenuSubmenu.push({
-        type: "separator"
-    });
+    if (isDev) {
+        helpMenuSubmenu.push({
+            label: "Documentation",
+            accelerator: "F1",
+            click: function (item: any, focusedWindow: any) {
+                focusedWindow.webContents.send("show-documentation-browser");
+            }
+        });
+        helpMenuSubmenu.push({
+            type: "separator"
+        });
+    }
 
     helpMenuSubmenu.push({
         label: "About",
