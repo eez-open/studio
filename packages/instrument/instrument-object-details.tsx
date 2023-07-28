@@ -23,11 +23,10 @@ import type * as ExtensionManagerModule from "home/extensions-manager/extensions
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const InstrumentDetails = observer(
-    class InstrumentDetails extends React.Component<
-        { instrument: InstrumentObject },
-        {}
-    > {
+export const InstrumentToolbar = observer(
+    class InstrumentToolbar extends React.Component<{
+        instrument: InstrumentObject;
+    }> {
         onOpenInTab = () => {
             this.props.instrument.openEditor("tab");
         };
@@ -47,66 +46,62 @@ export const InstrumentDetails = observer(
         };
 
         render() {
-            let { instrument } = this.props;
             return (
-                <Panels>
-                    <Panel
-                        title="Actions"
-                        justify="flex-start"
-                        scrollable={true}
-                        grow={1}
-                    >
-                        <Toolbar>
-                            {this.props.instrument.isUnknownExtension && (
-                                <ButtonAction
-                                    text="Install Extension"
-                                    title="Install extension for this instrument"
-                                    className="btn btn-default btn-primary"
-                                    onClick={() =>
-                                        installExtension(this.props.instrument)
-                                    }
-                                />
-                            )}
-                            <ButtonAction
-                                text="Open in Tab"
-                                title="Open instrument in new tab"
-                                className="btn btn-secondary"
-                                onClick={this.onOpenInTab}
-                            />
-                            <ButtonAction
-                                text="Open in New Window"
-                                title="Open instrument in new window"
-                                className="btn btn-secondary"
-                                onClick={this.onOpenInWindow}
-                            />
-                            <ButtonAction
-                                text="Delete"
-                                title="Delete instrument"
-                                className="btn btn-danger"
-                                onClick={this.onDelete}
-                            />
-                        </Toolbar>
-                    </Panel>
-
-                    <Panel
-                        title="Properties"
-                        justify="flex-start"
-                        scrollable={true}
-                        grow={1}
-                    >
-                        <Properties instrument={instrument} />
-                    </Panel>
-
-                    <Panel
-                        title="Connection"
-                        justify="flex-start"
-                        scrollable={true}
-                        grow={1}
-                    >
-                        <Connection instrument={instrument} />
-                    </Panel>
-                </Panels>
+                <Toolbar>
+                    {this.props.instrument.isUnknownExtension && (
+                        <ButtonAction
+                            text="Install Extension"
+                            title="Install extension for this instrument"
+                            className="btn btn-default btn-primary"
+                            onClick={() =>
+                                installExtension(this.props.instrument)
+                            }
+                        />
+                    )}
+                    <ButtonAction
+                        text="Open in Tab"
+                        title="Open instrument in new tab"
+                        className="btn btn-secondary"
+                        onClick={this.onOpenInTab}
+                    />
+                    <ButtonAction
+                        text="Open in New Window"
+                        title="Open instrument in new window"
+                        className="btn btn-secondary"
+                        onClick={this.onOpenInWindow}
+                    />
+                    <ButtonAction
+                        text="Delete"
+                        title="Delete instrument"
+                        className="btn btn-danger"
+                        onClick={this.onDelete}
+                    />
+                </Toolbar>
             );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const InstrumentProperties = observer(
+    class InstrumentProperties extends React.Component<{
+        instrument: InstrumentObject;
+    }> {
+        render() {
+            return <Properties instrument={this.props.instrument} />;
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const InstrumentConnection = observer(
+    class InstrumentConnection extends React.Component<{
+        instrument: InstrumentObject;
+    }> {
+        render() {
+            return <Connection instrument={this.props.instrument} />;
         }
     }
 );
@@ -256,51 +251,6 @@ export async function installExtension(instrument: InstrumentObject) {
         });
     } else {
         notification.error("Instrument extension not found!");
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-class PanelTitle extends React.Component<{ title?: string }, {}> {
-    render() {
-        return <div className="EezStudio_PanelTitle">{this.props.title}</div>;
-    }
-}
-
-class Panel extends React.Component<{
-    children?: React.ReactNode;
-    title?: string;
-    justify?:
-        | "flex-start"
-        | "flex-end"
-        | "center"
-        | "space-between"
-        | "space-around";
-    scrollable?: boolean;
-    grow?: number;
-}> {
-    render() {
-        return (
-            <div className="EezStudio_InstrumentPanelContainer">
-                {this.props.title && <PanelTitle title={this.props.title} />}
-                <div
-                    className="EezStudio_PanelContent"
-                    style={{
-                        flexGrow: this.props.grow,
-                        overflow: this.props.scrollable ? "auto" : "hidden",
-                        justifyContent: this.props.justify
-                    }}
-                >
-                    {this.props.children}
-                </div>
-            </div>
-        );
-    }
-}
-
-class Panels extends React.Component<{ children?: React.ReactNode }> {
-    render() {
-        return <div className="EezStudio_Panels">{this.props.children}</div>;
     }
 }
 

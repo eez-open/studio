@@ -40,7 +40,9 @@ import type { ITabDefinition } from "home/tabs-store";
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 import { instrumentStore } from "instrument/instrument-object";
 import {
-    InstrumentDetails,
+    InstrumentConnection,
+    InstrumentProperties,
+    InstrumentToolbar,
     installExtension
 } from "instrument/instrument-object-details";
 import { tabs } from "home/tabs-store";
@@ -370,25 +372,56 @@ export const WorkbenchToolbar = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class PanelTitle extends React.Component<{ title?: string }, {}> {
-    render() {
-        return <div className="EezStudio_PanelTitle">{this.props.title}</div>;
-    }
-}
-
-const InstrumentDetailsEnclosure = observer(() => {
+const InstrumentToolbarEnclosure = observer(() => {
     const selectedInstrumentId = selectedInstrument.get();
     if (!selectedInstrumentId) {
         return null;
     }
+
     const instrument = instruments.get(selectedInstrumentId);
     if (!instrument) {
         return null;
     }
 
     return (
-        <div className="EezStudio_InstrumentDetailsEnclosure">
-            <InstrumentDetails instrument={instrument} />
+        <div className="EezStudio_InstrumentToolbarEnclosure">
+            <InstrumentToolbar instrument={instrument} />
+        </div>
+    );
+});
+
+const InstrumentPropertiesEnclosure = observer(() => {
+    const selectedInstrumentId = selectedInstrument.get();
+    if (!selectedInstrumentId) {
+        return null;
+    }
+
+    const instrument = instruments.get(selectedInstrumentId);
+    if (!instrument) {
+        return null;
+    }
+
+    return (
+        <div className="EezStudio_InstrumentPropertiesEnclosure">
+            <InstrumentProperties instrument={instrument} />
+        </div>
+    );
+});
+
+const InstrumentConnectionEnclosure = observer(() => {
+    const selectedInstrumentId = selectedInstrument.get();
+    if (!selectedInstrumentId) {
+        return null;
+    }
+
+    const instrument = instruments.get(selectedInstrumentId);
+    if (!instrument) {
+        return null;
+    }
+
+    return (
+        <div className="EezStudio_InstrumentConnectionEnclosure">
+            <InstrumentConnection instrument={instrument} />
         </div>
     );
 });
@@ -399,14 +432,7 @@ const HistoryEnclosure = observer(() => {
         return null;
     }
 
-    return (
-        <div className="EezStudio_HistoryContainer">
-            <PanelTitle title="History" />
-            <div className="EezStudio_HistoryContent">
-                <HistorySection oids={[selectedInstrumentId]} simple={true} />
-            </div>
-        </div>
-    );
+    return <HistorySection oids={[selectedInstrumentId]} simple={true} />;
 });
 
 export const Properties = observer(
@@ -414,8 +440,16 @@ export const Properties = observer(
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
-            if (component === "Details") {
-                return <InstrumentDetailsEnclosure />;
+            if (component === "Toolbar") {
+                return <InstrumentToolbarEnclosure />;
+            }
+
+            if (component === "Properties") {
+                return <InstrumentPropertiesEnclosure />;
+            }
+
+            if (component === "Connection") {
+                return <InstrumentConnectionEnclosure />;
             }
 
             if (component === "History") {
@@ -426,6 +460,11 @@ export const Properties = observer(
         };
 
         render() {
+            const selectedInstrumentId = selectedInstrument.get();
+            if (!selectedInstrumentId) {
+                return null;
+            }
+
             return (
                 <FlexLayout.Layout
                     model={homeLayoutModels.instrumentProperties}

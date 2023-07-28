@@ -145,30 +145,48 @@ export class LayoutModels extends AbstractLayoutModels {
         ]
     };
 
-    static INSTRUMENT_DETAILS_TABSET: FlexLayout.IJsonTabSetNode = {
+    static INSTRUMENT_TOOLBAR_TABSET: FlexLayout.IJsonTabSetNode = {
         type: "tabset",
-        enableTabStrip: false,
-        enableDrag: false,
-        enableDrop: false,
-        enableClose: false,
-        weight: 55,
+        weight: 10,
         children: [
             {
                 type: "tab",
                 enableClose: false,
-                name: "Details",
-                component: "Details"
+                name: "Actions",
+                component: "Toolbar"
+            }
+        ]
+    };
+
+    static INSTRUMENT_PROPERTIES_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        weight: 25,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Properties",
+                component: "Properties"
+            }
+        ]
+    };
+
+    static INSTRUMENT_CONNECTION_TABSET: FlexLayout.IJsonTabSetNode = {
+        type: "tabset",
+        weight: 25,
+        children: [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Connection",
+                component: "Connection"
             }
         ]
     };
 
     static INSTRUMENT_HISTORY_TABSET: FlexLayout.IJsonTabSetNode = {
         type: "tabset",
-        enableTabStrip: false,
-        enableDrag: false,
-        enableDrop: false,
-        enableClose: false,
-        weight: 55,
+        weight: 40,
         children: [
             {
                 type: "tab",
@@ -364,7 +382,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "instrumentProperties",
-                version: 10,
+                version: 15,
                 json: {
                     global,
                     borders: [],
@@ -374,7 +392,9 @@ export class LayoutModels extends AbstractLayoutModels {
                             {
                                 type: "row",
                                 children: [
-                                    LayoutModels.INSTRUMENT_DETAILS_TABSET,
+                                    LayoutModels.INSTRUMENT_TOOLBAR_TABSET,
+                                    LayoutModels.INSTRUMENT_PROPERTIES_TABSET,
+                                    LayoutModels.INSTRUMENT_CONNECTION_TABSET,
                                     LayoutModels.INSTRUMENT_HISTORY_TABSET
                                 ]
                             }

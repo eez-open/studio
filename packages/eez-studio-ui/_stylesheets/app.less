@@ -1421,19 +1421,6 @@ button.EezStudio_Action {
     overflow: auto;
 }
 
-.EezStudio_PanelTitle {
-    display: flex;
-    flex-direction: row;
-    padding: 5px 10px;
-    border-bottom: 1px solid @borderColor;
-    font-weight: bold;
-}
-
-.EezStudio_InstrumentDetailsEnclosure {
-    background-color: @panelHeaderColor;
-    min-height: 100%;
-}
-
 .EezStudio_InstrumentComponentEnclosure {
     width: 240px;
 
@@ -2422,6 +2409,12 @@ button.EezStudio_Action {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+}
+
+.EezStudio_InstrumentToolbarEnclosure,
+.EezStudio_InstrumentPropertiesEnclosure,
+.EezStudio_InstrumentConnectionEnclosure {
+    padding: 8px;
 }
 
 .EezStudio_DropMark {
