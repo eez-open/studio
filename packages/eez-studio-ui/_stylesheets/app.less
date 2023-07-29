@@ -5116,9 +5116,11 @@ button.EezStudio_Action {
         }
 
         &.CheckboxWidget {
-            .form-check {
+            & > div {
+                width: 100%;
                 height: 100%;
-                padding-left: 0;
+                padding: 0;
+                margin: 0;
                 label {
                     padding-left: 4px;
                 }
@@ -5130,6 +5132,29 @@ button.EezStudio_Action {
                 display: block;
                 width: 100%;
                 height: 100%;
+            }
+        }
+
+        &.SliderDashboardWidget {
+            input {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.SwitchDashboardWidget {
+            .form-check {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                input {
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 0;
+                    margin: 0;
+                }
             }
         }
 

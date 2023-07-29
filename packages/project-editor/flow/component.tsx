@@ -2956,6 +2956,10 @@ export class Widget extends Component {
         return this.style;
     }
 
+    get styles() {
+        return [this.style];
+    }
+
     getOutputs(): ComponentOutput[] {
         return [
             ...super.getOutputs(),

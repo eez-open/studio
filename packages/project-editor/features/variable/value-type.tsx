@@ -101,6 +101,8 @@ export const CHECKBOX_CHANGE_EVENT_STRUCT_NAME = "$CheckboxChangeEvent";
 export const TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME = "$TextInputChangeEvent";
 export const DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME =
     "$DropDownListChangeEvent";
+export const SLIDER_CHANGE_EVENT_STRUCT_NAME = "$SliderChangeEvent";
+export const SWITCH_CHANGE_EVENT_STRUCT_NAME = "$SwitchChangeEvent";
 export const SCROLLBAR_STATE_STRUCT_NAME = "$ScrollbarState";
 export const OBJECT_VARIABLE_STATUS_STRUCT_NAME = "$ObjectVariableStatus";
 
@@ -187,6 +189,40 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             {
                 name: "selectedIndex",
                 type: "integer"
+            }
+        ]
+    }),
+    new SystemStructure({
+        name: SLIDER_CHANGE_EVENT_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "value",
+                type: "double"
+            }
+        ]
+    }),
+    new SystemStructure({
+        name: SWITCH_CHANGE_EVENT_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "value",
+                type: "boolean"
             }
         ]
     }),
@@ -1256,4 +1292,17 @@ export function makeDropDownListActionParamsValue(
     selectedIndex: number
 ): DropDownListActionParamsValue {
     return { ...makeActionParamsValue(flowContext), selectedIndex };
+}
+
+interface SliderActionParamsValue {
+    index: number;
+    indexes: number[];
+    value: number;
+}
+
+export function makeSliderActionParamsValue(
+    flowContext: IFlowContext,
+    value: number
+): SliderActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), value };
 }

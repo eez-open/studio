@@ -353,7 +353,7 @@ export const ComponentEnclosure = observer(
                 <>
                     {flowContext.projectStore.projectTypeTraits.isDashboard &&
                         component instanceof ProjectEditor.WidgetClass &&
-                        component.style.render()}
+                        component.styles.map(style => style.render())}
 
                     <div
                         ref={this.elRef}

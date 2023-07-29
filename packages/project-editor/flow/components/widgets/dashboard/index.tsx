@@ -43,10 +43,13 @@ import {
     CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
     CLICK_EVENT_STRUCT_NAME,
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
+    SLIDER_CHANGE_EVENT_STRUCT_NAME,
+    SWITCH_CHANGE_EVENT_STRUCT_NAME,
     TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
     makeActionParamsValue,
     makeCheckboxActionParamsValue as makeCheckboxChangeEventValue,
     makeDropDownListActionParamsValue,
+    makeSliderActionParamsValue,
     makeTextInputActionParamsValue as makeTextInputChangeEventValue
 } from "project-editor/features/variable/value-type";
 
@@ -55,7 +58,6 @@ import {
     makeDataPropertyInfo,
     ComponentOutput,
     makeExpressionProperty,
-    makeTextPropertyInfo,
     makeStylePropertyInfo,
     migrateStyleProperty
 } from "project-editor/flow/component";
@@ -82,11 +84,12 @@ import { Button } from "eez-studio-ui/button";
 import { detectFileType } from "instrument/connection/file-type";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 
+import { SWITCH_WIDGET_ICON } from "project-editor/ui-components/icons";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextDashboardWidget extends Widget {
     name: string;
-    text?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -94,14 +97,6 @@ export class TextDashboardWidget extends Widget {
 
         label: (widget: TextDashboardWidget) => {
             let name = getComponentName(widget.type);
-
-            const project = ProjectEditor.getProject(widget);
-
-            if (!project.projectTypeTraits.hasFlowSupport) {
-                if (widget.text) {
-                    return `${name}: ${widget.text}`;
-                }
-            }
 
             if (widget.name) {
                 return `${name}: ${widget.name}`;
@@ -128,20 +123,17 @@ export class TextDashboardWidget extends Widget {
                     }
                     return "Data";
                 }
-            }),
-            makeTextPropertyInfo("text")
+            })
         ],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             jsObject.type = "TextDashboardWidget";
 
             if (jsObject.text) {
-                if (project.projectTypeTraits.hasFlowSupport) {
-                    if (!jsObject.data) {
-                        jsObject.data = `"${jsObject.text}"`;
-                    }
-                    delete jsObject.text;
+                if (!jsObject.data) {
+                    jsObject.data = `"${jsObject.text}"`;
                 }
+                delete jsObject.text;
             }
         },
 
@@ -171,7 +163,7 @@ export class TextDashboardWidget extends Widget {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
-                if (!widget.text && !widget.data) {
+                if (!widget.data) {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
             } else {
@@ -188,8 +180,7 @@ export class TextDashboardWidget extends Widget {
         super();
 
         makeObservable(this, {
-            name: observable,
-            text: observable
+            name: observable
         });
     }
 
@@ -210,13 +201,7 @@ export class TextDashboardWidget extends Widget {
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        const result = getTextValue(
-            flowContext,
-            this,
-            "data",
-            this.name,
-            this.text
-        );
+        const result = getTextValue(flowContext, this, "data", this.name, "");
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {
@@ -738,6 +723,137 @@ registerClass("CheckboxWidget", CheckboxWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class SwitchDashboardWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                displayName: "Value"
+            })
+        ],
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32
+        },
+
+        icon: SWITCH_WIDGET_ICON,
+
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${SWITCH_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
+    });
+
+    constructor() {
+        super();
+
+        makeObservable(this, {});
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [...super.getOutputs()];
+    }
+
+    getChecked(flowContext: IFlowContext) {
+        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.data) {
+                try {
+                    return !!evalProperty(flowContext, this, "data");
+                } catch (err) {
+                    //console.error(err);
+                }
+            }
+
+            return false;
+        }
+
+        if (this.data) {
+            return !!flowContext.dataContext.get(this.data);
+        }
+
+        return false;
+    }
+
+    getClassName() {
+        return classNames("eez-widget-component", this.type);
+    }
+
+    render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
+        let checked = this.getChecked(flowContext);
+
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
+
+        return (
+            <>
+                <div
+                    className={classNames(
+                        "form-check form-switch",
+                        this.style.classNames
+                    )}
+                    style={{ opacity: style.opacity }}
+                >
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
+                        role="switch"
+                        checked={checked}
+                        onChange={event => {
+                            const flowState =
+                                flowContext.flowState as FlowState;
+                            if (flowState) {
+                                const value = event.target.checked;
+
+                                if (this.data) {
+                                    flowState.runtime.assignProperty(
+                                        flowContext,
+                                        this,
+                                        "data",
+                                        value
+                                    );
+                                }
+
+                                if (flowState.runtime) {
+                                    flowState.runtime.executeWidgetAction(
+                                        flowContext,
+                                        this,
+                                        "ON_CHANGE",
+                                        makeCheckboxChangeEventValue(
+                                            flowContext,
+                                            value
+                                        ),
+                                        `struct:${CHECKBOX_CHANGE_EVENT_STRUCT_NAME}`
+                                    );
+                                }
+                            }
+                        }}
+                    ></input>
+                </div>
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+}
+
+registerClass("SwitchDashboardWidget", SwitchDashboardWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class DropDownListDashboardWidget extends Widget {
     options: string;
 
@@ -1068,7 +1184,7 @@ export class SpinnerWidget extends Widget {
         width: number,
         height: number
     ): React.ReactNode {
-        return <Loader />;
+        return <Loader size={Math.min(width, height)} />;
     }
 }
 
@@ -1234,7 +1350,6 @@ registerClass("QRCodeDashboardWidget", QRCodeDashboardWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ButtonDashboardWidget extends Widget {
-    text?: string;
     enabled?: string;
     disabledStyle: Style;
 
@@ -1252,7 +1367,6 @@ export class ButtonDashboardWidget extends Widget {
                     return "Data";
                 }
             }),
-            makeTextPropertyInfo("text"),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("disabledStyle")
         ],
@@ -1265,12 +1379,10 @@ export class ButtonDashboardWidget extends Widget {
             jsObject.type = "ButtonDashboardWidget";
 
             if (jsObject.text) {
-                if (project.projectTypeTraits.hasFlowSupport) {
-                    if (!jsObject.data) {
-                        jsObject.data = `"${jsObject.text}"`;
-                    }
-                    delete jsObject.text;
+                if (!jsObject.data) {
+                    jsObject.data = `"${jsObject.text}"`;
                 }
+                delete jsObject.text;
             }
 
             migrateStyleProperty(jsObject, "disabledStyle");
@@ -1303,11 +1415,7 @@ export class ButtonDashboardWidget extends Widget {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
-                if (
-                    !widget.text &&
-                    !widget.data &&
-                    !widget.isInputProperty("data")
-                ) {
+                if (!widget.data && !widget.isInputProperty("data")) {
                     messages.push(propertyNotSetMessage(widget, "text"));
                 }
 
@@ -1326,10 +1434,13 @@ export class ButtonDashboardWidget extends Widget {
         super();
 
         makeObservable(this, {
-            text: observable,
             enabled: observable,
             disabledStyle: observable
         });
+    }
+
+    get styles() {
+        return [this.style, this.disabledStyle];
     }
 
     getClassName() {
@@ -1337,13 +1448,7 @@ export class ButtonDashboardWidget extends Widget {
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        const result = getTextValue(
-            flowContext,
-            this,
-            "data",
-            undefined,
-            this.text
-        );
+        const result = getTextValue(flowContext, this, "data", undefined, "");
         let text: string;
         let node: React.ReactNode | null;
         if (typeof result == "object") {
@@ -1629,6 +1734,161 @@ export class BitmapDashboardWidget extends Widget {
 }
 
 registerClass("BitmapDashboardWidget", BitmapDashboardWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class SliderDashboardWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true
+            }),
+
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "min",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "max",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            )
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 20,
+            min: "0",
+            max: "100"
+        },
+
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <circle cx="14" cy="6" r="2"></circle>
+                <line x1="4" y1="6" x2="12" y2="6"></line>
+                <line x1="16" y1="6" x2="20" y2="6"></line>
+                <circle cx="8" cy="12" r="2"></circle>
+                <line x1="4" y1="12" x2="6" y2="12"></line>
+                <line x1="10" y1="12" x2="20" y2="12"></line>
+                <circle cx="17" cy="18" r="2"></circle>
+                <line x1="4" y1="18" x2="15" y2="18"></line>
+                <line x1="19" y1="18" x2="20" y2="18"></line>
+            </svg>
+        ),
+
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
+    });
+
+    value: string;
+    min: string;
+    max: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            value: observable,
+            min: observable,
+            max: observable
+        });
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [...super.getOutputs()];
+    }
+
+    getClassName() {
+        return classNames("eez-widget-component", this.type);
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        let value = evalProperty(flowContext, this, "value") ?? 25;
+        let min = evalProperty(flowContext, this, "min") ?? 0;
+        let max = evalProperty(flowContext, this, "max") ?? 100;
+
+        return (
+            <>
+                <input
+                    type="range"
+                    value={value}
+                    min={min}
+                    max={max}
+                    onChange={event => {
+                        const flowState = flowContext.flowState as FlowState;
+                        if (flowState) {
+                            const value = parseFloat(event.target.value);
+
+                            if (this.value) {
+                                flowState.runtime.assignProperty(
+                                    flowContext,
+                                    this,
+                                    "value",
+                                    value
+                                );
+                            }
+
+                            if (flowState.runtime) {
+                                flowState.runtime.executeWidgetAction(
+                                    flowContext,
+                                    this,
+                                    "ON_CHANGE",
+                                    makeSliderActionParamsValue(
+                                        flowContext,
+                                        value
+                                    ),
+                                    `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`
+                                );
+                            }
+                        }
+                    }}
+                ></input>
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+}
+
+registerClass("SliderDashboardWidget", SliderDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
