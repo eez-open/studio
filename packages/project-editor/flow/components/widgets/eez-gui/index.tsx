@@ -1701,8 +1701,6 @@ registerClass("ToggleButtonWidget", ToggleButtonWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ButtonGroupWidget extends Widget {
-    selectedStyle: Style;
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -1710,7 +1708,30 @@ export class ButtonGroupWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
 
-        properties: [makeStylePropertyInfo("selectedStyle")],
+        properties: [
+            makeDataPropertyInfo("data", {
+                displayName: (widget: ButtonGroupWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    if (
+                        project.projectTypeTraits.hasFlowSupport &&
+                        project.settings.general.projectVersion == "v3"
+                    ) {
+                        return "Button labels";
+                    }
+                    return "Data";
+                }
+            }),
+            makeDataPropertyInfo("selectedButton", {
+                hideInPropertyGrid: (widget: ButtonGroupWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    return !(
+                        project.projectTypeTraits.hasFlowSupport &&
+                        project.settings.general.projectVersion == "v3"
+                    );
+                }
+            }),
+            makeStylePropertyInfo("selectedStyle")
+        ],
 
         defaultValue: {
             left: 0,
@@ -1745,126 +1766,150 @@ export class ButtonGroupWidget extends Widget {
         }
     });
 
+    selectedStyle: Style;
+    selectedButton: string;
+
     constructor() {
         super();
 
         makeObservable(this, {
-            selectedStyle: observable
+            selectedStyle: observable,
+            selectedButton: observable
         });
+    }
+
+    getButtonLabels(flowContext: IFlowContext): string[] {
+        if (
+            flowContext.projectStore.project.projectTypeTraits.hasFlowSupport &&
+            flowContext.projectStore.project.settings.general.projectVersion ==
+                "v3"
+        ) {
+            const buttonLabels = getAnyValue(flowContext, this, "data", []);
+            if (Array.isArray(buttonLabels)) {
+                return buttonLabels.map(label => label.toString());
+            }
+            return [];
+        }
+
+        return (
+            (this.data && flowContext.dataContext.getValueList(this.data)) || []
+        );
+    }
+
+    getSelectedButton(flowContext: IFlowContext): number {
+        if (
+            flowContext.projectStore.project.projectTypeTraits.hasFlowSupport &&
+            flowContext.projectStore.project.settings.general.projectVersion ==
+                "v3"
+        ) {
+            return 0;
+        }
+
+        return (this.data && flowContext.dataContext.get(this.data)) || 0;
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let buttonLabels =
-                                (this.data &&
-                                    flowContext.dataContext.getValueList(
-                                        this.data
-                                    )) ||
-                                [];
-                            let selectedButton =
-                                (this.data &&
-                                    flowContext.dataContext.get(this.data)) ||
-                                0;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let buttonLabels = this.getButtonLabels(flowContext);
+                        let selectedButton =
+                            this.getSelectedButton(flowContext);
 
-                            let x = 0;
-                            let y = 0;
-                            let w = width;
-                            let h = height;
+                        let x = 0;
+                        let y = 0;
+                        let w = width;
+                        let h = height;
 
-                            if (w > h) {
-                                // horizontal orientation
-                                let buttonWidth = Math.floor(
-                                    w / buttonLabels.length
-                                );
-                                x += Math.floor(
-                                    (w - buttonWidth * buttonLabels.length) / 2
-                                );
-                                let buttonHeight = h;
-                                for (let i = 0; i < buttonLabels.length; i++) {
-                                    if (i == selectedButton) {
-                                        drawText(
-                                            ctx,
-                                            buttonLabels[i],
-                                            x,
-                                            y,
-                                            buttonWidth,
-                                            buttonHeight,
-                                            this.selectedStyle,
-                                            false
-                                        );
-                                    } else {
-                                        drawText(
-                                            ctx,
-                                            buttonLabels[i],
-                                            x,
-                                            y,
-                                            buttonWidth,
-                                            buttonHeight,
-                                            this.style,
-                                            false
-                                        );
-                                    }
-                                    x += buttonWidth;
+                        if (w > h) {
+                            // horizontal orientation
+                            let buttonWidth = Math.floor(
+                                w / buttonLabels.length
+                            );
+                            x += Math.floor(
+                                (w - buttonWidth * buttonLabels.length) / 2
+                            );
+                            let buttonHeight = h;
+                            for (let i = 0; i < buttonLabels.length; i++) {
+                                if (i == selectedButton) {
+                                    drawText(
+                                        ctx,
+                                        buttonLabels[i],
+                                        x,
+                                        y,
+                                        buttonWidth,
+                                        buttonHeight,
+                                        this.selectedStyle,
+                                        false
+                                    );
+                                } else {
+                                    drawText(
+                                        ctx,
+                                        buttonLabels[i],
+                                        x,
+                                        y,
+                                        buttonWidth,
+                                        buttonHeight,
+                                        this.style,
+                                        false
+                                    );
                                 }
-                            } else {
-                                // vertical orientation
-                                let buttonWidth = w;
-                                let buttonHeight = Math.floor(
-                                    h / buttonLabels.length
-                                );
-
-                                y += Math.floor(
-                                    (h - buttonHeight * buttonLabels.length) / 2
-                                );
-
-                                let labelHeight = Math.min(
-                                    buttonWidth,
-                                    buttonHeight
-                                );
-                                let yOffset = Math.floor(
-                                    (buttonHeight - labelHeight) / 2
-                                );
-
-                                y += yOffset;
-
-                                for (let i = 0; i < buttonLabels.length; i++) {
-                                    if (i == selectedButton) {
-                                        drawText(
-                                            ctx,
-                                            buttonLabels[i],
-                                            x,
-                                            y,
-                                            buttonWidth,
-                                            labelHeight,
-                                            this.selectedStyle,
-                                            false
-                                        );
-                                    } else {
-                                        drawText(
-                                            ctx,
-                                            buttonLabels[i],
-                                            x,
-                                            y,
-                                            buttonWidth,
-                                            labelHeight,
-                                            this.style,
-                                            false
-                                        );
-                                    }
-                                    y += buttonHeight;
-                                }
+                                x += buttonWidth;
                             }
-                        }}
-                    />
-                )}
+                        } else {
+                            // vertical orientation
+                            let buttonWidth = w;
+                            let buttonHeight = Math.floor(
+                                h / buttonLabels.length
+                            );
+
+                            y += Math.floor(
+                                (h - buttonHeight * buttonLabels.length) / 2
+                            );
+
+                            let labelHeight = Math.min(
+                                buttonWidth,
+                                buttonHeight
+                            );
+                            let yOffset = Math.floor(
+                                (buttonHeight - labelHeight) / 2
+                            );
+
+                            y += yOffset;
+
+                            for (let i = 0; i < buttonLabels.length; i++) {
+                                if (i == selectedButton) {
+                                    drawText(
+                                        ctx,
+                                        buttonLabels[i],
+                                        x,
+                                        y,
+                                        buttonWidth,
+                                        labelHeight,
+                                        this.selectedStyle,
+                                        false
+                                    );
+                                } else {
+                                    drawText(
+                                        ctx,
+                                        buttonLabels[i],
+                                        x,
+                                        y,
+                                        buttonWidth,
+                                        labelHeight,
+                                        this.style,
+                                        false
+                                    );
+                                }
+                                y += buttonHeight;
+                            }
+                        }
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -1873,6 +1918,14 @@ export class ButtonGroupWidget extends Widget {
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // selectedStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "selectedStyle"));
+
+        // selectedButton
+        let selectedButton =
+            assets.projectStore.project.projectTypeTraits.hasFlowSupport &&
+            assets.projectStore.project.settings.general.projectVersion == "v3"
+                ? assets.getWidgetDataItemIndex(this, "selectedButton")
+                : 0;
+        dataBuffer.writeInt16(selectedButton);
     }
 }
 
