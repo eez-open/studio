@@ -511,24 +511,21 @@ export class WasmRuntime extends RemoteRuntime {
             this.displayHeight
         );
 
-        let left;
-        let top;
-        let width;
-        let height;
-        if (this.isDebuggerActive) {
-            this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
-            left = this.selectedPage.left;
-            top = this.selectedPage.top;
-            width = this.selectedPage.width;
-            height = this.selectedPage.height;
-        } else {
-            left = 0;
-            top = 0;
-            width = this.displayWidth;
-            height = this.displayHeight;
-        }
+        const left = this.selectedPage.left;
+        const top = this.selectedPage.top;
+        const width = this.selectedPage.width;
+        const height = this.selectedPage.height;
 
-        this.ctx.putImageData(imgData, 0, 0, left, top, width, height);
+        this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
+        this.ctx.putImageData(
+            imgData,
+            this.isDebuggerActive ? 0 : left + (this.displayWidth - width) / 2,
+            this.isDebuggerActive ? 0 : top + (this.displayHeight - height) / 2,
+            left,
+            top,
+            width,
+            height
+        );
     }
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1149,10 +1146,26 @@ export const WasmCanvas = observer(
 
             var bbox = canvas.getBoundingClientRect();
 
-            const x = (event.clientX - bbox.left) * (canvas.width / bbox.width);
+            const left = wasmRuntime.selectedPage.left;
+            const top = wasmRuntime.selectedPage.top;
+            const width = wasmRuntime.selectedPage.width;
+            const height = wasmRuntime.selectedPage.height;
+
+            const x =
+                (event.clientX -
+                    bbox.left -
+                    (wasmRuntime.isDebuggerActive
+                        ? 0
+                        : left + (wasmRuntime.displayWidth - width) / 2)) *
+                (canvas.width / bbox.width);
 
             const y =
-                (event.clientY - bbox.top) * (canvas.height / bbox.height);
+                (event.clientY -
+                    bbox.top -
+                    (wasmRuntime.isDebuggerActive
+                        ? 0
+                        : top + (wasmRuntime.displayHeight - height) / 2)) *
+                (canvas.height / bbox.height);
 
             const pressed = event.buttons == 1 ? 1 : 0;
 
