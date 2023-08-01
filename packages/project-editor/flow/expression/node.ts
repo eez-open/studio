@@ -29,6 +29,7 @@ export type ExpressionNode =
           type: "Literal";
           value: any;
           valueType: ValueType;
+          location?: LocationRange;
       }
     | {
           type: "TextResource";

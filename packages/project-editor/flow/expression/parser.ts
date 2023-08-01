@@ -27,7 +27,9 @@ export const expressionParser = {
         if (resultJSONStr != undefined) {
             result = JSON.parse(resultJSONStr);
         } else {
-            result = peggyParser.parse(expr);
+            result = peggyParser.parse(expr, {
+                grammarSource: expr
+            });
             resultJSONStr = JSON.stringify(result);
             cache.set(expr, resultJSONStr);
         }
