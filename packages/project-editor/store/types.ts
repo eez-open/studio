@@ -19,7 +19,7 @@ import {
     BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES
 } from "project-editor/features/variable/value-type";
-import { computed, makeObservable, observable, runInAction } from "mobx";
+import { computed, makeObservable } from "mobx";
 import { basicFlowValueTypes } from "project-editor/build/value-types";
 
 function getFieldIndexes(fields: IField[]): IIndexes {
@@ -31,20 +31,36 @@ function getFieldIndexes(fields: IField[]): IIndexes {
 export class TypesStore {
     _types: IType[] = [];
     _typeIndexes: IIndexes = {};
-    _numDynamicTypes: number = 0;
-    lastChangeTime: number;
+
+    _basicTypeIndex: number = 0;
+    _systemStructureTypeIndex: number = 0;
+    _userStructureTypeIndex: number = 0;
+    _systemEnumTypeIndex: number = 0;
+    _userEnumTypeIndex: number = 0;
+    _objectTypeIndex: number = 0;
+    _dynamicTypeIndex: number = 0;
 
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
-            allValueTypes: computed,
-            lastChangeTime: observable
+            allValueTypes: computed
         });
     }
 
     reset() {
+        console.log("TypesStore.reset START");
+
+        this.projectStore.lastRevision;
+
         this._types = [];
         this._typeIndexes = {};
-        this._numDynamicTypes = 0;
+
+        this._basicTypeIndex = 0;
+        this._systemStructureTypeIndex = 0;
+        this._userStructureTypeIndex = 0;
+        this._systemEnumTypeIndex = 0;
+        this._userEnumTypeIndex = 0;
+        this._objectTypeIndex = 0;
+        this._dynamicTypeIndex = 0;
 
         basicFlowValueTypes.forEach(valueType =>
             this._addType({
@@ -65,14 +81,10 @@ export class TypesStore {
             this.getTypeFromValueType(valueType)
         );
 
-        runInAction(() => {
-            this.lastChangeTime = Date.now();
-        });
+        console.log("TypesStore.reset END");
     }
 
     get allValueTypes() {
-        this.lastChangeTime;
-
         const allValueTypes: ValueType[] = [];
 
         allValueTypes.push(`undefined`);
@@ -114,7 +126,7 @@ export class TypesStore {
     }
 
     createOpenType() {
-        const valueType: ValueType = `dynamic:${this._numDynamicTypes++}`;
+        const valueType: ValueType = `dynamic:${this._dynamicTypeIndex}`;
         const type: IType = {
             kind: "object",
             valueType,
@@ -127,8 +139,6 @@ export class TypesStore {
     }
 
     getValueTypeIndex(valueType: ValueType): number | undefined {
-        this.lastChangeTime;
-
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -137,7 +147,6 @@ export class TypesStore {
     }
 
     getType(valueType: ValueType) {
-        this.lastChangeTime;
         return this.getTypeFromValueType(valueType);
     }
 
@@ -145,8 +154,6 @@ export class TypesStore {
         valueType: ValueType,
         fieldName: string
     ): ValueType | undefined {
-        this.lastChangeTime;
-
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -178,8 +185,6 @@ export class TypesStore {
     }
 
     getFieldIndex(valueType: ValueType, fieldName: string): number | undefined {
-        this.lastChangeTime;
-
         const type = this.getTypeFromValueType(valueType);
         if (!type) {
             return undefined;
@@ -191,10 +196,60 @@ export class TypesStore {
     }
 
     _addType(type: IType) {
-        if (!this._typeIndexes[type.valueType]) {
-            this._typeIndexes[type.valueType] = this._types.length;
+        let index = this._typeIndexes[type.valueType];
+        if (index == undefined) {
+            let T;
+            let C;
+            let A;
+
+            if (type.kind == "basic") {
+                T = this._basicTypeIndex++;
+                C = 0;
+                A = 0;
+            } else if (type.kind == "object") {
+                if (type.valueType.startsWith("struct:")) {
+                    if (type.valueType["struct:".length] == "$") {
+                        T = this._systemStructureTypeIndex++;
+                        C = 1;
+                    } else {
+                        T = this._userStructureTypeIndex++;
+                        C = 2;
+                    }
+                } else if (type.valueType.startsWith("enum:")) {
+                    if (type.valueType["enum:".length] == "$") {
+                        T = this._systemEnumTypeIndex++;
+                        C = 3;
+                    } else {
+                        T = this._userEnumTypeIndex++;
+                        C = 4;
+                    }
+                } else if (type.valueType.startsWith("object:")) {
+                    T = this._objectTypeIndex++;
+                    C = 5;
+                } else {
+                    if (!type.valueType.startsWith("dynamic:")) {
+                        throw "unexpected valueType";
+                    }
+                    T = this._dynamicTypeIndex++;
+                    C = 6;
+                }
+                A = 0;
+            } else {
+                let index = this._addType(type.elementType);
+                T = index & 0x1fff;
+                C = (index >> 13) & 0x7;
+                A = (index >> 15) | 0x1;
+            }
+
+            index = (A << 16) | (C << 13) | T;
+
+            this._typeIndexes[type.valueType] = index;
+            this._types[index] = type;
+
+            console.log(type, `A=${A} C=${C} T=${T}`);
         }
-        this._types.push(type);
+
+        return index;
     }
 
     private getTypeFromValueType(valueType: ValueType): IType | undefined {
@@ -305,7 +360,7 @@ export class TypesStore {
     _createDynamicTypeForObjectVariableValueFieldDescription(
         valueFieldDescriptions: IObjectVariableValueFieldDescription[]
     ): ValueType {
-        const valueType: ValueType = `dynamic:${this._numDynamicTypes++}`;
+        const valueType: ValueType = `dynamic:${this._dynamicTypeIndex}`;
         const type = this.objectVariableFieldDescriptionsToType(
             valueType,
             valueFieldDescriptions

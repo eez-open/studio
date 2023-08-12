@@ -28,22 +28,22 @@ export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED
     "null", // FLOW_VALUE_TYPE_NULL
     "boolean", // FLOW_VALUE_TYPE_BOOLEAN
-    "integer", // FLOW_VALUE_TYPE_INT8
-    "integer", // FLOW_VALUE_TYPE_UINT8
-    "integer", // FLOW_VALUE_TYPE_INT16
-    "integer", // FLOW_VALUE_TYPE_UINT16
+    "int8", // FLOW_VALUE_TYPE_INT8
+    "uint8", // FLOW_VALUE_TYPE_UINT8
+    "int16", // FLOW_VALUE_TYPE_INT16
+    "uint16", // FLOW_VALUE_TYPE_UINT16
     "integer", // FLOW_VALUE_TYPE_INT32
-    "integer", // FLOW_VALUE_TYPE_UINT32
-    "integer", // FLOW_VALUE_TYPE_INT64
-    "integer", // FLOW_VALUE_TYPE_UINT64
+    "uint32", // FLOW_VALUE_TYPE_UINT32
+    "int64", // FLOW_VALUE_TYPE_INT64
+    "uint64", // FLOW_VALUE_TYPE_UINT64
     "float", // FLOW_VALUE_TYPE_FLOAT
     "double", // FLOW_VALUE_TYPE_DOUBLE
     "string", // FLOW_VALUE_TYPE_STRING
-    "string", // FLOW_VALUE_TYPE_STRING_ASSET
+    "stringasset", // FLOW_VALUE_TYPE_STRING_ASSET
     "array:any", // FLOW_VALUE_TYPE_ARRAY
-    "array:any", // FLOW_VALUE_TYPE_ARRAY_ASSET
+    "arrayasset", // FLOW_VALUE_TYPE_ARRAY_ASSET
     "string", // FLOW_VALUE_TYPE_STRING_REF
-    "array:any", // FLOW_VALUE_TYPE_ARRAY_REF
+    "arrayref", // FLOW_VALUE_TYPE_ARRAY_REF
     "blob", // FLOW_VALUE_TYPE_BLOB_REF
     "stream", // FLOW_VALUE_TYPE_STREAM
     "date" // FLOW_VALUE_TYPE_DATE

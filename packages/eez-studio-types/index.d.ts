@@ -13,10 +13,25 @@ export type BasicType =
     | "stream"
     | "any";
 
-export type ValueType =
-    | BasicType
+export type OtherBasicType =
     | "undefined"
     | "null"
+    | `int8`
+    | `uint8`
+    | `int16`
+    | `uint16`
+    | `int8`
+    | `int8`
+    | `uint32`
+    | `int64`
+    | `uint64`
+    | `stringasset`
+    | `arrayasset`
+    | `arrayref`;
+
+export type ValueType =
+    | BasicType
+    | OtherBasicType
     | `object:${string}`
     | `enum:${string}`
     | `struct:${string}`

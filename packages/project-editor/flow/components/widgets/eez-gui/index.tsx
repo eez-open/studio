@@ -1590,9 +1590,6 @@ registerClass("ButtonWidget", ButtonWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ToggleButtonWidget extends Widget {
-    text1?: string;
-    text2?: string;
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -1610,7 +1607,8 @@ export class ToggleButtonWidget extends Widget {
                 name: "text2",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("checkedStyle")
         ],
 
         defaultValue: {
@@ -1650,12 +1648,17 @@ export class ToggleButtonWidget extends Widget {
         }
     });
 
+    text1?: string;
+    text2?: string;
+    checkedStyle: Style;
+
     constructor() {
         super();
 
         makeObservable(this, {
             text1: observable,
-            text2: observable
+            text2: observable,
+            checkedStyle: observable
         });
     }
 
@@ -1693,6 +1696,9 @@ export class ToggleButtonWidget extends Widget {
 
         // text 2
         buildWidgetText(assets, dataBuffer, this.text2);
+
+        // checkedStyle
+        dataBuffer.writeInt16(assets.getStyleIndex(this, "checkedStyle"));
     }
 }
 
@@ -2432,10 +2438,6 @@ registerClass("YTGraphWidget", YTGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class UpDownWidget extends Widget {
-    buttonsStyle: Style;
-    downButtonText?: string;
-    upButtonText?: string;
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -2446,11 +2448,30 @@ export class UpDownWidget extends Widget {
         properties: [
             makeStylePropertyInfo("buttonsStyle"),
             makeTextPropertyInfo("downButtonText"),
-            makeTextPropertyInfo("upButtonText")
+            makeTextPropertyInfo("upButtonText"),
+            makeDataPropertyInfo("min", {
+                hideInPropertyGrid: isNotProjectWithFlowSupport
+            }),
+            makeDataPropertyInfo("max", {
+                hideInPropertyGrid: isNotProjectWithFlowSupport
+            })
         ],
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "buttonsStyle");
+        beforeLoadHook: (
+            widget: UpDownWidget,
+            jsWidget: Partial<UpDownWidget>,
+            project: Project
+        ) => {
+            if (project.projectTypeTraits.hasFlowSupport) {
+                if (widget.min == undefined) {
+                    widget.min = "0";
+                }
+                if (widget.max == undefined) {
+                    widget.max = "100";
+                }
+            }
+
+            migrateStyleProperty(widget, "buttonsStyle");
         },
 
         defaultValue: {
@@ -2490,17 +2511,29 @@ export class UpDownWidget extends Widget {
         }
     });
 
+    buttonsStyle: Style;
+    downButtonText?: string;
+    upButtonText?: string;
+    min: string;
+    max: string;
+
     constructor() {
         super();
 
         makeObservable(this, {
             buttonsStyle: observable,
             downButtonText: observable,
-            upButtonText: observable
+            upButtonText: observable,
+            min: observable,
+            max: observable
         });
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
+        let text = this.data
+            ? (flowContext.dataContext.get(this.data) as string)
+            : "";
+
         return (
             <>
                 {flowContext.projectStore.projectTypeTraits
@@ -2519,28 +2552,28 @@ export class UpDownWidget extends Widget {
                                 return;
                             }
 
+                            const buttonWidth =
+                                buttonsStyle.paddingRect.left +
+                                buttonsFont.height +
+                                buttonsStyle.paddingRect.right;
+
                             drawText(
                                 ctx,
                                 upDownWidget.downButtonText || "<",
                                 0,
                                 0,
-                                buttonsFont.height,
+                                buttonWidth,
                                 height,
                                 buttonsStyle,
                                 false
                             );
 
-                            let text = upDownWidget.data
-                                ? (flowContext.dataContext.get(
-                                      upDownWidget.data
-                                  ) as string)
-                                : "";
                             drawText(
                                 ctx,
                                 text,
-                                buttonsFont.height,
+                                buttonWidth,
                                 0,
-                                width - 2 * buttonsFont.height,
+                                width - 2 * buttonWidth,
                                 height,
                                 style,
                                 false
@@ -2549,9 +2582,9 @@ export class UpDownWidget extends Widget {
                             drawText(
                                 ctx,
                                 upDownWidget.upButtonText || ">",
-                                width - buttonsFont.height,
+                                width - buttonWidth,
                                 0,
-                                buttonsFont.height,
+                                buttonWidth,
                                 height,
                                 buttonsStyle,
                                 false
@@ -2573,6 +2606,12 @@ export class UpDownWidget extends Widget {
 
         // buttonStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
+
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
     }
 }
 
