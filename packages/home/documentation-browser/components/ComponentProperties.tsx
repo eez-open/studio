@@ -64,6 +64,7 @@ export const ComponentProperties = observer(
         }
     }
 );
+
 const ComponentProperty = observer(
     class ComponentProperty extends React.Component<{
         componentInfo: ComponentInfo;
@@ -190,14 +191,18 @@ function getPropertyGroups(properties: IComponentInfoProperty[]) {
 
     groupPropertiesArray.sort((a: IGroupProperties, b: IGroupProperties) => {
         const aPosition =
-            a.group.position !== undefined &&
-            typeof a.group.position == "number"
+            a.group.title == "Specific"
+                ? -1
+                : a.group.position !== undefined &&
+                  typeof a.group.position == "number"
                 ? a.group.position
                 : maxPosition + 1;
 
         const bPosition =
-            b.group.position !== undefined &&
-            typeof b.group.position == "number"
+            b.group.title == "Specific"
+                ? -1
+                : b.group.position !== undefined &&
+                  typeof b.group.position == "number"
                 ? b.group.position
                 : maxPosition + 1;
 

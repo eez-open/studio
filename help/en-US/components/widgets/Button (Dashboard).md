@@ -2,19 +2,16 @@
 
 # PROPERTIES
 
-## Name
+## Text
 
-## Widgets [EMPTY]
+## Enabled
 
-
-## Overlay
-
-## Shadow
-
-## Layout
+## Disabled style
 
 # INPUTS
 
 # OUTPUTS
+
+## CLICKED
 
 # EXAMPLES

@@ -441,10 +441,18 @@ async function generateParentMarkdownFiles(
             builder.addHeading(
                 2,
                 property +
-                    (markdown?.properties[property]?.draft ? " [DRAFT]" : "")
+                    (markdown?.properties[property]?.draft
+                        ? " [DRAFT]"
+                        : markdown?.properties[property]?.empty
+                        ? " [EMPTY]"
+                        : "")
             );
             builder.addEmptyLine();
-            if (markdown && markdown.properties[property]) {
+            if (
+                markdown &&
+                markdown.properties[property] &&
+                !markdown.properties[property].empty
+            ) {
                 builder.addRaw(markdown.properties[property].raw);
                 if (i == properties.length - 1) {
                     builder.addEmptyLine();

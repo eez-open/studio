@@ -2,16 +2,15 @@
 
 # PROPERTIES
 
-## Name
+## Title
 
-## Widgets [EMPTY]
+## Min range
 
+## Max range
 
-## Overlay
+## Color
 
-## Shadow
-
-## Layout
+## Margin
 
 # INPUTS
 

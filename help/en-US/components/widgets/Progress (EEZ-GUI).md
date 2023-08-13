@@ -2,16 +2,11 @@
 
 # PROPERTIES
 
-## Name
+## Min
 
-## Widgets [EMPTY]
+## Max
 
-
-## Overlay
-
-## Shadow
-
-## Layout
+## Orientation
 
 # INPUTS
 

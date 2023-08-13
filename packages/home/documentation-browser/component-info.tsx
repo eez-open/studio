@@ -262,7 +262,10 @@ export class ComponentInfo {
     }
 
     isEmptyProperty(propertyName: string) {
-        return this.markdown?.properties[propertyName]?.empty;
+        return (
+            this.markdown?.properties[propertyName]?.empty ||
+            this.parent.markdown?.properties[propertyName]?.empty
+        );
     }
 
     isEmptyInputs() {
@@ -270,7 +273,10 @@ export class ComponentInfo {
     }
 
     isEmptyInput(inputName: string) {
-        return this.markdown?.inputs[inputName]?.empty;
+        return (
+            this.markdown?.inputs[inputName]?.empty ||
+            this.parent.markdown?.inputs[inputName]?.empty
+        );
     }
 
     isEmptyOutputs() {
@@ -278,7 +284,10 @@ export class ComponentInfo {
     }
 
     isEmptyOutput(outputName: string) {
-        return this.markdown?.outputs[outputName]?.empty;
+        return (
+            this.markdown?.outputs[outputName]?.empty ||
+            this.parent.markdown?.outputs[outputName]?.empty
+        );
     }
 
     isEmptyExamples() {

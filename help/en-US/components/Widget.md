@@ -12,12 +12,12 @@
 
 ## Hide "Widget is outside of its parent" warning
 
-## Locked
+## Locked [EMPTY]
 
-## Hidden in editor
+## Hidden in editor [EMPTY]
 
-## Timeline
+## Timeline [EMPTY]
 
-## Timeline ui
+## Keyframe editor
 
 ## Event handlers

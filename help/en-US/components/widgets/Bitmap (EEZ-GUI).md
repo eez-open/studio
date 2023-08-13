@@ -2,16 +2,9 @@
 
 # PROPERTIES
 
-## Name
+## Bitmap
 
-## Widgets [EMPTY]
-
-
-## Overlay
-
-## Shadow
-
-## Layout
+## Custom ui
 
 # INPUTS
 

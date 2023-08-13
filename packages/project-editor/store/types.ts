@@ -47,8 +47,6 @@ export class TypesStore {
     }
 
     reset() {
-        console.log("TypesStore.reset START");
-
         this.projectStore.lastRevision;
 
         this._types = [];
@@ -80,8 +78,6 @@ export class TypesStore {
         this.allValueTypes.forEach(valueType =>
             this.getTypeFromValueType(valueType)
         );
-
-        console.log("TypesStore.reset END");
     }
 
     get allValueTypes() {
@@ -245,8 +241,6 @@ export class TypesStore {
 
             this._typeIndexes[type.valueType] = index;
             this._types[index] = type;
-
-            console.log(type, `A=${A} C=${C} T=${T}`);
         }
 
         return index;

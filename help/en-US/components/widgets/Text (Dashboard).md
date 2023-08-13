@@ -2,16 +2,9 @@
 
 # PROPERTIES
 
+## Text
+
 ## Name
-
-## Widgets [EMPTY]
-
-
-## Overlay
-
-## Shadow
-
-## Layout
 
 # INPUTS
 

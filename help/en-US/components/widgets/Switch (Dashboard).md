@@ -2,11 +2,7 @@
 
 # PROPERTIES
 
-## Text1
-
-## Text2
-
-## Checked style
+## Value
 
 # INPUTS
 

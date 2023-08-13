@@ -2649,6 +2649,7 @@ export class Widget extends Component {
             },
             {
                 name: "timelineUI",
+                displayName: "Keyframe editor",
                 type: PropertyType.Any,
                 propertyGridGroup: timelineGroup,
                 propertyGridRowComponent: TimelineKeyframePropertyUI,

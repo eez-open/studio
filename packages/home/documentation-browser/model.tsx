@@ -315,13 +315,6 @@ class Model {
             let { label, icon, titleStyle } =
                 getComponentVisualData(componentClass);
 
-            if (
-                componentClass.objectClass.classInfo.parentClassInfo ==
-                ProjectEditor.LVGLWidgetClass.classInfo
-            ) {
-                label = "LVGL " + label;
-            }
-
             const componentInfoType = isProperSubclassOf(
                 componentClass.objectClass.classInfo,
                 ProjectEditor.WidgetClass.classInfo
@@ -508,6 +501,28 @@ class Model {
                     componentClass.objectClass.classInfo.parentClassInfo!,
                     componentObject
                 );
+            }
+        }
+
+        for (const componentInfo of components) {
+            if (
+                componentInfo.type == "widget" &&
+                components.find(
+                    otherComponentInfo =>
+                        otherComponentInfo != componentInfo &&
+                        (otherComponentInfo.name == componentInfo.name ||
+                            otherComponentInfo.name.startsWith(
+                                componentInfo.name + " ("
+                            ))
+                )
+            ) {
+                if (componentInfo.isDashboardComponent) {
+                    componentInfo.name += " (Dashboard)";
+                } else if (componentInfo.isEezGuiComponent) {
+                    componentInfo.name += " (EEZ-GUI)";
+                } else {
+                    componentInfo.name += " (LVGL)";
+                }
             }
         }
 
