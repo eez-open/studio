@@ -4,15 +4,20 @@ Ovaj widget služi za grupiranje više widgeta, a koristi se kada se želi dodat
 
 # PROPERTIES
 
+## Data
+
 ## Name [DRAFT]
 
 Opcionalni naziv koji se prikazuje u Widgets Structure panelu u editoru. Ako nije zadan onda se prikazuje "Container".
 
 ## Widgets [EMPTY]
 
+
 ## Overlay [EMPTY]
 
+
 ## Shadow [EMPTY]
+
 
 ## Layout [DRAFT]
 

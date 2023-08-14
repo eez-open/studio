@@ -2,7 +2,11 @@
 
 # PROPERTIES
 
+## Data
+
 ## Chart mode
+
+## Data
 
 ## Format
 

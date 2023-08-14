@@ -137,6 +137,10 @@ export class ContainerWidget extends Widget {
                 typeClass: Widget,
                 hideInPropertyGrid: true
             },
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
+            }),
             makeDataPropertyInfo("overlay", {
                 hideInPropertyGrid: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);

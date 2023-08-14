@@ -2609,10 +2609,17 @@ export class Widget extends Component {
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
-            makeDataPropertyInfo("data", { hideInPropertyGrid: isLVGLProject }),
-            makeDataPropertyInfo("visible", {
-                hideInPropertyGrid: isLVGLProject
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: isLVGLProject,
+                hideInDocumentation: "all"
             }),
+            makeDataPropertyInfo(
+                "visible",
+                {
+                    hideInPropertyGrid: isLVGLProject
+                },
+                "boolean"
+            ),
             makeStylePropertyInfo("style", "Default style"),
             {
                 name: "styleUI",

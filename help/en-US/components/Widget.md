@@ -13,8 +13,6 @@ Pomoću "Fix size" opcije možemo fiksirati širinu/visinu widgeta, tj. ako je o
 
 Napomena: Ako je odabrano pin to left and right edge onda će fix width opcija disejblana, i obrunuto ako je odabran fix width onda se ne može odabrati i pin to left i pin to right edge, jer oboje nije moguće zadovoljiti. Isto vrijedi i za pin to top and bottom i fix width.
 
-## Data
-
 ## Visible [DRAFT]
 
 Ako je izračunati expression true onda je widget visible, a ako je false onda je widget hidden. Može se ostaviti prazno, u tom slučaju widget je uvijek visible.
@@ -23,7 +21,7 @@ Ako je izračunati expression true onda je widget visible, a ako je false onda j
 
 ## Style ui [EMPTY]
 
-## Hide "Widget is outside of its parent" warning
+## Hide "Widget is outside of its parent" warning [DRAFT]
 
 Check this if you want to hide "Widget is outside of its parent" warning.
 
@@ -35,4 +33,10 @@ Check this if you want to hide "Widget is outside of its parent" warning.
 
 ## Keyframe editor [EMPTY]
 
-## Event handlers
+## Event handlers [DRAFT]
+
+Lista event handler definicija. Tijekom izvršavanja widget može generirati određene evente (npr. `CLICKED` event se generira kada se preko touch uređaja pritisne i otpusti unutar widgeta) i kroz ovu listi možemo zadati način obrade eventa. Za svaki event handler moramo definirati ove propertije:
+
+-   `Event`: Event koji se obrađuje, npr. `CLICKED`.
+-   `Handler type`: Postoje dvije opcije: `Flow` ili `Action`. Ako je odabran `Flow` biti će dodan flow output kroz koji se izlazi prilikom obrade eventa, a ako je odabran "Action" onda treba zadati koja user akcija će se izvršiti prilikom obrade eventa.
+-   `Action`: Ako je za `Handler type` zadano `Action` onda ovdje treba zadati naziv user akcije koja će se izvršiti prilikom obrade odabranog eventa.
