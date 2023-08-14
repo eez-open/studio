@@ -65,6 +65,8 @@ export class ComponentInfo {
         completed: number;
     };
 
+    componentClass: IObjectClassInfo;
+
     constructor() {}
 
     makeObservable() {

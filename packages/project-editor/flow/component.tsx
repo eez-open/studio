@@ -48,6 +48,7 @@ import {
     getObjectIcon
 } from "project-editor/store";
 import {
+    isDashboardProject,
     isLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
@@ -2626,7 +2627,8 @@ export class Widget extends Component {
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: component =>
+                    isLVGLProject(component) || isDashboardProject(component)
             },
             {
                 name: "locked",

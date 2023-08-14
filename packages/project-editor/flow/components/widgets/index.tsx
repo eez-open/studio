@@ -141,7 +141,7 @@ export class ContainerWidget extends Widget {
                 hideInPropertyGrid: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);
                     return (
-                        !project.projectTypeTraits.hasFlowSupport ||
+                        project.projectTypeTraits.hasFlowSupport ||
                         project.projectTypeTraits.isDashboard
                     );
                 }

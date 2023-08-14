@@ -343,6 +343,8 @@ class Model {
                     componentInfo.properties = [];
                     componentInfo.inputs = [];
                     componentInfo.outputs = [];
+
+                    componentInfo.componentClass = componentClass;
                 }
 
                 return componentInfo;

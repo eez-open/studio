@@ -7,6 +7,7 @@ import {
 import { ComponentInfo, IComponentInfoProperty } from "../component-info";
 import { BodySection } from "./BodySection";
 import classNames from "classnames";
+import { getModel } from "../model";
 
 export const ComponentProperties = observer(
     class ComponentProperties extends React.Component<{
@@ -17,6 +18,7 @@ export const ComponentProperties = observer(
             const { componentInfo } = this.props;
 
             const groupPropertiesArray = getPropertyGroups(
+                componentInfo,
                 componentInfo.allProperties.filter(
                     property => !componentInfo.isEmptyProperty(property.name)
                 )
@@ -129,7 +131,10 @@ interface IGroupProperties {
     properties: IComponentInfoProperty[];
 }
 
-function getPropertyGroups(properties: IComponentInfoProperty[]) {
+function getPropertyGroups(
+    componentInfo: ComponentInfo,
+    properties: IComponentInfoProperty[]
+) {
     const groupPropertiesArray: IGroupProperties[] = [];
 
     let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
@@ -175,38 +180,25 @@ function getPropertyGroups(properties: IComponentInfoProperty[]) {
         propertiesInGroup.push(property);
     }
 
-    let maxPosition = 0;
-
-    groupPropertiesArray.forEach(groupProperties => {
-        if (groupProperties.group.position != undefined) {
-            let position;
-            if (typeof groupProperties.group.position == "number") {
-                position = groupProperties.group.position;
-            }
-            if (position != undefined && position > maxPosition) {
-                maxPosition = position;
-            }
-        }
-    });
+    const componentObject = ComponentInfo.createComponentObject(
+        getModel().dashboardProjectStore,
+        componentInfo.componentClass
+    );
 
     groupPropertiesArray.sort((a: IGroupProperties, b: IGroupProperties) => {
-        const aPosition =
-            a.group.title == "Specific"
-                ? -1
-                : a.group.position !== undefined &&
-                  typeof a.group.position == "number"
-                ? a.group.position
-                : maxPosition + 1;
+        function pos(groupProperties: IGroupProperties) {
+            if (groupProperties.group.title == "Specific") return -1000;
 
-        const bPosition =
-            b.group.title == "Specific"
-                ? -1
-                : b.group.position !== undefined &&
-                  typeof b.group.position == "number"
-                ? b.group.position
-                : maxPosition + 1;
+            if (groupProperties.group.position !== undefined) {
+                if (typeof groupProperties.group.position == "number")
+                    return groupProperties.group.position;
+                return groupProperties.group.position(componentObject);
+            }
 
-        return aPosition - bPosition;
+            return 1000;
+        }
+
+        return pos(a) - pos(b);
     });
 
     return groupPropertiesArray;
