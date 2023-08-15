@@ -2620,7 +2620,9 @@ export class Widget extends Component {
                 },
                 "boolean"
             ),
-            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("style", "Default style", {
+                hideInDocumentation: "all"
+            }),
             {
                 name: "styleUI",
                 type: PropertyType.Any,

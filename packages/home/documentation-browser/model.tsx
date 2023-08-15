@@ -566,39 +566,30 @@ class Model {
         for (const componentInfo of this.allComponentsNoSearchFilter) {
             componentInfo.updateDocCounters();
 
-            if (componentInfo.type == "action") {
-                actionDocCounters.total++;
-                actionDocCounters.drafts +=
-                    componentInfo.docCounters.drafts > 0 &&
-                    componentInfo.docCounters.drafts ==
-                        componentInfo.docCounters.total -
-                            componentInfo.docCounters.completed
-                        ? 1
-                        : 0;
-                actionDocCounters.completed +=
-                    componentInfo.docCounters.completed ==
-                    componentInfo.docCounters.total
-                        ? 1
-                        : 0;
-            } else {
-                widgetDocCounters.total++;
-                widgetDocCounters.drafts +=
-                    componentInfo.docCounters.drafts ==
-                    componentInfo.docCounters.total
-                        ? 1
-                        : 0;
-                widgetDocCounters.completed +=
-                    componentInfo.docCounters.completed ==
-                    componentInfo.docCounters.total
-                        ? 1
-                        : 0;
-            }
+            const docCounters =
+                componentInfo.type == "action"
+                    ? actionDocCounters
+                    : widgetDocCounters;
 
-            runInAction(() => {
-                this.actionDocCounters = actionDocCounters;
-                this.widgetDocCounters = widgetDocCounters;
-            });
+            docCounters.total++;
+            docCounters.drafts +=
+                componentInfo.docCounters.drafts > 0 &&
+                componentInfo.docCounters.drafts ==
+                    componentInfo.docCounters.total -
+                        componentInfo.docCounters.completed
+                    ? 1
+                    : 0;
+            docCounters.completed +=
+                componentInfo.docCounters.completed ==
+                componentInfo.docCounters.total
+                    ? 1
+                    : 0;
         }
+
+        runInAction(() => {
+            this.actionDocCounters = actionDocCounters;
+            this.widgetDocCounters = widgetDocCounters;
+        });
     }
 
     get allComponents(): ComponentInfo[] {

@@ -63,7 +63,8 @@ import {
     Widget,
     makeDataPropertyInfo,
     ComponentInput,
-    ComponentOutput
+    ComponentOutput,
+    makeStylePropertyInfo
 } from "project-editor/flow/component";
 
 import {
@@ -173,7 +174,10 @@ export class ContainerWidget extends Widget {
                     }
                 ],
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style", {
+                hideInDocumentation: "none"
+            })
         ],
 
         defaultValue: {
@@ -417,8 +421,6 @@ export class ContainerWidget extends Widget {
     }
 }
 
-registerClass("ContainerWidget", ContainerWidget);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ListWidget extends Widget {
@@ -459,7 +461,9 @@ export class ListWidget extends Widget {
                 name: "gap",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style"),
+            makeDataPropertyInfo("data")
         ],
 
         defaultValue: {
@@ -589,8 +593,6 @@ export class ListWidget extends Widget {
     }
 }
 
-registerClass("ListWidget", ListWidget);
-
 const ListWidgetItem = observer(
     class ListWidgetItem extends React.Component<{
         flowContext: IFlowContext;
@@ -663,7 +665,9 @@ export class GridWidget extends Widget {
                         id: "column"
                     }
                 ]
-            }
+            },
+            makeStylePropertyInfo("style", "Default style"),
+            makeDataPropertyInfo("data", {}, "boolean")
         ],
 
         defaultValue: {
@@ -779,8 +783,6 @@ export class GridWidget extends Widget {
         );
     }
 }
-
-registerClass("GridWidget", GridWidget);
 
 const GridWidgetItem = observer(
     class GridWidgetItem extends React.Component<{
@@ -898,7 +900,9 @@ export class SelectWidget extends Widget {
                     object.height = (getParent(widgets) as SelectWidget).height;
                     return object;
                 }
-            }
+            },
+            makeStylePropertyInfo("style", "Default style"),
+            makeDataPropertyInfo("data", {}, "boolean")
         ],
 
         defaultValue: {
@@ -1151,8 +1155,6 @@ export class SelectWidget extends Widget {
         );
     }
 }
-
-registerClass("SelectWidget", SelectWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1655,4 +1657,8 @@ export class UserWidgetWidget extends Widget {
     }
 }
 
+registerClass("ContainerWidget", ContainerWidget);
+registerClass("ListWidget", ListWidget);
+registerClass("GridWidget", GridWidget);
+registerClass("SelectWidget", SelectWidget);
 registerClass("UserWidgetWidget", UserWidgetWidget);

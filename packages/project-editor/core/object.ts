@@ -253,7 +253,7 @@ export interface PropertyInfo {
 
     hasExpressionProperties?: boolean;
 
-    hideInDocumentation?: "widget" | "action" | "all";
+    hideInDocumentation?: "widget" | "action" | "all" | "none";
 }
 
 export type InheritedValue =

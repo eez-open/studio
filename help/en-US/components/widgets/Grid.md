@@ -2,6 +2,12 @@
 
 # PROPERTIES
 
+## Data
+
+## Default style [DRAFT]
+
+Ovaj style se koristi prilikom renderiranja pozadine List widgeta.
+
 ## Item widget
 
 ## Grid flow
@@ -11,3 +17,5 @@
 # OUTPUTS
 
 # EXAMPLES
+
+    - Tetris

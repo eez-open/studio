@@ -17,8 +17,6 @@ Napomena: Ako je odabrano pin to left and right edge onda će fix width opcija d
 
 Ako je izračunati expression true onda je widget visible, a ako je false onda je widget hidden. Može se ostaviti prazno, u tom slučaju widget je uvijek visible.
 
-## Default style
-
 ## Style ui [EMPTY]
 
 ## Hide "Widget is outside of its parent" warning [DRAFT]

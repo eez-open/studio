@@ -1,10 +1,12 @@
 # DESCRIPTION [DRAFT]
 
-Ovaj widget služi za grupiranje više widgeta, a koristi se kada se želi dodatno organizirati stranica koja sadrži puno widgeta ili ako se želi obaviti neke operacija nad više widgeta odjednom npr. sakriti koristeći Visible property od containera.
+Ovaj widget služi za grupiranje više widgeta, a koristi se kada se želi dodatno organizirati stranica koja sadrži puno widgeta ili ako se želi obaviti neke operacija nad više widgeta odjednom npr. sakriti koristeći Visible property od containera. Kada se widget nalazi unutar containera onda njegove left i top koordinate su relativne u odnosu na left i top od containera, znači kada se pomiče container onda se pomiču i widgeti koji se nalaze unutar njega. Widgeti se dodaju u Container preko Widgets Structure panela koristeći drag and drop.
 
 # PROPERTIES
 
-## Data
+## Default style [DRAFT]
+
+Ovaj style se koristi prilikom renderiranja pozadine Container widgeta.
 
 ## Name [DRAFT]
 
