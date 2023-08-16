@@ -219,28 +219,39 @@ export abstract class LVGLPageRuntime {
         this.strings = [];
     }
 
-    numAsyncOperations: number;
+    asyncOperationsQueue: (() => Promise<void>)[] = [];
+    inAsyncQueueProcessing: boolean = false;
     refreshCounter: number = 0;
 
     async executeAsyncOperation<T>(
         getAsyncParams: () => Promise<T>,
         executeOperationWithAsyncParams: (params: T) => void
     ) {
-        this.numAsyncOperations++;
-
         const refreshCounter = this.refreshCounter;
 
-        const params = await getAsyncParams();
+        this.asyncOperationsQueue.push(async () => {
+            const params = await getAsyncParams();
+            if (this.isMounted && refreshCounter == this.refreshCounter) {
+                executeOperationWithAsyncParams(params);
+            }
+        });
 
-        if (this.isMounted && refreshCounter == this.refreshCounter) {
-            executeOperationWithAsyncParams(params);
+        this.processAsyncQueue();
+    }
+
+    async processAsyncQueue() {
+        if (this.inAsyncQueueProcessing) {
+            return;
         }
-
-        this.numAsyncOperations--;
+        this.inAsyncQueueProcessing = true;
+        while (this.asyncOperationsQueue.length > 0) {
+            await this.asyncOperationsQueue.shift()!();
+        }
+        this.inAsyncQueueProcessing = false;
     }
 
     get isAnyAsyncOperation() {
-        return this.numAsyncOperations > 0;
+        return this.asyncOperationsQueue.length > 0;
     }
 
     static detachRuntimeFromPage(page: Page) {
