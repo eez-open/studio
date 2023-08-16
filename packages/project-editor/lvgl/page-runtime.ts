@@ -64,7 +64,11 @@ export abstract class LVGLPageRuntime {
         flowState: 0
     };
 
-    constructor(public page: Page) {}
+    constructor(public page: Page) {
+        makeObservable(this, {
+            asyncOperationsQueue: observable
+        });
+    }
 
     abstract get isEditor(): boolean;
 

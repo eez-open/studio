@@ -88,7 +88,8 @@
         "typeinfo": "cpp",
         "string.h": "c",
         "lv_refr.h": "c",
-        "flow.h": "c"
+        "flow.h": "c",
+        "lv_conf_internal.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

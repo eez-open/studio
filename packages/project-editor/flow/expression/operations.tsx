@@ -6,6 +6,7 @@ import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
 import type { ProjectStore } from "project-editor/store";
+import { findBitmap } from "project-editor/project/assets";
 
 function roundN(value: number, decimals: number) {
     return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
@@ -565,6 +566,37 @@ export const builtInFunctions: {
         },
         getValueType: (...args: ValueType[]) => {
             return "double";
+        }
+    },
+
+    "Flow.toInteger": {
+        operationIndex: 71,
+        arity: 1,
+        args: ["value"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            return args[0];
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        }
+    },
+
+    "Flow.getBitmap": {
+        operationIndex: 70,
+        arity: 1,
+        args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) =>
+            expressionContext
+                ? findBitmap(expressionContext?.projectStore.project, args[0])
+                : undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "blob";
         }
     },
 

@@ -2443,6 +2443,8 @@ export class UpDownWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD,
 
+        componentPaletteGroupName: "!1Input",
+
         flowComponentId: WIDGET_TYPE_UP_DOWN,
 
         properties: [
@@ -2909,26 +2911,37 @@ export class ProgressWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.setColor(this.style.backgroundColorProperty);
-                        draw.fillRect(ctx, 0, 0, width - 1, height - 1);
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
 
                         // draw thumb
                         draw.setColor(this.style.colorProperty);
                         if (isHorizontal) {
-                            draw.fillRect(
+                            draw.drawBackground(
                                 ctx,
                                 0,
                                 0,
                                 (percent * width) / 100 - 1,
-                                height - 1
+                                height - 1,
+                                this.style,
+                                false
                             );
                         } else {
-                            draw.fillRect(
+                            draw.drawBackground(
                                 ctx,
                                 0,
                                 height - (percent * height) / 100,
                                 width - 1,
-                                height - 1
+                                height - 1,
+                                this.style,
+                                false
                             );
                         }
                     }}

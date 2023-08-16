@@ -675,11 +675,11 @@ const feature: ProjectEditorFeature = {
     icon: "material:image",
     create: () => [],
     check: (projectStore, object: EezObject[], messages: IMessage[]) => {
-        if (object.length > 255) {
+        if (object.length > 65535) {
             messages.push(
                 new Message(
                     MessageType.ERROR,
-                    "Max. 255 bitmaps are supported",
+                    "Max. 65535 bitmaps are supported",
                     object
                 )
             );

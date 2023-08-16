@@ -369,17 +369,12 @@ export class LVGLStylesDefinition extends EezObject {
                             if (propertyInfo == text_font_property_info) {
                                 const index = BUILT_IN_FONTS.indexOf(value);
                                 if (index != -1) {
-                                    console.log("loading built in font", value);
                                     runtime.executeAsyncOperation(
                                         () =>
                                             new Promise<boolean>(resolve =>
                                                 resolve(true)
                                             ),
                                         () => {
-                                            console.log(
-                                                "set built in font",
-                                                value
-                                            );
                                             runtime.wasm._lvglObjSetLocalStylePropBuiltInFont(
                                                 obj,
                                                 propertyInfo.lvglStyleProp.code,
@@ -389,7 +384,6 @@ export class LVGLStylesDefinition extends EezObject {
                                         }
                                     );
                                 } else {
-                                    console.log("loading user font", value);
                                     const font = findFont(
                                         ProjectEditor.getProject(this),
                                         value
@@ -400,11 +394,6 @@ export class LVGLStylesDefinition extends EezObject {
                                             () => runtime.loadFont(font),
                                             fontPtr => {
                                                 if (fontPtr) {
-                                                    console.log(
-                                                        "set user font",
-                                                        value
-                                                    );
-
                                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                         obj,
                                                         propertyInfo
