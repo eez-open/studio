@@ -233,14 +233,18 @@ export abstract class LVGLPageRuntime {
     ) {
         const refreshCounter = this.refreshCounter;
 
-        this.asyncOperationsQueue.push(async () => {
+        const asyncOperation = async () => {
             const params = await getAsyncParams();
             if (this.isMounted && refreshCounter == this.refreshCounter) {
                 executeOperationWithAsyncParams(params);
             }
+        };
+
+        runInAction(() => {
+            this.asyncOperationsQueue.push(asyncOperation);
         });
 
-        this.processAsyncQueue();
+        setTimeout(() => this.processAsyncQueue());
     }
 
     async processAsyncQueue() {
@@ -249,7 +253,10 @@ export abstract class LVGLPageRuntime {
         }
         this.inAsyncQueueProcessing = true;
         while (this.asyncOperationsQueue.length > 0) {
-            await this.asyncOperationsQueue.shift()!();
+            await this.asyncOperationsQueue[0]();
+            runInAction(() => {
+                this.asyncOperationsQueue.shift();
+            });
         }
         this.inAsyncQueueProcessing = false;
     }

@@ -30,6 +30,8 @@ async function buildGuiBitmaps(assets: Assets) {
         pixels: Uint8Array;
     }[] = [];
 
+    Promise.all(assets.bitmaps.map(bitmap => getBitmapData(bitmap)));
+
     for (let i = 0; i < assets.bitmaps.length; i++) {
         const bitmapsData = await getBitmapData(assets.bitmaps[i]);
 
