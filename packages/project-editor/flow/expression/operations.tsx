@@ -584,10 +584,10 @@ export const builtInFunctions: {
         }
     },
 
-    "Flow.getBitmap": {
+    "Flow.getBitmapIndex": {
         operationIndex: 70,
         arity: 1,
-        args: [],
+        args: ["bitmapName"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]

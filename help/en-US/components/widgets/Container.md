@@ -6,7 +6,7 @@ Ovaj widget služi za grupiranje više widgeta, a koristi se kada se želi dodat
 
 ## Default style [DRAFT]
 
-Ovaj style se koristi prilikom renderiranja pozadine Container widgeta.
+Ovaj style se koristi prilikom renderiranja pozadine widgeta.
 
 ## Name [DRAFT]
 
@@ -14,12 +14,9 @@ Opcionalni naziv koji se prikazuje u Widgets Structure panelu u editoru. Ako nij
 
 ## Widgets [EMPTY]
 
-
 ## Overlay [EMPTY]
 
-
 ## Shadow [EMPTY]
-
 
 ## Layout [DRAFT]
 
@@ -33,4 +30,6 @@ Ovaj property definira kako se child widgeti pozicioniraju unutar ovog container
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [EMPTY]
+# EXAMPLES [DRAFT]
+
+-   eez-gui-widgets-demo

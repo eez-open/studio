@@ -190,6 +190,8 @@ class Model {
         });
 
         setupMarkdownWatcher();
+
+        console.log(this.allComponentsNoSearchFilter);
     }
 
     async createProjectStore(type: string) {
@@ -337,8 +339,6 @@ class Model {
                     componentInfo.name = label;
                     componentInfo.icon = icon;
                     componentInfo.titleStyle = titleStyle;
-
-                    componentInfo.markdown = await readMarkdown(componentInfo);
 
                     componentInfo.properties = [];
                     componentInfo.inputs = [];
@@ -526,6 +526,8 @@ class Model {
                     componentInfo.name += " (LVGL)";
                 }
             }
+
+            componentInfo.markdown = await readMarkdown(componentInfo);
         }
 
         this.allComponentsNoSearchFilter = components;

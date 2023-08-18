@@ -14,10 +14,9 @@ Posebno, za EEZ-GUI projekte, vrijednost ovog propertija može biti i `struct:$S
 
 ## Default style [DRAFT]
 
-Ovaj style se koristi prilikom renderiranja pozadine List widgeta.
+Ovaj style se koristi prilikom renderiranja pozadine widgeta.
 
 ## Item widget [EMPTY]
-
 
 ## List type [DRAFT]
 
@@ -27,16 +26,17 @@ Pomoću ovog propertija se bira vertikalna ili horizontalna orijentacija.
 
 Razmak u pikselima između dva elementa grida.
 
-# INPUTS
+# INPUTS [EMPTY]
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
-# EXAMPLES
+# EXAMPLES [DRAFT]
 
-    - CSV
-    - JSON
-    - MQTT
-    - Simple HTTP
-    - Charts
-    - Regexp String
-    - Multi-Language
+-   eez-gui-widgets-demo
+-   CSV
+-   JSON
+-   MQTT
+-   Simple HTTP
+-   Charts
+-   Regexp String
+-   Multi-Language

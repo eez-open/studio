@@ -20,19 +20,19 @@ Posebno, za EEZ-GUI projekte, vrijednost ovog propertija može biti i `struct:$S
 
 ## Default style [DRAFT]
 
-Ovaj style se koristi prilikom renderiranja pozadine Grid widgeta.
+Ovaj style se koristi prilikom renderiranja pozadine widgeta.
 
 ## Item widget [EMPTY]
-
 
 ## Grid flow [DRAFT]
 
 Pomoću ovog propertija se definira način popunjavanja grida, odaberite `Row` ako želite da se puni redak po redak ili odaberite `Column` ako želite da se puni kolona po kolona.
 
-# INPUTS
+# INPUTS [EMPTY]
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
-# EXAMPLES
+# EXAMPLES [DRAFT]
 
-    - Tetris
+-   eez-gui-widgets-demo
+-   Tetris

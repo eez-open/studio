@@ -14,9 +14,10 @@ Ovaj style se koristi prilikom renderiranja pozadine Select widgeta.
 
 ## Widgets [EMPTY]
 
+# INPUTS [EMPTY]
 
-# INPUTS
+# OUTPUTS [EMPTY]
 
-# OUTPUTS
+# EXAMPLES [DRAFT]
 
-# EXAMPLES [EMPTY]
+-   eez-gui-widgets-demo

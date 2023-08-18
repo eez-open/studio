@@ -102,6 +102,7 @@ export function markdownToHTML(markdown: string) {
 export async function doReadMarkdown(
     filePath: string
 ): Promise<MarkdownData | undefined> {
+    console.log(filePath);
     markdownFiles.add(filePath);
 
     let description: MarkdownDescription | undefined;

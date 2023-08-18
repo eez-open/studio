@@ -1176,6 +1176,7 @@ export class BitmapWidget extends Widget {
         flowComponentId: WIDGET_TYPE_BITMAP,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
             {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
@@ -1188,7 +1189,8 @@ export class BitmapWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridRowComponent: BitmapWidgetPropertyGridUI
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
@@ -1220,7 +1222,7 @@ export class BitmapWidget extends Widget {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        "Either bitmap or data must be set",
+                        "Either Bitmap or Data must be set",
                         object
                     )
                 );
@@ -1229,7 +1231,7 @@ export class BitmapWidget extends Widget {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            "Both bitmap and data set, only bitmap is used",
+                            "Both Bitmap and Data set, only Data is used",
                             object
                         )
                     );
