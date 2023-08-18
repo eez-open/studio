@@ -635,7 +635,29 @@ export interface BitmapData {
     pixels: Uint8Array;
 }
 
-export async function getBitmapData(
+export function getBitmapData(
+    bitmap: Bitmap,
+    bppOverride?: number
+): BitmapData {
+    const bitmapData =
+        bppOverride != undefined
+            ? bitmap.getBitmapData(bppOverride)
+            : bitmap.bitmapData;
+
+    if (bitmapData) {
+        return bitmapData;
+    }
+
+    return {
+        width: 1,
+        height: 1,
+        bpp: 32,
+        pixels: new Uint8Array([0, 0, 0, 0])
+    };
+}
+
+// this function makes sure that bitmap is eventually loaded
+export async function getBitmapDataAsync(
     bitmap: Bitmap,
     bppOverride?: number
 ): Promise<BitmapData> {
@@ -655,6 +677,8 @@ export async function getBitmapData(
                 pixels: new Uint8Array([0, 0, 0, 0])
             };
         }
+
+        // still loading, wait for 10 ms
         await new Promise(resolve => setTimeout(resolve, 10));
     }
 }

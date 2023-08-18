@@ -37,8 +37,7 @@ export abstract class LVGLPageRuntime {
     bitmapsCache = new Map<
         Bitmap,
         {
-            image: string;
-            bitmapPtrPromise: Promise<number>;
+            imageElement: HTMLImageElement;
             bitmapPtr: number;
         }
     >();
@@ -47,12 +46,10 @@ export abstract class LVGLPageRuntime {
         Font,
         {
             lvglBinFile: string;
-            fontPtrPromise: Promise<number>;
+            fontPtr: number;
         }
     >();
     fontAddressToFont = new Map<number, Font>();
-
-    unusedFontPtrs: number[] = [];
 
     lvglCreateContext: {
         widgetIndex: number;
@@ -64,11 +61,7 @@ export abstract class LVGLPageRuntime {
         flowState: 0
     };
 
-    constructor(public page: Page) {
-        makeObservable(this, {
-            asyncOperationsQueue: observable
-        });
-    }
+    constructor(public page: Page) {}
 
     abstract get isEditor(): boolean;
 
@@ -77,9 +70,30 @@ export abstract class LVGLPageRuntime {
 
     abstract getWidgetIndex(object: LVGLWidget | Page): number;
 
-    async loadBitmap(bitmap: Bitmap): Promise<number> {
-        const doLoad = async (bitmap: Bitmap) => {
-            const bitmapData = await ProjectEditor.getBitmapData(bitmap, 32);
+    getBitmapPtrByName(bitmapName: string) {
+        const bitmap = findBitmap(
+            ProjectEditor.getProjectStore(this.page).project,
+            bitmapName
+        );
+        if (!bitmap) {
+            return 0;
+        }
+        return this.getBitmapPtr(bitmap);
+    }
+
+    getBitmapPtr(bitmap: Bitmap) {
+        let cachedBitmap = this.bitmapsCache.get(bitmap);
+        if (!cachedBitmap || cachedBitmap.imageElement != bitmap.imageElement) {
+            if (cachedBitmap) {
+                this.wasm._free(cachedBitmap.bitmapPtr);
+                this.bitmapsCache.delete(bitmap);
+            }
+
+            if (!bitmap.imageElement) {
+                return 0;
+            }
+
+            const bitmapData = ProjectEditor.getBitmapData(bitmap, 32);
 
             let bitmapPtr = this.wasm._malloc(
                 4 + 4 + 4 + bitmapData.pixels.length
@@ -115,40 +129,32 @@ export abstract class LVGLPageRuntime {
                 this.wasm.HEAP8[offset + i] = bitmapData.pixels[i];
             }
 
-            return bitmapPtr;
-        };
-
-        let cashed = this.bitmapsCache.get(bitmap);
-        if (!cashed) {
-            cashed = {
-                image: bitmap.image,
-                bitmapPtrPromise: doLoad(bitmap),
-                bitmapPtr: 0
+            cachedBitmap = {
+                imageElement: bitmap.imageElement,
+                bitmapPtr
             };
 
-            this.bitmapsCache.set(bitmap, cashed);
+            this.bitmapsCache.set(bitmap, cachedBitmap);
         }
 
-        const bitmapPtr = await cashed.bitmapPtrPromise;
-        cashed.bitmapPtr = bitmapPtr;
-
-        if (cashed.image == bitmap.image) {
-            return bitmapPtr;
-        }
-
-        this.bitmapsCache.delete(bitmap);
-        this.wasm._free(bitmapPtr);
-
-        return this.loadBitmap(bitmap);
+        return cachedBitmap.bitmapPtr;
     }
 
-    async loadFont(font: Font): Promise<number> {
-        if (!font.lvglBinFile) {
-            return 0;
-        }
+    getFontPtr(font: Font) {
+        let cashedFont = this.fontsCache.get(font);
+        if (!cashedFont || cashedFont.lvglBinFile != font.lvglBinFile) {
+            if (cashedFont) {
+                this.wasm._lvglFreeFont(cashedFont.fontPtr);
+                this.fontsCache.delete(font);
+                this.fontAddressToFont.delete(cashedFont.fontPtr);
+            }
 
-        const doLoad = async (font: Font) => {
-            const bin = Buffer.from(font.lvglBinFile!, "base64");
+            const lvglBinFile = font.lvglBinFile;
+            if (!lvglBinFile) {
+                return 0;
+            }
+
+            const bin = Buffer.from(lvglBinFile, "base64");
 
             const fontMemPtr = this.wasm._malloc(bin.length);
             if (!fontMemPtr) {
@@ -164,46 +170,16 @@ export abstract class LVGLPageRuntime {
 
             this.wasm._free(fontMemPtr);
 
-            return fontPtr;
-        };
-
-        let cashed = this.fontsCache.get(font);
-        if (!cashed) {
-            cashed = {
-                lvglBinFile: font.lvglBinFile,
-                fontPtrPromise: doLoad(font)
+            cashedFont = {
+                lvglBinFile,
+                fontPtr
             };
 
-            this.fontsCache.set(font, cashed);
+            this.fontsCache.set(font, cashedFont);
+            this.fontAddressToFont.set(fontPtr, font);
         }
 
-        const fontPtr = await cashed.fontPtrPromise;
-
-        if (cashed.lvglBinFile == font.lvglBinFile) {
-            runInAction(() => {
-                this.fontAddressToFont.set(fontPtr, font);
-            });
-
-            return fontPtr;
-        }
-
-        this.fontsCache.delete(font);
-        runInAction(() => {
-            this.fontAddressToFont.delete(fontPtr);
-        });
-
-        if (this.unusedFontPtrs.indexOf(fontPtr) == -1) {
-            this.unusedFontPtrs.push(fontPtr);
-        }
-
-        return this.loadFont(font);
-    }
-
-    freeUnusedFontPtrs() {
-        for (const fontPtr of this.unusedFontPtrs) {
-            this.wasm._lvglFreeFont(fontPtr);
-        }
-        this.unusedFontPtrs = [];
+        return cashedFont.fontPtr;
     }
 
     strings: number[] = [];
@@ -221,48 +197,6 @@ export abstract class LVGLPageRuntime {
             this.wasm._free(stringPtr);
         }
         this.strings = [];
-    }
-
-    asyncOperationsQueue: (() => Promise<void>)[] = [];
-    inAsyncQueueProcessing: boolean = false;
-    refreshCounter: number = 0;
-
-    async executeAsyncOperation<T>(
-        getAsyncParams: () => Promise<T>,
-        executeOperationWithAsyncParams: (params: T) => void
-    ) {
-        const refreshCounter = this.refreshCounter;
-
-        const asyncOperation = async () => {
-            const params = await getAsyncParams();
-            if (this.isMounted && refreshCounter == this.refreshCounter) {
-                executeOperationWithAsyncParams(params);
-            }
-        };
-
-        runInAction(() => {
-            this.asyncOperationsQueue.push(asyncOperation);
-        });
-
-        setTimeout(() => this.processAsyncQueue());
-    }
-
-    async processAsyncQueue() {
-        if (this.inAsyncQueueProcessing) {
-            return;
-        }
-        this.inAsyncQueueProcessing = true;
-        while (this.asyncOperationsQueue.length > 0) {
-            await this.asyncOperationsQueue[0]();
-            runInAction(() => {
-                this.asyncOperationsQueue.shift();
-            });
-        }
-        this.inAsyncQueueProcessing = false;
-    }
-
-    get isAnyAsyncOperation() {
-        return this.asyncOperationsQueue.length > 0;
     }
 
     static detachRuntimeFromPage(page: Page) {
@@ -326,7 +260,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        const wasm = lvgl_flow_runtime_constructor(() => {
+        const wasm = lvgl_flow_runtime_constructor(async () => {
             if (this.wasm != wasm) {
                 return;
             }
@@ -343,8 +277,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             );
 
             this.autorRunDispose = autorun(() => {
-                this.refreshCounter++;
-
                 if (!this.isMounted) {
                     return;
                 }
@@ -378,8 +310,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 }
 
                 this.wasm._lvglScreenLoad(-1, pageObj);
-
-                this.freeUnusedFontPtrs();
 
                 runInAction(() => {
                     if (this.page._lvglObj != undefined) {
@@ -471,7 +401,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
     }
 
     mount() {
-        this.wasm = lvgl_flow_runtime_constructor(() => {
+        this.wasm = lvgl_flow_runtime_constructor(async () => {
             runInAction(() => {
                 this.page._lvglRuntime = this;
                 this.page._lvglObj = undefined;
@@ -607,7 +537,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         return false;
     }
 
-    mount() {
+    async mount() {
         this.reactionDispose = autorun(() => {
             const selectedPage = this.runtime.selectedPage;
             const pageState = this.pageStates.get(selectedPage)!;
@@ -634,29 +564,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         }
 
         this.isMounted = false;
-    }
-
-    async loadAllBitmaps() {
-        await Promise.all(
-            this.runtime.projectStore.project.bitmaps.map(bitmap =>
-                this.loadBitmap(bitmap)
-            )
-        );
-    }
-
-    getBitmap(bitmapName: string) {
-        const bitmap = findBitmap(
-            this.runtime.projectStore.project,
-            bitmapName
-        );
-        if (!bitmap) {
-            return 0;
-        }
-        const cashed = this.bitmapsCache.get(bitmap);
-        if (!cashed) {
-            return 0;
-        }
-        return cashed.bitmapPtr;
     }
 
     lvglCreate(page: Page) {
@@ -784,7 +691,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        const wasm = lvgl_flow_runtime_constructor(() => {
+        const wasm = lvgl_flow_runtime_constructor(async () => {
             if (this.wasm != wasm) {
                 return;
             }
@@ -801,8 +708,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             );
 
             this.autorRunDispose = autorun(() => {
-                this.refreshCounter++;
-
                 if (!this.isMounted) {
                     return;
                 }

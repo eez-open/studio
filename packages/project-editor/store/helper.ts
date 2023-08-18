@@ -963,9 +963,7 @@ export function isLVGLCreateInProgress(flow: Flow) {
     return (
         projectStore.projectTypeTraits.isLVGL &&
         flow instanceof ProjectEditor.PageClass &&
-        (!flow._lvglRuntime ||
-            !flow._lvglObj ||
-            flow._lvglRuntime.isAnyAsyncOperation)
+        (!flow._lvglRuntime || !flow._lvglObj)
     );
 }
 

@@ -1161,15 +1161,19 @@ export const FlowEditor = observer(
 
                                 {
                                     // render action components
-                                    <div
-                                        style={{
-                                            position: "absolute"
-                                        }}
-                                    >
-                                        {flow.renderActionComponents(
-                                            this.flowContext
-                                        )}
-                                    </div>
+                                    !isLVGLCreateInProgress(
+                                        this.flowContext.flow
+                                    ) && (
+                                        <div
+                                            style={{
+                                                position: "absolute"
+                                            }}
+                                        >
+                                            {flow.renderActionComponents(
+                                                this.flowContext
+                                            )}
+                                        </div>
+                                    )
                                 }
 
                                 <TimelinePathEditor

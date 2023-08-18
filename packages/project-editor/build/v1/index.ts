@@ -23,7 +23,7 @@ import {
 } from "project-editor/project/project";
 
 import {
-    getBitmapData,
+    getBitmapDataAsync,
     BitmapData,
     Bitmap
 } from "project-editor/features/bitmap/bitmap";
@@ -787,7 +787,7 @@ function buildGuiBitmapsDef(project: Project) {
 
         let getBitmapDataPromises: Promise<BitmapData>[] = [];
         for (let i = 0; i < project.bitmaps.length; i++) {
-            getBitmapDataPromises.push(getBitmapData(project.bitmaps[i]));
+            getBitmapDataPromises.push(getBitmapDataAsync(project.bitmaps[i]));
         }
 
         Promise.all(getBitmapDataPromises).then(bitmapsData => {

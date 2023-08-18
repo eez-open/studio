@@ -79,7 +79,11 @@ import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import {
+    LVGLNonActivePageViewerRuntime,
+    LVGLPageRuntime,
+    LVGLPageViewerRuntime
+} from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     LVGLWidgetFlagsProperty,
@@ -94,7 +98,8 @@ import {
     getCode,
     getExpressionPropertyData,
     LV_EVENT_METER_TICK_LABEL_EVENT,
-    LVGL_EVENTS
+    LVGL_EVENTS,
+    getExpressionPropertyInitalValue
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -1857,7 +1862,7 @@ export class LVGLWidget extends Widget {
     buildEventHandlerSpecific(build: LVGLBuild) {}
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        return (
+        return this._lvglObj ? (
             <>
                 <ComponentsContainerEnclosure
                     parent={this}
@@ -1868,7 +1873,7 @@ export class LVGLWidget extends Widget {
                 />
                 {super.render(flowContext, width, height)}
             </>
-        );
+        ) : null;
     }
 }
 
@@ -2037,7 +2042,11 @@ export class LVGLLabelWidget extends LVGLWidget {
                 ? 0
                 : runtime.wasm.allocateUTF8(
                       this.textType == "expression"
-                          ? `{${this.text}}`
+                          ? getExpressionPropertyInitalValue(
+                                runtime,
+                                this,
+                                "text"
+                            )
                           : this.text
                   ),
             LONG_MODE_CODES[this.longMode],
@@ -2943,22 +2952,17 @@ export class LVGLImageWidget extends LVGLWidget {
         const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
 
         if (bitmap && bitmap.image) {
-            runtime.executeAsyncOperation(
-                () => runtime.loadBitmap(bitmap),
-                image => {
-                    if (image) {
-                        runtime.wasm._lvglSetImageSrc(
-                            obj,
-                            image,
-                            this.pivotX,
-                            this.pivotY,
-                            this.zoom,
-                            this.angle
-                        );
-                        runInAction(() => this._refreshCounter++);
-                    }
-                }
-            );
+            const bitmapPtr = runtime.getBitmapPtr(bitmap);
+            if (bitmapPtr) {
+                runtime.wasm._lvglSetImageSrc(
+                    obj,
+                    bitmapPtr,
+                    this.pivotX,
+                    this.pivotY,
+                    this.zoom,
+                    this.angle
+                );
+            }
         }
 
         return obj;
@@ -5378,19 +5382,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_RELEASED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_RELEASED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5401,19 +5400,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_PRESSED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_PRESSED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5424,19 +5418,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_DISABLED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_DISABLED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5447,19 +5436,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_RELEASED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_RELEASED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5470,19 +5454,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_PRESSED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_PRESSED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5493,19 +5472,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
-                runtime.executeAsyncOperation(
-                    () => runtime.loadBitmap(bitmap),
-                    image => {
-                        if (image) {
-                            runtime.wasm._lvglSetImgbuttonImageSrc(
-                                obj,
-                                ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_DISABLED,
-                                image
-                            );
-                            runInAction(() => this._refreshCounter++);
-                        }
-                    }
-                );
+                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                if (bitmapPtr) {
+                    runtime.wasm._lvglSetImgbuttonImageSrc(
+                        obj,
+                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_DISABLED,
+                        bitmapPtr
+                    );
+                }
             }
         }
 
@@ -5750,20 +5724,22 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             if (lvglIdentifier) {
                 const textareaWidget = lvglIdentifier.object;
 
-                if (textareaWidget) {
-                    runtime.executeAsyncOperation(
-                        async () => {
-                            await new Promise(resolve => setTimeout(resolve));
-                        },
-                        () => {
-                            if (this._lvglObj && textareaWidget._lvglObj) {
-                                runtime.wasm._lvglSetKeyboardTextarea(
-                                    this._lvglObj,
-                                    textareaWidget._lvglObj
-                                );
-                            }
+                if (
+                    runtime instanceof LVGLPageViewerRuntime ||
+                    runtime instanceof LVGLNonActivePageViewerRuntime
+                ) {
+                    setTimeout(() => {
+                        if (
+                            this._lvglObj &&
+                            textareaWidget._lvglObj &&
+                            runtime.isMounted
+                        ) {
+                            runtime.wasm._lvglSetKeyboardTextarea(
+                                this._lvglObj,
+                                textareaWidget._lvglObj
+                            );
                         }
-                    );
+                    });
                 }
             }
         }
@@ -6243,32 +6219,27 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         const value = this.value;
 
         if (bitmap && bitmap.image) {
-            runtime.executeAsyncOperation(
-                () => runtime.loadBitmap(bitmap),
-                image => {
-                    if (image) {
-                        const indicator =
-                            runtime.wasm._lvglMeterAddIndicatorNeedleImg(
-                                obj,
-                                scale,
-                                image,
-                                pivotX,
-                                pivotY,
-                                valueExpr ? 0 : (value as number)
-                            );
+            const bitmapPtr = runtime.getBitmapPtr(bitmap);
+            if (bitmapPtr) {
+                const indicator = runtime.wasm._lvglMeterAddIndicatorNeedleImg(
+                    obj,
+                    scale,
+                    bitmapPtr,
+                    pivotX,
+                    pivotY,
+                    valueExpr ? 0 : (value as number)
+                );
 
-                        if (valueExpr) {
-                            runtime.wasm._lvglUpdateMeterIndicatorValue(
-                                obj,
-                                indicator,
-                                getFlowStateAddressIndex(runtime),
-                                valueExpr.componentIndex,
-                                valueExpr.propertyIndex
-                            );
-                        }
-                    }
+                if (valueExpr) {
+                    runtime.wasm._lvglUpdateMeterIndicatorValue(
+                        obj,
+                        indicator,
+                        getFlowStateAddressIndex(runtime),
+                        valueExpr.componentIndex,
+                        valueExpr.propertyIndex
+                    );
                 }
-            );
+            }
         }
     }
 

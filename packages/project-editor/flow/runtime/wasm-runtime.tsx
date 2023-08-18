@@ -290,7 +290,7 @@ export class WasmRuntime extends RemoteRuntime {
     onWorkerMessage = (workerToRenderMessage: WorkerToRenderMessage) => {
         if (workerToRenderMessage.getLvglImageByName) {
             return (
-                this.lgvlPageRuntime?.getBitmap(
+                this.lgvlPageRuntime?.getBitmapPtrByName(
                     workerToRenderMessage.getLvglImageByName.name
                 ) ?? 0
             );
@@ -336,10 +336,6 @@ export class WasmRuntime extends RemoteRuntime {
                 displayWidth: this.displayWidth,
                 displayHeight: this.displayHeight
             };
-
-            if (this.lgvlPageRuntime) {
-                await this.lgvlPageRuntime.loadAllBitmaps();
-            }
 
             await this.worker.postMessage(message);
 

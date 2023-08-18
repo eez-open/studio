@@ -16,8 +16,12 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
-import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
+import {
+    LVGLPageEditorRuntime,
+    type LVGLPageRuntime
+} from "project-editor/lvgl/page-runtime";
 import type { WidgetEvents } from "project-editor/core/object";
+import { evalConstantExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -386,4 +390,26 @@ export function getExpressionPropertyData(
     }
 
     return { componentIndex, propertyIndex };
+}
+
+export function getExpressionPropertyInitalValue(
+    runtime: LVGLPageRuntime,
+    widget: LVGLWidget,
+    propertyName: string
+) {
+    if (runtime instanceof LVGLPageEditorRuntime) {
+        const expr = getProperty(widget, propertyName);
+        try {
+            const result = evalConstantExpression(
+                ProjectEditor.getProject(widget),
+                expr
+            );
+            if (result) {
+                return result.value;
+            }
+        } catch (e) {}
+        return `{${expr}}`;
+    } else {
+        return "";
+    }
 }

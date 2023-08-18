@@ -1,4 +1,4 @@
-import { makeObservable, observable, runInAction, toJS } from "mobx";
+import { makeObservable, observable, toJS } from "mobx";
 
 import {
     ClassInfo,
@@ -369,19 +369,11 @@ export class LVGLStylesDefinition extends EezObject {
                             if (propertyInfo == text_font_property_info) {
                                 const index = BUILT_IN_FONTS.indexOf(value);
                                 if (index != -1) {
-                                    runtime.executeAsyncOperation(
-                                        () =>
-                                            new Promise<boolean>(resolve =>
-                                                resolve(true)
-                                            ),
-                                        () => {
-                                            runtime.wasm._lvglObjSetLocalStylePropBuiltInFont(
-                                                obj,
-                                                propertyInfo.lvglStyleProp.code,
-                                                index,
-                                                selectorCode
-                                            );
-                                        }
+                                    runtime.wasm._lvglObjSetLocalStylePropBuiltInFont(
+                                        obj,
+                                        propertyInfo.lvglStyleProp.code,
+                                        index,
+                                        selectorCode
                                     );
                                 } else {
                                     const font = findFont(
@@ -390,25 +382,16 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
 
                                     if (font) {
-                                        runtime.executeAsyncOperation(
-                                            () => runtime.loadFont(font),
-                                            fontPtr => {
-                                                if (fontPtr) {
-                                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
-                                                        obj,
-                                                        propertyInfo
-                                                            .lvglStyleProp.code,
-                                                        fontPtr,
-                                                        selectorCode
-                                                    );
-
-                                                    runInAction(
-                                                        () =>
-                                                            widget._refreshCounter++
-                                                    );
-                                                }
-                                            }
-                                        );
+                                        const fontPtr =
+                                            runtime.getFontPtr(font);
+                                        if (fontPtr) {
+                                            runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                                obj,
+                                                propertyInfo.lvglStyleProp.code,
+                                                fontPtr,
+                                                selectorCode
+                                            );
+                                        }
                                     }
                                 }
                             } else {
@@ -445,23 +428,15 @@ export class LVGLStylesDefinition extends EezObject {
                                 value
                             );
                             if (bitmap && bitmap.image) {
-                                runtime.executeAsyncOperation(
-                                    () => runtime.loadBitmap(bitmap),
-                                    bitmapPtr => {
-                                        if (bitmapPtr) {
-                                            runtime.wasm._lvglObjSetLocalStylePropPtr(
-                                                obj,
-                                                propertyInfo.lvglStyleProp.code,
-                                                bitmapPtr,
-                                                selectorCode
-                                            );
-
-                                            runInAction(
-                                                () => widget._refreshCounter++
-                                            );
-                                        }
-                                    }
-                                );
+                                const bitmapPtr = runtime.getBitmapPtr(bitmap);
+                                if (bitmapPtr) {
+                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                        obj,
+                                        propertyInfo.lvglStyleProp.code,
+                                        bitmapPtr,
+                                        selectorCode
+                                    );
+                                }
                             }
                         }
                     }
