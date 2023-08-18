@@ -667,7 +667,7 @@ export class GridWidget extends Widget {
                 ]
             },
             makeStylePropertyInfo("style", "Default style"),
-            makeDataPropertyInfo("data", {}, "boolean")
+            makeDataPropertyInfo("data")
         ],
 
         defaultValue: {

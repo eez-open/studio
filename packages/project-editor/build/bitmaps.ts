@@ -1,4 +1,4 @@
-import { getBitmapData } from "project-editor/features/bitmap/bitmap";
+import { getBitmapDataAsync } from "project-editor/features/bitmap/bitmap";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
@@ -30,10 +30,10 @@ async function buildGuiBitmaps(assets: Assets) {
         pixels: Uint8Array;
     }[] = [];
 
-    Promise.all(assets.bitmaps.map(bitmap => getBitmapData(bitmap)));
+    Promise.all(assets.bitmaps.map(bitmap => getBitmapDataAsync(bitmap)));
 
     for (let i = 0; i < assets.bitmaps.length; i++) {
-        const bitmapsData = await getBitmapData(assets.bitmaps[i]);
+        const bitmapsData = await getBitmapDataAsync(assets.bitmaps[i]);
 
         bitmaps.push({
             name: assets.bitmaps[i].name,
