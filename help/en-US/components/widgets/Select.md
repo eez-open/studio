@@ -1,16 +1,16 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget, slično kao Container, pod sobom ima više child widgeta. Ali za razliku od Containera koji će uvijek prikazati sve child widgete, ovaj widget prikazuje samo jedan child widget i to onaj koji smo selektirali preko `Data` propertija. Dakle, koristite ovaj widget kada želite u ovisnosti o npr. vrijednosti neke varijable mijenjati strukturu stranice. Widgeti se dodaje u Select preko Widgets Structure panela koristeći drag and drop.
+This Widget, similar to `Container`, has multiple Child widgets under it. But unlike `Container`, which will always display all Child widgets, this Widget displays only one Child widget, and that is the one we selected via the `Data` property. Therefore, use this Widget when you want depending on e.g. the value of some variable to change the structure of the page. Widgets are added to `Select` via the _Widgets Structure_ panel using drag and drop.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Rezultat evaluacije ovog expressiona mora biti zero based index od widgeta koji se želi prikazati. Znači ako je rezultat 0 onda će se prikazati prvi widget, ako je rezultat 1 onda će se prikazati drugi widget, itd. Poredak widgeta se može odabrati koristeći drag and drop unutar Widgets Structure panela.
+The result of the evaluation of this expression must be the zero based index of the Widget that is to be displayed. So if the result is 0 then the first Widget will be displayed, if the result is 1 then the second Widget will be displayed, etc. The order of Widgets can be selected using drag and drop within the _Widgets Structure_ panel.
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja pozadine Select widgeta.
+Style used when rendering the background of the Widget.
 
 ## Widgets [EMPTY]
 
@@ -18,6 +18,6 @@ Ovaj style se koristi prilikom renderiranja pozadine Select widgeta.
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

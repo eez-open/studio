@@ -1,42 +1,44 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Koristite ovaj widget kada želite isti widget prikazati više puta, tj. multiplicirati. Ovaj widget pod sobom ima jedan child widget, a koliko puta će se on prikazati ovisi o `Data` propertiju. Multiplicirani widgeti se mogu prikazati tako da se prvo popunjavaju redtci ili kolone:
+Use this Widget when you want to display the same Widget multiple times. This Widget has one Child widget under it, and the number of times it will be displayed depends on the `Data` property. Multiplied Widgets can be displayed by first filling rows or columns:
 
-Ne bi bilo previše korisno kada bi multiplicirani widgeti uvijek imali isti sadržaj, zato postoji sistemska varijabla `$index` koja nam govori koji po redu widget se renderira. Ta varijabla je zero based, znači kada je njena vrijednost 0 onda se renderira prvi widget, kada je njena vrijednost 1 onda se renderira drugi widget, itd. Taj `$index` se onda može koristiti unutar expressiona od propertija od child widgeta i na taj način se postiže da svaki renderirani widget ima drugačiji sadržaj (npr. Text widget može prikazati neki string koji se uzima iz neke array varijable: `country_cities[$index].country`).
+It wouldn't be very useful if multiplied Widgets always had the same content, that's why there is a system variable `$index` that tells us in which order the Widget is rendered. That variable is zero based, that means when its value is 0 then the first Widget is rendered, when its value is 1 then the second Widget is rendered and so on. That `$index` can then be used within the expression of the property of the Child widget, and in this way it is achieved that each rendered Widget has different content (e.g. the `Text` Widget can display a string that is taken from an array variable: `country_cities [$index].country`).
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-O ovom propertiju ovisi koliko će se puta child widget multiplicirati, tj. broj elemenata u listi. Vrijednost ovog propertija može biti integer i onda je to broj elemenata, a ako je vrijednost ovog propertije array onda je broj elemenata u listi jednak broju elemenata u tom arraya.
+Determines how many times the Child widget will be multiplied, i.e. the number of elements in the list. The value of this property can be an integer and then it is the number of elements, and if the value of this property is an array, then the number of elements in the list is equal to the number of elements in that array.
 
-Posebno, za EEZ-GUI projekte, vrijednost ovog propertija može biti i `struct:$ScrollbarState`. Ista strukutra se koristi i za `ScrollBar` widget koji se onda preko varijable tipa `struct:$ScrollbarState` može povezati sa `List` widgetom i na taj način omogućiti scrollanje liste za slučaj da je ukupan broj elemenata liste veći od broja elemenata koji stanu unutar `List` widgeta. Više o sistemskoj strukturi `struct:$ScrollbarState` možete saznati u dokumentaciji za `ScrollBar` widget.
+In the case of _EEZ-GUI_ projects, the value of this property can also be `struct:$ScrollbarState`. The same structure is used for the `ScrollBar` Widget, which can then be connected to the `List` Widget via the `struct:$ScrollbarState` variable and thus enable scrolling of the list in case the total number of list elements is greater than the number of elements that fit within the `List` Widget.
 
-## Default style [DRAFT]
+More about the `struct:$ScrollbarState` system structure can be found in the `ScrollBar` Widget documentation.
 
-Ovaj style se koristi prilikom renderiranja pozadine widgeta.
+## Default style
+
+Style used when rendering the background of the Widget.
 
 ## Item widget [EMPTY]
 
-## List type [DRAFT]
+## List type
 
-Pomoću ovog propertija se bira vertikalna ili horizontalna orijentacija.
+Defines vertical or horizontal orientation.
 
-## Gap [DRAFT]
+## Gap
 
-Razmak u pikselima između dva elementa grida.
+The distance in pixels between two grid elements.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
--   CSV
--   JSON
--   MQTT
--   Simple HTTP
--   Charts
--   Regexp String
--   Multi-Language
+* _eez-gui-widgets-demo_
+* _CSV_
+* _JSON_
+* _MQTT_
+* _Simple HTTP_
+* _Charts_
+* _Regexp String_
+* _Multi-Language_

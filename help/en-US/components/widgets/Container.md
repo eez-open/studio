@@ -1,16 +1,16 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget služi za grupiranje više widgeta, a koristi se kada se želi dodatno organizirati stranica koja sadrži puno widgeta ili ako se želi obaviti neke operacija nad više widgeta odjednom npr. sakriti koristeći Visible property od containera. Kada se widget nalazi unutar containera onda njegove left i top koordinate su relativne u odnosu na left i top od containera, znači kada se pomiče container onda se pomiču i widgeti koji se nalaze unutar njega. Widgeti se dodaju u Container preko Widgets Structure panela koristeći drag and drop.
+It is used to group several Widgets, and it is used when we want to additionally organize a page that contains a large number of Widgets or if we want to perform some operation on several Widgets at once, e.g. hide using the `Visible` property of the Container. When the Widget is inside the Container, then its left and top coordinates are relative to the left and top of the Container, which means that when the Container is moved, all the Widgets inside it are also moved. Widgets are added to the Container via the _Widgets Structure_ panel using drag and drop.
 
 # PROPERTIES
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja pozadine widgeta.
+Style used when rendering the background of the Widget.
 
-## Name [DRAFT]
+## Name
 
-Opcionalni naziv koji se prikazuje u Widgets Structure panelu u editoru. Ako nije zadan onda se prikazuje "Container".
+Optional name to display in the _Widgets Structure_ panel in the editor. If not set then `Container` is displayed.
 
 ## Widgets [EMPTY]
 
@@ -18,18 +18,18 @@ Opcionalni naziv koji se prikazuje u Widgets Structure panelu u editoru. Ako nij
 
 ## Shadow [EMPTY]
 
-## Layout [DRAFT]
+## Layout
 
-Ovaj property definira kako se child widgeti pozicioniraju unutar ovog containera:
+Determines how Child widgets are positioned within this container:
 
--   `Static`: child widgeti se unutar containera pozicioniraju koristeći njihove left i top propertije.
--   `Horizontal`: child widgeti se pozicioniraju od lijeva prema desno (ili obrnuto ako je odabrano RTL u SetPageDirection akciji) i to redom prema poretku koji je postavlje kroz Widgets Structure panel. Znači, ako je ova opcija odabrana onda se left property od child widgeta ne koristi. Ako je neki child widget hidden, onda se on preskače i njegovu poziciju zauzima slijedeći visible widget u poretku.
--   `Vertical`: child widgeti se pozicioniraju od gore prema dolje i to redom prema poretku koji je postavlje kroz Widgets Structure panel. Znači, ako je ova opcija odabrana onda se top property od child widgeta ne koristi. Ako je neki child widget hidden, onda se on preskače i njegovu poziciju zauzima slijedeći visible widget u poretku.
+- `Static` – Child widgets are positioned within the Container using their left and top properties.
+- `Horizontal` – Child widgets are positioned from left to right (or vice versa if RTL is selected in the `SetPageDirection` action) and in order according to the order set through the _Widgets Structure_ panel. So, if this option is selected, then the left property of the Child widget is not used. If a Child widget is hidden, then it is skipped and its position is taken by the next visible Widget in the list.
+- `Vertical` – Child widgets are positioned from top to bottom and in order according to the order set through the _Widgets Structure_ panel. So, if this option is selected, then the top property of the Child widget is not used. If a Child widget is hidden, then it is skipped and its position is taken by the next visible Widget from the list.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_
