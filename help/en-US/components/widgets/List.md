@@ -18,6 +18,7 @@ Ovaj style se koristi prilikom renderiranja pozadine widgeta.
 
 ## Item widget [EMPTY]
 
+
 ## List type [DRAFT]
 
 Pomoću ovog propertija se bira vertikalna ili horizontalna orijentacija.

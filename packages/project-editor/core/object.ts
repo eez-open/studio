@@ -446,6 +446,8 @@ export interface ClassInfo {
     findChildIndex?: (parent: IEezObject[], child: IEezObject) => number;
 
     widgetEvents?: WidgetEvents;
+
+    addObjectHook?: (object: IEezObject, parent: IEezObject) => void;
 }
 
 export function makeDerivedClassInfo(

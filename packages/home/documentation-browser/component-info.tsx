@@ -140,14 +140,20 @@ export class ComponentInfo {
         }
 
         inc(this.getDescriptionMarkdown());
-        for (const property of this.allProperties) {
-            inc(this.getPropertyDescriptionMarkdown(property.name));
+        if (!this.markdown?.propertiesEmpty) {
+            for (const property of this.allProperties) {
+                inc(this.getPropertyDescriptionMarkdown(property.name));
+            }
         }
-        for (const input of this.inputs) {
-            inc(this.getInputDescriptionMarkdown(input.name));
+        if (!this.markdown?.inputsEmpty) {
+            for (const input of this.inputs) {
+                inc(this.getInputDescriptionMarkdown(input.name));
+            }
         }
-        for (const output of this.outputs) {
-            inc(this.getOutputDescriptionMarkdown(output.name));
+        if (!this.markdown?.outputsEmpty) {
+            for (const output of this.outputs) {
+                inc(this.getOutputDescriptionMarkdown(output.name));
+            }
         }
         inc(this.getExamplesMarkdown());
 

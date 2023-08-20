@@ -589,6 +589,7 @@ export class General extends EezObject {
     flowSupport: boolean;
     displayWidth: number;
     displayHeight: number;
+    colorFormat: string;
     //css: string;
 
     icon: string;
@@ -739,6 +740,18 @@ export class General extends EezObject {
                         .hasDisplaySizeProperty
             },
             {
+                name: "colorFormat",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "RGB", label: "RGB" },
+                    { id: "BGR", label: "BGR" }
+                ],
+                hideInPropertyGrid: (general: General) => {
+                    const projectStore = getProjectStore(general);
+                    return !projectStore.projectTypeTraits.isFirmware;
+                }
+            },
+            {
                 name: "flowSupport",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
@@ -881,6 +894,21 @@ export class General extends EezObject {
                 }
             }
 
+            if (jsObject.colorFormat == undefined) {
+                if (
+                    jsObject.projectType == ProjectType.FIRMWARE ||
+                    jsObject.projectType == ProjectType.FIRMWARE_MODULE ||
+                    jsObject.projectType == ProjectType.RESOURCE ||
+                    jsObject.projectType == ProjectType.APPLET
+                ) {
+                    jsObject.colorFormat = jsObject.flowSupport ? "RGB" : "BGR";
+                } else if (jsObject.projectType == ProjectType.LVGL) {
+                    jsObject.colorFormat = "BGR";
+                } else {
+                    jsObject.colorFormat = "RGB";
+                }
+            }
+
             /*
             // MIGRATION TO LOW RES
             jsObject.displayWidth = 480;
@@ -902,6 +930,7 @@ export class General extends EezObject {
             flowSupport: observable,
             displayWidth: observable,
             displayHeight: observable,
+            colorFormat: observable,
             description: observable,
             image: observable,
             keywords: observable,

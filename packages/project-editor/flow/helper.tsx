@@ -228,7 +228,8 @@ export function buildWidgetText(
 
 export function getInputDisplayName(
     component: Component | undefined,
-    componentInput: ComponentInput | string
+    componentInput: ComponentInput | string,
+    appendType: boolean = false
 ): string {
     if (typeof componentInput == "string") {
         if (componentInput == "@seqin") {
@@ -239,29 +240,38 @@ export function getInputDisplayName(
                 input => input.name == componentInput
             );
             if (input) {
-                return getInputDisplayName(component, input);
+                return getInputDisplayName(component, input, appendType);
             }
         }
         return componentInput;
     } else if (componentInput.displayName) {
         if (typeof componentInput.displayName === "string") {
-            return componentInput.displayName;
+            return (
+                componentInput.displayName +
+                (appendType ? ` (${componentInput.type})` : "")
+            );
         }
         if (component) {
-            return componentInput.displayName(component, componentInput);
+            return (
+                componentInput.displayName(component, componentInput) +
+                (appendType ? ` (${componentInput.type})` : "")
+            );
         }
     }
     if (componentInput.name == "@seqin") {
         return "seqin";
     }
-    return componentInput.name;
+    return (
+        componentInput.name + (appendType ? ` (${componentInput.type})` : "")
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getOutputDisplayName(
     component: Component | undefined,
-    componentOutput: ComponentOutput | string
+    componentOutput: ComponentOutput | string,
+    appendType: boolean = false
 ): string {
     if (typeof componentOutput == "string") {
         if (componentOutput == "@seqout") {
@@ -272,20 +282,28 @@ export function getOutputDisplayName(
                 output => output.name == componentOutput
             );
             if (output) {
-                return getOutputDisplayName(component, output);
+                return getOutputDisplayName(component, output, appendType);
             }
         }
         return componentOutput;
     } else if (componentOutput.displayName) {
         if (typeof componentOutput.displayName === "string") {
-            return componentOutput.displayName;
+            return (
+                componentOutput.displayName +
+                (appendType ? ` (${componentOutput.type})` : "")
+            );
         }
         if (component) {
-            return componentOutput.displayName(component, componentOutput);
+            return (
+                componentOutput.displayName(component, componentOutput) +
+                (appendType ? ` (${componentOutput.type})` : "")
+            );
         }
     }
     if (componentOutput.name == "@seqout") {
         return "seqout";
     }
-    return componentOutput.name;
+    return (
+        componentOutput.name + (appendType ? ` (${componentOutput.type})` : "")
+    );
 }

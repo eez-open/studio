@@ -190,8 +190,6 @@ class Model {
         });
 
         setupMarkdownWatcher();
-
-        console.log(this.allComponentsNoSearchFilter);
     }
 
     async createProjectStore(type: string) {

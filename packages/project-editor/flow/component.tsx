@@ -2979,7 +2979,7 @@ export class Widget extends Component {
                 .filter(eventHandler => eventHandler.handlerType == "flow")
                 .map(eventHandler => ({
                     name: eventHandler.eventName,
-                    type: "any" as ValueType,
+                    type: eventHandler.eventParamExpressionType,
                     isOptionalOutput: false,
                     isSequenceOutput: false
                 }))
@@ -3502,7 +3502,7 @@ export class Widget extends Component {
                             className={classNames({
                                 seq: input.name === "@seqin"
                             })}
-                            title={getInputDisplayName(this, input)}
+                            title={getInputDisplayName(this, input, true)}
                         ></div>
                     ))}
                 </div>
@@ -3515,7 +3515,7 @@ export class Widget extends Component {
                                 seq: output.name === "@seqout",
                                 error: output.name === "@error"
                             })}
-                            title={getOutputDisplayName(this, output)}
+                            title={getOutputDisplayName(this, output, true)}
                         ></div>
                     ))}
                 </div>
@@ -3543,9 +3543,11 @@ export class Widget extends Component {
 ////////////////////////////////////////////////////////////////////////////////
 
 function ComponentInputSpan({
-    componentInput
+    componentInput,
+    title
 }: {
     componentInput: ComponentInput;
+    title?: string;
 }) {
     const className = classNames(
         "input",
@@ -3558,14 +3560,17 @@ function ComponentInputSpan({
         <span
             className={className}
             data-connection-input-id={componentInput.name}
+            title={title}
         ></span>
     );
 }
 
 function ComponentOutputSpan({
-    componentOutput
+    componentOutput,
+    title
 }: {
     componentOutput: ComponentOutput;
+    title?: string;
 }) {
     const className = classNames(
         "output",
@@ -3579,6 +3584,7 @@ function ComponentOutputSpan({
         <span
             className={className}
             data-connection-output-id={componentOutput.name}
+            title={title}
         ></span>
     );
 }
@@ -3680,6 +3686,7 @@ function renderActionComponent(
                 {seqInputIndex != -1 && (
                     <ComponentInputSpan
                         componentInput={actionNode.inputs[seqInputIndex]}
+                        title="Sequence input"
                     />
                 )}
                 <div
@@ -3697,6 +3704,7 @@ function renderActionComponent(
                 {seqOutputIndex != -1 && (
                     <ComponentOutputSpan
                         componentOutput={actionNode.outputs[seqOutputIndex]}
+                        title="Sequence output"
                     />
                 )}
             </div>
@@ -3710,6 +3718,11 @@ function renderActionComponent(
                                     <div
                                         className="connection-input-label"
                                         key={input.name}
+                                        title={getInputDisplayName(
+                                            actionNode,
+                                            input,
+                                            true
+                                        )}
                                     >
                                         <ComponentInputSpan
                                             componentInput={input}
@@ -3745,6 +3758,11 @@ function renderActionComponent(
                                             {
                                                 error: output.name === "@error"
                                             }
+                                        )}
+                                        title={getOutputDisplayName(
+                                            actionNode,
+                                            output,
+                                            true
                                         )}
                                     >
                                         {getOutputDisplayName(

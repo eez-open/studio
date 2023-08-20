@@ -478,6 +478,11 @@ export class Page extends Flow {
             return page;
         },
 
+        addObjectHook: (page: Page, parent: IEezObject) => {
+            page.isUsedAsUserWidget =
+                parent == ProjectEditor.getProject(parent).userWidgets;
+        },
+
         getIcon: (page: Page) =>
             page.isUsedAsUserWidget ? "svg:user_widget" : "svg:page",
 

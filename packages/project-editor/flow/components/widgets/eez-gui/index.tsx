@@ -1413,7 +1413,7 @@ export class ButtonWidget extends Widget {
                 displayName: (widget: ButtonWidget) => {
                     const project = ProjectEditor.getProject(widget);
                     if (project.projectTypeTraits.hasFlowSupport) {
-                        return "Text";
+                        return "Label";
                     }
                     return "Data";
                 }
@@ -1422,6 +1422,7 @@ export class ButtonWidget extends Widget {
                 hideInPropertyGrid: isProjectWithFlowSupport
             }),
             makeDataPropertyInfo("enabled"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("disabledStyle")
         ],
 
@@ -2475,7 +2476,7 @@ export class UpDownWidget extends Widget {
                 }
             }
 
-            migrateStyleProperty(widget, "buttonsStyle");
+            migrateStyleProperty(jsWidget, "buttonsStyle");
         },
 
         defaultValue: {

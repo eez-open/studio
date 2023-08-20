@@ -55,7 +55,7 @@ export const StylePropertyUI = observer(
         }
 
         render() {
-            if (this.props.collapsed) {
+            if (this.props.collapsed || !this.selectedStyleProperty) {
                 return null;
             }
             return (

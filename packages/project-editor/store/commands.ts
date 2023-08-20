@@ -32,6 +32,11 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 export let addObject = action((parentObject: IEezObject, object: EezObject) => {
     setParent(object, parentObject);
 
+    const classInfo = getClassInfo(object);
+    if (classInfo.addObjectHook) {
+        classInfo.addObjectHook(object, parentObject);
+    }
+
     ensureUniqueProperties(parentObject, [object]);
 
     getProjectStore(parentObject).undoManager.executeCommand({
@@ -55,6 +60,11 @@ export let addObjects = action(
     (parentObject: IEezObject, objects: EezObject[]) => {
         objects.forEach(object => {
             setParent(object, parentObject);
+
+            const classInfo = getClassInfo(object);
+            if (classInfo.addObjectHook) {
+                classInfo.addObjectHook(object, parentObject);
+            }
         });
 
         ensureUniqueProperties(parentObject, objects);

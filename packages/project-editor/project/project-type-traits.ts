@@ -69,7 +69,9 @@ class ProjectTypeTraits {
     }
 
     get bitmapColorFormat() {
-        return BitmapColorFormat.RGB;
+        return this.project.settings.general.colorFormat === "BGR"
+            ? BitmapColorFormat.BGR
+            : BitmapColorFormat.RGB;
     }
 
     get hasDisplaySizeProperty() {
@@ -95,13 +97,6 @@ class FirmwareProjectTypeTraits extends ProjectTypeTraits {
     override get hasFlowSupport() {
         return this.project.settings.general.flowSupport;
     }
-
-    override get bitmapColorFormat() {
-        return this.hasFlowSupport
-            ? BitmapColorFormat.RGB
-            : BitmapColorFormat.BGR;
-    }
-
     override get runtimeType(): RuntimeType {
         return this.hasFlowSupport ? RuntimeType.WASM : RuntimeType.NONE;
     }
@@ -222,10 +217,6 @@ class LVGLProjectTypeTraits extends ProjectTypeTraits {
 
     override get runtimeType() {
         return RuntimeType.WASM;
-    }
-
-    override get bitmapColorFormat() {
-        return BitmapColorFormat.BGR;
     }
 
     override get hasDisplaySizeProperty() {

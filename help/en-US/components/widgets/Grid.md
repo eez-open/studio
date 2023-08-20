@@ -24,6 +24,7 @@ Ovaj style se koristi prilikom renderiranja pozadine widgeta.
 
 ## Item widget [EMPTY]
 
+
 ## Grid flow [DRAFT]
 
 Pomoću ovog propertija se definira način popunjavanja grida, odaberite `Row` ako želite da se puni redak po redak ili odaberite `Column` ako želite da se puni kolona po kolona.
