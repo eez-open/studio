@@ -1,20 +1,20 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget prikazuje bitmapu.
+This Widget displays a bitmap.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Index od bitmape koju treba prikazati. Potrebno je koristiti funkcije `Flow.getBitmapIndex({<bitmapName>})`, koja prima `bitmapName`, odnosno naziv bitmape, a vraća indeks bitmape. Na ovaj način možemo u runtimeu birati ili mijenjati koja će bitmapa biti prikaza, jer npr. `bitmapName` može doći iz varijable.
+Index of the bitmap to be displayed. It is necessary to use the functions `Flow.getBitmapIndex({<bitmapName>})`, which receives `bitmapName`, i.e. the name of the bitmap, and returns the index of the bitmap. In this way, we can choose or change which bitmap will be displayed in the runtime, because, for example, `bitmapName' can come from a variable.
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja pozadine widgeta.
+Style used when rendering the background of the Widget.
 
-## Bitmap [DRAFT]
+## Bitmap
 
-Naziv bitmape koju treba prikazati.
+The name of the bitmap to be displayed.
 
 ## Custom ui [EMPTY]
 
@@ -23,6 +23,6 @@ Naziv bitmape koju treba prikazati.
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_
