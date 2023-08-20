@@ -1739,6 +1739,7 @@ export class ButtonGroupWidget extends Widget {
                     );
                 }
             }),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("selectedStyle")
         ],
 
@@ -1839,12 +1840,9 @@ export class ButtonGroupWidget extends Widget {
                             let buttonWidth = Math.floor(
                                 w / buttonLabels.length
                             );
-                            x += Math.floor(
-                                (w - buttonWidth * buttonLabels.length) / 2
-                            );
                             let buttonHeight = h;
                             for (let i = 0; i < buttonLabels.length; i++) {
-                                if (i == selectedButton) {
+                                if (i < buttonLabels.length - 1) {
                                     drawText(
                                         ctx,
                                         buttonLabels[i],
@@ -1852,22 +1850,26 @@ export class ButtonGroupWidget extends Widget {
                                         y,
                                         buttonWidth,
                                         buttonHeight,
-                                        this.selectedStyle,
+                                        i == selectedButton
+                                            ? this.selectedStyle
+                                            : this.style,
                                         false
                                     );
+                                    x += buttonWidth;
                                 } else {
                                     drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
                                         y,
-                                        buttonWidth,
+                                        width - x,
                                         buttonHeight,
-                                        this.style,
+                                        i == selectedButton
+                                            ? this.selectedStyle
+                                            : this.style,
                                         false
                                     );
                                 }
-                                x += buttonWidth;
                             }
                         } else {
                             // vertical orientation

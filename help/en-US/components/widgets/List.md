@@ -20,6 +20,7 @@ Style used when rendering the background of the Widget.
 
 ## Item widget [EMPTY]
 
+
 ## List type
 
 Defines vertical or horizontal orientation.
