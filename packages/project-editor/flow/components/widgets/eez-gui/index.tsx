@@ -33,7 +33,9 @@ import {
     isProjectWithFlowSupport,
     isNotV1Project,
     isNotProjectWithFlowSupport,
-    isV3OrNewerProject
+    isV3OrNewerProject,
+    hasNotFlowSupport,
+    hasFlowSupport
 } from "project-editor/project/project-type-traits";
 
 import {
@@ -1952,6 +1954,9 @@ export class BarGraphWidget extends Widget {
     line1Style: Style;
     line2Data?: string;
     line2Style: Style;
+    min: string;
+    max: string;
+    refreshRate: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1991,7 +1996,16 @@ export class BarGraphWidget extends Widget {
             makeStylePropertyInfo("line1Style"),
             makeStylePropertyInfo("line2Style"),
             makeDataPropertyInfo("line1Data"),
-            makeDataPropertyInfo("line2Data")
+            makeDataPropertyInfo("line2Data"),
+            makeDataPropertyInfo("min", {
+                hideInPropertyGrid: hasNotFlowSupport
+            }),
+            makeDataPropertyInfo("max", {
+                hideInPropertyGrid: hasNotFlowSupport
+            }),
+            makeDataPropertyInfo("refreshRate", {
+                hideInPropertyGrid: hasNotFlowSupport
+            })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -2005,6 +2019,7 @@ export class BarGraphWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
+            refreshRate: "0",
             orientation: "left-right"
         },
 
@@ -2030,22 +2045,18 @@ export class BarGraphWidget extends Widget {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
 
-            const project = getProject(object);
-
-            if (object.line1Data) {
-                if (!findVariable(project, object.line1Data)) {
-                    messages.push(propertyNotFoundMessage(object, "line1Data"));
+            if (hasFlowSupport(object)) {
+                if (!object.min) {
+                    messages.push(propertyNotSetMessage(object, "min"));
                 }
-            } else {
-                messages.push(propertyNotSetMessage(object, "line1Data"));
-            }
 
-            if (object.line2Data) {
-                if (!findVariable(project, object.line2Data)) {
-                    messages.push(propertyNotFoundMessage(object, "line2Data"));
+                if (!object.max) {
+                    messages.push(propertyNotSetMessage(object, "max"));
                 }
-            } else {
-                messages.push(propertyNotSetMessage(object, "line2Data"));
+
+                if (!object.refreshRate) {
+                    messages.push(propertyNotSetMessage(object, "refreshRate"));
+                }
             }
         }
     });
@@ -2060,7 +2071,10 @@ export class BarGraphWidget extends Widget {
             line1Data: observable,
             line1Style: observable,
             line2Data: observable,
-            line2Style: observable
+            line2Style: observable,
+            min: observable,
+            max: observable,
+            refreshRate: observable
         });
     }
 
@@ -2281,20 +2295,29 @@ export class BarGraphWidget extends Widget {
         dataBuffer.writeInt16(assets.getStyleIndex(this, "textStyle"));
 
         // line1Data
-        let line1Data = assets.getWidgetDataItemIndex(this, "line1Data");
-
-        dataBuffer.writeInt16(line1Data);
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "line1Data"));
 
         // line1Style
         dataBuffer.writeInt16(assets.getStyleIndex(this, "line1Style"));
 
         // line2Data
-        let line2Data = assets.getWidgetDataItemIndex(this, "line2Data");
-
-        dataBuffer.writeInt16(line2Data);
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "line2Data"));
 
         // line2Style
         dataBuffer.writeInt16(assets.getStyleIndex(this, "line2Style"));
+
+        if (isV3OrNewerProject(this)) {
+            // min
+            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+
+            // max
+            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+
+            // refreshRate
+            dataBuffer.writeInt16(
+                assets.getWidgetDataItemIndex(this, "refreshRate")
+            );
+        }
 
         // orientation
         let orientation: number;
@@ -2614,11 +2637,13 @@ export class UpDownWidget extends Widget {
         // buttonStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
 
-        // min
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+        if (isV3OrNewerProject(this)) {
+            // min
+            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
 
-        // max
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+            // max
+            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+        }
     }
 }
 

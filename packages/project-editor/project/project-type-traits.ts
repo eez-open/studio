@@ -287,6 +287,11 @@ export function hasFlowSupport(object: IEezObject) {
     return project.projectTypeTraits.hasFlowSupport;
 }
 
+export function hasNotFlowSupport(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return !project.projectTypeTraits.hasFlowSupport;
+}
+
 export function isDashboardOrApplet(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return (
