@@ -16,6 +16,12 @@
 
 ## Line2 data
 
+## Min
+
+## Max
+
+## Refresh rate
+
 # INPUTS
 
 # OUTPUTS

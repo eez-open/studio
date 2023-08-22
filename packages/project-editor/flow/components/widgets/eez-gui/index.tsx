@@ -160,6 +160,7 @@ enum DisplayOption {
 export class DisplayDataWidget extends Widget {
     focusStyle: Style;
     displayOption: DisplayOption;
+    refreshRate: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -169,6 +170,8 @@ export class DisplayDataWidget extends Widget {
         flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "any"),
+            makeStylePropertyInfo("style", "Default style"),
             Object.assign(
                 makeStylePropertyInfo("focusStyle", "Focused style"),
                 { hideInPropertyGrid: isNotV1Project },
@@ -179,38 +182,60 @@ export class DisplayDataWidget extends Widget {
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: DisplayOption.All,
-                        label: "All"
-                    },
-                    {
-                        id: DisplayOption.Integer,
-                        label: "Integer"
-                    },
-                    {
-                        id: DisplayOption.FractionAndUnit,
-                        label: "Fraction and unit"
-                    },
-                    {
-                        id: DisplayOption.Fraction,
-                        label: "Fraction"
-                    },
-                    {
-                        id: DisplayOption.Unit,
-                        label: "Unit"
-                    },
-                    {
-                        id: DisplayOption.IntegerAndFraction,
-                        label: "Integer and fraction"
-                    }
-                ],
+                enumItems: (widget: DisplayDataWidget) =>
+                    hasFlowSupport(widget)
+                        ? [
+                              {
+                                  id: DisplayOption.All,
+                                  label: "All"
+                              },
+                              {
+                                  id: DisplayOption.Integer,
+                                  label: "Integer"
+                              },
+                              {
+                                  id: DisplayOption.Fraction,
+                                  label: "Fraction"
+                              }
+                          ]
+                        : [
+                              {
+                                  id: DisplayOption.All,
+                                  label: "All"
+                              },
+                              {
+                                  id: DisplayOption.Integer,
+                                  label: "Integer"
+                              },
+                              {
+                                  id: DisplayOption.FractionAndUnit,
+                                  label: "Fraction and unit"
+                              },
+                              {
+                                  id: DisplayOption.Fraction,
+                                  label: "Fraction"
+                              },
+                              {
+                                  id: DisplayOption.Unit,
+                                  label: "Unit"
+                              },
+                              {
+                                  id: DisplayOption.IntegerAndFraction,
+                                  label: "Integer and fraction"
+                              }
+                          ],
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeDataPropertyInfo("refreshRate", {
+                hideInPropertyGrid: hasNotFlowSupport
+            })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateStyleProperty(jsObject, "focusStyle");
+            if (jsObject.refreshRate == undefined) {
+                jsObject.refreshRate = "0";
+            }
         },
 
         defaultValue: {
@@ -219,7 +244,8 @@ export class DisplayDataWidget extends Widget {
             top: 0,
             width: 64,
             height: 32,
-            displayOption: 0
+            displayOption: 0,
+            refreshRate: "0"
         },
 
         icon: (
@@ -259,7 +285,8 @@ export class DisplayDataWidget extends Widget {
 
         makeObservable(this, {
             focusStyle: observable,
-            displayOption: observable
+            displayOption: observable,
+            refreshRate: observable
         });
     }
 
@@ -372,6 +399,13 @@ export class DisplayDataWidget extends Widget {
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        if (isV3OrNewerProject(this)) {
+            // refreshRate
+            dataBuffer.writeInt16(
+                assets.getWidgetDataItemIndex(this, "refreshRate")
+            );
+        }
+
         // displayOption
         dataBuffer.writeUint8(this.displayOption || 0);
     }
@@ -432,14 +466,17 @@ export class TextWidget extends Widget {
                 }
             }),
             makeTextPropertyInfo("text", {
+                displayName: "Static text",
                 hideInPropertyGrid: isProjectWithFlowSupport
             }),
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 defaultValue: false,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: isV3OrNewerProject
             },
+            makeStylePropertyInfo("style", "Default style"),
             Object.assign(
                 makeStylePropertyInfo("focusStyle", "Focused style"),
                 { hideInPropertyGrid: isNotV1Project },
@@ -2012,6 +2049,10 @@ export class BarGraphWidget extends Widget {
             migrateStyleProperty(jsObject, "textStyle");
             migrateStyleProperty(jsObject, "line1Style");
             migrateStyleProperty(jsObject, "line2Style");
+
+            if (jsObject.refreshRate == undefined) {
+                jsObject.refreshRate = "0";
+            }
         },
 
         defaultValue: {
