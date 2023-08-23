@@ -18,7 +18,9 @@ Ako se za Text property koristi expression koji se ne može izračunati za vrije
 
 ## Static text [EMPTY]
 
+
 ## Ignore luminocity [EMPTY]
+
 
 ## Focused style [DRAFT]
 

@@ -1,13 +1,21 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ovaj widget renderira solid rectangle koristeći background color is Default stila. Može se koristiti i za renderiranje horizontalnih (if height is 1 pixel)) i vertikalnih linija (if width is 1 pixel).
 
 # PROPERTIES
 
-## Invert colors
+## Default style [DRAFT]
 
-## Ignore luminocity
+Ovo je style koji se koristit prilikom renderiranja ovog widgeta.
 
-# INPUTS
+## Invert colors [EMPTY]
 
-# OUTPUTS
 
-# EXAMPLES
+## Ignore luminocity [EMPTY]
+
+
+# INPUTS [EMPTY]
+
+# OUTPUTS [EMPTY]
+
+# EXAMPLES [EMPTY]

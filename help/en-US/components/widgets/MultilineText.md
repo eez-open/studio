@@ -1,19 +1,36 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Ovaj widget prikazuje multi line text.
 
 # PROPERTIES
 
-## Text
+## Text [DRAFT]
 
-## Name
+Tekst koji se prikazuje. Ovo je expression i ako se želi samo prikazati neki statički tekst onda taj tekst treba unjeti između navodnika. A ako expression koristi varijable onda se u editoru ne može izračunati taj expression, pa će se umjesto samog teksta prikazati expression.
 
-## Text
+## Default style [DRAFT]
 
-## First line
+Ovo je style koji se koristit prilikom renderiranja ovog widgeta.
 
-## Hanging
+## Name [DRAFT]
 
-# INPUTS
+Ako se za Text property koristi expression koji se ne može izračunati za vrijeme editiranja onda se ovdje može postaviti tekst koji se prikazuje u editoru. Također, ovaj tekst će biti prikazan u _Widgets Structure_ panelu.
 
-# OUTPUTS
+## Static text [EMPTY]
 
-# EXAMPLES
+
+## First line [DRAFT]
+
+Indentacija prve linije.
+
+## Hanging [DRAFT]
+
+Indentacija ostalih linije.
+
+# INPUTS [EMPTY]
+
+# OUTPUTS [EMPTY]
+
+# EXAMPLES [DRAFT]
+
+-   eez-gui-widgets-demo

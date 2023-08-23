@@ -8,7 +8,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 export const indentationGroup: IPropertyGridGroupDefinition = {
     id: "indentation",
     title: "Indentation",
-    position: 4
+    position: 2
 };
 
 export const generalGroup: IPropertyGridGroupDefinition = {

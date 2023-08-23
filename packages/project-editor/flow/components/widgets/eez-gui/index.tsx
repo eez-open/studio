@@ -878,7 +878,7 @@ export class MultilineTextWidget extends Widget {
                     return "Data";
                 }
             }),
-            makeTextPropertyInfo("text", {
+            makeTextPropertyInfo("Static text", {
                 hideInPropertyGrid: isProjectWithFlowSupport
             }),
             {
@@ -892,7 +892,8 @@ export class MultilineTextWidget extends Widget {
                 displayName: "Hanging",
                 type: PropertyType.Number,
                 propertyGridGroup: indentationGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
@@ -1043,8 +1044,10 @@ export class RectangleWidget extends Widget {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
-                defaultValue: false
-            }
+                defaultValue: false,
+                hideInPropertyGrid: isV3OrNewerProject
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
@@ -1640,6 +1643,7 @@ export class ToggleButtonWidget extends Widget {
         flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "boolean"),
             {
                 name: "text1",
                 type: PropertyType.String,
@@ -1650,6 +1654,7 @@ export class ToggleButtonWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("checkedStyle")
         ],
 
@@ -3167,6 +3172,8 @@ export class ScrollBarWidget extends Widget {
         flowComponentId: WIDGET_TYPE_SCROLL_BAR,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "struct:$ScrollbarState"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("thumbStyle"),
             makeStylePropertyInfo("buttonsStyle"),
             makeTextPropertyInfo("leftButtonText"),
