@@ -1,12 +1,12 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget renderira solid rectangle koristeći background color is Default stila. Može se koristiti i za renderiranje horizontalnih (if height is 1 pixel)) i vertikalnih linija (if width is 1 pixel).
+This Widget renders a solid rectangle using the background color from the `Default` style. It can also be used to render horizontal (if height is 1 pixel)) and vertical lines (if width is 1 pixel).
 
 # PROPERTIES
 
-## Default style [DRAFT]
+## Default style
 
-Ovo je style koji se koristit prilikom renderiranja ovog widgeta.
+Style used when rendering the background of the Widget.
 
 ## Invert colors [EMPTY]
 

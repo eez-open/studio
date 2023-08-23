@@ -1,33 +1,33 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Button koji može biti u dva stanja: default i checked.
+A button that can be in two states: `Default` or `Checked`.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Ako je vrijednost ovog propertija `false` onda je button u default stanju, a ako je vrijednost `true` onda je u checked stanju
+If the value of this property is `false` then the button is in the `Default` state, and if the value is `true` then it is in the `Checked` state
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja buttona kada je u default stanju.
+Style to be used for rendering if the Widget is the `Default` state.
 
-## Text1 [DRAFT]
+## Text1
 
-Tekst koji se prikazuje kada je button u default stanju.
+The text that is displayed when the Widget is in the `Default` state.
 
-## Text2 [DRAFT]
+## Text2
 
-Tekst koji se prikazuje kada je button u checked stanju.
+The text that is displayed when the Widget is in the `Checked` state.
 
-## Checked style [DRAFT]
+## Checked style
 
-Ovaj style se koristi prilikom renderiranja buttona kada je u checked stanju.
+Style to be used for rendering if the Widget is the `Checked` state.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

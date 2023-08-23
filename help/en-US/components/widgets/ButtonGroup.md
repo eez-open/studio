@@ -1,29 +1,29 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Prikazuje grupu buttona. Koliko ima buttona i njihove labele su definirane propertijem `Button labels`. Jedan od tih buttona može biti selected, što je definirano `Selected button` propertijem. Ako je button selected onda se koristi `Selected` style, inače se koristi `Default` style prilikom rendereiranja pojedinog buttona.
+Shows a group of buttons. The total number of buttons and their labels are defined with `Button labels`. Only one of those buttons can be selected, which is defined by the `Selected button` item. If the button is selected, then `Selected` style is used, otherwise `Default` style is used when rendering an individual button.
 
 # PROPERTIES
 
-## Button labels [DRAFT]
+## Button labels
 
-Ovaj property definira labele svih buttona. Koliko ima elemenata u ovom polju stringova toliko će biti i buttona.
+Specifies the labels of all buttons. The number of elements in this string array defines how many buttons will be displayed.
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja buttona koji nije selected.
+Style is used to render a button that is not selected.
 
-## Selected button [DRAFT]
+## Selected button
 
-Ovaj property definira koji je button selected. To je zero-based integer, što znači ako je njegova vrijednost 0 biti će selektiran prvi button, ako je njegova vrijednost 1 biti će selektiran drugi button, itd. Ako želite da niti jedan button nije selektiran koristite vrijednost -1 za ovaj property.
+Determines which button is selected. It is a zero-based integer, which means that if its value is 0, the first button will be selected, if its value is 1, the second button will be selected, etc. If we want no button to be selected, we will use the value -1.
 
-## Selected style [DRAFT]
+## Selected style
 
-Ovaj style se koristi prilikom renderiranja buttona koji je selected.
+Style used to render the selected button.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

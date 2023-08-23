@@ -1,20 +1,20 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget prikazuje single line text.
+A widget used to display single line text.
 
 # PROPERTIES
 
-## Text [DRAFT]
+## Text
 
-Tekst koji se prikazuje. Ovo je expression i ako se želi samo prikazati neki statički tekst onda taj tekst treba unjeti između navodnika. A ako expression koristi varijable onda se u editoru ne može izračunati taj expression, pa će se umjesto samog teksta prikazati expression.
+Text to be displayed. This is an expression and if you only want to display some static text, then that text should be entered in quotation marks. If the expression uses variables, then that expression cannot be calculated in the editor, so the expression will be displayed instead of the text itself.
 
-## Default style [DRAFT]
+## Default style
 
-Ovo je style koji se koristit prilikom renderiranja ovog widgeta.
+Style that will be used to render the Widget.
 
-## Name [DRAFT]
+## Name
 
-Ako se za Text property koristi expression koji se ne može izračunati za vrijeme editiranja onda se ovdje može postaviti tekst koji se prikazuje u editoru. Također, ovaj tekst će biti prikazan u _Widgets Structure_ panelu.
+If an expression is used for the `Text` property that cannot be calculated during editing, then the text displayed in the editor can be set here. Also, this text will be displayed in the _Widgets Structure_ panel.
 
 ## Static text [EMPTY]
 
@@ -22,14 +22,14 @@ Ako se za Text property koristi expression koji se ne može izračunati za vrije
 ## Ignore luminocity [EMPTY]
 
 
-## Focused style [DRAFT]
+## Focused style
 
-Ovaj style se koristi prilikom renderiranja ako je widget u focusu.
+Style to be used for rendering if the Widget is in focus.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

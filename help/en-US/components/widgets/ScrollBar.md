@@ -1,60 +1,60 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovo je ScrollBar widget koji se može koristiti uz List/Grid widget za pomicanje unutar velikih lista koji ne stanu čitave unutar List/Grid widgeta. Ako je width > height onda se prikazuje horizontalni ScrollBar:
+This Widget can be used with `List` and `Grid` Widget for scrolling within large lists that do not fit entirely within said Widgets. If `width` > `height` then a horizontal `ScrollBar` is displayed:
 
-![Alt text](scrollbar.png)
+![Alt text](../images/scrollbar.png)
 
-a ako je width <= height onda se prikazuje vertikalni ScrollBar.
+... and if `width` <= `height` then a vertical `ScrollBar` is displayed.
 
-![Alt text](scrollbar_vert.png)
+![Alt text](../images/scrollbar_vert.png)
 
-Horizontalni ScrollBar ima left i right buttone, a vertikalni top i bottom buttone.
+The horizontal `ScrollBar` has left and right buttons, and the vertical top and bottom buttons.
 
-Ovaj widget se povezuje sa List/Grid widgetom preko varijable tipa `struct:$ScrollbarState` koja se zadaje u `Data` propertiju. Strukutra `struct:$ScrollbarState` ima ova polja:
+This Widget connects to the `List` or `Grid` Widget via a variable of type `struct:$ScrollbarState` which is set in the `Data` property. The structure `struct:$ScrollbarState` has these fields:
 
--   `numItems` - koliko itema/elementa se nalazi u listi
--   `itemsPerPage` - koliko itema stane unutar List/Grid widgeta.
--   `positionIncrement` - za koliko itema ćemo se pomaknuti unutar liste kada se pritisne na left/top button (pomak u lijevo/gore) ili right/bottom button (pomak u desno/dolje).
--   `position` - pozicija prvog itema/elementa koji se renderira u listi. Znači unutar Liste/Grida će se renderirati itemi od `position` do `position + itemsPerPage`. `position` može biti u intervalu od 0 do `numItems - itemsPerPage`.
+- `numItems` – how many items/elements are in the list
+- `itemsPerPage` – how many items fit inside the `List` or `Grid` Widget.
+- `positionIncrement` – determines how many items we will move within the list when the left/top button (shift to the left/up) or the right/bottom button (shift to the right/down) is selected.
+- `position` – the position of the first item/element that is rendered in the list. So within the `List` or `Grid` Widget, items from `position` to `position + itemsPerPage` will be rendered. `position` can be in the interval from `0` to `numItems – itemsPerPage`.
 
-Na ovaj način scrollbar može mijenjati `position`:
+The scrollbar can change its `position' in the following ways:
 
--   Pritiskom na Left/Top button `position` se umanjuje za `positionIncrement` vrijednost.
--   Pritiskom na Right/Bottom button `position` se uvećava za `positionIncrement` vrijednost.
--   Pomicanjem thuma `position` se postavlja na vrijednost u intervalu od 0 do `numItems - itemsPerPage`.
--   Ako se pritisne u regiji između Left/Top buttona i Thumba onda se position umanjuje za `itemsPerPage` (AKA "page up").
--   Ako se pritisne u regiji između Thumba i Right/Bottom buttona onda se position uvećava za `itemsPerPage` (AKA "page down").
+- By selecting the Left/Top button `position` is decreased by the `positionIncrement` value.
+- By selecting Right/Bottom button `position` is increased by `positionIncrement` value.
+- By moving the thumb `position` is set to a value in the interval from `0` to `numItems - itemsPerPage`.
+- If the region between the Left/Top button and the thumb is selected, then the position is reduced by `itemsPerPage` (AKA "page up").
+- If the region between the thumb and the Right/Bottom button is selected, then the position is increased by `itemsPerPage` (AKA "page down").
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Ovdje treba staviti naziv varijable tipa `struct:$ScrollbarState`.
+Set here the name of the `struct:$ScrollbarState` type variable.
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja pozadine.
+Style used when rendering the background of the Widget.
 
-## Thumb style [DRAFT]
+## Thumb style
 
-Ovaj style se koristi prilikom renderiranja thumba.
+Style that will be used to render the scrollbar thumb.
 
-## Buttons style [DRAFT]
+## Buttons style
 
-Ovaj style se koristi prilikom renderiranja lijevog i desnog buttona.
+Style used to render the left and right buttons.
 
-## Left button text [DRAFT]
+## Left button text
 
-Ovo je tekst koji se prikazuje unutar left/top buttona. Obično se koristiti single character iz nekog icons fonta.
+The text that will be displayed inside the left/top button. Usually a single character from an icons font is used.
 
-## Right button text [DRAFT]
+## Right button text
 
-Ovo je tekst koji se prikazuje unutar right/bottom buttona. Obično se koristiti single character iz nekog icons fonta.
+The text that will be displayed inside the right/bottom button. Usually a single character from an icons font is used.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

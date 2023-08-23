@@ -1,27 +1,27 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Button se koristi kada se treba izvršiti neka akcija preko GUI-ja, pritiskom na njega generira se 'CLICKED' event, koji je u ovom slučaju by default dodan u listu event handlera. Button ima dva stanja enabled i disabled, koji se postavlja preko `Enabled` propertija. Za svako stanje postoji poseban style, `Default style` za enabled stanje i `Disabled style` za disabled stanje.
+This Widget is used when an action needs to be performed via the GUI, clicking on it generates a `CLICKED` event, which in this case is added to the list of event handlers by default. The widget has two states enabled and disabled, which is set via the `Enabled` property. Each state has its own style, `Default` style for the enabled state and `Disabled` style for the disabled state.
 
 # PROPERTIES
 
-## Label [DRAFT]
+## Label
 
-Ovo je text koji se prikazuje unutar buttona.
+The text that will be displayed inside the button.
 
-## Default style [DRAFT]
+## Default style
 
-Ovaj style se koristi prilikom renderiranja ako je buttone enabled.
+Style to be used for rendering if the Widget is enabled.
 
 ## Text [EMPTY]
 
 
-## Enabled [DRAFT]
+## Enabled
 
-Ako je true onda je button enabled, inače je disabled.
+If it is true, then the button is enabled, otherwise it will be eisabled.
 
-## Disabled style [DRAFT]
+## Disabled style
 
-Ovaj style se koristi prilikom renderiranja ako je buttone disabled.
+Style to be used for rendering if the Widget is disabled.
 
 # INPUTS [EMPTY]
 
@@ -29,6 +29,6 @@ Ovaj style se koristi prilikom renderiranja ako je buttone disabled.
 
 ## CLICKED
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

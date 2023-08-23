@@ -1,37 +1,37 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovo je slično kao Text widget ali ima još neke opcije koje se zadaju preko `Display option` i `Refresh rate` propertija.
+Similar to the `Text` Widget, but it has some more options that are set via the `Display option` and `Refresh rate` properties.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Ovaj ekspression kada sa izračuna pretvori se u string i prikazuje unutar widgeta.
+An expression that, when calculated, is converted into a string and displayed inside the widget.
 
-## Default style [DRAFT]
+## Default style
 
-Ovo je style koji se koristit prilikom renderiranja ovog widgeta.
+Style used when rendering of the Widget.
 
-## Focused style [DRAFT]
+## Focused style
 
-Ovaj style se koristi prilikom renderiranja ako je widget u focusu.
+Style to be used for rendering if the Widget is in focus.
 
-## Display option [DRAFT]
+## Display option
 
-Ako je izračunati `Data` floating point broj onda s ovim propertijem možemo birati koji dio floating point broja se prikazuje:
+If the calculated `Data` is a floating point number, then with this property we can choose which part of the floating point number is displayed:
 
--   `All`: prikazuje čitav floating point broj
--   `Integer`: prikazuje samo cijeli dio (integer) broja
--   `Fraction`: prikazuje samo decimale (fraction) broja
+- `All` – displays the entire floating point number
+- `Integer` – displays only the whole part (integer) of the number
+- `Fraction` – displays only decimals (fractions) of a number
 
-## Refresh rate [DRAFT]
+## Refresh rate
 
-Ovaj property definira koliko ćesto će se obnavljati sadržaj ovog widgeta i zadaje se u milisekundama. Npr. ako se Data mijenja sa velikom frekvencijom i ako se sa tom frekvencijom obnavlja i sadržaj ovog widgeta (npr. ako je Refresh rate postavljen na 0) onda će biti problematično vidjeti taj sadržaj, pa je preporučljivo Refresh rate povećati, npr. na 200 ms.
+This property defines how often the content of this widget will be refreshed. It is set in milliseconds. If the `Data` changes with a high frequency and if the content of this widget is renewed with that frequency (e.g. if the Refresh rate is set to `0`) then it will be a problem to see that content, therefore it is recommended to increase the Refresh rate, eg. at 200 ms.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_
