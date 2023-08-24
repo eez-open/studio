@@ -85,6 +85,7 @@ import {
     activityLogStore,
     logDelete
 } from "instrument/window/history/activity-log";
+import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -233,6 +234,8 @@ export class WasmRuntime extends RemoteRuntime {
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
+            await preloadAllBitmaps(this.projectStore);
+
             this.lgvlPageRuntime = new LVGLPageViewerRuntime(this);
         }
     }

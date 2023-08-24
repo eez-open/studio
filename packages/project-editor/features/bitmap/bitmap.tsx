@@ -683,6 +683,16 @@ export async function getBitmapDataAsync(
     }
 }
 
+export async function preloadAllBitmaps(projectStore: ProjectStore) {
+    const bitmaps: Bitmap[] = [];
+    for (const project of projectStore.project._store.openProjectsManager
+        .projects) {
+        bitmaps.push(...project.bitmaps);
+    }
+
+    return Promise.all(bitmaps.map(bitmap => getBitmapDataAsync(bitmap)));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const feature: ProjectEditorFeature = {
