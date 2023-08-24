@@ -2034,11 +2034,9 @@ export class BarGraphWidget extends Widget {
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup
             },
-            makeStylePropertyInfo("textStyle"),
-            makeStylePropertyInfo("line1Style"),
-            makeStylePropertyInfo("line2Style"),
-            makeDataPropertyInfo("line1Data"),
-            makeDataPropertyInfo("line2Data"),
+            makeDataPropertyInfo("data"),
+            makeDataPropertyInfo("line1Data", { displayName: "Threshold1" }),
+            makeDataPropertyInfo("line2Data", { displayName: "Threshold2" }),
             makeDataPropertyInfo("min", {
                 hideInPropertyGrid: hasNotFlowSupport
             }),
@@ -2047,7 +2045,11 @@ export class BarGraphWidget extends Widget {
             }),
             makeDataPropertyInfo("refreshRate", {
                 hideInPropertyGrid: hasNotFlowSupport
-            })
+            }),
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("textStyle"),
+            makeStylePropertyInfo("line1Style", "Threshold1 style"),
+            makeStylePropertyInfo("line2Style", "Threshold2 style")
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -2872,6 +2874,7 @@ export class ProgressWidget extends Widget {
         flowComponentId: WIDGET_TYPE_PROGRESS,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("min", {
                 hideInPropertyGrid: isNotProjectWithFlowSupport
             }),
@@ -2890,7 +2893,8 @@ export class ProgressWidget extends Widget {
                         id: "vertical"
                     }
                 ]
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (
@@ -3630,6 +3634,7 @@ export class LineChartEmbeddedWidget extends Widget {
                 enumerable: false
             },
             makeDataPropertyInfo("marker", {}, "float"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("titleStyle"),
             makeStylePropertyInfo("legendStyle"),
             makeStylePropertyInfo("xAxisStyle"),
@@ -4524,10 +4529,12 @@ export class GaugeEmbeddedWidget extends Widget {
         flowComponentId: WIDGET_TYPE_GAUGE,
 
         properties: [
+            makeDataPropertyInfo("data"),
             makeDataPropertyInfo("min"),
             makeDataPropertyInfo("max"),
             makeDataPropertyInfo("threshold"),
             makeDataPropertyInfo("unit"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("barStyle"),
             makeStylePropertyInfo("valueStyle"),
             makeStylePropertyInfo("ticksStyle"),
@@ -5884,7 +5891,8 @@ export class QRCodeWidget extends Widget {
                     }
                 ],
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
