@@ -2522,7 +2522,7 @@ export class UpDownWidget extends Widget {
         flowComponentId: WIDGET_TYPE_UP_DOWN,
 
         properties: [
-            makeStylePropertyInfo("buttonsStyle"),
+            makeDataPropertyInfo("data", {}, "integer"),
             makeTextPropertyInfo("downButtonText"),
             makeTextPropertyInfo("upButtonText"),
             makeDataPropertyInfo("min", {
@@ -2530,7 +2530,9 @@ export class UpDownWidget extends Widget {
             }),
             makeDataPropertyInfo("max", {
                 hideInPropertyGrid: isNotProjectWithFlowSupport
-            })
+            }),
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("buttonsStyle")
         ],
 
         beforeLoadHook: (
@@ -4980,6 +4982,7 @@ export class InputEmbeddedWidget extends Widget {
         flowComponentId: WIDGET_TYPE_INPUT,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "any"),
             {
                 name: "inputType",
                 type: PropertyType.Enum,
@@ -4996,12 +4999,12 @@ export class InputEmbeddedWidget extends Widget {
             {
                 ...makeDataPropertyInfo("min"),
                 displayName: (widget: InputEmbeddedWidget) =>
-                    widget.inputType === "text" ? "Min chars" : "Min"
+                    widget.inputType === "text" ? "Min (chars)" : "Min"
             },
             {
                 ...makeDataPropertyInfo("max"),
                 displayName: (widget: InputEmbeddedWidget) =>
-                    widget.inputType === "text" ? "Max chars" : "Max"
+                    widget.inputType === "text" ? "Max (chars)" : "Max"
             },
             {
                 ...makeDataPropertyInfo("precision"),
@@ -5019,7 +5022,8 @@ export class InputEmbeddedWidget extends Widget {
                 hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "text",
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
@@ -5186,10 +5190,18 @@ export class InputEmbeddedWidget extends Widget {
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
 
         // precision
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "precision"));
+        dataBuffer.writeInt16(
+            this.inputType === "text"
+                ? 0
+                : assets.getWidgetDataItemIndex(this, "precision")
+        );
 
         // unit
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "unit"));
+        dataBuffer.writeInt16(
+            this.inputType === "text"
+                ? 0
+                : assets.getWidgetDataItemIndex(this, "unit")
+        );
 
         // component index
         dataBuffer.writeUint16(assets.getComponentIndex(this));
@@ -5217,9 +5229,11 @@ export class RollerWidget extends Widget {
         flowComponentId: WIDGET_TYPE_ROLLER,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("min"),
             makeDataPropertyInfo("max"),
             makeDataPropertyInfo("text"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("selectedValueStyle"),
             makeStylePropertyInfo("unselectedValueStyle")
         ],
@@ -5393,7 +5407,10 @@ export class SwitchWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_SWITCH,
 
-        properties: [],
+        properties: [
+            makeDataPropertyInfo("data", {}, "boolean"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
 
         defaultValue: {
             left: 0,
@@ -5511,7 +5528,12 @@ export class SliderWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_SLIDER,
 
-        properties: [makeDataPropertyInfo("min"), makeDataPropertyInfo("max")],
+        properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
+            makeDataPropertyInfo("min"),
+            makeDataPropertyInfo("max"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
 
         defaultValue: {
             left: 0,
@@ -5689,7 +5711,11 @@ export class DropDownListWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_DROP_DOWN_LIST,
 
-        properties: [makeDataPropertyInfo("options")],
+        properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
+            makeDataPropertyInfo("options"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
 
         defaultValue: {
             left: 0,

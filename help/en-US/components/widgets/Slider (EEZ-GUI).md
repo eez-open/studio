@@ -1,13 +1,29 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Slider vam omogućuje da odaberete jednu vrijednost s popisa pomicanjem knoba na slideru.
 
 # PROPERTIES
 
-## Min
+## Data [DRAFT]
 
-## Max
+Varijabla u koju se sprema odabrana vrijednost u rasponu od `[Min, Max]`.
 
-# INPUTS
+## Default style [DRAFT]
 
-# OUTPUTS
+Style koji se koristi za renderiranje widgeta.
 
-# EXAMPLES
+## Min [DRAFT]
+
+Minimalna vrijednost koja se može odabrati.
+
+## Max [DRAFT]
+
+Maksimalna vrijednost koja se može odabrati.
+
+# INPUTS [EMPTY]
+
+# OUTPUTS [EMPTY]
+
+# EXAMPLES [DRAFT]
+
+-   eez-gui-widgets-demo
