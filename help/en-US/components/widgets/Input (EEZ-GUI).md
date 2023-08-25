@@ -1,46 +1,46 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Koristite ovaj widget kada želite unjeti broj ili tekst. Da bi ovaj widget radio project mora definirati page za unos teksta i page za unos broja. Pogledajte neki od primjera koji su navedeni pod Examples kako se definiraju te stranice.
+The widget is used when we want to enter a number or text. In order for this widget to work, the project must define a page for entering text and a page for entering numbers. See some of the examples listed under _Examples_ of how these pages are defined.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Varijabla u koju će biti pospremljen uneseni broj ili tekst.
+The variable in which the entered number or text will be stored.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje.
+Style used when rendering of the Widget.
 
-## Input type [DRAFT]
+## Input type
 
-Odabir da li se unosti `Number` ili `Text`.
+Choose whether `Number` or `Text` is entered.
 
-## Min [DRAFT]
+## Min
 
-Ako je `Input type` postavljen na `Number` onda ovaj broj predstavlja minimalni broj koju je potrebno unjeti, a ako je postavljen na `Text` onda ovaj property pretstavlja minimalan broj znakova koje je potrebno unjeti.
+If `Input type` is set to `Number` then this number represents the minimum number that needs to be entered, and if it is set to `Text` then this property represents the minimum number of characters that need to be entered.
 
-## Max [DRAFT]
+## Max
 
-Ako je `Input type` postavljen na `Number` onda ovaj broj predstavlja maksimalni broj koju je potrebno unjeti, a ako je postavljen na `Text` onda ovaj property pretstavlja maksimalan broj znakova koje je potrebno unjeti.
+If `Input type` is set to `Number` then this number represents the maximum number that needs to be entered, and if it is set to `Text` then this property represents the maximum number of characters that need to be entered.
 
-## Precision [DRAFT]
+## Precision
 
-Ako je `Input type` postavljen na `Number` onda ovaj property definira preciznost broja koji se unosi. Ako se unese broj koji ima veću preciznost (više decimalnih mjesta) onda će se broj zaokružiti na ovu preciznost. Npr. ako postavite na 0.01 onda će broj biti zaokružen na dvije decimale.
+If `Input type` is set to `Number` then this property defines the precision of the entered number. If a number with higher precision (more decimal places) is entered, then the number will be rounded to this precision. For example if we set it to `0.01` then the number will be rounded to two decimal places.
 
-## Unit [DRAFT]
+## Unit
 
-Ako je `Input type` postavljen na `Number` onda ovaj property definrira unit koji će se koristiti, tj. ispisati desno od brojčane vrijednosti.
+If `Input type` is set to `Number` then this property defines the unit that will be used, i.e. printed to the right of the numerical value.
 
-## Password [DRAFT]
+## Password
 
-Ako je `Input type` postavljen na `Text` i unosi se password onda treba enejblati ovaj property kako bi se prikazale `*` umjesto znakova prilikom unosa passworda.
+If `Input type` is set to `Text` and a password is entered, then this property should be enabled so that `*` is displayed instead of characters when entering the password.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
--   stm32f469i-disco-eez-flow-demo
+* _eez-gui-widgets-demo_
+* _stm32f469i-disco-eez-flow-demo_

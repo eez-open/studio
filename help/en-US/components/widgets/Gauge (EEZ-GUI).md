@@ -1,53 +1,53 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget prikazuje zadanu vrijednost kroz `Data` property unutar gauge charta. Također, ako je zadano, prikazati će i threshold liniju na zadanim pozicijama, npr. za označavanje neke kritične vrijednosti.
+Displays the default value through the `Data` property inside the gauge chart. Also, if it is set, it will also show the threshold line at the given positions, for example to mark some critical value.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Ovo je vrijednost unutar raspona `[Min, Max]` koja se prikazuje u Gauge.
+The value within the `[Min, Max]` range that is displayed in the Widget.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje pozadine widgeta.
+Style used when rendering the background of the Widget.
 
-## Min [DRAFT]
+## Min
 
-Minimalna vrijednost koju može imati `Data` vrijednost.
+The minimum value that `Data` can contain.
 
-## Max [DRAFT]
+## Max
 
-Maksimalna vrijednost koju može imati `Data` vrijednost.
+The maximum value that `Data` can contain.
 
-## Threshold [DRAFT]
+## Threshold
 
-Ovo je opcionalna vrijednost unutar raspona `[Min, Max]` na čijoj poziciji će se nacrtati linija u zadanom stilu (`Threshold style`).
+An optional value within the range `[Min, Max]` at the position of which a line will be drawn in the default style (`Threshold style`).
 
-## Unit [DRAFT]
+## Unit
 
-Ovo je unit koji će se ispisati desno od `Data` vrijednosti.
+The unit that will be displayed to the right of the `Data` value.
 
-## Bar style [DRAFT]
+## Bar style
 
-Style koji se koristi za renderiranje bara unutar gauge widgeta.
+Style used to render the bar inside the Widget.
 
-## Value style [DRAFT]
+## Value style
 
-Style koji se koristi za renderiranje vrijednosti koja se zadaje kroz `Data`.
+Style used to render the value specified through `Data`.
 
-## Ticks style [DRAFT]
+## Ticks style
 
-Style koji se koristi za renderiranje ticksa na skali.
+The style used to render the ticks on the scale.
 
-## Threshold style [DRAFT]
+## Threshold style
 
-Style koji se koristi za renderiranje threshold linije.
+Style used to render the threshold line.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

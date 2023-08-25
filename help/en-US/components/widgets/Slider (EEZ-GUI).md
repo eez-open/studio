@@ -1,29 +1,29 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Slider vam omogućuje da odaberete jednu vrijednost s popisa pomicanjem knoba na slideru.
+This Widget allows us to select one value from the list by moving the knob on the slider.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Varijabla u koju se sprema odabrana vrijednost u rasponu od `[Min, Max]`.
+The variable in which the selected value in the range of `[Min, Max]` is saved.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje widgeta.
+Style used when rendering of the Widget.
 
-## Min [DRAFT]
+## Min
 
-Minimalna vrijednost koja se može odabrati.
+The minimum value that can be selected.
 
-## Max [DRAFT]
+## Max
 
-Maksimalna vrijednost koja se može odabrati.
+The maximum value that can be selected.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

@@ -1,25 +1,25 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Koristite ovaj widget za odabir jedne opcija iz liste.
+We can use this widget when we need to select one option from the list.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Varijabla u koju će biti pospremljen zero-based indeks odabrane opcije.
+The variable in which the zero-based index of the selected option will be stored.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje.
+Style used when rendering of the Widget.
 
-## Options [DRAFT]
+## Options
 
-Lista opcija.
+List of options.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_
