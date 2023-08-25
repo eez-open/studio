@@ -878,7 +878,8 @@ export class MultilineTextWidget extends Widget {
                     return "Data";
                 }
             }),
-            makeTextPropertyInfo("Static text", {
+            makeTextPropertyInfo("text", {
+                displayName: "Static text",
                 hideInPropertyGrid: isProjectWithFlowSupport
             }),
             {

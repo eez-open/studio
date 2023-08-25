@@ -76,7 +76,10 @@ const ComponentProperty = observer(
         render() {
             const { property } = this.props;
 
-            const propertyName = property.name;
+            let propertyName = property.name;
+            if (propertyName.endsWith(" style")) {
+                propertyName = propertyName.substr(0, " style".length);
+            }
 
             let propertyDescription;
             if (

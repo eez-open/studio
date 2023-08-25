@@ -85,6 +85,7 @@ import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 import { LVGLBuild } from "project-editor/lvgl/build";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { AssetsMap } from "eez-studio-types";
+import { isDashboardProject } from "project-editor/project/project-type-traits";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -150,7 +151,8 @@ export class Assets {
         types: [],
         typeIndexes: {},
         displayWidth: this.displayWidth,
-        displayHeight: this.displayHeight
+        displayHeight: this.displayHeight,
+        bitmaps: []
     };
 
     dashboardComponentClassNameToComponentIdMap: {
@@ -440,7 +442,10 @@ export class Assets {
         ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
         this.getAssets<Bitmap>(
             project => project.bitmaps,
-            bitmap => bitmap.id == undefined && bitmap.alwaysBuild
+            bitmap =>
+                bitmap.id == undefined &&
+                (bitmap.alwaysBuild ||
+                    isDashboardProject(this.projectStore.project))
         ).forEach(bitmap => this.bitmaps.push(bitmap));
         for (let i = 0; i < this.bitmaps.length; i++) {
             if (!this.bitmaps[i]) {
@@ -1194,6 +1199,8 @@ export class Assets {
 
         this.map.types = this.projectStore.typesStore.types;
         this.map.typeIndexes = this.projectStore.typesStore.typeIndexes;
+
+        this.map.bitmaps = this.bitmaps.map(bitmap => bitmap.name);
     }
 
     get displayWidth() {

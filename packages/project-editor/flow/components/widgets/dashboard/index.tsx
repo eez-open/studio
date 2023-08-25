@@ -1247,7 +1247,12 @@ export class QRCodeDashboardWidget extends Widget {
             top: 0,
             width: 128,
             height: 128,
-            errorCorrection: "medium"
+            errorCorrection: "medium",
+            style: {
+                useStyle: "default",
+                color: "white",
+                backgroundColor: "black"
+            }
         },
 
         icon: (
@@ -1708,6 +1713,21 @@ export class BitmapDashboardWidget extends Widget {
                 );
             }
 
+            if (typeof data == "number") {
+                const runtime = flowContext.flowState?.runtime;
+                if (runtime instanceof WasmRuntime) {
+                    const bitmap = findBitmap(
+                        getProject(this),
+                        runtime.assetsMap.bitmaps[data - 1]
+                    );
+                    if (bitmap) {
+                        return bitmap;
+                    }
+
+                    return undefined;
+                }
+            }
+
             return data;
         }
 
@@ -1896,3 +1916,4 @@ import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
 import "project-editor/flow/components/widgets/dashboard/terminal";
+import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";

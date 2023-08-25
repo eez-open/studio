@@ -471,6 +471,7 @@ interface AssetsMap {
     typeIndexes: IIndexes;
     displayWidth: number;
     displayHeight: number;
+    bitmaps: string[];
 }
 
 export interface ScpiCommand {
