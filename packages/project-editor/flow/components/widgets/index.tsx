@@ -735,12 +735,25 @@ export class GridWidget extends Widget {
             return null;
         }
 
-        const dataValue = this.data
-            ? flowContext.dataContext.get(this.data)
-            : 0;
+        let dataValue;
+        if (this.data) {
+            if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
+                try {
+                    dataValue = evalProperty(flowContext, this, "data");
+                } catch (err) {
+                    //console.error(err);
+                }
+            } else {
+                dataValue = flowContext.dataContext.get(this.data);
+            }
+        }
 
-        if (!dataValue || !Array.isArray(dataValue)) {
+        if (dataValue == undefined && flowContext.flowState) {
             return null;
+        }
+
+        if (!Array.isArray(dataValue)) {
+            dataValue = [{}];
         }
 
         const iterators =
@@ -805,27 +818,21 @@ const GridWidgetItem = observer(
                 iterators
             } = this.props;
 
-            const rows = Math.floor(width / itemWidget.width);
-            const cols = Math.floor(height / itemWidget.height);
+            const rows = Math.floor(height / itemWidget.height);
+            const cols = Math.floor(width / itemWidget.width);
 
             let row;
             let col;
             if (gridWidget.gridFlow === "column") {
-                row = Math.floor(i / cols);
-                col = i % cols;
-                if (row >= rows) {
-                    return null;
-                }
-            } else {
                 row = i % rows;
                 col = Math.floor(i / rows);
-                if (col >= cols) {
-                    return null;
-                }
+            } else {
+                col = i % cols;
+                row = Math.floor(i / cols);
             }
 
-            let xListItem = row * itemWidget.width;
-            let yListItem = col * itemWidget.height;
+            let xListItem = col * itemWidget.width;
+            let yListItem = row * itemWidget.height;
 
             const overridenFlowContext = flowContext.overrideDataContext({
                 [FLOW_ITERATOR_INDEX_VARIABLE]: i,

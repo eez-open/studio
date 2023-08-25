@@ -612,7 +612,9 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         const save = () => {
-            projectStore.save();
+            if (projectStore.isModified) {
+                projectStore.save();
+            }
         };
         const saveAs = () => {
             projectStore.saveAs();
