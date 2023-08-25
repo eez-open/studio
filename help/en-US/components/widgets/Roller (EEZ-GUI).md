@@ -1,47 +1,47 @@
 # DESCRIPTION
 
-Roller vam omogućuje da odaberete jednu opciju s popisa koristeći touch based scrolling.
+This Widget allows us to select one option from a list using touch based scrolling.
 
 # PROPERTIES
 
 ## Data
 
-Varijabla u koju se sprema odabrana vrijednost u rasponu od `[Min, Max]`.
+The variable in which the selected value in the range of `[Min, Max]` is saved.
 
 ## Default style
 
-Style koji se koristi za renderiranje pozadine.
+Style used when rendering the background of the Widget.
 
 ## Min
 
-Minimalna vrijednost koja se može odabrati.
+The minimum value that can be selected.
 
 ## Max
 
-Maksimalna vrijednost koja se može odabrati.
+The maximum value that can be selected.
 
 ## Text
 
-Text koji se prikazuje u widgetu za svaku moguću vrijednost koja se odabira.
+The text that is displayed in the widget for each possible value that is selected.
 
-Primjer: postavite Data na `selected_option` (tipa `integer`), postavite Min na `0`, a Max na `Array.length(TEXTS) - 1`, gdje je `TEXTS` varijabla tipa `array:string` sa `Default value` postavljeno na: `["Option 1", "Option 2", "Option 3", ...]` i onda ovaj property možete postaviti na `TEXTS[selected_option]`.
+Example: set Data to `selected_option` (of type `integer`), set Min to `0`, and Max to `Array.length(TEXTS) - 1`, where `TEXTS` is a variable of type `array:string` with ` Default value` set to: `["Option 1", "Option 2", "Option 3", ...]` and then we can set this property to `TEXTS[selected_option]`.
 
 ## Selected value style
 
-Style koji se koristi za renderiranje selektirane vrijednosti.
+Style used to render selected value.
 
 ## Unselected value style
 
-Style koji se koristi za renderiranje ostalih (neselektiranih) vrijednosti.
+Style used to render other (unselected) values.
 
 # INPUTS
 
-## clear [DRAFT]
+## clear
 
-Pošaljite signal na ovaj input ako želite resetirati odabir, tj. odabrati prvu opciju.
+We need to send a signal to this input if we want to reset the selection, i.e. choose the first option.
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

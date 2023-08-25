@@ -1,34 +1,34 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Korisitite ovaj widget npr. kada želite prikazati execution progress neke operacije.
+We can use this Widget, for example, when we want to display the execution progress of an operation.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Vrijednost koja ide od Min (progress is at 0%) do Max (progress is at 100%).
+A value that goes from Min (progress is at 0%) to Max (progress is at 100%).
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje widgeta.
+Style used when rendering of the Widget.
 
-## Min [DRAFT]
+## Min
 
-Minimalna vrijednost koju može imati `Data` vrijednost.
+The minimum value that `Data` can contain.
 
-## Max [DRAFT]
+## Max
 
-Maksimalna vrijednost koju može imati `Data` vrijednost.
+The maximum value that `Data` can contain.
 
-## Orientation [DRAFT]
+## Orientation
 
-Postoje dvije orijentacije koje može imati Progress widget:
+There are two orientations that the `Progress` widget can have:
 
--   Horizonatal
+- Horizonatal
 
     ![Alt text](../images/progress_horz.png)
 
--   Vertical
+- Vertical
 
     ![Alt text](../images/progress_vert.png)
 
@@ -36,6 +36,6 @@ Postoje dvije orijentacije koje može imati Progress widget:
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

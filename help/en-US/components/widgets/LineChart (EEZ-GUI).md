@@ -1,122 +1,122 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Prikazuje Line chart koji se sastoji od ovih dijelova:
+Displays a Line chart consisting of the following parts:
 
--   Title
--   X Axis
--   Y axis
--   Legend
--   Grid
--   One or more lines
+- Title
+- X Axis
+- Y axis
+- A legend
+- Grid
+- One or more lines
 
-![Alt text](line_chart.png)
+![Alt text](../images/line_chart.png)
 
-Na početku chart nema niti jednu točku na linijama. Kako bi smo dodali točku potrebno je proslijediti podatak kroz `value` input. Za svaki primjeljeni podatak na tom inputu dodaje se po jedna točka. Iz primljenog podatka se onda treba izračunati X i Y vrijednosti te točke na svim linija. Npr. primljeni podatak može biti strukutra koja u sebi ima X vrijednost i Y vrijednost za svaku liniju.
+At the beginning of the chart there is not a single point on the lines. In order to add a point, it is necessary to pass the data through `value` input. One point is added for each applied data on that input. The X and Y values of that point on all lines should then be calculated from the received data. For example the received data can be a structure that has an X value and a Y value for each line.
 
 # PROPERTIES
 
 ## Data [EMPTY]
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje pozadine widgeta.
+Style used when rendering of the Widget.
 
-## X value [DRAFT]
+## X value
 
-Definira vrijednost na X osi za dodanu točku. Može se postaviti na trenutno vrijeme sa `Date.now()` ili neku drugu vrijednost, ali se mora paziti da vrijednost raste sa svakom novododanom toćkom.
+Defines the value on the X-axis for the added point. It can be set to the current time with `Date.now()` or some other value, but care must be taken to increase the value with each newly added point.
 
-## Lines [DRAFT]
+## Lines
 
-Definira jednu ili više linija na Y osi. Za svaku liniju se zadaje:
+Defines one or more lines on the Y-axis. The following must be specified for each line:
 
--   Label - Naziv linije koji se prikazuje u Legend.
--   Color - Boja linije.
--   Line width - Debljina linije u pikselima.
--   Value - Vrijednost na Y osi za dodanu točku.
+- `Label` – The name of the line that is displayed in the Legend.
+- `Color` – Color of the line.
+- `Line width` – The thickness of the line in pixels.
+- `Value` – The value on the Y axis for the added point.
 
-## Show title [DRAFT]
+## Show title
 
-Postaviti na checked ako se želi renderirati title.
+It should be set if we want to render the title.
 
-## Show legend [DRAFT]
+## Show legend
 
-Postaviti na checked ako se želi renderirati legend.
+It should be set if we want to render the legend.
 
-## Show X axis [DRAFT]
+## Show X axis
 
-Postaviti na checked ako se želi renderirati X axis.
+It should be set if we want to render the X-axis.
 
-## Show Y axis [DRAFT]
+## Show Y axis
 
-Postaviti na checked ako se želi renderirati Y axis.
+It should be set if we want to render the Y-axis.
 
-## Show grid [DRAFT]
+## Show grid
 
-Postaviti na checked ako se želi renderirati grid.
+It should be set if we want to render the grid.
 
-## Title [DRAFT]
+## Title
 
-Naziv charta.
+Name of the chart.
 
-## Y axis range option [DRAFT]
+## Y axis range option
 
-Ovdje imamo dvije opcije:
+Here we have two options:
 
--   `Floating`: Y axis range će biti automatski odabran na osnovu Y vrijednosti u svim točkama.
--   `Fixed`: Y axis range je zadan preko `Y axis range from` i `Y axis range to` propertija.
+- `Floating` – Y-axis range will be automatically selected based on the Y value at all points.
+- `Fixed` – Y-axis range is set via `Y axis range from` and `Y axis range to` items.
 
-## Y axis range from [DRAFT]
+## Y axis range from
 
-Ako je za `Y axis range option` odabrano `Fixed` onda se s ovim propertijem zadaje donja granica raspona Y osi.
+If `Fixed` is selected for `Y axis range option`, then the lower limit of the Y-axis range is set with this item.
 
-## Y axis range to [DRAFT]
+## Y axis range to
 
-Ako je za `Y axis range option` odabrano `Fixed` onda se s ovim propertijem zadaje gornja granica raspona Y osi.
+If `Fixed` is selected for `Y axis range option`, then the upper limit of the Y-axis range is set with this item.
 
-## Max points [DRAFT]
+## Max points
 
-Maksimalni broj točaka koji se prikazuju.
+The maximum number of points that will be displayed.
 
-## Margin [DRAFT]
+## Margin
 
-Ručno odabrane vrijednosti margina između granica widgeta i samog charta unutar widgeta. Potrebno je ostaviti prazan prostor za Title (prikazuje se iznad charta pa treba odabrati odgovarajući Top margin), X axis (prikazuje se ispod charta, Bottom margin), Y axis (prikazuje se lijevo od charta, Left margin) i Legend (prikazuje se desno od charta, Right margin).
+Manually selected margin values between the Widget borders and the chart itself within the Widget. It is necessary to leave an empty space for Title (displayed above the chart, so the appropriate `Top` margin should be selected), X-axis (displayed below the chart, `Bottom` margin), Y-axis (displayed to the left of the chart, `Left` margin) and Legend (displayed to the right of the chart, `Right` margin).
 
-## Marker [DRAFT]
+## Marker
 
-Na ovoj poziciji biti će prikazana vertikalna linija unutar charta koristeću stil `Marker style`.
+At this position, a vertical line will be displayed inside the chart using `Marker` style.
 
-## Title style [DRAFT]
+## Title style
 
-Style koji se koristi za renderiranje title.
+Style used to render the title.
 
-## Legend style [DRAFT]
+## Legend style
 
-Style koji se koristi za renderiranje legende.
+Style used to render the legend.
 
-## X axis style [DRAFT]
+## X axis style
 
-Style koji se koristi za renderiranje x axis.
+Style used to render the X-axis.
 
-## Y axis style [DRAFT]
+## Y axis style
 
-Style koji se koristi za renderiranje y axis.
+Style used to render the Y-axis.
 
-## Marker style [DRAFT]
+## Marker style
 
-Style koji se koristi za renderiranje markera.
+Style used to render the marker.
 
 # INPUTS
 
-## reset [DRAFT]
+## reset
 
-Pošaljite signal kroz ovaj input ako želite pobrisati sve točke na chartu.
+If we want to erase all the points on the chart, it is necessary to send a signal to this input.
 
-## value [DRAFT]
+## value
 
-Pošaljite vrijednost kroz ovaj input ako želite dodati točku unutar charta. Kada se dosegne maksimalni broj točaka, koji je zadan kroz `Max points` property, onda će se obrisati najstarija dodana točka.
+The input to which the value of the point that we want to add to the chart is sent. When the maximum number of points, which is set through the `Max points` item, is reached, then the oldest added point will be deleted.
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   Line Chart
+* _Line Chart_

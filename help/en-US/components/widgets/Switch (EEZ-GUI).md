@@ -1,21 +1,21 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Switch se koristi kada želite neku opciju turn ON ili turn OFF.
+`Switch` Widget is used when we want a turn ON or turn OFF option.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Boolean varijabla u koju se sprema `true` kada je switch ON i `false` kada je switch OFF.
+Boolean variable in which `true` is stored when the switch is ON and `false` when the switch is OFF.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje widgeta.
+Style used when rendering of the Widget.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_

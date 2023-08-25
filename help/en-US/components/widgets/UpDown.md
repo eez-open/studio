@@ -1,41 +1,41 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-UpDown vam omogućuje da odaberete jednu vrijednost pomoću buttona za decrement i increment.
+This Widget allows us to select a single value using the decrement and increment buttons.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Varijabla u koju se sprema odabrana vrijednost u rasponu od `[Min, Max]`.
+The variable in which the selected value in the range of `[Min, Max]` is saved.
 
-## Default style [DRAFT]
+## Default style
 
-Style koji se koristi za renderiranje pozadine widgeta i teksta.
+Style used when rendering the background of the Widget and text.
 
-## Down button text [DRAFT]
+## Down button text
 
-Tekst koji se prikazuje unutar buttona za decrement vrijednosti.
+The text that is displayed inside the button for the decrement value.
 
-## Up button text [DRAFT]
+## Up button text
 
-Tekst koji se prikazuje unutar buttona za increment vrijednosti.
+The text that is displayed inside the button for the increment value.
 
-## Min [DRAFT]
+## Min
 
-Minimalna vrijednost koja se može odabrati.
+The minimum value that can be selected.
 
-## Max [DRAFT]
+## Max
 
-Maksimalna vrijednost koja se može odabrati.
+The maximum value that can be selected.
 
-## Buttons style [DRAFT]
+## Buttons style
 
-Style koji se koristi za renderiranje buttona.
+Style used to render the button.
 
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
-# EXAMPLES [DRAFT]
+# EXAMPLES
 
--   eez-gui-widgets-demo
+* _eez-gui-widgets-demo_
