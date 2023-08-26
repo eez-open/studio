@@ -9,7 +9,12 @@ import {
     ProjectType
 } from "project-editor/core/object";
 
-import { ComponentOutput, Widget } from "project-editor/flow/component";
+import {
+    ComponentOutput,
+    Widget,
+    makeDataPropertyInfo,
+    makeStylePropertyInfo
+} from "project-editor/flow/component";
 import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
 import { observer } from "mobx-react";
@@ -35,6 +40,11 @@ export class TerminalWidget extends Widget {
             width: 240,
             height: 240
         },
+
+        properties: [
+            makeDataPropertyInfo("data", {}, "string"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
 
         icon: (
             <svg

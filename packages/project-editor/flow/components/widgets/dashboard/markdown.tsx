@@ -9,7 +9,11 @@ import {
     PropertyType
 } from "project-editor/core/object";
 
-import { makeDataPropertyInfo, Widget } from "project-editor/flow/component";
+import {
+    makeDataPropertyInfo,
+    makeStylePropertyInfo,
+    Widget
+} from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observable, makeObservable } from "mobx";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -29,7 +33,8 @@ export class MarkdownWidget extends Widget {
                 name: "text",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,

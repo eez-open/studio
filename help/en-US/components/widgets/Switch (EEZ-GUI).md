@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-`Switch` Widget is used when we want a turn ON or turn OFF option.
+`Checkbox` Widget is used when we want a turn ON or turn OFF option.
 
 # PROPERTIES
 
@@ -18,4 +18,4 @@ Style used when rendering of the Widget.
 
 # EXAMPLES
 
-* _eez-gui-widgets-demo_
+-   _eez-gui-widgets-demo_

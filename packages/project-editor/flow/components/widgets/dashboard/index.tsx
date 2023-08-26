@@ -116,14 +116,9 @@ export class TextDashboardWidget extends Widget {
                 propertyGridGroup: generalGroup
             },
             makeDataPropertyInfo("data", {
-                displayName: (widget: TextDashboardWidget) => {
-                    const project = ProjectEditor.getProject(widget);
-                    if (project.projectTypeTraits.hasFlowSupport) {
-                        return "Text";
-                    }
-                    return "Data";
-                }
-            })
+                displayName: "Text"
+            }),
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
@@ -253,7 +248,7 @@ export class RectangleDashboardWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
 
-        properties: [],
+        properties: [makeStylePropertyInfo("style", "Default style")],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             jsObject.type = "RectangleDashboardWidget";
@@ -399,7 +394,8 @@ export class TextInputWidget extends Widget {
                 name: "password",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,
@@ -571,7 +567,8 @@ export class CheckboxWidget extends Widget {
                     propertyGridGroup: specificGroup
                 },
                 "string"
-            )
+            ),
+            makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,
@@ -733,7 +730,8 @@ export class SwitchDashboardWidget extends Widget {
         properties: [
             makeDataPropertyInfo("data", {
                 displayName: "Value"
-            })
+            }),
+            makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,
@@ -864,7 +862,11 @@ export class DropDownListDashboardWidget extends Widget {
         componentPaletteGroupName: "!1Input",
         componentPaletteLabel: "Dropdown",
 
-        properties: [makeDataPropertyInfo("options")],
+        properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
+            makeDataPropertyInfo("options"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
 
         beforeLoadHook: (
             widget: DropDownListDashboardWidget,
@@ -1364,15 +1366,10 @@ export class ButtonDashboardWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {
-                displayName: (widget: ButtonDashboardWidget) => {
-                    const project = ProjectEditor.getProject(widget);
-                    if (project.projectTypeTraits.hasFlowSupport) {
-                        return "Text";
-                    }
-                    return "Data";
-                }
+                displayName: "Label"
             }),
             makeDataPropertyInfo("enabled"),
+            makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("disabledStyle")
         ],
 
@@ -1590,6 +1587,7 @@ export class BitmapDashboardWidget extends Widget {
             projectType === ProjectType.DASHBOARD,
 
         properties: [
+            makeDataPropertyInfo("data", {}, "any"),
             {
                 name: "bitmap",
                 type: PropertyType.ObjectReference,
@@ -1602,7 +1600,8 @@ export class BitmapDashboardWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridRowComponent: BitmapWidgetPropertyGridUI
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
@@ -1792,7 +1791,8 @@ export class SliderDashboardWidget extends Widget {
                     propertyGridGroup: specificGroup
                 },
                 "double"
-            )
+            ),
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
