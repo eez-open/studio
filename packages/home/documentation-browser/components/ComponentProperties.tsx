@@ -138,7 +138,7 @@ function getPropertyGroups(
     componentInfo: ComponentInfo,
     properties: IComponentInfoProperty[]
 ) {
-    const groupPropertiesArray: IGroupProperties[] = [];
+    let groupPropertiesArray: IGroupProperties[] = [];
 
     let groupForPropertiesWithoutGroupSpecified: IGroupProperties | undefined;
 
@@ -203,6 +203,64 @@ function getPropertyGroups(
 
         return pos(a) - pos(b);
     });
+
+    // move and remove some properties
+    if (componentInfo.type == "widget") {
+        groupPropertiesArray.forEach(groupProperties => {
+            function move(name1: string, name2: string) {
+                let i1 = groupProperties.properties.findIndex(
+                    property => property.name == name1
+                );
+                const i2 = groupProperties.properties.findIndex(
+                    property => property.name == name2
+                );
+
+                if (i1 != -1 && i2 != -1) {
+                    groupProperties.properties.splice(
+                        i2 + 1,
+                        0,
+                        groupProperties.properties[i1]
+                    );
+                    if (i2 < i1) i1++;
+                    groupProperties.properties.splice(i1, 1);
+                }
+            }
+
+            function remove(name: string) {
+                const i = groupProperties.properties.findIndex(
+                    property => property.name == name
+                );
+                if (i != -1) {
+                    groupProperties.properties.splice(i, 1);
+                }
+            }
+
+            if (componentInfo.isLVGLComponent) {
+                move("Left unit", "Left");
+                move("Top unit", "Top");
+                move("Width unit", "Width");
+                move("Height unit", "Height");
+
+                remove("Absolute position");
+                remove("Resizing");
+                remove("Visible");
+            }
+
+            if (
+                componentInfo.isLVGLComponent ||
+                (componentInfo.isDashboardComponent &&
+                    !componentInfo.isEezGuiComponent)
+            ) {
+                remove(`Hide "Widget is outside of its parent" warning`);
+            }
+
+            move("Center widget", "Align and distribute");
+        });
+
+        groupPropertiesArray = groupPropertiesArray.filter(
+            groupProperties => groupProperties.properties.length > 0
+        );
+    }
 
     return groupPropertiesArray;
 }

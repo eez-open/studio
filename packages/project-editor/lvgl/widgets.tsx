@@ -74,7 +74,10 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
-import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import {
+    geometryGroup,
+    specificGroup
+} from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
@@ -152,8 +155,6 @@ const generalGroup: IPropertyGridGroupDefinition = {
     title: "General",
     position: 0
 };
-
-const SPECIFIC_GROUP_POSITION = 1;
 
 const flagsGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-flags",
@@ -1887,12 +1888,6 @@ const LONG_MODE_CODES = {
     CLIP: 4
 };
 
-const labelGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-label",
-    title: "Label",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
     textType: LVGLPropertyType;
@@ -1926,7 +1921,7 @@ export class LVGLLabelWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: labelGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             {
@@ -1937,12 +1932,12 @@ export class LVGLLabelWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: labelGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "recolor",
                 type: PropertyType.Boolean,
-                propertyGridGroup: labelGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -2271,12 +2266,6 @@ export class LVGLPanelWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const userWidgetGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-user-widget",
-    title: "User Widget",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 const LVGLUserWidgetWidgetPropertyGridUI = observer(
     class LVGLUserWidgetWidgetPropertyGridUI extends React.Component<PropertyProps> {
         showUserWidgetPage = () => {
@@ -2330,13 +2319,13 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 name: "userWidgetPageName",
                 displayName: "User widget",
                 type: PropertyType.ObjectReference,
-                propertyGridGroup: userWidgetGroup,
+                propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "userWidgets"
             },
             {
                 name: "customUI",
                 type: PropertyType.Any,
-                propertyGridGroup: userWidgetGroup,
+                propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridRowComponent: LVGLUserWidgetWidgetPropertyGridUI,
                 hideInPropertyGrid: (widget: LVGLUserWidgetWidget) => {
@@ -2795,12 +2784,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const imageGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-image",
-    title: "Image",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLImageWidget extends LVGLWidget {
     image: string;
     pivotX: number;
@@ -2819,31 +2802,31 @@ export class LVGLImageWidget extends LVGLWidget {
                 name: "image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "pivotX",
                 displayName: "Pivot X",
                 type: PropertyType.Number,
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "pivotY",
                 displayName: "Pivot Y",
                 type: PropertyType.Number,
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "zoom",
                 displayName: "Scale",
                 type: PropertyType.Number,
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "angle",
                 displayName: "Rotation",
                 type: PropertyType.Number,
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -3012,12 +2995,6 @@ const SLIDER_MODES = {
     RANGE: 2
 };
 
-export const sliderGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-slider",
-    title: "Slider",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLSliderWidget extends LVGLWidget {
     min: number;
     max: number;
@@ -3037,12 +3014,12 @@ export class LVGLSliderWidget extends LVGLWidget {
             {
                 name: "min",
                 type: PropertyType.Number,
-                propertyGridGroup: sliderGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "max",
                 type: PropertyType.Number,
-                propertyGridGroup: sliderGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "mode",
@@ -3052,7 +3029,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: sliderGroup
+                propertyGridGroup: specificGroup
             },
             ...makeLvglExpressionProperty(
                 "value",
@@ -3060,7 +3037,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: sliderGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             ...makeLvglExpressionProperty(
@@ -3069,7 +3046,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: sliderGroup,
+                    propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (slider: LVGLSliderWidget) =>
                         slider.mode != "RANGE"
                 }
@@ -3317,12 +3294,6 @@ const ROLLER_MODES = {
     INFINITE: 1
 };
 
-export const rollerGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-roller",
-    title: "Roller",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
     optionsType: LVGLPropertyType;
@@ -3345,7 +3316,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: rollerGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             ...makeLvglExpressionProperty(
@@ -3354,7 +3325,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: rollerGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             {
@@ -3365,7 +3336,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: rollerGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -3653,12 +3624,6 @@ const BAR_MODES = {
     RANGE: 2
 };
 
-export const barGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-bar",
-    title: "Bar",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLBarWidget extends LVGLWidget {
     min: number;
     max: number;
@@ -3678,12 +3643,12 @@ export class LVGLBarWidget extends LVGLWidget {
             {
                 name: "min",
                 type: PropertyType.Number,
-                propertyGridGroup: barGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "max",
                 type: PropertyType.Number,
-                propertyGridGroup: barGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "mode",
@@ -3693,7 +3658,7 @@ export class LVGLBarWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: barGroup
+                propertyGridGroup: specificGroup
             },
             ...makeLvglExpressionProperty(
                 "value",
@@ -3701,7 +3666,7 @@ export class LVGLBarWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: barGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             ...makeLvglExpressionProperty(
@@ -3710,7 +3675,7 @@ export class LVGLBarWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: barGroup,
+                    propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (bar: LVGLBarWidget) =>
                         bar.mode != "RANGE"
                 }
@@ -3893,12 +3858,6 @@ export class LVGLBarWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const dropdownGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-dropdown",
-    title: "Dropdown",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLDropdownWidget extends LVGLWidget {
     options: string;
     optionsType: LVGLPropertyType;
@@ -3919,7 +3878,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: dropdownGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             ...makeLvglExpressionProperty(
@@ -3928,7 +3887,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: dropdownGroup
+                    propertyGridGroup: specificGroup
                 }
             )
         ],
@@ -4126,12 +4085,6 @@ const ARC_MODES = {
     SYMMETRICAL: 2
 };
 
-export const arcGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-arc",
-    title: "Arc",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLArcWidget extends LVGLWidget {
     rangeMin: number;
     rangeMax: number;
@@ -4152,12 +4105,12 @@ export class LVGLArcWidget extends LVGLWidget {
             {
                 name: "rangeMin",
                 type: PropertyType.Number,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "rangeMax",
                 type: PropertyType.Number,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             },
             ...makeLvglExpressionProperty(
                 "value",
@@ -4165,18 +4118,18 @@ export class LVGLArcWidget extends LVGLWidget {
                 "assignable",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: arcGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             {
                 name: "bgStartAngle",
                 type: PropertyType.Number,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "bgEndAngle",
                 type: PropertyType.Number,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "mode",
@@ -4186,12 +4139,12 @@ export class LVGLArcWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "rotation",
                 type: PropertyType.Number,
-                propertyGridGroup: arcGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4457,12 +4410,6 @@ export class LVGLSpinnerWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const checkboxGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-checkbox",
-    title: "Checkbox",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLCheckboxWidget extends LVGLWidget {
     text: string;
 
@@ -4476,7 +4423,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             {
                 name: "text",
                 type: PropertyType.String,
-                propertyGridGroup: checkboxGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4558,12 +4505,6 @@ export class LVGLCheckboxWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const textareaGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-textarea",
-    title: "Textarea",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLTextareaWidget extends LVGLWidget {
     text: string;
     textType: LVGLPropertyType;
@@ -4586,33 +4527,33 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 "input",
                 ["literal", "expression"],
                 {
-                    propertyGridGroup: textareaGroup
+                    propertyGridGroup: specificGroup
                 }
             ),
             {
                 name: "placeholder",
                 type: PropertyType.String,
-                propertyGridGroup: textareaGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "oneLineMode",
                 type: PropertyType.Boolean,
-                propertyGridGroup: textareaGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "passwordMode",
                 type: PropertyType.Boolean,
-                propertyGridGroup: textareaGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "acceptedCharacters",
                 type: PropertyType.String,
-                propertyGridGroup: textareaGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "maxTextLength",
                 type: PropertyType.Number,
-                propertyGridGroup: textareaGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -4810,12 +4751,6 @@ export class LVGLTextareaWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const calendarGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-calendar",
-    title: "Calendar",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLCalendarWidget extends LVGLWidget {
     todayYear: number;
     todayMonth: number;
@@ -4832,19 +4767,19 @@ export class LVGLCalendarWidget extends LVGLWidget {
                 name: "todayYear",
                 displayName: "Year",
                 type: PropertyType.Number,
-                propertyGridGroup: calendarGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "todayMonth",
                 displayName: "Month",
                 type: PropertyType.Number,
-                propertyGridGroup: calendarGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "todayDay",
                 displayName: "Day",
                 type: PropertyType.Number,
-                propertyGridGroup: calendarGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -5003,12 +4938,6 @@ const COLORWHEEL_MODES = {
     VALUE: 2
 };
 
-const colorwheelGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-colorwheel",
-    title: "Colorwheel",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLColorwheelWidget extends LVGLWidget {
     mode: keyof typeof COLORWHEEL_MODES;
     fixedMode: boolean;
@@ -5028,13 +4957,13 @@ export class LVGLColorwheelWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: colorwheelGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "fixedMode",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                propertyGridGroup: colorwheelGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -5149,12 +5078,6 @@ const enum ImgbuttonStates {
     LV_IMGBTN_STATE_CHECKED_DISABLED
 }
 
-const imgbuttonGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-imgbutton",
-    title: "Imgbutton",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLImgbuttonWidget extends LVGLWidget {
     imageReleased: string;
     imagePressed: string;
@@ -5175,42 +5098,42 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
                 displayName: "Released",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "imagePressed",
                 displayName: "Pressed",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "imageDisabled",
                 displayName: "Disabled",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedReleased",
                 displayName: "Checked released",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedPressed",
                 displayName: "Checked pressed",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedDisabled",
                 displayName: "Checked disabled",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imgbuttonGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -5537,12 +5460,6 @@ const KEYBOARD_MODES = {
     USER4: 7
 };
 
-const keyboardGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-keyboard",
-    title: "Keyboard",
-    position: SPECIFIC_GROUP_POSITION
-};
-
 export class LVGLKeyboardWidget extends LVGLWidget {
     textarea: string;
     mode: keyof typeof KEYBOARD_MODES;
@@ -5573,7 +5490,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                             label: lvglWidget.identifier
                         }));
                 },
-                propertyGridGroup: keyboardGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "mode",
@@ -5583,7 +5500,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                     label: id
                 })),
                 enumDisallowUndefined: true,
-                propertyGridGroup: keyboardGroup
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -5779,12 +5696,6 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// const chartGroup: IPropertyGridGroupDefinition = {
-//     id: "lvgl-chart",
-//     title: "Chart",
-//     position: SPECIFIC_GROUP_POSITION
-// };
-
 export class LVGLChartWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -5877,12 +5788,6 @@ export class LVGLChartWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const meterGroup: IPropertyGridGroupDefinition = {
-    id: "lvgl-meter",
-    title: "Meter",
-    position: SPECIFIC_GROUP_POSITION
-};
 
 const LVGL_METER_INDICATOR_TYPES = {
     NEEDLE_IMG: 0,
@@ -6121,7 +6026,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
                 name: "image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: imageGroup
+                propertyGridGroup: specificGroup
             },
             {
                 name: "pivotX",
@@ -7049,7 +6954,7 @@ export class LVGLMeterWidget extends LVGLWidget {
                 name: "scales",
                 type: PropertyType.Array,
                 typeClass: LVGLMeterScale,
-                propertyGridGroup: meterGroup,
+                propertyGridGroup: specificGroup,
                 arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
