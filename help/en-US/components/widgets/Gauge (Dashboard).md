@@ -1,19 +1,43 @@
 # DESCRIPTION
 
+Displays the value selected through the `Data` property inside the gauge chart.
+
 # PROPERTIES
+
+## Data
+
+The value within the `[Min, Max]` range that is displayed in the Widget.
+
+## Default style
+
+Style used when rendering the background of the Widget.
 
 ## Title
 
+Naziv koji se prikazuju iznad gauge charta.
+
 ## Min range
+
+The minimum value that `Data` can contain.
 
 ## Max range
 
-## Color
+The maximum value that `Data` can contain.
+
+## Color [DRAFT]
+
+Boja arc bara unutar charta.
+
+![Alt text](../images/gauge_arc_bar_color.png)
 
 ## Margin
 
-# INPUTS
+Manually selected margin values between the Widget borders and the chart itself within the Widget.
 
-# OUTPUTS
+# INPUTS [EMPTY]
+
+# OUTPUTS [EMPTY]
 
 # EXAMPLES
+
+-   _Dashboard Widgets Demo_

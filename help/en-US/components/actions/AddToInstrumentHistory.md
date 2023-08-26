@@ -32,7 +32,7 @@ A string or blob containing the samples that will be displayed in the chart.
 
 ## Chart sampling rate
 
-Sampling rate or number of samples per second SPS).
+Sampling rate or number of samples per second (SPS).
 
 ## Chart offset
 
@@ -112,4 +112,4 @@ ID of the added history item. We can, for example, use this data in the `Chart` 
 
 # EXAMPLES
 
-- _Rigol Waveform Data_
+-   _Rigol Waveform Data_

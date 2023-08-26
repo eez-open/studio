@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-Displays the default value through the `Data` property inside the gauge chart. Also, if it is set, it will also show the threshold line at the given positions, for example to mark some critical value.
+Displays the value selected through the `Data` property inside the gauge chart. Also, if it is set, it will also show the threshold line at the given positions, for example to mark some critical value.
 
 # PROPERTIES
 
@@ -50,4 +50,4 @@ Style used to render the threshold line.
 
 # EXAMPLES
 
-* _eez-gui-widgets-demo_
+-   _eez-gui-widgets-demo_

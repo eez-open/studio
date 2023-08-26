@@ -970,6 +970,7 @@ export class ProgressDashboardWidget extends Widget {
         componentPaletteGroupName: "!1Visualiser",
 
         properties: [
+            makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("min"),
             makeDataPropertyInfo("max"),
             {
@@ -984,7 +985,8 @@ export class ProgressDashboardWidget extends Widget {
                         id: "vertical"
                     }
                 ]
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (
@@ -1149,7 +1151,7 @@ export class SpinnerWidget extends Widget {
 
         componentPaletteGroupName: "!1Visualiser",
 
-        properties: [],
+        properties: [makeStylePropertyInfo("style", "Default style")],
 
         defaultValue: {
             left: 0,
@@ -1234,7 +1236,8 @@ export class QRCodeDashboardWidget extends Widget {
                     }
                 ],
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (

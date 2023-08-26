@@ -23,6 +23,7 @@ import {
 import {
     makeDataPropertyInfo,
     makeExpressionProperty,
+    makeStylePropertyInfo,
     Widget
 } from "project-editor/flow/component";
 import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
@@ -434,7 +435,8 @@ export class LineChartWidget extends Widget {
                 typeClass: RectObject,
                 propertyGridGroup: specificGroup,
                 enumerable: false
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (object: LineChartWidget, jsObject: any) => {
@@ -824,6 +826,7 @@ export class GaugeWidget extends Widget {
         componentPaletteGroupName: "!1Visualiser",
 
         properties: [
+            makeDataPropertyInfo("data"),
             {
                 name: "title",
                 type: PropertyType.String,
@@ -855,7 +858,8 @@ export class GaugeWidget extends Widget {
                 type: PropertyType.Object,
                 typeClass: RectObject,
                 propertyGridGroup: specificGroup
-            }
+            },
+            makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,
@@ -865,6 +869,7 @@ export class GaugeWidget extends Widget {
             title: "",
             minRange: "0",
             maxRange: "1",
+            color: "#008000",
             margin: {
                 top: 50,
                 right: 0,

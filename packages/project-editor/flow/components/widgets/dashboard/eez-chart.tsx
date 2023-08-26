@@ -16,7 +16,8 @@ import {
 import {
     Widget,
     makeDataPropertyInfo,
-    makeExpressionProperty
+    makeExpressionProperty,
+    makeStylePropertyInfo
 } from "project-editor/flow/component";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -57,7 +58,7 @@ class WaveformDefinition extends EezObject {
             makeExpressionProperty(
                 {
                     name: "chartData",
-                    displayName: "Data",
+                    displayName: "Chart data",
                     type: PropertyType.MultilineText
                 },
                 "any"
@@ -66,7 +67,7 @@ class WaveformDefinition extends EezObject {
                 {
                     name: "format",
                     type: PropertyType.MultilineText,
-                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv"`
                 },
                 "string"
             ),
@@ -177,7 +178,7 @@ export class EEZChartWidget extends Widget {
             makeExpressionProperty(
                 {
                     name: "chartData",
-                    displayName: "Data",
+                    displayName: "Chart data",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     hideInPropertyGrid: (widget: EEZChartWidget) =>
@@ -191,7 +192,7 @@ export class EEZChartWidget extends Widget {
                     name: "format",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv", "jsNumbers"`,
+                    formText: `"float", "double", "rigol-byte", "rigol-word", "csv"`,
                     hideInPropertyGrid: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
@@ -281,7 +282,8 @@ export class EEZChartWidget extends Widget {
                         widget.chartType != "history-item"
                 },
                 "string"
-            )
+            ),
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
