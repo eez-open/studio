@@ -1659,7 +1659,7 @@ class WizardModel {
             } catch (err) {
                 console.error(err);
                 this.projectCreationError = `Failed to create a new project${
-                    this.progress ? ' at: "' + this.progress : '"'
+                    this.progress ? ' at: "' + this.progress + '"' : ""
                 }!`;
             } finally {
                 runInAction(() => {

@@ -163,7 +163,8 @@ async function getExtraResource() {
         .filter(
             file =>
                 file.endsWith(".eez-project") ||
-                file.endsWith(".eez-project-ui-state")
+                file.endsWith(".eez-project-ui-state") ||
+                file.endsWith(".ttf")
         )
         .map(file => ({
             from: "./resources/project-templates/" + file,
