@@ -14,7 +14,7 @@ Style used when rendering the background of the Widget.
 
 ## Title
 
-Naziv koji se prikazuju iznad gauge charta.
+The name displayed above the gauge chart.
 
 ## Min range
 
@@ -24,9 +24,9 @@ The minimum value that `Data` can contain.
 
 The maximum value that `Data` can contain.
 
-## Color [DRAFT]
+## Color
 
-Boja arc bara unutar charta.
+The color of the arc bar inside the chart.
 
 ![Alt text](../images/gauge_arc_bar_color.png)
 
@@ -40,4 +40,4 @@ Manually selected margin values between the Widget borders and the chart itself 
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

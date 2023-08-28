@@ -1,12 +1,12 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Prikazuje Terminal prozor kroz koji korisnik može unjeti proizvoljan tekst, kako se tekst unosi, znak po znak se šalje kroz `onData` output. Također se može i kroz flow upisivati tekst u terminal koristeći `Data` property.
+Displays a Terminal window through which the user can enter arbitrary text, as the text is entered, character by character is sent through the `onData` output. It is also possible to enter text into the terminal through flow using the `Data` property.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Tekst koji se upisuje u Terminal prozor. Potrebno je dodati flow input tipa `string` ili `stream` i u ovaj property upisati naziv tog inputa. Ako je flow input tipa `string` onda je potrebno na taj input poslati string koji se želi upisati u terminal - ovo je moguće napraviti više puta, tj. svaki put kada se dobije neki string na taj input on će biti upisan u terminal. Ako je flow input tipa stream onda Terminal Widget sluša da li ima neki novi podatak na streamu i kada se on pojavi onda ga upisuje u terminal - npr. na ovaj način je moguće povezati `stdout` ili `stderr` izlaz iz ExecuteCommand akcije na Terminal Widget.
+The text that is entered in the Terminal window. It is necessary to add flow input of type `string` or `stream` and enter the name of that input in this property. If the flow input is of the `string` type, then it is necessary to send a string to that input that you want to enter in the terminal – this can be done multiple times, i.e. every time a string is received at that input, it will be entered in the terminal. If the flow input is of `stream` type, then the Terminal Widget listens to see if there is any new data on the stream and when it appears, it writes it to the terminal – for example, in this way it is possible to connect `stdout` or `stderr` output from `ExecuteCommand` Actions on the `Terminal` Widget.
 
 ## Default style
 
@@ -16,10 +16,10 @@ Style used when rendering of the Widget.
 
 # OUTPUTS [EMPTY]
 
-## onData [DRAFT]
+## onData
 
-Kroz ovaj output se šalje uneseni tekst znak po znak.
+Through this output, the entered text is sent character by character.
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

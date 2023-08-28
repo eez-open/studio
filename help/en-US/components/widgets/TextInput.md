@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-The widget is used when we want to enter a text.
+This Widget is used when we want to enter a text.
 
 # PROPERTIES
 
@@ -12,9 +12,9 @@ The variable in which the entered text will be stored.
 
 Style used when rendering of the Widget.
 
-## Placehoder [DRAFT]
+## Placehoder
 
-Tekst koji se prikazuju na početku kada još nije ništa uneseno.
+The text that is displayed at the beginning when nothing has been entered yet.
 
 ## Password
 
@@ -26,4 +26,4 @@ If password is entered, then this property should be enabled so that `*` is disp
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

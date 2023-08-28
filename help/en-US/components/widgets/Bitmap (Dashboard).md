@@ -1,18 +1,18 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-This Widget displays a bitmap. Ako se zna unaprijed koja bitmapa se želi prikazati onda je potrebno koristiti `Bitmap` property gdje se odabir naziva bitmape, a ako je bitmapa poznata tek tijekom izvršavanja, jer npr. dolazi iz neke varijable, onda je potrebno koristiti Data property.
+This Widget displays a bitmap. If we know in advance which bitmap we want to display, then it is necessary to use the `Bitmap` property, where the selection is called the bitmap, and if the bitmap is known only during execution because, for example, it comes from some variable, then it is necessary to use the `Data` property.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Ovdje imamo više opcija kako odabrati bitmapu koju treba prikazati:
+There are several options for choosing which bitmap to display:
 
--   Ako je zadana vrijednost tipa `integer` onda je to index of the bitmap to be displayed. It is necessary to use the functions `Flow.getBitmapIndex({<bitmapName>})`, which receives `bitmapName`, i.e. the name of the bitmap, and returns the index of the bitmap. In this way, we can choose or change which bitmap will be displayed in the runtime, because, for example, `bitmapName' can come from a variable.
+- If the default value is of type `integer` then it is the index of the bitmap to be displayed. It is necessary to use the functions `Flow.getBitmapIndex({<bitmapName>})`, which receives `bitmapName`, i.e. the name of the bitmap, and returns the index of the bitmap. In this way, we can choose or change which bitmap will be displayed in the runtime, because, for example, `bitmapName' can come from a variable.
 
--   Ako je zadana vrijednost tipa `string` onda se podrazumjeva da je bitmapa enkodirana po pravilima [Data URI Scheme](https://en.wikipedia.org/wiki/Data_URI_scheme).
+- If the default value is of type `string` then it is assumed that the bitmap is encoded according to the [Data URI Scheme](https://en.wikipedia.org/wiki/Data_URI_scheme) rules.
 
--   Ako je zadana vrijednost tipa `blob` onda je bitmapa zadana u svom binarnom zapisu (vidjeti Screen Capture example).
+- If the default value is of type `blob` then the bitmap is defaulted to its binary notation (see _Screen Capture_ example).
 
 ## Default style
 
@@ -31,5 +31,5 @@ The name of the bitmap to be displayed.
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
--   _Screen Capture_
+* _Dashboard Widgets Demo_
+* _Screen Capture_

@@ -1,6 +1,6 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget prikazuje Markdown text.
+Widget for displaying Markdown text.
 
 # PROPERTIES
 
@@ -11,9 +11,9 @@ Ovaj widget prikazuje Markdown text.
 
 Style used when rendering the background of the Widget.
 
-## Text [DRAFT]
+## Text
 
-Markdown text koji se prikazuje.
+Markdown text to be displayed.
 
 # INPUTS [EMPTY]
 
@@ -21,4 +21,4 @@ Markdown text koji se prikazuje.
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

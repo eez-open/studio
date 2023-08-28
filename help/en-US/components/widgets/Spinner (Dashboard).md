@@ -1,6 +1,6 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Use this widget to show that some operation is in progress, or something is loading, etc.
+We use this Widget to show that some operation is in progress or something is loading, etc.
 
 # PROPERTIES
 
@@ -14,4 +14,4 @@ Style used when rendering of the Widget.
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_
