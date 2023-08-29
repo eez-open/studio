@@ -1,9 +1,13 @@
-# DESCRIPTION
+# DESCRIPTION [DRAFT]
+
+Use this Widget to show that some operation is in progress or something is loading, etc.
 
 # PROPERTIES
 
-# INPUTS
+# INPUTS [EMPTY]
 
-# OUTPUTS
+# OUTPUTS [EMPTY]
 
 # EXAMPLES
+
+-   _Dashboard Widgets Demo_

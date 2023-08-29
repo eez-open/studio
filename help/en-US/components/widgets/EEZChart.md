@@ -6,6 +6,7 @@ Displays a line chart using the same Widget as in the Instrument _History_ panel
 
 ## Data [EMPTY]
 
+
 ## Default style
 
 Style used when rendering of the Widget.

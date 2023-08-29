@@ -5097,42 +5097,42 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         properties: [
             {
                 name: "imageReleased",
-                displayName: "Released",
+                displayName: "Released image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "imagePressed",
-                displayName: "Pressed",
+                displayName: "Pressed image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "imageDisabled",
-                displayName: "Disabled",
+                displayName: "Disabled image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedReleased",
-                displayName: "Checked released",
+                displayName: "Checked released image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedPressed",
-                displayName: "Checked pressed",
+                displayName: "Checked pressed image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
             },
             {
                 name: "imageCheckedDisabled",
-                displayName: "Checked disabled",
+                displayName: "Checked disabled image",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "bitmaps",
                 propertyGridGroup: specificGroup
