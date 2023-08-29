@@ -53,6 +53,12 @@ import {
 } from "project-editor/flow/helper";
 import { Icon } from "eez-studio-ui/icon";
 import { flagsGroup, statesGroup } from "project-editor/lvgl/widgets";
+import {
+    AppViewWidget,
+    CanvasWidget,
+    ListGraphWidget,
+    YTGraphWidget
+} from "project-editor/flow/components/widgets/eez-gui";
 
 interface ProjectTypeNodeData {
     id: string;
@@ -363,7 +369,15 @@ class Model {
                 componentClass.objectClass.classInfo ==
                     ProjectEditor.UserWidgetWidgetClass.classInfo ||
                 componentClass.objectClass.classInfo ==
-                    ProjectEditor.LVGLUserWidgetWidgetClass.classInfo
+                    ProjectEditor.LVGLUserWidgetWidgetClass.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    AppViewWidget.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    YTGraphWidget.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    CanvasWidget.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    ListGraphWidget.classInfo
             ) {
                 continue;
             }
