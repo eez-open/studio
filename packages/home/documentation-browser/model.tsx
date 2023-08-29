@@ -694,6 +694,25 @@ class Model {
             projectType: ProjectType
         ): ITreeNode<ComponentTreeNodeData> => {
             let id = idPrefix + componentInfo.id;
+
+            let label = componentInfo.name;
+
+            if (this.groupByProjectType) {
+                if (label.endsWith(" (Dashboard)")) {
+                    label = label.substring(
+                        0,
+                        label.length - " (Dashboard)".length
+                    );
+                } else if (label.endsWith(" (EEZ-GUI)")) {
+                    label = label.substring(
+                        0,
+                        label.length - " (EEZ-GUI)".length
+                    );
+                } else if (label.endsWith(" (LVGL)")) {
+                    label = label.substring(0, label.length - " (LVGL)".length);
+                }
+            }
+
             return {
                 id,
                 label: (
@@ -704,9 +723,7 @@ class Model {
                             ) : (
                                 componentInfo.icon
                             )}
-                            <span title={componentInfo.name}>
-                                {componentInfo.name}
-                            </span>
+                            <span title={label}>{label}</span>
                         </span>
                         {isDev && (
                             <span>
