@@ -27,7 +27,10 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     ClassInfo,
     getObjectPropertyDisplayName,
-    isProperSubclassOf
+    isProperSubclassOf,
+    LVGL_FLAG_CODES,
+    LVGL_STATE_CODES,
+    PropertyType
 } from "project-editor/core/object";
 import {
     DASHBOARD_PROJECT_ICON,
@@ -49,6 +52,7 @@ import {
     getOutputDisplayName
 } from "project-editor/flow/helper";
 import { Icon } from "eez-studio-ui/icon";
+import { flagsGroup, statesGroup } from "project-editor/lvgl/widgets";
 
 interface ProjectTypeNodeData {
     id: string;
@@ -216,7 +220,59 @@ class Model {
             classInfo: ClassInfo,
             componentObject: Component
         ) => {
-            return classInfo.properties
+            let properties = classInfo.properties;
+
+            if (classInfo == ProjectEditor.LVGLWidgetClass.classInfo) {
+                properties = properties.slice();
+
+                properties.splice(
+                    properties.findIndex(property => property.name == "flags"),
+                    1,
+                    ...Object.keys(LVGL_FLAG_CODES)
+                        .filter(
+                            flagName =>
+                                flagName != "HIDDEN" && flagName != "CLICKABLE"
+                        )
+                        .map(flagName => ({
+                            name: flagName,
+                            type: PropertyType.Boolean,
+                            propertyGridGroup: flagsGroup
+                        }))
+                );
+
+                properties.splice(
+                    properties.findIndex(property => property.name == "states"),
+                    1,
+                    ...Object.keys(LVGL_STATE_CODES)
+                        .filter(
+                            stateName =>
+                                stateName != "CHECKED" &&
+                                stateName != "DISABLED"
+                        )
+                        .map(stateName => ({
+                            name: stateName,
+                            type: PropertyType.Boolean,
+                            propertyGridGroup: statesGroup
+                        }))
+                );
+            } else if (
+                classInfo.parentClassInfo ==
+                ProjectEditor.LVGLWidgetClass.classInfo
+            ) {
+                properties = properties.slice();
+
+                properties.splice(
+                    properties.findIndex(property => property.name == "flags"),
+                    1
+                );
+
+                properties.splice(
+                    properties.findIndex(property => property.name == "states"),
+                    1
+                );
+            }
+
+            return properties
                 .filter(property => property.hideInDocumentation != "all")
                 .map(property => ({
                     name: getObjectPropertyDisplayName(

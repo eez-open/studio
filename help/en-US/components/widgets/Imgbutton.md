@@ -4,8 +4,6 @@
 
 ## Released
 
-## Pressed
-
 ## Checked released
 
 ## Checked pressed

@@ -156,7 +156,7 @@ const generalGroup: IPropertyGridGroupDefinition = {
     position: 0
 };
 
-const flagsGroup: IPropertyGridGroupDefinition = {
+export const flagsGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-flags",
     title: "Flags",
     position: 4
@@ -168,7 +168,7 @@ const styleGroup: IPropertyGridGroupDefinition = {
     position: 3
 };
 
-const statesGroup: IPropertyGridGroupDefinition = {
+export const statesGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-states",
     title: "States",
     position: 4
@@ -513,7 +513,8 @@ export class LVGLWidget extends Widget {
                     }
                 ],
                 enumDisallowUndefined: true,
-                propertyGridGroup: flagsGroup
+                propertyGridGroup: flagsGroup,
+                hideInPropertyGrid: true
             },
             {
                 name: "scrollDirection",
@@ -549,7 +550,8 @@ export class LVGLWidget extends Widget {
                     }
                 ],
                 enumDisallowUndefined: true,
-                propertyGridGroup: flagsGroup
+                propertyGridGroup: flagsGroup,
+                hideInPropertyGrid: true
             },
             ...makeLvglExpressionProperty(
                 "checkedState",

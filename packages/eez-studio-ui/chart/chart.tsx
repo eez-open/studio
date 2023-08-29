@@ -3236,17 +3236,21 @@ const Fade = cssTransition({
 });
 
 function showCalculating() {
+    console.log("showCalculating");
     if (!calculatingToastId) {
         calculatingToastId = notification.info("Calculating...", {
             transition: Fade,
             closeButton: false,
             position: "top-center"
         });
+        console.log("showCalculating do it", calculatingToastId);
     }
 }
 
 function hideCalculating() {
+    console.log("hideCalculating");
     if (calculatingToastId) {
+        console.log("hideCalculating do it", calculatingToastId);
         notification.dismiss(calculatingToastId);
         calculatingToastId = undefined;
     }
@@ -3391,20 +3395,30 @@ class MeasurementsController {
             this.timeoutId = undefined;
         }
 
+        console.log(
+            "startMeasurement",
+            measurementsInterval.numSamples,
+            CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE
+        );
+
         if (
             measurementsInterval.numSamples >
             CONF_MAX_NUM_SAMPLES_TO_SHOW_CALCULATING_MESSAGE
         ) {
             showCalculating();
+
             this.timeoutId = setTimeout(() => {
                 this.timeoutId = undefined;
+
                 runInAction(
                     () => (this.measurementsInterval = measurementsInterval)
                 );
+
+                this.refreshResults();
+
                 setTimeout(() => {
                     hideCalculating();
                 }, 10);
-                this.refreshResults();
             }, 150);
         } else {
             runInAction(
@@ -3435,7 +3449,9 @@ class MeasurementsController {
 
     refreshResults() {
         this.measurements.forEach(measurement => {
+            console.log("meas", measurement);
             if (measurement.dirty) {
+                console.log("refresh", measurement);
                 measurement.refreshResult();
             }
         });

@@ -77,8 +77,14 @@ const ComponentProperty = observer(
             const { property } = this.props;
 
             let propertyName = property.name;
-            if (propertyName.endsWith(" style")) {
-                propertyName = propertyName.substr(0, " style".length);
+            if (
+                propertyName.endsWith(" style") &&
+                propertyName != "Use style"
+            ) {
+                propertyName = propertyName.substr(
+                    0,
+                    propertyName.length - " style".length
+                );
             }
 
             let propertyDescription;
