@@ -29,11 +29,15 @@ export interface WebSimulatorParameters {
 
 export interface ConnectionParameters {
     type: "ethernet" | "serial" | "usbtmc" | "visa" | "web-simulator";
+
     ethernetParameters: EthernetConnectionParameters;
     serialParameters: SerialConnectionParameters;
     usbtmcParameters: UsbtmcConnectionParameters;
     visaParameters: VisaConnectionParameters;
     webSimulatorParameters: WebSimulatorParameters;
+
+    timeout: number;
+    delay: number;
 }
 
 export interface CommunicationInterfaceHost {

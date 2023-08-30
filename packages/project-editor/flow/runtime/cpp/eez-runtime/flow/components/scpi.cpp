@@ -107,7 +107,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         }
     }
 
-	ScpiResultStatus scpi(eez::ArrayValue *instrument, bool isQuery) {
+	ScpiResultStatus scpi(eez::ArrayValue *instrument, bool isQuery, int timeout, int delay) {
 		if (g_waitingForScpiResult) {
 			if (g_waitingForScpiResult == this && g_waitingForScpiResult->resultIsReady) {
 				g_waitingForScpiResult = nullptr;
@@ -127,18 +127,18 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
         resultIsReady = false;
 
 		EM_ASM({
-            executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4);
-        }, g_wasmModuleId, instrument, commandOrQueryText, strlen(commandOrQueryText), isQuery ? 1 : 0);
+            executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4, $5, $6);
+        }, g_wasmModuleId, instrument, commandOrQueryText, strlen(commandOrQueryText), isQuery ? 1 : 0, timeout, delay);
 
 		return SCPI_RESULT_STATUS_QUEUED;
 	}
 
-    ScpiResultStatus scpiCommand(eez::ArrayValue *instrument) {
-        return scpi(instrument, false);
+    ScpiResultStatus scpiCommand(eez::ArrayValue *instrument, int timeout, int delay) {
+        return scpi(instrument, false, timeout, delay);
     }
 
-    ScpiResultStatus scpiQuery(eez::ArrayValue *instrument) {
-        return scpi(instrument, true);
+    ScpiResultStatus scpiQuery(eez::ArrayValue *instrument, int timeout, int delay) {
+        return scpi(instrument, true, timeout, delay);
     }
 
     bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen, bool *resultIsBlob) {
@@ -212,6 +212,26 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     }
     auto instrumentArrayValue = instrumentValue.getArray();
 
+    int err;
+
+    Value timeoutValue;
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_TIMEOUT, timeoutValue, "Failed to evaluate Timeout in SCPI")) {
+        return;
+    }
+    int timeout = timeoutValue.toInt32(&err);
+    if (err == 1) {
+        timeout = -1;
+    }
+
+    Value delayValue;
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_DELAY, delayValue, "Failed to evaluate Delay in SCPI")) {
+        return;
+    }
+    int delay = delayValue.toInt32(&err);
+    if (err == 1) {
+        delay = -1;
+    }
+
 	auto instructions = component->instructions;
 
 	static const int SCPI_PART_STRING = 1;
@@ -262,7 +282,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiQuery(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
+            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue, timeout, delay);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
 				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;
@@ -314,7 +334,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiQuery(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue);
+            auto scpiResultStatus = scpiComponentExecutionState->scpiQuery(instrumentArrayValue, timeout, delay);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
 				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;
@@ -334,7 +354,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 				logScpiCommand(flowState, componentIndex, scpiComponentExecutionState->commandOrQueryText);
 			}
 
-            auto scpiResultStatus = scpiComponentExecutionState->scpiCommand(instrumentArrayValue);
+            auto scpiResultStatus = scpiComponentExecutionState->scpiCommand(instrumentArrayValue, timeout, delay);
 			if (scpiResultStatus != SCPI_RESULT_STATUS_READY) {
 				addToQueue(flowState, componentIndex, -1, -1, -1, scpiResultStatus == SCPI_RESULT_STATUS_NOT_READY);
 				return;

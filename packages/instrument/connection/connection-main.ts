@@ -113,6 +113,8 @@ export class Connection
     traceEnabled: boolean = true;
     expectedResponseType: IResponseTypeType | undefined;
 
+    sendTimeoutId: any;
+
     constructor(public instrument: InstrumentObject) {
         super(instrument);
 
@@ -270,7 +272,28 @@ export class Connection
         }
     }
 
+    sendTimeout() {
+        if (this.callbackWindowId) {
+            let browserWindow = require("electron").BrowserWindow.fromId(
+                this.callbackWindowId
+            )!;
+            if (browserWindow) {
+                browserWindow.webContents.send("instrument/connection/value", {
+                    instrumentId: this.instrumentId,
+                    acquireId: this.acquireId,
+                    value: null,
+                    error: "Timeout"
+                });
+            }
+        }
+    }
+
     longOperationDone() {
+        if (this.sendTimeoutId) {
+            clearTimeout(this.sendTimeoutId);
+            this.sendTimeoutId = undefined;
+        }
+
         if (this.longOperation) {
             if (this.longOperation.isQuery && this.longOperation.logEntry) {
                 this.sendValue({ logEntry: this.longOperation.logEntry });
@@ -285,6 +308,11 @@ export class Connection
         data = data.trim();
         if (data) {
             const value = parseScpiValue(data);
+
+            if (this.sendTimeoutId) {
+                clearTimeout(this.sendTimeoutId);
+                this.sendTimeoutId = undefined;
+            }
 
             this.sendValue(value);
 
@@ -437,6 +465,26 @@ export class Connection
         }
     }
 
+    sendQueue: { command: string; delay: number }[] = [];
+    lastSend: number | undefined;
+
+    dumpSendQueue() {
+        if (this.sendQueue.length > 0) {
+            let now = new Date().getTime();
+            let delay = this.sendQueue[0].delay;
+            if (this.lastSend == undefined || now - this.lastSend >= delay) {
+                this.lastSend = now;
+                this.communicationInterface!.write(this.sendQueue[0].command);
+                this.sendQueue.shift();
+                this.dumpSendQueue();
+            } else {
+                setTimeout(() => {
+                    this.dumpSendQueue();
+                }, delay - (now - this.lastSend));
+            }
+        }
+    }
+
     send(command: string, options?: ISendOptions): void {
         if (!options || !options.longOperation) {
             if (this.longOperation) {
@@ -470,7 +518,27 @@ export class Connection
         this.errorCode = ConnectionErrorCode.NONE;
         this.error = undefined;
 
-        this.communicationInterface.write(command + "\n");
+        const delay =
+            options && options.delay != undefined
+                ? options.delay
+                : this.connectionParameters.delay;
+        this.sendQueue.push({
+            command: command + "\n",
+            delay
+        });
+        this.dumpSendQueue();
+
+        if (options && options.isQuery) {
+            this.sendTimeoutId = setTimeout(
+                () => {
+                    this.sendTimeoutId = undefined;
+                    this.sendTimeout();
+                },
+                options.timeout != undefined
+                    ? options.timeout
+                    : this.connectionParameters.timeout
+            );
+        }
     }
 
     sendIdn() {
@@ -580,6 +648,13 @@ export class Connection
     disconnected() {
         this.communicationInterface = undefined;
         this.state = ConnectionState.IDLE;
+
+        this.sendQueue = [];
+
+        if (this.sendTimeoutId) {
+            clearTimeout(this.sendTimeoutId);
+            this.sendTimeoutId = undefined;
+        }
 
         if (this.wasConnected) {
             this.flushData();

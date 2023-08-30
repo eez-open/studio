@@ -75,7 +75,9 @@ function executeScpi(
     wasmModuleId: number,
     instrumentPtr: number,
     arr: any,
-    isQuery: number
+    isQuery: number,
+    timeout: number,
+    delay: number
 ) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -103,7 +105,9 @@ function executeScpi(
         scpiCommand: {
             instrumentId: instrument.id,
             command: new Uint8Array(arr),
-            isQuery: isQuery ? true : false
+            isQuery: isQuery ? true : false,
+            timeout,
+            delay
         }
     };
 

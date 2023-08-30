@@ -82,6 +82,8 @@ export const ConnectionProperties = observer(
                 idProduct: observable,
                 visaResource: observable,
                 visaResources: observable,
+                timeout: observable,
+                delay: observable,
                 componentDidUpdate: action,
                 onIfaceChange: action.bound,
                 onEthernetAddressChange: action.bound,
@@ -94,7 +96,9 @@ export const ConnectionProperties = observer(
                 onSerialPortFlowControlChange: action.bound,
                 onUsbDeviceChange: action.bound,
                 initUsbDevices: action,
-                onVisaResourceChange: action.bound
+                onVisaResourceChange: action.bound,
+                onTimeoutChange: action.bound,
+                onDelayChange: action.bound
             });
 
             this.applyConnectionParameters(this.props.connectionParameters);
@@ -115,6 +119,9 @@ export const ConnectionProperties = observer(
 
         visaResource: string;
         visaResources: string[] | undefined = [];
+
+        timeout: number;
+        delay: number;
 
         disposer: any;
 
@@ -151,6 +158,9 @@ export const ConnectionProperties = observer(
             this.idProduct = connectionParameters.usbtmcParameters.idProduct;
 
             this.visaResource = connectionParameters.visaParameters.resource;
+
+            this.timeout = connectionParameters.timeout ?? 60000;
+            this.delay = connectionParameters.delay ?? 0;
         }
 
         async componentDidMount() {
@@ -210,6 +220,9 @@ export const ConnectionProperties = observer(
                             ? this.visaResource
                             : "";
                 }
+
+                connectionParameters.timeout = this.timeout;
+                connectionParameters.delay = this.delay;
 
                 this.props.onConnectionParametersChanged(connectionParameters);
             });
@@ -369,6 +382,14 @@ export const ConnectionProperties = observer(
 
         onVisaResourceChange(value: string) {
             this.visaResource = value;
+        }
+
+        onTimeoutChange(value: number) {
+            this.timeout = value;
+        }
+
+        onDelayChange(value: number) {
+            this.delay = value;
         }
 
         render() {
@@ -585,6 +606,25 @@ export const ConnectionProperties = observer(
                           </tr>
                       ];
             }
+
+            options.push(
+                <NumberInputProperty
+                    key="timeout"
+                    name="Timeout (ms)"
+                    value={this.timeout}
+                    onChange={this.onTimeoutChange}
+                />
+            );
+
+            options.push(
+                <NumberInputProperty
+                    key="delay"
+                    name="Delay (ms)"
+                    formText="Minimum delay between commands."
+                    value={this.delay}
+                    onChange={this.onDelayChange}
+                />
+            );
 
             return (
                 <PropertyList>

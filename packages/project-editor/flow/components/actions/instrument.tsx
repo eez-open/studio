@@ -101,7 +101,26 @@ export class SCPIActionComponent extends ActionComponent {
                 monospaceFont: true,
                 disableSpellcheck: true,
                 flowProperty: "scpi-template-literal"
-            }
+            },
+            makeExpressionProperty(
+                {
+                    name: "timeout",
+                    displayName: "Timeout (ms)",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "delay",
+                    displayName: "Delay (ms)",
+                    formText: "Minimum delay between commands.",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            )
         ],
         beforeLoadHook: (component: SCPIActionComponent, jsObject: any) => {
             if (jsObject.scpi) {
@@ -148,6 +167,14 @@ export class SCPIActionComponent extends ActionComponent {
                         }
                     } catch (err) {}
                 }
+            }
+
+            if (jsObject.timeout == undefined) {
+                jsObject.timeout = "null";
+            }
+
+            if (jsObject.delay == undefined) {
+                jsObject.delay = "null";
             }
         },
         check: (component: SCPIActionComponent, messages: IMessage[]) => {
@@ -222,13 +249,17 @@ export class SCPIActionComponent extends ActionComponent {
 
     instrument: string;
     scpi: string;
+    timeout: string;
+    delay: string;
 
     constructor() {
         super();
 
         makeObservable(this, {
             instrument: observable,
-            scpi: observable
+            scpi: observable,
+            timeout: observable,
+            delay: observable
         });
     }
 

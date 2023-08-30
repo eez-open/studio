@@ -457,6 +457,9 @@ export class InstrumentObject {
             idProduct = 0;
         }
 
+        const timeout = 60000;
+        const delay = 0;
+
         return {
             type,
             ethernetParameters: {
@@ -480,7 +483,9 @@ export class InstrumentObject {
             },
             webSimulatorParameters: {
                 id: ""
-            }
+            },
+            timeout,
+            delay
         };
     }
 

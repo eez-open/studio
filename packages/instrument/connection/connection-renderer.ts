@@ -204,9 +204,7 @@ export class IpcConnection extends ConnectionBase {
         });
     }
 
-    async send(command: string) {
-        let options: ISendOptions | undefined;
-
+    async send(command: string, options: ISendOptions | undefined) {
         // find out command name, i.e. up to parameters section which start with space
         let commandName;
         let i = command.indexOf(" ");
@@ -219,18 +217,18 @@ export class IpcConnection extends ConnectionBase {
 
         if (commandName.endsWith("?")) {
             // get expected query response
-            options = {
+            options = Object.assign(options || {}, {
                 queryResponseType: await this.instrument.getQueryResponseType(
                     commandName
                 )
-            };
+            });
         } else {
             if (
                 await this.instrument.isCommandSendsBackDataBlock(commandName)
             ) {
-                options = {
+                options = Object.assign(options || {}, {
                     queryResponseType: "non-standard-data-block"
-                };
+                });
             }
         }
 
@@ -325,16 +323,19 @@ export class IpcConnection extends ConnectionBase {
         this.traceEnabled = traceEnabled;
     }
 
-    async command(command: string) {
-        await this.send(command);
+    async command(command: string, options?: ISendOptions) {
+        await this.send(command, options);
     }
 
-    query(query: string) {
+    query(query: string, options?: ISendOptions) {
         return new Promise<any>((resolve, reject) => {
             if (this.isConnected) {
                 this.resolveCallback = resolve;
                 this.rejectCallback = reject;
-                this.send(query);
+                this.send(
+                    query,
+                    Object.assign(options || {}, { isQuery: true })
+                );
             } else {
                 reject("not connected");
             }

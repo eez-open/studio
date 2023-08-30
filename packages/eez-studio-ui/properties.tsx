@@ -111,6 +111,7 @@ export const InputProperty = observer(
             errors?: string[];
             min?: number;
             max?: number;
+            formText?: string;
         },
         {}
     > {
@@ -168,6 +169,15 @@ export const InputProperty = observer(
                         )}
                         {this.props.inputGroupButton}
                     </div>
+                );
+            }
+
+            if (this.props.formText) {
+                input = (
+                    <>
+                        {input}
+                        <div className="form-text">{this.props.formText}</div>
+                    </>
                 );
             }
 
@@ -305,6 +315,7 @@ export const NumberInputProperty = observer(
             errors?: string[];
             min?: number;
             max?: number;
+            formText?: string;
         },
         {}
     > {
@@ -314,6 +325,7 @@ export const NumberInputProperty = observer(
                     {...this.props}
                     type="number"
                     onChange={value => this.props.onChange(parseInt(value))}
+                    formText={this.props.formText}
                 />
             );
         }

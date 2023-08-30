@@ -901,15 +901,19 @@ export class WasmRuntime extends RemoteRuntime {
 
         const command = arrayBufferToBinaryString(scpiCommand.command);
 
+        const timeout =
+            scpiCommand.timeout > 0 ? scpiCommand.timeout : undefined;
+        const delay = scpiCommand.delay >= 0 ? scpiCommand.delay : undefined;
+
         let result: any = "";
         try {
             if (scpiCommand.isQuery) {
                 //console.log("SCPI query", command);
-                result = await connection.query(command);
+                result = await connection.query(command, { timeout, delay });
                 //console.log("SCPI result", result);
             } else {
                 //console.log("SCPI command", command);
-                await connection.command(command);
+                await connection.command(command, { timeout, delay });
                 result = "";
             }
         } catch (err) {

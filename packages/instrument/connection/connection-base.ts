@@ -28,6 +28,9 @@ export interface ISendOptions {
     log?: boolean;
     longOperation?: boolean;
     queryResponseType?: IResponseTypeType;
+    isQuery?: boolean;
+    timeout?: number;
+    delay?: number;
 }
 
 export abstract class ConnectionBase {
@@ -83,8 +86,8 @@ export abstract class ConnectionBase {
     // only in renderer
     abstract get interfaceInfo(): string | undefined;
     abstract acquire(traceEnabled: boolean): Promise<void>;
-    abstract command(command: string): Promise<void>;
-    abstract query(query: string): Promise<any>;
+    abstract command(command: string, options?: ISendOptions): Promise<void>;
+    abstract query(query: string, options?: ISendOptions): Promise<any>;
     abstract upload(
         instructions: IFileUploadInstructions,
         onSuccess?: () => void,

@@ -478,6 +478,8 @@ export interface ScpiCommand {
     instrumentId: string;
     command: Uint8Array;
     isQuery: boolean;
+    timeout: number;
+    delay: number;
 }
 
 // prettier-ignore
