@@ -1,38 +1,38 @@
 # PROPERTIES
 
-## Name [DRAFT]
+## Name
 
-Naziv widgeta. Unutar projekte referenciramo widget prema njegovom nazivu, npr. u LVGL akciji. Za svaki widget moramo odabrati unique naziv unutar čitavog projekta. Ovo polje nije obavezno i ne treba se postaviti ukoliko nemamo potrebe za referenciranjem widgeta.
+Widget name. We reference the Widget within the project by its name, for example in the LVGL action. For each Widget, we must choose a unique name within the entire project. This field is optional and does not need to be set if we do not need to reference the Widget.
 
-## Left unit [DRAFT]
+## Left unit
 
-Ovdje imamo ove opcije:
+The following options are available:
 
--   `px`: Left je zadan u pikselima.
--   `%`: Left je zadan kao postotak u odnosu na parent width
+- `px` – Left is default in pixels.
+- `%` – Left is set as a percentage in relation to the parent width.
 
-## Top unit [DRAFT]
+## Top unit
 
-Ovdje imamo ove opcije:
+The following options are available:
 
--   `px`: Top je zadan u pikselima.
--   `%`: Top je zadan kao postotak u odnosu na parent height
+- `px` – Top is set in pixels.
+- `%` – The top is set as a percentage in relation to the parent height.
 
-## Width unit [DRAFT]
+## Width unit
 
-Ovdje imamo ove opcije:
+The following options are available:
 
--   `px`: Width je zadan u pikselima.
--   `%`: Width je zadan kao postotak u odnosu na parent width
--   `content`: Width se automatski postavlja tako da stane čitav content po širini.
+- `px` – Width is given in pixels.
+- `%` – Width is given as a percentage in relation to the parent width.
+- `content` – Width is automatically set to fit the entire content in width.
 
-## Height unit [DRAFT]
+## Height unit
 
-Ovdje imamo ove opcije:
+The following options are available:
 
--   `px`: Height je zadan u pikselima.
--   `%`: Height je zadan kao postotak u odnosu na parent height.
--   `content`: Height se automatski postavlja tako da stane čitav content po visini
+- `px` – Height is given in pixels.
+- `%` – Height is given as a percentage in relation to the parent height.
+- `content` – Height is automatically set to fit the entire content in height.
 
 ## Children [EMPTY]
 
@@ -40,93 +40,93 @@ Ovdje imamo ove opcije:
 
 Make the object hidden.
 
-## Hidden flag type [DRAFT]
+## Hidden flag type
 
-Ovdje se može odabrati da se Hidden flag stanje računa iz Expressiona.
+Here we can choose whether the `Hidden` flag state will be calculated from the Expression or not.
 
 ## Clickable
 
-Make the object clickable by input devices
+Make the object clickable by input devices.
 
-## Clickable flag type [DRAFT]
+## Clickable flag type
 
-Ovdje se može odabrati da se Clickable flag stanje računa iz Expressiona.
+Here we can choose whether the `Clickable` flag state will be calculated from the Expression or not.
 
 ## Click focusable
 
-Add focused state to the object when clicked
+Add focused state to the object when clicked.
 
 ## Checkable
 
-Toggle checked state when the object is clicked
+Toggle checked state when the object is clicked.
 
 ## Scrollable
 
-Make the object scrollable
+Make the object scrollable.
 
 ## Scroll elastic
 
-Allow scrolling inside but with slower speed
+Allow scrolling inside but with slower speed.
 
 ## Scroll momentum
 
-Make the object scroll further when "thrown"
+Make the object scroll further when "thrown".
 
 ## Scroll one
 
-Allow scrolling only one snappable children
+Allow scrolling only one snappable children.
 
 ## Scroll chain hor
 
-Allow propagating the horizontal scroll to a parent
+Allow propagating the horizontal scroll to a parent.
 
 ## Scroll chain ver
 
-Allow propagating the vertical scroll to a parent
+Allow propagating the vertical scroll to a parent.
 
 ## Scroll chain
 
-Allow propagating both the horizontal and the vertical scroll to a parent
+Allow propagating both the horizontal and the vertical scroll to a parent.
 
 ## Scroll on focus
 
-Automatically scroll object to make it visible when focused
+Automatically scroll object to make it visible when focused.
 
 ## Scroll with arrow
 
-Allow scrolling the focused object with arrow keys
+Allow scrolling the focused object with arrow keys.
 
 ## Snappable
 
-If scroll snap is enabled on the parent it can snap to this object
+If scroll snap is enabled on the parent it can snap to this object.
 
 ## Press lock
 
-Keep the object pressed even if the press slid from the object
+Keep the object pressed even if the press slid from the object.
 
 ## Event bubble
 
-Propagate the events to the parent too
+Propagate the events to the parent too.
 
 ## Gesture bubble
 
-Propagate the gestures to the parent
+Propagate the gestures to the parent.
 
 ## Adv hittest
 
-Allow performing more accurate hit (click) test. E.g. accounting for rounded corners
+Allow performing more accurate hit (click) test. E.g. accounting for rounded corners.
 
 ## Ignore layout
 
-Make the object positionable by the layouts
+Make the object positionable by the layouts.
 
 ## Floating
 
-Do not scroll the object when the parent scrolls and ignore layout
+Do not scroll the object when the parent scrolls and ignore layout.
 
 ## Overflow visible
 
-Do not clip the children's content to the parent's boundary
+Do not clip the children's content to the parent's boundary.
 
 ## Scrollbar mode [EMPTY]
 
@@ -134,30 +134,30 @@ Do not clip the children's content to the parent's boundary
 
 ## Checked
 
-Toggled or checked state
+Toggled or checked state.
 
-## Checked state type [DRAFT]
+## Checked state type
 
-Ovdje se može odabrati da se Checked stanje računa iz Expressiona.
+Here we can choose whether the `Checked` state will be calculated from the Expression or not.
 
 ## Disabled
 
 Disabled state
 
-## Disabled state type [DRAFT]
+## Disabled state type
 
-Ovdje se može odabrati da se Disabled stanje računa iz Expressiona.
+Here we can choose whether the `Disabled` state will be calculated from the Expression or not.
 
 ## Focused
 
-Focused via keypad or encoder or clicked via touchpad/mouse
+Focused via keypad or encoder or clicked via touchpad/mouse.
 
 ## Pressed
 
-Being pressed
+Being pressed.
 
-## Use style [DRAFT]
+## Use style
 
-Ovdje možemo odabrati neki od globalno definiranih stilova tako da widget koristi taj stil.
+Here we can select one of the globally defined Styles so that the Widget uses that Style.
 
 ## Local styles [EMPTY]

@@ -1,4 +1,4 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 The virtual (on screen) keyboard to write texts into a Text area.
 
@@ -6,19 +6,19 @@ The virtual (on screen) keyboard to write texts into a Text area.
 
 # PROPERTIES
 
-## Textarea [DRAFT]
+## Textarea
 
-The name of Textarea Widget attached to this Keyboard Widget.
+The name of `Textarea` Widget attached to this Widget.
 
-## Mode [DRAFT]
+## Mode
 
-The Keyboards have the following modes:
+The following modes are available:
 
--   `TEXT_LOWER`: Display lower case letters
--   `TEXT_UPPER`: Display upper case letters
--   `SPECIAL`: Display special characters
--   `NUMBER`: Display numbers, +/- sign, and decimal dot
--   `USER_1` through `USER_4`: User-defined modes
+-   `TEXT_LOWER` – Display lower case letters.
+-   `TEXT_UPPER` – Display upper case letters.
+-   `SPECIAL` – Display special characters.
+-   `NUMBER` – Display numbers, +/- sign, and decimal dot.
+-   `USER_1` to `USER_4` – User-defined modes.
 
 # INPUTS [EMPTY]
 
@@ -26,4 +26,4 @@ The Keyboards have the following modes:
 
 # EXAMPLES
 
--   _LVGL Widgets Demo_
+* _LVGL Widgets Demo_

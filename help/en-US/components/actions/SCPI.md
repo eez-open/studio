@@ -33,13 +33,13 @@ For an SCPI query, it must be specified where the result is sent, and there we h
 
         ![Alt text](../images/scpi_query_expression.png)
 
-## Timeout (ms) [DRAFT]
+## Timeout (ms)
 
-Vrijeme u milisekundama koliko će se čekati da stigne rezultat queryija. Ukoliko rezultat ne stinge unutar tog vremena generira se Timeout error koji se može hendlati kroz `@Error` output ako se enejbla `Catch error`. Ako se postavio na `null` onda se koristi timeout kako je specificirano u Instrument Connect dialogu.
+The time in milliseconds to wait for the result of the query. If the result does not expire within that time, a Timeout error is generated, which can be handled through `@Error` output if `Catch error` is enabled. If set to `null' then the timeout as specified in the Instrument _Connect_ dialog is used.
 
-## Delay (ms) [DRAFT]
+## Delay (ms)
 
-Minimalno vrijeme zadano u milisekundana koje mora proteči od slanja prethodne SCPI komanda ili query prije nego što se pošalje nova komanda ili query. Ako se postavio na `null` onda se koristi delay kako je specificirano u Instrument Connect dialogu.
+The minimum time specified in milliseconds that must elapse before a new SCPI command or query is sent. If set to `null' then the delay as specified in the Instrument _Connect_ dialog is used.
 
 # INPUTS
 

@@ -1,22 +1,22 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Colorwheel widget allows the user to select a color.
+This widget allows the user to select a color.
 
 [More info](https://docs.lvgl.io/8.3/widgets/extra/colorwheel.html)
 
 # PROPERTIES
 
-## Mode [DRAFT]
+## Mode
 
-Select which part of the color will be changed with the widget:
+Select which part of the color will be changed with the Widget:
 
 -   `HUE`
 -   `SATURATION`
 -   `VALUE`
 
-## Fixed mode [DRAFT]
+## Fixed mode
 
-The color mode can be fixed (so as to not change with long press) using this property.
+The color mode can be fixed (so as to not change with long press) using this item.
 
 # INPUTS [EMPTY]
 
@@ -24,4 +24,4 @@ The color mode can be fixed (so as to not change with long press) using this pro
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

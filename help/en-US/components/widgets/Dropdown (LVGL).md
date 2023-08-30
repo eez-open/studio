@@ -10,15 +10,15 @@ The drop-down list allows the user to select one value from a list.
 
 List of options.
 
-## Options type [DRAFT]
+## Options type
 
 Select between `Literal` and `Expression`. If `Literal` is selected then `Options` are entered one option per line. If `Expression` is selected then options are evaluated from `Options` expression which must be of type `array:string`.
 
-## Selected [DRAFT]
+## Selected
 
 The zero-based index of the selected option.
 
-## Selected type [DRAFT]
+## Selected type
 
 Select between `Literal` and `Assignable`. If `Assignable` is selected then `Options` can be variable in which the zero-based index of the selected option will be stored.
 
@@ -28,4 +28,4 @@ Select between `Literal` and `Assignable`. If `Assignable` is selected then `Opt
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

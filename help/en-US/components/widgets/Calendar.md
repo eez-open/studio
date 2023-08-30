@@ -1,20 +1,20 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj widget prikazuje kalendar.
+This Widget displays a calendar.
 
 [More info](https://docs.lvgl.io/8.3/widgets/extra/calendar.html)
 
 # PROPERTIES
 
-## Year [DRAFT]
+## Year
 
 Initially selected year.
 
-## Month [DRAFT]
+## Month
 
 Initially selected month.
 
-## Day [DRAFT]
+## Day
 
 Initially selected day.
 
@@ -24,4 +24,4 @@ Initially selected day.
 
 # EXAMPLES
 
--   _LVGL Widgets Demo_
+* _LVGL Widgets Demo_

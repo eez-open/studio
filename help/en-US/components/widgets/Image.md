@@ -1,4 +1,4 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 This Widget displays an image.
 
@@ -6,25 +6,25 @@ This Widget displays an image.
 
 # PROPERTIES
 
-## Image [DRAFT]
+## Image
 
 The name of the bitmap to be displayed.
 
-## Pivot X [DRAFT]
+## Pivot X
 
-X pozicija centra rotacije. Ako se ostavi prazno onda je centar rotacija u sredini widgeta.
+X position of the center of rotation. If left blank, the center of rotation is in the middle of the Widget.
 
-## Pivot Y [DRAFT]
+## Pivot Y
 
-Y pozicija centra rotacije. Ako se ostavi prazno onda je centar rotacija u sredini widgeta.
+Y position of the center of rotation. If left blank, the center of rotation is in the middle of the Widget.
 
-## Scale [DRAFT]
+## Scale
 
-Scale factor. Set factor to 256 to disable zooming. A larger value enlarges the images (e.g. 512 double size), a smaller value shrinks it (e.g. 128 half size). Fractional scale works as well, e.g. 281 for 10% enlargement.
+Scale factor. Set factor to `256` to disable zooming. A larger value enlarges the images (e.g. `512` double size), a smaller value shrinks it (e.g. `128` half size). Fractional scale works as well, e.g. `281` for 10% enlargement.
 
-## Rotation [DRAFT]
+## Rotation
 
-Rotation angle, angle has 0.1 degree precision, so for 45.8° set 458. Image is rotated around the centar of rotation which is defined with `Pivot X` and `Pivot Y` properties.
+Rotation angle, angle has 0.1 degree precision, so for 45.8° set `458`. Image is rotated around the centar of rotation which is defined with `Pivot X` and `Pivot Y` properties.
 
 # INPUTS [EMPTY]
 
@@ -32,4 +32,4 @@ Rotation angle, angle has 0.1 degree precision, so for 45.8° set 458. Image is 
 
 # EXAMPLES
 
--   _LVGL Widgets Demo_
+* _LVGL Widgets Demo_

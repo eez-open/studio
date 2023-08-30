@@ -1,4 +1,4 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 Use this Widget to show that some operation is in progress or something is loading, etc.
 
@@ -10,4 +10,4 @@ Use this Widget to show that some operation is in progress or something is loadi
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_

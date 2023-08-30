@@ -1,4 +1,4 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 This Widget is used when an action needs to be performed via the GUI, clicking on it generates a `CLICKED` event.
 
@@ -12,4 +12,4 @@ This Widget is used when an action needs to be performed via the GUI, clicking o
 
 # EXAMPLES
 
--   _LVGL Widgets Demo_
+* _LVGL Widgets Demo_

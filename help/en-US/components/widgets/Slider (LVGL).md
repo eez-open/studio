@@ -1,4 +1,4 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
 This Widget allows us to select one or two values from the list by moving the knob on the slider.
 
@@ -6,35 +6,35 @@ This Widget allows us to select one or two values from the list by moving the kn
 
 # PROPERTIES
 
-## Min [DRAFT]
+## Min
 
 The minimum value that can be selected.
 
-## Max [DRAFT]
+## Max
 
 The maximum value that can be selected.
 
-## Mode [DRAFT]
+## Mode
 
 Slider mode options:
 
--   `NORMAL`: A normal slider
--   `SYMMETRICAL`: Draw the indicator form the zero value to current value. Requires negative minimum range and positive maximum range.
--   `RANGE`: Allows setting the start value (`Value left` property) and end value (`Value` property).
+-   `NORMAL` – A normal slider.
+-   `SYMMETRICAL` – Draw the indicator form the zero value to current value. Requires negative minimum range and positive maximum range.
+-   `RANGE` – Allows setting the start value (`Value left` property) and end value (`Value` property).
 
-## Value [DRAFT]
+## Value
 
 The selected value on the slider. If `RANGE` mode is selected then this is selected end value on the slider.
 
-## Value type [DRAFT]
+## Value type
 
 Select between `Literal` and `Assignable`. If `Assignable` is selected then `Value` can be variable in which the selected value will be stored.
 
-## Value left [DRAFT]
+## Value left
 
 If `RANGE` mode is selected then this is selected start value on the slider.
 
-## Value left type [DRAFT]
+## Value left type
 
 Select between `Literal` and `Assignable`. If `Assignable` is selected then `Value left` can be variable in which the selected start value will be stored.
 
@@ -44,4 +44,4 @@ Select between `Literal` and `Assignable`. If `Assignable` is selected then `Val
 
 # EXAMPLES
 
--   _Dashboard Widgets Demo_
+* _Dashboard Widgets Demo_
