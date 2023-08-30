@@ -25,13 +25,21 @@ For an SCPI query, it must be specified where the result is sent, and there we h
 -   Saving the result in a variable. The results are saved in a variable so that the query is written like this: `variable_name=query?` or `{assignable_expression}=query?`.
     This second form is used when it is stored, for example, in a structure member or an array. Here are examples for both forms, also taken from the _BB3 Dashboard_ example:
 
-      -   In this example, the result of the `SYSTem:CPU:FIRMware?` query is saved in the `fw_ver` variable. As it is the first (simple) form, then the name of the variable should not be enclosed in curly brackets.
+    -   In this example, the result of the `SYSTem:CPU:FIRMware?` query is saved in the `fw_ver` variable. As it is the first (simple) form, then the name of the variable should not be enclosed in curly brackets.
 
         ![Alt text](../images/scpi_query_variable.png)
 
-      -   In this example, four SCPI queries are executed. The results are saved in the slots variable of the type: `array:struct:Slot`, where slots is a structure that has `u_min`, `u_max`, `i_min` and `i_max` members. The second form is used here and the assignable expression must be enclosed in curly brackets. Also here we have an example of using the expression `{ch_idx}` within the query itself.
+    -   In this example, four SCPI queries are executed. The results are saved in the slots variable of the type: `array:struct:Slot`, where slots is a structure that has `u_min`, `u_max`, `i_min` and `i_max` members. The second form is used here and the assignable expression must be enclosed in curly brackets. Also here we have an example of using the expression `{ch_idx}` within the query itself.
 
-         ![Alt text](../images/scpi_query_expression.png)
+        ![Alt text](../images/scpi_query_expression.png)
+
+## Timeout (ms)
+
+Vrijeme u milisekundama koliko će se čekati da stigne rezultat queryija. Ukoliko rezultat ne stinge unutar tog vremena generira se Timeout error koji se može hendlati kroz `@Error` output ako se enejbla `Catch error`.
+
+## Delay (ms)
+
+Minimalno vrijeme zadano u milisekundana koje mora proteči od slanja prethodne SCPI komanda ili query prije nego što se pošalje nova komanda ili query.
 
 # INPUTS
 
