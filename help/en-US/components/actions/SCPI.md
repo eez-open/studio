@@ -33,11 +33,11 @@ For an SCPI query, it must be specified where the result is sent, and there we h
 
         ![Alt text](../images/scpi_query_expression.png)
 
-## Timeout (ms)
+## Timeout (ms) [DRAFT]
 
 Vrijeme u milisekundama koliko će se čekati da stigne rezultat queryija. Ukoliko rezultat ne stinge unutar tog vremena generira se Timeout error koji se može hendlati kroz `@Error` output ako se enejbla `Catch error`.
 
-## Delay (ms)
+## Delay (ms) [DRAFT]
 
 Minimalno vrijeme zadano u milisekundana koje mora proteči od slanja prethodne SCPI komanda ili query prije nego što se pošalje nova komanda ili query.
 
