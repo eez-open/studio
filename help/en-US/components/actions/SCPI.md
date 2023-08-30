@@ -35,11 +35,11 @@ For an SCPI query, it must be specified where the result is sent, and there we h
 
 ## Timeout (ms) [DRAFT]
 
-Vrijeme u milisekundama koliko će se čekati da stigne rezultat queryija. Ukoliko rezultat ne stinge unutar tog vremena generira se Timeout error koji se može hendlati kroz `@Error` output ako se enejbla `Catch error`.
+Vrijeme u milisekundama koliko će se čekati da stigne rezultat queryija. Ukoliko rezultat ne stinge unutar tog vremena generira se Timeout error koji se može hendlati kroz `@Error` output ako se enejbla `Catch error`. Ako se postavio na `null` onda se koristi timeout kako je specificirano u Instrument Connect dialogu.
 
 ## Delay (ms) [DRAFT]
 
-Minimalno vrijeme zadano u milisekundana koje mora proteči od slanja prethodne SCPI komanda ili query prije nego što se pošalje nova komanda ili query.
+Minimalno vrijeme zadano u milisekundana koje mora proteči od slanja prethodne SCPI komanda ili query prije nego što se pošalje nova komanda ili query. Ako se postavio na `null` onda se koristi delay kako je specificirano u Instrument Connect dialogu.
 
 # INPUTS
 
