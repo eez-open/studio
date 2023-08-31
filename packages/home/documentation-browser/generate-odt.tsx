@@ -637,7 +637,12 @@ export async function generateODTFilesForAllComponents() {
         try {
             await generateODTFile(
                 componentInfo,
-                folderPath + "/" + componentInfo.name + ".odt",
+                folderPath +
+                    "/" +
+                    componentInfo.type +
+                    "s/" +
+                    componentInfo.name +
+                    ".odt",
                 imageDimensions
             );
 
