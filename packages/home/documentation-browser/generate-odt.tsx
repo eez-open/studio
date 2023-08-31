@@ -294,29 +294,25 @@ async function generateODTFile(
             </text:sequence-decls>
             <text:list xml:id="list2882491321189167835" text:style-name="Outline">
                 <text:list-item>
-                    <text:h text:style-name="P2" text:outline-level="1">
-                        ${
-                            componentInfo.isDashboardComponent
-                                ? `<draw:frame draw:style-name="fr1" draw:name="dashboard-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="10.94mm" draw:z-index="1">
+                    <text:h text:style-name="P2" text:outline-level="1">${
+                        componentInfo.isDashboardComponent
+                            ? `<draw:frame draw:style-name="fr1" draw:name="dashboard-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="10.94mm" draw:z-index="1">
                             <draw:image xlink:href="Pictures/100002010000036B0000031B40540EF8.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
                         </draw:frame>`
-                                : ""
-                        }
-                        ${
-                            componentInfo.isEezGuiComponent
-                                ? `<draw:frame draw:style-name="fr1" draw:name="eez-gui-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="9.35mm" draw:z-index="3">
+                            : ""
+                    }${
+        componentInfo.isEezGuiComponent
+            ? `<draw:frame draw:style-name="fr1" draw:name="eez-gui-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="9.35mm" draw:z-index="3">
                             <draw:image xlink:href="Pictures/100002010000036D0000027EEDA92E76.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
                         </draw:frame>`
-                                : ""
-                        }
-                        ${
-                            componentInfo.isLVGLComponent
-                                ? `<draw:frame draw:style-name="fr1" draw:name="lvgl-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="8.89mm" draw:z-index="2">
+            : ""
+    }${
+        componentInfo.isLVGLComponent
+            ? `<draw:frame draw:style-name="fr1" draw:name="lvgl-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="8.89mm" draw:z-index="2">
                             <draw:image xlink:href="Pictures/100002010000036D0000027E5239E6C0.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
                         </draw:frame>`
-                                : ""
-                        }
-                        ${componentInfo.nameWithoutProjectType}</text:h>
+            : ""
+    }${componentInfo.nameWithoutProjectType}</text:h>
                     <text:list>
                         <text:list-item>
                             <text:h text:style-name="Heading_20_2" text:outline-level="2">Description</text:h>
@@ -324,6 +320,8 @@ async function generateODTFile(
                     </text:list>
                 </text:list-item>
             </text:list>
+
+            <text:p text:style-name="Standard"/>
 
             ${markdownToODT(context, componentInfo.getDescriptionMarkdown())}
 
