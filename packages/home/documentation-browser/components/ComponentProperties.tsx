@@ -76,39 +76,8 @@ const ComponentProperty = observer(
         render() {
             const { property } = this.props;
 
-            let propertyName = property.name;
-            if (
-                propertyName.endsWith(" style") &&
-                propertyName != "Use style"
-            ) {
-                propertyName = propertyName.substr(
-                    0,
-                    propertyName.length - " style".length
-                );
-            }
-
-            let propertyDescription;
-            if (
-                property.metaInfo.expressionType ||
-                property.metaInfo.flowProperty
-            ) {
-                if (property.metaInfo.flowProperty == "assignable") {
-                    propertyDescription = `ASSIGNABLE EXPRESSSION (${property.metaInfo.expressionType})`;
-                } else if (
-                    property.metaInfo.flowProperty == "template-literal" ||
-                    property.metaInfo.flowProperty == "scpi-template-literal"
-                ) {
-                    if (property.metaInfo.expressionType) {
-                        propertyDescription = `TEMPLATE LITERAL (${property.metaInfo.expressionType})`;
-                    } else {
-                        propertyDescription = `TEMPLATE LITERAL`;
-                    }
-                } else {
-                    propertyDescription = `EXPRESSSION (${property.metaInfo.expressionType})`;
-                }
-            } else {
-                propertyDescription = TYPE_NAMES[property.metaInfo.type];
-            }
+            let propertyName = getPropertyName(property);
+            let propertyDescription = getPropertyDescription(property);
 
             return (
                 <>
@@ -125,7 +94,7 @@ const ComponentProperty = observer(
                     </dt>
                     <dd>
                         {this.props.componentInfo.renderPropertyDescription(
-                            propertyName,
+                            property.name,
                             this.props.generateHTML
                         )}
                     </dd>
@@ -140,7 +109,7 @@ interface IGroupProperties {
     properties: IComponentInfoProperty[];
 }
 
-function getPropertyGroups(
+export function getPropertyGroups(
     componentInfo: ComponentInfo,
     properties: IComponentInfoProperty[]
 ) {
@@ -269,4 +238,38 @@ function getPropertyGroups(
     }
 
     return groupPropertiesArray;
+}
+
+export function getPropertyName(property: IComponentInfoProperty) {
+    let propertyName = property.name;
+    if (propertyName.endsWith(" style") && propertyName != "Use style") {
+        propertyName = propertyName.substr(
+            0,
+            propertyName.length - " style".length
+        );
+    }
+    return propertyName;
+}
+
+export function getPropertyDescription(property: IComponentInfoProperty) {
+    let propertyDescription;
+    if (property.metaInfo.expressionType || property.metaInfo.flowProperty) {
+        if (property.metaInfo.flowProperty == "assignable") {
+            propertyDescription = `ASSIGNABLE EXPRESSION (${property.metaInfo.expressionType})`;
+        } else if (
+            property.metaInfo.flowProperty == "template-literal" ||
+            property.metaInfo.flowProperty == "scpi-template-literal"
+        ) {
+            if (property.metaInfo.expressionType) {
+                propertyDescription = `TEMPLATE LITERAL (${property.metaInfo.expressionType})`;
+            } else {
+                propertyDescription = `TEMPLATE LITERAL`;
+            }
+        } else {
+            propertyDescription = `EXPRESSION (${property.metaInfo.expressionType})`;
+        }
+    } else {
+        propertyDescription = TYPE_NAMES[property.metaInfo.type];
+    }
+    return propertyDescription;
 }

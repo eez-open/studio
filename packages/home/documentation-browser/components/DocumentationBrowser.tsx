@@ -10,6 +10,7 @@ import { homeLayoutModels } from "home/home-layout-models";
 import { getModel } from "../model";
 import { generateMarkdownFilesForAllComponents } from "../doc-markdown";
 import { generateHTMLFilesForAllComponents } from "../generate-html";
+import { generateODTFilesForAllComponents } from "../generate-odt";
 import { ComponentContent } from "./ComponentContent";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +155,14 @@ export const DocumentationBrowser = observer(
                                     }
                                 >
                                     Generate HTML Files
+                                </button>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={() =>
+                                        generateODTFilesForAllComponents()
+                                    }
+                                >
+                                    Generate ODT Files
                                 </button>
                             </div>
                         )}

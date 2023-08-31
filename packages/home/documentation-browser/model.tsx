@@ -709,23 +709,9 @@ class Model {
         ): ITreeNode<ComponentTreeNodeData> => {
             let id = idPrefix + componentInfo.id;
 
-            let label = componentInfo.name;
-
-            if (this.groupByProjectType) {
-                if (label.endsWith(" (Dashboard)")) {
-                    label = label.substring(
-                        0,
-                        label.length - " (Dashboard)".length
-                    );
-                } else if (label.endsWith(" (EEZ-GUI)")) {
-                    label = label.substring(
-                        0,
-                        label.length - " (EEZ-GUI)".length
-                    );
-                } else if (label.endsWith(" (LVGL)")) {
-                    label = label.substring(0, label.length - " (LVGL)".length);
-                }
-            }
+            let label = this.groupByProjectType
+                ? componentInfo.nameWithoutProjectType
+                : componentInfo.name;
 
             return {
                 id,

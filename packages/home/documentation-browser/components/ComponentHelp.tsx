@@ -114,7 +114,7 @@ export const ComponentHelp = observer(
                             style={componentInfo.titleStyle}
                         >
                             <div>{componentInfo.icon}</div>
-                            <div>{componentInfo.name}</div>
+                            <div>{componentInfo.nameWithoutProjectType}</div>
                         </div>
                         <div className="EezStudio_Component_Documentation_Title_ProjectTypes">
                             {isDashboardComponent && DASHBOARD_PROJECT_ICON(36)}

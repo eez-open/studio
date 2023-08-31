@@ -77,6 +77,18 @@ export class ComponentInfo {
         });
     }
 
+    get nameWithoutProjectType() {
+        let name = this.name;
+        if (name.endsWith(" (Dashboard)")) {
+            name = name.substring(0, name.length - " (Dashboard)".length);
+        } else if (name.endsWith(" (EEZ-GUI)")) {
+            name = name.substring(0, name.length - " (EEZ-GUI)".length);
+        } else if (name.endsWith(" (LVGL)")) {
+            name = name.substring(0, name.length - " (LVGL)".length);
+        }
+        return name;
+    }
+
     get allProperties() {
         const getParentProperties = (
             parentComponentInfo: ParentComponentInfo
@@ -208,7 +220,7 @@ export class ComponentInfo {
     }
 
     renderDescription(generateHTML: boolean) {
-        return this.renderMarkdown(this.markdown?.description, generateHTML);
+        return this.renderMarkdown(this.getDescriptionMarkdown(), generateHTML);
     }
 
     getPropertyDescriptionMarkdown(propertyName: string) {
