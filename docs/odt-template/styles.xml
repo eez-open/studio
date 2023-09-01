@@ -138,6 +138,15 @@
             </style:paragraph-properties>
             <style:text-properties fo:font-size="10.5pt"/>
         </style:style>
+
+        <style:style style:name="List_20_2" style:display-name="List 2" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="1.6cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+
+        <style:style style:name="List_20_3" style:display-name="List 3" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="2.2cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+
         <style:style style:name="table_5f_header" style:display-name="table_header" style:family="paragraph" style:parent-style-name="Standard">
             <style:paragraph-properties fo:text-align="center" style:justify-single-word="false">
                 <style:tab-stops/>

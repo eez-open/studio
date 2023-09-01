@@ -22,6 +22,8 @@ class Context {
     listID = 1;
     images = new Set<string>();
 
+    listLevel = 0;
+
     constructor(
         public componentInfo: ComponentInfo,
         public imageDimensions: Map<string, { width: number; height: number }>
@@ -48,10 +50,20 @@ class Context {
     }
 }
 
-function lexemesToODT(context: Context, tokens: marked.Token[]) {
+function lexemesToODT(
+    context: Context,
+    tokens: marked.Token[],
+    onlyList: boolean = false
+) {
     let odt = "";
 
+    context.listLevel++;
+
     for (const token of tokens) {
+        if (onlyList && token.type != "list") {
+            continue;
+        }
+
         if (token.type == "paragraph") {
             odt += `<text:p text:style-name="Standard">${lexemesToODT(
                 context,
@@ -67,8 +79,6 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
         } else if (token.type == "codespan") {
             odt += `<text:span text:style-name="backtick">${token.text}</text:span>`;
         } else if (token.type == "code") {
-            console.log(context.componentInfo.name, tokens, token);
-
             odt += token.text
                 .split("\n")
                 .map(
@@ -88,24 +98,41 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
         } else if (token.type == "br") {
             odt += `<text:p text:style-name="Standard"/>`;
         } else if (token.type == "list") {
-            console.log(token);
-            odt += `<text:list xml:id="${context.getListID()}" text:style-name="List_20_1">
+            if (context.listLevel > 1) {
+                if (onlyList) {
+                    odt += token.items
+                        .map(
+                            item => `<text:list-item>
+                        <text:p text:style-name="List_20_${context.listLevel}">
+                        ${lexemesToODT(context, item.tokens)}
+                        </text:p>
+                    </text:list-item>
+                    ${lexemesToODT(context, item.tokens, true)}`
+                        )
+                        .join("\n");
+                }
+            } else {
+                odt += `<text:list xml:id="${context.getListID()}" text:style-name="List_20_${
+                    context.listLevel
+                }">
                     ${token.items
                         .map(
                             (item, i) => `<text:list-item>
                             <text:p text:style-name="${
                                 i == 0
-                                    ? "List_20_1_20_Start"
+                                    ? `List_20_${context.listLevel}_20_Start`
                                     : i == token.items.length - 1
-                                    ? "List_20_1_20_End"
-                                    : "List_20_1"
+                                    ? `List_20_${context.listLevel}_20_End`
+                                    : `List_20_${context.listLevel}`
                             }">
                             ${lexemesToODT(context, item.tokens)}
                             </text:p>
-                        </text:list-item>`
+                        </text:list-item>
+                        ${lexemesToODT(context, item.tokens, true)}`
                         )
-                        .join()}
+                        .join("\n")}
                 </text:list>`;
+            }
         } else if (token.type == "image") {
             odt += context.generateImage(token.href);
         } else if (token.type == "link") {
@@ -117,6 +144,8 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
             );
         }
     }
+
+    context.listLevel--;
 
     return odt;
 }
@@ -334,7 +363,7 @@ async function generateODTFile(
                             <draw:image xlink:href="Pictures/100002010000036D0000027E5239E6C0.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
                         </draw:frame>`
             : ""
-    }${componentInfo.nameWithoutProjectType}</text:h>
+    }${componentInfo.name}</text:h>
                     <text:list>
                         <text:list-item>
                             <text:h text:style-name="Heading_20_2" text:outline-level="2">Description</text:h>
