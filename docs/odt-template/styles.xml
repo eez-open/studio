@@ -1,2 +1,885 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dom="http://www.w3.org/2001/xml-events" xmlns:rpt="http://openoffice.org/2005/report" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:grddl="http://www.w3.org/2003/g/data-view#" xmlns:tableooo="http://openoffice.org/2009/table" xmlns:textooo="http://openoffice.org/2013/office" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"><office:font-face-decls><style:font-face style:name="OpenSymbol" svg:font-family="OpenSymbol" style:font-charset="x-symbol"/><style:font-face style:name="CombiNumerals" svg:font-family="CombiNumerals" style:font-adornments="Regular" style:font-pitch="variable" style:font-charset="x-symbol"/><style:font-face style:name="OpenSymbol1" svg:font-family="OpenSymbol"/><style:font-face style:name="Arial" svg:font-family="Arial" style:font-family-generic="swiss"/><style:font-face style:name="DejaVu Sans1" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="swiss"/><style:font-face style:name="Courier New" svg:font-family="&apos;Courier New&apos;" style:font-adornments="Normal" style:font-family-generic="modern" style:font-pitch="fixed"/><style:font-face style:name="DejaVu Sans Mono" svg:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/><style:font-face style:name="Droid Sans Fallback1" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/><style:font-face style:name="Arial Black" svg:font-family="&apos;Arial Black&apos;" style:font-adornments="Bold" style:font-pitch="variable"/><style:font-face style:name="Ubuntu2" svg:font-family="Ubuntu" style:font-adornments="Bold" style:font-pitch="variable"/><style:font-face style:name="Ubuntu3" svg:font-family="Ubuntu" style:font-adornments="Bold Italic" style:font-pitch="variable"/><style:font-face style:name="Ubuntu1" svg:font-family="Ubuntu" style:font-adornments="Italic" style:font-pitch="variable"/><style:font-face style:name="Ubuntu" svg:font-family="Ubuntu" style:font-adornments="Regular" style:font-pitch="variable"/><style:font-face style:name="Arial1" svg:font-family="Arial" style:font-adornments="Negreta" style:font-family-generic="swiss" style:font-pitch="variable"/><style:font-face style:name="DejaVu Sans" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="system" style:font-pitch="variable"/><style:font-face style:name="Droid Sans Fallback" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="system" style:font-pitch="variable"/></office:font-face-decls><office:styles><style:default-style style:family="graphic"><style:graphic-properties svg:stroke-color="#808080" draw:fill-color="#cfe7f5" fo:wrap-option="no-wrap" draw:shadow-offset-x="3mm" draw:shadow-offset-y="3mm" draw:start-line-spacing-horizontal="2.83mm" draw:start-line-spacing-vertical="2.83mm" draw:end-line-spacing-horizontal="2.83mm" draw:end-line-spacing-vertical="2.83mm" style:flow-with-text="false"/><style:paragraph-properties style:text-autospace="ideograph-alpha" style:line-break="strict" style:writing-mode="lr-tb" style:font-independent-line-spacing="false"><style:tab-stops/></style:paragraph-properties><style:text-properties style:use-window-font-color="true" fo:font-size="12pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-size-asian="12pt" style:language-asian="zh" style:country-asian="CN" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN"/></style:default-style><style:default-style style:family="paragraph"><style:paragraph-properties fo:hyphenation-ladder-count="no-limit" style:text-autospace="ideograph-alpha" style:punctuation-wrap="hanging" style:line-break="strict" style:tab-stop-distance="14.99mm" style:writing-mode="page"/><style:text-properties style:use-window-font-color="true" style:font-name="Arial" fo:font-size="12pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-name-asian="Droid Sans Fallback" style:font-size-asian="12pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="DejaVu Sans" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:default-style><style:default-style style:family="table"><style:table-properties table:border-model="collapsing"/></style:default-style><style:default-style style:family="table-row"><style:table-row-properties fo:keep-together="auto"/></style:default-style><style:style style:name="Standard" style:family="paragraph" style:class="text" style:master-page-name=""><style:paragraph-properties fo:text-align="justify" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/><style:text-properties style:font-name="Ubuntu" fo:font-size="10.5pt" fo:hyphenate="true" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="Heading" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard" style:list-style-name="Numbering_20_1" style:class="text" style:master-page-name=""><style:paragraph-properties fo:margin-top="4.23mm" fo:margin-bottom="2.12mm" style:page-number="auto" fo:background-color="transparent" style:shadow="none" fo:keep-with-next="always"><style:tab-stops/><style:background-image/></style:paragraph-properties><style:text-properties style:font-name="Ubuntu" fo:font-size="14pt" style:font-name-asian="Droid Sans Fallback" style:font-size-asian="14pt" style:font-name-complex="DejaVu Sans" style:font-size-complex="14pt"/></style:style><style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" style:parent-style-name="Standard" style:class="text"><style:paragraph-properties fo:margin-top="0mm" fo:margin-bottom="2.12mm"/></style:style><style:style style:name="List" style:family="paragraph" style:parent-style-name="Standard" style:default-outline-level="" style:list-style-name="List_20_1" style:class="list" style:master-page-name=""><style:paragraph-properties fo:margin-left="6mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" fo:text-indent="-6mm" style:auto-text-indent="false" style:page-number="auto"><style:tab-stops/></style:paragraph-properties><style:text-properties style:use-window-font-color="true" style:font-name="Ubuntu" fo:font-size="10.5pt" style:font-name-complex="DejaVu Sans1" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="Caption" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties fo:margin-top="2.12mm" fo:margin-bottom="2.12mm" fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0"/><style:text-properties style:font-name="Ubuntu1" fo:font-size="10pt" fo:font-style="italic" style:font-size-asian="12pt" style:font-style-asian="italic" style:font-name-complex="DejaVu Sans1" style:font-size-complex="12pt" style:font-style-complex="italic" style:font-weight-complex="normal"/></style:style><style:style style:name="Index" style:family="paragraph" style:parent-style-name="Standard" style:class="index"><style:paragraph-properties text:number-lines="false" text:line-number="0"/><style:text-properties style:font-name="Ubuntu" fo:font-size="10.5pt" style:font-name-complex="DejaVu Sans1"/></style:style><style:style style:name="cmd_5f_root" style:display-name="cmd_root" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/><style:text-properties fo:color="#0066cc" fo:font-size="10.5pt" fo:font-weight="normal"/></style:style><style:style style:name="Table_20_Contents" style:display-name="Table Contents" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties text:number-lines="false" text:line-number="0"/></style:style><style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="1" style:list-style-name="Outline" style:class="text"><style:text-properties fo:color="#0066cc" style:font-name="Ubuntu2" fo:font-size="14pt" fo:font-weight="bold" style:font-size-asian="115%" style:font-weight-asian="bold" style:font-size-complex="115%" style:font-weight-complex="bold"/></style:style><style:style style:name="Heading_20_2" style:display-name="Heading 2" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="2" style:list-style-name="Outline" style:class="text"><style:paragraph-properties fo:margin-left="7.62mm" fo:margin-right="0mm" fo:margin-top="4.5mm" fo:margin-bottom="0mm" fo:text-indent="-7.62mm" style:auto-text-indent="false"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:color="#0066cc" style:font-name="Ubuntu3" fo:font-size="12pt" fo:font-style="italic" fo:font-weight="bold" style:font-size-asian="14pt" style:font-style-asian="italic" style:font-weight-asian="bold" style:font-size-complex="14pt" style:font-style-complex="italic" style:font-weight-complex="normal"/></style:style><style:style style:name="Table_20_Heading" style:display-name="Table Heading" style:family="paragraph" style:parent-style-name="Table_20_Contents" style:class="extra"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0"/><style:text-properties fo:font-weight="bold" style:font-weight-asian="bold" style:font-weight-complex="bold"/></style:style><style:style style:name="cmd_5f_code" style:display-name="cmd_code" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name=""><style:paragraph-properties fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/><style:text-properties style:font-name="Courier New" fo:font-size="10.5pt" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="Default_5f_ntt" style:display-name="Default_ntt" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name=""><style:paragraph-properties fo:hyphenation-ladder-count="6" style:page-number="auto"/><style:text-properties fo:font-size="10.5pt" fo:font-weight="normal" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="List_20_1_20_Start" style:display-name="List 1 Start" style:family="paragraph" style:parent-style-name="List" style:next-style-name="List_20_1" style:class="list"><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="1.99mm" fo:margin-top="3mm" fo:margin-bottom="0mm" fo:text-indent="-6mm" style:auto-text-indent="false"><style:tab-stops/></style:paragraph-properties></style:style><style:style style:name="List_20_1" style:display-name="List 1" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="1.99mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-indent="-6mm" style:auto-text-indent="false" style:writing-mode="page"><style:tab-stops/></style:paragraph-properties></style:style><style:style style:name="List_20_1_20_End" style:display-name="List 1 End" style:family="paragraph" style:parent-style-name="List" style:next-style-name="Standard" style:class="list"><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="1.99mm" fo:margin-top="0mm" fo:margin-bottom="3mm" fo:text-indent="-6mm" style:auto-text-indent="false"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:font-size="10.5pt"/></style:style><style:style style:name="table_5f_header" style:display-name="table_header" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:font-size="10.5pt" fo:font-weight="normal"/></style:style><style:style style:name="Header_20_and_20_Footer" style:display-name="Header and Footer" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="85mm" style:type="center"/><style:tab-stop style:position="170mm" style:type="right"/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="Header" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties><style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/></style:style><style:style style:name="Footer" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="Heading_20_3" style:display-name="Heading 3" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="3" style:list-style-name="Outline" style:class="text"><style:paragraph-properties fo:margin-left="7.62mm" fo:margin-right="0mm" fo:margin-top="4.5mm" fo:margin-bottom="2.5mm" fo:text-indent="-7.62mm" style:auto-text-indent="false"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:color="#0066cc" style:font-name="Ubuntu2" fo:font-size="10pt" fo:font-weight="bold" style:font-size-asian="14pt" style:font-weight-asian="bold" style:font-size-complex="14pt" style:font-weight-complex="bold"/></style:style><style:style style:name="Header_20_right" style:display-name="Header right" style:family="paragraph" style:parent-style-name="Header" style:class="extra"><style:paragraph-properties fo:text-align="end" style:justify-single-word="false" text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties><style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/></style:style><style:style style:name="Header_20_left" style:display-name="Header left" style:family="paragraph" style:parent-style-name="Header" style:class="extra"><style:paragraph-properties fo:text-align="start" style:justify-single-word="false" text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties><style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/></style:style><style:style style:name="Heading_20_4" style:display-name="Heading 4" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="4" style:list-style-name="Outline" style:class="text"><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="1.99mm" fo:margin-bottom="1.99mm" fo:text-indent="0mm" style:auto-text-indent="false"/><style:text-properties fo:color="#0066cc" fo:font-size="10.5pt" fo:font-style="normal" fo:font-weight="bold" style:font-size-asian="85%" style:font-style-asian="italic" style:font-weight-asian="bold" style:font-size-complex="85%" style:font-style-complex="italic" style:font-weight-complex="bold"/></style:style><style:style style:name="cmd_5f_code_5f_single" style:display-name="cmd_code_single" style:family="paragraph" style:parent-style-name="cmd_5f_code" style:master-page-name=""><style:paragraph-properties fo:margin-top="1.99mm" fo:margin-bottom="1.99mm" style:page-number="auto"/></style:style><style:style style:name="note" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:text-align="justify" style:justify-single-word="false"/><style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/></style:style><style:style style:name="Title" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Subtitle" style:list-style-name="" style:class="chapter"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/><style:text-properties style:font-name="Arial Black" fo:font-size="22pt" fo:font-weight="normal" style:font-size-asian="18pt" style:font-weight-asian="bold" style:font-size-complex="18pt" style:font-weight-complex="bold"/></style:style><style:style style:name="Subtitle" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:class="chapter"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/><style:text-properties fo:font-size="14pt" fo:font-style="italic" style:font-size-asian="14pt" style:font-style-asian="italic" style:font-size-complex="14pt" style:font-style-complex="italic"/></style:style><style:style style:name="cc-license" style:family="paragraph" style:parent-style-name="Standard"><style:text-properties fo:font-size="8pt"/></style:style><style:style style:name="Illustration" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/><style:style style:name="Fig." style:family="paragraph" style:parent-style-name="Caption"><style:paragraph-properties fo:margin-top="4.99mm" fo:margin-bottom="2.12mm" fo:text-align="center" style:justify-single-word="false"/><style:text-properties fo:font-size="10pt" style:font-weight-complex="normal"/></style:style><style:style style:name="Preformatted_20_Text" style:display-name="Preformatted Text" style:family="paragraph" style:parent-style-name="Standard" style:class="html"><style:paragraph-properties fo:margin-top="0mm" fo:margin-bottom="0mm"/><style:text-properties style:font-name="DejaVu Sans Mono" fo:font-size="10pt" style:font-name-asian="Droid Sans Fallback1" style:font-size-asian="10pt" style:font-name-complex="DejaVu Sans Mono" style:font-size-complex="10pt"/></style:style><style:style style:name="Frame_20_contents" style:display-name="Frame contents" style:family="paragraph" style:parent-style-name="Text_20_body" style:class="extra"/><style:style style:name="scpi0" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name=""><style:paragraph-properties fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/><style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="scpi1" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name=""><style:paragraph-properties fo:margin-left="4.99mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:hyphenation-ladder-count="6" fo:text-indent="0mm" style:auto-text-indent="false" style:page-number="auto"/><style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="scpi2" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name=""><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:hyphenation-ladder-count="6" fo:text-indent="0mm" style:auto-text-indent="false" style:page-number="auto"/><style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="scpi3" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name=""><style:paragraph-properties fo:margin-left="14.99mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-indent="0mm" style:auto-text-indent="false" style:page-number="auto"/></style:style><style:style style:name="Numbering_20_1_20_Start" style:display-name="Numbering 1 Start" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="6.35mm" fo:margin-right="0mm" fo:margin-top="4.23mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_1" style:display-name="Numbering 1" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="6.35mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_2" style:display-name="Numbering 2" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="12.7mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_3" style:display-name="Numbering 3" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="19.05mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_4_20_Start" style:display-name="Numbering 4 Start" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="25.4mm" fo:margin-right="0mm" fo:margin-top="4.23mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_4" style:display-name="Numbering 4" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="25.4mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_4_20_End" style:display-name="Numbering 4 End" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="25.4mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="4.23mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_5_20_Start" style:display-name="Numbering 5 Start" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="31.75mm" fo:margin-right="0mm" fo:margin-top="4.23mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="Numbering_20_5" style:display-name="Numbering 5" style:family="paragraph" style:parent-style-name="List" style:class="list"><style:paragraph-properties fo:margin-left="31.75mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="2.12mm" fo:text-indent="-6.35mm" style:auto-text-indent="false"/></style:style><style:style style:name="cmd_5f_code_20_Start" style:display-name="cmd_code Start" style:family="paragraph" style:parent-style-name="cmd_5f_code_5f_single" style:next-style-name="cmd_5f_code" style:master-page-name=""><style:paragraph-properties fo:margin-top="1.99mm" fo:margin-bottom="0mm" fo:hyphenation-ladder-count="6" style:page-number="auto"/><style:text-properties fo:font-size="10.5pt" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2"/></style:style><style:style style:name="cmd_5f_code_20_End" style:display-name="cmd_code End" style:family="paragraph" style:parent-style-name="cmd_5f_code_20_Start" style:master-page-name=""><style:paragraph-properties fo:margin-top="0mm" fo:margin-bottom="1.99mm" style:page-number="auto"/></style:style><style:style style:name="scpi4" style:family="paragraph" style:parent-style-name="scpi0"><style:paragraph-properties fo:margin-left="20mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-indent="0mm" style:auto-text-indent="false"/></style:style><style:style style:name="table_5f_body" style:display-name="table_body" style:family="paragraph" style:parent-style-name="Standard" style:auto-update="true"><style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/><style:text-properties fo:font-size="10.5pt" fo:font-style="normal" style:font-style-asian="normal" style:font-style-complex="normal"/></style:style><style:style style:name="equation" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="0mm" fo:margin-top="1.99mm" fo:margin-bottom="1.99mm" fo:text-indent="0mm" style:auto-text-indent="false"/><style:text-properties fo:font-size="10.5pt"/></style:style><style:style style:name="table_5f_body_5f_centered" style:display-name="table_body_centered" style:family="paragraph" style:parent-style-name="table_5f_body"><style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/><style:text-properties fo:font-size="10.5pt"/></style:style><style:style style:name="table_5f_body_5f_left" style:display-name="table_body_left" style:family="paragraph" style:parent-style-name="table_5f_body"><style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/></style:style><style:style style:name="html-code" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:background-color="#ffff00"><style:background-image/></style:paragraph-properties></style:style><style:style style:name="Footer_20_left" style:display-name="Footer left" style:family="paragraph" style:parent-style-name="Footer" style:class="extra"><style:paragraph-properties text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="highlighted" style:family="paragraph" style:parent-style-name="Default_5f_ntt" style:next-style-name="Standard" style:master-page-name=""><style:paragraph-properties fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-align="center" style:justify-single-word="false" style:page-number="auto" fo:padding-left="0mm" fo:padding-right="0mm" fo:padding-top="0.35mm" fo:padding-bottom="0.35mm" fo:border-left="none" fo:border-right="none" fo:border-top="0.88mm solid #ff950e" fo:border-bottom="0.88mm solid #ff950e" style:shadow="none" style:writing-mode="page"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:color="#ff950e" fo:font-size="10.5pt" fo:font-style="italic" fo:font-weight="normal"/></style:style><style:style style:name="Index_20_Heading" style:display-name="Index Heading" style:family="paragraph" style:parent-style-name="Heading" style:class="index"><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:text-indent="0mm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/><style:text-properties fo:font-size="16pt" fo:font-weight="bold" style:font-size-asian="16pt" style:font-weight-asian="bold" style:font-size-complex="16pt" style:font-weight-complex="bold"/></style:style><style:style style:name="Contents_20_Heading" style:display-name="Contents Heading" style:family="paragraph" style:parent-style-name="Standard" style:class="index" style:master-page-name=""><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="3mm" fo:text-indent="0mm" style:auto-text-indent="false" style:page-number="auto" fo:break-before="page" text:number-lines="false" text:line-number="0"><style:tab-stops/></style:paragraph-properties><style:text-properties fo:color="#0066cc" style:font-name="Arial1" fo:font-size="14pt" fo:font-weight="bold" style:font-size-asian="16pt" style:font-weight-asian="bold" style:font-size-complex="16pt" style:font-weight-complex="bold"/></style:style><style:style style:name="Footer_20_right" style:display-name="Footer right" style:family="paragraph" style:parent-style-name="Footer" style:class="extra"><style:paragraph-properties text:number-lines="false" text:line-number="0"><style:tab-stops><style:tab-stop style:position="87.51mm" style:type="center"/><style:tab-stop style:position="175.01mm" style:type="right"/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="Contents_20_1" style:display-name="Contents 1" style:family="paragraph" style:parent-style-name="Index" style:class="index" style:master-page-name=""><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="1.01mm" fo:margin-bottom="1.01mm" fo:text-indent="0mm" style:auto-text-indent="false" style:page-number="auto"><style:tab-stops><style:tab-stop style:position="175.01mm" style:type="right" style:leader-style="dotted" style:leader-text="."/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="Contents_20_2" style:display-name="Contents 2" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="4.99mm" fo:margin-right="0mm" fo:margin-top="0.49mm" fo:margin-bottom="0.49mm" fo:text-indent="0mm" style:auto-text-indent="false"><style:tab-stops><style:tab-stop style:position="170.02mm" style:type="right" style:leader-style="dotted" style:leader-text="."/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="Contents_20_3" style:display-name="Contents 3" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="9.98mm" fo:margin-right="0mm" fo:margin-top="0.49mm" fo:margin-bottom="0.49mm" fo:text-indent="0mm" style:auto-text-indent="false"><style:tab-stops><style:tab-stop style:position="165.03mm" style:type="right" style:leader-style="dotted" style:leader-text="."/></style:tab-stops></style:paragraph-properties></style:style><style:style style:name="List_20_1_20_Cont." style:display-name="List 1 Cont." style:family="paragraph" style:parent-style-name="List" style:class="list" style:master-page-name=""><style:paragraph-properties fo:margin-left="10mm" fo:margin-right="1.99mm" fo:margin-top="0mm" fo:margin-bottom="0mm" fo:text-indent="-6mm" style:auto-text-indent="false" style:page-number="auto" style:writing-mode="page"><style:tab-stops/></style:paragraph-properties></style:style><style:style style:name="Default_5f_nt2" style:display-name="Default_nt2" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard"><style:text-properties fo:font-size="10pt" fo:font-weight="bold"/></style:style><style:style style:name="Table" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/><style:style style:name="Figure" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/><style:style style:name="circled_20_numbers" style:display-name="circled numbers" style:family="paragraph" style:parent-style-name="Standard"><style:text-properties style:font-name="CombiNumerals" fo:font-size="22pt"/></style:style><style:style style:name="Footnote" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties fo:margin-left="4.99mm" fo:margin-right="0mm" fo:text-indent="-4.99mm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/><style:text-properties fo:font-size="10pt" style:font-size-asian="10pt" style:font-size-complex="10pt"/></style:style><style:style style:name="small" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard"><style:text-properties fo:font-size="6pt"/></style:style><style:style style:name="Endnote" style:family="paragraph" style:parent-style-name="Standard" style:class="extra"><style:paragraph-properties fo:margin-left="4.99mm" fo:margin-right="0mm" fo:text-indent="-4.99mm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/><style:text-properties fo:font-size="10pt" style:font-size-asian="10pt" style:font-size-complex="10pt"/></style:style><style:style style:name="Index_20_1" style:display-name="Index 1" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:text-indent="0mm" style:auto-text-indent="false"/></style:style><style:style style:name="Index_20_2" style:display-name="Index 2" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="4.99mm" fo:margin-right="0mm" fo:text-indent="0mm" style:auto-text-indent="false"/></style:style><style:style style:name="Index_20_3" style:display-name="Index 3" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="9.98mm" fo:margin-right="0mm" fo:text-indent="0mm" style:auto-text-indent="false"/></style:style><style:style style:name="Heading_20_5" style:display-name="Heading 5" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="5" style:list-style-name="Outline" style:class="text"><style:text-properties fo:font-size="85%" fo:font-weight="bold" style:font-size-asian="85%" style:font-weight-asian="bold" style:font-size-complex="85%" style:font-weight-complex="bold"/></style:style><style:style style:name="Index_20_Separator" style:display-name="Index Separator" style:family="paragraph" style:parent-style-name="Index" style:class="index"><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:text-indent="0mm" style:auto-text-indent="false"/></style:style><style:style style:name="Nospacing" style:family="paragraph" style:parent-style-name="Standard"><style:paragraph-properties fo:line-height="0.49mm"/><style:text-properties fo:font-size="6pt"/></style:style><style:style style:name="frame_20_header" style:display-name="frame header" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard" style:master-page-name=""><style:paragraph-properties fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="0mm" fo:margin-bottom="0mm" style:register-true="false" fo:text-indent="1.99mm" style:auto-text-indent="false" style:page-number="auto" fo:background-color="#cccccc" style:shadow="none" text:number-lines="false" text:line-number="0"><style:tab-stops/><style:background-image/></style:paragraph-properties><style:text-properties fo:font-size="10.5pt" fo:font-weight="bold" fo:background-color="transparent"/></style:style><style:style style:name="frame_20_spacing" style:display-name="frame spacing" style:family="paragraph" style:parent-style-name="frame_20_header"><style:text-properties fo:font-size="6pt"/></style:style><style:style style:name="Table_20_header_20_bold" style:display-name="Table header bold" style:family="paragraph" style:parent-style-name="Table_20_Contents"><style:text-properties fo:font-weight="bold"/></style:style><style:style style:name="Internet_20_link" style:display-name="Internet link" style:family="text"><style:text-properties fo:color="#000080" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color" style:language-asian="zxx" style:country-asian="none" style:language-complex="zxx" style:country-complex="none"/></style:style><style:style style:name="Numbering_20_Symbols" style:display-name="Numbering Symbols" style:family="text"/><style:style style:name="Line_20_numbering" style:display-name="Line numbering" style:family="text"/><style:style style:name="Caption_20_characters" style:display-name="Caption characters" style:family="text"/><style:style style:name="Visited_20_Internet_20_Link" style:display-name="Visited Internet Link" style:family="text"><style:text-properties fo:color="#800000" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color" style:language-asian="zxx" style:country-asian="none" style:language-complex="zxx" style:country-complex="none"/></style:style><style:style style:name="backtick" style:family="text"><style:text-properties style:font-name="Courier New" fo:font-size="10pt" fo:background-color="#dddddd"/></style:style><style:style style:name="DCP405" style:family="text"><style:text-properties fo:color="#ffffff" fo:text-shadow="none" fo:font-weight="bold" fo:background-color="#ff6600"/></style:style><style:style style:name="DCP405B" style:family="text"><style:text-properties fo:color="#ffffff" fo:text-shadow="none" fo:font-weight="bold" fo:background-color="#cc9900"/></style:style><style:style style:name="DCM220" style:family="text"><style:text-properties fo:color="#ffffff" fo:font-weight="bold" fo:background-color="#66ccff"/></style:style><style:style style:name="Footnote_20_Symbol" style:display-name="Footnote Symbol" style:family="text"/><style:style style:name="Footnote_20_anchor" style:display-name="Footnote anchor" style:family="text"><style:text-properties style:text-position="super 58%"/></style:style><style:style style:name="Bullet_20_Symbols" style:display-name="Bullet Symbols" style:family="text"><style:text-properties style:font-name="OpenSymbol" style:font-name-asian="OpenSymbol" style:font-name-complex="OpenSymbol"/></style:style><style:style style:name="Emphasis" style:family="text"><style:text-properties fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/></style:style><style:style style:name="Source_20_Text" style:display-name="Source Text" style:family="text"><style:text-properties style:font-name="DejaVu Sans Mono" style:font-name-asian="DejaVu Sans Mono" style:font-name-complex="DejaVu Sans Mono"/></style:style><style:style style:name="Graphics" style:family="graphic"><style:graphic-properties text:anchor-type="paragraph" svg:x="0mm" svg:y="0mm" style:wrap="none" style:vertical-pos="top" style:vertical-rel="paragraph" style:horizontal-pos="center" style:horizontal-rel="paragraph"/></style:style><style:style style:name="Watermark" style:family="graphic"><style:graphic-properties text:anchor-type="page" svg:x="0mm" svg:y="0mm" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="middle" style:vertical-rel="page" style:horizontal-pos="center" style:horizontal-rel="paragraph"/></style:style><style:style style:name="Frame" style:family="graphic"><style:graphic-properties text:anchor-type="paragraph" svg:x="0mm" svg:y="0mm" fo:margin-left="2.01mm" fo:margin-right="2.01mm" fo:margin-top="2.01mm" fo:margin-bottom="2.01mm" style:wrap="parallel" style:number-wrapped-paragraphs="no-limit" style:wrap-contour="false" style:vertical-pos="top" style:vertical-rel="paragraph-content" style:horizontal-pos="center" style:horizontal-rel="paragraph-content" fo:padding="1.5mm" fo:border="0.02mm solid #000000"/></style:style><style:style style:name="OLE" style:family="graphic"><style:graphic-properties text:anchor-type="paragraph" svg:x="0mm" svg:y="0mm" style:wrap="none" style:vertical-pos="top" style:vertical-rel="paragraph" style:horizontal-pos="center" style:horizontal-rel="paragraph"/></style:style><text:outline-style style:name="Outline"><text:outline-level-style text:level="1" text:style-name="Numbering_20_Symbols" style:num-prefix="A" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-7.62mm" fo:margin-left="7.62mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="2" text:style-name="Numbering_20_Symbols" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-10.16mm" fo:margin-left="10.16mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="3" text:style-name="Numbering_20_Symbols" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-12.7mm" fo:margin-left="12.7mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="4" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-15.24mm" fo:margin-left="15.24mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="5" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="17.78mm" fo:text-indent="-17.78mm" fo:margin-left="17.78mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="6" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="20.32mm" fo:text-indent="-20.32mm" fo:margin-left="20.32mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="7" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="22.86mm" fo:text-indent="-22.86mm" fo:margin-left="22.86mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="8" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="25.4mm" fo:text-indent="-25.4mm" fo:margin-left="25.4mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="9" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="27.94mm" fo:text-indent="-27.94mm" fo:margin-left="27.94mm"/></style:list-level-properties></text:outline-level-style><text:outline-level-style text:level="10" style:num-format=""><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="30.48mm" fo:text-indent="-30.48mm" fo:margin-left="30.48mm"/></style:list-level-properties></text:outline-level-style></text:outline-style><text:list-style style:name="Numbering_20_1" style:display-name="Numbering 1"><text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-10mm" fo:margin-left="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="2"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm" fo:text-indent="-4.99mm" fo:margin-left="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="3"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="14.99mm" fo:text-indent="-4.99mm" fo:margin-left="14.99mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="4"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="20mm" fo:text-indent="-4.99mm" fo:margin-left="20mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="5"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="24.99mm" fo:text-indent="-4.99mm" fo:margin-left="24.99mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="6"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="30mm" fo:text-indent="-4.99mm" fo:margin-left="30mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="7"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="35mm" fo:text-indent="-4.99mm" fo:margin-left="35mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="8"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="40.01mm" fo:text-indent="-4.99mm" fo:margin-left="40.01mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="9"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="45mm" fo:text-indent="-4.99mm" fo:margin-left="45mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="10"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="50.01mm" fo:text-indent="-4.99mm" fo:margin-left="50.01mm"/></style:list-level-properties></text:list-level-style-number></text:list-style><text:list-style style:name="Numbering_20_2" style:display-name="Numbering 2"><text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="2"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="3"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="4" text:display-levels="4"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="5" text:display-levels="5"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="6" text:display-levels="6"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="7" text:display-levels="7"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="8" text:display-levels="8"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="9" text:display-levels="9"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:start-value="10" text:display-levels="10"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="10mm"/></style:list-level-properties></text:list-level-style-number></text:list-style><text:list-style style:name="Numbering_20_3" style:display-name="Numbering 3"><text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-10mm" fo:margin-left="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="2"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-10mm" fo:margin-left="10mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1" text:display-levels="3"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="14.99mm" fo:text-indent="-14.99mm" fo:margin-left="14.99mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="4" text:display-levels="4"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="31.75mm" fo:text-indent="-6.35mm" fo:margin-left="31.75mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="5" text:display-levels="5"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="38.1mm" fo:text-indent="-6.35mm" fo:margin-left="38.1mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="6" text:display-levels="6"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="44.45mm" fo:text-indent="-6.35mm" fo:margin-left="44.45mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="7" text:display-levels="7"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="50.8mm" fo:text-indent="-6.35mm" fo:margin-left="50.8mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="8" text:display-levels="8"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="57.15mm" fo:text-indent="-6.35mm" fo:margin-left="57.15mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="9" text:display-levels="9"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="63.5mm" fo:text-indent="-6.35mm" fo:margin-left="63.5mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="10" text:display-levels="10"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="69.85mm" fo:text-indent="-6.35mm" fo:margin-left="69.85mm"/></style:list-level-properties></text:list-level-style-number></text:list-style><text:list-style style:name="List_20_1" style:display-name="List 1"><text:list-level-style-bullet text:level="1" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="2" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="8.01mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="3" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="11.99mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="4" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="16mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="5" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="20mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="6" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="24.01mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="7" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="27.99mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="8" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="32mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="9" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="36mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet><text:list-level-style-bullet text:level="10" text:style-name="Numbering_20_Symbols" text:bullet-char="•"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="40.01mm" fo:margin-left="10mm"/></style:list-level-properties><style:text-properties style:font-name="OpenSymbol1"/></text:list-level-style-bullet></text:list-style><text:list-style style:name="Numbering_20_123" style:display-name="Numbering 123"><text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="7mm" fo:text-indent="-7mm" fo:margin-left="13.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="14.01mm" fo:text-indent="-7mm" fo:margin-left="20.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="21.01mm" fo:text-indent="-7mm" fo:margin-left="27.31mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="28.01mm" fo:text-indent="-7mm" fo:margin-left="34.31mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="35.01mm" fo:text-indent="-7mm" fo:margin-left="41.31mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="42mm" fo:text-indent="-7mm" fo:margin-left="48.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="49mm" fo:text-indent="-7mm" fo:margin-left="55.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="56mm" fo:text-indent="-7mm" fo:margin-left="62.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="63.01mm" fo:text-indent="-7mm" fo:margin-left="69.3mm"/></style:list-level-properties></text:list-level-style-number><text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" style:num-suffix="." style:num-format="1"><style:list-level-properties text:list-level-position-and-space-mode="label-alignment"><style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="70.01mm" fo:text-indent="-7mm" fo:margin-left="76.31mm"/></style:list-level-properties></text:list-level-style-number></text:list-style><text:notes-configuration text:note-class="footnote" text:citation-style-name="Footnote_20_Symbol" text:citation-body-style-name="Footnote_20_anchor" style:num-format="1" text:start-value="0" text:footnotes-position="page" text:start-numbering-at="document"/><text:notes-configuration text:note-class="endnote" style:num-format="i" text:start-value="0"/><text:linenumbering-configuration text:style-name="Line_20_numbering" text:number-lines="false" text:offset="4.99mm" style:num-format="1" text:number-position="left" text:increment="5"/></office:styles><office:automatic-styles><style:page-layout style:name="Mpm1"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="14.99mm" fo:margin-bottom="14.99mm" fo:margin-left="20mm" fo:margin-right="14.99mm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style/><style:footer-style/></style:page-layout><style:page-layout style:name="Mpm2" style:page-usage="right"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="20mm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:background-image/><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style/><style:footer-style><style:header-footer-properties fo:min-height="7.99mm" fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="3mm" style:dynamic-spacing="false"/></style:footer-style></style:page-layout><style:page-layout style:name="Mpm3" style:page-usage="left"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="20mm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style><style:header-footer-properties fo:min-height="7.99mm" fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-bottom="3mm" style:dynamic-spacing="false"/></style:header-style><style:footer-style><style:header-footer-properties fo:min-height="7.99mm" fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="3mm" style:dynamic-spacing="false"/></style:footer-style></style:page-layout><style:page-layout style:name="Mpm4" style:page-usage="right"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="20mm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:background-image/><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style><style:header-footer-properties fo:min-height="7.99mm" fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-bottom="3mm" style:dynamic-spacing="false"/></style:header-style><style:footer-style><style:header-footer-properties fo:min-height="7.99mm" fo:margin-left="0mm" fo:margin-right="0mm" fo:margin-top="3mm" style:dynamic-spacing="false"/></style:footer-style></style:page-layout><style:page-layout style:name="Mpm5"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="20mm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style/><style:footer-style/></style:page-layout><style:page-layout style:name="Mpm6"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="20mm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:background-image/><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style/><style:footer-style/></style:page-layout><style:page-layout style:name="Mpm7"><style:page-layout-properties fo:page-width="210.01mm" fo:page-height="297mm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="10mm" fo:margin-bottom="10mm" fo:margin-left="20mm" fo:margin-right="10mm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="7.06mm" style:layout-grid-ruby-height="3.53mm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" loext:margin-gutter="0cm" style:footnote-max-height="0mm"><style:footnote-sep style:width="0.18mm" style:distance-before-sep="1.01mm" style:distance-after-sep="1.01mm" style:adjustment="left" style:rel-width="25%" style:color="#000000"/></style:page-layout-properties><style:header-style/><style:footer-style/></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="Mpm1"/><style:master-page style:name="First_20_Page" style:display-name="First Page" style:page-layout-name="Mpm2" style:next-style-name="Left_20_Page"><style:footer><text:p text:style-name="Footer"><text:page-number text:select-page="current">1</text:page-number></text:p></style:footer></style:master-page><style:master-page style:name="Left_20_Page" style:display-name="Left Page" style:page-layout-name="Mpm3" style:next-style-name="Right_20_Page"><style:header><text:p text:style-name="Header_20_left"><text:title>Loop Action</text:title></text:p></style:header><style:footer><text:p text:style-name="Footer_20_left"><text:page-number text:select-page="current">2</text:page-number></text:p></style:footer></style:master-page><style:master-page style:name="Right_20_Page" style:display-name="Right Page" style:page-layout-name="Mpm4" style:next-style-name="Left_20_Page"><style:header><text:p text:style-name="Header_20_right"><text:chapter text:display="number-and-name" text:outline-level="1">A1.Loop</text:chapter></text:p></style:header><style:footer><text:p text:style-name="Footer_20_right"><text:page-number text:select-page="current">3</text:page-number></text:p></style:footer></style:master-page><style:master-page style:name="master_5f_first_20_page" style:display-name="master_first page" style:page-layout-name="Mpm5" style:next-style-name="master_5f_left_20_page"/><style:master-page style:name="master_5f_left_20_page" style:display-name="master_left page" style:page-layout-name="Mpm5" style:next-style-name="master_5f_right_20_page"/><style:master-page style:name="master_5f_right_20_page" style:display-name="master_right page" style:page-layout-name="Mpm6" style:next-style-name="master_5f_left_20_page"/><style:master-page style:name="HTML" style:page-layout-name="Mpm7"/></office:master-styles></office:document-styles>
+<office:document-styles xmlns:officeooo="http://openoffice.org/2009/office"
+    xmlns:css3t="http://www.w3.org/TR/css3-text/"
+    xmlns:rpt="http://openoffice.org/2005/report"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0"
+    xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+    xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
+    xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+    xmlns:oooc="http://openoffice.org/2004/calc"
+    xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+    xmlns:ooow="http://openoffice.org/2004/writer"
+    xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+    xmlns:ooo="http://openoffice.org/2004/office"
+    xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+    xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0"
+    xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"
+    xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0"
+    xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2"
+    xmlns:calcext="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0"
+    xmlns:tableooo="http://openoffice.org/2009/table"
+    xmlns:drawooo="http://openoffice.org/2010/draw"
+    xmlns:grddl="http://www.w3.org/2003/g/data-view#"
+    xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"
+    xmlns:dom="http://www.w3.org/2001/xml-events"
+    xmlns:field="urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0"
+    xmlns:math="http://www.w3.org/1998/Math/MathML"
+    xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0"
+    xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml" office:version="1.3">
+    <office:font-face-decls>
+        <style:font-face style:name="Arial" svg:font-family="Arial" style:font-family-generic="swiss"/>
+        <style:font-face style:name="Arial Black" svg:font-family="&apos;Arial Black&apos;" style:font-adornments="Bold" style:font-pitch="variable"/>
+        <style:font-face style:name="Arial1" svg:font-family="Arial" style:font-adornments="Negreta" style:font-family-generic="swiss" style:font-pitch="variable"/>
+        <style:font-face style:name="CombiNumerals" svg:font-family="CombiNumerals" style:font-adornments="Regular" style:font-pitch="variable" style:font-charset="x-symbol"/>
+        <style:font-face style:name="Courier New" svg:font-family="&apos;Courier New&apos;" style:font-adornments="Normal" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="DejaVu Sans" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="swiss"/>
+        <style:font-face style:name="DejaVu Sans Mono" svg:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="DejaVu Sans1" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+        <style:font-face style:name="Droid Sans Fallback" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="Droid Sans Fallback1" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+        <style:font-face style:name="OpenSymbol" svg:font-family="OpenSymbol" style:font-charset="x-symbol"/>
+        <style:font-face style:name="OpenSymbol1" svg:font-family="OpenSymbol"/>
+        <style:font-face style:name="Ubuntu" svg:font-family="Ubuntu" style:font-adornments="Bold" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu1" svg:font-family="Ubuntu" style:font-adornments="Bold Italic" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu2" svg:font-family="Ubuntu" style:font-adornments="Italic" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu3" svg:font-family="Ubuntu" style:font-adornments="Regular" style:font-pitch="variable"/>
+    </office:font-face-decls>
+    <office:styles>
+        <style:default-style style:family="graphic">
+            <style:graphic-properties svg:stroke-color="#808080" draw:fill-color="#cfe7f5" fo:wrap-option="no-wrap" draw:shadow-offset-x="0.3cm" draw:shadow-offset-y="0.3cm" draw:start-line-spacing-horizontal="0.283cm" draw:start-line-spacing-vertical="0.283cm" draw:end-line-spacing-horizontal="0.283cm" draw:end-line-spacing-vertical="0.283cm" style:flow-with-text="false"/>
+            <style:paragraph-properties style:text-autospace="ideograph-alpha" style:line-break="strict" style:writing-mode="lr-tb" style:font-independent-line-spacing="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties style:use-window-font-color="true" loext:opacity="0%" style:font-name="Arial" fo:font-size="12pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-name-asian="Droid Sans Fallback1" style:font-size-asian="12pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="DejaVu Sans1" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN"/>
+        </style:default-style>
+        <style:default-style style:family="paragraph">
+            <style:paragraph-properties fo:hyphenation-ladder-count="no-limit" style:text-autospace="ideograph-alpha" style:punctuation-wrap="hanging" style:line-break="strict" style:tab-stop-distance="1.499cm" style:writing-mode="page"/>
+            <style:text-properties style:use-window-font-color="true" loext:opacity="0%" style:font-name="Arial" fo:font-size="12pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-name-asian="Droid Sans Fallback1" style:font-size-asian="12pt" style:language-asian="zh" style:country-asian="CN" style:font-name-complex="DejaVu Sans1" style:font-size-complex="12pt" style:language-complex="hi" style:country-complex="IN" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:default-style>
+        <style:default-style style:family="table">
+            <style:table-properties table:border-model="collapsing"/>
+        </style:default-style>
+        <style:default-style style:family="table-row">
+            <style:table-row-properties fo:keep-together="auto"/>
+        </style:default-style>
+        <style:style style:name="Standard" style:family="paragraph" style:class="text" style:master-page-name="">
+            <style:paragraph-properties fo:text-align="justify" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/>
+            <style:text-properties style:font-name="Ubuntu3" fo:font-family="Ubuntu" style:font-style-name="Regular" style:font-pitch="variable" fo:font-size="10.5pt" fo:hyphenate="true" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="Heading" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard" style:list-style-name="Numbering_20_1" style:class="text" style:master-page-name="">
+            <loext:graphic-properties draw:fill="none" draw:fill-color="#cfe7f5"/>
+            <style:paragraph-properties fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" style:page-number="auto" fo:background-color="transparent" style:shadow="none" fo:keep-with-next="always">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties style:font-name="Ubuntu3" fo:font-family="Ubuntu" style:font-style-name="Regular" style:font-pitch="variable" fo:font-size="14pt" style:font-name-asian="Droid Sans Fallback1" style:font-family-asian="&apos;Droid Sans Fallback&apos;" style:font-family-generic-asian="system" style:font-pitch-asian="variable" style:font-size-asian="14pt" style:font-name-complex="DejaVu Sans1" style:font-family-complex="&apos;DejaVu Sans&apos;" style:font-family-generic-complex="system" style:font-pitch-complex="variable" style:font-size-complex="14pt"/>
+        </style:style>
+        <style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" style:parent-style-name="Standard" style:class="text">
+            <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false"/>
+        </style:style>
+        <style:style style:name="List" style:family="paragraph" style:parent-style-name="Standard" style:default-outline-level="" style:list-style-name="List_20_1" style:class="list" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="0.6cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" fo:text-indent="-0.6cm" style:auto-text-indent="false" style:page-number="auto">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties style:use-window-font-color="true" loext:opacity="0%" style:font-name="Ubuntu3" fo:font-family="Ubuntu" style:font-style-name="Regular" style:font-pitch="variable" fo:font-size="10.5pt" style:font-name-complex="DejaVu Sans" style:font-family-complex="&apos;DejaVu Sans&apos;" style:font-family-generic-complex="swiss" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="Caption" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties fo:margin-top="0.212cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0"/>
+            <style:text-properties style:font-name="Ubuntu2" fo:font-family="Ubuntu" style:font-style-name="Italic" style:font-pitch="variable" fo:font-size="10pt" fo:font-style="italic" style:font-size-asian="12pt" style:font-style-asian="italic" style:font-name-complex="DejaVu Sans" style:font-family-complex="&apos;DejaVu Sans&apos;" style:font-family-generic-complex="swiss" style:font-size-complex="12pt" style:font-style-complex="italic" style:font-weight-complex="normal"/>
+        </style:style>
+        <style:style style:name="Index" style:family="paragraph" style:parent-style-name="Standard" style:class="index">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0"/>
+            <style:text-properties style:font-name="Ubuntu3" fo:font-family="Ubuntu" style:font-style-name="Regular" style:font-pitch="variable" fo:font-size="10.5pt" style:font-name-complex="DejaVu Sans" style:font-family-complex="&apos;DejaVu Sans&apos;" style:font-family-generic-complex="swiss"/>
+        </style:style>
+        <style:style style:name="cmd_5f_root" style:display-name="cmd_root" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/>
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" fo:font-size="10.5pt" fo:font-weight="normal"/>
+        </style:style>
+        <style:style style:name="Table_20_Contents" style:display-name="Table Contents" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0"/>
+        </style:style>
+        <style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="1" style:list-style-name="Outline" style:class="text">
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" style:font-name="Ubuntu" fo:font-family="Ubuntu" style:font-style-name="Bold" style:font-pitch="variable" fo:font-size="14pt" fo:font-weight="bold" style:font-size-asian="115%" style:font-weight-asian="bold" style:font-size-complex="115%" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Heading_20_2" style:display-name="Heading 2" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="2" style:list-style-name="Outline" style:class="text">
+            <style:paragraph-properties fo:margin-left="0.762cm" fo:margin-right="0cm" fo:margin-top="0.45cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.762cm" style:auto-text-indent="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" style:font-name="Ubuntu1" fo:font-family="Ubuntu" style:font-style-name="Bold Italic" style:font-pitch="variable" fo:font-size="12pt" fo:font-style="italic" fo:font-weight="bold" style:font-size-asian="14pt" style:font-style-asian="italic" style:font-weight-asian="bold" style:font-size-complex="14pt" style:font-style-complex="italic" style:font-weight-complex="normal"/>
+        </style:style>
+        <style:style style:name="Table_20_Heading" style:display-name="Table Heading" style:family="paragraph" style:parent-style-name="Table_20_Contents" style:class="extra">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0"/>
+            <style:text-properties fo:font-weight="bold" style:font-weight-asian="bold" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="cmd_5f_code" style:display-name="cmd_code" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name="">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/>
+            <style:text-properties style:font-name="Courier New" fo:font-family="&apos;Courier New&apos;" style:font-style-name="Normal" style:font-family-generic="modern" style:font-pitch="fixed" fo:font-size="10.5pt" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="Default_5f_ntt" style:display-name="Default_ntt" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name="">
+            <style:paragraph-properties fo:hyphenation-ladder-count="6" style:page-number="auto"/>
+            <style:text-properties fo:font-size="10.5pt" fo:font-weight="normal" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="List_20_1_20_Start" style:display-name="List 1 Start" style:family="paragraph" style:parent-style-name="List" style:next-style-name="List_20_1" style:class="list">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0.199cm" fo:margin-top="0.3cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.6cm" style:auto-text-indent="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="List_20_1" style:display-name="List 1" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0.199cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.6cm" style:auto-text-indent="false" style:writing-mode="page">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="List_20_1_20_End" style:display-name="List 1 End" style:family="paragraph" style:parent-style-name="List" style:next-style-name="Standard" style:class="list">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0.199cm" fo:margin-top="0cm" fo:margin-bottom="0.3cm" style:contextual-spacing="false" fo:text-indent="-0.6cm" style:auto-text-indent="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt"/>
+        </style:style>
+        <style:style style:name="table_5f_header" style:display-name="table_header" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt" fo:font-weight="normal"/>
+        </style:style>
+        <style:style style:name="Header_20_and_20_Footer" style:display-name="Header and Footer" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.5cm" style:type="center"/>
+                    <style:tab-stop style:position="17cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Header" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/>
+        </style:style>
+        <style:style style:name="Footer" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false" text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Heading_20_3" style:display-name="Heading 3" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="3" style:list-style-name="Outline" style:class="text">
+            <style:paragraph-properties fo:margin-left="0.762cm" fo:margin-right="0cm" fo:margin-top="0.45cm" fo:margin-bottom="0.25cm" style:contextual-spacing="false" fo:text-indent="-0.762cm" style:auto-text-indent="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" style:font-name="Ubuntu" fo:font-family="Ubuntu" style:font-style-name="Bold" style:font-pitch="variable" fo:font-size="10pt" fo:font-weight="bold" style:font-size-asian="14pt" style:font-weight-asian="bold" style:font-size-complex="14pt" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Header_20_right" style:display-name="Header right" style:family="paragraph" style:parent-style-name="Header" style:class="extra">
+            <style:paragraph-properties fo:text-align="end" style:justify-single-word="false" text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/>
+        </style:style>
+        <style:style style:name="Header_20_left" style:display-name="Header left" style:family="paragraph" style:parent-style-name="Header" style:class="extra">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false" text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/>
+        </style:style>
+        <style:style style:name="Heading_20_4" style:display-name="Heading 4" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Standard" style:default-outline-level="4" style:list-style-name="Outline" style:class="text">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.199cm" fo:margin-bottom="0.199cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false"/>
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" fo:font-size="10.5pt" fo:font-style="normal" fo:font-weight="bold" style:font-size-asian="85%" style:font-style-asian="italic" style:font-weight-asian="bold" style:font-size-complex="85%" style:font-style-complex="italic" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="cmd_5f_code_5f_single" style:display-name="cmd_code_single" style:family="paragraph" style:parent-style-name="cmd_5f_code" style:master-page-name="">
+            <style:paragraph-properties fo:margin-top="0.199cm" fo:margin-bottom="0.199cm" style:contextual-spacing="false" style:page-number="auto"/>
+        </style:style>
+        <style:style style:name="note" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:text-align="justify" style:justify-single-word="false"/>
+            <style:text-properties fo:font-size="10.5pt" fo:font-style="italic"/>
+        </style:style>
+        <style:style style:name="Title" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Subtitle" style:list-style-name="" style:class="chapter">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/>
+            <style:text-properties style:font-name="Arial Black" fo:font-family="&apos;Arial Black&apos;" style:font-style-name="Bold" style:font-pitch="variable" fo:font-size="22pt" fo:font-weight="normal" style:font-size-asian="18pt" style:font-weight-asian="bold" style:font-size-complex="18pt" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Subtitle" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:class="chapter">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/>
+            <style:text-properties fo:font-size="14pt" fo:font-style="italic" style:font-size-asian="14pt" style:font-style-asian="italic" style:font-size-complex="14pt" style:font-style-complex="italic"/>
+        </style:style>
+        <style:style style:name="cc-license" style:family="paragraph" style:parent-style-name="Standard">
+            <style:text-properties fo:font-size="8pt"/>
+        </style:style>
+        <style:style style:name="Illustration" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/>
+        <style:style style:name="Fig." style:family="paragraph" style:parent-style-name="Caption">
+            <style:paragraph-properties fo:margin-top="0.499cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-align="center" style:justify-single-word="false"/>
+            <style:text-properties fo:font-size="10pt" style:font-weight-complex="normal"/>
+        </style:style>
+        <style:style style:name="Preformatted_20_Text" style:display-name="Preformatted Text" style:family="paragraph" style:parent-style-name="Standard" style:class="html">
+            <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false"/>
+            <style:text-properties style:font-name="DejaVu Sans Mono" fo:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed" fo:font-size="10pt" style:font-name-asian="Droid Sans Fallback" style:font-family-asian="&apos;Droid Sans Fallback&apos;" style:font-family-generic-asian="modern" style:font-pitch-asian="fixed" style:font-size-asian="10pt" style:font-name-complex="DejaVu Sans Mono" style:font-family-complex="&apos;DejaVu Sans Mono&apos;" style:font-family-generic-complex="modern" style:font-pitch-complex="fixed" style:font-size-complex="10pt"/>
+        </style:style>
+        <style:style style:name="Frame_20_contents" style:display-name="Frame contents" style:family="paragraph" style:parent-style-name="Text_20_body" style:class="extra"/>
+        <style:style style:name="scpi0" style:family="paragraph" style:parent-style-name="Standard" style:master-page-name="">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/>
+            <style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="scpi1" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="0.499cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:hyphenation-ladder-count="6" fo:text-indent="0cm" style:auto-text-indent="false" style:page-number="auto"/>
+            <style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="scpi2" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:hyphenation-ladder-count="6" fo:text-indent="0cm" style:auto-text-indent="false" style:page-number="auto"/>
+            <style:text-properties fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="scpi3" style:family="paragraph" style:parent-style-name="scpi0" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="1.499cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false" style:page-number="auto"/>
+        </style:style>
+        <style:style style:name="Numbering_20_1_20_Start" style:display-name="Numbering 1 Start" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="0.635cm" fo:margin-right="0cm" fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_1" style:display-name="Numbering 1" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="0.635cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_2" style:display-name="Numbering 2" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="1.27cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_3" style:display-name="Numbering 3" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="1.905cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_4_20_Start" style:display-name="Numbering 4 Start" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="2.54cm" fo:margin-right="0cm" fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_4" style:display-name="Numbering 4" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="2.54cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_4_20_End" style:display-name="Numbering 4 End" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="2.54cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.423cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_5_20_Start" style:display-name="Numbering 5 Start" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="3.175cm" fo:margin-right="0cm" fo:margin-top="0.423cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Numbering_20_5" style:display-name="Numbering 5" style:family="paragraph" style:parent-style-name="List" style:class="list">
+            <style:paragraph-properties fo:margin-left="3.175cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.212cm" style:contextual-spacing="false" fo:text-indent="-0.635cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="cmd_5f_code_20_Start" style:display-name="cmd_code Start" style:family="paragraph" style:parent-style-name="cmd_5f_code_5f_single" style:next-style-name="cmd_5f_code" style:master-page-name="">
+            <style:paragraph-properties fo:margin-top="0.199cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:hyphenation-ladder-count="6" style:page-number="auto"/>
+            <style:text-properties fo:font-size="10.5pt" fo:hyphenate="false" fo:hyphenation-remain-char-count="2" fo:hyphenation-push-char-count="2" loext:hyphenation-no-caps="false"/>
+        </style:style>
+        <style:style style:name="cmd_5f_code_20_End" style:display-name="cmd_code End" style:family="paragraph" style:parent-style-name="cmd_5f_code_20_Start" style:master-page-name="">
+            <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.199cm" style:contextual-spacing="false" style:page-number="auto"/>
+        </style:style>
+        <style:style style:name="scpi4" style:family="paragraph" style:parent-style-name="scpi0">
+            <style:paragraph-properties fo:margin-left="2cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="table_5f_body" style:display-name="table_body" style:family="paragraph" style:parent-style-name="Standard" style:auto-update="true">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/>
+            <style:text-properties fo:font-size="10.5pt" fo:font-style="normal" style:font-style-asian="normal" style:font-style-complex="normal"/>
+        </style:style>
+        <style:style style:name="equation" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0cm" fo:margin-top="0.199cm" fo:margin-bottom="0.199cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false"/>
+            <style:text-properties fo:font-size="10.5pt"/>
+        </style:style>
+        <style:style style:name="table_5f_body_5f_centered" style:display-name="table_body_centered" style:family="paragraph" style:parent-style-name="table_5f_body">
+            <style:paragraph-properties fo:text-align="center" style:justify-single-word="false"/>
+            <style:text-properties fo:font-size="10.5pt"/>
+        </style:style>
+        <style:style style:name="table_5f_body_5f_left" style:display-name="table_body_left" style:family="paragraph" style:parent-style-name="table_5f_body">
+            <style:paragraph-properties fo:text-align="start" style:justify-single-word="false"/>
+        </style:style>
+        <style:style style:name="html-code" style:family="paragraph" style:parent-style-name="Standard">
+            <loext:graphic-properties draw:fill="solid" draw:fill-color="#ffff00" draw:opacity="100%"/>
+            <style:paragraph-properties fo:background-color="#ffff00"/>
+        </style:style>
+        <style:style style:name="Footer_20_left" style:display-name="Footer left" style:family="paragraph" style:parent-style-name="Footer" style:class="extra">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="highlighted" style:family="paragraph" style:parent-style-name="Default_5f_ntt" style:next-style-name="Standard" style:master-page-name="">
+            <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-align="center" style:justify-single-word="false" style:page-number="auto" fo:padding-left="0cm" fo:padding-right="0cm" fo:padding-top="0.035cm" fo:padding-bottom="0.035cm" fo:border-left="none" fo:border-right="none" fo:border-top="2.49pt solid #ff950e" fo:border-bottom="2.49pt solid #ff950e" style:shadow="none" style:writing-mode="page">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:color="#ff950e" loext:opacity="100%" fo:font-size="10.5pt" fo:font-style="italic" fo:font-weight="normal"/>
+        </style:style>
+        <style:style style:name="Index_20_Heading" style:display-name="Index Heading" style:family="paragraph" style:parent-style-name="Heading" style:class="index">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/>
+            <style:text-properties fo:font-size="16pt" fo:font-weight="bold" style:font-size-asian="16pt" style:font-weight-asian="bold" style:font-size-complex="16pt" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Contents_20_Heading" style:display-name="Contents Heading" style:family="paragraph" style:parent-style-name="Standard" style:class="index" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0.3cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false" style:page-number="auto" fo:break-before="page" text:number-lines="false" text:line-number="0">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:color="#0066cc" loext:opacity="100%" style:font-name="Arial1" fo:font-family="Arial" style:font-style-name="Negreta" style:font-family-generic="swiss" style:font-pitch="variable" fo:font-size="14pt" fo:font-weight="bold" style:font-size-asian="16pt" style:font-weight-asian="bold" style:font-size-complex="16pt" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Footer_20_right" style:display-name="Footer right" style:family="paragraph" style:parent-style-name="Footer" style:class="extra">
+            <style:paragraph-properties text:number-lines="false" text:line-number="0">
+                <style:tab-stops>
+                    <style:tab-stop style:position="8.751cm" style:type="center"/>
+                    <style:tab-stop style:position="17.501cm" style:type="right"/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Contents_20_1" style:display-name="Contents 1" style:family="paragraph" style:parent-style-name="Index" style:class="index" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.101cm" fo:margin-bottom="0.101cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false" style:page-number="auto">
+                <style:tab-stops>
+                    <style:tab-stop style:position="17.501cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Contents_20_2" style:display-name="Contents 2" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0.499cm" fo:margin-right="0cm" fo:margin-top="0.049cm" fo:margin-bottom="0.049cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false">
+                <style:tab-stops>
+                    <style:tab-stop style:position="17.002cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Contents_20_3" style:display-name="Contents 3" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0.998cm" fo:margin-right="0cm" fo:margin-top="0.049cm" fo:margin-bottom="0.049cm" style:contextual-spacing="false" fo:text-indent="0cm" style:auto-text-indent="false">
+                <style:tab-stops>
+                    <style:tab-stop style:position="16.503cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+                </style:tab-stops>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="List_20_1_20_Cont." style:display-name="List 1 Cont." style:family="paragraph" style:parent-style-name="List" style:class="list" style:master-page-name="">
+            <style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0.199cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" fo:text-indent="-0.6cm" style:auto-text-indent="false" style:page-number="auto" style:writing-mode="page">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+        </style:style>
+        <style:style style:name="Default_5f_nt2" style:display-name="Default_nt2" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard">
+            <style:text-properties fo:font-size="10pt" fo:font-weight="bold"/>
+        </style:style>
+        <style:style style:name="Table" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/>
+        <style:style style:name="Figure" style:family="paragraph" style:parent-style-name="Caption" style:class="extra"/>
+        <style:style style:name="circled_20_numbers" style:display-name="circled numbers" style:family="paragraph" style:parent-style-name="Standard">
+            <style:text-properties style:font-name="CombiNumerals" fo:font-family="CombiNumerals" style:font-style-name="Regular" style:font-pitch="variable" style:font-charset="x-symbol" fo:font-size="22pt"/>
+        </style:style>
+        <style:style style:name="Footnote" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties fo:margin-left="0.499cm" fo:margin-right="0cm" fo:text-indent="-0.499cm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/>
+            <style:text-properties fo:font-size="10pt" style:font-size-asian="10pt" style:font-size-complex="10pt"/>
+        </style:style>
+        <style:style style:name="small" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard">
+            <style:text-properties fo:font-size="6pt"/>
+        </style:style>
+        <style:style style:name="Endnote" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+            <style:paragraph-properties fo:margin-left="0.499cm" fo:margin-right="0cm" fo:text-indent="-0.499cm" style:auto-text-indent="false" text:number-lines="false" text:line-number="0"/>
+            <style:text-properties fo:font-size="10pt" style:font-size-asian="10pt" style:font-size-complex="10pt"/>
+        </style:style>
+        <style:style style:name="Index_20_1" style:display-name="Index 1" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Index_20_2" style:display-name="Index 2" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0.499cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Index_20_3" style:display-name="Index 3" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0.998cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Heading_20_5" style:display-name="Heading 5" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="5" style:list-style-name="Outline" style:class="text">
+            <style:text-properties fo:font-size="85%" fo:font-weight="bold" style:font-size-asian="85%" style:font-weight-asian="bold" style:font-size-complex="85%" style:font-weight-complex="bold"/>
+        </style:style>
+        <style:style style:name="Index_20_Separator" style:display-name="Index Separator" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false"/>
+        </style:style>
+        <style:style style:name="Nospacing" style:family="paragraph" style:parent-style-name="Standard">
+            <style:paragraph-properties fo:line-height="0.049cm"/>
+            <style:text-properties fo:font-size="6pt"/>
+        </style:style>
+        <style:style style:name="frame_20_header" style:display-name="frame header" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Standard" style:master-page-name="">
+            <loext:graphic-properties draw:fill="solid" draw:fill-color="#cccccc" draw:opacity="100%"/>
+            <style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" style:contextual-spacing="false" style:register-true="false" fo:text-indent="0.199cm" style:auto-text-indent="false" style:page-number="auto" fo:background-color="#cccccc" style:shadow="none" text:number-lines="false" text:line-number="0">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties fo:font-size="10.5pt" fo:font-weight="bold" fo:background-color="transparent"/>
+        </style:style>
+        <style:style style:name="frame_20_spacing" style:display-name="frame spacing" style:family="paragraph" style:parent-style-name="frame_20_header">
+            <style:text-properties fo:font-size="6pt"/>
+        </style:style>
+        <style:style style:name="Table_20_header_20_bold" style:display-name="Table header bold" style:family="paragraph" style:parent-style-name="Table_20_Contents">
+            <style:text-properties fo:font-weight="bold"/>
+        </style:style>
+        <style:style style:name="Internet_20_link" style:display-name="Internet link" style:family="text">
+            <style:text-properties fo:color="#000080" loext:opacity="100%" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color" style:language-asian="zxx" style:country-asian="none" style:language-complex="zxx" style:country-complex="none"/>
+        </style:style>
+        <style:style style:name="Numbering_20_Symbols" style:display-name="Numbering Symbols" style:family="text"/>
+        <style:style style:name="Line_20_numbering" style:display-name="Line numbering" style:family="text"/>
+        <style:style style:name="Caption_20_characters" style:display-name="Caption characters" style:family="text"/>
+        <style:style style:name="Visited_20_Internet_20_Link" style:display-name="Visited Internet Link" style:family="text">
+            <style:text-properties fo:color="#800000" loext:opacity="100%" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color" style:language-asian="zxx" style:country-asian="none" style:language-complex="zxx" style:country-complex="none"/>
+        </style:style>
+        <style:style style:name="backtick" style:family="text">
+            <style:text-properties style:font-name="Courier New" fo:font-family="&apos;Courier New&apos;" style:font-style-name="Normal" style:font-family-generic="modern" style:font-pitch="fixed" fo:font-size="10pt" fo:background-color="#dddddd"/>
+        </style:style>
+        <style:style style:name="DCP405" style:family="text">
+            <style:text-properties fo:color="#ffffff" loext:opacity="100%" fo:text-shadow="none" fo:font-weight="bold" fo:background-color="#ff6600"/>
+        </style:style>
+        <style:style style:name="DCP405B" style:family="text">
+            <style:text-properties fo:color="#ffffff" loext:opacity="100%" fo:text-shadow="none" fo:font-weight="bold" fo:background-color="#cc9900"/>
+        </style:style>
+        <style:style style:name="DCM220" style:family="text">
+            <style:text-properties fo:color="#ffffff" loext:opacity="100%" fo:font-weight="bold" fo:background-color="#66ccff"/>
+        </style:style>
+        <style:style style:name="Footnote_20_Symbol" style:display-name="Footnote Symbol" style:family="text"/>
+        <style:style style:name="Footnote_20_anchor" style:display-name="Footnote anchor" style:family="text">
+            <style:text-properties style:text-position="super 58%"/>
+        </style:style>
+        <style:style style:name="Bullet_20_Symbols" style:display-name="Bullet Symbols" style:family="text">
+            <style:text-properties style:font-name="OpenSymbol" fo:font-family="OpenSymbol" style:font-charset="x-symbol" style:font-name-asian="OpenSymbol" style:font-family-asian="OpenSymbol" style:font-charset-asian="x-symbol" style:font-name-complex="OpenSymbol" style:font-family-complex="OpenSymbol" style:font-charset-complex="x-symbol"/>
+        </style:style>
+        <style:style style:name="Emphasis" style:family="text">
+            <style:text-properties fo:font-style="italic" style:font-style-asian="italic" style:font-style-complex="italic"/>
+        </style:style>
+        <style:style style:name="Source_20_Text" style:display-name="Source Text" style:family="text">
+            <style:text-properties style:font-name="DejaVu Sans Mono" fo:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed" style:font-name-asian="DejaVu Sans Mono" style:font-family-asian="&apos;DejaVu Sans Mono&apos;" style:font-family-generic-asian="modern" style:font-pitch-asian="fixed" style:font-name-complex="DejaVu Sans Mono" style:font-family-complex="&apos;DejaVu Sans Mono&apos;" style:font-family-generic-complex="modern" style:font-pitch-complex="fixed"/>
+        </style:style>
+        <style:style style:name="Graphics" style:family="graphic">
+            <style:graphic-properties text:anchor-type="paragraph" svg:x="0cm" svg:y="0cm" style:wrap="none" style:vertical-pos="top" style:vertical-rel="paragraph" style:horizontal-pos="center" style:horizontal-rel="paragraph"/>
+        </style:style>
+        <style:style style:name="Watermark" style:family="graphic">
+            <style:graphic-properties text:anchor-type="page" svg:x="0cm" svg:y="0cm" style:wrap="run-through" style:number-wrapped-paragraphs="no-limit" style:vertical-pos="middle" style:vertical-rel="page" style:horizontal-pos="center" style:horizontal-rel="paragraph"/>
+        </style:style>
+        <style:style style:name="Frame" style:family="graphic">
+            <style:graphic-properties text:anchor-type="paragraph" svg:x="0cm" svg:y="0cm" fo:margin-left="0.201cm" fo:margin-right="0.201cm" fo:margin-top="0.201cm" fo:margin-bottom="0.201cm" style:wrap="parallel" style:number-wrapped-paragraphs="no-limit" style:wrap-contour="false" style:vertical-pos="top" style:vertical-rel="paragraph-content" style:horizontal-pos="center" style:horizontal-rel="paragraph-content" fo:padding="0.15cm" fo:border="0.06pt solid #000000"/>
+        </style:style>
+        <style:style style:name="OLE" style:family="graphic">
+            <style:graphic-properties text:anchor-type="paragraph" svg:x="0cm" svg:y="0cm" style:wrap="none" style:vertical-pos="top" style:vertical-rel="paragraph" style:horizontal-pos="center" style:horizontal-rel="paragraph"/>
+        </style:style>
+        <text:outline-style style:name="Outline">
+            <text:outline-level-style text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="A%1%." style:num-prefix="A" style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-0.762cm" fo:margin-left="0.762cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%2%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-1.016cm" fo:margin-left="1.016cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%3%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-1.27cm" fo:margin-left="1.27cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="4" loext:num-list-format="%4%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="space" fo:text-indent="-1.524cm" fo:margin-left="1.524cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="5" loext:num-list-format="%5%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.778cm" fo:text-indent="-1.778cm" fo:margin-left="1.778cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="6" loext:num-list-format="%6%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.032cm" fo:text-indent="-2.032cm" fo:margin-left="2.032cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="7" loext:num-list-format="%7%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.286cm" fo:text-indent="-2.286cm" fo:margin-left="2.286cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="8" loext:num-list-format="%8%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.54cm" fo:text-indent="-2.54cm" fo:margin-left="2.54cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="9" loext:num-list-format="%9%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.794cm" fo:text-indent="-2.794cm" fo:margin-left="2.794cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+            <text:outline-level-style text:level="10" loext:num-list-format="%10%" style:num-format="">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.048cm" fo:text-indent="-3.048cm" fo:margin-left="3.048cm"/>
+                </style:list-level-properties>
+            </text:outline-level-style>
+        </text:outline-style>
+        <text:list-style style:name="Numbering_20_123" style:display-name="Numbering 123">
+            <text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.7cm" fo:text-indent="-0.7cm" fo:margin-left="1.33cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%2%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.401cm" fo:text-indent="-0.7cm" fo:margin-left="2.03cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%3%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.101cm" fo:text-indent="-0.7cm" fo:margin-left="2.731cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" loext:num-list-format="%4%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.801cm" fo:text-indent="-0.7cm" fo:margin-left="3.431cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" loext:num-list-format="%5%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.501cm" fo:text-indent="-0.7cm" fo:margin-left="4.131cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" loext:num-list-format="%6%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.2cm" fo:text-indent="-0.7cm" fo:margin-left="4.83cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" loext:num-list-format="%7%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.9cm" fo:text-indent="-0.7cm" fo:margin-left="5.53cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" loext:num-list-format="%8%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="5.6cm" fo:text-indent="-0.7cm" fo:margin-left="6.23cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" loext:num-list-format="%9%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="6.301cm" fo:text-indent="-0.7cm" fo:margin-left="6.93cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" loext:num-list-format="%10%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="7.001cm" fo:text-indent="-0.7cm" fo:margin-left="7.631cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+        </text:list-style>
+        <text:list-style style:name="List_20_1" style:display-name="List 1">
+            <text:list-level-style-bullet text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.4cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%2%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="0.801cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%3%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.199cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="4" text:style-name="Numbering_20_Symbols" loext:num-list-format="%4%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.6cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="5" text:style-name="Numbering_20_Symbols" loext:num-list-format="%5%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="6" text:style-name="Numbering_20_Symbols" loext:num-list-format="%6%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.401cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="7" text:style-name="Numbering_20_Symbols" loext:num-list-format="%7%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.799cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="8" text:style-name="Numbering_20_Symbols" loext:num-list-format="%8%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.2cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="9" text:style-name="Numbering_20_Symbols" loext:num-list-format="%9%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.6cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+            <text:list-level-style-bullet text:level="10" text:style-name="Numbering_20_Symbols" loext:num-list-format="%10%" text:bullet-char="•">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.001cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+                <style:text-properties style:font-name="OpenSymbol1"/>
+            </text:list-level-style-bullet>
+        </text:list-style>
+        <text:list-style style:name="Numbering_20_1" style:display-name="Numbering 1">
+            <text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-1cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%." style:num-suffix="." style:num-format="1" text:display-levels="2">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm" fo:text-indent="-0.499cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%." style:num-suffix="." style:num-format="1" text:display-levels="3">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.499cm" fo:text-indent="-0.499cm" fo:margin-left="1.499cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%." style:num-suffix="." style:num-format="1" text:display-levels="4">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2cm" fo:text-indent="-0.499cm" fo:margin-left="2cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%." style:num-suffix="." style:num-format="1" text:display-levels="5">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="2.499cm" fo:text-indent="-0.499cm" fo:margin-left="2.499cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%." style:num-suffix="." style:num-format="1" text:display-levels="6">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3cm" fo:text-indent="-0.499cm" fo:margin-left="3cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%." style:num-suffix="." style:num-format="1" text:display-levels="7">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.5cm" fo:text-indent="-0.499cm" fo:margin-left="3.5cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%." style:num-suffix="." style:num-format="1" text:display-levels="8">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.001cm" fo:text-indent="-0.499cm" fo:margin-left="4.001cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9%." style:num-suffix="." style:num-format="1" text:display-levels="9">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.5cm" fo:text-indent="-0.499cm" fo:margin-left="4.5cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9%.%10%." style:num-suffix="." style:num-format="1" text:display-levels="10">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="5.001cm" fo:text-indent="-0.499cm" fo:margin-left="5.001cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+        </text:list-style>
+        <text:list-style style:name="Numbering_20_2" style:display-name="Numbering 2">
+            <text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%." style:num-suffix="." style:num-format="1" text:display-levels="2">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%." style:num-suffix="." style:num-format="1" text:display-levels="3">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%." style:num-suffix="." style:num-format="1" text:start-value="4" text:display-levels="4">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%." style:num-suffix="." style:num-format="1" text:start-value="5" text:display-levels="5">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%." style:num-suffix="." style:num-format="1" text:start-value="6" text:display-levels="6">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%." style:num-suffix="." style:num-format="1" text:start-value="7" text:display-levels="7">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%." style:num-suffix="." style:num-format="1" text:start-value="8" text:display-levels="8">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9%." style:num-suffix="." style:num-format="1" text:start-value="9" text:display-levels="9">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9%.%10%." style:num-suffix="." style:num-format="1" text:start-value="10" text:display-levels="10">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+        </text:list-style>
+        <text:list-style style:name="Numbering_20_3" style:display-name="Numbering 3">
+            <text:list-level-style-number text:level="1" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%." style:num-suffix="." style:num-format="1">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-1cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="2" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%." style:num-suffix="." style:num-format="1" text:display-levels="2">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" fo:text-indent="-1cm" fo:margin-left="1cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="3" text:style-name="Numbering_20_Symbols" loext:num-list-format="%1%.%2%.%3%." style:num-suffix="." style:num-format="1" text:display-levels="3">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="1.499cm" fo:text-indent="-1.499cm" fo:margin-left="1.499cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="4" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="4" text:display-levels="4">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.175cm" fo:text-indent="-0.635cm" fo:margin-left="3.175cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="5" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="5" text:display-levels="5">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="3.81cm" fo:text-indent="-0.635cm" fo:margin-left="3.81cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="6" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5%.%6% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="6" text:display-levels="6">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="4.445cm" fo:text-indent="-0.635cm" fo:margin-left="4.445cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="7" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5%.%6%.%7% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="7" text:display-levels="7">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="5.08cm" fo:text-indent="-0.635cm" fo:margin-left="5.08cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="8" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5%.%6%.%7%.%8% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="8" text:display-levels="8">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="5.715cm" fo:text-indent="-0.635cm" fo:margin-left="5.715cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="9" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="9" text:display-levels="9">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="6.35cm" fo:text-indent="-0.635cm" fo:margin-left="6.35cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+            <text:list-level-style-number text:level="10" text:style-name="Numbering_20_Symbols" loext:num-list-format=" %1%.%2%.%3%.%4%.%5%.%6%.%7%.%8%.%9%.%10% " style:num-prefix=" " style:num-suffix=" " style:num-format="1" text:start-value="10" text:display-levels="10">
+                <style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+                    <style:list-level-label-alignment text:label-followed-by="listtab" text:list-tab-stop-position="6.985cm" fo:text-indent="-0.635cm" fo:margin-left="6.985cm"/>
+                </style:list-level-properties>
+            </text:list-level-style-number>
+        </text:list-style>
+        <text:notes-configuration text:note-class="footnote" text:citation-style-name="Footnote_20_Symbol" text:citation-body-style-name="Footnote_20_anchor" style:num-format="1" text:start-value="0" text:footnotes-position="page" text:start-numbering-at="document"/>
+        <text:notes-configuration text:note-class="endnote" style:num-format="i" text:start-value="0"/>
+        <text:linenumbering-configuration text:style-name="Line_20_numbering" text:number-lines="false" text:offset="0.499cm" style:num-format="1" text:number-position="left" text:increment="5"/>
+    </office:styles>
+    <office:automatic-styles>
+        <style:page-layout style:name="Mpm1">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1.499cm" fo:margin-bottom="1.499cm" fo:margin-left="2cm" fo:margin-right="1.499cm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style/>
+            <style:footer-style/>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm2" style:page-usage="right">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="2cm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" draw:fill="none" draw:fill-color="#cfe7f5" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style/>
+            <style:footer-style>
+                <style:header-footer-properties fo:min-height="0.799cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.3cm" style:dynamic-spacing="false"/>
+            </style:footer-style>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm3" style:page-usage="left">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="2cm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style>
+                <style:header-footer-properties fo:min-height="0.799cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-bottom="0.3cm" style:dynamic-spacing="false"/>
+            </style:header-style>
+            <style:footer-style>
+                <style:header-footer-properties fo:min-height="0.799cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.3cm" style:dynamic-spacing="false"/>
+            </style:footer-style>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm4" style:page-usage="right">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="2cm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" draw:fill="none" draw:fill-color="#cfe7f5" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style>
+                <style:header-footer-properties fo:min-height="0.799cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-bottom="0.3cm" style:dynamic-spacing="false"/>
+            </style:header-style>
+            <style:footer-style>
+                <style:header-footer-properties fo:min-height="0.799cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.3cm" style:dynamic-spacing="false"/>
+            </style:footer-style>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm5">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="2cm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style/>
+            <style:footer-style/>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm6">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="2cm" fo:background-color="transparent" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" draw:fill="none" draw:fill-color="#cfe7f5" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style/>
+            <style:footer-style/>
+        </style:page-layout>
+        <style:page-layout style:name="Mpm7">
+            <style:page-layout-properties fo:page-width="21.001cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="1cm" fo:margin-bottom="1cm" fo:margin-left="2cm" fo:margin-right="1cm" style:writing-mode="lr-tb" style:layout-grid-color="#c0c0c0" style:layout-grid-lines="20" style:layout-grid-base-height="0.706cm" style:layout-grid-ruby-height="0.353cm" style:layout-grid-mode="none" style:layout-grid-ruby-below="false" style:layout-grid-print="false" style:layout-grid-display="false" style:footnote-max-height="0cm" loext:margin-gutter="0cm">
+                <style:footnote-sep style:width="0.018cm" style:distance-before-sep="0.101cm" style:distance-after-sep="0.101cm" style:line-style="solid" style:adjustment="left" style:rel-width="25%" style:color="#000000"/>
+            </style:page-layout-properties>
+            <style:header-style/>
+            <style:footer-style/>
+        </style:page-layout>
+        <style:style style:name="Mdp1" style:family="drawing-page">
+            <style:drawing-page-properties draw:background-size="full"/>
+        </style:style>
+        <style:style style:name="Mdp2" style:family="drawing-page">
+            <style:drawing-page-properties draw:fill="none" draw:background-size="full" draw:fill-color="#cfe7f5"/>
+        </style:style>
+    </office:automatic-styles>
+    <office:master-styles>
+        <style:master-page style:name="Standard" style:page-layout-name="Mpm1" draw:style-name="Mdp1"/>
+        <style:master-page style:name="First_20_Page" style:display-name="First Page" style:page-layout-name="Mpm2" draw:style-name="Mdp2" style:next-style-name="Left_20_Page">
+            <style:footer>
+                <text:p text:style-name="Footer">
+                    <text:page-number text:select-page="current">1</text:page-number>
+                </text:p>
+            </style:footer>
+        </style:master-page>
+        <style:master-page style:name="Left_20_Page" style:display-name="Left Page" style:page-layout-name="Mpm3" draw:style-name="Mdp1" style:next-style-name="Right_20_Page">
+            <style:header>
+                <text:p text:style-name="Header_20_left">
+                    <text:title>Loop Action</text:title>
+                </text:p>
+            </style:header>
+            <style:footer>
+                <text:p text:style-name="Footer_20_left">
+                    <text:page-number text:select-page="current">4</text:page-number>
+                </text:p>
+            </style:footer>
+        </style:master-page>
+        <style:master-page style:name="Right_20_Page" style:display-name="Right Page" style:page-layout-name="Mpm4" draw:style-name="Mdp2" style:next-style-name="Left_20_Page">
+            <style:header>
+                <text:p text:style-name="Header_20_right">
+                    <text:chapter text:display="number-and-name" text:outline-level="1">A1. CSVParse</text:chapter>
+                </text:p>
+            </style:header>
+            <style:footer>
+                <text:p text:style-name="Footer_20_right">
+                    <text:page-number text:select-page="current">3</text:page-number>
+                </text:p>
+            </style:footer>
+        </style:master-page>
+        <style:master-page style:name="master_5f_first_20_page" style:display-name="master_first page" style:page-layout-name="Mpm5" draw:style-name="Mdp1" style:next-style-name="master_5f_left_20_page"/>
+        <style:master-page style:name="master_5f_left_20_page" style:display-name="master_left page" style:page-layout-name="Mpm5" draw:style-name="Mdp1" style:next-style-name="master_5f_right_20_page"/>
+        <style:master-page style:name="master_5f_right_20_page" style:display-name="master_right page" style:page-layout-name="Mpm6" draw:style-name="Mdp2" style:next-style-name="master_5f_left_20_page"/>
+        <style:master-page style:name="HTML" style:page-layout-name="Mpm7" draw:style-name="Mdp1"/>
+    </office:master-styles>
+</office:document-styles>

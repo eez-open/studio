@@ -28,7 +28,7 @@ class Context {
     ) {}
 
     getListID() {
-        return "list" + this.listID++;
+        return "list_" + this.componentInfo.name + this.listID++;
     }
 
     generateImage(href: string) {
@@ -67,11 +67,16 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
         } else if (token.type == "codespan") {
             odt += `<text:span text:style-name="backtick">${token.text}</text:span>`;
         } else if (token.type == "code") {
+            console.log(context.componentInfo.name, tokens, token);
+
             odt += token.text
                 .split("\n")
                 .map(
                     line =>
-                        `<text:p text:style-name="Standard">${line}</text:p>`
+                        `<text:p text:style-name="cmd_code">${line.replace(
+                            /    /gi,
+                            "<text:tab/>"
+                        )}</text:p>`
                 )
                 .join();
         } else if (token.type == "em") {
@@ -79,7 +84,7 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
         } else if (token.type == "strong") {
             odt += `<text:span text:style-name="strong">${token.text}</text:span>`;
         } else if (token.type == "space") {
-            odt += `<text:span> </text:span>`;
+            odt += `<text:p text:style-name="Standard"/>`;
         } else if (token.type == "br") {
             odt += `<text:p text:style-name="Standard"/>`;
         } else if (token.type == "list") {
@@ -87,8 +92,14 @@ function lexemesToODT(context: Context, tokens: marked.Token[]) {
             odt += `<text:list xml:id="${context.getListID()}" text:style-name="List_20_1">
                     ${token.items
                         .map(
-                            item => `<text:list-item>
-                            <text:p text:style-name="List_20_1">
+                            (item, i) => `<text:list-item>
+                            <text:p text:style-name="${
+                                i == 0
+                                    ? "List_20_1_20_Start"
+                                    : i == token.items.length - 1
+                                    ? "List_20_1_20_End"
+                                    : "List_20_1"
+                            }">
                             ${lexemesToODT(context, item.tokens)}
                             </text:p>
                         </text:list-item>`
@@ -151,6 +162,22 @@ async function generateODTFile(
         )
     );
 
+    const titleList = context.getListID();
+    const propertiesList = !componentInfo.isEmptyProperties()
+        ? context.getListID()
+        : undefined;
+    const inputsList = !componentInfo.isEmptyInputs()
+        ? context.getListID()
+        : undefined;
+    const outputsList = !componentInfo.isEmptyOutputs()
+        ? context.getListID()
+        : undefined;
+    const examplesList = !componentInfo.isEmptyExamples()
+        ? context.getListID()
+        : undefined;
+
+    let propertyPrevListID: string | undefined;
+
     let content = `<?xml version="1.0" encoding="UTF-8"?>
 <office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
     xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
@@ -185,84 +212,81 @@ async function generateODTFile(
     xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0">
     <office:scripts/>
     <office:font-face-decls>
-        <style:font-face style:name="OpenSymbol" svg:font-family="OpenSymbol" style:font-charset="x-symbol"/>
-        <style:font-face style:name="CombiNumerals" svg:font-family="CombiNumerals" style:font-adornments="Regular" style:font-pitch="variable" style:font-charset="x-symbol"/>
-        <style:font-face style:name="OpenSymbol1" svg:font-family="OpenSymbol"/>
         <style:font-face style:name="Arial" svg:font-family="Arial" style:font-family-generic="swiss"/>
-        <style:font-face style:name="DejaVu Sans1" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="swiss"/>
-        <style:font-face style:name="Courier New" svg:font-family="&apos;Courier New&apos;" style:font-adornments="Normal" style:font-family-generic="modern" style:font-pitch="fixed"/>
-        <style:font-face style:name="DejaVu Sans Mono" svg:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
-        <style:font-face style:name="Droid Sans Fallback1" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
         <style:font-face style:name="Arial Black" svg:font-family="&apos;Arial Black&apos;" style:font-adornments="Bold" style:font-pitch="variable"/>
-        <style:font-face style:name="Ubuntu2" svg:font-family="Ubuntu" style:font-adornments="Bold" style:font-pitch="variable"/>
-        <style:font-face style:name="Ubuntu3" svg:font-family="Ubuntu" style:font-adornments="Bold Italic" style:font-pitch="variable"/>
-        <style:font-face style:name="Ubuntu1" svg:font-family="Ubuntu" style:font-adornments="Italic" style:font-pitch="variable"/>
-        <style:font-face style:name="Ubuntu" svg:font-family="Ubuntu" style:font-adornments="Regular" style:font-pitch="variable"/>
         <style:font-face style:name="Arial1" svg:font-family="Arial" style:font-adornments="Negreta" style:font-family-generic="swiss" style:font-pitch="variable"/>
-        <style:font-face style:name="DejaVu Sans" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
-        <style:font-face style:name="Droid Sans Fallback" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+        <style:font-face style:name="CombiNumerals" svg:font-family="CombiNumerals" style:font-adornments="Regular" style:font-pitch="variable" style:font-charset="x-symbol"/>
+        <style:font-face style:name="Courier New" svg:font-family="&apos;Courier New&apos;" style:font-adornments="Normal" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="DejaVu Sans" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="swiss"/>
+        <style:font-face style:name="DejaVu Sans Mono" svg:font-family="&apos;DejaVu Sans Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="DejaVu Sans1" svg:font-family="&apos;DejaVu Sans&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+        <style:font-face style:name="Droid Sans Fallback" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
+        <style:font-face style:name="Droid Sans Fallback1" svg:font-family="&apos;Droid Sans Fallback&apos;" style:font-family-generic="system" style:font-pitch="variable"/>
+        <style:font-face style:name="OpenSymbol" svg:font-family="OpenSymbol" style:font-charset="x-symbol"/>
+        <style:font-face style:name="OpenSymbol1" svg:font-family="OpenSymbol"/>
+        <style:font-face style:name="Ubuntu" svg:font-family="Ubuntu" style:font-adornments="Bold" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu1" svg:font-family="Ubuntu" style:font-adornments="Bold Italic" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu2" svg:font-family="Ubuntu" style:font-adornments="Italic" style:font-pitch="variable"/>
+        <style:font-face style:name="Ubuntu3" svg:font-family="Ubuntu" style:font-adornments="Regular" style:font-pitch="variable"/>
     </office:font-face-decls>
     <office:automatic-styles>
         <style:style style:name="Table1" style:family="table">
-            <style:table-properties style:width="170mm" table:align="margins"/>
+            <style:table-properties style:width="17cm" table:align="margins"/>
         </style:style>
         <style:style style:name="Table1.A" style:family="table-column">
-            <style:table-column-properties style:column-width="170mm" style:rel-column-width="65535*"/>
+            <style:table-column-properties style:column-width="17cm" style:rel-column-width="65535*"/>
         </style:style>
         <style:style style:name="Table1.A1" style:family="table-cell">
-            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.97mm" fo:border="0.02mm solid #cccccc">
+            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.097cm" fo:border="0.05pt solid #cccccc">
                 <style:background-image/>
             </style:table-cell-properties>
         </style:style>
         <style:style style:name="Table1.A2" style:family="table-cell">
-            <style:table-cell-properties fo:padding="0.97mm" fo:border-left="0.02mm solid #cccccc" fo:border-right="0.02mm solid #cccccc" fo:border-top="none" fo:border-bottom="0.02mm solid #cccccc"/>
+            <style:table-cell-properties fo:padding="0.097cm" fo:border-left="0.05pt solid #cccccc" fo:border-right="0.05pt solid #cccccc" fo:border-top="none" fo:border-bottom="0.05pt solid #cccccc"/>
         </style:style>
         <style:style style:name="Table2" style:family="table">
-            <style:table-properties style:width="170mm" table:align="margins"/>
+            <style:table-properties style:width="17cm" table:align="margins"/>
         </style:style>
         <style:style style:name="Table2.A" style:family="table-column">
-            <style:table-column-properties style:column-width="170mm" style:rel-column-width="65535*"/>
+            <style:table-column-properties style:column-width="17cm" style:rel-column-width="65535*"/>
         </style:style>
         <style:style style:name="Table2.A1" style:family="table-cell">
-            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.97mm" fo:border="0.02mm solid #cccccc">
+            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.097cm" fo:border="0.05pt solid #cccccc">
                 <style:background-image/>
             </style:table-cell-properties>
         </style:style>
         <style:style style:name="Table2.A2" style:family="table-cell">
-            <style:table-cell-properties fo:padding="0.97mm" fo:border-left="0.02mm solid #cccccc" fo:border-right="0.02mm solid #cccccc" fo:border-top="none" fo:border-bottom="0.02mm solid #cccccc"/>
+            <style:table-cell-properties fo:padding="0.097cm" fo:border-left="0.05pt solid #cccccc" fo:border-right="0.05pt solid #cccccc" fo:border-top="none" fo:border-bottom="0.05pt solid #cccccc"/>
         </style:style>
         <style:style style:name="Table3" style:family="table">
-            <style:table-properties style:width="170mm" table:align="margins"/>
+            <style:table-properties style:width="17cm" table:align="margins"/>
         </style:style>
         <style:style style:name="Table3.A" style:family="table-column">
-            <style:table-column-properties style:column-width="170mm" style:rel-column-width="65535*"/>
+            <style:table-column-properties style:column-width="17cm" style:rel-column-width="65535*"/>
         </style:style>
         <style:style style:name="Table3.A1" style:family="table-cell">
-            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.97mm" fo:border="0.02mm solid #cccccc">
+            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.097cm" fo:border="0.05pt solid #cccccc">
                 <style:background-image/>
             </style:table-cell-properties>
         </style:style>
         <style:style style:name="Table3.A2" style:family="table-cell">
-            <style:table-cell-properties fo:padding="0.97mm" fo:border-left="0.02mm solid #cccccc" fo:border-right="0.02mm solid #cccccc" fo:border-top="none" fo:border-bottom="0.02mm solid #cccccc"/>
+            <style:table-cell-properties fo:padding="0.097cm" fo:border-left="0.05pt solid #cccccc" fo:border-right="0.05pt solid #cccccc" fo:border-top="none" fo:border-bottom="0.05pt solid #cccccc"/>
         </style:style>
         <style:style style:name="Table4" style:family="table">
-            <style:table-properties style:width="170mm" table:align="margins"/>
+            <style:table-properties style:width="17cm" table:align="margins"/>
         </style:style>
         <style:style style:name="Table4.A" style:family="table-column">
-            <style:table-column-properties style:column-width="170mm" style:rel-column-width="65535*"/>
+            <style:table-column-properties style:column-width="17cm" style:rel-column-width="65535*"/>
         </style:style>
         <style:style style:name="Table4.A1" style:family="table-cell">
-            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.97mm" fo:border="0.02mm solid #cccccc">
+            <style:table-cell-properties fo:background-color="#cccccc" fo:padding="0.097cm" fo:border="0.05pt solid #cccccc">
                 <style:background-image/>
             </style:table-cell-properties>
         </style:style>
         <style:style style:name="Table4.A2" style:family="table-cell">
-            <style:table-cell-properties fo:padding="0.97mm" fo:border-left="0.02mm solid #cccccc" fo:border-right="0.02mm solid #cccccc" fo:border-top="none" fo:border-bottom="0.02mm solid #cccccc"/>
+            <style:table-cell-properties fo:padding="0.097cm" fo:border-left="0.05pt solid #cccccc" fo:border-right="0.05pt solid #cccccc" fo:border-top="none" fo:border-bottom="0.05pt solid #cccccc"/>
         </style:style>
-        <style:style style:name="P1" style:family="paragraph" style:parent-style-name="frame_20_header">
-            <style:paragraph-properties style:shadow="none"/>
-        </style:style>
-        <style:style style:name="P2" style:family="paragraph" style:parent-style-name="Heading_20_1" style:master-page-name="First_20_Page">
+        <style:style style:name="P1" style:family="paragraph" style:parent-style-name="Heading_20_1" style:master-page-name="First_20_Page">
             <style:paragraph-properties style:page-number="auto"/>
         </style:style>
         <style:style style:name="T1" style:family="text">
@@ -271,14 +295,12 @@ async function generateODTFile(
         <style:style style:name="T2" style:family="text">
             <style:text-properties fo:font-style="italic" fo:font-weight="normal" style:font-style-asian="italic" style:font-weight-asian="normal" style:font-style-complex="italic" style:font-weight-complex="normal"/>
         </style:style>
+        <style:style style:name="T3" style:family="text"/>
         <style:style style:name="fr1" style:family="graphic" style:parent-style-name="Graphics">
-            <style:graphic-properties style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0mm, 0mm, 0mm, 0mm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
+            <style:graphic-properties style:wrap="dynamic" style:number-wrapped-paragraphs="1" style:wrap-contour="false" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
         </style:style>
         <style:style style:name="fr2" style:family="graphic" style:parent-style-name="Graphics">
-            <style:graphic-properties style:wrap="none" style:mirror="none" fo:clip="rect(0mm, 0mm, 0mm, 0mm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
-        </style:style>
-        <style:style style:name="fr3" style:family="graphic" style:parent-style-name="Graphics">
-            <style:graphic-properties style:wrap="dynamic" style:number-wrapped-paragraphs="1" style:wrap-contour="false" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0mm, 0mm, 0mm, 0mm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
+            <style:graphic-properties style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
         </style:style>
     </office:automatic-styles>
     <office:body>
@@ -292,9 +314,9 @@ async function generateODTFile(
                 <text:sequence-decl text:display-outline-level="0" text:name="Figure"/>
                 <text:sequence-decl text:display-outline-level="0" text:name="Fig."/>
             </text:sequence-decls>
-            <text:list xml:id="list2882491321189167835" text:style-name="Outline">
+            <text:list xml:id="${titleList}" text:style-name="Outline">
                 <text:list-item>
-                    <text:h text:style-name="P2" text:outline-level="1">${
+                    <text:h text:style-name="P1" text:outline-level="1">${
                         componentInfo.isDashboardComponent
                             ? `<draw:frame draw:style-name="fr1" draw:name="dashboard-icon.png" text:anchor-type="paragraph" svg:x="${projectIconX()}mm" svg:y="0mm" svg:width="13mm" svg:height="10.94mm" draw:z-index="1">
                             <draw:image xlink:href="Pictures/100002010000036B0000031B40540EF8.png" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
@@ -321,14 +343,12 @@ async function generateODTFile(
                 </text:list-item>
             </text:list>
 
-            <text:p text:style-name="Standard"/>
-
             ${markdownToODT(context, componentInfo.getDescriptionMarkdown())}
 
             ${
-                !componentInfo.isEmptyProperties()
+                propertiesList
                     ? `
-                <text:list xml:id="list322571231" text:continue-numbering="true" text:style-name="Outline">
+                <text:list xml:id="${propertiesList}" text:continue-numbering="true" text:continue-list="${titleList}" text:style-name="Outline">
                     <text:list-item>
                         <text:list>
                             <text:list-item>
@@ -365,8 +385,14 @@ async function generateODTFile(
                                         let propertyDescription =
                                             getPropertyDescription(property);
 
-                                        return `
-                                            <text:list xml:id="list1065229068" text:continue-numbering="true" text:style-name="Outline">
+                                        let listID = context.getListID();
+
+                                        const result = `
+                                            <text:list xml:id="${listID}" text:continue-numbering="true" ${
+                                            propertyPrevListID
+                                                ? `text:continue-list="${propertyPrevListID}"`
+                                                : ""
+                                        } text:style-name="Outline">
                                                 <text:list-item>
                                                     <text:list>
                                                         <text:list-item>
@@ -388,8 +414,11 @@ async function generateODTFile(
                                                 componentInfo.getPropertyDescriptionMarkdown(
                                                     property.name
                                                 )
-                                            )}
-                                            <text:p text:style-name="Standard"></text:p>`;
+                                            )}`;
+
+                                        propertyPrevListID = listID;
+
+                                        return result;
                                     })
                                     .join()}
                             </table:table-cell>
@@ -401,9 +430,11 @@ async function generateODTFile(
             }
 
             ${
-                !componentInfo.isEmptyInputs()
+                inputsList
                     ? `
-                <text:list xml:id="list2080053797" text:continue-numbering="true" text:style-name="Outline">
+                <text:list xml:id="${inputsList}" text:continue-numbering="true" text:continue-list="${
+                          propertiesList || titleList
+                      }" text:style-name="Outline">
                     <text:list-item>
                         <text:list>
                             <text:list-item>
@@ -421,7 +452,7 @@ async function generateODTFile(
                         let inputDescription = getInputDescription(input);
 
                         return `
-                            <text:list xml:id="list53662346" text:continue-numbering="true" text:style-name="Outline">
+                            <text:list xml:id="${context.getListID()}" text:continue-numbering="true" text:style-name="Outline">
                                 <text:list-item>
                                     <text:list>
                                         <text:list-item>
@@ -443,18 +474,18 @@ async function generateODTFile(
                                 componentInfo.getInputDescriptionMarkdown(
                                     input.name
                                 )
-                            )}
-                            <text:p text:style-name="Standard"></text:p>;
-                        `;
+                            )}`;
                     })
                     .join()}`
                     : ""
             }
 
             ${
-                !componentInfo.isEmptyOutputs()
+                outputsList
                     ? `
-                <text:list xml:id="list2080153797" text:continue-numbering="true" text:style-name="Outline">
+                <text:list xml:id="${outputsList}" text:continue-numbering="true" text:continue-list="${
+                          inputsList || propertiesList || titleList
+                      }" text:style-name="Outline">
                     <text:list-item>
                         <text:list>
                             <text:list-item>
@@ -472,7 +503,7 @@ async function generateODTFile(
                         let outputDescription = getOutputDescription(output);
 
                         return `
-                            <text:list xml:id="list513662346" text:continue-numbering="true" text:style-name="Outline">
+                            <text:list xml:id="${context.getListID()}" text:continue-numbering="true" text:style-name="Outline">
                                 <text:list-item>
                                     <text:list>
                                         <text:list-item>
@@ -494,8 +525,7 @@ async function generateODTFile(
                                 componentInfo.getOutputDescriptionMarkdown(
                                     output.name
                                 )
-                            )}
-                            <text:p text:style-name="Standard"></text:p>`;
+                            )}`;
                     })
                     .join()}`
                     : ""
@@ -503,9 +533,14 @@ async function generateODTFile(
 
 
             ${
-                !componentInfo.isEmptyExamples()
+                examplesList
                     ? `
-                    <text:list xml:id="list1803240655" text:continue-numbering="true" text:style-name="Outline">
+                    <text:list xml:id="${examplesList}" text:continue-numbering="true" text:continue-list="${
+                          outputsList ||
+                          inputsList ||
+                          propertiesList ||
+                          titleList
+                      }" text:style-name="Outline">
                         <text:list-item>
                             <text:list>
                                 <text:list-item>
