@@ -24,11 +24,11 @@ The maximum value that `Data` can contain.
 
 There are two orientations that the `Progress` widget can have:
 
-- Horizonatal
+-   Horizontal
 
     ![Alt text](../images/progress_horz.png)
 
-- Vertical
+-   Vertical
 
     ![Alt text](../images/progress_vert.png)
 
@@ -38,4 +38,4 @@ There are two orientations that the `Progress` widget can have:
 
 # EXAMPLES
 
-* _eez-gui-widgets-demo_
+-   _eez-gui-widgets-demo_

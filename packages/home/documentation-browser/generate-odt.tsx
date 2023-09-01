@@ -22,7 +22,9 @@ class Context {
     listID = 1;
     images = new Set<string>();
 
-    listLevel = 0;
+    listLevel: number = 0;
+
+    imgZIndex: number = 1;
 
     constructor(
         public componentInfo: ComponentInfo,
@@ -44,7 +46,8 @@ class Context {
         const widthmm = Math.min(Math.round((width * 43.66) / 165), 165);
         const heightmm = Math.round((widthmm * height) / width);
 
-        return `<draw:frame draw:style-name="fr3" draw:name="image_${imageFileName}" text:anchor-type="paragraph" svg:x="0mm" svg:y="0mm" svg:width="${widthmm}mm" svg:height="${heightmm}mm" draw:z-index="4">
+        return `<draw:frame draw:style-name="fr2" draw:name="image_${imageFileName}" text:anchor-type="paragraph" svg:width="${widthmm}mm" svg:height="${heightmm}mm" draw:z-index="${this
+            .imgZIndex++}">
                 <draw:image xlink:href="Pictures/${imageFileName}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
             </draw:frame>`;
     }
@@ -53,30 +56,46 @@ class Context {
 function lexemesToODT(
     context: Context,
     tokens: marked.Token[],
-    onlyList: boolean = false
+    listPass: number
 ) {
     let odt = "";
 
-    context.listLevel++;
-
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
-        if (onlyList && token.type != "list") {
+
+        if (listPass == 2 && token.type != "list") {
             continue;
         }
 
         if (token.type == "paragraph") {
             odt += `<text:p text:style-name="Standard">${lexemesToODT(
                 context,
-                token.tokens
+                token.tokens,
+                0
             )}</text:p>`;
         } else if (token.type == "text") {
-            odt += `<text:span>${
-                Array.isArray((token as any).tokens) &&
-                (token as any).tokens.length > 0
-                    ? lexemesToODT(context, (token as any).tokens)
-                    : token.text
-            }</text:span>`;
+            const subtokens = (token as any).tokens;
+            if (!Array.isArray(subtokens) || subtokens.length == 0) {
+                odt += token.text;
+            } else if (subtokens.length == 1) {
+                if (
+                    subtokens[0].type == "text" &&
+                    (!Array.isArray((subtokens[0] as any).tokens) ||
+                        (subtokens[0] as any).tokens.length == 0)
+                ) {
+                    odt += token.text;
+                } else if (subtokens[0].type == "image") {
+                    odt += `<text:p text:style-name="Standard">${lexemesToODT(
+                        context,
+                        subtokens,
+                        0
+                    )}</text:p>`;
+                } else {
+                    odt += lexemesToODT(context, (token as any).tokens, 0);
+                }
+            } else {
+                odt += lexemesToODT(context, (token as any).tokens, 0);
+            }
         } else if (token.type == "codespan") {
             odt += `<text:span text:style-name="backtick">${token.text}</text:span>`;
         } else if (token.type == "code") {
@@ -97,48 +116,90 @@ function lexemesToODT(
         } else if (token.type == "space" || token.type == "br") {
             if (
                 !(
-                    (i > 0 && tokens[i - 1].type == "space") ||
+                    (i > 0 &&
+                        (tokens[i - 1].type == "space" ||
+                            tokens[i - 1].type == "paragraph")) ||
                     i == tokens.length - 1
                 )
             ) {
-                odt += `<text:p text:style-name="Standard"/>`;
+                //odt += `<text:p text:style-name="Standard"/>`;
             }
         } else if (token.type == "list") {
+            context.listLevel++;
+
+            const listItems = token.items
+                .map(item => {
+                    const images: any[] = [];
+
+                    if (
+                        item.tokens.length > 0 &&
+                        (context.listLevel <= 1 || listPass == 2)
+                    ) {
+                        const lastToken = item.tokens[item.tokens.length - 1];
+                        if (
+                            lastToken.type == "text" &&
+                            Array.isArray((lastToken as any).tokens) &&
+                            (lastToken as any).tokens.length == 1 &&
+                            (lastToken as any).tokens[0].type == "image"
+                        ) {
+                            images.push((lastToken as any).tokens[0]);
+                            item.tokens.splice(item.tokens.length - 1, 1);
+                        }
+                    }
+
+                    const imagesODT =
+                        images.length > 0
+                            ? `
+                                <text:p>
+                                    ${images
+                                        .map(image =>
+                                            context.generateImage(image.href)
+                                        )
+                                        .join("\n")}
+                                </text:p>
+                            `
+                            : "";
+
+                    if (imagesODT) {
+                        console.log(imagesODT, context.listLevel, listPass);
+                    }
+
+                    const styleName =
+                        context.listLevel > 1
+                            ? `List_20_${context.listLevel}`
+                            : i == 0
+                            ? `List_20_${context.listLevel}_20_Start`
+                            : i == token.items.length - 1
+                            ? `List_20_${context.listLevel}_20_End`
+                            : `List_20_${context.listLevel}`;
+
+                    return `
+                        <text:list-item>
+                            <text:p text:style-name="${styleName}">
+                                ${lexemesToODT(context, item.tokens, 1)}
+                            </text:p>
+                            ${imagesODT}
+                        </text:list-item>
+                        ${lexemesToODT(context, item.tokens, 2)}
+                    `;
+                })
+                .join("\n");
+
             if (context.listLevel > 1) {
-                if (onlyList) {
-                    odt += token.items
-                        .map(
-                            item => `<text:list-item>
-                        <text:p text:style-name="List_20_${context.listLevel}">
-                        ${lexemesToODT(context, item.tokens)}
-                        </text:p>
-                    </text:list-item>
-                    ${lexemesToODT(context, item.tokens, true)}`
-                        )
-                        .join("\n");
+                if (listPass == 2) {
+                    odt += listItems;
                 }
             } else {
-                odt += `<text:list xml:id="${context.getListID()}" text:style-name="List_20_${
+                odt += `
+                    <text:list xml:id="${context.getListID()}" text:style-name="List_20_${
                     context.listLevel
                 }">
-                    ${token.items
-                        .map(
-                            (item, i) => `<text:list-item>
-                            <text:p text:style-name="${
-                                i == 0
-                                    ? `List_20_${context.listLevel}_20_Start`
-                                    : i == token.items.length - 1
-                                    ? `List_20_${context.listLevel}_20_End`
-                                    : `List_20_${context.listLevel}`
-                            }">
-                            ${lexemesToODT(context, item.tokens)}
-                            </text:p>
-                        </text:list-item>
-                        ${lexemesToODT(context, item.tokens, true)}`
-                        )
-                        .join("\n")}
-                </text:list>`;
+                        ${listItems}
+                    </text:list>
+                `;
             }
+
+            context.listLevel--;
         } else if (token.type == "image") {
             odt += context.generateImage(token.href);
         } else if (token.type == "link") {
@@ -150,8 +211,6 @@ function lexemesToODT(
             );
         }
     }
-
-    context.listLevel--;
 
     return odt;
 }
@@ -166,7 +225,14 @@ function markdownToODT(
 
     const tokens = marked.lexer(markdown.raw);
 
-    return lexemesToODT(context, tokens);
+    if (
+        context.componentInfo.name == "Progress (EEZ-GUI)" ||
+        context.componentInfo.name == "SCPI"
+    ) {
+        console.log(context.componentInfo.name, tokens);
+    }
+
+    return lexemesToODT(context, tokens, 0);
 }
 
 async function generateODTFile(
@@ -335,7 +401,7 @@ async function generateODTFile(
             <style:graphic-properties style:wrap="dynamic" style:number-wrapped-paragraphs="1" style:wrap-contour="false" style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
         </style:style>
         <style:style style:name="fr2" style:family="graphic" style:parent-style-name="Graphics">
-            <style:graphic-properties style:vertical-pos="from-top" style:vertical-rel="paragraph" style:horizontal-pos="from-left" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard" style:flow-with-text="false"/>
+            <style:graphic-properties style:horizontal-pos="center" style:horizontal-rel="paragraph" style:mirror="none" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:luminance="0%" draw:contrast="0%" draw:red="0%" draw:green="0%" draw:blue="0%" draw:gamma="100%" draw:color-inversion="false" draw:image-opacity="100%" draw:color-mode="standard"/>
         </style:style>
     </office:automatic-styles>
     <office:body>

@@ -24,7 +24,7 @@ The maximum value that `Data` can contain.
 
 There are two orientations that the `Progress` widget can have:
 
--   Horizonatal
+-   Horizontal
 -   Vertical
 
 # INPUTS [EMPTY]
