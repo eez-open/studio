@@ -59,7 +59,8 @@ function lexemesToODT(
 
     context.listLevel++;
 
-    for (const token of tokens) {
+    for (let i = 0; i < tokens.length; i++) {
+        const token = tokens[i];
         if (onlyList && token.type != "list") {
             continue;
         }
@@ -93,10 +94,15 @@ function lexemesToODT(
             odt += `<text:span text:style-name="T1">${token.text}</text:span>`;
         } else if (token.type == "strong") {
             odt += `<text:span text:style-name="strong">${token.text}</text:span>`;
-        } else if (token.type == "space") {
-            odt += `<text:p text:style-name="Standard"/>`;
-        } else if (token.type == "br") {
-            odt += `<text:p text:style-name="Standard"/>`;
+        } else if (token.type == "space" || token.type == "br") {
+            if (
+                !(
+                    (i > 0 && tokens[i - 1].type == "space") ||
+                    i == tokens.length - 1
+                )
+            ) {
+                odt += `<text:p text:style-name="Standard"/>`;
+            }
         } else if (token.type == "list") {
             if (context.listLevel > 1) {
                 if (onlyList) {
