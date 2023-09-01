@@ -26,7 +26,7 @@ A standard sequence output.
 
 ## result
 
-Data output to which the constructed value is sent. The type of that value must be specified - this should be done in the Flow - Outputs section:
+Data output to which the constructed value is sent. The type of that value must be specified – this should be done in the Flow – Outputs section:
 
 ![Alt text](../images/json_result_output_type.png)
 

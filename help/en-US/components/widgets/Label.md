@@ -16,7 +16,7 @@ Here we can choose whether the `Text` property will be calculated from the Expre
 
 ## Long mode
 
-If `content` is selected for `Width` and `Height` then this item has no effect because the size of the Widget will be automatically set to fit the entire text, but if the size of the Widget is set manually ('px' or '%') then using of this item defines one of the following ways in which the text will be split if it does not fit within the limits of the Widget:
+If `content` is selected for `Width` and `Height` then this item has no effect because the size of the Widget will be automatically set to fit the entire text, but if the size of the Widget is set manually (`px` or `%`) then using of this item defines one of the following ways in which the text will be split if it does not fit within the limits of the Widget:
 
 -   `WRAP` – Wrap too long lines. If the `Height` is set to `content` it will be expanded, otherwise the text will be clipped (Default).
 -   `DOT` – Replaces the last 3 characters from bottom right corner of the label with dots.

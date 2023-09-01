@@ -46,11 +46,11 @@ When displaying samples, the formula `offset + sample_value * scale` is used.
 
 Format from `Chart data`. Possible values:
 
--   `"float"`: "Chart data" must be a blob containing 32-bit, little-endian float numbers
--   `"double"`: "Chart data" must be a blob containing 64-bit, little-endian float numbers
--   `"rigol-byte"`: "Chart data" must be a blob containing 8-bit unsigned integer numbers
--   `"rigol-word"`: "Chart data" must be a blob containing 16-bit unsigned integer numbers
--   `"csv"`: "Chart data" must be a CSV string, the first column is taken
+-   `"float"` – "Chart data" must be a blob containing 32-bit, little-endian float numbers.
+-   `"double"`– "Chart data" must be a blob containing 64-bit, little-endian float numbers.
+-   `"rigol-byte"` – "Chart data" must be a blob containing 8-bit unsigned integer numbers.
+-   `"rigol-word"` – "Chart data" must be a blob containing 16-bit unsigned integer numbers.
+-   `"csv"` – "Chart data" must be a CSV string, the first column is taken.
 
 ## Chart unit
 

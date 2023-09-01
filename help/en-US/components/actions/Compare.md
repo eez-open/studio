@@ -21,17 +21,17 @@ This expression is used only in the case of the `BETWEEN` operator, then it is c
 
 It is possible to use one of the following operators:
 
--   `=`: A is equal to B, i.e. `A == B``
--   `<`: A is less than B, i.e. `A < B``
--   `>`: A is greater than B, i.e. `A > B``
--   `<=`: A is less or equal to B, i.e. `A <= B``
--   `>=`: A is greater or equal to B, i.e. `A >= B``
--   `<>`: A is different then B, i.e. `A != B``
--   `NOT`: A is not true, i.e. `!A``
--   `AND`: both A and B are true, i.e. `A && B`
--   `OR`: either A or B is true, i.e. `A || B`
--   `XOR`: either A or B is true, but not both, `A ^^ B`
--   `BETWEEN`: A is between B and C, i.e. A is greater then or equal to B and A is less then or equal to C, i.e. `A >= B AND A <= C`
+-   `=` – A is equal to B, i.e. `A == B`
+-   `<` – A is less than B, i.e. `A < B`
+-   `>` – A is greater than B, i.e. `A > B`
+-   `<=` – A is less or equal to B, i.e. `A <= B`
+-   `>=` – A is greater or equal to B, i.e. `A >= B`
+-   `<>` – A is different then B, i.e. `A != B`
+-   `NOT` – A is not true, i.e. `!A`
+-   `AND` – both A and B are true, i.e. `A && B`
+-   `OR` – either A or B is true, i.e. `A || B`
+-   `XOR` – either A or B is true, but not both, `A ^^ B`
+-   `BETWEEN` – A is between B and C, i.e. A is greater then or equal to B and A is less then or equal to C, i.e. `A >= B AND A <= C`
 
 # INPUTS
 
