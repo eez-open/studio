@@ -9,10 +9,10 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 ### Links
 
 * [Discord](https://discord.gg/dhYMnCB) server
-* [Twitter](https://twitter.com/envox) <img src="https://about.twitter.com/etc/designs/about2-twitter/public/img/favicon.ico" width="16" />
-* [YouTube](https://www.youtube.com/c/eezopen) channel
+* [X (Twitter)](https://twitter.com/envox)
 * [Mastodon](https://mastodon.social/@envox)
-* [Liberpay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
+* [YouTube](https://www.youtube.com/c/eezopen) channel
+* [Liberapay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
 
 ## Introduction
 
@@ -73,6 +73,8 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 -   [M13](https://github.com/eez-open/studio/releases/tag/v0.9.98) - Standalone Flow dashboard
 -   [M14](https://github.com/eez-open/studio/releases/tag/v0.9.99) - Home page modifications and enhancements
 -   [M15](https://github.com/eez-open/studio/releases/tag/v0.10.1) - Enhancements (more examples, extension manager, MQTT)
+-   [M16](https://github.com/eez-open/studio/releases/tag/v0.10.2) - Online help, enhancements, bug fixing for “Actions”
+-   [M17](https://github.com/eez-open/studio/releases/tag/v0.10.3) - Online help, enhancements, bug fixing for “Widgets”
 
 ## Installation
 
