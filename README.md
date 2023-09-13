@@ -8,7 +8,8 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ### Links
 
-* [Discord](https://discord.gg/dhYMnCB) server
+* [Web page](https://www.envox.eu/studio/studio-introduction/)
+* [Discord](https://discord.gg/q5KAeeenNG) server
 * [X (Twitter)](https://twitter.com/envox)
 * [Mastodon](https://mastodon.social/@envox)
 * [YouTube](https://www.youtube.com/c/eezopen) channel
@@ -16,7 +17,7 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ## Introduction
 
-EEZ Studio is a free and open source cross-platform low-code tool for embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple devices and T&M equipment including [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and any other T&M devices that support [SCPI](https://www.ivifoundation.org/scpi/) from manufacturers such as Keysight, Rigol, Siglent, etc.
+EEZ Studio is a free and open source cross-platform low-code visual tool for desktop and embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple devices and T&M equipment including [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and any other T&M devices that support [SCPI](https://www.ivifoundation.org/scpi/) from manufacturers such as Keysight, Rigol, Siglent, etc.
 
 ### EEZ Studio _Project_
 
@@ -75,6 +76,8 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 -   [M15](https://github.com/eez-open/studio/releases/tag/v0.10.1) - Enhancements (more examples, extension manager, MQTT)
 -   [M16](https://github.com/eez-open/studio/releases/tag/v0.10.2) - Online help, enhancements, bug fixing for “Actions”
 -   [M17](https://github.com/eez-open/studio/releases/tag/v0.10.3) - Online help, enhancements, bug fixing for “Widgets”
+
+---
 
 ## Installation
 
