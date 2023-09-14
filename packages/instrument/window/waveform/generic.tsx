@@ -355,7 +355,7 @@ export class Waveform extends FileHistoryItem {
     getDefaultWaveformDefinition(): IWaveformDefinition {
         return {
             samplingRate: 1,
-            format: WaveformFormat.UNKNOWN,
+            format: this.guessWaveformFormat(),
             unitName: "unknown",
             offset: 0,
             scale: 1,
