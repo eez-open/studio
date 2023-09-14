@@ -3,7 +3,7 @@
     "author": "Envox <eez@envox.hr>",
     "description": "Cross-platform visual development tool and SCPI instrument controller",
     "homepage": "https://www.envox.hr/eez/studio/studio-introduction.html",
-    "version": "0.10.3",
+    "version": "0.10.4",
     "revision": "1",
     "license": "GPL-3.0-only",
     "repository": "https://github.com/eez-open/studio",
@@ -34,7 +34,8 @@
         "electron-version": "electron --version",
         "publish-types": "cd packages/eez-studio-types && npm publish",
         "pubdoc-dev": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/dev.json",
-        "pubdoc-prod": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/prod.json"
+        "pubdoc-prod": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/prod.json",
+        "npm-module-publish": "node npm-module-publish.js"
     },
     "prettier": {
         "printWidth": 80,

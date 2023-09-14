@@ -521,23 +521,25 @@ export class Connection
         const delay =
             options && options.delay != undefined
                 ? options.delay
-                : this.connectionParameters.delay;
+                : this.connectionParameters.delay ?? 0;
+
         this.sendQueue.push({
             command: command + "\n",
             delay
         });
+
         this.dumpSendQueue();
 
         if (options && options.isQuery) {
-            this.sendTimeoutId = setTimeout(
-                () => {
-                    this.sendTimeoutId = undefined;
-                    this.sendTimeout();
-                },
+            const timeout =
                 options.timeout != undefined
                     ? options.timeout
-                    : this.connectionParameters.timeout
-            );
+                    : this.connectionParameters.timeout ?? 60000;
+
+            this.sendTimeoutId = setTimeout(() => {
+                this.sendTimeoutId = undefined;
+                this.sendTimeout();
+            }, timeout);
         }
     }
 

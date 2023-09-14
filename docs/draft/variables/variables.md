@@ -314,31 +314,29 @@ Each binary operators requires two arguments. Binary operator is written between
 
 -   These are also binary operators which results to boolean value
 
-`==`
+`==` equal to
 
-`!=`
+`!=` not equal
 
-`<`
+`<` greater than
 
-`>`
+`>` less than
 
-`<=`
+`<=` less than or equal to
 
-`>=`
+`>=` greater than or equal to
 
-`&&`
+`&&` and
 
-`||`
+`||` or
 
 ## Unary operators
 
-`+`
+`-` negate the value
 
-`-`
+`~` binary invert
 
-`~`
-
-`!`
+`!` logical invert
 
 ## Conditional (ternary) operator
 
@@ -361,7 +359,7 @@ The conditional (ternary) operator is the only operator that takes three operand
 
     -   Description: Index of current element in the List and Grid widget. Check the description of these two widget for the more information.
     -   Parameters:
-        -   Name: `index`. Type: `integer`. Description:
+        -   Name: `index`. Type: `integer`. Description: in case of nested List/Grid widgets use 0 for inner most List/Grid, 1 for List/Grid one up, etc.
     -   Return value:
         -   Type: `integer`. Description: element index
 
