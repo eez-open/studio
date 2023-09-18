@@ -514,7 +514,17 @@ export function buildInstrumentExtension(
         }
 
         if (scpiHelpFolderPath) {
-            archive.directory(scpiHelpFolderPath, MODULE_DOCS_FOLDER);
+            console.log(MODULE_DOCS_FOLDER);
+            archive.glob(
+                "**/*",
+                {
+                    cwd: scpiHelpFolderPath,
+                    ignore: [".*"]
+                },
+                {
+                    prefix: MODULE_DOCS_FOLDER
+                }
+            );
         }
 
         if (webSimulatorFiles) {
