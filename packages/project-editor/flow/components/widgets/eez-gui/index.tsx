@@ -1491,7 +1491,7 @@ export class ButtonWidget extends Widget {
             top: 0,
             width: 80,
             height: 40,
-            data: `"Buttton"`,
+            data: `"Button"`,
             eventHandlers: [
                 {
                     eventName: "CLICKED",

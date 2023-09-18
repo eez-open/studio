@@ -2709,7 +2709,7 @@ function openLink(url: string) {
 }
 
 export async function confirmOverwrite(description: string) {
-    const yesButtton = {
+    const yesButton = {
         label: "Yes",
         result: true
     };
@@ -2719,11 +2719,11 @@ export async function confirmOverwrite(description: string) {
 
     const buttons: any[] = [];
     if (os.platform() == "win32") {
-        buttons.push(yesButtton, noButton);
+        buttons.push(yesButton, noButton);
     } else if (os.platform() == "linux") {
-        buttons.push(noButton, yesButtton);
+        buttons.push(noButton, yesButton);
     } else {
-        buttons.push(yesButtton, noButton);
+        buttons.push(yesButton, noButton);
     }
 
     let opts: Electron.MessageBoxOptions = {

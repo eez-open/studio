@@ -28,7 +28,7 @@ export async function confirmSave({
         CANCEL
     }
 
-    const saveButtton = {
+    const saveButton = {
         label: mnemonicLabel("&&Save"),
         result: ConfirmResult.SAVE
     };
@@ -42,11 +42,11 @@ export async function confirmSave({
 
     const buttons: any[] = [];
     if (os.platform() == "win32") {
-        buttons.push(saveButtton, dontSaveButton, cancelButton);
+        buttons.push(saveButton, dontSaveButton, cancelButton);
     } else if (os.platform() == "linux") {
-        buttons.push(dontSaveButton, cancelButton, saveButtton);
+        buttons.push(dontSaveButton, cancelButton, saveButton);
     } else {
-        buttons.push(saveButtton, cancelButton, dontSaveButton);
+        buttons.push(saveButton, cancelButton, dontSaveButton);
     }
 
     let opts: Electron.MessageBoxOptions = {
