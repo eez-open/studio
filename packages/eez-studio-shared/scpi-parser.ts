@@ -559,8 +559,11 @@ export function parseScpi(input: string) {
         token: Token;
     }[] = [];
 
-    let backtrackTerm: "query-with-assignment" | "query" | "command" =
-        "command";
+    let backtrackTerm:
+        | "query-with-assignment"
+        | "query"
+        | "command-with-assignment"
+        | "command" = "command";
     let backtrackToken: Token;
     let backtrack = -1;
     let backtrackTokens: Token[] | undefined = undefined;
@@ -640,7 +643,11 @@ export function parseScpi(input: string) {
     }
 
     function backtrackStart(
-        term: "query-with-assignment" | "query" | "command"
+        term:
+            | "query-with-assignment"
+            | "query"
+            | "command-with-assignment"
+            | "command"
     ) {
         backtrackTerm = term;
         backtrackToken = tokens[index];
@@ -674,6 +681,23 @@ export function parseScpi(input: string) {
             if (tag == "space") {
                 tokens.shift();
             }
+        } else if (backtrackTerm == "command-with-assignment") {
+            output = tokens[0].value;
+
+            tokens.shift();
+
+            let tag = tokens[0].tag;
+            if (tag == "space") {
+                tokens.shift();
+            }
+
+            tokens.shift(); // remove '='
+            tokens.shift(); // remove '?'
+
+            tag = tokens[0].tag;
+            if (tag == "space") {
+                tokens.shift();
+            }
         }
 
         while (true) {
@@ -684,7 +708,10 @@ export function parseScpi(input: string) {
             emitToken(token);
         }
 
-        if (backtrackTerm == "query-with-assignment") {
+        if (
+            backtrackTerm == "query-with-assignment" ||
+            backtrackTerm == "command-with-assignment"
+        ) {
             emitExecuteQueryWithAssignment(output!, backtrackToken);
         } else if (backtrackTerm == "query") {
             emitExecuteQuery(backtrackToken);
@@ -750,9 +777,11 @@ export function parseScpi(input: string) {
         }
 
         if (optional("symbol", ":")) {
+            optional("space");
             match("mnemonic");
             while (optional("input"));
             while (optional("symbol", ":")) {
+                optional("space");
                 match("mnemonic");
                 while (optional("input"));
             }
@@ -760,6 +789,7 @@ export function parseScpi(input: string) {
         } else if (optional("mnemonic")) {
             while (optional("input"));
             while (optional("symbol", ":")) {
+                optional("space");
                 if (!optional("input")) {
                     match("mnemonic");
                 }
@@ -817,6 +847,29 @@ export function parseScpi(input: string) {
         return false;
     }
 
+    function commandWithAssignment() {
+        backtrackStart("command-with-assignment");
+        if (optional("input") || optional("mnemonic")) {
+            optional("space");
+            if (optional("symbol", "=") && optional("symbol", "?")) {
+                optional("space");
+                if (!commandName()) {
+                    const token = tokens[index];
+                    throw `Unexpected token "${token.tag}" at line ${
+                        token.line + 1
+                    }, column ${token.column + 1}`;
+                }
+                if (optional("space")) {
+                    args();
+                }
+                backtrackConfirm();
+                return true;
+            }
+        }
+        backtrackCancel();
+        return false;
+    }
+
     function query() {
         backtrackStart("query");
         if (commandName()) {
@@ -848,7 +901,12 @@ export function parseScpi(input: string) {
     }
 
     function queryOrCommand() {
-        return queryWithAssignment() || query() || command();
+        return (
+            commandWithAssignment() ||
+            queryWithAssignment() ||
+            query() ||
+            command()
+        );
     }
 
     function line() {
