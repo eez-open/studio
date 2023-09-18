@@ -525,123 +525,83 @@
                 "articles": [
                     {
                         "content": "Arc.html",
-                        "status": "publish",
-                        "id": 21246020,
-                        "sha256": "f90e2abd33b8fdfd630c521b20dba3d6ad2a0a8160f66a95e6c8e18c480c8711"
+                        "status": "publish"
                     },
                     {
                         "content": "Bitmap (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246021,
-                        "sha256": "2c0e2ce33f7576d2748dd83d0f67e6542b21deaf453f7370c33b3a9aec53f67d"
+                        "status": "publish"
                     },
                     {
                         "content": "Bitmap (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246022,
-                        "sha256": "abce0bcd324c75ec26467865b3508b5749d63f46c2dfdeadeba2d08776f2a05f"
+                        "status": "publish"
                     },
                     {
                         "content": "Button (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246023,
-                        "sha256": "cad704be1855f0ede7d0d6c1eb6f06a275dcead81752f17a856b31495aeaaa43"
+                        "status": "publish"
                     },
                     {
                         "content": "Button (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246024,
-                        "sha256": "547f2437ee9a5902eb327b66b534613bb8beb9e2913fef0fe79a80433885504f"
+                        "status": "publish"
                     },
                     {
                         "content": "Button (LVGL).html",
-                        "status": "publish",
-                        "id": 21246025,
-                        "sha256": "3812d13cf765cef3be7c3ca76f696af94e026cc651efceb9ebef74b719fe97f5"
+                        "status": "publish"
                     },
                     {
                         "content": "ButtonGroup.html",
-                        "status": "publish",
-                        "id": 21246026,
-                        "sha256": "8f3f3594c6e2191826bf1e3092e5b7960c46d1649716d6336f90021163ac0c37"
+                        "status": "publish"
                     },
                     {
                         "content": "DisplayData.html",
-                        "status": "publish",
-                        "id": 21246028,
-                        "sha256": "a986f1728bccc430af6d36f83e1396ff8759a86c281f44da854f24f4c96e47b4"
+                        "status": "publish"
                     },
                     {
                         "content": "Image.html",
-                        "status": "publish",
-                        "id": 21246029,
-                        "sha256": "85730e92dba35a313d1c04e03ca0c598cdeb4affd7832f4165d8026d1be63e25"
+                        "status": "publish"
                     },
                     {
                         "content": "Label.html",
-                        "status": "publish",
-                        "id": 21246030,
-                        "sha256": "0e0409b6e7f6e74f440f60b9d9612d51ecf93c2052ee039d4c9c2add10040e5c"
+                        "status": "publish"
                     },
                     {
                         "content": "Markdown.html",
-                        "status": "publish",
-                        "id": 21246031,
-                        "sha256": "263d52eed65103e5e1e236cb361b2c3b4275d9f552b19a12ead9f480b6a001e2"
+                        "status": "publish"
                     },
                     {
                         "content": "MultilineText.html",
-                        "status": "publish",
-                        "id": 21246032,
-                        "sha256": "f026f853511e170f4a2d7d697d122b70696a6882388a5c53fcc079dc9a82c650"
+                        "status": "publish"
                     },
                     {
                         "content": "Panel.html",
-                        "status": "publish",
-                        "id": 21246033,
-                        "sha256": "23628ad2e196ac47c6d27746d9b7ea6faf29dbef485703fa1b9b5851d153323c"
+                        "status": "publish"
                     },
                     {
                         "content": "Rectangle (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246034,
-                        "sha256": "fabfb3c62984627eed14a6798b3c0d95749c3e43835ceed2b7c6fd587d6e1cf9"
+                        "status": "publish"
                     },
                     {
                         "content": "Rectangle (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246035,
-                        "sha256": "aff3b977105029939cb2334b3f676771ae334ec2b8970947080e6678aed07ff8"
+                        "status": "publish"
                     },
                     {
                         "content": "ScrollBar.html",
-                        "status": "publish",
-                        "id": 21246036,
-                        "sha256": "44a104c79458f1fc39563f353efd6e6dccb8f777d2bd4644924c5480ca9813da"
+                        "status": "publish"
                     },
                     {
                         "content": "Text (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246037,
-                        "sha256": "706c72dbba8f12f274b72cd737dc6d9bcdfafa8dfa3ae3b4d9f8fc2971f441ce"
+                        "status": "publish"
                     },
                     {
                         "content": "Text (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246038,
-                        "sha256": "f4b159bc4b8a14af2fe43cdec68612c576b16af80d01c65e3de2d41bc4e611a5"
+                        "status": "publish"
                     },
                     {
                         "content": "Textarea.html",
-                        "status": "publish",
-                        "id": 21246039,
-                        "sha256": "ee8eebe4be85a3678dadc2f0c60aada997c1ffcd24b5d225dc490f9af2efb5e9"
+                        "status": "publish"
                     },
                     {
                         "content": "ToggleButton.html",
-                        "status": "publish",
-                        "id": 21246040,
-                        "sha256": "fa3651a6e9a3523fcd55d56d2d050cbf1e76a4a6c0f7562090d09e57adbface8"
+                        "status": "publish"
                     }
                 ]
             },
@@ -653,27 +613,19 @@
                 "articles": [
                     {
                         "content": "Container.html",
-                        "status": "publish",
-                        "id": 21246041,
-                        "sha256": "f1a094dcec4603cc3ecb7fcc2368557e0cd422100fee77a728155b54511367e5"
+                        "status": "publish"
                     },
                     {
                         "content": "Grid.html",
-                        "status": "publish",
-                        "id": 21246042,
-                        "sha256": "78594dfcf0ab3d2d095b1827c44787535b16c43c844b29469f591b1b7d44ea48"
+                        "status": "publish"
                     },
                     {
                         "content": "List.html",
-                        "status": "publish",
-                        "id": 21246043,
-                        "sha256": "99d8b71d68c6b7860914172f25115f8fac7023d5c48596fec408e9c941aa3aed"
+                        "status": "publish"
                     },
                     {
                         "content": "Select.html",
-                        "status": "publish",
-                        "id": 21246044,
-                        "sha256": "069cce8a6b82e980c21e9e0fa510f1b7cef6efb7df236c843eeb41262e4a8766"
+                        "status": "publish"
                     }
                 ]
             },
@@ -685,129 +637,87 @@
                 "articles": [
                     {
                         "content": "Calendar.html",
-                        "status": "publish",
-                        "id": 21246045,
-                        "sha256": "06856a55c54e2fbdd0e49d97979e14a17d7bf7d58934612483373ecc8298b9e8"
+                        "status": "publish"
                     },
                     {
                         "content": "Checkbox (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246046,
-                        "sha256": "e53e9bd41852f4d74deaf149fae8632f448189335ba97ed4037dcbecd95ea23e"
+                        "status": "publish"
                     },
                     {
                         "content": "Checkbox (LVGL).html",
-                        "status": "publish",
-                        "id": 21246047,
-                        "sha256": "3e3b6603643bf892e6685efea5514148d79f4ddc7053d3fa00662387c56ce0f8"
+                        "status": "publish"
                     },
                     {
                         "content": "Colorwheel.html",
-                        "status": "publish",
-                        "id": 21246048,
-                        "sha256": "f01d8f64a9b579bf4f2ec906b6985fbf3d79b53a53b9a149dd32570bd0520ce9"
+                        "status": "publish"
                     },
                     {
                         "content": "Dropdown (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246049,
-                        "sha256": "ab98ba34110c718ac7f7b6b22fd38f1395193581ecff48a517e2fa241efe25c9"
+                        "status": "publish"
                     },
                     {
                         "content": "Dropdown (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246050,
-                        "sha256": "7d0fa05b7d85241d6e1bbfe51d1b019ea2d59cf25c71653e798819805f1c4c10"
+                        "status": "publish"
                     },
                     {
                         "content": "Dropdown (LVGL).html",
-                        "status": "publish",
-                        "id": 21246051,
-                        "sha256": "638634293743603b445885ded8de82ac9024a39a5ac03be7346e4c2126345d2c"
+                        "status": "publish"
                     },
                     {
                         "content": "Imgbutton.html",
-                        "status": "publish",
-                        "id": 21246052,
-                        "sha256": "7b71f64ee9f2264c2cf87ccb51efb1a5bbe1db371e299ef8700afeb58d418b64"
+                        "status": "publish"
                     },
                     {
                         "content": "Input (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246053,
-                        "sha256": "a2629cac536a7d4f1d59b2683ea7d524013020fbfbb9e79b0d036f53c2e1444f"
+                        "status": "publish"
                     },
                     {
                         "content": "Keyboard.html",
-                        "status": "publish",
-                        "id": 21246054,
-                        "sha256": "5c70b04e6b5b20685d1a2d4bc1398325f9e3063b88b44f8351611f9dd25ad415"
+                        "status": "publish"
                     },
                     {
                         "content": "Roller (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246055,
-                        "sha256": "7896cf765cac35a07b0d88bb3adf7cd5eb8d87a63cdea6586eeded6bc3be5748"
+                        "status": "publish"
                     },
                     {
                         "content": "Roller (LVGL).html",
-                        "status": "publish",
-                        "id": 21246056,
-                        "sha256": "6ca2f612211df52d0eda241029c78f65134dd5dc33d2d9eff2a5404b4b4c95b9"
+                        "status": "publish"
                     },
                     {
                         "content": "Slider (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246057,
-                        "sha256": "dd4fb30c7b680895f4103634e2c36e099f442bd6cf92a6d18810e41eb4e87601"
+                        "status": "publish"
                     },
                     {
                         "content": "Slider (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246058,
-                        "sha256": "02c88f0f3307ae1bcc833a82e2563a7ec57dc0d149d7f6ef170851afd61b14f9"
+                        "status": "publish"
                     },
                     {
                         "content": "Slider (LVGL).html",
-                        "status": "publish",
-                        "id": 21246059,
-                        "sha256": "2a3bfb4fb36cab80d6da88a7e8265f1848218a3e373d2df42979a6a117fca121"
+                        "status": "publish"
                     },
                     {
                         "content": "Switch (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246060,
-                        "sha256": "c01a78374f444f71ba04d568151f29e3de4a12443d8325d75802513d95acef47"
+                        "status": "publish"
                     },
                     {
                         "content": "Switch (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246061,
-                        "sha256": "cdc5febaf7feb9484b2dc6c18b260b77e83d5c7ec4eb2295c79e19b548fa9291"
+                        "status": "publish"
                     },
                     {
                         "content": "Switch (LVGL).html",
-                        "status": "publish",
-                        "id": 21246062,
-                        "sha256": "f3e70a30c6172b8d911a43358b15e97f0cd44848c307d25141b7b538752c546d"
+                        "status": "publish"
                     },
                     {
                         "content": "Terminal.html",
-                        "status": "publish",
-                        "id": 21246063,
-                        "sha256": "7886969cb64f40fa950f26c707d06b661f117c9e25df322baf075d6defc1edf0"
+                        "status": "publish"
                     },
                     {
                         "content": "TextInput.html",
-                        "status": "publish",
-                        "id": 21246064,
-                        "sha256": "78c95ddf39c432df8647beab50be711700517d7635c10dd325eb77514c86cca9"
+                        "status": "publish"
                     },
                     {
                         "content": "UpDown.html",
-                        "status": "publish",
-                        "id": 21246066,
-                        "sha256": "a91a51507dbfe4c1ba2d5e09a8b0d80ce5cb7e550ae7c8781759235765d00c20"
+                        "status": "publish"
                     }
                 ]
             },
@@ -819,93 +729,63 @@
                 "articles": [
                     {
                         "content": "Bar.html",
-                        "status": "publish",
-                        "id": 21246067,
-                        "sha256": "79671d02c3ad3add2002889e12edfb08b171dc7e359efda1e30a08e0100cddbb"
+                        "status": "publish"
                     },
                     {
                         "content": "BarGraph.html",
-                        "status": "publish",
-                        "id": 21246068,
-                        "sha256": "57968b71c4014a818ce9fdb332380e7ac39267e499b3abb59a37c45e3bcc1bf4"
+                        "status": "publish"
                     },
                     {
                         "content": "Chart.html",
-                        "status": "publish",
-                        "id": 21246069,
-                        "sha256": "0f965dd6013b7653dedac47c2766032d69f240202c4dd7e0c8efa9f184f2d8ac"
+                        "status": "publish"
                     },
                     {
                         "content": "EEZChart.html",
-                        "status": "publish",
-                        "id": 21246070,
-                        "sha256": "b59fbfb9f1b5f34a7bbbb769d5c29e5c6b170f0cd81efc0b0d3cb505f6c49d54"
+                        "status": "publish"
                     },
                     {
                         "content": "Gauge (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246071,
-                        "sha256": "15e37bbfed68e66d35e578a20ea9434e9e1f8e6c318f2e369d02c40d80cc45ad"
+                        "status": "publish"
                     },
                     {
                         "content": "Gauge (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246073,
-                        "sha256": "b04c56113116a3178c8b415879e8bd68f23cfead27a827343a695ee4b900a4ae"
+                        "status": "publish"
                     },
                     {
                         "content": "LineChart (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246074,
-                        "sha256": "cbbd06f21db79a0f12b7dc79a3aa82199b3712f52bc64bdff2e6cbb32eb4ce7c"
+                        "status": "publish"
                     },
                     {
                         "content": "LineChart (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246077,
-                        "sha256": "aa09dcec0d52f9a70f579d0d2f38ffd449a6319d83966d39c8aabffe5e630d96"
+                        "status": "publish"
                     },
                     {
                         "content": "Meter.html",
-                        "status": "publish",
-                        "id": 21246078,
-                        "sha256": "2ccb122286122b884251f34ebe2da661455b01915023321167bcb37bb1cdf601"
+                        "status": "publish"
                     },
                     {
                         "content": "Progress (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246079,
-                        "sha256": "83c9b1cd21b5ebed4dc88d55ab03669a9a790d7a47b671bfedbbaf83cb926605"
+                        "status": "publish"
                     },
                     {
                         "content": "Progress (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246080,
-                        "sha256": "1f7794cfbdeda65df0cdfabb5ebe5cece5ca590c090b1e2498407557c67fa89c"
+                        "status": "publish"
                     },
                     {
                         "content": "QRCode (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246081,
-                        "sha256": "f89c73f290eee8ed48e968d54ee759a07bcffa86e93818eb32f4236e3faaafa8"
+                        "status": "publish"
                     },
                     {
                         "content": "QRCode (EEZ-GUI).html",
-                        "status": "publish",
-                        "id": 21246082,
-                        "sha256": "0f874136cd13c67180196a655ede8f8630f917c98bc498d1ccb7c25ef2d78c2b"
+                        "status": "publish"
                     },
                     {
                         "content": "Spinner (Dashboard).html",
-                        "status": "publish",
-                        "id": 21246083,
-                        "sha256": "8b991f82305b7ac54d58952f0fc15b26807dfd75fd82c9711c1ca690a08d4e30"
+                        "status": "publish"
                     },
                     {
                         "content": "Spinner (LVGL).html",
-                        "status": "publish",
-                        "id": 21246084,
-                        "sha256": "2048e7a8b950b64c37512863f5e7bed5859768086a9efcf42c999c3de091b250"
+                        "status": "publish"
                     }
                 ]
             }
@@ -1121,66 +1001,6 @@
             "id": 10056,
             "source_url": "https://www.envox.eu/wp-content/uploads/e34326507e4a12b81b4c69582ac9e627748f4c72c43d4f5aa35400c1a99392e4-widget_centering-1.png",
             "sha256": "e34326507e4a12b81b4c69582ac9e627748f4c72c43d4f5aa35400c1a99392e4"
-        },
-        {
-            "fileName": "gauge_arc_bar_color.png",
-            "id": 21245937,
-            "source_url": "https://www.envox.eu/wp-content/uploads/efc8f2b739d1662f2c01a66004bca43402069b7e1b1a052f6929298c9b223398-gauge_arc_bar_color.png",
-            "sha256": "efc8f2b739d1662f2c01a66004bca43402069b7e1b1a052f6929298c9b223398"
-        },
-        {
-            "fileName": "grid_column_flow.png",
-            "id": 21245938,
-            "source_url": "https://www.envox.eu/wp-content/uploads/627fdcf95b381f457fd25213a1faac4dbdd5e4055bf3bec6e17051dbb4752644-grid_column_flow.png",
-            "sha256": "627fdcf95b381f457fd25213a1faac4dbdd5e4055bf3bec6e17051dbb4752644"
-        },
-        {
-            "fileName": "grid_row_flow.png",
-            "id": 21245939,
-            "source_url": "https://www.envox.eu/wp-content/uploads/8930504907c27041f37aac765c388041f2e87e5fce8fdc588a2118d254e820f7-grid_row_flow.png",
-            "sha256": "8930504907c27041f37aac765c388041f2e87e5fce8fdc588a2118d254e820f7"
-        },
-        {
-            "fileName": "line_chart.png",
-            "id": 21245940,
-            "source_url": "https://www.envox.eu/wp-content/uploads/19b050d464f5faac615ab8ac209df16ec6e45050923274b9fb09d31d455fbd70-line_chart.png",
-            "sha256": "19b050d464f5faac615ab8ac209df16ec6e45050923274b9fb09d31d455fbd70"
-        },
-        {
-            "fileName": "line_chart_dashboard.png",
-            "id": 21245941,
-            "source_url": "https://www.envox.eu/wp-content/uploads/d98ec4cf56dd4e14012ae344d9d3c200887d1e778a00c2f05011b5dc3a49c39d-line_chart_dashboard.png",
-            "sha256": "d98ec4cf56dd4e14012ae344d9d3c200887d1e778a00c2f05011b5dc3a49c39d"
-        },
-        {
-            "fileName": "progress_horz.png",
-            "id": 21245942,
-            "source_url": "https://www.envox.eu/wp-content/uploads/c54e405679233ba09426ee1dfb3edc30727df1e380b4bc115871bfb11e318f99-progress_horz.png",
-            "sha256": "c54e405679233ba09426ee1dfb3edc30727df1e380b4bc115871bfb11e318f99"
-        },
-        {
-            "fileName": "progress_vert.png",
-            "id": 21245943,
-            "source_url": "https://www.envox.eu/wp-content/uploads/2a24470c3c11bb5005815fc1789ee1db2dc10e26d20860133a13502d5a9e94dd-progress_vert.png",
-            "sha256": "2a24470c3c11bb5005815fc1789ee1db2dc10e26d20860133a13502d5a9e94dd"
-        },
-        {
-            "fileName": "scrollbar.png",
-            "id": 21245944,
-            "source_url": "https://www.envox.eu/wp-content/uploads/a0827a3facddd81c66f09cc55ea64500d1abc24a5b23dd97d8929567c10f8115-scrollbar.png",
-            "sha256": "a0827a3facddd81c66f09cc55ea64500d1abc24a5b23dd97d8929567c10f8115"
-        },
-        {
-            "fileName": "scrollbar_vert.png",
-            "id": 21245945,
-            "source_url": "https://www.envox.eu/wp-content/uploads/392e62b7202326c2ea5b016e610d211589fa18c0f00e3598cb38b318aab97538-scrollbar_vert.png",
-            "sha256": "392e62b7202326c2ea5b016e610d211589fa18c0f00e3598cb38b318aab97538"
-        },
-        {
-            "fileName": "widget_resizing.png",
-            "id": 21245946,
-            "source_url": "https://www.envox.eu/wp-content/uploads/d2857120016585b501c10aafdb47a6e35c1903ac26fdb20e671118bc2c682cae-widget_resizing.png",
-            "sha256": "d2857120016585b501c10aafdb47a6e35c1903ac26fdb20e671118bc2c682cae"
         }
     ]
 }
