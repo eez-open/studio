@@ -247,21 +247,18 @@ export class TerminalComponent extends React.Component<
                                 );
                             } catch (err) {}
 
-                            if (hasQuery) {
-                                await instrument.connection.query(
-                                    terminalState.command
-                                );
-                            } else {
-                                instrument.connection.send(
-                                    terminalState.command
-                                );
-                            }
-
+                            const command = terminalState.command;
                             terminalState.command = "";
 
-                            instrument.connection.release();
+                            if (hasQuery) {
+                                await instrument.connection.query(command);
+                            } else {
+                                instrument.connection.send(command);
+                            }
                         } catch (err) {
                             notification.error(err.toString());
+                        } finally {
+                            instrument.connection.release();
                         }
                     }}
                     sendFileToInstrumentHandler={
