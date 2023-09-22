@@ -68,6 +68,7 @@ async function selectLVGLStyleProperty(object: IEezObject) {
             </ProjectContext.Provider>,
             {
                 jsPanel: {
+                    id: "lvgl-style-properties",
                     title: "Select LVGL style property",
                     width: 600,
                     height: 800

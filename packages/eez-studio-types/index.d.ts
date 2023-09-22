@@ -192,7 +192,8 @@ export interface IObjectVariableValueFieldDescription {
 export interface IObjectVariableType {
     editConstructorParams?(
         variable: IVariable,
-        params?: IObjectVariableValueConstructorParams
+        params?: IObjectVariableValueConstructorParams,
+        runtime?: boolean
     ): Promise<IObjectVariableValueConstructorParams | undefined>;
 
     createValue(

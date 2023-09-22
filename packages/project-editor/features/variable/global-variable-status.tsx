@@ -55,7 +55,8 @@ export const GlobalVariableStatuses = observer(
                                         await objectVariableType.editConstructorParams(
                                             variable,
                                             objectVariableValue?.constructorParams ||
-                                                objectVariableValue
+                                                objectVariableValue,
+                                            true
                                         );
                                     if (constructorParams !== undefined) {
                                         this.context.runtime!.setObjectVariableValue(
@@ -143,7 +144,8 @@ export const RenderVariableStatusPropertyUI = observer(
                         const constructorParams =
                             await objectVariableType.editConstructorParams!(
                                 variable,
-                                objectVariableValue?.constructorParams
+                                objectVariableValue?.constructorParams,
+                                false
                             );
                         if (constructorParams !== undefined) {
                             this.context.runtimeSettings.setVariableValue(

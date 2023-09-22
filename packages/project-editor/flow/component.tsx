@@ -418,64 +418,78 @@ export function makeExpressionProperty(
         {
             flowProperty: "input",
             expressionType,
-            propertyMenu(props: PropertyProps) {
-                let menuItems: Electron.MenuItem[] = [];
+            propertyMenu:
+                propertyInfo.flowProperty == undefined
+                    ? (props: PropertyProps) => {
+                          let menuItems: Electron.MenuItem[] = [];
 
-                if (props.objects.length == 1) {
-                    const component = props.objects[0] as Component;
+                          if (props.objects.length == 1) {
+                              const component = props.objects[0] as Component;
 
-                    if (
-                        !getProperty(component, props.propertyInfo.name) &&
-                        !component.customInputs.find(
-                            componentInput =>
-                                componentInput.name == props.propertyInfo.name
-                        )
-                    ) {
-                        menuItems.push(
-                            new MenuItem({
-                                label: "Convert to input",
-                                click: () => {
-                                    const projectStore = getProjectStore(
-                                        props.objects[0]
-                                    );
+                              if (
+                                  !getProperty(
+                                      component,
+                                      props.propertyInfo.name
+                                  ) &&
+                                  !component.customInputs.find(
+                                      componentInput =>
+                                          componentInput.name ==
+                                          props.propertyInfo.name
+                                  )
+                              ) {
+                                  menuItems.push(
+                                      new MenuItem({
+                                          label: "Convert to input",
+                                          click: () => {
+                                              const projectStore =
+                                                  getProjectStore(
+                                                      props.objects[0]
+                                                  );
 
-                                    projectStore.undoManager.setCombineCommands(
-                                        true
-                                    );
+                                              projectStore.undoManager.setCombineCommands(
+                                                  true
+                                              );
 
-                                    const customInput =
-                                        createObject<CustomInput>(
-                                            projectStore,
-                                            {
-                                                name: props.propertyInfo.name,
-                                                type:
-                                                    props.propertyInfo
-                                                        .expressionType || "any"
-                                            },
-                                            CustomInput
-                                        );
+                                              const customInput =
+                                                  createObject<CustomInput>(
+                                                      projectStore,
+                                                      {
+                                                          name: props
+                                                              .propertyInfo
+                                                              .name,
+                                                          type:
+                                                              props.propertyInfo
+                                                                  .expressionType ||
+                                                              "any"
+                                                      },
+                                                      CustomInput
+                                                  );
 
-                                    projectStore.addObject(
-                                        component.customInputs,
-                                        customInput
-                                    );
+                                              projectStore.addObject(
+                                                  component.customInputs,
+                                                  customInput
+                                              );
 
-                                    projectStore.updateObject(component, {
-                                        [props.propertyInfo.name]:
-                                            customInput.name
-                                    });
+                                              projectStore.updateObject(
+                                                  component,
+                                                  {
+                                                      [props.propertyInfo.name]:
+                                                          customInput.name
+                                                  }
+                                              );
 
-                                    projectStore.undoManager.setCombineCommands(
-                                        false
-                                    );
-                                }
-                            })
-                        );
-                    }
-                }
+                                              projectStore.undoManager.setCombineCommands(
+                                                  false
+                                              );
+                                          }
+                                      })
+                                  );
+                              }
+                          }
 
-                return menuItems;
-            },
+                          return menuItems;
+                      }
+                    : undefined,
             onSelect: (
                 object: IEezObject,
                 propertyInfo: PropertyInfo,
@@ -486,7 +500,10 @@ export function makeExpressionProperty(
                     propertyInfo,
                     {
                         assignableExpression: false,
-                        title: "Expression Builder"
+                        title:
+                            propertyInfo.flowProperty == "scpi-template-literal"
+                                ? "SCPI Builder"
+                                : "Expression Builder"
                     },
                     params
                 ),

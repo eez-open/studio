@@ -905,7 +905,7 @@ const Projects = observer(
                                                         className="EezStudio_HomeTab_ProjectItem"
                                                         title={mruItem.filePath}
                                                     >
-                                                        <div className="fist-line">
+                                                        <div className="first-line">
                                                             <span className="fw-bolder">
                                                                 {baseName}
                                                             </span>

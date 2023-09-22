@@ -16,6 +16,7 @@ export function showDocumentationBrowser() {
 
     const [modalDialog] = showDialog(<DocumentationBrowser />, {
         jsPanel: {
+            id: "documentation-browser",
             title: "Components Documentation Browser",
             modeless: true,
             width: window.innerWidth - 100,

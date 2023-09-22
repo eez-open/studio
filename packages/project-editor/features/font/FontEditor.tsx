@@ -982,6 +982,7 @@ export function browseGlyph(glyph: Glyph) {
         }),
         opts: {
             jsPanel: {
+                id: "select-glyph",
                 title,
                 width: 1200
             },

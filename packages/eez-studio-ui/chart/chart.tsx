@@ -5290,7 +5290,7 @@ const MeasurementInputField = observer(
             );
             return (
                 <select
-                    className="form-control"
+                    className="form-select"
                     title="Chart rendering algorithm"
                     value={
                         measurement.arity === 1

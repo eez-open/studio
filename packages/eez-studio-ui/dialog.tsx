@@ -13,6 +13,7 @@ import { IconAction } from "eez-studio-ui/action";
 export interface IDialogOptions {
     id?: string;
     jsPanel?: {
+        id: string;
         title: string;
         width: number;
         height?: number;
@@ -39,34 +40,49 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
 
         const jsPanel: any = (window as any).jsPanel;
 
-        const dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
-            {
-                container: "#EezStudio_Content",
-                theme: "primary",
-                headerTitle: opts.jsPanel.title,
-                panelSize: {
-                    width: Math.min(
-                        Math.round(window.innerWidth * 0.9),
-                        opts.jsPanel.width
-                    ),
-                    height: opts.jsPanel.height
-                        ? Math.min(
-                              Math.round(window.innerHeight * 0.9),
-                              opts.jsPanel.height
-                          )
-                        : Math.round(window.innerHeight * 0.9)
-                },
-                content: element,
-                headerControls: {
-                    minimize: "remove",
-                    smallify: "remove"
-                },
-                dragit: {},
-                resizeit: {},
-                closeOnBackdrop: false,
-                onclosed: opts.jsPanel.onclosed
+        const id = opts.jsPanel.id;
+
+        const config = {
+            id,
+            container: "#EezStudio_Content",
+            theme: "primary",
+            headerTitle: opts.jsPanel.title,
+            panelSize: {
+                width: Math.min(
+                    Math.round(window.innerWidth * 0.9),
+                    opts.jsPanel.width
+                ),
+                height: opts.jsPanel.height
+                    ? Math.min(
+                          Math.round(window.innerHeight * 0.9),
+                          opts.jsPanel.height
+                      )
+                    : Math.round(window.innerHeight * 0.9)
+            },
+            content: element,
+            headerControls: {
+                minimize: "remove",
+                smallify: "remove"
+            },
+            dragit: {},
+            resizeit: {},
+            closeOnBackdrop: false,
+            onclosed: opts.jsPanel.onclosed,
+            onbeforeclose: () => {
+                jsPanel.layout.save({
+                    selector: ".jsPanel",
+                    storagename: "jsPanels" + id
+                });
+                return true;
             }
-        );
+        };
+
+        const dialog = jsPanel.layout.restoreId({
+            id,
+            config,
+            storagename: "jsPanels" + id
+        });
+
         return [dialog, element, root];
     } else {
         document.body.appendChild(element);

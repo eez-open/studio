@@ -13,42 +13,62 @@ export const ScriptsSectionSelectView = observer(
         return (
             <label className="form-check-label">
                 <select
-                    className="form-control form-control-sm"
+                    className="form-select form-control-sm"
                     value={bb3Instrument.selectedScriptsCollectionType}
-                    onChange={action((event: React.ChangeEvent<HTMLSelectElement>) => {
-                        bb3Instrument.selectedScriptsCollectionType = event.currentTarget
-                            .value as any;
-                    })}
+                    onChange={action(
+                        (event: React.ChangeEvent<HTMLSelectElement>) => {
+                            bb3Instrument.selectedScriptsCollectionType = event
+                                .currentTarget.value as any;
+                        }
+                    )}
                 >
                     <option value="allScriptsCollection">
                         All ({bb3Instrument.allScriptsCollection.length})
                     </option>
                     {bb3Instrument.catalogScriptsCollection.length > 0 && (
                         <option value="catalogScriptsCollection">
-                            From catalog ({bb3Instrument.catalogScriptsCollection.length})
+                            From catalog (
+                            {bb3Instrument.catalogScriptsCollection.length})
                         </option>
                     )}
                     {bb3Instrument.instrumentScriptsCollection.length > 0 && (
                         <option value="instrumentScriptsCollection">
-                            On instrument ({bb3Instrument.instrumentScriptsCollection.length})
+                            On instrument (
+                            {bb3Instrument.instrumentScriptsCollection.length})
                         </option>
                     )}
-                    {bb3Instrument.notInstalledCatalogScriptsCollection.length > 0 && (
+                    {bb3Instrument.notInstalledCatalogScriptsCollection.length >
+                        0 && (
                         <option value="notInstalledCatalogScriptsCollection">
                             Not installed from catalog (
-                            {bb3Instrument.notInstalledCatalogScriptsCollection.length})
+                            {
+                                bb3Instrument
+                                    .notInstalledCatalogScriptsCollection.length
+                            }
+                            )
                         </option>
                     )}
-                    {bb3Instrument.installedCatalogScriptsCollection.length > 0 && (
+                    {bb3Instrument.installedCatalogScriptsCollection.length >
+                        0 && (
                         <option value="installedCatalogScriptsCollection">
                             Installed from catalog (
-                            {bb3Instrument.installedCatalogScriptsCollection.length})
+                            {
+                                bb3Instrument.installedCatalogScriptsCollection
+                                    .length
+                            }
+                            )
                         </option>
                     )}
-                    {bb3Instrument.instrumentScriptsNotInCatalogCollection.length > 0 && (
+                    {bb3Instrument.instrumentScriptsNotInCatalogCollection
+                        .length > 0 && (
                         <option value="instrumentScriptsNotInCatalogCollection">
                             On instrument but not from catalog (
-                            {bb3Instrument.instrumentScriptsNotInCatalogCollection.length})
+                            {
+                                bb3Instrument
+                                    .instrumentScriptsNotInCatalogCollection
+                                    .length
+                            }
+                            )
                         </option>
                     )}
                 </select>

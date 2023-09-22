@@ -566,7 +566,8 @@ export class WasmRuntime extends RemoteRuntime {
                         const constructorParams =
                             await objectVariableType.editConstructorParams(
                                 variable,
-                                undefined
+                                undefined,
+                                true
                             );
 
                         if (constructorParams) {

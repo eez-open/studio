@@ -94,6 +94,7 @@ export async function showSelectProjectExtensionDialog(
             <SelectProjectExtensionDialog onOk={onOk} onCancel={onDispose} />,
             {
                 jsPanel: {
+                    id: "select-project-extension-dialog",
                     title: "Select Project Editor Extension",
                     width: 1024,
                     height: 600,

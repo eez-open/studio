@@ -76,6 +76,7 @@ import { TextAction, IconAction } from "eez-studio-ui/action";
 import { ConnectionParameters } from "instrument/connection/interface";
 import { activityLogStore, log } from "instrument/window/history/activity-log";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+import { findVariable } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,14 +95,47 @@ export class SCPIActionComponent extends ActionComponent {
                 },
                 "object:Instrument"
             ),
-            {
-                name: "scpi",
-                type: PropertyType.MultilineText,
-                propertyGridGroup: specificGroup,
-                monospaceFont: true,
-                disableSpellcheck: true,
-                flowProperty: "scpi-template-literal"
-            },
+            makeExpressionProperty(
+                {
+                    name: "scpi",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    monospaceFont: true,
+                    disableSpellcheck: true,
+                    flowProperty: "scpi-template-literal",
+                    expressionType: undefined,
+                    getInstrumentId: (component: SCPIActionComponent) => {
+                        const projectStore =
+                            ProjectEditor.getProjectStore(component);
+
+                        const instrumentVariable = findVariable(
+                            projectStore.project,
+                            component.instrument
+                        );
+                        if (
+                            !instrumentVariable ||
+                            instrumentVariable.type != "object:Instrument"
+                        ) {
+                            return undefined;
+                        }
+
+                        const value =
+                            projectStore.runtimeSettings.getVariableValue(
+                                instrumentVariable
+                            );
+                        if (
+                            !value ||
+                            value.id == undefined ||
+                            typeof value.id != "string"
+                        ) {
+                            return undefined;
+                        }
+
+                        return value.id;
+                    }
+                },
+                "any"
+            ),
             makeExpressionProperty(
                 {
                     name: "timeout",
@@ -1723,12 +1757,14 @@ function getInstrumentIdFromConstructorParams(
 registerObjectVariableType("Instrument", {
     editConstructorParams: async (
         variable: IVariable,
-        constructorParams?: InstrumentConstructorParams
+        constructorParams?: InstrumentConstructorParams,
+        runtime?: boolean
     ): Promise<IObjectVariableValueConstructorParams | undefined> => {
         let instrument = await showSelectInstrumentDialog(
             ProjectEditor.getProjectStore(variable as any),
             variable.description || humanize(variable.fullName),
-            getInstrumentIdFromConstructorParams(constructorParams)
+            getInstrumentIdFromConstructorParams(constructorParams),
+            !(runtime === false)
         );
 
         return instrument

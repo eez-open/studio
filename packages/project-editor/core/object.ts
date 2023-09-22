@@ -254,6 +254,8 @@ export interface PropertyInfo {
     hasExpressionProperties?: boolean;
 
     hideInDocumentation?: "widget" | "action" | "all" | "none";
+
+    getInstrumentId?: (parentObject: IEezObject) => string | undefined;
 }
 
 export type InheritedValue =

@@ -288,6 +288,7 @@ export class TerminalComponent extends React.Component<
                 <CommandsBrowser
                     appStore={this.props.appStore}
                     host={terminalState}
+                    terminalState={terminalState}
                 />
             </Splitter>
         );

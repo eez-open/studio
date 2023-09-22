@@ -79,7 +79,7 @@ export const ChartViewOptions = observer(
                             </div>
                             <div className="EezStudio_SideDockView_Property">
                                 <select
-                                    className="form-control"
+                                    className="form-select"
                                     title="Chart rendering algorithm"
                                     value={globalViewOptions.renderAlgorithm}
                                     onChange={action(

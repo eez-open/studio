@@ -37,7 +37,7 @@ import {
 } from "instrument/commands-tree";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
-import { terminalState } from "instrument/window/terminal/terminalState";
+import type { ITerminalState } from "instrument/window/terminal/terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -386,24 +386,20 @@ export const CommandSyntax = observer(
 );
 
 export const CommandsBrowser = observer(
-    class CommandsBrowser extends React.Component<
-        {
-            appStore: InstrumentAppStore;
-            host: {
-                command: string;
-            };
-        },
-        {}
-    > {
+    class CommandsBrowser extends React.Component<{
+        appStore: InstrumentAppStore;
+        terminalState: ITerminalState;
+        host: {
+            command: string;
+        };
+        className?: string;
+        style?: React.CSSProperties;
+        persistId?: string;
+    }> {
         selectedNode: ICommandNode;
         dispose: IReactionDisposer;
 
-        constructor(props: {
-            appStore: InstrumentAppStore;
-            host: {
-                command: string;
-            };
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -419,7 +415,7 @@ export const CommandsBrowser = observer(
                 commandNode: ICommandNode;
             })[] = [];
 
-            let searchText = terminalState.searchText.toLowerCase();
+            let searchText = this.props.terminalState.searchText.toLowerCase();
             let selectedNode = this.selectedNode;
 
             function visitCommandNode(node: ICommandNode) {
@@ -449,7 +445,7 @@ export const CommandsBrowser = observer(
 
         componentDidMount(): void {
             this.dispose = reaction(
-                () => terminalState.searchText,
+                () => this.props.terminalState.searchText,
                 () => {
                     if (this.foundNodes.length > 0) {
                         this.selectNode(this.foundNodes[0]);
@@ -487,12 +483,14 @@ export const CommandsBrowser = observer(
         };
 
         onSearchChange(event: any) {
-            terminalState.searchText = $(event.target).val() as string;
+            this.props.terminalState.searchText = $(
+                event.target
+            ).val() as string;
         }
 
         render() {
             let leftSideBody;
-            if (terminalState.searchText) {
+            if (this.props.terminalState.searchText) {
                 leftSideBody = (
                     <List
                         nodes={this.foundNodes}
@@ -543,7 +541,12 @@ export const CommandsBrowser = observer(
                 <Splitter
                     type="horizontal"
                     sizes="240px|100%"
-                    persistId="instrument/window/commands-browser/splitter1"
+                    persistId={
+                        this.props.persistId ||
+                        "instrument/window/commands-browser/splitter1"
+                    }
+                    className={this.props.className}
+                    style={this.props.style}
                 >
                     <VerticalHeaderWithBody className="EezStudio_CommandsBrowserTree">
                         <Header>
@@ -551,18 +554,22 @@ export const CommandsBrowser = observer(
                                 icon="material:link"
                                 title="Link the command input with the documentation browser"
                                 onClick={action(() => {
-                                    terminalState.linkCommandInputWithDocumentationBrowser =
-                                        !terminalState.linkCommandInputWithDocumentationBrowser;
+                                    this.props.terminalState.linkCommandInputWithDocumentationBrowser =
+                                        !this.props.terminalState
+                                            .linkCommandInputWithDocumentationBrowser;
                                 })}
                                 className={classNames({
                                     selected:
-                                        terminalState.linkCommandInputWithDocumentationBrowser
+                                        this.props.terminalState
+                                            .linkCommandInputWithDocumentationBrowser
                                 })}
                             />
                             <SearchInput
-                                searchText={terminalState.searchText || ""}
+                                searchText={
+                                    this.props.terminalState.searchText || ""
+                                }
                                 onClear={action(() => {
-                                    terminalState.searchText = "";
+                                    this.props.terminalState.searchText = "";
                                 })}
                                 onChange={this.onSearchChange}
                                 onKeyDown={this.onSearchChange}

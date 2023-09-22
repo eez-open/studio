@@ -2590,6 +2590,7 @@ export function showNewProjectWizard() {
         <NewProjectWizard modalDialog={modalDialogObservable} />,
         {
             jsPanel: {
+                id: "new-project-wizard",
                 title: "New Project",
                 width: 1280,
                 height: 800

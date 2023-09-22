@@ -1,6 +1,15 @@
 import React from "react";
-import { computed, observable, action, makeObservable } from "mobx";
+import {
+    computed,
+    observable,
+    action,
+    makeObservable,
+    runInAction,
+    reaction,
+    autorun
+} from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import { _map } from "eez-studio-shared/algorithm";
 import { humanize, stringCompare } from "eez-studio-shared/string";
@@ -40,8 +49,17 @@ import {
 import { parseIdentifier } from "project-editor/flow/expression";
 import { IObjectVariableValueFieldDescription } from "eez-studio-types";
 
-export const EXPR_MARK_START = "{<";
-export const EXPR_MARK_END = ">}";
+import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
+import { InstrumentObject, instruments } from "instrument/instrument-object";
+
+import type { ITerminalState } from "instrument/window/terminal/terminalState";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const EXPR_MARK_START = "/*";
+export const EXPR_MARK_END = "*/";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export async function expressionBuilder(
     object: IEezObject,
@@ -60,6 +78,7 @@ export async function expressionBuilder(
         const onDispose = () => {
             if (!disposed) {
                 if (modalDialog) {
+                    root.unmount();
                     modalDialog.close();
                 }
                 disposed = true;
@@ -71,7 +90,7 @@ export async function expressionBuilder(
             onDispose();
         };
 
-        const [modalDialog] = showDialog(
+        const [modalDialog, _, root] = showDialog(
             <ProjectContext.Provider value={getProjectStore(object)}>
                 <SelectItemDialog
                     object={object}
@@ -83,11 +102,128 @@ export async function expressionBuilder(
                 />
             </ProjectContext.Provider>,
             {
-                jsPanel: Object.assign({ width: 1024, height: 600 }, opts)
+                jsPanel: Object.assign({ width: 1024, height: 600 }, opts, {
+                    id: "expression-builder",
+                    onclosed: onDispose
+                })
             }
         );
     });
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ExpressionBuilderState implements ITerminalState {
+    _command: string = "";
+    _linkCommandInputWithDocumentationBrowser: boolean;
+    searchText: string;
+
+    activeTab: "scpi" | "expression" = "scpi";
+
+    constructor() {
+        this._linkCommandInputWithDocumentationBrowser = !(
+            localStorage.getItem(
+                "expression-builder/linkCommandInputWithDocumentationBrowser"
+            ) === "false" || false
+        );
+
+        this.activeTab =
+            (window.localStorage.getItem(
+                "expression-builder/activeTab"
+            ) as any) == "scpi"
+                ? "scpi"
+                : "expression";
+
+        makeObservable(this, {
+            _command: observable,
+            _linkCommandInputWithDocumentationBrowser: observable,
+            searchText: observable,
+            activeTab: observable,
+            setSearchText: action
+        });
+
+        reaction(
+            () => this._linkCommandInputWithDocumentationBrowser,
+            value => {
+                localStorage.setItem(
+                    "expression-builder/linkCommandInputWithDocumentationBrowser",
+                    value ? "true" : "false"
+                );
+            }
+        );
+
+        reaction(
+            () => this.activeTab,
+            value => {
+                localStorage.setItem("expression-builder/activeTab", value);
+            }
+        );
+    }
+
+    get command() {
+        return this._command;
+    }
+
+    set command(command: string) {
+        runInAction(() => {
+            this._command = command;
+
+            if (this.linkCommandInputWithDocumentationBrowser) {
+                this.setSearchText();
+            }
+        });
+    }
+
+    get linkCommandInputWithDocumentationBrowser() {
+        return this._linkCommandInputWithDocumentationBrowser;
+    }
+
+    set linkCommandInputWithDocumentationBrowser(value: boolean) {
+        this._linkCommandInputWithDocumentationBrowser = value;
+        if (this.linkCommandInputWithDocumentationBrowser) {
+            this.setSearchText();
+        }
+    }
+
+    setSearchText() {
+        let command = this.command.trim();
+
+        // skip optional assignment
+        if (command.startsWith("{")) {
+            const i = command.indexOf("}", 1);
+            if (i == -1) {
+                this.searchText = "";
+                return;
+            }
+            command = command.substring(i + 1).trim();
+        } else {
+            let i = command.indexOf("=", 1);
+
+            if (i != -1) {
+                if (parseIdentifier(command.substring(0, i).trim())) {
+                    command = command.substring(i).trim();
+                }
+            }
+        }
+        if (command.startsWith("=")) {
+            command = command.substring(1);
+        }
+        if (command.startsWith("?")) {
+            command = command.substring(1);
+        }
+
+        command = command.trim().split(" ")[0];
+        if (command.endsWith("?")) {
+            command = command.substring(0, command.length - 1);
+        }
+
+        this.searchText = command;
+    }
+}
+
+const expressionBuilderState = new ExpressionBuilderState();
+
+////////////////////////////////////////////////////////////////////////////////
 
 const VariableLabel = observer(
     ({ name, type }: { name: string; type: string }) => (
@@ -97,6 +233,8 @@ const VariableLabel = observer(
         </>
     )
 );
+
+////////////////////////////////////////////////////////////////////////////////
 
 const SelectItemDialog = observer(
     class SelectItemDialog extends React.Component<{
@@ -114,6 +252,8 @@ const SelectItemDialog = observer(
         value: string;
         selection: string | undefined;
 
+        _instrumentId: string | undefined;
+
         constructor(props: any) {
             super(props);
 
@@ -126,6 +266,7 @@ const SelectItemDialog = observer(
             makeObservable(this, {
                 value: observable,
                 selection: observable,
+                _instrumentId: observable,
                 component: computed,
                 flow: computed,
                 componentInputs: computed,
@@ -135,8 +276,22 @@ const SelectItemDialog = observer(
                 rootNodeSystemVariables: computed,
                 rootNodeOperations: computed,
                 rootNodeFunctions: computed,
-                rootNodeTextResources: computed
+                rootNodeTextResources: computed,
+                instrumentId: computed,
+                instrument: computed
             });
+
+            autorun(() => {
+                this.updateCommand();
+            });
+        }
+
+        updateCommand() {
+            const start = this.textarea?.selectionStart ?? 0;
+            const end = this.textarea?.selectionEnd ?? start;
+
+            let line = getLine(this.value, start, end) ?? "";
+            expressionBuilderState.command = line;
         }
 
         componentDidMount() {
@@ -154,6 +309,13 @@ const SelectItemDialog = observer(
                 };
             }
 
+            const textareaHeight = window.localStorage.getItem(
+                "project-editor/expression-builder/textarea/height"
+            );
+            if (textareaHeight) {
+                this.textarea.style.height = textareaHeight;
+            }
+
             this.textarea.focus();
 
             this.textarea.setSelectionRange(
@@ -162,6 +324,13 @@ const SelectItemDialog = observer(
                 textInputSelection.direction === null
                     ? undefined
                     : textInputSelection.direction
+            );
+        }
+
+        componentWillUnmount() {
+            window.localStorage.setItem(
+                "project-editor/expression-builder/textarea/height",
+                this.textarea.style.height
             );
         }
 
@@ -182,19 +351,56 @@ const SelectItemDialog = observer(
                 return;
             }
 
-            let value = this.selection;
+            const start = this.textarea.selectionStart ?? 0;
+            const end = this.textarea.selectionEnd ?? start;
 
-            const start = this.textarea.selectionStart;
-            const end = this.textarea.selectionEnd;
+            let textToInsert = this.selection;
 
-            if (start != null && end != null) {
-                value =
-                    this.value.substring(0, start) +
-                    value +
-                    this.value.substring(end);
+            if (
+                this.props.propertyInfo.flowProperty == "scpi-template-literal"
+            ) {
+                if (!isInsideExpression(this.value, start, end)) {
+                    textToInsert = `{${textToInsert}}`;
+                }
             }
 
-            this.value = value;
+            this.value =
+                this.value.substring(0, start) +
+                textToInsert +
+                this.value.substring(end);
+
+            let newStart: number | undefined;
+            let newEnd: number | undefined;
+
+            for (let i = start + 1; i < this.value.length; i++) {
+                if (!newStart) {
+                    if (this.value[i - 1] == "/" && this.value[i] == "*") {
+                        i++;
+                        newStart = i;
+                    }
+                } else {
+                    if (
+                        this.value[i] == "*" &&
+                        i < this.value.length - 1 &&
+                        this.value[i + 1] == "/"
+                    ) {
+                        i++;
+                        newEnd = i;
+                        break;
+                    }
+                }
+            }
+
+            if (newStart != undefined && newEnd != undefined) {
+                setTimeout(() => {
+                    this.textarea.focus();
+                    this.textarea.setSelectionRange(
+                        newStart!,
+                        newEnd!,
+                        "forward"
+                    );
+                });
+            }
         });
 
         get component() {
@@ -696,6 +902,39 @@ const SelectItemDialog = observer(
             });
         }
 
+        get instrumentId(): string | undefined {
+            let instrumentId = this._instrumentId;
+
+            if (!instrumentId) {
+                if (this.props.propertyInfo.getInstrumentId) {
+                    instrumentId = this.props.propertyInfo.getInstrumentId(
+                        this.props.object
+                    );
+                }
+            }
+
+            if (!instrumentId) {
+                instrumentId =
+                    this.context.uiStateStore.expressionBuilderInstrumentId;
+            }
+
+            if (!instrumentId) {
+                const instrumentsArray = [...instruments.values()];
+                if (instrumentsArray.length > 0) {
+                    instrumentId = [...instruments.values()][0].id;
+                }
+            }
+
+            return instrumentId;
+        }
+
+        get instrument(): InstrumentObject | undefined {
+            if (!this.instrumentId) {
+                return undefined;
+            }
+            return instruments.get(this.instrumentId);
+        }
+
         selectNode = action((node?: ITreeNode<string>) => {
             this.selection = node && node.data;
         });
@@ -706,12 +945,10 @@ const SelectItemDialog = observer(
                 Event
             >
         ) => {
-            const start = event.currentTarget.selectionStart;
-            const end = event.currentTarget.selectionEnd;
-            if (!(typeof start == "number") || !(typeof end == "number")) {
-                return;
-            }
+            this.updateCommand();
 
+            const start = event.currentTarget.selectionStart ?? 0;
+            const end = event.currentTarget.selectionEnd ?? start;
             const value = event.currentTarget.value;
 
             let expressionStart: number | undefined;
@@ -771,7 +1008,129 @@ const SelectItemDialog = observer(
             );
         };
 
+        set command(value: string) {
+            runInAction(() => {
+                const start = this.textarea.selectionStart ?? 0;
+                const end = this.textarea.selectionEnd ?? start;
+
+                let newStart = start;
+                let newEnd = end;
+
+                if (start == end) {
+                    let pos = start;
+                    if (isEndOfLine(this.value, pos)) {
+                        this.value =
+                            this.value.substring(0, pos) +
+                            "\n" +
+                            value +
+                            this.value.substring(pos);
+
+                        newStart = pos + 1 + value.length;
+                        newEnd = newStart;
+                    } else {
+                        pos = getStartOfLine(this.value, pos);
+                        this.value =
+                            this.value.substring(0, pos) +
+                            value +
+                            "\n" +
+                            this.value.substring(pos);
+
+                        newStart = pos + value.length;
+                        newEnd = newStart;
+                    }
+                } else {
+                    this.value =
+                        this.value.substring(0, start) +
+                        value +
+                        this.value.substring(end);
+                    newEnd = start + value.length;
+                }
+
+                setTimeout(() => {
+                    this.textarea.focus();
+                    this.textarea.setSelectionRange(
+                        newStart,
+                        newEnd,
+                        "forward"
+                    );
+                });
+            });
+        }
+
         render() {
+            let tabs;
+            let activeTab;
+
+            if (
+                this.props.propertyInfo.flowProperty == "scpi-template-literal"
+            ) {
+                activeTab = expressionBuilderState.activeTab;
+                tabs = (
+                    <div className="EezStudio_ExpressionBuilder_NavContainer">
+                        <ul className="nav nav-pills">
+                            <li className="nav-item">
+                                <a
+                                    className={classNames("nav-link", {
+                                        active: activeTab == "scpi"
+                                    })}
+                                    aria-current="page"
+                                    href="#"
+                                    onClick={action(
+                                        () =>
+                                            (expressionBuilderState.activeTab =
+                                                "scpi")
+                                    )}
+                                >
+                                    SCPI
+                                </a>
+                            </li>
+                            <li className="nav-item">
+                                <a
+                                    className={classNames("nav-link", {
+                                        active: activeTab == "expression"
+                                    })}
+                                    href="#"
+                                    onClick={action(
+                                        () =>
+                                            (expressionBuilderState.activeTab =
+                                                "expression")
+                                    )}
+                                >
+                                    Expression
+                                </a>
+                            </li>
+                        </ul>
+                        {expressionBuilderState.activeTab == "scpi" && (
+                            <div>
+                                <span>Instrument</span>
+                                <select
+                                    className="form-select"
+                                    value={this.instrumentId}
+                                    onChange={action(event => {
+                                        this._instrumentId = event.target.value;
+                                        this.context.uiStateStore.expressionBuilderInstrumentId =
+                                            this._instrumentId;
+                                    })}
+                                >
+                                    {[...instruments.values()].map(
+                                        instrument => (
+                                            <option
+                                                value={instrument.id}
+                                                key={instrument.id}
+                                            >
+                                                {instrument.name}
+                                            </option>
+                                        )
+                                    )}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                );
+            } else {
+                activeTab = "expression";
+            }
+
             return (
                 <Dialog
                     modal={false}
@@ -785,15 +1144,20 @@ const SelectItemDialog = observer(
                             ref={(ref: any) => (this.textarea = ref)}
                             className="form-control pre"
                             value={this.value}
-                            onChange={action(
-                                event => (this.value = event.target.value)
-                            )}
+                            onChange={action(event => {
+                                this.value = event.target.value;
+                            })}
                             onSelect={this.onSelectionChange}
-                            style={{ resize: "none" }}
                             spellCheck={false}
                         />
-
-                        <div className="EezStudio_ExpressionBuilder_Panels">
+                        {tabs}
+                        <div
+                            className="EezStudio_ExpressionBuilder_Panels"
+                            style={{
+                                display:
+                                    activeTab == "expression" ? "flex" : "none"
+                            }}
+                        >
                             {this.rootNodeVariables.children.length > 0 && (
                                 <Tree
                                     showOnlyChildren={true}
@@ -836,9 +1200,78 @@ const SelectItemDialog = observer(
                                 />
                             )}
                         </div>
+                        <CommandsBrowser
+                            appStore={this.instrument!.getEditor()}
+                            host={this}
+                            terminalState={expressionBuilderState}
+                            className="EezStudio_ExpressionBuilder_CommandsBrowser"
+                            style={{
+                                display: activeTab == "scpi" ? "block" : "none"
+                            }}
+                            persistId="project-editor/expression-builder/commands-browser/splitter1"
+                        />
                     </div>
                 </Dialog>
             );
         }
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+function isEndOfLine(str: string, pos: number) {
+    return pos == str.length || str[pos] == "\n";
+}
+
+function getStartOfLine(str: string, pos: number) {
+    for (let i = pos; i >= 0; i--) {
+        if (str[i] == "\n") {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+function getLine(str: string, start: number, end: number) {
+    let lineStart = getStartOfLine(str, start);
+    let lineEnd = str.indexOf("\n", end);
+    if (lineEnd == -1) {
+        lineEnd = str.length;
+    }
+
+    const line = str.substring(lineStart, lineEnd);
+
+    if (line.indexOf("\n") != -1) {
+        return undefined;
+    }
+
+    return line;
+}
+
+function isInsideExpression(str: string, start: number, end: number) {
+    if (start == 0) {
+        return false;
+    }
+
+    for (let i = start - 1; i >= 0; i--) {
+        if (str[i] == "{") {
+            break;
+        }
+
+        if (str[i] == "}") {
+            return false;
+        }
+    }
+
+    for (let i = end; i < str.length; i++) {
+        if (str[i] == "}") {
+            return true;
+        }
+
+        if (str[i] == "{") {
+            break;
+        }
+    }
+
+    return false;
+}

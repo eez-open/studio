@@ -8,8 +8,12 @@ import {
 
 import type { ISession } from "instrument/window/history/session/store";
 
-////////////////////////////////////////////////////////////////////////////////
-class TerminalState {
+export interface ITerminalState {
+    searchText: string;
+    linkCommandInputWithDocumentationBrowser: boolean;
+}
+
+class TerminalState implements ITerminalState {
     _command: string = "";
     selectedSession: ISession | undefined;
 
@@ -76,4 +80,5 @@ class TerminalState {
         }
     }
 }
+
 export const terminalState = new TerminalState();

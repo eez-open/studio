@@ -42,6 +42,8 @@ export class UIStateStore {
 
     wasEmpty: boolean;
 
+    expressionBuilderInstrumentId: string | undefined;
+
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
     }
@@ -90,7 +92,8 @@ export class UIStateStore {
             selectedStylePropertyName: observable,
             lvglPart: observable,
             lvglState: observable,
-            lvglExpandedPropertiesGroup: observable
+            lvglExpandedPropertiesGroup: observable,
+            expressionBuilderInstrumentId: observable
         });
     }
 
@@ -210,6 +213,11 @@ export class UIStateStore {
                 this.lvglExpandedPropertiesGroup =
                     uiState.lvglExpandedPropertiesGroup;
             }
+
+            if (uiState.expressionBuilderInstrumentId) {
+                this.expressionBuilderInstrumentId =
+                    uiState.expressionBuilderInstrumentId;
+            }
         });
     }
 
@@ -269,7 +277,8 @@ export class UIStateStore {
             selectedStylePropertyName: this.selectedStylePropertyName,
             lvglPart: this.lvglPart,
             lvglState: this.lvglState,
-            lvglExpandedPropertiesGroup: this.lvglExpandedPropertiesGroup
+            lvglExpandedPropertiesGroup: this.lvglExpandedPropertiesGroup,
+            expressionBuilderInstrumentId: this.expressionBuilderInstrumentId
         };
 
         return state;

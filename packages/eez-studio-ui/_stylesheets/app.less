@@ -1037,6 +1037,10 @@ button.EezStudio_Action {
         .EezStudio_Action:hover {
             color: #aaa;
         }
+
+        td {
+            color: @selectionColor;
+        }
     }
 
     &:focus {
@@ -1056,6 +1060,7 @@ button.EezStudio_Action {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        background-color: transparent;
     }
 
     thead,
@@ -4470,6 +4475,27 @@ button.EezStudio_Action {
         font-size: 0.875em;
     }
 
+    .EezStudio_ExpressionBuilder_NavContainer {
+        margin-bottom: 10px;
+
+        display: flex;
+        justify-content: space-between;
+
+        & > div {
+            display: flex;
+            align-items: center;
+            & > span {
+                margin-left: 20px;
+                margin-right: 10px;
+            }
+        }
+    }
+
+    .EezStudio_ExpressionBuilder_CommandsBrowser {
+        background-color: white;
+        border: 1px solid @borderColor;
+    }
+
     .EezStudio_ExpressionBuilder_Panels {
         flex: 1;
         overflow: auto;
@@ -4627,7 +4653,7 @@ button.EezStudio_Action {
                         display: flex;
                         flex-direction: column;
 
-                        div.fist-line {
+                        div.first-line {
                             font-size: 110%;
                             overflow: hidden;
                             white-space: nowrap;
@@ -4635,7 +4661,7 @@ button.EezStudio_Action {
                         }
 
                         div.text-secondary {
-                            color: @actionDisabledColor;
+                            color: @secondaryTextColor!important;
                             white-space: normal;
                             font-size: 90%;
                         }

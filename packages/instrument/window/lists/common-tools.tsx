@@ -103,7 +103,7 @@ export const CommonTools = observer(
                             <td>
                                 <label className="form-check-label">
                                     <select
-                                        className="form-control"
+                                        className="form-select"
                                         value={displayOption.get()}
                                         onChange={this.onDisplayOptionChange}
                                     >
