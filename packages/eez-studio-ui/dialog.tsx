@@ -77,11 +77,17 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             }
         };
 
-        const dialog = jsPanel.layout.restoreId({
+        let dialog = jsPanel.layout.restoreId({
             id,
             config,
             storagename: "jsPanels" + id
         });
+
+        if (!dialog) {
+            dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
+                config
+            );
+        }
 
         return [dialog, element, root];
     } else {
