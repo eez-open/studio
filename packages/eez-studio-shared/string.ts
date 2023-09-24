@@ -38,6 +38,11 @@ export function underscore(string: string | undefined): string {
     string = string.toString(); // might be a number
     string = string.trim();
 
+    // if there are no lowercase letters, then do nothing
+    if (string.toUpperCase() === string) {
+        return string;
+    }
+
     let temp = "";
     for (let i = 0; i < string.length; i++) {
         if (string[i] >= "A" && string[i] <= "Z") {
