@@ -10,19 +10,17 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 import { TabsView } from "eez-studio-ui/tabs";
+import { makeLazyComponent } from "eez-studio-ui/lazy-component";
 
 import { IHomeTab, tabs } from "home/tabs-store";
-import { getAppStore } from "home/history";
 import "home/home-tab";
 
-import { SessionInfo } from "instrument/window/history/session/info-view";
 import type { InstrumentObject } from "instrument/instrument-object";
-import { instruments } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const AppComponent = observer(
-    class AppComponent extends React.Component {
+export const App = observer(
+    class App extends React.Component {
         constructor(props: any) {
             super(props);
 
@@ -42,8 +40,6 @@ const AppComponent = observer(
         }
 
         render() {
-            const appStore = getAppStore();
-
             const content = (
                 <VerticalHeaderWithBody>
                     <Header className="EezStudio_AppHeader">
@@ -62,11 +58,7 @@ const AppComponent = observer(
                                 }
                             )}
                         />
-                        {tabs.instrumentsVisible && (
-                            <div className="EezStudio_SessionInfoContainer">
-                                <SessionInfo appStore={appStore} />
-                            </div>
-                        )}
+                        {tabs.instrumentsVisible && <SessionInfoContainer />}
                     </Header>
                     <Body>
                         <Tabs />
@@ -77,7 +69,7 @@ const AppComponent = observer(
             return (
                 <>
                     {content}
-                    <WebSimulators />
+                    {tabs.instrumentsVisible && <WebSimulators />}
                 </>
             );
         }
@@ -122,43 +114,57 @@ const Tabs = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const WebSimulators = observer(
-    class WebSimulators extends React.Component {
-        constructor(props: any) {
-            super(props);
+const SessionInfoContainer = makeLazyComponent(
+    async () => {
+        const { getAppStore } = await import("home/history");
+        const { SessionInfo } = await import(
+            "instrument/window/history/session/info-view"
+        );
+        return { appStore: getAppStore(), SessionInfo };
+    },
+    ({ appStore, SessionInfo }) => {
+        return (
+            <div className="EezStudio_SessionInfoContainer">
+                <SessionInfo appStore={appStore} />
+            </div>
+        );
+    }
+);
 
-            makeObservable(this, {
-                webSimulators: computed
-            });
-        }
+////////////////////////////////////////////////////////////////////////////////
 
-        get webSimulators() {
-            const webSimulators: InstrumentObject[] = [];
-            instruments.forEach(instrument => {
-                if (
-                    !instrument.connection.isIdle &&
-                    instrument.extension &&
-                    instrument.lastConnection?.type == "web-simulator"
-                ) {
-                    webSimulators.push(instrument);
-                }
-            });
-            return webSimulators;
-        }
+const WebSimulators = makeLazyComponent(
+    async () => {
+        const { instruments } = await import("instrument/instrument-object");
 
-        render() {
-            const webSimulatorConnections = this.webSimulators;
-            if (webSimulatorConnections.length == 0) {
-                return null;
+        class State {
+            constructor() {
+                makeObservable(this, {
+                    webSimulators: computed
+                });
             }
 
-            return webSimulatorConnections.map(instrument => (
-                <WebSimulatorPanel
-                    key={instrument.id}
-                    instrument={instrument}
-                />
-            ));
+            get webSimulators() {
+                return [...instruments.values()].filter(
+                    instrument =>
+                        !instrument.connection.isIdle &&
+                        instrument.extension &&
+                        instrument.lastConnection?.type == "web-simulator"
+                );
+            }
         }
+
+        return { state: new State() };
+    },
+    ({ state }) => {
+        const webSimulatorConnections = state.webSimulators;
+        if (webSimulatorConnections.length == 0) {
+            return null;
+        }
+
+        return webSimulatorConnections.map(instrument => (
+            <WebSimulatorPanel key={instrument.id} instrument={instrument} />
+        ));
     }
 );
 
@@ -315,7 +321,3 @@ class WebSimulatorPanel extends React.Component<{
         return null;
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const App = AppComponent;
