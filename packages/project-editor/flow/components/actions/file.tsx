@@ -308,33 +308,27 @@ registerActionComponents("File", [
             }
         ],
         properties: [],
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const result = await dialog.showOpenDialog({
-                properties: ["openFile"],
-                filters: [{ name: "All Files", extensions: ["*"] }]
-            });
-
-            // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
-            const filePath =
-                result.filePaths && result.filePaths[0]
-                    ? result.filePaths[0].replace(/\\/g, "/")
-                    : undefined;
-
-            flowState.sendResultToWorker(messageId, {
-                cancelled: result.canceled,
-                filePath
-            });
-        },
         execute: (context: IDashboardComponentContext) => {
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(undefined, result => {
+            (async () => {
+                const result = await dialog.showOpenDialog({
+                    properties: ["openFile"],
+                    filters: [{ name: "All Files", extensions: ["*"] }]
+                });
+
+                // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
+                const filePath =
+                    result.filePaths && result.filePaths[0]
+                        ? result.filePaths[0].replace(/\\/g, "/")
+                        : undefined;
+
                 if (!result.canceled) {
-                    context.propagateValue("file_path", result.filePath);
+                    context.propagateValue("file_path", filePath);
                 }
                 context.propagateValueThroughSeqout();
                 context.endAsyncExecution();
-            });
+            })();
         }
     },
     {
@@ -357,21 +351,6 @@ registerActionComponents("File", [
                 valueType: "string"
             }
         ],
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const result = await dialog.showSaveDialog({
-                defaultPath: message
-            });
-
-            // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
-            const filePath = result.filePath
-                ? result.filePath.replace(/\\/g, "/")
-                : undefined;
-
-            flowState.sendResultToWorker(messageId, {
-                cancelled: result.canceled,
-                filePath
-            });
-        },
         execute: (context: IDashboardComponentContext) => {
             const fileNameValue = context.evalProperty("fileName");
             if (fileNameValue && typeof fileNameValue != "string") {
@@ -381,13 +360,22 @@ registerActionComponents("File", [
 
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(fileNameValue, result => {
+            (async () => {
+                const result = await dialog.showSaveDialog({
+                    defaultPath: fileNameValue
+                });
+
+                // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
+                const filePath = result.filePath
+                    ? result.filePath.replace(/\\/g, "/")
+                    : undefined;
+
                 if (!result.canceled) {
-                    context.propagateValue("file_path", result.filePath);
+                    context.propagateValue("file_path", filePath);
                 }
                 context.propagateValueThroughSeqout();
                 context.endAsyncExecution();
-            });
+            })();
         }
     },
     {
@@ -403,12 +391,6 @@ registerActionComponents("File", [
                 valueType: "string"
             }
         ],
-        onWasmWorkerMessage: (flowState, message) => {
-            // workaround: on windows, showItemInFolder will not work if path.sep is /
-            const filePath = message.replace(/\//g, path.sep);
-
-            shell.showItemInFolder(filePath);
-        },
         execute: (context: IDashboardComponentContext) => {
             const filePathValue = context.evalProperty("filePath");
             if (typeof filePathValue != "string") {
@@ -416,7 +398,11 @@ registerActionComponents("File", [
                 return;
             }
 
-            context.sendMessageToComponent(filePathValue);
+            // workaround: on windows, showItemInFolder will not work if path.sep is /
+            const filePath = filePathValue.replace(/\//g, path.sep);
+
+            shell.showItemInFolder(filePath);
+
             context.propagateValueThroughSeqout();
         }
     }

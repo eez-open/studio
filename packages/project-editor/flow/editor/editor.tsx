@@ -720,6 +720,10 @@ export const Canvas = observer(
             return (
                 <div
                     ref={(ref: any) => (this.div = ref!)}
+                    className={classNames({
+                        EezStudio_FlowCanvasContainer_DragAndDropActive:
+                            this.props.dragAndDropActive
+                    })}
                     style={style}
                     onContextMenu={this.onContextMenu}
                     onPointerMove={this.onPointerMove}

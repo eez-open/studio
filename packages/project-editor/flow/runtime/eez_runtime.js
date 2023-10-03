@@ -5264,7 +5264,13 @@ var _getFlowIndex = Module["_getFlowIndex"] = createExportWrapper("getFlowIndex"
 var _getComponentExecutionState = Module["_getComponentExecutionState"] = createExportWrapper("getComponentExecutionState");
 
 /** @type {function(...*):?} */
-var _setComponentExecutionState = Module["_setComponentExecutionState"] = createExportWrapper("setComponentExecutionState");
+var _allocateDashboardComponentExecutionState = Module["_allocateDashboardComponentExecutionState"] = createExportWrapper("allocateDashboardComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _deallocateDashboardComponentExecutionState = Module["_deallocateDashboardComponentExecutionState"] = createExportWrapper("deallocateDashboardComponentExecutionState");
+
+/** @type {function(...*):?} */
+var _getUint8Param = Module["_getUint8Param"] = createExportWrapper("getUint8Param");
 
 /** @type {function(...*):?} */
 var _getUint32Param = Module["_getUint32Param"] = createExportWrapper("getUint32Param");

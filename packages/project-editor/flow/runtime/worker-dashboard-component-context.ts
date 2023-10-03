@@ -8,8 +8,10 @@ import {
     createWasmValue,
     getValue
 } from "project-editor/flow/runtime/wasm-value";
-
-let nextWidgetMessageId = 0;
+import {
+    registerDashboardState,
+    getDashboardState
+} from "project-editor/flow/runtime/component-execution-states";
 
 export class DashboardComponentContext implements IDashboardComponentContext {
     constructor(
@@ -31,15 +33,40 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             this.flowStateIndex,
             this.componentIndex
         );
-        return wasmToComponentExecutionState<T>(wasmState);
+        return getDashboardState<T>(
+            this.WasmFlowRuntime.wasmModuleId,
+            wasmState
+        );
     }
 
     setComponentExecutionState<T>(state: T | undefined) {
-        const wasmState = componentExecutionStateToWasm<T>(state);
-        this.WasmFlowRuntime._setComponentExecutionState(
+        if (state) {
+            const wasmState =
+                this.WasmFlowRuntime._allocateDashboardComponentExecutionState(
+                    this.flowStateIndex,
+                    this.componentIndex
+                );
+
+            if (wasmState) {
+                registerDashboardState(
+                    this.WasmFlowRuntime.wasmModuleId,
+                    wasmState,
+                    state
+                );
+            }
+        } else {
+            this.WasmFlowRuntime._deallocateDashboardComponentExecutionState(
+                this.flowStateIndex,
+                this.componentIndex
+            );
+        }
+    }
+
+    getUint8Param(offset: number) {
+        return this.WasmFlowRuntime._getUint8Param(
             this.flowStateIndex,
             this.componentIndex,
-            wasmState
+            offset
         );
     }
 
@@ -371,19 +398,6 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
     }
 
-    sendMessageToComponent(message: any, callback?: (result: any) => void) {
-        if (this.WasmFlowRuntime.componentMessages == undefined) {
-            this.WasmFlowRuntime.componentMessages = [];
-        }
-        this.WasmFlowRuntime.componentMessages.push({
-            id: nextWidgetMessageId++,
-            flowStateIndex: this.flowStateIndex,
-            componentIndex: this.componentIndex,
-            message,
-            callback
-        });
-    }
-
     logInfo(infoMessage: string) {
         const infoMessagePtr = this.WasmFlowRuntime.allocateUTF8(infoMessage);
         this.WasmFlowRuntime._logInfo(
@@ -404,39 +418,3 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         this.WasmFlowRuntime._free(errorMessagePtr);
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const wasmStates = new Map<any, number>();
-let nextWasmState = 0;
-const states = new Map<number, any>();
-
-function componentExecutionStateToWasm<T>(state: T | undefined) {
-    if (state == undefined) {
-        return -1;
-    }
-    let wasmState = wasmStates.get(state);
-    if (wasmState == undefined) {
-        wasmState = nextWasmState++;
-        wasmStates.set(state, wasmState);
-        states.set(wasmState, state);
-    }
-    return wasmState;
-}
-
-function wasmToComponentExecutionState<T>(wasmState: number) {
-    if (wasmState == -1) {
-        return undefined;
-    }
-    return states.get(wasmState);
-}
-
-function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
-    const state = states.has(wasmState);
-    if (state) {
-        wasmStates.delete(state);
-        states.delete(wasmState);
-    }
-}
-
-(global as any).freeComponentExecutionState = freeComponentExecutionState;

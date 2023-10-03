@@ -68,8 +68,8 @@ class Connection {
         try {
             this.port = new SerialPort(
                 {
+                    ...params,
                     path: params.port,
-                    baudRate: params.baudRate,
                     rtscts: false
                 },
                 (err: any) => {

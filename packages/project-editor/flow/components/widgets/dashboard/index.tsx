@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, makeObservable, computed } from "mobx";
+import { observable, makeObservable, computed, runInAction } from "mobx";
 import classNames from "classnames";
 
 import QRC from "../qrcodegen";
@@ -180,7 +180,7 @@ export class TextDashboardWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
@@ -549,6 +549,202 @@ registerClass("TextInputWidget", TextInputWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const NumberInputDashboardWidgetElement = observer(
+    class NumberInputDashboardWidgetElement extends React.Component<{
+        className: string;
+        component: SliderDashboardWidget;
+        flowContext: IFlowContext;
+        width: number;
+        height: number;
+    }> {
+        render() {
+            const { flowContext, component } = this.props;
+
+            let value = evalProperty(flowContext, component, "value") ?? 25;
+            let min = evalProperty(flowContext, component, "min") ?? 0;
+            let max = evalProperty(flowContext, component, "max") ?? 100;
+            let step = evalProperty(flowContext, component, "step") ?? 1;
+
+            return (
+                <input
+                    type="number"
+                    className={this.props.className}
+                    value={value ?? 0}
+                    min={min}
+                    max={max}
+                    step={step}
+                    onChange={event => {
+                        const flowState = flowContext.flowState as FlowState;
+                        if (flowState) {
+                            const value = parseFloat(event.target.value);
+
+                            if (component.value) {
+                                flowState.runtime.assignProperty(
+                                    flowContext,
+                                    component,
+                                    "value",
+                                    value
+                                );
+                            }
+
+                            if (flowState.runtime) {
+                                flowState.runtime.executeWidgetAction(
+                                    flowContext,
+                                    component,
+                                    "ON_CHANGE",
+                                    makeSliderActionParamsValue(
+                                        flowContext,
+                                        value
+                                    ),
+                                    `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`
+                                );
+                            }
+                        }
+                    }}
+                ></input>
+            );
+        }
+    }
+);
+
+export class NumberInputDashboardWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true
+            }),
+
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "min",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "max",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "step",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeStylePropertyInfo("style", "Default style")
+        ],
+
+        beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
+            if (jsObject.step == undefined) {
+                jsObject.step = "1";
+            }
+        },
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 20,
+            min: "0",
+            max: "100",
+            step: "1"
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M12 3a3 3 0 0 0 -3 3v12a3 3 0 0 0 3 3"></path>
+                <path d="M6 3a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3"></path>
+                <path d="M13 7h7a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-7"></path>
+                <path d="M5 7h-1a1 1 0 0 0 -1 1v8a1 1 0 0 0 1 1h1"></path>
+                <path d="M17 12h.01"></path>
+                <path d="M13 12h.01"></path>
+            </svg>
+        ),
+
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
+    });
+
+    value: string;
+    min: string;
+    max: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            value: observable,
+            min: observable,
+            max: observable
+        });
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [...super.getOutputs()];
+    }
+
+    getClassName() {
+        return classNames("eez-widget", this.type);
+    }
+
+    render(flowContext: IFlowContext, width: number, height: number) {
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
+        return (
+            <>
+                <NumberInputDashboardWidgetElement
+                    className={classNames(this.style.classNames)}
+                    component={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+}
+
+registerClass("NumberInputDashboardWidget", NumberInputDashboardWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class CheckboxWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -633,7 +829,7 @@ export class CheckboxWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     render(
@@ -784,7 +980,7 @@ export class SwitchDashboardWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     render(
@@ -1449,7 +1645,7 @@ export class ButtonDashboardWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
@@ -1759,6 +1955,94 @@ registerClass("BitmapDashboardWidget", BitmapDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SliderDashboardWidgetElement = observer(
+    class SliderDashboardWidgetElement extends React.Component<{
+        component: SliderDashboardWidget;
+        flowContext: IFlowContext;
+        width: number;
+        height: number;
+    }> {
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                currentValue: observable
+            });
+        }
+
+        onChangeTimer: any;
+        currentValue: any;
+
+        render() {
+            const { flowContext, component } = this.props;
+
+            let value =
+                this.currentValue != undefined
+                    ? this.currentValue
+                    : evalProperty(flowContext, component, "value") ?? 25;
+            let min = evalProperty(flowContext, component, "min") ?? 0;
+            let max = evalProperty(flowContext, component, "max") ?? 100;
+            let step = evalProperty(flowContext, component, "step") ?? 1;
+
+            return (
+                <input
+                    className={classNames(
+                        this.props.component.style.classNames
+                    )}
+                    type="range"
+                    value={value ?? 0}
+                    min={min}
+                    max={max}
+                    step={step}
+                    onChange={event => {
+                        runInAction(() => {
+                            this.currentValue = parseFloat(event.target.value);
+                        });
+
+                        if (this.onChangeTimer) {
+                            return;
+                        }
+
+                        this.onChangeTimer = setTimeout(() => {
+                            const flowState =
+                                flowContext.flowState as FlowState;
+                            if (flowState) {
+                                if (component.value) {
+                                    flowState.runtime.assignProperty(
+                                        flowContext,
+                                        component,
+                                        "value",
+                                        this.currentValue
+                                    );
+
+                                    runInAction(() => {
+                                        this.currentValue = undefined;
+                                    });
+                                }
+
+                                if (flowState.runtime) {
+                                    flowState.runtime.executeWidgetAction(
+                                        flowContext,
+                                        component,
+                                        "ON_CHANGE",
+                                        makeSliderActionParamsValue(
+                                            flowContext,
+                                            value
+                                        ),
+                                        `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`
+                                    );
+                                }
+                            }
+
+                            this.onChangeTimer = undefined;
+                        }, 20);
+                    }}
+                ></input>
+            );
+        }
+    }
+);
+
 export class SliderDashboardWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1795,8 +2079,22 @@ export class SliderDashboardWidget extends Widget {
                 },
                 "double"
             ),
+            makeExpressionProperty(
+                {
+                    name: "step",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
             makeStylePropertyInfo("style", "Default style")
         ],
+
+        beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
+            if (jsObject.step == undefined) {
+                jsObject.step = "1";
+            }
+        },
 
         defaultValue: {
             left: 0,
@@ -1804,7 +2102,8 @@ export class SliderDashboardWidget extends Widget {
             width: 180,
             height: 20,
             min: "0",
-            max: "100"
+            max: "100",
+            step: "1"
         },
 
         icon: (
@@ -1861,50 +2160,18 @@ export class SliderDashboardWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        let value = evalProperty(flowContext, this, "value") ?? 25;
-        let min = evalProperty(flowContext, this, "min") ?? 0;
-        let max = evalProperty(flowContext, this, "max") ?? 100;
-
         return (
             <>
-                <input
-                    type="range"
-                    value={value}
-                    min={min}
-                    max={max}
-                    onChange={event => {
-                        const flowState = flowContext.flowState as FlowState;
-                        if (flowState) {
-                            const value = parseFloat(event.target.value);
-
-                            if (this.value) {
-                                flowState.runtime.assignProperty(
-                                    flowContext,
-                                    this,
-                                    "value",
-                                    value
-                                );
-                            }
-
-                            if (flowState.runtime) {
-                                flowState.runtime.executeWidgetAction(
-                                    flowContext,
-                                    this,
-                                    "ON_CHANGE",
-                                    makeSliderActionParamsValue(
-                                        flowContext,
-                                        value
-                                    ),
-                                    `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`
-                                );
-                            }
-                        }
-                    }}
-                ></input>
+                <SliderDashboardWidgetElement
+                    component={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );

@@ -14,7 +14,7 @@ import {
     SerialConnectionCallbacks,
     SerialConnectionConstructorParams,
     write
-} from "instrument/connection/interfaces/serial-ports-renderer";
+} from "instrument/connection/interfaces/serial-ports";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
 
@@ -213,45 +213,36 @@ registerActionComponents("Serial Port", [
 
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(serialConnection, result => {
-                if (result.serialConnectionId != undefined) {
-                    if (result.serialConnectionId != serialConnection.id) {
-                        try {
-                            context.setPropertyField(
-                                "connection",
-                                "id",
-                                result.serialConnectionId
-                            );
-                            context.propagateValueThroughSeqout();
-                        } catch (err) {
-                            context.throwError(err.toString());
+            (async (serialConnectionId: number) => {
+                let serialConnection =
+                    serialConnections.get(serialConnectionId);
+                if (serialConnection) {
+                    try {
+                        await serialConnection.connect();
+
+                        if (serialConnection.id != serialConnectionId) {
+                            try {
+                                context.setPropertyField(
+                                    "connection",
+                                    "id",
+                                    serialConnection.id
+                                );
+                                context.propagateValueThroughSeqout();
+                            } catch (err) {
+                                context.throwError(err.toString());
+                            }
                         }
+                    } catch (err) {
+                        context.throwError(err.toString());
                     }
                 } else {
-                    context.throwError(result.error);
+                    context.throwError(
+                        `serial connection ${serialConnectionId} not found`
+                    );
                 }
+
                 context.endAsyncExecution();
-            });
-        },
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            let serialConnection = serialConnections.get(message.id);
-            if (serialConnection) {
-                try {
-                    await serialConnection.connect();
-                    flowState.sendResultToWorker(messageId, {
-                        serialConnectionId: serialConnection.id
-                    });
-                } catch (err) {
-                    flowState.sendResultToWorker(messageId, {
-                        error: err.toString()
-                    });
-                }
-            } else {
-                flowState.sendResultToWorker(
-                    messageId,
-                    `serial connection ${message.id} not found`
-                );
-            }
+            })(serialConnection.id);
         }
     },
     {
@@ -277,26 +268,19 @@ registerActionComponents("Serial Port", [
 
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(serialConnection, result => {
-                if (result) {
-                    context.throwError(result);
-                } else {
+            (async (serialConnectionId: number) => {
+                const serialConnection =
+                    serialConnections.get(serialConnectionId);
+
+                if (serialConnection) {
+                    serialConnection.disconnect();
                     context.propagateValueThroughSeqout();
+                } else {
+                    context.throwError("serial connection not found");
                 }
+
                 context.endAsyncExecution();
-            });
-        },
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const serialConnection = serialConnections.get(message.id);
-            if (serialConnection) {
-                serialConnection.disconnect();
-                flowState.sendResultToWorker(messageId, null);
-            } else {
-                flowState.sendResultToWorker(
-                    messageId,
-                    "serial connection not found"
-                );
-            }
+            })(serialConnection.id);
         }
     },
     {
@@ -333,43 +317,28 @@ registerActionComponents("Serial Port", [
 
             context.propagateValue("data", readableStream);
 
-            context.sendMessageToComponent(serialConnection, result => {
-                if (result && result.error) {
-                    context.throwError(result.error);
-                    context.endAsyncExecution();
-                } else {
-                    if (result.data) {
-                        readableStream.push(result.data);
+            (async serialConnectionId => {
+                const serialConnection =
+                    serialConnections.get(serialConnectionId);
+                if (serialConnection) {
+                    if (serialConnection.isConnected) {
+                        serialConnection.onRead = data => {
+                            if (data) {
+                                readableStream.push(data);
+                            } else {
+                                readableStream.destroy();
+                                context.endAsyncExecution();
+                            }
+                        };
                     } else {
-                        readableStream.destroy();
+                        context.throwError("not connected");
                         context.endAsyncExecution();
                     }
-                }
-            });
-        },
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const serialConnection = serialConnections.get(message.id);
-            if (serialConnection) {
-                if (serialConnection.isConnected) {
-                    serialConnection.onRead = data => {
-                        flowState.sendResultToWorker(
-                            messageId,
-                            {
-                                data
-                            },
-                            data == undefined
-                        );
-                    };
                 } else {
-                    flowState.sendResultToWorker(messageId, {
-                        error: "not connected"
-                    });
+                    context.throwError("serial connection not found");
+                    context.endAsyncExecution();
                 }
-            } else {
-                flowState.sendResultToWorker(messageId, {
-                    error: "serial connection not found"
-                });
-            }
+            })(serialConnection.id);
         }
     },
     {
@@ -402,38 +371,19 @@ registerActionComponents("Serial Port", [
 
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(
-                {
-                    serialConnection,
-                    data
-                },
-                result => {
-                    if (result) {
-                        context.throwError(result);
-                    } else {
-                        context.propagateValueThroughSeqout();
+            (async (serialConnectionId: number, data: any) => {
+                const serialConnection =
+                    serialConnections.get(serialConnectionId);
+                if (serialConnection) {
+                    if (data) {
+                        serialConnection.write(data.toString());
                     }
-                    context.endAsyncExecution();
+                    context.propagateValueThroughSeqout();
+                } else {
+                    context.throwError("serial connection not found");
                 }
-            );
-        },
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            const serialConnection = serialConnections.get(
-                message.serialConnection.id
-            );
-            if (serialConnection) {
-                const data = message.data;
-                if (data) {
-                    serialConnection.write(data.toString());
-                }
-                flowState.sendResultToWorker(messageId, null);
-            } else {
-                flowState.sendResultToWorker(
-                    messageId,
-                    "serial connection not found"
-                );
-                return;
-            }
+                context.endAsyncExecution();
+            })(serialConnection.id, data);
         }
     },
     {
@@ -453,34 +403,23 @@ registerActionComponents("Serial Port", [
         execute: (context: IDashboardComponentContext) => {
             context = context.startAsyncExecution();
 
-            context.sendMessageToComponent(undefined, result => {
-                if (result.ports) {
-                    context.propagateValue("ports", result.ports);
+            (async () => {
+                try {
+                    const ports = await SerialConnection.listPorts();
+                    context.propagateValue("ports", ports);
                     context.propagateValueThroughSeqout();
-                } else {
-                    context.throwError(result.error);
+                } catch (err) {
+                    context.throwError(err.toString());
                 }
                 context.endAsyncExecution();
-            });
-        },
-        onWasmWorkerMessage: async (flowState, message, messageId) => {
-            try {
-                const ports = await SerialConnection.listPorts();
-                flowState.sendResultToWorker(messageId, {
-                    ports
-                });
-            } catch (err) {
-                flowState.sendResultToWorker(messageId, {
-                    error: err.toString()
-                });
-            }
+            })();
         }
     }
 ]);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const serialConnections = new Map<number, SerialConnection>();
+export const serialConnections = new Map<number, SerialConnection>();
 let nextSerialConnectionId = 0;
 
 registerObjectVariableType("SerialConnection", {
@@ -508,7 +447,7 @@ registerObjectVariableType("SerialConnection", {
         const serialConnection = serialConnections.get(objectVariable.id);
         if (serialConnection) {
             serialConnection.disconnect();
-            serialConnections.set(serialConnection.id, serialConnection);
+            serialConnections.delete(serialConnection.id);
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {

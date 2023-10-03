@@ -3,7 +3,6 @@ import deepEqual from "deep-equal";
 import type {
     WorkerToRenderMessage,
     IPropertyValue,
-    IMessageFromWorker,
     IWasmFlowRuntime
 } from "eez-studio-types";
 
@@ -215,6 +214,8 @@ export function createWasmWorker(
         );
     }
 
+    WasmFlowRuntime.wasmModuleId = wasmModuleId;
+
     WasmFlowRuntime.getClassByName = getClassByName;
     WasmFlowRuntime.readSettings = readSettings;
     WasmFlowRuntime.writeSettings = writeSettings;
@@ -334,8 +335,6 @@ export function createWasmWorker(
         return true;
     }
 
-    const componentMessageCallbacks = new Map<number, (result: any) => void>();
-
     let stopScriptCalled = false;
 
     const postRendererToWorkerMessage = async function (
@@ -417,23 +416,6 @@ export function createWasmWorker(
 
             WasmFlowRuntime._valueFree(valuePtr);
 
-            return;
-        }
-
-        if (rendererToWorkerMessage.resultToWorker) {
-            const callback = componentMessageCallbacks.get(
-                rendererToWorkerMessage.resultToWorker.messageId
-            );
-            if (callback) {
-                callback(rendererToWorkerMessage.resultToWorker.result);
-                if (rendererToWorkerMessage.resultToWorker.finalResult) {
-                    componentMessageCallbacks.delete(
-                        rendererToWorkerMessage.resultToWorker.messageId
-                    );
-                }
-            } else {
-                console.error("Unexpected: there is no worker callback");
-            }
             return;
         }
 
@@ -624,24 +606,6 @@ export function createWasmWorker(
             }
 
             workerToRenderMessage.propertyValues = propertyValues;
-
-            if (WasmFlowRuntime.componentMessages) {
-                const componentMessages: IMessageFromWorker[] = [];
-                workerToRenderMessage.componentMessages = componentMessages;
-
-                WasmFlowRuntime.componentMessages.forEach(componentMessage => {
-                    if (componentMessage.callback) {
-                        componentMessageCallbacks.set(
-                            componentMessage.id,
-                            componentMessage.callback
-                        );
-                        componentMessage.callback = undefined;
-                    }
-                    componentMessages?.push(componentMessage);
-                });
-
-                WasmFlowRuntime.componentMessages = undefined;
-            }
 
             var buf_addr = WasmFlowRuntime._getSyncedBuffer();
             if (buf_addr != 0) {

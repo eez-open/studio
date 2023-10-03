@@ -74,11 +74,6 @@ export interface IRuntime {
         value: any,
         valueType: ValueType
     ): void;
-    sendResultToWorker(
-        messageId: number,
-        result: any,
-        finalResult?: boolean
-    ): void;
     throwError(
         flowState: IFlowState,
         sourceComponent: Component,
@@ -93,7 +88,7 @@ export interface IComponentState {
     inputsData: Map<string, any>;
     unreadInputsData: Set<string>;
     asyncState: boolean;
-    runningState: any;
+    executionState: any;
 }
 
 export interface IFlowState {
@@ -104,8 +99,11 @@ export interface IFlowState {
 
     getComponentState(component: Component): IComponentState;
 
-    getComponentRunningState<T>(component: Component): T | undefined;
-    setComponentRunningState<T>(component: Component, runningState: T): void;
+    getComponentExecutionState<T>(component: Component): T | undefined;
+    setComponentExecutionState<T>(
+        component: Component,
+        executionState: T
+    ): void;
 
     dataContext: IDataContext;
     runtime: IRuntime;

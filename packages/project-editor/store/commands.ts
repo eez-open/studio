@@ -26,6 +26,7 @@ import { ICommand } from "project-editor/store/undo-manager";
 import { visitObjects } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { Style } from "project-editor/features/style/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -436,17 +437,9 @@ function ensureUniqueProperties(
         existingObjects.push(object);
     });
 
-    // make sure LVGL widget identifiers are unique
     const project = ProjectEditor.getProject(parentObject);
     if (project.projectTypeTraits.isLVGL) {
-        const existingLvglWidgets: LVGLWidget[] = [];
-
-        for (const widget of visitObjects(project)) {
-            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                existingLvglWidgets.push(widget);
-            }
-        }
-
+        // make sure LVGL widget identifiers are unique
         const newLvglWidgets: LVGLWidget[] = [];
 
         objects.forEach(object => {
@@ -456,17 +449,54 @@ function ensureUniqueProperties(
                 }
             }
         });
+        if (newLvglWidgets.length > 0) {
+            const existingLvglWidgets: LVGLWidget[] = [];
 
-        newLvglWidgets.forEach(newLvglWidget => {
-            if (newLvglWidget.identifier) {
-                newLvglWidget.identifier = getUniquePropertyValue(
-                    existingLvglWidgets,
-                    "identifier",
-                    newLvglWidget.identifier
-                ) as string;
+            for (const widget of visitObjects(project)) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    existingLvglWidgets.push(widget);
+                }
             }
-            existingLvglWidgets.push(newLvglWidget);
+
+            newLvglWidgets.forEach(newLvglWidget => {
+                if (newLvglWidget.identifier) {
+                    newLvglWidget.identifier = getUniquePropertyValue(
+                        existingLvglWidgets,
+                        "identifier",
+                        newLvglWidget.identifier
+                    ) as string;
+                }
+                existingLvglWidgets.push(newLvglWidget);
+            });
+        }
+    } else {
+        // make sure style names are unique
+        const newStyles: Style[] = [];
+
+        objects.forEach(object => {
+            if (object instanceof ProjectEditor.StyleClass) {
+                newStyles.push(object);
+            }
         });
+
+        if (newStyles.length > 0) {
+            const existingStyles: Style[] = [];
+
+            for (const style of visitObjects(project)) {
+                if (style instanceof ProjectEditor.StyleClass) {
+                    existingStyles.push(style);
+                }
+            }
+
+            newStyles.forEach(newStyle => {
+                newStyle.name = getUniquePropertyValue(
+                    existingStyles,
+                    "name",
+                    newStyle.name
+                ) as string;
+                existingStyles.push(newStyle);
+            });
+        }
     }
 }
 

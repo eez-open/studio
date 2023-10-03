@@ -40,6 +40,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import { InputActionComponent } from "project-editor/flow/components/actions";
 import { getProperty, IEezObject } from "project-editor/core/object";
+import { getDashboardState } from "project-editor/flow/runtime/component-execution-states";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -119,6 +120,10 @@ export class RemoteRuntime extends RuntimeBase {
 
     constructor(public projectStore: ProjectStore) {
         super(projectStore);
+    }
+
+    getWasmModuleId(): number | undefined {
+        return undefined;
     }
 
     async doStartRuntime(isDebuggerActive: boolean) {
@@ -1508,9 +1513,16 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         if (!(component instanceof InputActionComponent)) {
-                            flowState.setComponentRunningState(
+                            const wasmModuleId = this.runtime.getWasmModuleId();
+
+                            flowState.setComponentExecutionState(
                                 component,
-                                executionState
+                                wasmModuleId != undefined
+                                    ? getDashboardState(
+                                          wasmModuleId,
+                                          executionState
+                                      )
+                                    : executionState
                             );
                         }
                     }

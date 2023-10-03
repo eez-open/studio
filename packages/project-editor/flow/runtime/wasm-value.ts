@@ -30,7 +30,8 @@ import {
     FLOW_VALUE_TYPE_UINT8,
     FLOW_VALUE_TYPE_UNDEFINED,
     FLOW_VALUE_TYPE_DATE,
-    FLOW_VALUE_TYPE_POINTER
+    FLOW_VALUE_TYPE_POINTER,
+    FLOW_VALUE_TYPE_ERROR
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
@@ -397,6 +398,12 @@ export function getValue(
         return {
             value: WasmFlowRuntime.HEAPU32[offset >> 2],
             valueType: "integer"
+        };
+    } else if (type == FLOW_VALUE_TYPE_ERROR) {
+        // TODO
+        return {
+            value: "Runtime error",
+            valueType: "string"
         };
     }
 

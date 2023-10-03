@@ -268,8 +268,6 @@ export const ComponentEnclosure = observer(
                 if (this.props.flowContext.flowState) {
                     return null;
                 }
-                style.opacity = "0.05";
-                style.pointerEvents = "none";
             }
 
             let width;
@@ -345,7 +343,8 @@ export const ComponentEnclosure = observer(
                 {
                     "eez-flow-editor-capture-pointers":
                         runtime &&
-                        !(runtime.isDebuggerActive && runtime.isPaused)
+                        !(runtime.isDebuggerActive && runtime.isPaused),
+                    "not-visible-in-select-widget": visible == false
                 }
             );
 

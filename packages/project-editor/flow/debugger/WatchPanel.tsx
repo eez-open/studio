@@ -614,9 +614,9 @@ const WatchTable = observer(
                 return undefined;
             }
 
-            if (flowState.flow.components.indexOf(component) == -1) {
-                return undefined;
-            }
+            // if (flowState.flow.components.indexOf(component) == -1) {
+            //     return undefined;
+            // }
 
             const componentState = flowState.getComponentState(component);
 

@@ -150,17 +150,12 @@ export type LogItemType =
     | "debug";
 
 export interface IComponentFlowState {
-    getComponentRunningState<T>(): T | undefined;
-    setComponentRunningState<T>(runningState: T): void;
+    getComponentExecutionState<T>(): T | undefined;
+    setComponentExecutionState<T>(executionState: T): void;
     evalExpression(expression: string): any;
     evalTemplateLiteral(expression: string): any;
     assignValue(assignableExpression: string, value: any): any;
     propagateValue(output: string, value: any): void;
-    sendResultToWorker(
-        messageId: number,
-        result: any,
-        finalResult?: boolean
-    ): void;
     throwError(err: string): void;
     log(type: LogItemType, message: string): void;
     dispose: (() => void) | undefined;
@@ -326,12 +321,6 @@ export interface IActionComponentDefinition {
     migrateProperties?: (component: IActionComponent) => void;
 
     execute?: (context: IDashboardComponentContext) => void;
-
-    onWasmWorkerMessage?: (
-        flowState: IComponentFlowState,
-        message: any,
-        messageId: number
-    ) => void;
 }
 
 interface IMessageFromWorker {
@@ -360,8 +349,6 @@ export interface WorkerToRenderMessage {
 
     // evaluated property values
     propertyValues?: IPropertyValue[];
-
-    componentMessages?: IMessageFromWorker[];
 
     freeArrayValue?: ObjectOrArrayValueWithType;
 
@@ -504,8 +491,8 @@ export interface IWasmFlowRuntime {
     _free(ptr: number): void;
 
     //
+    wasmModuleId: number;
     assetsMap: AssetsMap;
-    componentMessages: IMessageFromWorker[] | undefined;
     postWorkerToRendererMessage: (workerToRenderMessage: WorkerToRenderMessage) => any;
 
     getClassByName: (className: string) => any;
@@ -547,8 +534,10 @@ export interface IWasmFlowRuntime {
     _getFlowIndex(flowStateIndex: number): number;
 
     _getComponentExecutionState(flowStateIndex: number, componentIndex: number): number;
-    _setComponentExecutionState(flowStateIndex: number, componentIndex: number, state: number): void;
+    _allocateDashboardComponentExecutionState(flowStateIndex: number, componentIndex: number): number;
+    _deallocateDashboardComponentExecutionState(flowStateIndex: number, componentIndex: number): void;
 
+    _getUint8Param(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getUint32Param(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getStringParam(flowStateIndex: number, componentIndex: number, offset: number): number;
     _getExpressionListParam(flowStateIndex: number, componentIndex: number, offset: number): number;
@@ -692,8 +681,9 @@ export interface IDashboardComponentContext {
     getComponentIndex: () => number;
 
     getComponentExecutionState: <T>() => T | undefined;
-    setComponentExecutionState: <T>(runningState: T) => void;
+    setComponentExecutionState: <T>(executionState: T) => void;
 
+    getUint8Param: (offset: number) => number;
     getUint32Param: (offset: number) => number;
     getStringParam: (offset: number) => string;
     getExpressionListParam: (offset: number) => any[];
@@ -736,11 +726,6 @@ export interface IDashboardComponentContext {
     endAsyncExecution: () => void;
 
     executeCallAction: (flowIndex: number) => void;
-
-    sendMessageToComponent: (
-        message: any,
-        callback?: (result: any) => void
-    ) => void;
 
     logInfo: (infoMessage: string) => void;
 

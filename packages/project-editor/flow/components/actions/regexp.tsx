@@ -106,20 +106,20 @@ registerActionComponents("Dashboard Specific", [
             }
         },
         execute: (context: IDashboardComponentContext) => {
-            let runningState: RegexpExecutionState | undefined;
+            let executionState: RegexpExecutionState | undefined;
             if (context.getInputValue("@seqin") !== undefined) {
                 context.setComponentExecutionState(undefined);
-                runningState = undefined;
+                executionState = undefined;
             } else {
-                runningState =
+                executionState =
                     context.getComponentExecutionState<RegexpExecutionState>();
-                if (!runningState) {
+                if (!executionState) {
                     context.throwError("Never started");
                     return;
                 }
             }
 
-            if (!runningState) {
+            if (!executionState) {
                 const patternValue: any = context.evalProperty("pattern");
                 if (typeof patternValue != "string") {
                     context.throwError("pattern is not a string");
@@ -159,9 +159,9 @@ registerActionComponents("Dashboard Specific", [
                     );
                 }
             } else if (context.getInputValue("next") !== undefined) {
-                runningState.getNext();
+                executionState.getNext();
             } else if (context.getInputValue("stop") !== undefined) {
-                runningState.stop();
+                executionState.stop();
             }
         }
     }

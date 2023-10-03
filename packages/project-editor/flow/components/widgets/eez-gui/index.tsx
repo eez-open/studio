@@ -548,7 +548,7 @@ export class TextWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
@@ -1565,7 +1565,7 @@ export class ButtonWidget extends Widget {
     }
 
     getClassName() {
-        return classNames("eez-widget-component", this.type);
+        return classNames("eez-widget", this.type);
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {

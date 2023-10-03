@@ -26,7 +26,7 @@ import {
     makeStylePropertyInfo,
     Widget
 } from "project-editor/flow/component";
-import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { observer } from "mobx-react";
 
 import type * as PlotlyModule from "plotly.js-dist-min";
@@ -62,8 +62,8 @@ const LineChartElement = observer(
         width: number;
         height: number;
     }) => {
-        const runningState =
-            flowContext.flowState?.getComponentRunningState<RunningState>(
+        const executionState =
+            flowContext.flowState?.getComponentExecutionState<ExecutionState>(
                 widget
             );
 
@@ -76,8 +76,8 @@ const LineChartElement = observer(
             return widget.lines.map((line, i) => {
                 let name;
 
-                if (runningState) {
-                    name = runningState.labels[i];
+                if (executionState) {
+                    name = executionState.labels[i];
                 } else {
                     try {
                         name = evalConstantExpression(
@@ -90,15 +90,15 @@ const LineChartElement = observer(
                 }
 
                 return {
-                    x: runningState
-                        ? runningState.values.map(
+                    x: executionState
+                        ? executionState.values.map(
                               inputValue => inputValue.xValue
                           )
                         : flowContext.flowState
                         ? []
                         : [1, 2, 3, 4],
-                    y: runningState
-                        ? runningState.values.map(
+                    y: executionState
+                        ? executionState.values.map(
                               inputValue => inputValue.lineValues[i]
                           )
                         : flowContext.flowState
@@ -172,16 +172,16 @@ const LineChartElement = observer(
 
                         disposeReaction = reaction(
                             () => {
-                                let runningState;
+                                let executionState;
                                 if (flowContext.flowState) {
-                                    runningState =
-                                        flowContext.flowState.getComponentRunningState<RunningState>(
+                                    executionState =
+                                        flowContext.flowState.getComponentExecutionState<ExecutionState>(
                                             widget
                                         );
                                 }
-                                return runningState
-                                    ? runningState.values[
-                                          runningState.values.length - 1
+                                return executionState
+                                    ? executionState.values[
+                                          executionState.values.length - 1
                                       ]
                                     : undefined;
                             },
@@ -246,7 +246,7 @@ const LineChartElement = observer(
             widget.lines
                 .map(line => `${line.label},${line.value},${line.color}`)
                 .join("/"),
-            runningState
+            executionState
         ]);
 
         return (
@@ -264,7 +264,7 @@ const LineChartElement = observer(
     }
 );
 
-class RunningState {
+class ExecutionState {
     values: InputData[] = [];
     labels: string[] = [];
 
@@ -500,20 +500,41 @@ export class LineChartWidget extends Widget {
 
         execute: (context: IDashboardComponentContext) => {
             const value = context.getInputValue("reset");
-            const labels = context.getExpressionListParam(0);
+
+            const maxPoints = context.getUint32Param(0);
+
+            const labels = context.getExpressionListParam(4);
+
             if (value !== undefined) {
                 context.clearInputValue("reset");
-                context.sendMessageToComponent({
-                    reset: true,
-                    labels
-                });
+
+                const newExecutionState = new ExecutionState();
+                newExecutionState.labels = labels;
+
+                context.setComponentExecutionState(newExecutionState);
             } else {
+                let executionState =
+                    context.getComponentExecutionState<ExecutionState>();
+
+                if (!executionState) {
+                    executionState = new ExecutionState();
+                    context.setComponentExecutionState(executionState);
+                }
+
                 const xValue = context.evalProperty("xValue");
-                const values = context.getExpressionListParam(8);
-                context.sendMessageToComponent({
-                    xValue,
-                    labels,
-                    values
+                const values = context.getExpressionListParam(12);
+
+                runInAction(() => {
+                    executionState!.labels = labels;
+
+                    executionState!.values.push({
+                        xValue,
+                        lineValues: values
+                    });
+
+                    if (executionState!.values.length == maxPoints) {
+                        executionState!.values.shift();
+                    }
                 });
             }
         }
@@ -576,6 +597,8 @@ export class LineChartWidget extends Widget {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeUint32(this.maxPoints);
+
         dataBuffer.writeArray(this.lines, line => {
             try {
                 // as property
@@ -605,37 +628,6 @@ export class LineChartWidget extends Widget {
                 );
 
                 dataBuffer.writeUint16NonAligned(makeEndInstruction());
-            }
-        });
-    }
-
-    onWasmWorkerMessage(flowState: IFlowState, message: any) {
-        runInAction(() => {
-            let runningState =
-                flowState.getComponentRunningState<RunningState>(this);
-
-            if (!runningState) {
-                runningState = new RunningState();
-                flowState.setComponentRunningState(this, runningState);
-            }
-
-            if (message.reset) {
-                const newRunningState = new RunningState();
-                newRunningState.labels = message.labels;
-                flowState.setComponentRunningState(this, newRunningState);
-            } else {
-                const { xValue, labels, values } = message;
-
-                runningState.labels = labels;
-
-                runningState.values.push({
-                    xValue,
-                    lineValues: values
-                });
-
-                if (runningState.values.length == this.maxPoints) {
-                    runningState.values.shift();
-                }
             }
         });
     }

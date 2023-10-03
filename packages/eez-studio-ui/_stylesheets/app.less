@@ -4930,7 +4930,7 @@ button.EezStudio_Action {
         display: block;
         position: absolute;
 
-        &.eez-action-component {
+        &.eez-action {
             display: flex;
             flex-direction: column;
 
@@ -5064,7 +5064,7 @@ button.EezStudio_Action {
             }
         }
 
-        &.eez-widget-component {
+        &.eez-widget {
             --size: 6px;
 
             .inputs,
@@ -5127,7 +5127,8 @@ button.EezStudio_Action {
             }
         }
 
-        &.TextInputWidget {
+        &.TextInputDashboardWidget,
+        &.NumberInputDashboardWidget {
             input {
                 display: block;
                 width: 100%;
@@ -5234,7 +5235,7 @@ button.EezStudio_Action {
         }
     }
 
-    .eez-action-component {
+    .eez-action {
         .seq-connection,
         .data-connection {
             @d: 6px;
@@ -5362,7 +5363,7 @@ button.EezStudio_Action {
         }
     }
 
-    .eez-widget-component {
+    .eez-widget {
         [data-connection-input-id],
         [data-connection-output-id] {
             position: relative;
@@ -5580,25 +5581,34 @@ button.EezStudio_Action {
             background-color: @lightSelectionBackgroundColor!important;
         }
 
+        & > div:not(.EezStudio_FlowCanvasContainer_DragAndDropActive) {
+            .EezStudio_ComponentEnclosure {
+                pointer-events: all !important;
+            }
+
+            .EezStudio_ComponentEnclosure.not-visible-in-select-widget {
+                pointer-events: none !important;
+                .EezStudio_ComponentEnclosure {
+                    pointer-events: none !important;
+                }
+            }
+        }
+
         .EezStudio_ComponentEnclosure {
             overflow: visible;
 
-            &.ButtonWidget {
-                button {
-                    cursor: default !important;
-                }
+            &.not-visible-in-select-widget {
+                opacity: 0.05;
             }
 
-            &.TextInputWidget {
-                input {
-                    cursor: default !important;
-                }
+            > * {
+                cursor: default !important;
+                pointer-events: none;
             }
 
             &.TerminalWidget {
                 .xterm {
                     overflow: hidden !important;
-                    cursor: default !important;
                     .xterm-viewport {
                         overflow-y: auto;
                     }

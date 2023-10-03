@@ -2,7 +2,7 @@ import { settingsController } from "home/settings";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-const MAX_ACTIVE_CONNECTION_LINES = 20;
+const MAX_ACTIVE_CONNECTION_LINES = 1000;
 
 const CIRCLE_RADIUS = "4";
 const CIRCLE_FILL_COLOR_LIGHT = "#333";
@@ -23,9 +23,7 @@ const connectionLinePointsCache = new Map<
     }[]
 >();
 
-(window as any).connectionLinePaths = connectionLinePaths;
-(window as any).activeConnectionLines = activeConnectionLines;
-(window as any).connectionLinePointsCache = connectionLinePointsCache;
+let requestAnimationFrameId: any = undefined;
 
 export function registerPath(
     connectionLine: ConnectionLine,
@@ -82,7 +80,9 @@ export function activateConnectionLine(connectionLine: ConnectionLine) {
         circles: new Map<SVGPathElement, SVGCircleElement>()
     });
 
-    window.requestAnimationFrame(animate);
+    if (!requestAnimationFrameId) {
+        requestAnimationFrameId = window.requestAnimationFrame(animate);
+    }
 }
 
 function getPointAt(path: SVGPathElement, t: number) {
@@ -110,6 +110,8 @@ function moveCircle(circle: SVGCircleElement, path: SVGPathElement, t: number) {
 }
 
 function animate() {
+    requestAnimationFrameId = undefined;
+
     const now = Date.now();
 
     let i = 0;
@@ -158,6 +160,6 @@ function animate() {
     }
 
     if (activeConnectionLines.length > 0) {
-        window.requestAnimationFrame(animate);
+        requestAnimationFrameId = window.requestAnimationFrame(animate);
     }
 }

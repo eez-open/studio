@@ -48,7 +48,6 @@ import {
     getObjectIcon
 } from "project-editor/store";
 import {
-    isDashboardProject,
     isLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
@@ -57,8 +56,7 @@ import { IContextMenuContext, getProjectStore } from "project-editor/store";
 
 import type {
     IResizeHandler,
-    IFlowContext,
-    IFlowState
+    IFlowContext
 } from "project-editor/flow/flow-interfaces";
 import {
     calcComponentGeometry,
@@ -86,8 +84,7 @@ import {
     checkExpression,
     checkTemplateLiteralExpression,
     evalConstantExpression,
-    parseIdentifier,
-    templateLiteralToExpression
+    parseIdentifier
 } from "project-editor/flow/expression";
 import {
     variableTypeProperty,
@@ -103,9 +100,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IActionComponentDefinition,
-    IComponentFlowState,
-    IComponentProperty,
-    LogItemType
+    IComponentProperty
 } from "eez-studio-types";
 import {
     flowGroup,
@@ -2339,12 +2334,6 @@ export class Component extends EezObject {
         // }
     }
 
-    onWasmWorkerMessage(
-        flowState: IFlowState,
-        message: any,
-        messageId: number
-    ) {}
-
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {}
 }
 
@@ -2653,8 +2642,7 @@ export class Widget extends Component {
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: component =>
-                    isLVGLProject(component) || isDashboardProject(component)
+                hideInPropertyGrid: component => isLVGLProject(component)
             },
             {
                 name: "locked",
@@ -3463,11 +3451,7 @@ export class Widget extends Component {
     }
 
     getClassName() {
-        return classNames(
-            "eez-widget-component",
-            this.type,
-            this.style.classNames
-        );
+        return classNames("eez-widget", this.type, this.style.classNames);
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
@@ -3676,7 +3660,7 @@ function renderActionComponent(
     if (flowContext.flowState) {
         const componentState =
             flowContext.flowState.getComponentState(actionNode);
-        if (componentState.runningState || componentState.asyncState) {
+        if (componentState.executionState || componentState.asyncState) {
             executionStateInfo = (
                 <span className="title-info-execution">
                     <svg
@@ -3836,7 +3820,7 @@ export class ActionComponent extends Component {
     }
 
     getClassName() {
-        return "eez-action-component";
+        return "eez-action";
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
@@ -3910,65 +3894,6 @@ export class NotFoundComponent extends ActionComponent {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-function getComponentFlowState(
-    flowState: IFlowState,
-    component: Component,
-    dispose?: () => void
-): IComponentFlowState {
-    return {
-        getComponentRunningState: () =>
-            flowState.getComponentRunningState(component),
-
-        setComponentRunningState: runningState =>
-            flowState.setComponentRunningState(component, runningState),
-
-        evalExpression: (expression: string) =>
-            flowState.evalExpression(component, expression),
-
-        evalTemplateLiteral: (templateLiteral: string) =>
-            flowState.evalExpression(
-                component,
-                templateLiteralToExpression(templateLiteral)
-            ),
-
-        assignValue: (assignableExpression: string, value: any) =>
-            flowState.runtime.assignValue(
-                flowState,
-                component,
-                assignableExpression,
-                value
-            ),
-
-        propagateValue: (output: string, value: any) =>
-            flowState.runtime.propagateValue(
-                flowState,
-                component,
-                output,
-                value
-            ),
-
-        sendResultToWorker: (
-            messageId: number,
-            result: any,
-            finalResult?: boolean
-        ) => {
-            flowState.runtime.sendResultToWorker(
-                messageId,
-                result,
-                finalResult
-            );
-        },
-
-        throwError: (message: string) =>
-            flowState.runtime.throwError(flowState, component, message),
-
-        log: (type: LogItemType, message: string) =>
-            flowState.log(type, message, component),
-
-        dispose
-    };
-}
 
 function getProperties(propertyDefinitions: IComponentProperty[]) {
     const properties: PropertyInfo[] = [];
@@ -4283,20 +4208,6 @@ export function createActionComponentClass(
             }
 
             return null;
-        }
-
-        override onWasmWorkerMessage(
-            flowState: IFlowState,
-            message: any,
-            messageId: number
-        ): void {
-            if (actionComponentDefinition.onWasmWorkerMessage) {
-                actionComponentDefinition.onWasmWorkerMessage(
-                    getComponentFlowState(flowState, this),
-                    message,
-                    messageId
-                );
-            }
         }
 
         override buildFlowComponentSpecific(

@@ -47,12 +47,6 @@ export interface RendererToWorkerMessage {
         arrayValue: ArrayValue;
     };
 
-    resultToWorker?: {
-        messageId: number;
-        result: any;
-        finalResult: boolean;
-    };
-
     stopScript?: boolean;
 }
 

@@ -854,12 +854,12 @@ export class FlowState {
             flowStates: observable,
             error: observable,
             isFinished: observable,
-            setComponentRunningState: action,
-            setComponentAsyncState: action,
+            setComponentExecutionState: action,
             isRunning: computed({ keepAlive: true }),
             hasAnyDiposableComponent: computed({ keepAlive: true }),
             finish: action,
-            timelinePosition: observable
+            timelinePosition: observable,
+            setComponentAsyncState: action
         });
 
         this.dataContext =
@@ -938,12 +938,14 @@ export class FlowState {
         return evalExpression(this, component, expression);
     }
 
-    getComponentRunningState<T>(component: Component): T | undefined {
-        return this.getComponentState(component).runningState;
+    getComponentExecutionState<T>(component: Component): T | undefined {
+        return this.getComponentState(component).executionState;
     }
 
-    setComponentRunningState<T>(component: Component, runningState: T) {
-        this.getComponentState(component).runningState = runningState;
+    setComponentExecutionState<T>(component: Component, executionState: T) {
+        runInAction(() => {
+            this.getComponentState(component).executionState = executionState;
+        });
     }
 
     setComponentAsyncState(component: Component, asyncState: boolean) {
@@ -1075,7 +1077,7 @@ export class ComponentState implements IComponentState {
     unreadInputsData = new Set<string>();
     isRunning: boolean = false;
     asyncState: boolean = false;
-    runningState: any;
+    executionState: any;
     dispose: (() => void) | undefined = undefined;
 
     constructor(public flowState: FlowState, public component: Component) {
@@ -1084,7 +1086,7 @@ export class ComponentState implements IComponentState {
             unreadInputsData: observable,
             isRunning: observable,
             asyncState: observable,
-            runningState: observable,
+            executionState: observable,
             dispose: observable,
             setInputData: action,
             markInputsDataRead: action

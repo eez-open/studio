@@ -18,7 +18,6 @@ import { ProjectContext } from "project-editor/project/context";
 import {
     ProjectStore,
     getClassInfo,
-    getObjectFromStringPath,
     getObjectPathAsString,
     LayoutModels,
     Section
@@ -86,6 +85,7 @@ import {
     logDelete
 } from "instrument/window/history/activity-log";
 import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
+import { releaseRuntimeDashboardStates } from "project-editor/flow/runtime/component-execution-states";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -161,6 +161,10 @@ export class WasmRuntime extends RemoteRuntime {
         });
     }
 
+    getWasmModuleId() {
+        return this.wasmModuleId;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
@@ -219,7 +223,9 @@ export class WasmRuntime extends RemoteRuntime {
                       (1 <<
                           MessagesToDebugger.MESSAGE_TO_DEBUGGER_FLOW_STATE_ERROR) |
                       (1 <<
-                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_PAGE_CHANGED),
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_PAGE_CHANGED) |
+                      (1 <<
+                          MessagesToDebugger.MESSAGE_TO_DEBUGGER_COMPONENT_EXECUTION_STATE_CHANGED),
             this.onWorkerMessage,
             this.projectStore.projectTypeTraits.isLVGL,
             this.displayWidth,
@@ -269,6 +275,8 @@ export class WasmRuntime extends RemoteRuntime {
                 );
             }
         }
+
+        releaseRuntimeDashboardStates(this.wasmModuleId);
     }
 
     stop() {
@@ -397,35 +405,6 @@ export class WasmRuntime extends RemoteRuntime {
                 this.componentProperties.valuesFromWorker(
                     workerToRenderMessage.propertyValues
                 );
-            }
-
-            if (workerToRenderMessage.componentMessages) {
-                for (const componentMessage of workerToRenderMessage.componentMessages) {
-                    const flowStateAndIndex = this.flowStateMap.get(
-                        componentMessage.flowStateIndex
-                    );
-                    if (flowStateAndIndex) {
-                        const { flowState, flowIndex } = flowStateAndIndex;
-
-                        const component = getObjectFromStringPath(
-                            this.projectStore.project,
-                            this.assetsMap.flows[flowIndex].components[
-                                componentMessage.componentIndex
-                            ].path
-                        ) as Component;
-                        if (component) {
-                            component.onWasmWorkerMessage(
-                                flowState,
-                                componentMessage.message,
-                                componentMessage.id
-                            );
-                        } else {
-                            console.error("UNEXPECTED!");
-                        }
-                    } else {
-                        console.error("UNEXPECTED!");
-                    }
-                }
             }
 
             if (workerToRenderMessage.messageToDebugger) {
@@ -1035,7 +1014,7 @@ export class WasmRuntime extends RemoteRuntime {
             this.assetsMap.flows[flowIndex].components[componentIndex]
                 .outputIndexes[actionName];
         if (outputIndex == undefined) {
-            console.error("Unexpected!");
+            // console.error("Unexpected!");
             return;
         }
 
@@ -1076,16 +1055,6 @@ export class WasmRuntime extends RemoteRuntime {
             componentIndex,
             outputIndex,
             arrayValue
-        };
-        this.worker.postMessage(message);
-    }
-
-    sendResultToWorker(messageId: number, result: any, finalResult: boolean) {
-        const message: RendererToWorkerMessage = {};
-        message.resultToWorker = {
-            messageId,
-            result,
-            finalResult: finalResult == undefined ? true : finalResult
         };
         this.worker.postMessage(message);
     }

@@ -15,7 +15,7 @@ import {
     makeDataPropertyInfo,
     makeStylePropertyInfo
 } from "project-editor/flow/component";
-import { IFlowContext, IFlowState } from "project-editor/flow/flow-interfaces";
+import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { addCssStylesheet } from "eez-studio-shared/dom";
 import { observer } from "mobx-react";
 import { registerSystemStructure } from "project-editor/features/variable/value-type";
@@ -23,7 +23,7 @@ import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class RunningState {
+class ExecutionState {
     onData: ((value: string) => void) | undefined = undefined;
 }
 
@@ -66,10 +66,28 @@ export class TerminalWidget extends Widget {
             const data = context.evalProperty("data");
 
             if (typeof data === "string" && data.length > 0) {
-                context.sendMessageToComponent(data);
+                let executionState =
+                    context.getComponentExecutionState<ExecutionState>();
+                if (!executionState) {
+                    executionState = new ExecutionState();
+                    context.setComponentExecutionState(executionState);
+                }
+
+                if (executionState.onData) {
+                    executionState.onData(data);
+                }
             } else if (data instanceof Readable || data instanceof Duplex) {
                 data.on("data", (chunk: Buffer) => {
-                    context.sendMessageToComponent(chunk.toString());
+                    let executionState =
+                        context.getComponentExecutionState<ExecutionState>();
+                    if (!executionState) {
+                        executionState = new ExecutionState();
+                        context.setComponentExecutionState(executionState);
+                    }
+
+                    if (executionState.onData) {
+                        executionState.onData(chunk.toString());
+                    }
                 });
             }
         }
@@ -103,22 +121,6 @@ export class TerminalWidget extends Widget {
                 {super.render(flowContext, width, height)}
             </>
         );
-    }
-
-    async onWasmWorkerMessage(flowState: IFlowState, message: any) {
-        let runningState =
-            flowState.getComponentRunningState<RunningState>(this);
-
-        if (!runningState) {
-            runningState = new RunningState();
-            flowState.setComponentRunningState(this, runningState);
-        }
-
-        const value = message;
-
-        if (runningState.onData && value) {
-            runningState.onData(value);
-        }
     }
 }
 
@@ -192,6 +194,20 @@ const TerminalElement = observer(
 
         dispose: any;
 
+        updateComponentExecutionState() {
+            if (this.props.flowContext.flowState) {
+                let executionState =
+                    this.props.flowContext.flowState.getComponentExecutionState<ExecutionState>(
+                        this.props.widget
+                    );
+                if (executionState && !executionState.onData) {
+                    executionState.onData = data => {
+                        this.terminal.write(data);
+                    };
+                }
+            }
+        }
+
         async componentDidMount() {
             if (!this.ref.current) {
                 return;
@@ -231,30 +247,15 @@ const TerminalElement = observer(
                 }
             });
 
-            if (this.props.flowContext.flowState) {
-                let runningState =
-                    this.props.flowContext.flowState.getComponentRunningState<RunningState>(
-                        this.props.widget
-                    );
-                if (!runningState) {
-                    runningState = new RunningState();
-                    this.props.flowContext.flowState.setComponentRunningState(
-                        this.props.widget,
-                        runningState
-                    );
-                }
-                if (runningState) {
-                    runningState.onData = data => {
-                        this.terminal.write(data);
-                    };
-                }
-            }
+            this.updateComponentExecutionState();
         }
 
         componentDidUpdate() {
             if (this.fitAddon) {
                 this.fitAddon.fit();
             }
+
+            this.updateComponentExecutionState();
         }
 
         componentWillUnmount() {
@@ -264,6 +265,10 @@ const TerminalElement = observer(
         }
 
         render() {
+            this.props.flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                this.props.widget
+            );
+
             return (
                 <div
                     ref={this.ref}

@@ -159,10 +159,41 @@ const idProperty: PropertyInfo = {
     defaultValue: undefined
 };
 
+function styleNameUnique(
+    parent: IEezObject,
+    oldIdentifier: string | undefined
+) {
+    return (object: any, ruleName: string) => {
+        const newIdentifer = object[ruleName];
+        if (oldIdentifier != undefined && newIdentifer == oldIdentifier) {
+            return null;
+        }
+
+        if (
+            findStyle(ProjectEditor.getProject(parent), newIdentifer) ==
+            undefined
+        ) {
+            return null;
+        }
+
+        return "Not an unique name";
+    };
+}
+
 const nameProperty: PropertyInfo = {
     name: "name",
     type: PropertyType.String,
-    unique: true,
+    unique: (
+        style: Style,
+        parent: Style | Project,
+        propertyInfo?: PropertyInfo
+    ) => {
+        const oldIdentifier = propertyInfo
+            ? getProperty(style, propertyInfo.name)
+            : undefined;
+
+        return styleNameUnique(parent, oldIdentifier);
+    },
     hideInPropertyGrid: isWidgetParentOfStyle
 };
 
@@ -993,7 +1024,7 @@ export class Style extends EezObject {
                             validators: [
                                 validators.required,
                                 validators.invalidCharacters("."),
-                                validators.unique({}, parent)
+                                styleNameUnique(parent, undefined)
                             ]
                         }
                     ]
