@@ -5601,9 +5601,16 @@ button.EezStudio_Action {
                 opacity: 0.05;
             }
 
-            > * {
-                cursor: default !important;
-                pointer-events: none;
+            &.eez-widget {
+                > * {
+                    cursor: default !important;
+                    pointer-events: none;
+                }
+
+                > .inputs,
+                > .outputs {
+                    pointer-events: all;
+                }
             }
 
             &.TerminalWidget {
