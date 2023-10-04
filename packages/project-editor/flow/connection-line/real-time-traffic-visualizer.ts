@@ -2,7 +2,7 @@ import { settingsController } from "home/settings";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-const MAX_ACTIVE_CONNECTION_LINES = 1000;
+const MAX_ACTIVE_CONNECTION_LINES = 250;
 
 const CIRCLE_RADIUS = "4";
 const CIRCLE_FILL_COLOR_LIGHT = "#333";

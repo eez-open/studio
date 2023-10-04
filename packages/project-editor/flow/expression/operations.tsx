@@ -1076,6 +1076,19 @@ export const builtInFunctions: {
         }
     },
 
+    "String.fromCharCode": {
+        operationIndex: 72,
+        arity: 1,
+        args: ["charCode"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => String.fromCharCode(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
+
     "Array.length": {
         operationIndex: 52,
         arity: 1,

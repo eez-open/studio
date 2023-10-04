@@ -1,5 +1,12 @@
 import React from "react";
-import { observable, makeObservable, computed, runInAction } from "mobx";
+import {
+    observable,
+    makeObservable,
+    computed,
+    runInAction,
+    IReactionDisposer,
+    action
+} from "mobx";
 import classNames from "classnames";
 
 import QRC from "../qrcodegen";
@@ -552,11 +559,25 @@ registerClass("TextInputWidget", TextInputWidget);
 const NumberInputDashboardWidgetElement = observer(
     class NumberInputDashboardWidgetElement extends React.Component<{
         className: string;
-        component: SliderDashboardWidget;
+        component: NumberInputDashboardWidget;
         flowContext: IFlowContext;
         width: number;
         height: number;
     }> {
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                inputValue: observable
+            });
+        }
+
+        componentWillUnmount(): void {}
+
+        dispose: IReactionDisposer;
+        latestFlowValue: any;
+        inputValue: any;
+
         render() {
             const { flowContext, component } = this.props;
 
@@ -565,18 +586,37 @@ const NumberInputDashboardWidgetElement = observer(
             let max = evalProperty(flowContext, component, "max") ?? 100;
             let step = evalProperty(flowContext, component, "step") ?? 1;
 
+            if (value != this.latestFlowValue) {
+                this.latestFlowValue = value;
+
+                setTimeout(
+                    action(() => {
+                        this.inputValue = undefined;
+                    })
+                );
+            }
+
             return (
                 <input
                     type="number"
                     className={this.props.className}
-                    value={value ?? 0}
+                    value={
+                        this.inputValue != undefined ? this.inputValue : value
+                    }
                     min={min}
                     max={max}
                     step={step}
                     onChange={event => {
+                        runInAction(() => {
+                            this.inputValue = event.target.value;
+                        });
+
                         const flowState = flowContext.flowState as FlowState;
                         if (flowState) {
-                            const value = parseFloat(event.target.value);
+                            let value = parseFloat(this.inputValue);
+                            if (isNaN(value) || value < min || value > max) {
+                                return;
+                            }
 
                             if (component.value) {
                                 flowState.runtime.assignProperty(
@@ -1982,7 +2022,19 @@ const SliderDashboardWidgetElement = observer(
                     : evalProperty(flowContext, component, "value") ?? 25;
             let min = evalProperty(flowContext, component, "min") ?? 0;
             let max = evalProperty(flowContext, component, "max") ?? 100;
+            let viewMin =
+                evalProperty(flowContext, component, "viewMin") ?? min;
+            let viewMax =
+                evalProperty(flowContext, component, "viewMax") ?? max;
             let step = evalProperty(flowContext, component, "step") ?? 1;
+
+            if (min < viewMin) {
+                viewMin = min;
+            }
+
+            if (max > viewMax) {
+                viewMax = max;
+            }
 
             return (
                 <input
@@ -1991,12 +2043,21 @@ const SliderDashboardWidgetElement = observer(
                     )}
                     type="range"
                     value={value ?? 0}
-                    min={min}
-                    max={max}
+                    min={viewMin}
+                    max={viewMax}
                     step={step}
                     onChange={event => {
+                        let value = parseFloat(event.target.value);
+                        if (value < min) {
+                            value = min;
+                        }
+
+                        if (value > max) {
+                            value = max;
+                        }
+
                         runInAction(() => {
-                            this.currentValue = parseFloat(event.target.value);
+                            this.currentValue = value;
                         });
 
                         if (this.onChangeTimer) {
@@ -2087,12 +2148,34 @@ export class SliderDashboardWidget extends Widget {
                 },
                 "double"
             ),
+            makeExpressionProperty(
+                {
+                    name: "viewMin",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "viewMax",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "double"
+            ),
             makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             if (jsObject.step == undefined) {
                 jsObject.step = "1";
+            }
+            if (jsObject.viewMin == undefined) {
+                jsObject.viewMin = jsObject.min;
+            }
+            if (jsObject.viewMax == undefined) {
+                jsObject.viewMax = jsObject.max;
             }
         },
 
@@ -2103,7 +2186,9 @@ export class SliderDashboardWidget extends Widget {
             height: 20,
             min: "0",
             max: "100",
-            step: "1"
+            step: "1",
+            viewMin: "0",
+            viewMax: "100"
         },
 
         icon: (
@@ -2144,6 +2229,8 @@ export class SliderDashboardWidget extends Widget {
     value: string;
     min: string;
     max: string;
+    viewMin: string;
+    viewMax: string;
 
     constructor() {
         super();
@@ -2151,7 +2238,9 @@ export class SliderDashboardWidget extends Widget {
         makeObservable(this, {
             value: observable,
             min: observable,
-            max: observable
+            max: observable,
+            viewMin: observable,
+            viewMax: observable
         });
     }
 
