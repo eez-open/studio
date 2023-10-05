@@ -1,6 +1,7 @@
 import type {
     BasicType,
     IField,
+    IFieldIndexes,
     IIndexes,
     IObjectVariableValueFieldDescription,
     IType,
@@ -22,14 +23,14 @@ import {
 import { computed, makeObservable } from "mobx";
 import { basicFlowValueTypes } from "project-editor/build/value-types";
 
-function getFieldIndexes(fields: IField[]): IIndexes {
-    const fieldIndexes: IIndexes = {};
+function getFieldIndexes(fields: IField[]): IFieldIndexes {
+    const fieldIndexes: IFieldIndexes = {};
     fields.forEach((field, i) => (fieldIndexes[field.name] = i));
     return fieldIndexes;
 }
 
 export class TypesStore {
-    _types: IType[] = [];
+    _types: { [key: string]: IType } = {};
     _typeIndexes: IIndexes = {};
 
     _basicTypeIndex: number = 0;
@@ -49,7 +50,7 @@ export class TypesStore {
     reset() {
         this.projectStore.lastRevision;
 
-        this._types = [];
+        this._types = {};
         this._typeIndexes = {};
 
         this._basicTypeIndex = 0;
@@ -139,7 +140,7 @@ export class TypesStore {
         if (!type) {
             return undefined;
         }
-        return this._typeIndexes[type.valueType];
+        return +this._typeIndexes[type.valueType];
     }
 
     getType(valueType: ValueType) {
@@ -192,8 +193,12 @@ export class TypesStore {
     }
 
     _addType(type: IType) {
-        let index = this._typeIndexes[type.valueType];
-        if (index == undefined) {
+        let index: number;
+
+        let indexAsStr = this._typeIndexes[type.valueType];
+        if (indexAsStr != undefined) {
+            index = +indexAsStr;
+        } else {
             let T;
             let C;
             let A;
@@ -239,8 +244,10 @@ export class TypesStore {
 
             index = (A << 16) | (C << 13) | T;
 
-            this._typeIndexes[type.valueType] = index;
-            this._types[index] = type;
+            indexAsStr = index.toString();
+
+            this._typeIndexes[type.valueType] = indexAsStr;
+            this._types[indexAsStr] = type;
         }
 
         return index;

@@ -565,7 +565,7 @@ export class WasmRuntime extends RemoteRuntime {
 
                 if (value != null) {
                     const arrayValue = createJsArrayValue(
-                        this.assetsMap.typeIndexes[variable.type],
+                        +this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
                         (type: string) => {
@@ -603,7 +603,7 @@ export class WasmRuntime extends RemoteRuntime {
             } else if (variable.persistent) {
                 if (isStructType(variable.type) || isArrayType(variable.type)) {
                     const arrayValue = createJsArrayValue(
-                        this.assetsMap.typeIndexes[variable.type],
+                        +this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
                         (type: string) => {
@@ -642,7 +642,7 @@ export class WasmRuntime extends RemoteRuntime {
                 globalVariable.kind == "object"
             ) {
                 globalVariable.value = createJsArrayValue(
-                    this.assetsMap.typeIndexes[globalVariable.variable.type],
+                    +this.assetsMap.typeIndexes[globalVariable.variable.type],
                     objectVariableValue,
                     this.assetsMap,
                     (type: string) => {
@@ -719,7 +719,7 @@ export class WasmRuntime extends RemoteRuntime {
                 let objectVariableValue;
 
                 const engineArrayValue = createJsArrayValue(
-                    this.assetsMap.typeIndexes[engineValueWithType.valueType],
+                    +this.assetsMap.typeIndexes[engineValueWithType.valueType],
                     engineValueWithType.value,
                     this.assetsMap,
                     undefined
@@ -749,7 +749,7 @@ export class WasmRuntime extends RemoteRuntime {
                 }
 
                 const newArrayValue = createJsArrayValue(
-                    this.assetsMap.typeIndexes[globalVariable.variable.type],
+                    +this.assetsMap.typeIndexes[globalVariable.variable.type],
                     objectVariableValue,
                     this.assetsMap,
                     (type: string) => {
@@ -1036,7 +1036,7 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         const arrayValue = createJsArrayValue(
-            valueTypeIndex,
+            +valueTypeIndex,
             value,
             this.assetsMap,
             (type: string) => {

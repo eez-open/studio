@@ -78,7 +78,7 @@ export function createJsArrayValue(
                 }
 
                 return createArrayValue(
-                    assetsMap.typeIndexes[type.elementType.valueType],
+                    +assetsMap.typeIndexes[type.elementType.valueType],
                     elementValue,
                     fieldValueFieldDescriptions
                 );
@@ -90,9 +90,10 @@ export function createJsArrayValue(
                         ? valueFieldDescriptions[i].getFieldValue(value)
                         : value[field.name];
 
-                    const fieldValueTypeIndex =
+                    const fieldValueTypeIndexAsStr =
                         assetsMap.typeIndexes[field.valueType];
-                    if (fieldValueTypeIndex != undefined) {
+                    if (fieldValueTypeIndexAsStr != undefined) {
+                        const fieldValueTypeIndex = +fieldValueTypeIndexAsStr;
                         let fieldValueFieldDescriptions:
                             | IObjectVariableValueFieldDescription[]
                             | undefined;

@@ -367,11 +367,13 @@ interface ITypeBase {
     valueType: ValueType;
 }
 
+type IFieldIndexes = { [key: string]: number };
+
 interface IObjectType {
     kind: "object";
     valueType: ValueType;
     fields: IField[];
-    fieldIndexes: IIndexes;
+    fieldIndexes: IFieldIndexes;
     open: boolean;
 }
 
@@ -388,7 +390,7 @@ interface IBasicType {
 
 type IType = IArrayType | IObjectType | IBasicType;
 
-type IIndexes = { [key: string]: number };
+type IIndexes = { [key: string]: string };
 
 interface AssetsMap {
     flows: {
