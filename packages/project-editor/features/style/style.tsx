@@ -773,6 +773,8 @@ const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let nextTransientId = 0;
+
 export class Style extends EezObject {
     id: number | undefined;
     name: string;
@@ -808,8 +810,12 @@ export class Style extends EezObject {
 
     css?: string;
 
+    _transientId: number;
+
     constructor() {
         super();
+
+        this._transientId = nextTransientId++;
 
         makeObservable(this, {
             id: observable,
@@ -1981,7 +1987,7 @@ export class Style extends EezObject {
     }
 
     get globalClassName() {
-        return "eez-project-style-" + this.name + "-" + this.objID;
+        return "eez-project-style-" + this.name + "-" + this._transientId;
     }
 
     get classNames(): string[] {

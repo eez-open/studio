@@ -220,17 +220,15 @@ registerActionComponents("Serial Port", [
                     try {
                         await serialConnection.connect();
 
-                        if (serialConnection.id != serialConnectionId) {
-                            try {
-                                context.setPropertyField(
-                                    "connection",
-                                    "id",
-                                    serialConnection.id
-                                );
-                                context.propagateValueThroughSeqout();
-                            } catch (err) {
-                                context.throwError(err.toString());
-                            }
+                        try {
+                            context.setPropertyField(
+                                "connection",
+                                "id",
+                                serialConnection.id
+                            );
+                            context.propagateValueThroughSeqout();
+                        } catch (err) {
+                            context.throwError(err.toString());
                         }
                     } catch (err) {
                         context.throwError(err.toString());

@@ -165,23 +165,21 @@ export function getGroups(
     allComponentClasses.forEach(componentClass => {
         if (
             searchText &&
-            componentClass.name.toLowerCase().indexOf(searchText) == -1
+            (componentClass.displayName || componentClass.name)
+                .toLowerCase()
+                .indexOf(searchText) == -1
         ) {
             return;
         }
 
-        if (projectStore) {
-            if (
-                componentClass.objectClass.classInfo.enabledInComponentPalette
-            ) {
-                if (
-                    !componentClass.objectClass.classInfo.enabledInComponentPalette(
-                        projectStore.project.settings.general.projectType
-                    )
-                ) {
-                    return;
-                }
-            }
+        if (
+            projectStore &&
+            componentClass.objectClass.classInfo.enabledInComponentPalette &&
+            !componentClass.objectClass.classInfo.enabledInComponentPalette(
+                projectStore.project.settings.general.projectType
+            )
+        ) {
+            return;
         }
 
         const groupName = getComponentGroupName(componentClass);

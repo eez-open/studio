@@ -535,23 +535,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 ] as any;
             }
         },
-        check: (component: EvalJSExprActionComponent, messages: IMessage[]) => {
-            const { valueExpressions } = component.expandExpressionForBuild();
-
-            valueExpressions.forEach(valueExpression => {
-                try {
-                    checkExpression(component, valueExpression);
-                } catch (err) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Invalid expression "${valueExpression}": ${err}`,
-                            getChildOfObject(component, "expression")
-                        )
-                    );
-                }
-            });
-        },
         icon: (
             <svg
                 viewBox="-5 -5 32.556997299194336 27.176000595092773"
@@ -597,36 +580,12 @@ export class EvalJSExprActionComponent extends ActionComponent {
 
     expression: string;
 
-    static readonly PARAMS_REGEXP = /\{([^\}]+)\}/;
-
     constructor() {
         super();
 
         makeObservable(this, {
             expression: observable
         });
-    }
-
-    static parse(expression: string) {
-        const inputs = new Set<string>();
-
-        if (expression) {
-            EvalJSExprActionComponent.PARAMS_REGEXP.lastIndex = 0;
-            let str = expression;
-            while (true) {
-                let matches = str.match(
-                    EvalJSExprActionComponent.PARAMS_REGEXP
-                );
-                if (!matches) {
-                    break;
-                }
-                const input = matches[1].trim();
-                inputs.add(input);
-                str = str.substring(matches.index! + matches[1].length);
-            }
-        }
-
-        return Array.from(inputs.keys());
     }
 
     getInputs() {
@@ -665,16 +624,36 @@ export class EvalJSExprActionComponent extends ActionComponent {
         let expression = this.expression;
         let valueExpressions: any[] = [];
 
-        EvalJSExprActionComponent.parse(expression).forEach(
-            (valueExpression, i) => {
-                const name = `_val${i}`;
-                valueExpressions.push(valueExpression);
-                expression = expression.replace(
-                    `{${valueExpression}}`,
-                    `values.${name}`
-                );
+        const PARAMS_REGEXP = /\{([^\s][^\}]+)\}/m;
+
+        function parse(expression: string) {
+            const inputs = new Set<string>();
+
+            if (expression) {
+                PARAMS_REGEXP.lastIndex = 0;
+                let str = expression;
+                while (true) {
+                    let matches = str.match(PARAMS_REGEXP);
+                    if (!matches) {
+                        break;
+                    }
+                    const input = matches[1].trim();
+                    inputs.add(input);
+                    str = str.substring(matches.index! + matches[1].length);
+                }
             }
-        );
+
+            return Array.from(inputs.keys());
+        }
+
+        parse(expression).forEach((valueExpression, i) => {
+            const name = `_val${i}`;
+            valueExpressions.push(valueExpression);
+            expression = expression.replace(
+                `{${valueExpression}}`,
+                `values.${name}`
+            );
+        });
 
         return { expression, valueExpressions };
     }
@@ -2366,6 +2345,33 @@ export class DynamicCallActionActionComponent extends ActionComponent {
             },
             ...super.getOutputs()
         ];
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // flowIndex
+        dataBuffer.writeInt16(-1);
+
+        // inputsStartIndex
+        if (this.customInputs.length > 0) {
+            dataBuffer.writeUint8(
+                this.buildInputs.findIndex(
+                    input => input.name == this.customInputs[0].name
+                )
+            );
+        } else {
+            dataBuffer.writeUint8(0);
+        }
+
+        // outputsStartIndex
+        if (this.customOutputs.length > 0) {
+            dataBuffer.writeUint8(
+                this.buildOutputs.findIndex(
+                    output => output.name == this.customOutputs[0].name
+                )
+            );
+        } else {
+            dataBuffer.writeUint8(0);
+        }
     }
 }
 

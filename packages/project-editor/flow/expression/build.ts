@@ -324,6 +324,13 @@ function buildExpressionNode(
                 value: assets.getTypeIndex(node.valueType),
                 valueType: "integer"
             };
+
+            // number of init elements is 0
+            node.arguments.push({
+                type: "Literal",
+                value: 0,
+                valueType: "integer"
+            });
         } else if (functionName == "Flow.translate") {
             const nodeArgument = node.arguments[0];
             if (
@@ -491,6 +498,12 @@ function buildExpressionNode(
                 ],
                 []
             ),
+            // no. of init elements
+            makePushConstantInstruction(
+                assets,
+                node.elements.length,
+                "integer"
+            ),
             // no. of elements
             makePushConstantInstruction(
                 assets,
@@ -546,7 +559,9 @@ function buildExpressionNode(
                 ],
                 []
             ),
-            // no. of fields
+            // no. of init elements is same as no. of fields
+            makePushConstantInstruction(assets, type.fields.length, "integer"),
+            // no. of elements is same as no. of fields
             makePushConstantInstruction(assets, type.fields.length, "integer")
         ];
     }

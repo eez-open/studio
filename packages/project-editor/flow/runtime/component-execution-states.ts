@@ -11,13 +11,6 @@ export function registerDashboardState<T>(
     wasmState: number,
     dashboardState: any
 ) {
-    console.log(
-        "registerDashboardState",
-        wasmModuleId,
-        wasmState,
-        dashboardState
-    );
-
     let executionStates = wasmModuleExecutionStates.get(wasmModuleId);
     if (!executionStates) {
         executionStates = {

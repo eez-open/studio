@@ -328,8 +328,32 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     propagateValue(outputName: string, value: any) {
         const flowIndex = this.getFlowIndex();
         const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
+        if (!flow) {
+            console.error(
+                "Flow not found",
+                flowIndex,
+                this.getComponentIndex(),
+                outputName,
+                value,
+                this
+            );
+            this.throwError("Flow not found");
+            return;
+        }
         const componentIndex = this.getComponentIndex();
         const component = flow.components[componentIndex];
+        if (!component) {
+            console.error(
+                "Component not found",
+                flowIndex,
+                componentIndex,
+                outputName,
+                value,
+                this
+            );
+            this.throwError("Component not found");
+            return;
+        }
         const outputIndex = component.outputIndexes[outputName];
         if (outputIndex == undefined) {
             this.throwError(`Output "${outputName}" not found`);

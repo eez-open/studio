@@ -103,13 +103,6 @@ export class RemoteRuntime extends RuntimeBase {
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
     debuggerValues = new Map<number, DebuggerValue>();
-    arrayValues = new Map<
-        number,
-        {
-            arrayElementAddresses: number[];
-            value: any;
-        }
-    >();
     flowStateMap = new Map<
         number,
         { flowIndex: number; flowState: FlowState }
@@ -625,8 +618,6 @@ export abstract class DebuggerConnectionBase {
             .split(",")
             .map(addressStr => parseInt(addressStr, 16));
 
-        const arrayAddress = addresses[0];
-
         const arrayType = addresses[1];
         const type = this.runtime.assetsMap.types[arrayType];
         if (!type) {
@@ -636,24 +627,7 @@ export abstract class DebuggerConnectionBase {
 
         const arrayElementAddresses = addresses.slice(2);
 
-        let value;
-
-        let arrayValue: any = this.runtime.arrayValues.get(arrayAddress);
-        if (arrayValue) {
-            const { arrayElementAddresses } = arrayValue;
-            for (let i = 0; i < arrayElementAddresses.length; i++) {
-                this.runtime.debuggerValues.delete(arrayElementAddresses[i]);
-            }
-
-            value = arrayValue.value;
-        } else {
-            value = observable(type.kind == "array" ? [] : {});
-        }
-
-        this.runtime.arrayValues.set(arrayAddress, {
-            arrayElementAddresses,
-            value
-        });
+        let value = observable(type.kind == "array" ? [] : {});
 
         for (let i = 0; i < arrayElementAddresses.length; i++) {
             let propertyName: string | number;

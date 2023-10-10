@@ -1,12 +1,59 @@
 import React from "react";
 import { PassThrough } from "stream";
-import { spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
+import type {
+    IDashboardComponentContext,
+    IWasmFlowRuntime
+} from "eez-studio-types";
 
 import { registerActionComponents } from "project-editor/flow/component";
 
+import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
+
 ////////////////////////////////////////////////////////////////////////////////
+
+const activeExecuteProcesses = new Map<
+    number,
+    ChildProcessWithoutNullStreams[]
+>();
+
+(window as any).activeExecuteProcesses = activeExecuteProcesses;
+
+onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
+    const processes = activeExecuteProcesses.get(wasmFlowRuntime.wasmModuleId);
+    if (processes) {
+        processes.forEach(process => {
+            process.kill();
+        });
+        activeExecuteProcesses.delete(wasmFlowRuntime.wasmModuleId);
+    }
+});
+
+function registerProcess(
+    wasmFlowRuntime: IWasmFlowRuntime,
+    process: ChildProcessWithoutNullStreams
+) {
+    let processes = activeExecuteProcesses.get(wasmFlowRuntime.wasmModuleId);
+    if (!processes) {
+        processes = [];
+        activeExecuteProcesses.set(wasmFlowRuntime.wasmModuleId, processes);
+    }
+    processes.push(process);
+}
+
+function unregisterProcess(
+    wasmFlowRuntime: IWasmFlowRuntime,
+    process: ChildProcessWithoutNullStreams
+) {
+    let processes = activeExecuteProcesses.get(wasmFlowRuntime.wasmModuleId);
+    if (processes) {
+        const index = processes.indexOf(process);
+        if (index != -1) {
+            processes.splice(index, 1);
+        }
+    }
+}
 
 const executeCommandIcon: any = (
     <svg
@@ -86,11 +133,7 @@ registerActionComponents("Dashboard Specific", [
                 return;
             }
 
-            context = context.startAsyncExecution();
-
             try {
-                let processFinished = false;
-
                 let childProcess = spawn(commandValue, argsValue);
 
                 const passThroughStdout = new PassThrough();
@@ -101,29 +144,46 @@ registerActionComponents("Dashboard Specific", [
                 childProcess.stderr.pipe(passThroughStderr);
                 context.propagateValue("stderr", passThroughStderr);
 
+                let processFinished = false;
+                context = context.startAsyncExecution();
+                registerProcess(context.WasmFlowRuntime, childProcess);
+
+                function endAsyncExecution() {
+                    context.endAsyncExecution();
+                    processFinished = true;
+                    unregisterProcess(context.WasmFlowRuntime, childProcess);
+                }
+
                 childProcess.on("exit", code => {
                     if (!processFinished) {
                         context.propagateValue("finished", code);
-                        context.endAsyncExecution();
-                        processFinished = true;
+                        endAsyncExecution();
                     }
                 });
 
                 childProcess.on("error", err => {
                     if (!processFinished) {
                         context.throwError(err.toString());
-                        context.endAsyncExecution();
-                        processFinished = true;
+                        endAsyncExecution();
+                    }
+                });
+
+                childProcess.on("close", code => {
+                    if (!processFinished) {
+                        context.propagateValue("finished", code);
+                        endAsyncExecution();
+                    }
+                });
+                childProcess.on("disconnect", () => {
+                    if (!processFinished) {
+                        context.propagateValue("finished", -1);
+                        endAsyncExecution();
                     }
                 });
 
                 context.propagateValueThroughSeqout();
             } catch (err) {
-                context.throwError(
-                    `argument at position ${i + 1} is not a string`
-                );
-            } finally {
-                context.endAsyncExecution();
+                context.throwError(err.toString());
             }
         }
     }

@@ -29,7 +29,7 @@ export function toStringLiteral(str: string) {
 export function templateLiteralToExpressions(templateLiteral: string) {
     const expressions: { start: number; end: number }[] = [];
 
-    const re = /\{[^\}]+\}/g;
+    const re = /\{([^\s][^\}]+)\}/gm;
     while (true) {
         let result = re.exec(templateLiteral);
         if (!result) {

@@ -200,7 +200,7 @@ const TerminalElement = observer(
                     this.props.flowContext.flowState.getComponentExecutionState<ExecutionState>(
                         this.props.widget
                     );
-                if (executionState && !executionState.onData) {
+                if (executionState) {
                     executionState.onData = data => {
                         this.terminal.write(data);
                     };

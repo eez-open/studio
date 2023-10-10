@@ -379,7 +379,7 @@ export function findValueTypeInExpressionNode(
             if (!enumMember) {
                 throw `Enum member '${node.property.name}' not found in enum '${enumName}'`;
             }
-            node.valueType = "integer";
+            node.valueType = node.object.valueType;
             node.property.identifierType = "enum-member";
         } else {
             if (node.computed) {

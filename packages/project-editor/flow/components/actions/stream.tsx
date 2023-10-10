@@ -54,10 +54,17 @@ registerActionComponents("Dashboard Specific", [
                         context.propagateValue("data", accData);
                     });
 
-                    streamValue.on("end", (data: Buffer) => {
-                        context.propagateValueThroughSeqout();
-                        context.endAsyncExecution();
-                    });
+                    let isDone = false;
+                    const onDone = (data: Buffer) => {
+                        if (!isDone) {
+                            isDone = true;
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+                        }
+                    };
+
+                    streamValue.on("end", onDone);
+                    streamValue.on("close", onDone);
                 } else {
                     //context.throwError("not a readable stream");
                 }
