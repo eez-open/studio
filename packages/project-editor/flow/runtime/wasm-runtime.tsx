@@ -10,8 +10,7 @@ import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
 
-import { InstrumentObject } from "instrument/instrument-object";
-import { FileHistoryItem } from "instrument/window/history/items/file";
+import * as InstrumentObjectModule from "instrument/instrument-object";
 
 import { ProjectContext } from "project-editor/project/context";
 
@@ -80,10 +79,6 @@ import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
 import { getClassByName } from "project-editor/core/object";
 import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
-import {
-    activityLogStore,
-    logDelete
-} from "instrument/window/history/activity-log";
 import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
 import { releaseRuntimeDashboardStates } from "project-editor/flow/runtime/component-execution-states";
 
@@ -818,6 +813,10 @@ export class WasmRuntime extends RemoteRuntime {
             const globalVariable = this.globalVariables[i];
             if (globalVariable.kind == "object") {
                 const instrument = globalVariable.objectVariableValue;
+
+                const { InstrumentObject } =
+                    require("instrument/window/history/activity-log") as typeof InstrumentObjectModule;
+
                 if (instrument instanceof InstrumentObject) {
                     if (scpiCommand.instrumentId == instrument.id) {
                         return instrument;
@@ -907,8 +906,16 @@ export class WasmRuntime extends RemoteRuntime {
             connection.release();
         }
 
+        const { FileHistoryItem } = await import(
+            "instrument/window/history/items/file"
+        );
+
         if (result instanceof FileHistoryItem) {
             const data = result.data;
+
+            const { logDelete, activityLogStore } = await import(
+                "instrument/window/history/activity-log"
+            );
 
             logDelete(activityLogStore, result, {
                 undoable: false

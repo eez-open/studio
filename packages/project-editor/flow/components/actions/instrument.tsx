@@ -24,9 +24,11 @@ import {
     SCPI_PART_STRING
 } from "eez-studio-shared/scpi-parser";
 
-import { InstrumentObject, instruments } from "instrument/instrument-object";
-
-import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
+import type { InstrumentObject } from "instrument/instrument-object";
+import type * as InstrumentObjectModule from "instrument/instrument-object";
+import type { ConnectionParameters } from "instrument/connection/interface";
+import type * as WaveformFormatModule from "eez-studio-ui/chart/WaveformFormat";
+import type * as ActivityLogModule from "instrument/window/history/activity-log";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
 
@@ -73,9 +75,6 @@ import { COMPONENT_TYPE_SCPI_ACTION } from "project-editor/flow/components/compo
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { TextAction, IconAction } from "eez-studio-ui/action";
-import { ConnectionParameters } from "instrument/connection/interface";
-import { activityLogStore, log } from "instrument/window/history/activity-log";
-import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 import { findVariable } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +572,12 @@ export const SelectInstrumentDialog = observer(
                                       position: "left",
                                       onClick: async () => {
                                           const { showAddInstrumentDialog } =
-                                              require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
+                                              await import(
+                                                  "instrument/add-instrument-dialog"
+                                              );
+                                          const { instruments } = await import(
+                                              "instrument/instrument-object"
+                                          );
 
                                           showAddInstrumentDialog(
                                               instrumentId => {
@@ -638,6 +642,8 @@ export async function showSelectInstrumentDialog(
     instrumentId?: string | null,
     selectAndConnect?: boolean
 ) {
+    const { instruments } = await import("instrument/instrument-object");
+
     return new Promise<InstrumentObject | undefined>(resolve => {
         const dialog = (
             <SelectInstrumentDialog
@@ -776,6 +782,9 @@ export class GetInstrumentActionComponent extends ActionComponent {
                 return;
             }
 
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
             const instrument = instruments.get(instrumentId);
 
             if (!instrument) {
@@ -876,6 +885,9 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
                 context.throwError(`Invalid instrument property`);
                 return;
             }
+
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
             const instrumentObject = instruments.get(instrument.id);
 
@@ -991,6 +1003,9 @@ export class DisconnectInstrumentActionComponent extends ActionComponent {
                 context.throwError(`Invalid instrument property`);
                 return;
             }
+
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
             const instrumentObject = instruments.get(instrument.id);
 
@@ -1144,6 +1159,9 @@ export class GetInstrumentPropertiesActionComponent extends ActionComponent {
                 context.throwError(`Invalid instrument property`);
                 return;
             }
+
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
             const instrumentObject = instruments.get(instrument.id);
             if (!instrumentObject) {
@@ -1496,6 +1514,10 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 context.throwError(`Invalid Chart format property`);
                 return;
             }
+
+            const { WaveformFormat } =
+                require("eez-studio-ui/chart/WaveformFormat") as typeof WaveformFormatModule;
+
             let chartFormat =
                 chartFormatStr == "float"
                     ? WaveformFormat.FLOATS_32BIT
@@ -1619,6 +1641,9 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             };
 
             message.dataLength = chartData.length;
+
+            const { activityLogStore, log } =
+                require("instrument/window/history/activity-log") as typeof ActivityLogModule;
 
             const historyId = log(
                 activityLogStore,
@@ -1781,6 +1806,9 @@ registerObjectVariableType("Instrument", {
         const instrumentId =
             getInstrumentIdFromConstructorParams(constructorParams);
         if (instrumentId) {
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
             const instrument = instruments.get(instrumentId);
             if (instrument) {
                 if (isRuntime) {
@@ -1800,6 +1828,9 @@ registerObjectVariableType("Instrument", {
     destroyValue: (value: IObjectVariableValue) => {},
 
     getValue: (variableValue: any): IObjectVariableValue | null => {
+        const { instruments } =
+            require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
         return instruments.get(variableValue.id) ?? null;
     },
 

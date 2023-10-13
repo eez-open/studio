@@ -23,22 +23,19 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 import type { IStore } from "eez-studio-shared/store";
-import {
-    activityLogStore,
-    type IActivityLogEntry
-} from "instrument/window/history/activity-log";
+import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 import type { IAppStore } from "instrument/window/history/history";
 import type { IDashboardComponentContext } from "eez-studio-types";
-import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
-
-import { Waveform } from "instrument/window/waveform/generic";
-import { MultiWaveform } from "instrument/window/waveform/multi";
-import { DlogWaveform } from "instrument/window/waveform/dlog";
-
-import { ChartPreview } from "instrument/window/chart-preview";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { evalProperty } from "project-editor/flow/helper";
-import { UNITS } from "eez-studio-shared/units";
+
+import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+
+import type { Waveform } from "instrument/window/waveform/generic";
+import type { MultiWaveform } from "instrument/window/waveform/multi";
+import type { DlogWaveform } from "instrument/window/waveform/dlog";
+
+import type * as ChartPreviewModule from "instrument/window/chart-preview";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -431,15 +428,17 @@ abstract class EEZChart {
             chart: observable
         });
 
-        setTimeout(() => {
-            const chart = this.createChart();
+        setTimeout(async () => {
+            const chart = await this.createChart();
             runInAction(() => {
                 this.chart = chart;
             });
         }, 0);
     }
 
-    abstract createChart(): Waveform | MultiWaveform | DlogWaveform | undefined;
+    abstract createChart(): Promise<
+        Waveform | MultiWaveform | DlogWaveform | undefined
+    >;
 
     static genData(dataLength: number, fn: (x: number) => number) {
         const data = Buffer.alloc(dataLength * 8);
@@ -520,7 +519,7 @@ abstract class EEZChart {
         };
     }
 
-    createGenericWaveform({
+    async createGenericWaveform({
         id,
         data,
         format,
@@ -579,6 +578,8 @@ abstract class EEZChart {
             deleted: false
         };
 
+        const { Waveform } = await import("instrument/window/waveform/generic");
+
         return new Waveform(this.store, activityLogEntry, {
             toolbar: {
                 showConfigureButton: false
@@ -603,7 +604,7 @@ class SingleEEZChart extends EEZChart {
         super(flowContext, widget);
     }
 
-    createChart = () => {
+    createChart = async () => {
         if (!this.data) {
             return undefined;
         }
@@ -625,13 +626,15 @@ class SingleEEZChart extends EEZChart {
             format = WaveformFormat.JS_NUMBERS;
         }
 
+        const { UNITS } = await import("eez-studio-shared/units");
+
         const unitNameLowerCase = this.unitName.toLowerCase();
         const unitName =
             Object.keys(UNITS).indexOf(unitNameLowerCase) == -1
                 ? "unknown"
                 : unitNameLowerCase;
 
-        return this.createGenericWaveform({
+        return await this.createGenericWaveform({
             id: "0",
 
             data: this.data,
@@ -690,7 +693,7 @@ class MultiEEZChart extends EEZChart {
         super(flowContext, widget);
     }
 
-    createChart = () => {
+    createChart = async () => {
         const waveformDefinitions = this.waveformDefinitions.filter(
             waveformDefinition => waveformDefinition.data
         );
@@ -699,71 +702,76 @@ class MultiEEZChart extends EEZChart {
             return undefined;
         }
 
-        return this.createMultiWaveform({
+        const { UNITS } = await import("eez-studio-shared/units");
+
+        return await this.createMultiWaveform({
             id: "0",
-            waveforms: waveformDefinitions.map((waveformDefinition, i) => {
-                let format =
-                    waveformDefinition.format == "float"
-                        ? WaveformFormat.FLOATS_32BIT
-                        : waveformDefinition.format == "double"
-                        ? WaveformFormat.FLOATS_64BIT
-                        : waveformDefinition.format == "rigol-byte"
-                        ? WaveformFormat.RIGOL_BYTE
-                        : waveformDefinition.format == "rigol-word"
-                        ? WaveformFormat.RIGOL_WORD
-                        : waveformDefinition.format == "csv"
-                        ? WaveformFormat.CSV_STRING
-                        : WaveformFormat.JS_NUMBERS;
+            waveforms: await Promise.all(
+                waveformDefinitions.map((waveformDefinition, i) => {
+                    let format =
+                        waveformDefinition.format == "float"
+                            ? WaveformFormat.FLOATS_32BIT
+                            : waveformDefinition.format == "double"
+                            ? WaveformFormat.FLOATS_64BIT
+                            : waveformDefinition.format == "rigol-byte"
+                            ? WaveformFormat.RIGOL_BYTE
+                            : waveformDefinition.format == "rigol-word"
+                            ? WaveformFormat.RIGOL_WORD
+                            : waveformDefinition.format == "csv"
+                            ? WaveformFormat.CSV_STRING
+                            : WaveformFormat.JS_NUMBERS;
 
-                if (Array.isArray(waveformDefinition.data)) {
-                    format = WaveformFormat.JS_NUMBERS;
-                }
+                    if (Array.isArray(waveformDefinition.data)) {
+                        format = WaveformFormat.JS_NUMBERS;
+                    }
 
-                const unitName =
-                    Object.keys(UNITS).indexOf(waveformDefinition.unitName) ==
-                    -1
-                        ? "unknown"
-                        : waveformDefinition.unitName;
+                    const unitName =
+                        Object.keys(UNITS).indexOf(
+                            waveformDefinition.unitName
+                        ) == -1
+                            ? "unknown"
+                            : waveformDefinition.unitName;
 
-                return this.createGenericWaveform({
-                    id: i.toString(),
+                    return this.createGenericWaveform({
+                        id: i.toString(),
 
-                    data: waveformDefinition.data,
+                        data: waveformDefinition.data,
 
-                    samplingRate: waveformDefinition.samplingRate,
-                    format,
-                    unitName,
-                    color: waveformDefinition.color,
-                    colorInverse: waveformDefinition.color,
-                    label: waveformDefinition.label,
-                    offset: waveformDefinition.offset,
-                    scale: waveformDefinition.scale,
+                        samplingRate: waveformDefinition.samplingRate,
+                        format,
+                        unitName,
+                        color: waveformDefinition.color,
+                        colorInverse: waveformDefinition.color,
+                        label: waveformDefinition.label,
+                        offset: waveformDefinition.offset,
+                        scale: waveformDefinition.scale,
 
-                    viewOptions: {
-                        axesLines: {
-                            type: "dynamic",
-                            steps: {
-                                x: [],
-                                y: []
+                        viewOptions: {
+                            axesLines: {
+                                type: "dynamic",
+                                steps: {
+                                    x: [],
+                                    y: []
+                                },
+                                majorSubdivision: {
+                                    horizontal: 24,
+                                    vertical: 8
+                                },
+                                minorSubdivision: {
+                                    horizontal: 5,
+                                    vertical: 5
+                                },
+                                snapToGrid: true,
+                                defaultZoomMode: "all"
                             },
-                            majorSubdivision: {
-                                horizontal: 24,
-                                vertical: 8
-                            },
-                            minorSubdivision: {
-                                horizontal: 5,
-                                vertical: 5
-                            },
-                            snapToGrid: true,
-                            defaultZoomMode: "all"
+                            showAxisLabels: true,
+                            showZoomButtons: true
                         },
-                        showAxisLabels: true,
-                        showZoomButtons: true
-                    },
-                    measurements: undefined,
-                    rulers: undefined
-                });
-            }),
+                        measurements: undefined,
+                        rulers: undefined
+                    });
+                })
+            ),
 
             viewOptions: {
                 axesLines: {
@@ -791,7 +799,7 @@ class MultiEEZChart extends EEZChart {
         });
     };
 
-    createMultiWaveform({
+    async createMultiWaveform({
         id,
         waveforms,
         viewOptions,
@@ -835,6 +843,10 @@ class MultiEEZChart extends EEZChart {
             }
         });
 
+        const { MultiWaveform } = await import(
+            "instrument/window/waveform/multi"
+        );
+
         return new MultiWaveform(store, activityLogEntry, {
             toolbar: {
                 showConfigureButton: false
@@ -852,12 +864,12 @@ class DLOGEEZChart extends EEZChart {
         super(flowContext, widget);
     }
 
-    createChart() {
+    async createChart() {
         if (!this.data) {
             return undefined;
         }
 
-        return this.createDlogWaveform({
+        return await this.createDlogWaveform({
             id: "0",
             data: this.data,
             viewOptions: {
@@ -886,7 +898,7 @@ class DLOGEEZChart extends EEZChart {
         });
     }
 
-    createDlogWaveform({
+    async createDlogWaveform({
         id,
         data,
         viewOptions,
@@ -917,6 +929,10 @@ class DLOGEEZChart extends EEZChart {
             deleted: false
         };
 
+        const { DlogWaveform } = await import(
+            "instrument/window/waveform/dlog"
+        );
+
         return new DlogWaveform(this.store, activityLogEntry, {
             toolbar: {
                 showConfigureButton: false
@@ -933,14 +949,26 @@ class HistoryItemEEZChart extends EEZChart {
     ) {
         super(flowContext, widget);
 
-        this._store = activityLogStore;
+        (async () => {
+            const { activityLogStore } = await import(
+                "instrument/window/history/activity-log"
+            );
+
+            this._store = activityLogStore;
+        })();
     }
 
-    createChart = () => {
+    createChart = async () => {
+        const { activityLogStore } = await import(
+            "instrument/window/history/activity-log"
+        );
+
         const activityLogEntry = activityLogStore.findById(this.historyItemID);
         if (!activityLogEntry) {
             return undefined;
         }
+
+        const { Waveform } = await import("instrument/window/waveform/generic");
 
         return new Waveform(this.store, activityLogEntry, {
             toolbar: {
@@ -1168,6 +1196,9 @@ const EEZChartElement = observer(
 
         render() {
             const { flowContext } = this.props;
+
+            const { ChartPreview } =
+                require("instrument/window/chart-preview") as typeof ChartPreviewModule;
 
             return (
                 <div

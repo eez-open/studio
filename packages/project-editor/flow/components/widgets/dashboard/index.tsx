@@ -88,10 +88,11 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getComponentName } from "../../components-registry";
 import { observer } from "mobx-react";
 import { Button } from "eez-studio-ui/button";
-import { detectFileType } from "instrument/connection/file-type";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 
 import { SWITCH_WIDGET_ICON } from "project-editor/ui-components/icons";
+
+import type * as FileTypeModule from "instrument/connection/file-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1945,6 +1946,9 @@ export class BitmapDashboardWidget extends Widget {
             }
 
             if (data instanceof Uint8Array) {
+                const { detectFileType } =
+                    require("instrument/connection/file-type") as typeof FileTypeModule;
+
                 const fileType = detectFileType(data);
                 return URL.createObjectURL(
                     new Blob([data], { type: fileType.mime } /* (1) */)

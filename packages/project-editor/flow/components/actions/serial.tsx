@@ -7,13 +7,10 @@ import {
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 
-import {
-    connect,
-    disconnect,
-    getSerialPorts,
-    SerialConnectionCallbacks,
+import * as SerialPortsModule from "instrument/connection/interfaces/serial-ports";
+import type {
     SerialConnectionConstructorParams,
-    write
+    SerialConnectionCallbacks
 } from "instrument/connection/interfaces/serial-ports";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
@@ -511,6 +508,9 @@ async function showConnectDialog(
     values: SerialConnectionConstructorParams | undefined
 ) {
     try {
+        const { getSerialPorts } = await import(
+            "instrument/connection/interfaces/serial-ports"
+        );
         const serialPorts = (await getSerialPorts()).map(port => ({
             id: port.path,
             label:
@@ -626,6 +626,9 @@ class SerialConnection implements SerialConnectionCallbacks {
     }
 
     async connect() {
+        const { connect } = await import(
+            "instrument/connection/interfaces/serial-ports"
+        );
         return new Promise<void>((resolve, reject) => {
             this.connectionId = connect(toJS(this.constructorParams), this);
             this.connectResolve = resolve;
@@ -683,6 +686,9 @@ class SerialConnection implements SerialConnectionCallbacks {
 
     disconnect() {
         if (this.isConnected) {
+            const { disconnect } =
+                require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+
             disconnect(this.connectionId);
         }
     }
@@ -697,10 +703,17 @@ class SerialConnection implements SerialConnectionCallbacks {
         if (!this.isConnected) {
             throw "not connected";
         }
+
+        const { write } =
+            require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+
         write(this.connectionId, data);
     }
 
     static async listPorts() {
+        const { getSerialPorts } = await import(
+            "instrument/connection/interfaces/serial-ports"
+        );
         return await getSerialPorts();
     }
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
-import { ModbusRTUClient } from "jsmodbus";
+import type { ModbusRTUClient } from "jsmodbus";
+import * as JsmodbusModule from "jsmodbus";
 
 import type {
     IDashboardComponentContext,
@@ -8,7 +9,7 @@ import type {
     ValueType
 } from "eez-studio-types";
 
-import { getSerialPort } from "instrument/connection/interfaces/serial-ports";
+import type * as SerialPortsModule from "instrument/connection/interfaces/serial-ports";
 
 import {
     PropertyType,
@@ -230,6 +231,9 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
+                const { getSerialPort } =
+                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+
                 const serialPort = getSerialPort(serialConnection.connectionId);
 
                 let client;
@@ -243,6 +247,9 @@ export class ModbusActionComponent extends ActionComponent {
                 }
                 if (!client) {
                     try {
+                        const { ModbusRTUClient } =
+                            require("jsmodbus") as typeof JsmodbusModule;
+
                         client = new ModbusRTUClient(
                             serialPort,
                             serverAddress,
@@ -313,10 +320,15 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
+                const { getSerialPort } =
+                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+
                 const serialPort = getSerialPort(serialConnection.connectionId);
 
                 let client;
                 try {
+                    const { ModbusRTUClient } =
+                        require("jsmodbus") as typeof JsmodbusModule;
                     client = new ModbusRTUClient(
                         serialPort,
                         serverAddress,
@@ -365,10 +377,15 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
+                const { getSerialPort } =
+                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+
                 const serialPort = getSerialPort(serialConnection.connectionId);
 
                 let client;
                 try {
+                    const { ModbusRTUClient } =
+                        require("jsmodbus") as typeof JsmodbusModule;
                     client = new ModbusRTUClient(
                         serialPort,
                         serverAddress,

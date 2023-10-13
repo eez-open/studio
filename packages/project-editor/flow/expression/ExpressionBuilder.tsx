@@ -49,8 +49,9 @@ import {
 import { parseIdentifier } from "project-editor/flow/expression";
 import { IObjectVariableValueFieldDescription } from "eez-studio-types";
 
-import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
-import { InstrumentObject, instruments } from "instrument/instrument-object";
+import type { InstrumentObject } from "instrument/instrument-object";
+import type * as InstrumentObjectModule from "instrument/instrument-object";
+import type * as CommandsBrowserModule from "instrument/window/terminal/commands-browser";
 
 import type { ITerminalState } from "instrument/window/terminal/terminalState";
 
@@ -919,6 +920,9 @@ const SelectItemDialog = observer(
             }
 
             if (!instrumentId) {
+                const { instruments } =
+                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
                 const instrumentsArray = [...instruments.values()];
                 if (instrumentsArray.length > 0) {
                     instrumentId = [...instruments.values()][0].id;
@@ -932,6 +936,8 @@ const SelectItemDialog = observer(
             if (!this.instrumentId) {
                 return undefined;
             }
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
             return instruments.get(this.instrumentId);
         }
 
@@ -1065,6 +1071,38 @@ const SelectItemDialog = observer(
                 this.props.propertyInfo.flowProperty == "scpi-template-literal"
             ) {
                 activeTab = expressionBuilderState.activeTab;
+
+                let instrumentsSelector;
+
+                if (expressionBuilderState.activeTab == "scpi") {
+                    const { instruments } =
+                        require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
+                    instrumentsSelector = (
+                        <div>
+                            <span>Instrument</span>
+                            <select
+                                className="form-select"
+                                value={this.instrumentId}
+                                onChange={action(event => {
+                                    this._instrumentId = event.target.value;
+                                    this.context.uiStateStore.expressionBuilderInstrumentId =
+                                        this._instrumentId;
+                                })}
+                            >
+                                {[...instruments.values()].map(instrument => (
+                                    <option
+                                        value={instrument.id}
+                                        key={instrument.id}
+                                    >
+                                        {instrument.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    );
+                }
+
                 tabs = (
                     <div className="EezStudio_ExpressionBuilder_NavContainer">
                         <ul className="nav nav-pills">
@@ -1100,36 +1138,15 @@ const SelectItemDialog = observer(
                                 </a>
                             </li>
                         </ul>
-                        {expressionBuilderState.activeTab == "scpi" && (
-                            <div>
-                                <span>Instrument</span>
-                                <select
-                                    className="form-select"
-                                    value={this.instrumentId}
-                                    onChange={action(event => {
-                                        this._instrumentId = event.target.value;
-                                        this.context.uiStateStore.expressionBuilderInstrumentId =
-                                            this._instrumentId;
-                                    })}
-                                >
-                                    {[...instruments.values()].map(
-                                        instrument => (
-                                            <option
-                                                value={instrument.id}
-                                                key={instrument.id}
-                                            >
-                                                {instrument.name}
-                                            </option>
-                                        )
-                                    )}
-                                </select>
-                            </div>
-                        )}
+                        {instrumentsSelector}
                     </div>
                 );
             } else {
                 activeTab = "expression";
             }
+
+            const { CommandsBrowser } =
+                require("instrument/window/terminal/commands-browser") as typeof CommandsBrowserModule;
 
             return (
                 <Dialog

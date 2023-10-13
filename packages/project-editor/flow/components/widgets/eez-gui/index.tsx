@@ -138,7 +138,8 @@ import { getComponentName } from "project-editor/flow/components/components-regi
 import classNames from "classnames";
 import { observer } from "mobx-react";
 import { Button } from "eez-studio-ui/button";
-import { detectFileType } from "instrument/connection/file-type";
+
+import type * as FileTypeModule from "instrument/connection/file-type";
 
 const BAR_GRAPH_ORIENTATION_LEFT_RIGHT = 1;
 const BAR_GRAPH_ORIENTATION_RIGHT_LEFT = 2;
@@ -1332,6 +1333,8 @@ export class BitmapWidget extends Widget {
             }
 
             if (data instanceof Uint8Array) {
+                const { detectFileType } =
+                    require("instrument/connection/file-type") as typeof FileTypeModule;
                 const fileType = detectFileType(data);
                 return URL.createObjectURL(
                     new Blob([data], { type: fileType.mime } /* (1) */)
