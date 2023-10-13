@@ -10,7 +10,6 @@ import {
 } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
-import { _range } from "eez-studio-shared/algorithm";
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { validators } from "eez-studio-shared/validation";
 

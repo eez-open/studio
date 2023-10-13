@@ -44,7 +44,6 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { getProjectStore } from "project-editor/store";
 import { evalConstantExpression } from "project-editor/flow//expression";
-import { _difference } from "eez-studio-shared/algorithm";
 import {
     variableTypeProperty,
     migrateType,

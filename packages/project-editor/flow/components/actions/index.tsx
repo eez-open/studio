@@ -3,8 +3,6 @@ import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import { _find, _range } from "eez-studio-shared/algorithm";
-
 import {
     registerClass,
     PropertyType,

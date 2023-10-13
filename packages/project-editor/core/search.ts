@@ -1,5 +1,3 @@
-import { _isEqual } from "eez-studio-shared/algorithm";
-
 import {
     IEezObject,
     PropertyType,

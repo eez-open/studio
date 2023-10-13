@@ -1,7 +1,6 @@
 import path from "path";
 
 import { fileExists, makeFolder } from "eez-studio-shared/util-electron";
-import { _difference } from "eez-studio-shared/algorithm";
 
 import { sourceRootDir } from "eez-studio-shared/util";
 

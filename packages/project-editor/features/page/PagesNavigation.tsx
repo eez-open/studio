@@ -2,8 +2,6 @@ import React from "react";
 import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import { _find } from "eez-studio-shared/algorithm";
-
 import { IEezObject } from "project-editor/core/object";
 import {
     TreeAdapter,

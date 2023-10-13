@@ -1,7 +1,8 @@
+import uniqBy from "lodash/uniqBy";
+
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Style } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
-import { _uniqBy } from "eez-studio-shared/algorithm";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -15,7 +16,7 @@ export const STYLE_FLAGS_BLINK = 1 << 6;
 
 export function buildGuiStylesEnum(assets: Assets) {
     let styles = assets.styles.filter(style => style.id != undefined);
-    styles = _uniqBy(styles, style => style.id);
+    styles = uniqBy(styles, style => style.id);
 
     const styleEnumItems = styles.map((style, i) => {
         return `${TAB}${getName(

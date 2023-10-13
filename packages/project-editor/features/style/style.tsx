@@ -2,8 +2,9 @@ import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
 import { Global, css } from "@emotion/react";
+import zipObject from "lodash/zipObject";
+import map from "lodash/map";
 
-import { _map, _zipObject } from "eez-studio-shared/algorithm";
 import { isValid, strToColor16 } from "eez-studio-shared/color";
 
 import {
@@ -766,9 +767,9 @@ const properties = [
     alwaysBuildProperty
 ];
 
-const propertiesMap: { [propertyName: string]: PropertyInfo } = _zipObject(
-    _map(properties, p => p.name),
-    _map(properties, p => p)
+const propertiesMap: { [propertyName: string]: PropertyInfo } = zipObject(
+    map(properties, p => p.name),
+    map(properties, p => p)
 ) as any;
 
 ////////////////////////////////////////////////////////////////////////////////

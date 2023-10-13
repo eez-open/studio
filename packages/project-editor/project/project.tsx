@@ -7,7 +7,6 @@ import {
     fileExistsSync,
     getFileNameWithoutExtension
 } from "eez-studio-shared/util-electron";
-import { _map, _filter, _max, _min } from "eez-studio-shared/algorithm";
 import { pascalCase } from "eez-studio-shared/string";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";

@@ -1,5 +1,5 @@
 import { stringify } from "csv-stringify";
-import { parse } from "csv-parse";
+import * as csvParseModule from "csv-parse";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
 
@@ -106,6 +106,8 @@ registerActionComponents("Dashboard Specific", [
 
             try {
                 context.startAsyncExecution();
+
+                const { parse } = require("csv-parse") as typeof csvParseModule;
 
                 parse(
                     input,

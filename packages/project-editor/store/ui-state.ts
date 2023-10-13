@@ -1,8 +1,8 @@
 import fs from "fs";
 import { computed, makeObservable } from "mobx";
 import { observable, extendObservable, action, toJS, runInAction } from "mobx";
+import each from "lodash/each";
 
-import { _each } from "eez-studio-shared/algorithm";
 import * as notification from "eez-studio-ui/notification";
 import { IEezObject } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
@@ -104,7 +104,7 @@ export class UIStateStore {
 
     loadObjects(objects: any) {
         this.objectUIStates.clear();
-        _each(objects, (value: any, objectPath: any) => {
+        each(objects, (value: any, objectPath: any) => {
             this.objectUIStates.set(objectPath, value);
         });
     }

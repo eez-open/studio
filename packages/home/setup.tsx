@@ -8,8 +8,7 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-
-import { _uniqBy } from "eez-studio-shared/algorithm";
+import uniqBy from "lodash/uniqBy";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
@@ -65,7 +64,7 @@ class SetupState {
     }
 
     get manufacturers() {
-        return _uniqBy(this.instrumentExtensionNodes, extension =>
+        return uniqBy(this.instrumentExtensionNodes, extension =>
             getManufacturer(extension.latestVersion)
         ).map(extension => ({
             id: extension.latestVersion.id,

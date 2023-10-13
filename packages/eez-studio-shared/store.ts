@@ -1,16 +1,13 @@
 import type * as ElectronModule from "electron";
 import { observable, computed, action, toJS, makeObservable } from "mobx";
+import each from "lodash/each";
+import map from "lodash/map";
+import keys from "lodash/keys";
+import pickBy from "lodash/pickBy";
 
 import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
-import {
-    _each,
-    _extend,
-    _keys,
-    _map,
-    _pickBy
-} from "eez-studio-shared/algorithm";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +77,7 @@ export function createStoreObjectsCollection<
         ) {
             const object = objects.get(changes.id!);
             if (object) {
-                _each(changes, function (value: any, key: string) {
+                each(changes, function (value: any, key: string) {
                     (object as any)[key] = value;
                 });
             }
@@ -152,8 +149,8 @@ export const types = {
         }
     },
     transient: (type: IType, defaultValue?: any) =>
-        _extend({}, type, { transient: true, defaultValue }),
-    lazy: (type: IType) => _extend({}, type, { lazy: true })
+        Object.assign({}, type, { transient: true, defaultValue }),
+    lazy: (type: IType) => Object.assign({}, type, { lazy: true })
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,20 +227,20 @@ export function createStore({
     getSourceDescription?: (sid: string) => string | null;
 }) {
     function execCreateObject(object: any, options?: IStoreOperationOptions) {
-        let questionMarks = _map(
+        let questionMarks = map(
             nonTransientProperties,
             (value: IType, key: string) => "?"
         ).join(",");
 
-        let values = _map(nonTransientProperties, (value: IType, key: string) =>
+        let values = map(nonTransientProperties, (value: IType, key: string) =>
             value.toDB ? value.toDB(object[key]) : object[key]
         );
 
         let info = db
             .prepare(
-                `INSERT INTO "${storeName}"(${_keys(
-                    nonTransientProperties
-                ).join(",")}) VALUES(${questionMarks})`
+                `INSERT INTO "${storeName}"(${keys(nonTransientProperties).join(
+                    ","
+                )}) VALUES(${questionMarks})`
             )
             .run(values);
 
@@ -297,7 +294,7 @@ export function createStore({
     }
 
     function execUpdateObject(object: any, options?: IStoreOperationOptions) {
-        const changedProperties = _pickBy(
+        const changedProperties = pickBy(
             object,
             (value: any, key: string) =>
                 properties[key] && !properties[key].transient
@@ -319,7 +316,7 @@ export function createStore({
             )} FROM "${storeName}" WHERE id = ?`;
 
             const row = db.prepare(query).get(object.id);
-            _map(propertyNames, propertyName => {
+            map(propertyNames, propertyName => {
                 undoValues.push(row[propertyName]);
                 let type = properties[propertyName];
                 undoObject[propertyName] = type.fromDB
@@ -330,12 +327,11 @@ export function createStore({
         }
 
         // update
-        const columns = _map(
-            changedProperties,
-            (value, key) => key + "=?"
-        ).join(",");
+        const columns = map(changedProperties, (value, key) => key + "=?").join(
+            ","
+        );
 
-        let values = _map(changedProperties, (value, key) => {
+        let values = map(changedProperties, (value, key) => {
             let toDB = properties[key].toDB;
             return toDB ? toDB(value) : value;
         });
@@ -608,7 +604,7 @@ export function createStore({
     function dbRowToObject(row: any) {
         let object: any = {};
 
-        _map(properties, (type: IType, propertyName: string) => {
+        map(properties, (type: IType, propertyName: string) => {
             if (type.transient) {
                 if (type === types.id) {
                     object[propertyName] = row.id.toString();
@@ -649,9 +645,9 @@ export function createStore({
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    const nonTransientProperties = _pickBy(properties, type => !type.transient);
+    const nonTransientProperties = pickBy(properties, type => !type.transient);
 
-    const nonTransientAndNonLazyProperties = _keys(nonTransientProperties)
+    const nonTransientAndNonLazyProperties = keys(nonTransientProperties)
         .filter(propertyName => properties[propertyName].lazy !== true)
         .join(",");
 

@@ -7,9 +7,9 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import map from "lodash/map";
 
 import { humanize } from "eez-studio-shared/string";
-import { _map } from "eez-studio-shared/algorithm";
 import { UNITS } from "eez-studio-shared/units";
 import { guid } from "eez-studio-shared/guid";
 
@@ -90,7 +90,7 @@ export const TableField = observer(
         render() {
             let data = this.props.values[this.props.fieldProperties.name];
 
-            let rows = _map(data, (value, key: any) => {
+            let rows = map(data, (value, key: any) => {
                 return (
                     <tr key={key}>
                         <td dangerouslySetInnerHTML={{ __html: key }} />

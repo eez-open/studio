@@ -8,6 +8,7 @@ import {
     makeObservable,
     IReactionDisposer
 } from "mobx";
+import defer from "lodash/defer";
 
 import {
     createStore,
@@ -25,7 +26,6 @@ import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import type { IUnit } from "eez-studio-shared/units";
 import { db } from "eez-studio-shared/db-path";
-import { _defer } from "eez-studio-shared/algorithm";
 
 import type * as MainWindowModule from "main/window";
 
@@ -253,7 +253,7 @@ export class InstrumentObject {
         });
 
         if (extension) {
-            _defer(
+            defer(
                 action(() => {
                     this._extension = extension;
                 })

@@ -3,7 +3,6 @@ import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import { _filter, _map, _each } from "eez-studio-shared/algorithm";
 import { hasClass } from "eez-studio-shared/dom";
 
 import { Icon } from "eez-studio-ui/icon";

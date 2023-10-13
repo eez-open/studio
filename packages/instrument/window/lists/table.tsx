@@ -9,10 +9,10 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import range from "lodash/range";
 
 import { objectClone } from "eez-studio-shared/util";
 import { addAlphaToColor } from "eez-studio-shared/color";
-import { _range } from "eez-studio-shared/algorithm";
 import {
     IUnit,
     TIME_UNIT_NO_CUSTOM_FORMAT,
@@ -757,7 +757,7 @@ export const Table = observer(
                         </tr>
                     </thead>
                     <tbody>
-                        {_range(this.numRows).map(index => (
+                        {range(this.numRows).map(index => (
                             <tr key={index}>
                                 <td>{index + 1}</td>
                                 <Cell

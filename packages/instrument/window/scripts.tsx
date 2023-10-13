@@ -15,7 +15,6 @@ import { observer } from "mobx-react";
 import { stringCompare } from "eez-studio-shared/string";
 import { validators } from "eez-studio-shared/validation";
 import { readTextFile } from "eez-studio-shared/util-electron";
-import { _map } from "eez-studio-shared/algorithm";
 
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Splitter } from "eez-studio-ui/splitter";

@@ -12,8 +12,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { _difference } from "eez-studio-shared/algorithm";
-
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
 
 import type {

@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { humanize } from "eez-studio-shared/string";
-import { _difference } from "eez-studio-shared/algorithm";
 
 import { Icon } from "eez-studio-ui/icon";
 

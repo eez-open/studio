@@ -3,7 +3,6 @@ import { observable, makeObservable, runInAction, computed, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { MenuItem } from "@electron/remote";
 
-import { _find, _range } from "eez-studio-shared/algorithm";
 import { Rect } from "eez-studio-shared/geometry";
 
 import {

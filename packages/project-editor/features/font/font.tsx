@@ -7,7 +7,6 @@ import fs from "fs";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { Rect } from "eez-studio-shared/geometry";
-import { _minBy, _maxBy, _range } from "eez-studio-shared/algorithm";
 import {
     VALIDATION_MESSAGE_REQUIRED,
     validators

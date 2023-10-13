@@ -1,4 +1,6 @@
 import { computed, makeObservable } from "mobx";
+import intersection from "lodash/intersection";
+
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
@@ -13,7 +15,6 @@ import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Flow } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
-import { _intersection } from "eez-studio-shared/algorithm";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export class FlowDocument implements IDocument {
@@ -54,7 +55,7 @@ export class FlowDocument implements IDocument {
                 )
         );
 
-        return _intersection(
+        return intersection(
             selectedAndHoveredConnectionLines,
             this.selectedConnectionLines
         ).length == 0

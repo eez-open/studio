@@ -9,8 +9,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { _find, _range } from "eez-studio-shared/algorithm";
-
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { IListNode, ListItem } from "eez-studio-ui/list";
 import { PropertyList, SelectFromListProperty } from "eez-studio-ui/properties";

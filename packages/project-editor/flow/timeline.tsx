@@ -8,7 +8,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import {
     VALIDATION_MESSAGE_RANGE_INCLUSIVE,
     VALIDATION_MESSAGE_RANGE_INCLUSIVE_WITHOUT_MAX,

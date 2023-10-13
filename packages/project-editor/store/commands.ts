@@ -1,7 +1,7 @@
 import { makeObservable, computed, action } from "mobx";
+import map from "lodash/map";
 
 import { humanize } from "eez-studio-shared/string";
-import { _map } from "eez-studio-shared/algorithm";
 import { guid } from "eez-studio-shared/guid";
 
 import {
@@ -164,7 +164,7 @@ class UpdateCommand implements ICommand {
 
     get description() {
         return (
-            `Changed (${_map(this.values, (value, name) => humanize(name)).join(
+            `Changed (${map(this.values, (value, name) => humanize(name)).join(
                 ", "
             )}): ` + getHumanReadableObjectPath(this.object)
         );

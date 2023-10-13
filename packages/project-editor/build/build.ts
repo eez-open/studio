@@ -1,6 +1,5 @@
 import path from "path";
 import fs from "fs";
-import archiver from "archiver";
 import { createTransformer } from "mobx-utils";
 
 import {
@@ -8,7 +7,6 @@ import {
     writeBinaryData,
     makeFolder
 } from "eez-studio-shared/util-electron";
-import { _map } from "eez-studio-shared/algorithm";
 
 import type { BuildResult } from "project-editor/store/features";
 import {
@@ -443,8 +441,10 @@ export async function build(
             const destinationFilePahth =
                 destinationFolderPath + "/" + baseName + ".eez-dashboard";
 
+            const archiver = await import("archiver");
+
             await new Promise<void>((resolve, reject) => {
-                var archive = archiver("zip", {
+                var archive = archiver.default("zip", {
                     zlib: {
                         level: 9
                     }

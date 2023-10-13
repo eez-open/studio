@@ -9,8 +9,7 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-
-import { _countBy } from "eez-studio-shared/algorithm";
+import countBy from "lodash/countBy";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";
@@ -317,7 +316,7 @@ export const Groups = observer(
         }
 
         get numShortcuts() {
-            return _countBy(
+            return countBy(
                 Array.from(this.props.shortcutsStore.shortcuts.values()),
                 shortcut => shortcut.groupName
             );

@@ -8,9 +8,10 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import range from "lodash/range";
+import max from "lodash/max";
 
 import { clamp, objectClone } from "eez-studio-shared/util";
-import { _max, _range } from "eez-studio-shared/algorithm";
 import {
     Point,
     pointDistance,
@@ -197,8 +198,8 @@ export class EnvelopeList extends BaseList {
 
     getMaxTime() {
         return Math.max(
-            _max(this.data.voltage.map(point => point.time)) || 0,
-            _max(this.data.current.map(point => point.time)) || 0,
+            max(this.data.voltage.map(point => point.time)) || 0,
+            max(this.data.current.map(point => point.time)) || 0,
             this.data.duration
         );
     }
@@ -1297,7 +1298,7 @@ const EnvelopeLines = observer(
 
             return (
                 <g>
-                    {_range(values.length - 1).map(i => (
+                    {range(values.length - 1).map(i => (
                         <EnvelopeLine
                             key={i}
                             chartLeft={chartLeft}

@@ -15,7 +15,6 @@ import {
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { firstWord } from "eez-studio-shared/string";
-import { _difference } from "eez-studio-shared/algorithm";
 
 import { registerSource, sendMessage, watch } from "eez-studio-shared/notify";
 
@@ -522,14 +521,17 @@ export async function changeExtensionImage(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function exportExtension(extension: IExtension, destFilePath: string) {
+export async function exportExtension(
+    extension: IExtension,
+    destFilePath: string
+) {
+    const archiver = await import("archiver");
+
     return new Promise<void>((resolve, reject) => {
         let extensionFolderPath = getExtensionFolderPath(extension.id);
         var output = fs.createWriteStream(destFilePath);
 
-        const archiver = require("archiver");
-
-        var archive = archiver("zip", {
+        var archive = archiver.default("zip", {
             zlib: {
                 level: 9
             }

@@ -2,6 +2,7 @@ import { humanize } from "eez-studio-shared/string";
 import { observer } from "mobx-react";
 import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
+import intersection from "lodash/intersection";
 
 import {
     getClassInfoLvglProperties,
@@ -30,7 +31,6 @@ import {
     LVGLStylesEditorRuntime
 } from "project-editor/lvgl/page-runtime";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
-import { _intersection } from "eez-studio-shared/algorithm";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 
 type TreeNodeData =
@@ -310,7 +310,7 @@ export const LVGLStylesDefinitionTree = observer(
                 if (parts == undefined) {
                     parts = lvglClassInfoProperties.parts;
                 } else {
-                    parts = _intersection(parts, lvglClassInfoProperties.parts);
+                    parts = intersection(parts, lvglClassInfoProperties.parts);
                 }
             });
 

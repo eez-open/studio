@@ -3,8 +3,7 @@ import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-
-import { _find, _range } from "eez-studio-shared/algorithm";
+import range from "lodash/range";
 
 import { Button } from "eez-studio-ui/button";
 
@@ -553,7 +552,7 @@ export class ListWidget extends Widget {
 
         return (
             <>
-                {_range(flowContext.flowState ? dataValue.length : 1).map(i => (
+                {range(flowContext.flowState ? dataValue.length : 1).map(i => (
                     <ListWidgetItem
                         key={i}
                         flowContext={flowContext}
@@ -761,7 +760,7 @@ export class GridWidget extends Widget {
 
         return (
             <>
-                {_range(flowContext.flowState ? dataValue.length : 1).map(i => (
+                {range(flowContext.flowState ? dataValue.length : 1).map(i => (
                     <GridWidgetItem
                         key={i}
                         flowContext={flowContext}

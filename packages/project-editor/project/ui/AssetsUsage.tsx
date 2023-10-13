@@ -8,8 +8,8 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
+import keys from "lodash/keys";
 
-import { _keys } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 
 import {
@@ -104,7 +104,7 @@ const UsageTreeField = observer(
                 this.props.values[this.props.fieldProperties.name];
             return new UsageTreeNode(
                 "",
-                _keys(assetsUsage.assets)
+                keys(assetsUsage.assets)
                     .sort()
                     .map(key => {
                         return new UsageTreeNode(

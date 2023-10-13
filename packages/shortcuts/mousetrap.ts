@@ -1,5 +1,5 @@
 import { ObservableMap, IComputedValue, autorun, values } from "mobx";
-import Mousetrap from "mousetrap";
+import type * as MousetrapModule from "mousetrap";
 
 import type { IShortcut } from "shortcuts/interfaces";
 
@@ -7,6 +7,8 @@ export function bindShortcuts(
     instumentShortcuts: IComputedValue<ObservableMap<string, IShortcut>>,
     executeShortcut: (shortcut: IShortcut) => void
 ) {
+    const Mousetrap = require("mousetrap") as typeof MousetrapModule;
+
     const dispose = autorun(() => {
         Mousetrap.reset();
 

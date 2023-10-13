@@ -1,7 +1,7 @@
 import { computed, observable, runInAction, makeObservable } from "mobx";
+import range from "lodash/range";
 
 import { UNITS } from "eez-studio-shared/units";
-import { _range } from "eez-studio-shared/algorithm";
 
 import type {
     IChart,
@@ -136,7 +136,7 @@ export class Measurement implements IMeasurement {
         if (this.measurementDefinition.chartIndexes) {
             return this.measurementDefinition.chartIndexes;
         }
-        return _range(this.arity);
+        return range(this.arity);
     }
 
     set chartIndexes(value: number[]) {

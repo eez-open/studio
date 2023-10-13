@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
 
-import * as InstrumentObjectModule from "instrument/instrument-object";
+import type * as InstrumentObjectModule from "instrument/instrument-object";
 
 import { ProjectContext } from "project-editor/project/context";
 

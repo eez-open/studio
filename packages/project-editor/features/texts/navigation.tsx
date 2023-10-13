@@ -1,6 +1,5 @@
 import React from "react";
 import * as FlexLayout from "flexlayout-react";
-import xliff from "xliff";
 
 import * as notification from "eez-studio-ui/notification";
 import { ProjectContext } from "project-editor/project/context";
@@ -133,6 +132,8 @@ export const TextsTab = observer(
                         targetLanguage: result.values.targetLanguage
                     };
 
+                    const xliff = require("xliff");
+
                     const jsToXliff =
                         result.values.xliffVersion == "1.2"
                             ? xliff.jsToXliff12
@@ -252,6 +253,8 @@ export const TextsTab = observer(
                                 `Updated ${updated} translation(s) in language ${result.values.targetLanguage}`
                             );
                         };
+
+                        const xliff = require("xliff");
 
                         try {
                             xliff.xliff2js(xliffDoc, doit);

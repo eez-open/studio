@@ -1,6 +1,6 @@
 import React from "react";
 import { observable, makeObservable, runInAction, computed } from "mobx";
-import mqtt from "mqtt";
+import type mqtt from "mqtt";
 
 import {
     GenericDialogResult,
@@ -1210,7 +1210,9 @@ class MQTTConnection {
     async connect() {
         //console.log("connect called", this.id);
 
-        this.client = mqtt.connect(undefined as any, {
+        const mqtt = await import("mqtt");
+
+        this.client = mqtt.default.connect(undefined as any, {
             protocol: this.constructorParams.protocol as any,
             host: this.constructorParams.host,
             port: this.constructorParams.port,

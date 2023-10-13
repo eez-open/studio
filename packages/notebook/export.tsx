@@ -2,13 +2,12 @@ import { shell } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
 import path from "path";
-import archiver from "archiver";
+import flatten from "lodash/flatten";
 
 import React from "react";
 import { values } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
-import { _flatten } from "eez-studio-shared/algorithm";
 import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
 
@@ -117,15 +116,17 @@ function getExternalSourceDescription(
     return undefined;
 }
 
-function doExport(
+async function doExport(
     store: IStore,
     itemsToExport: IActivityLogEntry[],
     filePath: string,
     progressToastId: notification.ToastId
 ) {
+    const archiver = await import("archiver");
+
     return new Promise<void>((resolve, reject) => {
         var output = fs.createWriteStream(filePath);
-        var archive = archiver("zip", {
+        var archive = archiver.default("zip", {
             zlib: {
                 level: 9
             }
@@ -417,7 +418,7 @@ export function exportTool(controller: IActivityLogController) {
         return null;
     }
 
-    const referencedItemIds = _flatten(
+    const referencedItemIds = flatten(
         controller.selection.map(item => getReferencedItemIds(item))
     );
 

@@ -16,6 +16,9 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { cssTransition } from "react-toastify";
 import * as FlexLayout from "flexlayout-react";
+import uniqWith from "lodash/uniqWith";
+import range from "lodash/range";
+import map from "lodash/map";
 
 import { getLocale } from "eez-studio-shared/i10n";
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -25,12 +28,6 @@ import { guid } from "eez-studio-shared/guid";
 import { capitalize, stringCompare } from "eez-studio-shared/string";
 import { writeBinaryData } from "eez-studio-shared/util-electron";
 import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
-import {
-    _difference,
-    _map,
-    _range,
-    _uniqWith
-} from "eez-studio-shared/algorithm";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import * as notification from "eez-studio-ui/notification";
@@ -4133,7 +4130,7 @@ class DynamicAxisController extends AxisController {
         }
 
         // remove duplicates, i.e. ticks with the same label
-        ticks = _uniqWith(ticks, (a, b) =>
+        ticks = uniqWith(ticks, (a, b) =>
             a.label ? a.label === b.label : false
         );
 
@@ -5388,7 +5385,7 @@ const MeasurementComponent = observer(
 
             if (this.numCharts > 1) {
                 fields = fields.concat(
-                    _range(measurement.arity).map(inputIndex => {
+                    range(measurement.arity).map(inputIndex => {
                         return {
                             name: `${INPUT_FILED_NAME}${inputIndex}`,
                             displayName:
@@ -5745,7 +5742,7 @@ const MeasurementsDockView = observer(
                     <div>
                         <table>
                             <tbody>
-                                {_map(
+                                {map(
                                     this.props.measurementsController
                                         .measurements,
                                     measurement => (
@@ -5768,7 +5765,7 @@ const MeasurementsDockView = observer(
                                 Add Measurement
                             </button>
                             <div className="dropdown-menu">
-                                {_map(
+                                {map(
                                     this.availableMeasurements,
                                     measurementFunctionId => {
                                         return (

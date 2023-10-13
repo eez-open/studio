@@ -737,10 +737,10 @@ export abstract class RuntimeBase {
         });
         let filePath = result.filePath;
         if (filePath) {
-            await new Promise<void>((resolve, reject) => {
-                const archiver = require("archiver");
+            const archiver = await import("archiver");
 
-                var archive = archiver("zip", {
+            await new Promise<void>((resolve, reject) => {
+                var archive = archiver.default("zip", {
                     zlib: {
                         level: 9
                     }
@@ -767,6 +767,7 @@ export abstract class RuntimeBase {
                     json = JSON.stringify(toJS(this.debugInfo));
                 } catch (err) {
                     reject(err);
+                    return;
                 }
 
                 archive.append(json, { name: path.basename(filePath || "") });

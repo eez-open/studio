@@ -1,4 +1,5 @@
-import { _map } from "eez-studio-shared/algorithm";
+import map from "lodash/map";
+
 import { formatNumber } from "eez-studio-shared/util";
 
 export const TAB = "    ";
@@ -8,7 +9,7 @@ export { NamingConvention, getName } from "project-editor/project/assets";
 export function dumpData(data: number[] | Buffer) {
     const NUMBERS_PER_LINE = 16;
     let result = "";
-    _map(data, value => "0x" + formatNumber(value, 16, 2)).forEach(
+    map(data, value => "0x" + formatNumber(value, 16, 2)).forEach(
         (value, index) => {
             if (result.length > 0) {
                 result += ",";

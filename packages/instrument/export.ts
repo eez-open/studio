@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import archiver from "archiver";
 import xmlFormatter from "xml-formatter";
 
 import {
@@ -459,7 +458,7 @@ function buildSdl(
         </ScpiDefinition>`;
 }
 
-export function buildInstrumentExtension(
+export async function buildInstrumentExtension(
     idf: IdfProperties,
     subsystems: ISubsystem[],
     enums: IEnum[],
@@ -469,11 +468,13 @@ export function buildInstrumentExtension(
     projectFilePath: string,
     properties: any
 ) {
+    const archiver = await import("archiver");
+
     return new Promise<void>(async (resolve, reject) => {
         let extensionName = idf.extensionName;
         var output = fs.createWriteStream(moduleFilePath);
 
-        var archive = archiver("zip", {
+        var archive = archiver.default("zip", {
             zlib: {
                 level: 9
             }

@@ -2,8 +2,8 @@ import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 import classNames from "classnames";
+import each from "lodash/each";
 
-import { _each, _find, _range } from "eez-studio-shared/algorithm";
 import { validators } from "eez-studio-shared/validation";
 import { BoundingRectBuilder, Point, Rect } from "eez-studio-shared/geometry";
 
@@ -3849,7 +3849,7 @@ export class NotFoundComponent extends ActionComponent {
         ),
         beforeLoadHook(object: NotFoundComponent, jsObject: any) {
             // make sure unknow properties are remembered
-            _each(jsObject, (value, key) => {
+            each(jsObject, (value, key) => {
                 if (!findPropertyByNameInObject(object, key)) {
                     (object as any)[key] = value;
                 }

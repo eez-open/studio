@@ -10,8 +10,8 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import map from "lodash/map";
 
-import { _map } from "eez-studio-shared/algorithm";
 import { humanize, stringCompare } from "eez-studio-shared/string";
 
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
@@ -546,7 +546,7 @@ const SelectItemDialog = observer(
                 };
             }
         >(operators: T) {
-            return _map(operators, (operator, operatorSign) => {
+            return map(operators, (operator, operatorSign) => {
                 const data = `${operatorSign}${EXPR_MARK_START}expr${EXPR_MARK_END}`;
                 return {
                     id: operator.name,
@@ -573,7 +573,7 @@ const SelectItemDialog = observer(
                 };
             }
         >(operators: T) {
-            return _map(operators, (operator, operatorSign) => {
+            return map(operators, (operator, operatorSign) => {
                 const data = `${EXPR_MARK_START}expr${EXPR_MARK_END} ${operatorSign} ${EXPR_MARK_START}expr${EXPR_MARK_END}`;
                 return {
                     id: operator.name,
@@ -747,7 +747,7 @@ const SelectItemDialog = observer(
                 children.push({
                     id: "built-in-constants",
                     label: "Built-in Constants",
-                    children: _map(
+                    children: map(
                         builtInConstants(this.context),
                         (constant, constantName) => ({
                             id: constantName,
@@ -836,7 +836,7 @@ const SelectItemDialog = observer(
                 children.push({
                     id: "built-in-functions",
                     label: "Built-in Functions",
-                    children: _map(builtInFunctions, (func, functionName) => {
+                    children: map(builtInFunctions, (func, functionName) => {
                         const data = `${functionName}(${func.args
                             .map(
                                 arg =>
@@ -874,7 +874,7 @@ const SelectItemDialog = observer(
                     children.push({
                         id: "text-resources",
                         label: "Text resources",
-                        children: _map(
+                        children: map(
                             this.context.project.texts.resources,
                             text => {
                                 const data = `T"${text.resourceID}"`;

@@ -9,8 +9,11 @@ import {
     toJS
 } from "mobx";
 import { createTransformer } from "mobx-utils";
+import map from "lodash/map";
+import find from "lodash/find";
+import each from "lodash/each";
+import pickBy from "lodash/pickBy";
 
-import { _each, _find, _pickBy, _map } from "eez-studio-shared/algorithm";
 import { stringCompare } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -235,7 +238,7 @@ export class TreeObjectAdapter {
             items.push(this);
         }
 
-        _each(this.children, (item: any) => {
+        each(this.children, (item: any) => {
             items.push(...item.selectedItems);
         });
 
@@ -318,7 +321,7 @@ export class TreeObjectAdapter {
             treeObjectAdapter.expanded = true;
             treeObjectAdapter.selected = state.$selected;
 
-            _each(state, (value: any, key: any) => {
+            each(state, (value: any, key: any) => {
                 if (typeof key == "string" && key.startsWith("$")) {
                     return;
                 }
@@ -342,8 +345,8 @@ export class TreeObjectAdapter {
             }
 
             if (treeObjectAdapter.expanded) {
-                _each(
-                    _pickBy(
+                each(
+                    pickBy(
                         treeObjectAdapter.children,
                         (childItem: TreeObjectAdapter) =>
                             childItem.selected || childItem.expanded
@@ -365,7 +368,7 @@ export class TreeObjectAdapter {
 
         function makeMap(objectAdapter: TreeObjectAdapter) {
             map.set(getId(objectAdapter.object), objectAdapter);
-            _each(objectAdapter.children, makeMap);
+            each(objectAdapter.children, makeMap);
         }
 
         makeMap(this);
@@ -389,7 +392,7 @@ export class TreeObjectAdapter {
 
         let objectAdapter: TreeObjectAdapter = this;
         while (true) {
-            let childObjectAdapter = _find(
+            let childObjectAdapter = find(
                 objectAdapter.children,
                 (treeObjectAdpterChild: any) => {
                     let child: TreeObjectAdapter = treeObjectAdpterChild;
@@ -837,7 +840,7 @@ export class TreeAdapter {
         const children: ITreeRow[] = [];
 
         function getChildren(item: TreeObjectAdapter) {
-            let itemChildren = _map(
+            let itemChildren = map(
                 item.children,
                 childItem => childItem
             ) as TreeObjectAdapter[];

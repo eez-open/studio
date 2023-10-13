@@ -2,7 +2,6 @@ import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 import classNames from "classnames";
 
-import { _find } from "eez-studio-shared/algorithm";
 import { to16bitsColor } from "eez-studio-shared/color";
 
 import {

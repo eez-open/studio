@@ -1,9 +1,9 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
+import each from "lodash/each";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
-import { _each } from "eez-studio-shared/algorithm";
 
 import { IEezObject, isAncestor } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -187,7 +187,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             }
         }
 
-        _each(node.children, (item: any) => findSnapLinesInNode(item));
+        each(node.children, (item: any) => findSnapLinesInNode(item));
     }
 
     findSnapLinesInNode(flowContext.document.flow);

@@ -1,7 +1,7 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 import type { ModbusRTUClient } from "jsmodbus";
-import * as JsmodbusModule from "jsmodbus";
+import type * as JsmodbusModule from "jsmodbus";
 
 import type {
     IDashboardComponentContext,

@@ -9,9 +9,9 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import range from "lodash/range";
 
 import { closestByClass } from "eez-studio-shared/dom";
-import { _range } from "eez-studio-shared/algorithm";
 
 import { Checkbox } from "eez-studio-ui/properties";
 import { IconAction } from "eez-studio-ui/action";
@@ -749,7 +749,7 @@ export const RulersDockView = observer(
                             </div>
                         )}
                     </div>
-                    {_range(
+                    {range(
                         this.props.chartsController.chartControllers.length
                     ).map(chartIndex => (
                         <div

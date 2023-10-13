@@ -1,6 +1,6 @@
 import fs from "fs";
+import each from "lodash/each";
 
-import { _each } from "eez-studio-shared/algorithm";
 import { formatBytes } from "eez-studio-shared/formatBytes";
 
 const TP_MODULE_PREFIX = "\\node_modules\\";
@@ -16,7 +16,7 @@ function collectModules(
     thirdPartyModules: ModuleInfo[],
     ourModules: ModuleInfo[]
 ) {
-    _each(require.cache, (nodeModule: NodeModule) => {
+    each(require.cache, (nodeModule: NodeModule) => {
         try {
             const moduleInfo: ModuleInfo = {
                 fileName: nodeModule.filename,
@@ -47,11 +47,15 @@ function dumpModules(
 ) {
     let totalBytes = 0;
 
+    // modules.sort((a: ModuleInfo, b: ModuleInfo) => {
+    //     return b.bytes - a.bytes;
+    // });
+
     modules.sort((a: ModuleInfo, b: ModuleInfo) => {
-        return b.bytes - a.bytes;
+        return a.fileName < b.fileName ? -1 : a.fileName > b.fileName ? 1 : 0;
     });
 
-    _each(modules, moduleInfo => {
+    each(modules, moduleInfo => {
         totalBytes += moduleInfo.bytes;
         console.log(
             moduleType,

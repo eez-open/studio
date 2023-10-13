@@ -1,6 +1,5 @@
 import { observable } from "mobx";
-
-import { _map } from "eez-studio-shared/algorithm";
+import map from "lodash/map";
 
 import { sourceRootDir, parseXmlString } from "eez-studio-shared/util";
 import {
@@ -91,12 +90,12 @@ function compareName(name1: string, name2: string) {
 }
 
 function buildEnums(sdl: JQuery<any>): IEnum[] {
-    return _map(
+    return map(
         sdl.find("GlobalDefinitions>Enum"),
         (element: HTMLElement, index: number) => {
             const name = $(element).attr("name") || "";
 
-            const members: IEnumMember[] = _map(
+            const members: IEnumMember[] = map(
                 $(element).find("Member"),
                 (element: HTMLElement, index: number) => {
                     const name = $(element).attr("mnemonic") || "";
@@ -117,7 +116,7 @@ function buildEnums(sdl: JQuery<any>): IEnum[] {
 }
 
 function buildParameters(dom: JQuery): IParameter[] {
-    return _map(
+    return map(
         dom.find("Parameters>Parameter"),
         (element: HTMLElement, index: number) => {
             const name = element.getAttribute("name") || index.toString();

@@ -1,4 +1,3 @@
-import archiver from "archiver";
 import fs from "fs";
 import path from "path";
 import { marked } from "marked";
@@ -663,8 +662,10 @@ async function generateODTFile(
 </office:document-content>
 `;
 
+    const archiver = await import("archiver");
+
     await new Promise<void>((resolve, reject) => {
-        var archive = archiver("zip", {
+        var archive = archiver.default("zip", {
             zlib: {
                 level: 9
             }

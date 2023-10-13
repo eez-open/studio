@@ -11,7 +11,7 @@ import {
     autorun,
     runInAction
 } from "mobx";
-import Mousetrap from "mousetrap";
+import type * as MousetrapModule from "mousetrap";
 import update, { Spec } from "immutability-helper";
 
 import { confirmSave } from "eez-studio-shared/util-renderer";
@@ -245,6 +245,8 @@ export class ProjectStore {
     }
 
     onActivate() {
+        const Mousetrap = require("mousetrap") as typeof MousetrapModule;
+
         Mousetrap.reset();
 
         Mousetrap.bind("f5", () => {
@@ -332,6 +334,8 @@ export class ProjectStore {
     }
 
     onDeactivate() {
+        const Mousetrap = require("mousetrap") as typeof MousetrapModule;
+
         Mousetrap.reset();
     }
 

@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
-import { _uniqWith } from "eez-studio-shared/algorithm";
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
 

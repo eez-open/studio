@@ -5,8 +5,6 @@ import { action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import { _debounce } from "eez-studio-shared/algorithm";
-
 import { Icon } from "eez-studio-ui/icon";
 
 import type {

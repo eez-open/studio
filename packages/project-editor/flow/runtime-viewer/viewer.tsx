@@ -8,7 +8,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import { _range, _isEqual, _map } from "eez-studio-shared/algorithm";
 import {
     Point,
     pointDistance,
