@@ -9,7 +9,8 @@ import {
     reaction,
     autorun,
     computed,
-    makeObservable
+    makeObservable,
+    IReactionDisposer
 } from "mobx";
 import * as path from "path";
 
@@ -26,12 +27,11 @@ import { Icon } from "eez-studio-ui/icon";
 
 import * as notification from "eez-studio-ui/notification";
 
-import {
-    HistoryViewComponent,
-    showSessionsList
-} from "instrument/window/history/history-view";
+import type { InstrumentObject } from "instrument/instrument-object";
+import type * as InstrumentObjectModule from "instrument/instrument-object";
+import type { HistoryViewComponent } from "instrument/window/history/history-view";
+import type * as HistoryViewModule from "instrument/window/history/history-view";
 
-import { instruments, InstrumentObject } from "instrument/instrument-object";
 import type * as HomeTabModule from "home/home-tab";
 import type * as HistoryModule from "home/history";
 import type * as ShortcutsModule from "home/shortcuts";
@@ -111,17 +111,6 @@ class HistoryTab implements IHomeTab {
             _active: observable,
             makeActive: action
         });
-
-        const { getAppStore } = require("home/history") as typeof HistoryModule;
-
-        autorun(() => {
-            if (
-                this.tabs.viewDeletedHistory &&
-                getAppStore().deletedItemsHistory.deletedCount === 0
-            ) {
-                runInAction(() => (this.tabs.viewDeletedHistory = false));
-            }
-        });
     }
 
     permanent: boolean = true;
@@ -133,6 +122,8 @@ class HistoryTab implements IHomeTab {
     title = "History";
     icon = "material:history";
     category: HomeTabCategory = "instrument";
+
+    dispose: IReactionDisposer;
 
     get titleStr() {
         return this.title;
@@ -165,10 +156,28 @@ class HistoryTab implements IHomeTab {
     };
 
     onActivate() {
+        if (this.dispose) {
+            this.dispose();
+        }
+
+        const { getAppStore } = require("home/history") as typeof HistoryModule;
+
+        this.dispose = autorun(() => {
+            if (
+                this.tabs.viewDeletedHistory &&
+                getAppStore().deletedItemsHistory.deletedCount === 0
+            ) {
+                runInAction(() => (this.tabs.viewDeletedHistory = false));
+            }
+        });
+
         ipcRenderer.on("delete", this.deleteSelectedHistoryItems);
     }
 
     onDeactivate() {
+        if (this.dispose) {
+            this.dispose();
+        }
         ipcRenderer.removeListener("delete", this.deleteSelectedHistoryItems);
     }
 
@@ -981,6 +990,10 @@ export class Tabs {
         });
 
         loadPreinstalledExtension("instrument").then(async () => {
+            const { instruments } = await import(
+                "instrument/instrument-object"
+            );
+
             if (!firstTime.get()) {
                 if (location.search) {
                     const instrumentId = location.search.substring(1);
@@ -1107,6 +1120,8 @@ export class Tabs {
                 }
                 tab = this.addProjectTab(filePath);
             } else {
+                const { instruments } =
+                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
                 const instrument = instruments.get(tabId);
                 if (instrument) {
                     tab = this.addInstrumentTab(instrument);
@@ -1194,6 +1209,8 @@ export class Tabs {
     navigateToSessionsList() {
         this.openTabById("history", true);
         this.viewDeletedHistory = false;
+        const { showSessionsList } =
+            require("instrument/window/history/history-view") as typeof HistoryViewModule;
         showSessionsList(this);
     }
 

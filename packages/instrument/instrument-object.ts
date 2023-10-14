@@ -29,8 +29,6 @@ import { db } from "eez-studio-shared/db-path";
 
 import type * as MainWindowModule from "main/window";
 
-import { activityLogStore, log } from "instrument/window/history/activity-log";
-
 import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
 import { DEFAULT_INSTRUMENT_PROPERTIES } from "instrument/DEFAULT_INSTRUMENT_PROPERTIES";
 import type { IInstrumentProperties } from "instrument/export";
@@ -43,7 +41,7 @@ import type { IFileUploadInstructions } from "instrument/connection/file-upload"
 
 import type * as AppStoreModule from "instrument/window/app-store";
 import type * as Bb3Module from "instrument/bb3";
-import { CommandsTree, getCommandsTree } from "./window/terminal/commands-tree";
+import type { CommandsTree } from "./window/terminal/commands-tree";
 
 import type * as ConnectionMainModule from "instrument/connection/connection-main";
 import type * as ConnectionRendererModule from "instrument/connection/connection-renderer";
@@ -101,12 +99,9 @@ export class InstrumentObject {
     selectedShortcutGroups: string[];
     custom: any;
 
-    connection: IConnection;
-
+    _connection: IConnection | undefined;
+    _commandsTree: CommandsTree | undefined;
     _creationDate: Date | null | undefined;
-
-    commandsTree: CommandsTree;
-
     _autorunDispose: IReactionDisposer;
 
     constructor(props: IInstrumentObjectProps) {
@@ -161,20 +156,8 @@ export class InstrumentObject {
 
         this.custom = props.custom || {};
 
-        if (this.instrumentExtensionId && isRenderer()) {
-            this.commandsTree = getCommandsTree(this.instrumentExtensionId);
-        } else {
-            this.commandsTree = new CommandsTree();
-        }
-
-        if (isRenderer()) {
-            const { createRendererProcessConnection } =
-                require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
-            this.connection = createRendererProcessConnection(this);
-        } else {
-            const { createMainProcessConnection } =
-                require("instrument/connection/connection-main") as typeof ConnectionMainModule;
-            this.connection = createMainProcessConnection(this);
+        if (!isRenderer()) {
+            this.initConnection();
         }
 
         this._autorunDispose = autorun(() => {
@@ -196,6 +179,40 @@ export class InstrumentObject {
                 }
             }
         });
+    }
+
+    initConnection() {
+        if (isRenderer()) {
+            const { createRendererProcessConnection } =
+                require("instrument/connection/connection-renderer") as typeof ConnectionRendererModule;
+            this._connection = createRendererProcessConnection(this);
+        } else {
+            const { createMainProcessConnection } =
+                require("instrument/connection/connection-main") as typeof ConnectionMainModule;
+            this._connection = createMainProcessConnection(this);
+        }
+    }
+
+    get connection() {
+        if (!this._connection) {
+            this.initConnection();
+        }
+        return this._connection!;
+    }
+
+    get commandsTree() {
+        if (!this._commandsTree) {
+            const { CommandsTree, getCommandsTree } =
+                require("instrument/window/terminal/commands-tree") as typeof import("instrument/window/terminal/commands-tree");
+            if (this.instrumentExtensionId && isRenderer()) {
+                this._commandsTree = getCommandsTree(
+                    this.instrumentExtensionId
+                );
+            } else {
+                this._commandsTree = new CommandsTree();
+            }
+        }
+        return this._commandsTree;
     }
 
     toString() {
@@ -633,6 +650,9 @@ export class InstrumentObject {
 
     afterCreate() {
         if (!isRenderer()) {
+            const { log, activityLogStore } =
+                require("instrument/window/history/activity-log") as typeof import("instrument/window/history/activity-log");
+
             log(
                 activityLogStore,
                 {
@@ -648,6 +668,9 @@ export class InstrumentObject {
 
     afterRestore() {
         if (!isRenderer()) {
+            const { log, activityLogStore } =
+                require("instrument/window/history/activity-log") as typeof import("instrument/window/history/activity-log");
+
             log(
                 activityLogStore,
                 {
@@ -664,6 +687,9 @@ export class InstrumentObject {
     afterDelete() {
         if (!isRenderer()) {
             this.connection.destroy();
+
+            const { log, activityLogStore } =
+                require("instrument/window/history/activity-log") as typeof import("instrument/window/history/activity-log");
 
             log(
                 activityLogStore,
@@ -807,6 +833,9 @@ export class InstrumentObject {
     }
 
     deletePermanently() {
+        const { activityLogStore } =
+            require("instrument/window/history/activity-log") as typeof import("instrument/window/history/activity-log");
+
         activityLogStore.deleteObject(
             { oid: this.id },
             { deletePermanently: true }

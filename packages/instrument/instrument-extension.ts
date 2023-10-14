@@ -14,8 +14,6 @@ import type { IInstrumentProperties } from "instrument/export";
 
 import type * as ConnectionModule from "instrument/connection/connection-main";
 
-import { createInstrumentListStore } from "instrument/window/lists/store";
-
 import type * as InstrumentAppStoreModule from "instrument/window/app-store";
 import type * as ScriptsModule from "instrument/window/scripts";
 import type * as DlogModule from "instrument/window/waveform/dlog";
@@ -23,6 +21,9 @@ import type * as DlogModule from "instrument/window/waveform/dlog";
 import "instrument/instrument-object";
 
 if (!isRenderer()) {
+    const { createInstrumentListStore } =
+        require("instrument/window/lists/store") as typeof import("instrument/window/lists/store");
+
     createInstrumentListStore(null);
 }
 

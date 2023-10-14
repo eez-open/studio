@@ -26,7 +26,6 @@ import {
 } from "home/extensions-manager/extensions-manager";
 import { onSetupSkip, tabs } from "./tabs-store";
 
-import { createInstrument } from "instrument/instrument-object";
 import { firstTime } from "./first-time";
 
 const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
@@ -194,6 +193,8 @@ export async function onAddInstrument(
             return;
         }
     }
+
+    const { createInstrument } = await import("instrument/instrument-object");
 
     let instrumentId = createInstrument(installedVersion);
 

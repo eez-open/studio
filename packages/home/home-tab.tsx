@@ -22,14 +22,7 @@ import {
 import { ButtonAction, IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
-import type * as AddInstrumentDialogModule from "instrument/add-instrument-dialog";
-
-import {
-    showDeletedInstrumentsDialog,
-    deletedInstruments
-} from "instrument/deleted-instruments-dialog";
-
-import { HistorySection } from "home/history";
+import type { InstrumentObject } from "instrument/instrument-object";
 
 import classNames from "classnames";
 import { stringCompare } from "eez-studio-shared/string";
@@ -37,14 +30,6 @@ import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import type { ITabDefinition } from "home/tabs-store";
 
-import { instruments, InstrumentObject } from "instrument/instrument-object";
-import { instrumentStore } from "instrument/instrument-object";
-import {
-    InstrumentConnection,
-    InstrumentProperties,
-    InstrumentToolbar,
-    installExtension
-} from "instrument/instrument-object-details";
 import { tabs } from "home/tabs-store";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 import { settingsController } from "home/settings";
@@ -98,6 +83,8 @@ const SORT_RECENT_ICON = (
 ////////////////////////////////////////////////////////////////////////////////
 
 function deleteInstrument(instrument: InstrumentObject) {
+    const { instrumentStore } =
+        require("instrument/instrument-object") as typeof import("instrument/instrument-object");
     instrumentStore.deleteObject({
         id: instrument.id
     });
@@ -148,6 +135,8 @@ function openEditor(
 }
 
 window.addEventListener("message", (message: any) => {
+    const { instruments } =
+        require("instrument/instrument-object") as typeof import("instrument/instrument-object");
     for (let key of instruments.keys()) {
         const instrument = instruments.get(key);
         if (instrument && instrument.id === message.data.instrumentId) {
@@ -193,6 +182,8 @@ class WorkbenchDocument {
     }
 
     get instruments() {
+        const { instruments } =
+            require("instrument/instrument-object") as typeof import("instrument/instrument-object");
         return Array.from(instruments.values());
     }
 
@@ -229,6 +220,8 @@ class WorkbenchDocument {
                     new MenuItem({
                         label: "Install Extension",
                         click: () => {
+                            const { installExtension } =
+                                require("instrument/instrument-object-details") as typeof import("instrument/instrument-object-details");
                             installExtension(instrument);
                         }
                     })
@@ -305,7 +298,7 @@ export const WorkbenchToolbar = observer(
                     className: "btn-success",
                     onClick: () => {
                         const { showAddInstrumentDialog } =
-                            require("instrument/add-instrument-dialog") as typeof AddInstrumentDialogModule;
+                            require("instrument/add-instrument-dialog") as typeof import("instrument/add-instrument-dialog");
 
                         showAddInstrumentDialog(instrumentId => {
                             setTimeout(() => {
@@ -317,6 +310,9 @@ export const WorkbenchToolbar = observer(
                     }
                 }
             ];
+
+            const { showDeletedInstrumentsDialog, deletedInstruments } =
+                require("instrument/deleted-instruments-dialog") as typeof import("instrument/deleted-instruments-dialog");
 
             if (deletedInstruments.size > 0) {
                 buttons.push({
@@ -378,10 +374,16 @@ const InstrumentToolbarEnclosure = observer(() => {
         return null;
     }
 
+    const { instruments } =
+        require("instrument/instrument-object") as typeof import("instrument/instrument-object");
+
     const instrument = instruments.get(selectedInstrumentId);
     if (!instrument) {
         return null;
     }
+
+    const { InstrumentToolbar } =
+        require("instrument/instrument-object-details") as typeof import("instrument/instrument-object-details");
 
     return (
         <div className="EezStudio_InstrumentToolbarEnclosure">
@@ -396,10 +398,16 @@ const InstrumentPropertiesEnclosure = observer(() => {
         return null;
     }
 
+    const { instruments } =
+        require("instrument/instrument-object") as typeof import("instrument/instrument-object");
+
     const instrument = instruments.get(selectedInstrumentId);
     if (!instrument) {
         return null;
     }
+
+    const { InstrumentProperties } =
+        require("instrument/instrument-object-details") as typeof import("instrument/instrument-object-details");
 
     return (
         <div className="EezStudio_InstrumentPropertiesEnclosure">
@@ -414,10 +422,16 @@ const InstrumentConnectionEnclosure = observer(() => {
         return null;
     }
 
+    const { instruments } =
+        require("instrument/instrument-object") as typeof import("instrument/instrument-object");
+
     const instrument = instruments.get(selectedInstrumentId);
     if (!instrument) {
         return null;
     }
+
+    const { InstrumentConnection } =
+        require("instrument/instrument-object-details") as typeof import("instrument/instrument-object-details");
 
     return (
         <div className="EezStudio_InstrumentConnectionEnclosure">
@@ -431,6 +445,9 @@ const HistoryEnclosure = observer(() => {
     if (!selectedInstrumentId) {
         return null;
     }
+
+    const { HistorySection } =
+        require("home/history") as typeof import("home/history");
 
     return <HistorySection oids={[selectedInstrumentId]} simple={true} />;
 });
