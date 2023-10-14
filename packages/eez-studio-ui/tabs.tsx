@@ -1,12 +1,9 @@
 import React from "react";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
-import { XYCoord } from "dnd-core";
 
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
-import { IconAction } from "eez-studio-ui/action";
 
 import { Menu, MenuItem } from "@electron/remote";
 
@@ -36,11 +33,6 @@ interface TabViewProps {
     tab: ITab;
     index: number;
     moveTab?: (dragIndex: number, hoverIndex: number) => void;
-}
-
-interface DragItem {
-    tab: ITab;
-    index: number;
 }
 
 export const TabView: React.FC<TabViewProps> = observer(function TabView({
@@ -104,81 +96,6 @@ export const TabView: React.FC<TabViewProps> = observer(function TabView({
         [tab]
     );
 
-    const ref = React.useRef<HTMLDivElement>(null);
-
-    const [{ handlerId }, drop] = useDrop({
-        accept: ItemTypes.TAB,
-        collect(monitor) {
-            return {
-                handlerId: monitor.getHandlerId()
-            };
-        },
-        hover(item: DragItem, monitor: DropTargetMonitor) {
-            if (!ref.current) {
-                return;
-            }
-
-            const dragIndex = item.index;
-            const hoverIndex = index;
-
-            // Don't replace items with themselves
-            if (dragIndex === hoverIndex) {
-                return;
-            }
-
-            // Determine rectangle on screen
-            const hoverBoundingRect = ref.current?.getBoundingClientRect();
-
-            // Get vertical middle
-            const hoverMiddleX =
-                (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
-
-            // Determine mouse position
-            const clientOffset = monitor.getClientOffset();
-
-            // Get pixels to the left
-            const hoverClientX =
-                (clientOffset as XYCoord).x - hoverBoundingRect.left;
-
-            // Only perform the move when the mouse has crossed half of the items height
-            // When dragging downwards, only move when the cursor is below 50%
-            // When dragging upwards, only move when the cursor is above 50%
-
-            // Dragging downwards
-            if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX) {
-                return;
-            }
-
-            // Dragging upwards
-            if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX) {
-                return;
-            }
-
-            // Time to actually perform the action
-            moveTab!(dragIndex, hoverIndex);
-
-            // Note: we're mutating the monitor item here!
-            // Generally it's better to avoid mutations,
-            // but it's good here for the sake of performance
-            // to avoid expensive index searches.
-            item.index = hoverIndex;
-        }
-    });
-
-    const [{ isDragging }, drag] = useDrag({
-        type: ItemTypes.TAB,
-        item: () => {
-            return { tab, index };
-        },
-        collect: (monitor: any) => ({
-            isDragging: monitor.isDragging()
-        })
-    });
-
-    if (moveTab && !tab.dragDisabled) {
-        drag(drop(ref));
-    }
-
     let className = classNames("EezStudio_Tab", {
         active: tab.active,
         permanent: tab.permanent
@@ -223,18 +140,49 @@ export const TabView: React.FC<TabViewProps> = observer(function TabView({
         );
     }
 
-    const opacity = isDragging ? 0 : 1;
+    const opacity = 1;
 
     return (
         <div
-            ref={ref}
             className={className}
             onMouseDown={onMouseDown}
             onMouseUp={onMouseUp}
             onContextMenu={onContextMenu}
             title={tab.tooltipTitle}
             style={{ opacity }}
-            data-handler-id={handlerId}
+            draggable={!tab.dragDisabled}
+            onDragStart={ev => {
+                ev.dataTransfer.setData(
+                    "application/eez-studio-tab",
+                    index.toString()
+                );
+                ev.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={ev => {
+                ev.preventDefault();
+                ev.stopPropagation();
+
+                if (
+                    ev.dataTransfer.types.indexOf(
+                        "application/eez-studio-tab"
+                    ) == -1 ||
+                    index == 0
+                ) {
+                    ev.dataTransfer.dropEffect = "none";
+                    return;
+                }
+
+                ev.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={ev => {
+                ev.preventDefault();
+                const dragIndex = parseInt(
+                    ev.dataTransfer.getData("application/eez-studio-tab")
+                );
+                if (moveTab) {
+                    moveTab(dragIndex, index);
+                }
+            }}
         >
             <div>
                 {title}
@@ -247,37 +195,11 @@ export const TabView: React.FC<TabViewProps> = observer(function TabView({
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const AddTabButton = observer(
-    ({
-        addTabTitle,
-        addTabIcon,
-        addTabCallback,
-        attention
-    }: {
-        addTabTitle?: string;
-        addTabIcon?: string;
-        addTabCallback: () => void;
-        attention?: boolean;
-    }) => {
-        return (
-            <div className="EezStudio_AddTab">
-                <IconAction
-                    icon={addTabIcon || "material:add"}
-                    attention={attention}
-                    onClick={addTabCallback}
-                    title={addTabTitle || "Add Tab"}
-                />
-            </div>
-        );
-    }
-);
-
 export const TabsView = observer(
     class TabsView extends React.Component<{
         tabs: ITab[];
         addTabTitle?: string;
         addTabIcon?: string;
-        addTabCallback?: () => void;
         addTabAttention?: boolean;
         moveTab?: (dragIndex: number, hoverIndex: number) => void;
     }> {
@@ -292,14 +214,6 @@ export const TabsView = observer(
                             moveTab={this.props.moveTab}
                         />
                     ))}
-                    {this.props.addTabCallback && (
-                        <AddTabButton
-                            addTabTitle={this.props.addTabTitle}
-                            addTabIcon={this.props.addTabIcon}
-                            addTabCallback={this.props.addTabCallback}
-                            attention={this.props.addTabAttention}
-                        />
-                    )}
                 </div>
             );
         }

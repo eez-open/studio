@@ -6,8 +6,6 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { observer } from "mobx-react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 
 import { loadExtensions } from "eez-studio-shared/extensions/extensions";
 import { getNodeModuleFolders } from "eez-studio-shared/extensions/yarn";
@@ -146,10 +144,10 @@ const Main = observer(
     class Main extends React.Component<{ children: React.ReactNode }> {
         render() {
             return (
-                <DndProvider backend={HTML5Backend}>
+                <>
                     {this.props.children}
                     {notification.container}
-                </DndProvider>
+                </>
             );
         }
     }
@@ -185,6 +183,6 @@ async function main() {
 
 main();
 
-// setTimeout(() => {
-//     require("eez-studio-shared/module-stat");
-// }, 1000);
+setTimeout(() => {
+    require("eez-studio-shared/module-stat");
+}, 1000);

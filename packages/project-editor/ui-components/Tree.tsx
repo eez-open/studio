@@ -352,6 +352,16 @@ export const Tree = observer(
                 return;
             }
 
+            if (
+                event.dataTransfer.types.indexOf(
+                    "application/eez-studio-tab"
+                ) >= 0
+            ) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "none";
+                return;
+            }
+
             const treeAdapter = this.props.treeAdapter;
             const draggableAdapter = treeAdapter.draggableAdapter!;
 
