@@ -815,7 +815,7 @@ export class WasmRuntime extends RemoteRuntime {
                 const instrument = globalVariable.objectVariableValue;
 
                 const { InstrumentObject } =
-                    require("instrument/window/history/activity-log") as typeof InstrumentObjectModule;
+                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
                 if (instrument instanceof InstrumentObject) {
                     if (scpiCommand.instrumentId == instrument.id) {
