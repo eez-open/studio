@@ -2,8 +2,7 @@ import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
 import { Global, css } from "@emotion/react";
-import zipObject from "lodash/zipObject";
-import map from "lodash/map";
+import { zipObject, map } from "lodash";
 
 import { isValid, strToColor16 } from "eez-studio-shared/color";
 

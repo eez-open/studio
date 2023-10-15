@@ -9,7 +9,7 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import countBy from "lodash/countBy";
+import { countBy } from "lodash";
 
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, ButtonAction } from "eez-studio-ui/action";

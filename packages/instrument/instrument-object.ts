@@ -8,7 +8,7 @@ import {
     makeObservable,
     IReactionDisposer
 } from "mobx";
-import defer from "lodash/defer";
+import { defer } from "lodash";
 
 import {
     createStore,

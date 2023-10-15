@@ -8,8 +8,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
-import range from "lodash/range";
-import max from "lodash/max";
+import { range, max } from "lodash";
 
 import { clamp, objectClone } from "eez-studio-shared/util";
 import {

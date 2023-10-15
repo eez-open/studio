@@ -9,7 +9,7 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import range from "lodash/range";
+import { range } from "lodash";
 
 import { closestByClass } from "eez-studio-shared/dom";
 

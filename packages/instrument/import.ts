@@ -1,5 +1,5 @@
 import { observable } from "mobx";
-import map from "lodash/map";
+import { map } from "lodash";
 
 import { sourceRootDir, parseXmlString } from "eez-studio-shared/util";
 import {

@@ -1,9 +1,6 @@
 import type * as ElectronModule from "electron";
 import { observable, computed, action, toJS, makeObservable } from "mobx";
-import each from "lodash/each";
-import map from "lodash/map";
-import keys from "lodash/keys";
-import pickBy from "lodash/pickBy";
+import { each, map, keys, pickBy } from "lodash";
 
 import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";

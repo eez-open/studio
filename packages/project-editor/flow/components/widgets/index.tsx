@@ -3,7 +3,7 @@ import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import range from "lodash/range";
+import { range } from "lodash";
 
 import { Button } from "eez-studio-ui/button";
 

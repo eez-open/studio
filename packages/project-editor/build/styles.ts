@@ -1,4 +1,4 @@
-import uniqBy from "lodash/uniqBy";
+import { uniqBy } from "lodash";
 
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Style } from "project-editor/features/style/style";

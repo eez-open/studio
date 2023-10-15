@@ -1,7 +1,7 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
-import each from "lodash/each";
+import { each } from "lodash";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
 

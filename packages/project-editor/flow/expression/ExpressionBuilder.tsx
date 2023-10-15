@@ -10,7 +10,7 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import map from "lodash/map";
+import { map } from "lodash";
 
 import { humanize, stringCompare } from "eez-studio-shared/string";
 

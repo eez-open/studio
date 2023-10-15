@@ -8,7 +8,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
-import keys from "lodash/keys";
+import { keys } from "lodash";
 
 import { humanize } from "eez-studio-shared/string";
 

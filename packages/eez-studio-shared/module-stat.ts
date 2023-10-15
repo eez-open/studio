@@ -1,5 +1,5 @@
 import fs from "fs";
-import each from "lodash/each";
+import { each } from "lodash";
 
 import { formatBytes } from "eez-studio-shared/formatBytes";
 

@@ -16,9 +16,7 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import { cssTransition } from "react-toastify";
 import * as FlexLayout from "flexlayout-react";
-import uniqWith from "lodash/uniqWith";
-import range from "lodash/range";
-import map from "lodash/map";
+import { uniqWith, range, map } from "lodash";
 
 import { getLocale } from "eez-studio-shared/i10n";
 import { extensions } from "eez-studio-shared/extensions/extensions";

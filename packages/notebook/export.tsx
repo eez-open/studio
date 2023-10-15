@@ -2,7 +2,7 @@ import { shell } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
 import path from "path";
-import flatten from "lodash/flatten";
+import { flatten } from "lodash";
 
 import React from "react";
 import { values } from "mobx";

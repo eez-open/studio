@@ -7,7 +7,7 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
-import map from "lodash/map";
+import { map } from "lodash";
 
 import { humanize } from "eez-studio-shared/string";
 import { UNITS } from "eez-studio-shared/units";

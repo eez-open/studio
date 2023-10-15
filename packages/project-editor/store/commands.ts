@@ -1,5 +1,5 @@
 import { makeObservable, computed, action } from "mobx";
-import map from "lodash/map";
+import { map } from "lodash";
 
 import { humanize } from "eez-studio-shared/string";
 import { guid } from "eez-studio-shared/guid";

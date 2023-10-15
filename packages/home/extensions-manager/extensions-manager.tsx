@@ -64,7 +64,6 @@ import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts"
 import { extensionsCatalog } from "home/extensions-manager/catalog";
 
 import { homeLayoutModels } from "home/home-layout-models";
-import { yarnInstall } from "eez-studio-shared/extensions/yarn";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -740,6 +739,10 @@ export function downloadAndInstallExtension(
             });
 
             try {
+                const { yarnInstall } = await import(
+                    "eez-studio-shared/extensions/yarn"
+                );
+
                 await yarnInstall(extensionToInstall);
 
                 const extension = await reloadExtension(
@@ -1347,6 +1350,9 @@ const ExtensionsManagerSubNavigation = observer(
                         "link:" + folderPath.replace(/\\/g, "/");
                     extensionToInstall.version = undefined;
 
+                    const { yarnInstall } = await import(
+                        "eez-studio-shared/extensions/yarn"
+                    );
                     await yarnInstall(extensionToInstall);
 
                     const extension = await reloadExtension(

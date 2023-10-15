@@ -2,7 +2,7 @@ import { humanize } from "eez-studio-shared/string";
 import { observer } from "mobx-react";
 import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
-import intersection from "lodash/intersection";
+import { intersection } from "lodash";
 
 import {
     getClassInfoLvglProperties,

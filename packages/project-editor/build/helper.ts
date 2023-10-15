@@ -1,4 +1,4 @@
-import map from "lodash/map";
+import { map } from "lodash";
 
 import { formatNumber } from "eez-studio-shared/util";
 

@@ -9,10 +9,7 @@ import {
     toJS
 } from "mobx";
 import { createTransformer } from "mobx-utils";
-import map from "lodash/map";
-import find from "lodash/find";
-import each from "lodash/each";
-import pickBy from "lodash/pickBy";
+import { map, find, each, pickBy } from "lodash";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";

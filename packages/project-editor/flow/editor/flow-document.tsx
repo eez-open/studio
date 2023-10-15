@@ -1,5 +1,5 @@
 import { computed, makeObservable } from "mobx";
-import intersection from "lodash/intersection";
+import { intersection } from "lodash";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
