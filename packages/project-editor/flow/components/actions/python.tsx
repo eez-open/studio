@@ -3,7 +3,7 @@ import React from "react";
 import { tmpdir } from "os";
 import { sep } from "path";
 import { writeFileSync, unlinkSync } from "fs";
-import { PythonShell, Options } from "python-shell";
+import type { PythonShell, Options } from "python-shell";
 
 import type {
     IDashboardComponentContext,
@@ -148,6 +148,8 @@ registerActionComponents("Python", [
             const options: Options = {
                 pythonPath: context.evalProperty<string>("pythonPath")
             };
+            const { PythonShell } =
+                require("python-shell") as typeof import("python-shell");
             const pythonShell = new PythonShell(scriptFilePath, options);
             addPythonShell(context.WasmFlowRuntime, pythonShell);
 

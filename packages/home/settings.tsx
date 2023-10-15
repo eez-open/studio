@@ -10,7 +10,6 @@ import {
     makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
-import moment from "moment";
 import classNames from "classnames";
 
 import { app, createEmptyFile } from "eez-studio-shared/util-electron";
@@ -41,6 +40,7 @@ import * as notification from "eez-studio-ui/notification";
 import { Header } from "eez-studio-ui/header-with-body";
 
 import dbVacuum from "db-services/vacuum";
+import { getMoment } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -461,7 +461,7 @@ export const Settings = observer(
                                             </div>
                                             <div>
                                                 Database compacted{" "}
-                                                {moment(
+                                                {getMoment()(
                                                     settingsController.timeOfLastDatabaseCompactOperation
                                                 ).fromNow()}
                                                 .
@@ -517,7 +517,7 @@ export const Settings = observer(
                                         key={dateFormat.format}
                                         value={dateFormat.format}
                                     >
-                                        {moment(new Date())
+                                        {getMoment()(new Date())
                                             .locale(settingsController.locale)
                                             .format(dateFormat.format)}
                                     </option>
@@ -535,7 +535,7 @@ export const Settings = observer(
                                         key={timeFormat.format}
                                         value={timeFormat.format}
                                     >
-                                        {moment(new Date())
+                                        {getMoment()(new Date())
                                             .locale(settingsController.locale)
                                             .format(timeFormat.format)}
                                     </option>

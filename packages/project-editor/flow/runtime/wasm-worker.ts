@@ -1,5 +1,3 @@
-import deepEqual from "deep-equal";
-
 import type {
     WorkerToRenderMessage,
     IPropertyValue,
@@ -311,6 +309,8 @@ export function createWasmWorker(
                 return true;
             }
 
+            const deepEqual =
+                require("deep-equal") as typeof import("deep-equal");
             return deepEqual(oldValue, newValue);
         }
 

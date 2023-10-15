@@ -183,6 +183,6 @@ async function main() {
 
 main();
 
-setTimeout(() => {
-    require("eez-studio-shared/module-stat");
-}, 1000);
+// setTimeout(() => {
+//     require("eez-studio-shared/module-stat");
+// }, 1000);

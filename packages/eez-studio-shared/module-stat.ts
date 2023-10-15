@@ -47,13 +47,13 @@ function dumpModules(
 ) {
     let totalBytes = 0;
 
-    // modules.sort((a: ModuleInfo, b: ModuleInfo) => {
-    //     return b.bytes - a.bytes;
-    // });
-
     modules.sort((a: ModuleInfo, b: ModuleInfo) => {
-        return a.fileName < b.fileName ? -1 : a.fileName > b.fileName ? 1 : 0;
+        return b.bytes - a.bytes;
     });
+
+    // modules.sort((a: ModuleInfo, b: ModuleInfo) => {
+    //     return a.fileName < b.fileName ? -1 : a.fileName > b.fileName ? 1 : 0;
+    // });
 
     each(modules, moduleInfo => {
         totalBytes += moduleInfo.bytes;

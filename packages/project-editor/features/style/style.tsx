@@ -1,7 +1,6 @@
 import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
-import { Global, css } from "@emotion/react";
 import { zipObject, map } from "lodash";
 
 import { isValid, strToColor16 } from "eez-studio-shared/color";
@@ -2007,12 +2006,18 @@ export class Style extends EezObject {
     }
 
     render() {
+        if (!this.cssDeclarations) {
+            return null;
+        }
+
         // increase specificity, so this style overrides for example:
         // .EezStudio_FlowCanvasContainer.EezStudio_FlowEditorCanvasContainer .EezStudio_ComponentEnclosure.ButtonWidget button
-
         const selector = `.${this.globalClassName}.${this.globalClassName}.${this.globalClassName}.${this.globalClassName}`;
 
-        return this.cssDeclarations ? (
+        const { Global, css } =
+            require("@emotion/react") as typeof import("@emotion/react");
+
+        return (
             <Global
                 key={this.objID}
                 styles={css`
@@ -2021,7 +2026,7 @@ export class Style extends EezObject {
                     }
                 `}
             ></Global>
-        ) : null;
+        );
     }
 }
 

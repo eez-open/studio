@@ -1,5 +1,5 @@
 import MobXModule from "mobx";
-import MomentModule from "moment";
+import type MomentModule from "moment";
 import stringify from "json-stable-stringify";
 
 import type * as GeometryModule from "eez-studio-shared/geometry";

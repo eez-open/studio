@@ -1,4 +1,3 @@
-import moment from "moment";
 import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import { makeObservable, action, computed } from "mobx";
@@ -26,6 +25,7 @@ import {
     getHashFromFilePath,
     getFilePathFromHash
 } from "./state";
+import { getMoment } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +121,7 @@ export const ChangesTab = observer(
                     !getFilePathFromHash(node.data.hash)
                         ? `${node.data.hash.slice(0, 8)} • ${
                               node.data.author_name
-                          } • ${moment(node.data.date).calendar()}`
+                          } • ${getMoment()(node.data.date).calendar()}`
                         : ""}
                 </div>
             </div>
