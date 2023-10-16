@@ -86,7 +86,7 @@ switch (os.platform()) {
             "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
         break;
     case "linux":
-        dllName = "librsvisa";
+        dllName = "librsvisa.so";
         break;
     case "win32":
         dllName = os.arch() == "x64" ? "visa64.dll" : "visa32.dll";
@@ -166,10 +166,12 @@ if (libVisa) {
         )
     };
     // TODO: since error handling is undecided, every function calls this
-    function statusCheck(status: any) {
+    function statusCheck(status: any, func: string) {
         if (status & vcon.VI_ERROR) {
             console.warn(
-                "Warning: VISA Error: 0x" +
+                "Warning: VISA Error in " +
+                    func +
+                    ": 0x" +
                     (status >>> 0).toString(16).toUpperCase()
             );
             throw new Error();
@@ -190,7 +192,7 @@ if (libVisa) {
 
         const pSesn = [0];
         const status = visaFuncs.viOpenDefaultRM(pSesn);
-        statusCheck(status);
+        statusCheck(status, "viOpenDefaultRM");
         return [status, pSesn[0]];
     };
 
@@ -213,7 +215,7 @@ if (libVisa) {
             pRetcnt,
             instrDesc
         );
-        statusCheck(status);
+        statusCheck(status, "viFindRsrc");
         return [
             status,
             pFindList[0],
@@ -229,7 +231,7 @@ if (libVisa) {
         let status;
         let instrDesc = Buffer.allocUnsafe(512);
         status = visaFuncs.viFindNext(findList, instrDesc);
-        statusCheck(status);
+        statusCheck(status, "viFindNext");
         return [
             status,
             // Fake null-term string
@@ -244,7 +246,7 @@ if (libVisa) {
         let pIntfType = [0];
         let pIntfNum = [0];
         status = visaFuncs.viParseRsrc(sesn, rsrcName, pIntfType, pIntfNum);
-        statusCheck(status);
+        statusCheck(status, "viParseRsrc");
         return [
             status,
             // This is a VI_INTF_* define
@@ -265,7 +267,7 @@ if (libVisa) {
         let status;
         let pVi = [0];
         status = visaFuncs.viOpen(sesn, rsrcName, accessMode, openTimeout, pVi);
-        statusCheck(status);
+        statusCheck(status, "viOpen");
         return [status, pVi[0]];
     };
 
@@ -274,7 +276,7 @@ if (libVisa) {
 
         let status;
         status = visaFuncs.viClose(vi);
-        statusCheck(status);
+        statusCheck(status, "viClose");
         return status;
     };
 
@@ -286,7 +288,7 @@ if (libVisa) {
         let buf = Buffer.allocUnsafe(count);
         let pRetCount = [0];
         status = visaFuncs.viRead(vi, buf, buf.length, pRetCount);
-        statusCheck(status);
+        statusCheck(status, "viRead");
         //debug(`read (${count}) -> ${pRetCount.deref()}`);
         return [status, buf.slice(0, pRetCount[0]).toString("binary")];
     };
@@ -298,7 +300,7 @@ if (libVisa) {
         let status;
         let pRetCount = [0];
         status = visaFuncs.viWrite(vi, buf, buf.length, pRetCount as any);
-        statusCheck(status);
+        statusCheck(status, "viWrite");
         if (pRetCount[0] != buf.length) {
             throw new Error(
                 "viWrite length fail" + `: ${pRetCount[0]} vs ${buf.length}`
@@ -363,7 +365,7 @@ if (libVisa) {
             handler,
             userHandle
         );
-        statusCheck(status);
+        statusCheck(status, "viInstallHandler");
         return [status];
     };
 
@@ -381,7 +383,7 @@ if (libVisa) {
             handler,
             userHandle
         );
-        statusCheck(status);
+        statusCheck(status, "viUninstallHandler");
         return [status];
     };
 
@@ -399,7 +401,7 @@ if (libVisa) {
             mechanism,
             context
         );
-        statusCheck(status);
+        statusCheck(status, "viEnableEvent");
         return [status];
     };
 
@@ -407,7 +409,7 @@ if (libVisa) {
         if (!libVisa) throw "VISA not supported";
 
         const status = visaFuncs.viDisableEvent(sesn, eventType, mechanism);
-        statusCheck(status);
+        statusCheck(status, "viDisableEvent");
         return [status];
     };
 
@@ -415,7 +417,7 @@ if (libVisa) {
         if (!libVisa) throw "VISA not supported";
 
         const status = visaFuncs.viSetAttribute(sesn, attrName, attrValue);
-        statusCheck(status);
+        statusCheck(status, "viSetAttribute");
         return [status];
     };
 
