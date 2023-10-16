@@ -1,5 +1,6 @@
 import { observable } from "mobx";
 import { map } from "lodash";
+import fs from "fs";
 
 import { sourceRootDir, parseXmlString } from "eez-studio-shared/util";
 import {
@@ -43,6 +44,10 @@ export type NumericSuffix = "optional" | "mandatory" | "none";
 ////////////////////////////////////////////////////////////////////////////////
 
 async function findIdfFile(extensionFolderPath: string) {
+    if (!fs.lstatSync(extensionFolderPath).isDirectory()) {
+        return undefined;
+    }
+
     let files;
     try {
         files = await readFolder(extensionFolderPath);

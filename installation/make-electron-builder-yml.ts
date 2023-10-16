@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 
 var request = require("request-promise-native");
 var sha256 = require("sha256");
@@ -192,16 +193,16 @@ let files = [
     "!**/*.css.map",
     "!**/*.ilk",
     "!**/*.lib",
-    "!node_modules/better-sqlite3/build/Release/obj",
-    "!node_modules/better-sqlite3/build/Release/*.iobj",
-    "!node_modules/better-sqlite3/build/Release/*.ipdb",
+    "!node_modules/**/*.obj",
+    "!node_modules/**/*.iobj",
+    "!node_modules/**/*.ipdb",
+    "!node_modules/**/*.idb",
     "!node_modules/better-sqlite3/deps",
     "!node_modules/better-sqlite3/src",
     "!node_modules/better-sqlite3/docs",
+    "!node_modules/better-sqlite3/build/Release/obj/**",
     "!node_modules/bootstrap/js",
     "!node_modules/bootstrap/scss",
-    "!node_modules/ffi-napi/deps",
-    "!node_modules/ffi-napi/src",
     "!build/eez-studio-ui/_images/background.png",
     "!node_modules/plotly.js/dist/**",
     "!node_modules/plotly.js/src/**",
@@ -209,8 +210,15 @@ let files = [
     "!node_modules/mapbox-gl/dist/**",
     "!node_modules/mapbox-gl/src/**",
     "node_modules/mapbox-gl/dist/mapbox-gl.js",
-    "!node_modules/xterm/src/**"
+    "!node_modules/xterm/src/**",
+    "!node_modules/koffi/src",
+    "!node_modules/koffi/doc",
+    "!node_modules/koffi/build/koffi/**"
 ];
+
+files.push(
+    `node_modules/koffi/build/koffi/${os.platform()}_${os.arch()}/koffi.node`
+);
 
 (async function () {
     const config = {

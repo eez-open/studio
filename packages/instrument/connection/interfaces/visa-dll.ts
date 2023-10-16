@@ -8,21 +8,23 @@ See: https://github.com/node-ffi-napi/node-ffi-napi/issues/238
 import os from "os";
 import vcon from "instrument/connection/interfaces/visa-constants";
 
-import type * as ffiModule from "ffi-napi";
-let ffi: typeof ffiModule | undefined;
-try {
-    ffi = require("ffi-napi");
-} catch (err) {
-    console.error("VISA: failed to load ffi-napi module", err);
-}
+import koffi from "koffi";
 
-import type * as refModule from "ref-napi";
-let ref: typeof refModule | undefined;
-try {
-    ref = require("ref-napi");
-} catch (err) {
-    console.error("VISA: failed to load ref-napi module", err);
-}
+// import type * as ffiModule from "ffi-napi";
+// let ffi: typeof ffiModule | undefined;
+// try {
+//     ffi = require("ffi-napi");
+// } catch (err) {
+//     console.error("VISA: failed to load ffi-napi module", err);
+// }
+
+// import type * as refModule from "ref-napi";
+// let ref: typeof refModule | undefined;
+// try {
+//     ref = require("ref-napi");
+// } catch (err) {
+//     console.error("VISA: failed to load ref-napi module", err);
+// }
 
 export let defaultSessionStatus: number = 0;
 export let defaultSession: number = 0;
@@ -35,7 +37,6 @@ let _viFindRsrc: (
 ) => any;
 let _viFindNext: (findList: any) => any;
 let _viParseRsrc: (sesn: any, rsrcName: any) => any;
-let _viParseRsrcEx: (sesn: any, rsrcName: any) => any;
 let _viOpen: (
     sesn: any,
     rsrcName: any,
@@ -44,8 +45,6 @@ let _viOpen: (
 ) => any;
 let _viClose: (vi: any) => any;
 let _viRead: (vi: any, count: any) => any;
-let _viReadRaw: (vi: any, count: any) => any;
-let _viReadToFile: (vi: any, fileName: any, count: any) => any;
 let _viWrite: (vi: any, buf: any) => any;
 let _vhListResources: (
     sesn: any,
@@ -75,128 +74,97 @@ let _viDisableEvent: (sesn: any, eventType: any, mechanism: any) => any;
 let _viSetAttribute: (sesn: any, attrName: any, attrValue: any) => any;
 let _unloadVisa: () => any;
 
-if (ffi && ref) {
-    ////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
-    // based on https://github.com/petertorelli/ni-visa
+// Choose the proper DLL name
+let dllName;
+// I didn't see Linux support on the NI website...
+switch (os.platform()) {
+    case "darwin":
+        dllName =
+            "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
+        break;
+    case "linux":
+        dllName = "librsvisa";
+        break;
+    case "win32":
+        dllName = os.arch() == "x64" ? "visa64.dll" : "visa32.dll";
+        break;
+}
 
-    /**
-     * Create types like the ones in "visatype.h" from National Instruments
-     */
-    //const ViInt32 = ref.types.int32;
-    //const ViPInt32 = ref.refType(ViInt32);
-    const ViUInt32 = ref.types.uint32;
-    const ViPUInt32 = ref.refType(ViUInt32);
-    //const ViInt16 = ref.types.int16;
-    //const ViPInt16 = ref.refType(ViInt16);
-    const ViUInt16 = ref.types.uint16;
-    const ViPUInt16 = ref.refType(ViUInt16);
-    const ViUInt64 = ref.types.uint64;
-    //const ViChar = ref.types.char;
-    //const ViPChar = ref.refType(ViChar);
-    const ViByte = ref.types.uchar;
-    const ViPByte = ref.refType(ViByte);
-    // Note, this needs to be ViUInt32, not ViInt32 other we get negative hex
-    const ViStatus = ViUInt32;
-    const ViObject = ViUInt32;
-    const ViSession = ViUInt32;
-    const ViPSession = ref.refType(ViSession);
-    //const ViString = ViPChar;
-    //const ViConstString = ViString;
-    //const ViRsrc = ViString;
-    //const ViConstRsrc = ViConstString;
-    const ViAccessMode = ViUInt32;
-    //const ViBuf = ViPByte;
-    const ViPBuf = ViPByte;
-    //const ViConstBuf = ViPByte;
-    const ViFindList = ViObject;
-    const ViPFindList = ref.refType(ViFindList);
+console.log("VISA dll Name", dllName);
 
-    // Choose the proper DLL name
-    let dllName;
-    // I didn't see Linux support on the NI website...
-    switch (os.platform()) {
-        case "darwin":
-            dllName =
-                "/Library/Frameworks/RsVisa.framework/Versions/Current/RsVisa/librsvisa.dylib";
-            break;
-        case "linux":
-            dllName = "librsvisa";
-            break;
-        case "win32":
-            dllName = os.arch() == "x64" ? "visa64.dll" : "visa32.dll";
-            break;
-    }
+// 'string' is used to reduce code, the FFI module will create Buffers as needed
+let libVisa: koffi.IKoffiLib | undefined;
 
-    console.log("VISA dll Name", dllName);
-
-    // 'string' is used to reduce code, the FFI module will create Buffers as needed
-    let libVisa: ReturnType<typeof ffi.Library> | undefined;
-
-    if (dllName) {
-        try {
-            libVisa = ffi.Library(dllName, {
-                // Resource Manager Functions and Operations
-                viOpenDefaultRM: [ViStatus, [ViPSession]],
-                viFindRsrc: [
-                    ViStatus,
-                    [ViSession, "string", ViPFindList, ViPUInt32, "string"]
-                ],
-                viFindNext: [ViStatus, [ViFindList, "string"]],
-                viParseRsrc: [
-                    ViStatus,
-                    [ViSession, "string", ViPUInt16, ViPUInt16]
-                ],
-                viParseRsrcEx: [
-                    ViStatus,
-                    [
-                        ViSession,
-                        "string",
-                        ViPUInt16,
-                        ViPUInt16,
-                        "string",
-                        "string",
-                        "string"
-                    ]
-                ],
-                viOpen: [
-                    ViStatus,
-                    [ViSession, "string", ViAccessMode, ViUInt32, ViPSession]
-                ],
-                // Resource Template Operations
-                viClose: [ViStatus, [ViObject]],
-                // Basic I/O Operations
-                viRead: [ViStatus, [ViSession, ViPBuf, ViUInt32, ViPUInt32]],
-                viReadToFile: [
-                    ViStatus,
-                    [ViSession, "string", ViUInt32, ViPUInt32]
-                ],
-                viWrite: [ViStatus, [ViSession, "string", ViUInt32, ViPUInt32]],
-                // Resource Template Operations
-                viInstallHandler: [
-                    ViStatus,
-                    [ViSession, ViUInt32, "pointer", "pointer"]
-                ],
-                viUninstallHandler: [
-                    ViStatus,
-                    [ViSession, ViUInt32, "pointer", "pointer"]
-                ],
-                viEnableEvent: [
-                    ViStatus,
-                    [ViSession, ViUInt32, ViUInt16, "pointer"]
-                ],
-                viDisableEvent: [ViStatus, [ViSession, ViUInt32, ViUInt16]],
-                viSetAttribute: [ViStatus, [ViSession, ViUInt32, ViUInt64]]
-            });
-        } catch (err) {
-            console.error("Failed to load VISA dll");
-            libVisa = undefined;
-        }
-    } else {
+if (dllName) {
+    try {
+        libVisa = koffi.load(dllName);
+    } catch (err) {
+        console.error("Failed to load VISA dll");
         libVisa = undefined;
     }
+} else {
+    libVisa = undefined;
+}
 
+if (libVisa) {
+    // Resource Manager Functions and Operations
+    const visaFuncs = {
+        viOpenDefaultRM: libVisa.func(
+            "uint32_t viOpenDefaultRM(_Out_ uint32_t *sesn)"
+        ),
+
+        viFindRsrc: libVisa.func(
+            "uint32_t viFindRsrc(uint32_t sesn, const char *expr, _Out_ uint32_t *findList, _Out_ uint32_t *retcnt, _Out_ uint8_t *instrDesc)"
+        ),
+
+        viFindNext: libVisa.func(
+            "uint32_t viFindNext(uint32_t findList, _Out_ uint8_t *instrDesc)"
+        ),
+
+        viParseRsrc: libVisa.func(
+            "uint32_t viParseRsrc(uint32_t sesn, const char *rsrcName, _Out_ uint16_t *intfType, _Out_ uint16_t *intfNum)"
+        ),
+
+        viOpen: libVisa.func(
+            "uint32_t viOpen(uint32_t sesn, const char *rsrcName, uint32_t accessMode, uint32_t openTimeout, _Out_ uint32_t *vi)"
+        ),
+
+        // Resource Template Operations
+        viClose: libVisa.func("uint32_t viClose(uint32_t vi)"),
+
+        // Basic I/O Operations
+        viRead: libVisa.func(
+            "uint32_t viRead(uint32_t vi, _Out_ uchar *buf, uint32_t count, _Out_ uint32_t* retCount)"
+        ),
+
+        viWrite: libVisa.func(
+            "uint32_t viWrite(uint32_t vi, const uchar *buf, uint32_t count, _Out_ uint32_t* retCount)"
+        ),
+
+        // Resource Template Operations
+        viInstallHandler: libVisa.func(
+            "uint32_t viInstallHandler(uint32_t, uint32_t, void *, void *)"
+        ),
+
+        viUninstallHandler: libVisa.func(
+            "uint32_t viUninstallHandler(uint32_t vi, uint32_t eventType, void *handler, void *userHandle)"
+        ),
+
+        viEnableEvent: libVisa.func(
+            "uint32_t viEnableEvent(uint32_t vi, uint32_t eventType, uint16_t mechanism, void *context)"
+        ),
+
+        viDisableEvent: libVisa.func(
+            "uint32_t viDisableEvent(uint32_t vi, uint32_t eventType, uint16_t mechanism)"
+        ),
+
+        viSetAttribute: libVisa.func(
+            "uint32_t viSetAttribute(uint32_t vi, uint32_t attribute, uint64_t attrState)"
+        )
+    };
     // TODO: since error handling is undecided, every function calls this
     function statusCheck(status: any) {
         if (status & vcon.VI_ERROR) {
@@ -218,17 +186,16 @@ if (ffi && ref) {
     }
 
     _viOpenDefaultRM = () => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
-        let status;
-        let pSesn = ref.alloc(ViSession);
-        status = libVisa.viOpenDefaultRM(pSesn as any);
+        const pSesn = [0];
+        const status = visaFuncs.viOpenDefaultRM(pSesn);
         statusCheck(status);
-        return [status, pSesn.deref()];
+        return [status, pSesn[0]];
     };
 
     _viFindRsrc = (sesn: any, includeNetworkResources: boolean, expr: any) => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
         if (includeNetworkResources) {
             viSetAttribute(sesn, vcon.VI_RS_ATTR_TCPIP_FIND_RSRC_TMO, 0x3e8);
@@ -236,21 +203,21 @@ if (ffi && ref) {
         }
 
         let status;
-        let pFindList = ref.alloc(ViFindList);
-        let pRetcnt = ref.alloc(ViUInt32);
-        let instrDesc = Buffer.alloc(512);
-        status = libVisa.viFindRsrc(
+        let pFindList = [0];
+        let pRetcnt = [0];
+        let instrDesc = Buffer.allocUnsafe(512);
+        status = visaFuncs.viFindRsrc(
             sesn,
             expr,
-            pFindList as any,
-            pRetcnt as any,
-            instrDesc as any
+            pFindList,
+            pRetcnt,
+            instrDesc
         );
         statusCheck(status);
         return [
             status,
-            pFindList.deref(),
-            pRetcnt.deref(),
+            pFindList[0],
+            pRetcnt[0],
             // Fake null-term string
             instrDesc.toString("ascii", 0, instrDesc.indexOf(0))
         ];
@@ -260,8 +227,8 @@ if (ffi && ref) {
         if (!libVisa) throw "VISA not supported";
 
         let status;
-        let instrDesc = Buffer.alloc(512);
-        status = libVisa.viFindNext(findList, instrDesc as any);
+        let instrDesc = Buffer.allocUnsafe(512);
+        status = visaFuncs.viFindNext(findList, instrDesc);
         statusCheck(status);
         return [
             status,
@@ -271,60 +238,19 @@ if (ffi && ref) {
     };
 
     _viParseRsrc = (sesn: any, rsrcName: any) => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
         let status;
-        let pIntfType = ref.alloc(ViUInt16);
-        let pIntfNum = ref.alloc(ViUInt16);
-        status = libVisa.viParseRsrc(
-            sesn,
-            rsrcName,
-            pIntfType as any,
-            pIntfNum as any
-        );
+        let pIntfType = [0];
+        let pIntfNum = [0];
+        status = visaFuncs.viParseRsrc(sesn, rsrcName, pIntfType, pIntfNum);
         statusCheck(status);
         return [
             status,
             // This is a VI_INTF_* define
-            pIntfType.deref(),
+            pIntfType[0],
             // This is the board #
-            pIntfNum.deref()
-        ];
-    };
-
-    // TODO: Untested, I don't hardware that responds to this call
-    _viParseRsrcEx = (sesn: any, rsrcName: any) => {
-        if (!libVisa || !ref) throw "VISA not supported";
-
-        let status;
-        let pIntfType = ref.alloc(ViUInt16);
-        let pIntfNum = ref.alloc(ViUInt16);
-        let rsrcClass = Buffer.alloc(512);
-        let expandedUnaliasedName = Buffer.alloc(512);
-        let aliasIfExists = Buffer.alloc(512);
-        status = libVisa.viParseRsrcEx(
-            sesn,
-            rsrcName,
-            pIntfType as any,
-            pIntfNum as any,
-            rsrcClass as any,
-            expandedUnaliasedName as any,
-            aliasIfExists as any
-        );
-        statusCheck(status);
-        return [
-            status,
-            // This is a VI_INTF_* define
-            pIntfType.deref(),
-            // This is the board #
-            pIntfNum.deref(),
-            rsrcClass.toString("ascii", 0, rsrcClass.indexOf(0)),
-            expandedUnaliasedName.toString(
-                "ascii",
-                0,
-                expandedUnaliasedName.indexOf(0)
-            ),
-            aliasIfExists.toString("ascii", 0, aliasIfExists.indexOf(0))
+            pIntfNum[0]
         ];
     };
 
@@ -334,86 +260,51 @@ if (ffi && ref) {
         accessMode: any = 0,
         openTimeout: any = 2000
     ) => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
         let status;
-        let pVi = ref.alloc(ViSession);
-        status = libVisa.viOpen(
-            sesn,
-            rsrcName,
-            accessMode,
-            openTimeout,
-            pVi as any
-        );
+        let pVi = [0];
+        status = visaFuncs.viOpen(sesn, rsrcName, accessMode, openTimeout, pVi);
         statusCheck(status);
-        return [status, pVi.deref()];
+        return [status, pVi[0]];
     };
 
     _viClose = (vi: any) => {
         if (!libVisa) throw "VISA not supported";
 
         let status;
-        status = libVisa.viClose(vi);
+        status = visaFuncs.viClose(vi);
         statusCheck(status);
         return status;
     };
 
     // TODO ... assuming viRead always returns a string, probably wrong
     _viRead = (vi: any, count: any = 512) => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
         let status;
-        let buf = Buffer.alloc(count);
-        let pRetCount = ref.alloc(ViUInt32);
-        status = libVisa.viRead(vi, buf as any, buf.length, pRetCount as any);
+        let buf = Buffer.allocUnsafe(count);
+        let pRetCount = [0];
+        status = visaFuncs.viRead(vi, buf, buf.length, pRetCount);
         statusCheck(status);
         //debug(`read (${count}) -> ${pRetCount.deref()}`);
-        return [
-            status,
-            ref.reinterpret(buf, pRetCount.deref(), 0).toString("binary")
-        ];
-    };
-
-    // Returns the raw Buffer object rather than a decoded string
-    _viReadRaw = (vi: any, count: any = 512) => {
-        if (!libVisa || !ref) throw "VISA not supported";
-
-        let status;
-        let buf = Buffer.alloc(count);
-        let pRetCount = ref.alloc(ViUInt32);
-        status = libVisa.viRead(vi, buf as any, buf.length, pRetCount as any);
-        statusCheck(status);
-        //debug(`readRaw: (${count}) -> ${pRetCount.deref()}`);
-        return [status, buf.slice(0, pRetCount.deref())];
-    };
-
-    //	'viReadToFile': [ViStatus, [ViSession, 'string', ViUInt32, ViPUInt32]],
-    _viReadToFile = (vi: any, fileName: any, count: any) => {
-        if (!libVisa || !ref) throw "VISA not supported";
-
-        let status;
-        let pRetCount = ref.alloc(ViUInt32);
-        status = libVisa.viReadToFile(vi, fileName, count, pRetCount as any);
-        statusCheck(status);
-        //debug(`readToFile (${count}) -> ${pRetCount.deref()}`);
-        return [status];
+        return [status, buf.slice(0, pRetCount[0]).toString("binary")];
     };
 
     _viWrite = (vi: any, buf: any) => {
-        if (!libVisa || !ref) throw "VISA not supported";
+        if (!libVisa) throw "VISA not supported";
 
         //debug("write:", buf);
         let status;
-        let pRetCount = ref.alloc(ViUInt32);
-        status = libVisa.viWrite(vi, buf, buf.length, pRetCount as any);
+        let pRetCount = [0];
+        status = visaFuncs.viWrite(vi, buf, buf.length, pRetCount as any);
         statusCheck(status);
-        if (pRetCount.deref() != buf.length) {
+        if (pRetCount[0] != buf.length) {
             throw new Error(
-                "viWrite length fail" +
-                    `: ${pRetCount.deref()} vs ${buf.length}`
+                "viWrite length fail" + `: ${pRetCount[0]} vs ${buf.length}`
             );
         }
-        return [status, pRetCount.deref()];
+        return [status, pRetCount[0]];
     };
 
     /**
@@ -466,7 +357,7 @@ if (ffi && ref) {
     ) => {
         if (!libVisa) throw "VISA not supported";
 
-        const status = libVisa.viInstallHandler(
+        const status = visaFuncs.viInstallHandler(
             sesn,
             eventType,
             handler,
@@ -484,7 +375,7 @@ if (ffi && ref) {
     ) => {
         if (!libVisa) throw "VISA not supported";
 
-        const status = libVisa.viUninstallHandler(
+        const status = visaFuncs.viUninstallHandler(
             sesn,
             eventType,
             handler,
@@ -502,7 +393,7 @@ if (ffi && ref) {
     ) => {
         if (!libVisa) throw "VISA not supported";
 
-        const status = libVisa.viEnableEvent(
+        const status = visaFuncs.viEnableEvent(
             sesn,
             eventType,
             mechanism,
@@ -515,7 +406,7 @@ if (ffi && ref) {
     _viDisableEvent = (sesn: any, eventType: any, mechanism: any) => {
         if (!libVisa) throw "VISA not supported";
 
-        const status = libVisa.viDisableEvent(sesn, eventType, mechanism);
+        const status = visaFuncs.viDisableEvent(sesn, eventType, mechanism);
         statusCheck(status);
         return [status];
     };
@@ -523,7 +414,7 @@ if (ffi && ref) {
     _viSetAttribute = (sesn: any, attrName: any, attrValue: any) => {
         if (!libVisa) throw "VISA not supported";
 
-        const status = libVisa.viSetAttribute(sesn, attrName, attrValue);
+        const status = visaFuncs.viSetAttribute(sesn, attrName, attrValue);
         statusCheck(status);
         return [status];
     };
@@ -539,7 +430,7 @@ if (ffi && ref) {
     _unloadVisa = () => {
         if (libVisa && defaultSession) {
             console.log("Unload VISA dll");
-            libVisa.viClose(defaultSession);
+            viClose(defaultSession);
         }
     };
 
@@ -599,11 +490,6 @@ export function viParseRsrc(sesn: any, rsrcName: any) {
     return _viParseRsrc(sesn, rsrcName);
 }
 
-export function viParseRsrcEx(sesn: any, rsrcName: any) {
-    if (!_viParseRsrcEx) throw "VISA not supported";
-    return _viParseRsrcEx(sesn, rsrcName);
-}
-
 export function viOpen(
     sesn: any,
     rsrcName: any,
@@ -622,16 +508,6 @@ export function viClose(vi: any) {
 export function viRead(vi: any, count: any = 512) {
     if (!_viRead) throw "VISA not supported";
     return _viRead(vi, count);
-}
-
-export function viReadRaw(vi: any, count: any = 512) {
-    if (!_viReadRaw) throw "VISA not supported";
-    return _viReadRaw(vi, count);
-}
-
-export function viReadToFile(vi: any, fileName: any, count: any) {
-    if (!_viReadToFile) throw "VISA not supported";
-    return _viReadToFile(vi, fileName, count);
 }
 
 export function viWrite(vi: any, buf: any) {
