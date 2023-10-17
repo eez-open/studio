@@ -94,6 +94,8 @@ import { SWITCH_WIDGET_ICON } from "project-editor/ui-components/icons";
 
 import type * as FileTypeModule from "instrument/connection/file-type";
 
+import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextDashboardWidget extends Widget {
@@ -311,12 +313,14 @@ function TextInputWidgetInput({
     value,
     flowContext,
     textInputWidget,
+    readOnly,
     placeholder,
     password
 }: {
     value: string;
     flowContext: IFlowContext;
     textInputWidget: TextInputWidget;
+    readOnly: boolean;
     placeholder: string;
     password: boolean;
 }) {
@@ -381,6 +385,7 @@ function TextInputWidgetInput({
                     }
                 }}
                 onKeyDown={handleKeyDown}
+                readOnly={readOnly}
             ></input>
         </>
     );
@@ -397,6 +402,7 @@ export class TextInputWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: "Value"
             }),
+            makeDataPropertyInfo("readOnly"),
             makeDataPropertyInfo("placehoder"),
             {
                 name: "password",
@@ -466,6 +472,7 @@ export class TextInputWidget extends Widget {
         }
     });
 
+    readOnly: string;
     placehoder: string;
     password: boolean;
 
@@ -496,6 +503,20 @@ export class TextInputWidget extends Widget {
         }
 
         return "";
+    }
+
+    getReadOnly(flowContext: IFlowContext) {
+        if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.readOnly) {
+                try {
+                    return evalProperty(flowContext, this, "readOnly");
+                } catch (err) {
+                    //console.error(err);
+                }
+            }
+        }
+
+        return false;
     }
 
     getPlaceholder(flowContext: IFlowContext) {
@@ -536,6 +557,7 @@ export class TextInputWidget extends Widget {
         height: number
     ): React.ReactNode {
         let value = this.getValue(flowContext) ?? "";
+        let readOnly = this.getReadOnly(flowContext) ?? false;
         let placeholder = this.getPlaceholder(flowContext) ?? "";
 
         return (
@@ -544,6 +566,7 @@ export class TextInputWidget extends Widget {
                     flowContext={flowContext}
                     textInputWidget={this}
                     value={value}
+                    readOnly={readOnly}
                     placeholder={placeholder}
                     password={this.password}
                 />
@@ -2279,4 +2302,3 @@ import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
 import "project-editor/flow/components/widgets/dashboard/terminal";
-import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
