@@ -452,6 +452,7 @@ const Editors = observer(
                 | FlexLayout.BorderNode,
             event: React.MouseEvent<HTMLElement, MouseEvent>
         ) => {
+            console.log(node, event);
             if (
                 node instanceof FlexLayout.TabNode &&
                 node.getComponent() == "editor"
@@ -490,7 +491,8 @@ const Editors = observer(
                             label: "Keep Tab Open",
                             click: () => {
                                 runInAction(() => (editor.permanent = true));
-                                this.context.layoutModels.root.doAction(
+
+                                this.context.editorsStore.tabsModel.doAction(
                                     FlexLayout.Actions.updateNodeAttributes(
                                         node.getId(),
                                         {
@@ -514,6 +516,11 @@ const Editors = observer(
         };
 
         render() {
+            // to make sure onRenderTab is observable
+            this.context.editorsStore.editors.forEach(editor => {
+                editor.permanent;
+            });
+
             return (
                 <FlexLayout.Layout
                     model={this.context.editorsStore.tabsModel}
