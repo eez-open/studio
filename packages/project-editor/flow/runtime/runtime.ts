@@ -856,8 +856,8 @@ export class FlowState {
             error: observable,
             isFinished: observable,
             setComponentExecutionState: action,
-            isRunning: computed({ keepAlive: true }),
-            hasAnyDiposableComponent: computed({ keepAlive: true }),
+            isRunning: computed,
+            hasAnyDiposableComponent: computed,
             finish: action,
             timelinePosition: observable,
             setComponentAsyncState: action

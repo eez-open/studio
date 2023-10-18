@@ -22,10 +22,6 @@ async function buildGuiBitmaps(assets: Assets) {
         return null;
     }
 
-    if (assets.projectStore.projectTypeTraits.isDashboard) {
-        return null;
-    }
-
     let bitmaps: {
         name: string;
         width: number;

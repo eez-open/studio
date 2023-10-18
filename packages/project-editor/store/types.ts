@@ -199,50 +199,68 @@ export class TypesStore {
         if (indexAsStr != undefined) {
             index = +indexAsStr;
         } else {
+            const TYPE_MASK = 0x1fff;
+
+            const CATEGORY_SHIFT = 13;
+            const CATEGORY_MASK = 0x7;
+
+            const CATEGORY_BASIC = 0;
+            const CATEGORY_SYSTEM_STRUCTURE = 1;
+            const CATEGORY_USER_STRUCTURE = 2;
+            const CATEGORY_SYSTEM_ENUM = 3;
+            const CATEGORY_USER_ENUM = 4;
+            const CATEGORY_OBJECT = 5;
+            const CATEGORY_DYNAMIC = 6;
+
+            const ARRAY_MARK_SHIFT = 16;
+
             let T;
             let C;
             let A;
 
             if (type.kind == "basic") {
                 T = this._basicTypeIndex++;
-                C = 0;
+                C = CATEGORY_BASIC;
                 A = 0;
             } else if (type.kind == "object") {
                 if (type.valueType.startsWith("struct:")) {
                     if (type.valueType["struct:".length] == "$") {
                         T = this._systemStructureTypeIndex++;
-                        C = 1;
+                        C = CATEGORY_SYSTEM_STRUCTURE;
                     } else {
                         T = this._userStructureTypeIndex++;
-                        C = 2;
+                        C = CATEGORY_USER_STRUCTURE;
                     }
                 } else if (type.valueType.startsWith("enum:")) {
                     if (type.valueType["enum:".length] == "$") {
                         T = this._systemEnumTypeIndex++;
-                        C = 3;
+                        C = CATEGORY_SYSTEM_ENUM;
                     } else {
                         T = this._userEnumTypeIndex++;
-                        C = 4;
+                        C = CATEGORY_USER_ENUM;
                     }
                 } else if (type.valueType.startsWith("object:")) {
                     T = this._objectTypeIndex++;
-                    C = 5;
+                    C = CATEGORY_OBJECT;
                 } else {
                     if (!type.valueType.startsWith("dynamic:")) {
                         throw "unexpected valueType";
                     }
                     T = this._dynamicTypeIndex++;
-                    C = 6;
+                    C = CATEGORY_DYNAMIC;
                 }
                 A = 0;
             } else {
+                // array
                 let index = this._addType(type.elementType);
-                T = index & 0x1fff;
-                C = (index >> 13) & 0x7;
-                A = (index >> 15) | 0x1;
+                T = index & TYPE_MASK;
+                C = (index >> CATEGORY_SHIFT) & CATEGORY_MASK;
+                A = (index >> (ARRAY_MARK_SHIFT - 1)) | 0x1;
             }
 
-            index = (A << 16) | (C << 13) | T;
+            // aaaa aaaa aaaa aaaa ccct tttt tttt tttt
+
+            index = (A << ARRAY_MARK_SHIFT) | (C << CATEGORY_SHIFT) | T;
 
             indexAsStr = index.toString();
 
