@@ -206,7 +206,6 @@ const useStyleProperty: PropertyInfo = {
     name: "useStyle",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "allStyles",
-    hideInPropertyGrid: (object: IEezObject) => !isWidgetParentOfStyle(object),
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 

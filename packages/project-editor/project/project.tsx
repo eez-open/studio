@@ -1143,6 +1143,7 @@ function getProjectClassInfo() {
                         }
 
                         if (style1.inheritFrom) {
+                            let found = false;
                             for (const style2 of projectJs.styles) {
                                 if (style2.name == style1.inheritFrom) {
                                     if (!style2.childStyles) {
@@ -1150,7 +1151,13 @@ function getProjectClassInfo() {
                                     } else {
                                         style2.childStyles.push(style1);
                                     }
+                                    found = true;
+                                    break;
                                 }
+                            }
+                            if (!found) {
+                                style1.useStyle = style1.inheritFrom;
+                                rootStyles.push(style1);
                             }
                             delete style1.inheritFrom;
                         } else {

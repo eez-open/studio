@@ -232,10 +232,16 @@ export class DisplayDataWidget extends Widget {
             })
         ],
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
             migrateStyleProperty(jsObject, "focusStyle");
             if (jsObject.refreshRate == undefined) {
-                jsObject.refreshRate = "0";
+                if (project.projectTypeTraits.hasFlowSupport) {
+                    jsObject.refreshRate = "0";
+                }
             }
         },
 
@@ -403,7 +409,9 @@ export class DisplayDataWidget extends Widget {
         if (isV3OrNewerProject(this)) {
             // refreshRate
             dataBuffer.writeInt16(
-                assets.getWidgetDataItemIndex(this, "refreshRate")
+                assets.projectStore.projectTypeTraits.hasFlowSupport
+                    ? assets.getWidgetDataItemIndex(this, "refreshRate")
+                    : 0
             );
         }
 
@@ -2056,13 +2064,19 @@ export class BarGraphWidget extends Widget {
             makeStylePropertyInfo("line2Style", "Threshold2 style")
         ],
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
             migrateStyleProperty(jsObject, "textStyle");
             migrateStyleProperty(jsObject, "line1Style");
             migrateStyleProperty(jsObject, "line2Style");
 
             if (jsObject.refreshRate == undefined) {
-                jsObject.refreshRate = "0";
+                if (project.projectTypeTraits.hasFlowSupport) {
+                    jsObject.refreshRate = "0";
+                }
             }
         },
 
@@ -2367,7 +2381,9 @@ export class BarGraphWidget extends Widget {
 
             // refreshRate
             dataBuffer.writeInt16(
-                assets.getWidgetDataItemIndex(this, "refreshRate")
+                assets.projectStore.projectTypeTraits.hasFlowSupport
+                    ? assets.getWidgetDataItemIndex(this, "refreshRate")
+                    : 0
             );
         }
 
