@@ -686,7 +686,18 @@ export function setId(
 }
 
 export function getParent(object: IEezObject): IEezObject {
-    return (object as any)._eez_parent;
+    const parent = (object as any)._eez_parent;
+
+    // make _eez_parent observable
+    if (parent) {
+        if (Array.isArray(parent)) {
+            parent.indexOf(object);
+        } else {
+            parent[(object as any)._eez_key];
+        }
+    }
+
+    return parent;
 }
 
 export function setParent(object: IEezObject, parentObject: IEezObject) {

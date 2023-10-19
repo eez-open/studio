@@ -3,8 +3,6 @@
 #include <eez/gui/gui.h>
 #include <eez/gui/keypad.h>
 
-#include <SDL.h>
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace eez {
@@ -35,10 +33,6 @@ namespace eez {
 namespace eez {
     bool g_shutdown;
     void shutdown() { g_shutdown = true; }
-
-    namespace keyboard {
-        void onKeyboardEvent(SDL_KeyboardEvent *key) { }
-    } // keyboard
 
     namespace sound {
         void playBeep(bool force) {}

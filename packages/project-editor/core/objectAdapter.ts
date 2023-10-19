@@ -1123,7 +1123,7 @@ export class TreeAdapter {
             let aNewObject: IEezObject | undefined;
 
             if (dropPosition == DropPosition.DROP_POSITION_BEFORE) {
-                DragAndDropManager.deleteDragItem({
+                DragAndDropManager.deleteDragItem(true, {
                     dropPlace: getParent(dropItem.object)
                 });
                 aNewObject = projectStore.insertObjectBefore(
@@ -1131,7 +1131,7 @@ export class TreeAdapter {
                     dragObjectClone
                 );
             } else if (dropPosition == DropPosition.DROP_POSITION_AFTER) {
-                DragAndDropManager.deleteDragItem({
+                DragAndDropManager.deleteDragItem(true, {
                     dropPlace: getParent(dropItem.object)
                 });
                 aNewObject = projectStore.insertObjectAfter(
@@ -1145,7 +1145,7 @@ export class TreeAdapter {
                     true
                 );
                 if (dropPlace) {
-                    DragAndDropManager.deleteDragItem({
+                    DragAndDropManager.deleteDragItem(true, {
                         dropPlace
                     });
 

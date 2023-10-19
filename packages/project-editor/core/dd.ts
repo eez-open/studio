@@ -65,8 +65,11 @@ export class DragAndDropManagerClass {
         event.dataTransfer.dropEffect = this.dropEffect;
     }
 
-    deleteDragItem(options?: { dropPlace?: IEezObject | PropertyInfo }) {
-        if (this.dropObject && this.dropEffect == "move") {
+    deleteDragItem(
+        force: boolean,
+        options?: { dropPlace?: IEezObject | PropertyInfo }
+    ) {
+        if (force || (this.dropObject && this.dropEffect == "move")) {
             if (this.dragObject) {
                 this.undoManager?.projectStore.deleteObject(
                     this.dragObject,
@@ -81,7 +84,7 @@ export class DragAndDropManagerClass {
     end(event: any) {
         if (!this.dragItemDeleted) {
             this.dropEffect = event.dataTransfer.dropEffect;
-            this.deleteDragItem();
+            this.deleteDragItem(false);
         }
         this.dragObject = undefined;
         this.unsetDropObject();
