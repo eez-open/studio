@@ -56,7 +56,7 @@ import {
     getEnumTypeNameFromVariable,
     isEnumVariable
 } from "project-editor/features/variable/value-type";
-import * as draw from "project-editor/flow/editor/draw";
+import * as draw from "project-editor/flow/editor/eez-gui-draw";
 
 import {
     Widget,

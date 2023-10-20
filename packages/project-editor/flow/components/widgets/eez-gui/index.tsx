@@ -62,16 +62,7 @@ import {
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
     ValueType
 } from "project-editor/features/variable/value-type";
-import {
-    drawText,
-    styleIsHorzAlignLeft,
-    styleIsHorzAlignRight,
-    styleIsVertAlignTop,
-    styleIsVertAlignBottom,
-    styleGetFont,
-    drawStr
-} from "project-editor/flow/editor/draw";
-import * as draw from "project-editor/flow/editor/draw";
+import * as draw from "project-editor/flow/editor/eez-gui-draw";
 import { Font } from "project-editor/features/font/font";
 
 import {
@@ -365,41 +356,30 @@ export class DisplayDataWidget extends Widget {
             undefined,
             undefined
         );
-        let text: string;
-        let node: React.ReactNode | null;
-        if (typeof result == "object") {
-            text = result.text;
-            node = result.node;
-        } else {
-            text = result;
-            node = null;
-        }
 
-        text = this.applyDisplayOption(text);
+        let text = this.applyDisplayOption(
+            typeof result == "object" ? result.text : result
+        );
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits.isDashboard ? (
-                    node || text
-                ) : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            drawText(
-                                ctx,
-                                text,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                false
-                            );
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawText(
+                            ctx,
+                            text,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            false
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -597,7 +577,7 @@ export class TextWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        drawText(
+                        draw.drawText(
                             ctx,
                             text,
                             0,
@@ -668,9 +648,9 @@ class MultilineTextRender {
             if (step == MultilineTextRenderStep.RENDER) {
                 let x;
 
-                if (styleIsHorzAlignLeft(this.style)) {
+                if (draw.styleIsHorzAlignLeft(this.style)) {
                     x = this.x1;
-                } else if (styleIsHorzAlignRight(this.style)) {
+                } else if (draw.styleIsHorzAlignRight(this.style)) {
                     x = this.x2 + 1 - this.lineWidth;
                 } else {
                     x =
@@ -683,7 +663,7 @@ class MultilineTextRender {
                 draw.setBackColor(this.style.backgroundColorProperty);
                 draw.setColor(this.style.colorProperty);
 
-                drawStr(
+                draw.drawStr(
                     this.ctx,
                     this.line,
                     x + this.lineIndent,
@@ -798,7 +778,7 @@ class MultilineTextRender {
             true
         ));
 
-        const font = styleGetFont(this.style);
+        const font = draw.styleGetFont(this.style);
         if (!font) {
             return;
         }
@@ -825,8 +805,8 @@ class MultilineTextRender {
 
         const textHeight = this.executeStep(MultilineTextRenderStep.MEASURE);
 
-        if (styleIsVertAlignTop(this.style)) {
-        } else if (styleIsVertAlignBottom(this.style)) {
+        if (draw.styleIsVertAlignTop(this.style)) {
+        } else if (draw.styleIsVertAlignBottom(this.style)) {
             this.y1 = this.y2 + 1 - textHeight;
         } else {
             this.y1 += Math.floor((this.y2 - this.y1 + 1 - textHeight) / 2);
@@ -975,41 +955,30 @@ export class MultilineTextWidget extends Widget {
             this.name,
             this.text
         );
-        let text: string;
-        let node: React.ReactNode | null;
-        if (typeof result == "object") {
-            text = result.text;
-            node = result.node;
-        } else {
-            text = result;
-            node = null;
-        }
+
+        let text = typeof result == "object" ? result.text : result;
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits.isDashboard ? (
-                    node || text
-                ) : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            var multilineTextRender = new MultilineTextRender(
-                                ctx,
-                                text,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                this.firstLineIndent || 0,
-                                this.hangingIndent || 0
-                            );
-                            multilineTextRender.render();
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        var multilineTextRender = new MultilineTextRender(
+                            ctx,
+                            text,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            this.firstLineIndent || 0,
+                            this.hangingIndent || 0
+                        );
+                        multilineTextRender.render();
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -1384,9 +1353,9 @@ export class BitmapWidget extends Widget {
                             let height = imageElement.height;
 
                             let x_offset: number;
-                            if (styleIsHorzAlignLeft(style)) {
+                            if (draw.styleIsHorzAlignLeft(style)) {
                                 x_offset = x1 + style.paddingRect.left;
-                            } else if (styleIsHorzAlignRight(style)) {
+                            } else if (draw.styleIsHorzAlignRight(style)) {
                                 x_offset = x2 - style.paddingRect.right - width;
                             } else {
                                 x_offset = Math.floor(
@@ -1398,9 +1367,9 @@ export class BitmapWidget extends Widget {
                             }
 
                             let y_offset: number;
-                            if (styleIsVertAlignTop(style)) {
+                            if (draw.styleIsVertAlignTop(style)) {
                                 y_offset = y1 + style.paddingRect.top;
-                            } else if (styleIsVertAlignBottom(style)) {
+                            } else if (draw.styleIsVertAlignBottom(style)) {
                                 y_offset =
                                     y2 - style.paddingRect.bottom - height;
                             } else {
@@ -1613,7 +1582,7 @@ export class ButtonWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        drawText(
+                        draw.drawText(
                             ctx,
                             text,
                             0,
@@ -1724,26 +1693,23 @@ export class ToggleButtonWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            drawText(
-                                ctx,
-                                this.text1 || "",
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                false
-                            );
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawText(
+                            ctx,
+                            this.text1 || "",
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            false
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -1899,7 +1865,7 @@ export class ButtonGroupWidget extends Widget {
                             let buttonHeight = h;
                             for (let i = 0; i < buttonLabels.length; i++) {
                                 if (i < buttonLabels.length - 1) {
-                                    drawText(
+                                    draw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1913,7 +1879,7 @@ export class ButtonGroupWidget extends Widget {
                                     );
                                     x += buttonWidth;
                                 } else {
-                                    drawText(
+                                    draw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1950,7 +1916,7 @@ export class ButtonGroupWidget extends Widget {
 
                             for (let i = 0; i < buttonLabels.length; i++) {
                                 if (i == selectedButton) {
-                                    drawText(
+                                    draw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1961,7 +1927,7 @@ export class ButtonGroupWidget extends Widget {
                                         false
                                     );
                                 } else {
-                                    drawText(
+                                    draw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -2147,210 +2113,177 @@ export class BarGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let barGraphWidget = this;
-                            let style = barGraphWidget.style;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let barGraphWidget = this;
+                        let style = barGraphWidget.style;
 
-                            let valueText =
-                                (barGraphWidget.data &&
-                                    flowContext.dataContext.get(
-                                        barGraphWidget.data
-                                    )) ||
-                                "0";
-                            let value = parseFloat(valueText);
-                            if (isNaN(value)) {
-                                value = 0;
+                        let valueText =
+                            (barGraphWidget.data &&
+                                flowContext.dataContext.get(
+                                    barGraphWidget.data
+                                )) ||
+                            "0";
+                        let value = parseFloat(valueText);
+                        if (isNaN(value)) {
+                            value = 0;
+                        }
+                        let horizontal =
+                            barGraphWidget.orientation == "left-right" ||
+                            barGraphWidget.orientation == "right-left";
+
+                        let d = horizontal ? width : height;
+
+                        function calcPos(value: number) {
+                            let pos = Math.round(d / 3);
+                            if (pos < 0) {
+                                pos = 0;
                             }
-                            let horizontal =
-                                barGraphWidget.orientation == "left-right" ||
-                                barGraphWidget.orientation == "right-left";
-
-                            let d = horizontal ? width : height;
-
-                            function calcPos(value: number) {
-                                let pos = Math.round(d / 3);
-                                if (pos < 0) {
-                                    pos = 0;
-                                }
-                                if (pos > d) {
-                                    pos = d;
-                                }
-                                return pos;
+                            if (pos > d) {
+                                pos = d;
                             }
+                            return pos;
+                        }
 
-                            let pos = calcPos(value);
+                        let pos = calcPos(value);
 
-                            if (barGraphWidget.orientation == "left-right") {
-                                draw.setColor(style.colorProperty);
-                                draw.fillRect(ctx, 0, 0, pos - 1, height - 1);
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    pos,
-                                    0,
-                                    width - 1,
-                                    height - 1
-                                );
-                            } else if (
-                                barGraphWidget.orientation == "right-left"
-                            ) {
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    0,
-                                    width - pos - 1,
-                                    height - 1
-                                );
-                                draw.setColor(style.colorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    width - pos,
-                                    0,
-                                    width - 1,
-                                    height - 1
-                                );
-                            } else if (
-                                barGraphWidget.orientation == "top-bottom"
-                            ) {
-                                draw.setColor(style.colorProperty);
-                                draw.fillRect(ctx, 0, 0, width - 1, pos - 1);
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    pos,
-                                    width - 1,
-                                    height - 1
-                                );
-                            } else {
-                                draw.setColor(style.backgroundColorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    0,
-                                    width - 1,
-                                    height - pos - 1
-                                );
-                                draw.setColor(style.colorProperty);
-                                draw.fillRect(
-                                    ctx,
-                                    0,
-                                    height - pos,
-                                    width - 1,
-                                    height - 1
-                                );
-                            }
+                        if (barGraphWidget.orientation == "left-right") {
+                            draw.setColor(style.colorProperty);
+                            draw.fillRect(ctx, 0, 0, pos - 1, height - 1);
+                            draw.setColor(style.backgroundColorProperty);
+                            draw.fillRect(ctx, pos, 0, width - 1, height - 1);
+                        } else if (barGraphWidget.orientation == "right-left") {
+                            draw.setColor(style.backgroundColorProperty);
+                            draw.fillRect(
+                                ctx,
+                                0,
+                                0,
+                                width - pos - 1,
+                                height - 1
+                            );
+                            draw.setColor(style.colorProperty);
+                            draw.fillRect(
+                                ctx,
+                                width - pos,
+                                0,
+                                width - 1,
+                                height - 1
+                            );
+                        } else if (barGraphWidget.orientation == "top-bottom") {
+                            draw.setColor(style.colorProperty);
+                            draw.fillRect(ctx, 0, 0, width - 1, pos - 1);
+                            draw.setColor(style.backgroundColorProperty);
+                            draw.fillRect(ctx, 0, pos, width - 1, height - 1);
+                        } else {
+                            draw.setColor(style.backgroundColorProperty);
+                            draw.fillRect(
+                                ctx,
+                                0,
+                                0,
+                                width - 1,
+                                height - pos - 1
+                            );
+                            draw.setColor(style.colorProperty);
+                            draw.fillRect(
+                                ctx,
+                                0,
+                                height - pos,
+                                width - 1,
+                                height - 1
+                            );
+                        }
 
-                            if (this.displayValue) {
-                                if (horizontal) {
-                                    let textStyle = barGraphWidget.textStyle;
-                                    const font = styleGetFont(textStyle);
-                                    if (font) {
-                                        let w = draw.measureStr(
-                                            valueText,
-                                            font,
-                                            width
-                                        );
-                                        w += style.paddingRect.left;
+                        if (this.displayValue) {
+                            if (horizontal) {
+                                let textStyle = barGraphWidget.textStyle;
+                                const font = draw.styleGetFont(textStyle);
+                                if (font) {
+                                    let w = draw.measureStr(
+                                        valueText,
+                                        font,
+                                        width
+                                    );
+                                    w += style.paddingRect.left;
 
-                                        if (w > 0 && height > 0) {
-                                            let backgroundColor: string;
-                                            let x: number;
+                                    if (w > 0 && height > 0) {
+                                        let backgroundColor: string;
+                                        let x: number;
 
-                                            if (pos + w <= width) {
-                                                backgroundColor =
-                                                    style.backgroundColorProperty;
-                                                x = pos;
-                                            } else {
-                                                backgroundColor =
-                                                    style.colorProperty;
-                                                x =
-                                                    pos -
-                                                    w -
-                                                    style.paddingRect.right;
-                                            }
-
-                                            drawText(
-                                                ctx,
-                                                valueText,
-                                                x,
-                                                0,
-                                                w,
-                                                height,
-                                                textStyle,
-                                                false,
-                                                backgroundColor
-                                            );
+                                        if (pos + w <= width) {
+                                            backgroundColor =
+                                                style.backgroundColorProperty;
+                                            x = pos;
+                                        } else {
+                                            backgroundColor =
+                                                style.colorProperty;
+                                            x =
+                                                pos -
+                                                w -
+                                                style.paddingRect.right;
                                         }
+
+                                        draw.drawText(
+                                            ctx,
+                                            valueText,
+                                            x,
+                                            0,
+                                            w,
+                                            height,
+                                            textStyle,
+                                            false,
+                                            backgroundColor
+                                        );
                                     }
                                 }
                             }
+                        }
 
-                            function drawLine(
-                                lineData: string | undefined,
-                                lineStyle: Style
-                            ) {
-                                let value =
-                                    (lineData &&
-                                        parseFloat(
-                                            flowContext.dataContext.get(
-                                                lineData
-                                            )
-                                        )) ||
-                                    0;
-                                if (isNaN(value)) {
-                                    value = 0;
-                                }
-                                let pos = calcPos(value);
-                                if (pos == d) {
-                                    pos = d - 1;
-                                }
-                                draw.setColor(lineStyle.colorProperty);
-                                if (
-                                    barGraphWidget.orientation == "left-right"
-                                ) {
-                                    draw.drawVLine(ctx, pos, 0, height - 1);
-                                } else if (
-                                    barGraphWidget.orientation == "right-left"
-                                ) {
-                                    draw.drawVLine(
-                                        ctx,
-                                        width - pos,
-                                        0,
-                                        height - 1
-                                    );
-                                } else if (
-                                    barGraphWidget.orientation == "top-bottom"
-                                ) {
-                                    draw.drawHLine(ctx, 0, pos, width - 1);
-                                } else {
-                                    draw.drawHLine(
-                                        ctx,
-                                        0,
-                                        height - pos,
-                                        width - 1
-                                    );
-                                }
+                        function drawLine(
+                            lineData: string | undefined,
+                            lineStyle: Style
+                        ) {
+                            let value =
+                                (lineData &&
+                                    parseFloat(
+                                        flowContext.dataContext.get(lineData)
+                                    )) ||
+                                0;
+                            if (isNaN(value)) {
+                                value = 0;
                             }
+                            let pos = calcPos(value);
+                            if (pos == d) {
+                                pos = d - 1;
+                            }
+                            draw.setColor(lineStyle.colorProperty);
+                            if (barGraphWidget.orientation == "left-right") {
+                                draw.drawVLine(ctx, pos, 0, height - 1);
+                            } else if (
+                                barGraphWidget.orientation == "right-left"
+                            ) {
+                                draw.drawVLine(ctx, width - pos, 0, height - 1);
+                            } else if (
+                                barGraphWidget.orientation == "top-bottom"
+                            ) {
+                                draw.drawHLine(ctx, 0, pos, width - 1);
+                            } else {
+                                draw.drawHLine(ctx, 0, height - pos, width - 1);
+                            }
+                        }
 
-                            drawLine(
-                                barGraphWidget.line1Data,
-                                barGraphWidget.line1Style
-                            );
-                            drawLine(
-                                barGraphWidget.line2Data,
-                                barGraphWidget.line2Style
-                            );
-                        }}
-                    />
-                )}
+                        drawLine(
+                            barGraphWidget.line1Data,
+                            barGraphWidget.line1Style
+                        );
+                        drawLine(
+                            barGraphWidget.line2Data,
+                            barGraphWidget.line2Style
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -2502,25 +2435,22 @@ export class YTGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                true
-                            );
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -2636,62 +2566,59 @@ export class UpDownWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let upDownWidget = this;
-                            let style = upDownWidget.style;
-                            let buttonsStyle = upDownWidget.buttonsStyle;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let upDownWidget = this;
+                        let style = upDownWidget.style;
+                        let buttonsStyle = upDownWidget.buttonsStyle;
 
-                            const buttonsFont = styleGetFont(buttonsStyle);
-                            if (!buttonsFont) {
-                                return;
-                            }
+                        const buttonsFont = draw.styleGetFont(buttonsStyle);
+                        if (!buttonsFont) {
+                            return;
+                        }
 
-                            const buttonWidth =
-                                buttonsStyle.paddingRect.left +
-                                buttonsFont.height +
-                                buttonsStyle.paddingRect.right;
+                        const buttonWidth =
+                            buttonsStyle.paddingRect.left +
+                            buttonsFont.height +
+                            buttonsStyle.paddingRect.right;
 
-                            drawText(
-                                ctx,
-                                upDownWidget.downButtonText || "<",
-                                0,
-                                0,
-                                buttonWidth,
-                                height,
-                                buttonsStyle,
-                                false
-                            );
+                        draw.drawText(
+                            ctx,
+                            upDownWidget.downButtonText || "<",
+                            0,
+                            0,
+                            buttonWidth,
+                            height,
+                            buttonsStyle,
+                            false
+                        );
 
-                            drawText(
-                                ctx,
-                                text,
-                                buttonWidth,
-                                0,
-                                width - 2 * buttonWidth,
-                                height,
-                                style,
-                                false
-                            );
+                        draw.drawText(
+                            ctx,
+                            text,
+                            buttonWidth,
+                            0,
+                            width - 2 * buttonWidth,
+                            height,
+                            style,
+                            false
+                        );
 
-                            drawText(
-                                ctx,
-                                upDownWidget.upButtonText || ">",
-                                width - buttonWidth,
-                                0,
-                                buttonWidth,
-                                height,
-                                buttonsStyle,
-                                false
-                            );
-                        }}
-                    />
-                )}
+                        draw.drawText(
+                            ctx,
+                            upDownWidget.upButtonText || ">",
+                            width - buttonWidth,
+                            0,
+                            buttonWidth,
+                            height,
+                            buttonsStyle,
+                            false
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -2835,25 +2762,22 @@ export class ListGraphWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                true
-                            );
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -3152,25 +3076,22 @@ export class AppViewWidget extends Widget {
         }
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                true
-                            );
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
+                    }}
+                />
                 {element}
                 {super.render(flowContext, width, height)}
             </>
@@ -3255,121 +3176,118 @@ export class ScrollBarWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let widget = this;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let widget = this;
 
-                            const buttonsFont = styleGetFont(
-                                widget.buttonsStyle
-                            );
-                            if (!buttonsFont) {
-                                return;
-                            }
+                        const buttonsFont = draw.styleGetFont(
+                            widget.buttonsStyle
+                        );
+                        if (!buttonsFont) {
+                            return;
+                        }
 
-                            let isHorizontal = width > height;
+                        let isHorizontal = width > height;
 
-                            let buttonSize = isHorizontal ? height : width;
+                        let buttonSize = isHorizontal ? height : width;
 
-                            // draw left button
-                            drawText(
-                                ctx,
-                                widget.leftButtonText || "<",
-                                0,
-                                0,
-                                isHorizontal ? buttonSize : width,
-                                isHorizontal ? height : buttonSize,
-                                widget.buttonsStyle,
-                                false
-                            );
+                        // draw left button
+                        draw.drawText(
+                            ctx,
+                            widget.leftButtonText || "<",
+                            0,
+                            0,
+                            isHorizontal ? buttonSize : width,
+                            isHorizontal ? height : buttonSize,
+                            widget.buttonsStyle,
+                            false
+                        );
 
-                            // draw track
-                            let x;
-                            let y;
-                            let w;
-                            let h;
+                        // draw track
+                        let x;
+                        let y;
+                        let w;
+                        let h;
 
-                            if (isHorizontal) {
-                                x = buttonSize;
-                                y = 0;
-                                w = width - 2 * buttonSize;
-                                h = height;
-                            } else {
-                                x = 0;
-                                y = buttonSize;
-                                w = width;
-                                h = height - 2 * buttonSize;
-                            }
+                        if (isHorizontal) {
+                            x = buttonSize;
+                            y = 0;
+                            w = width - 2 * buttonSize;
+                            h = height;
+                        } else {
+                            x = 0;
+                            y = buttonSize;
+                            w = width;
+                            h = height - 2 * buttonSize;
+                        }
 
-                            draw.setColor(this.style.colorProperty);
-                            draw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
+                        draw.setColor(this.style.colorProperty);
+                        draw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
 
-                            // draw thumb
-                            let data = (widget.data &&
-                                flowContext.dataContext.get(widget.data)) || [
-                                100, 25, 20
+                        // draw thumb
+                        let data = (widget.data &&
+                            flowContext.dataContext.get(widget.data)) || [
+                            100, 25, 20
+                        ];
+
+                        if (!Array.isArray(data)) {
+                            data = [
+                                data.numItems,
+                                data.position,
+                                data.itemsPerPage
                             ];
+                        }
 
-                            if (!Array.isArray(data)) {
-                                data = [
-                                    data.numItems,
-                                    data.position,
-                                    data.itemsPerPage
-                                ];
-                            }
+                        const [size, position, pageSize] = data;
 
-                            const [size, position, pageSize] = data;
+                        let xThumb;
+                        let widthThumb;
+                        let yThumb;
+                        let heightThumb;
 
-                            let xThumb;
-                            let widthThumb;
-                            let yThumb;
-                            let heightThumb;
-
-                            if (isHorizontal) {
-                                xThumb = Math.floor((position * w) / size);
-                                widthThumb = Math.max(
-                                    Math.floor((pageSize * w) / size),
-                                    buttonSize
-                                );
-                                yThumb = y;
-                                heightThumb = h;
-                            } else {
-                                xThumb = x;
-                                widthThumb = w;
-                                yThumb = Math.floor((position * h) / size);
-                                heightThumb = Math.max(
-                                    Math.floor((pageSize * h) / size),
-                                    buttonSize
-                                );
-                            }
-
-                            draw.setColor(this.thumbStyle.colorProperty);
-                            draw.fillRect(
-                                ctx,
-                                xThumb,
-                                yThumb,
-                                xThumb + widthThumb - 1,
-                                yThumb + heightThumb - 1
+                        if (isHorizontal) {
+                            xThumb = Math.floor((position * w) / size);
+                            widthThumb = Math.max(
+                                Math.floor((pageSize * w) / size),
+                                buttonSize
                             );
-
-                            // draw right button
-                            drawText(
-                                ctx,
-                                widget.rightButtonText || ">",
-                                isHorizontal ? width - buttonSize : 0,
-                                isHorizontal ? 0 : height - buttonSize,
-                                isHorizontal ? buttonSize : width,
-                                isHorizontal ? height : buttonSize,
-                                widget.buttonsStyle,
-                                false
+                            yThumb = y;
+                            heightThumb = h;
+                        } else {
+                            xThumb = x;
+                            widthThumb = w;
+                            yThumb = Math.floor((position * h) / size);
+                            heightThumb = Math.max(
+                                Math.floor((pageSize * h) / size),
+                                buttonSize
                             );
-                        }}
-                    />
-                )}
+                        }
+
+                        draw.setColor(this.thumbStyle.colorProperty);
+                        draw.fillRect(
+                            ctx,
+                            xThumb,
+                            yThumb,
+                            xThumb + widthThumb - 1,
+                            yThumb + heightThumb - 1
+                        );
+
+                        // draw right button
+                        draw.drawText(
+                            ctx,
+                            widget.rightButtonText || ">",
+                            isHorizontal ? width - buttonSize : 0,
+                            isHorizontal ? 0 : height - buttonSize,
+                            isHorizontal ? buttonSize : width,
+                            isHorizontal ? height : buttonSize,
+                            widget.buttonsStyle,
+                            false
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -3443,18 +3361,15 @@ export class CanvasWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.setColor(this.style.backgroundColorProperty);
-                            draw.fillRect(ctx, 0, 0, width - 1, height - 1);
-                        }}
-                    />
-                )}
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.setColor(this.style.backgroundColorProperty);
+                        draw.fillRect(ctx, 0, 0, width - 1, height - 1);
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -3882,7 +3797,7 @@ export class LineChartEmbeddedWidget extends Widget {
                         ) => {
                             const title = this.getTitle(flowContext);
                             if (title) {
-                                drawText(
+                                draw.drawText(
                                     ctx,
                                     title,
                                     x,
@@ -3902,7 +3817,9 @@ export class LineChartEmbeddedWidget extends Widget {
                                 return { legendWidth: 0, legendLineHeight: 0 };
                             }
 
-                            const legendFont = styleGetFont(this.legendStyle);
+                            const legendFont = draw.styleGetFont(
+                                this.legendStyle
+                            );
                             if (!legendFont) {
                                 return { legendWidth: 0, legendLineHeight: 0 };
                             }
@@ -3934,7 +3851,9 @@ export class LineChartEmbeddedWidget extends Widget {
                             w: number,
                             h: number
                         ) => {
-                            const legendFont = styleGetFont(this.legendStyle);
+                            const legendFont = draw.styleGetFont(
+                                this.legendStyle
+                            );
                             if (!legendFont) {
                                 return;
                             }
@@ -4354,7 +4273,7 @@ export class LineChartEmbeddedWidget extends Widget {
                         chart.yAxis.rect.w = this.margin.left;
                         chart.yAxis.rect.h = gridRect.h;
 
-                        const xAxisFont = styleGetFont(this.xAxisStyle);
+                        const xAxisFont = draw.styleGetFont(this.xAxisStyle);
                         let xAxisLabelWidth;
                         if (xAxisFont) {
                             xAxisLabelWidth = draw.measureStr(
@@ -4370,7 +4289,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             Math.round(gridRect.w / xAxisLabelWidth)
                         );
 
-                        const yAxisFont = styleGetFont(this.yAxisStyle);
+                        const yAxisFont = draw.styleGetFont(this.yAxisStyle);
                         let yAxisLabelHeight;
                         if (yAxisFont) {
                             yAxisLabelHeight = Math.round(
@@ -4820,7 +4739,7 @@ export class GaugeEmbeddedWidget extends Widget {
             }
 
             // draw ticks
-            const ticksfont = styleGetFont(ticksStyle);
+            const ticksfont = draw.styleGetFont(ticksStyle);
             const ft = firstTick(max - min);
             const ticksRad = radBorderOuter + 1;
             for (let tickValueIndex = 0; ; tickValueIndex++) {
@@ -4859,7 +4778,7 @@ export class GaugeEmbeddedWidget extends Widget {
                             -1
                         );
                         if (tickAngleDeg == 180.0) {
-                            drawText(
+                            draw.drawText(
                                 ctx,
                                 tickText,
                                 xCenter -
@@ -4873,7 +4792,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg > 90.0) {
-                            drawText(
+                            draw.drawText(
                                 ctx,
                                 tickText,
                                 x2 - TICK_TEXT_GAP - tickTextWidth,
@@ -4884,7 +4803,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg == 90.0) {
-                            drawText(
+                            draw.drawText(
                                 ctx,
                                 tickText,
                                 x2 - tickTextWidth / 2,
@@ -4895,7 +4814,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg > 0) {
-                            drawText(
+                            draw.drawText(
                                 ctx,
                                 tickText,
                                 x2 + TICK_TEXT_GAP,
@@ -4906,7 +4825,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else {
-                            drawText(
+                            draw.drawText(
                                 ctx,
                                 tickText,
                                 xCenter + radBorderOuter + TICK_TEXT_GAP,
@@ -4922,11 +4841,11 @@ export class GaugeEmbeddedWidget extends Widget {
             }
 
             // draw value
-            const font = styleGetFont(valueStyle);
+            const font = draw.styleGetFont(valueStyle);
             if (font) {
                 const valueText = unit ? `${value} ${unit}` : value.toString();
                 const valueTextWidth = draw.measureStr(valueText, font, -1);
-                drawText(
+                draw.drawText(
                     ctx,
                     valueText,
                     xCenter - valueTextWidth / 2,
@@ -4941,17 +4860,14 @@ export class GaugeEmbeddedWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        width={width}
-                        height={height}
-                        component={this}
-                        draw={(ctx: CanvasRenderingContext2D) =>
-                            drawGauge(ctx, width, height)
-                        }
-                    />
-                )}
+                <ComponentCanvas
+                    width={width}
+                    height={height}
+                    component={this}
+                    draw={(ctx: CanvasRenderingContext2D) =>
+                        drawGauge(ctx, width, height)
+                    }
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -5124,68 +5040,65 @@ export class InputEmbeddedWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let text;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let text;
 
-                            if (flowContext.flowState) {
-                                if (this.data) {
-                                    try {
-                                        text = evalProperty(
-                                            flowContext,
-                                            this,
-                                            "data"
-                                        );
-                                    } catch (err) {
-                                        //console.error(err);
-                                        text = "";
-                                    }
-                                } else {
+                        if (flowContext.flowState) {
+                            if (this.data) {
+                                try {
+                                    text = evalProperty(
+                                        flowContext,
+                                        this,
+                                        "data"
+                                    );
+                                } catch (err) {
+                                    //console.error(err);
                                     text = "";
                                 }
                             } else {
-                                text = `{${this.data}}`;
+                                text = "";
                             }
+                        } else {
+                            text = `{${this.data}}`;
+                        }
 
-                            let unit;
+                        let unit;
 
-                            if (flowContext.flowState) {
-                                if (this.unit) {
-                                    try {
-                                        unit = evalProperty(
-                                            flowContext,
-                                            this,
-                                            "unit"
-                                        );
-                                    } catch (err) {
-                                        //console.error(err);
-                                        unit = "";
-                                    }
-                                } else {
+                        if (flowContext.flowState) {
+                            if (this.unit) {
+                                try {
+                                    unit = evalProperty(
+                                        flowContext,
+                                        this,
+                                        "unit"
+                                    );
+                                } catch (err) {
+                                    //console.error(err);
                                     unit = "";
                                 }
                             } else {
                                 unit = "";
                             }
+                        } else {
+                            unit = "";
+                        }
 
-                            drawText(
-                                ctx,
-                                text + (unit ? " " + unit : ""),
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                false
-                            );
-                        }}
-                    />
-                )}
+                        draw.drawText(
+                            ctx,
+                            text + (unit ? " " + unit : ""),
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            false
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -5358,47 +5271,44 @@ export class RollerWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.style,
-                                true
-                            );
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
 
-                            const font = styleGetFont(this.selectedValueStyle);
-                            if (!font) {
-                                return;
-                            }
+                        const font = draw.styleGetFont(this.selectedValueStyle);
+                        if (!font) {
+                            return;
+                        }
 
-                            const selectedValueHeight =
-                                this.selectedValueStyle.borderSizeRect.top +
-                                this.selectedValueStyle.paddingRect.top +
-                                font.height +
-                                this.selectedValueStyle.paddingRect.bottom +
-                                this.selectedValueStyle.borderSizeRect.bottom;
+                        const selectedValueHeight =
+                            this.selectedValueStyle.borderSizeRect.top +
+                            this.selectedValueStyle.paddingRect.top +
+                            font.height +
+                            this.selectedValueStyle.paddingRect.bottom +
+                            this.selectedValueStyle.borderSizeRect.bottom;
 
-                            draw.drawBackground(
-                                ctx,
-                                0,
-                                (height - selectedValueHeight) / 2,
-                                width,
-                                selectedValueHeight,
-                                this.selectedValueStyle,
-                                true
-                            );
-                        }}
-                    />
-                )}
+                        draw.drawBackground(
+                            ctx,
+                            0,
+                            (height - selectedValueHeight) / 2,
+                            width,
+                            selectedValueHeight,
+                            this.selectedValueStyle,
+                            true
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -5472,66 +5382,60 @@ export class SwitchWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let x = this.style.paddingRect.left;
-                            let y = this.style.paddingRect.top;
-                            let w =
-                                width -
-                                this.style.paddingRect.left -
-                                this.style.paddingRect.right;
-                            let h =
-                                height -
-                                this.style.paddingRect.top -
-                                this.style.paddingRect.bottom;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let x = this.style.paddingRect.left;
+                        let y = this.style.paddingRect.top;
+                        let w =
+                            width -
+                            this.style.paddingRect.left -
+                            this.style.paddingRect.right;
+                        let h =
+                            height -
+                            this.style.paddingRect.top -
+                            this.style.paddingRect.bottom;
 
-                            draw.setColor(this.style.borderColorProperty);
-                            draw.setBackColor(
-                                enabled
-                                    ? this.style.activeBackgroundColorProperty
-                                    : this.style.backgroundColorProperty
-                            );
-                            draw.fillRoundedRect(
-                                ctx,
-                                x,
-                                y,
-                                x + w - 1,
-                                y + h - 1,
-                                this.style.borderSizeRect.left,
-                                h / 2
-                            );
+                        draw.setColor(this.style.borderColorProperty);
+                        draw.setBackColor(
+                            enabled
+                                ? this.style.activeBackgroundColorProperty
+                                : this.style.backgroundColorProperty
+                        );
+                        draw.fillRoundedRect(
+                            ctx,
+                            x,
+                            y,
+                            x + w - 1,
+                            y + h - 1,
+                            this.style.borderSizeRect.left,
+                            h / 2
+                        );
 
-                            h -= 2 * (2 + this.style.borderSizeRect.left);
-                            y += 2 + this.style.borderSizeRect.left;
+                        h -= 2 * (2 + this.style.borderSizeRect.left);
+                        y += 2 + this.style.borderSizeRect.left;
 
-                            if (enabled) {
-                                x +=
-                                    w -
-                                    h -
-                                    (1 + this.style.borderSizeRect.left);
-                            } else {
-                                x += 1 + this.style.borderSizeRect.left;
-                            }
-                            w = h;
+                        if (enabled) {
+                            x += w - h - (1 + this.style.borderSizeRect.left);
+                        } else {
+                            x += 1 + this.style.borderSizeRect.left;
+                        }
+                        w = h;
 
-                            draw.setBackColor(this.style.colorProperty);
-                            draw.fillRoundedRect(
-                                ctx,
-                                x,
-                                y,
-                                x + w - 1,
-                                y + h - 1,
-                                1,
-                                h / 2 + 2
-                            );
-                        }}
-                    />
-                )}
+                        draw.setBackColor(this.style.colorProperty);
+                        draw.fillRoundedRect(
+                            ctx,
+                            x,
+                            y,
+                            x + w - 1,
+                            y + h - 1,
+                            1,
+                            h / 2 + 2
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -5624,91 +5528,74 @@ export class SliderWidget extends Widget {
     render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            let x = this.style.paddingRect.left;
-                            let y = this.style.paddingRect.top;
-                            let w =
-                                width -
-                                this.style.paddingRect.left -
-                                this.style.paddingRect.right;
-                            let h =
-                                height -
-                                this.style.paddingRect.top -
-                                this.style.paddingRect.bottom;
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        let x = this.style.paddingRect.left;
+                        let y = this.style.paddingRect.top;
+                        let w =
+                            width -
+                            this.style.paddingRect.left -
+                            this.style.paddingRect.right;
+                        let h =
+                            height -
+                            this.style.paddingRect.top -
+                            this.style.paddingRect.bottom;
 
-                            const barX = x + h / 2.0;
-                            const barW = w - h;
-                            const barH = (h * 8.0) / 20.0;
-                            const barY = y + (h - barH) / 2;
-                            const barBorderRadius = barH / 2.0;
+                        const barX = x + h / 2.0;
+                        const barW = w - h;
+                        const barH = (h * 8.0) / 20.0;
+                        const barY = y + (h - barH) / 2;
+                        const barBorderRadius = barH / 2.0;
 
-                            let value = getNumberValue(
-                                flowContext,
-                                this,
-                                "data",
-                                0.5
-                            );
-                            let min = getNumberValue(
-                                flowContext,
-                                this,
-                                "min",
-                                0
-                            );
-                            let max = getNumberValue(
-                                flowContext,
-                                this,
-                                "max",
-                                1.0
-                            );
+                        let value = getNumberValue(
+                            flowContext,
+                            this,
+                            "data",
+                            0.5
+                        );
+                        let min = getNumberValue(flowContext, this, "min", 0);
+                        let max = getNumberValue(flowContext, this, "max", 1.0);
 
-                            let knobRelativePosition =
-                                (value - min) / (max - min);
-                            if (knobRelativePosition < 0)
-                                knobRelativePosition = 0;
-                            if (knobRelativePosition > 1.0)
-                                knobRelativePosition = 1.0;
+                        let knobRelativePosition = (value - min) / (max - min);
+                        if (knobRelativePosition < 0) knobRelativePosition = 0;
+                        if (knobRelativePosition > 1.0)
+                            knobRelativePosition = 1.0;
 
-                            const knobPosition =
-                                barX + knobRelativePosition * (barW - 1);
+                        const knobPosition =
+                            barX + knobRelativePosition * (barW - 1);
 
-                            const knobRadius = h / 2;
-                            const knobX = knobPosition;
-                            const knobY = y;
-                            const knobW = h;
-                            const knobH = h;
+                        const knobRadius = h / 2;
+                        const knobX = knobPosition;
+                        const knobY = y;
+                        const knobW = h;
+                        const knobH = h;
 
-                            draw.setBackColor(
-                                this.style.backgroundColorProperty
-                            );
-                            draw.fillRoundedRect(
-                                ctx,
-                                barX - barBorderRadius,
-                                barY,
-                                barX + barW + barBorderRadius - 1,
-                                barY + barH - 1,
-                                0,
-                                barBorderRadius
-                            );
+                        draw.setBackColor(this.style.backgroundColorProperty);
+                        draw.fillRoundedRect(
+                            ctx,
+                            barX - barBorderRadius,
+                            barY,
+                            barX + barW + barBorderRadius - 1,
+                            barY + barH - 1,
+                            0,
+                            barBorderRadius
+                        );
 
-                            draw.setBackColor(this.style.colorProperty);
-                            draw.fillRoundedRect(
-                                ctx,
-                                knobX - knobRadius,
-                                knobY,
-                                knobX - knobRadius + knobW - 1,
-                                knobY + knobH - 1,
-                                0,
-                                knobRadius
-                            );
-                        }}
-                    />
-                )}
+                        draw.setBackColor(this.style.colorProperty);
+                        draw.fillRoundedRect(
+                            ctx,
+                            knobX - knobRadius,
+                            knobY,
+                            knobX - knobRadius + knobW - 1,
+                            knobY + knobH - 1,
+                            0,
+                            knobRadius
+                        );
+                    }}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
