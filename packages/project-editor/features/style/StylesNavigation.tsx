@@ -7,7 +7,7 @@ import * as FlexLayout from "flexlayout-react";
 import { LayoutModels, isObjectExists } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Style } from "./style";
-import { drawText } from "project-editor/flow/editor/draw";
+import { drawText } from "project-editor/flow/editor/eez-gui-draw";
 import { LVGLStylesNavigation } from "project-editor/lvgl/style";
 
 import { StylesTreeNavigation } from "project-editor/features/style/StylesTreeNavigation";

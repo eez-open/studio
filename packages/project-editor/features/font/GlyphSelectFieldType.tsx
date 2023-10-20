@@ -26,7 +26,7 @@ import {
     drawGlyph2,
     setBackColor,
     setColor
-} from "project-editor/flow/editor/draw";
+} from "project-editor/flow/editor/eez-gui-draw";
 import { formatEncoding } from "project-editor/features/font/utils";
 
 ////////////////////////////////////////////////////////////////////////////////

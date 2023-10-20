@@ -60,7 +60,7 @@ import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component-
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { drawBackground } from "project-editor/flow/editor/draw";
+import { drawBackground } from "project-editor/flow/editor/eez-gui-draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";

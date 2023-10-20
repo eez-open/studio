@@ -7,7 +7,7 @@ import {
     drawGlyph,
     setBackColor,
     setColor
-} from "project-editor/flow/editor/draw";
+} from "project-editor/flow/editor/eez-gui-draw";
 
 import { getId } from "project-editor/core/object";
 import { getAncestorOfType, getLabel, IPanel } from "project-editor/store";
