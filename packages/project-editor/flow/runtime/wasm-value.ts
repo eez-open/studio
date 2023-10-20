@@ -249,7 +249,9 @@ export function createWasmValue(
     }
 
     if (value instanceof Stream) {
-        return WasmFlowRuntime._createStreamValue(getStreamID(value));
+        return WasmFlowRuntime._createStreamValue(
+            getStreamID(value, WasmFlowRuntime.wasmModuleId)
+        );
     }
 
     if (value instanceof Date) {
@@ -386,7 +388,10 @@ export function getValue(
         };
     } else if (type == FLOW_VALUE_TYPE_STREAM) {
         return {
-            value: getStreamFromID(WasmFlowRuntime.HEAPU32[offset >> 2]),
+            value: getStreamFromID(
+                WasmFlowRuntime.HEAPU32[offset >> 2],
+                WasmFlowRuntime.wasmModuleId
+            ),
             valueType: "stream"
         };
     } else if (type == FLOW_VALUE_TYPE_DATE) {
@@ -475,23 +480,41 @@ export function getArrayValue(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const streams: Stream[] = [];
-const streamIDs = new Map<Stream, number>();
+const streamsMap = new Map<
+    number,
+    {
+        streams: Stream[];
+        streamIDs: Map<Stream, number>;
+    }
+>();
 
-function getStreamID(stream: Stream) {
-    let streamID = streamIDs.get(stream);
+function getStreamID(stream: Stream, wasmModuleId: number) {
+    let wasmModuleStreams = streamsMap.get(wasmModuleId);
+    if (!wasmModuleStreams) {
+        wasmModuleStreams = {
+            streams: [],
+            streamIDs: new Map()
+        };
+        streamsMap.set(wasmModuleId, wasmModuleStreams);
+    }
+
+    let streamID = wasmModuleStreams.streamIDs.get(stream);
     if (streamID == undefined) {
-        streamID = streams.length;
-        streams.push(stream);
-        streamIDs.set(stream, streamID);
+        streamID = wasmModuleStreams.streams.length;
+        wasmModuleStreams.streams.push(stream);
+        wasmModuleStreams.streamIDs.set(stream, streamID);
     }
     return streamID;
 }
 
-function getStreamFromID(streamID: number) {
-    return streams[streamID];
+function getStreamFromID(streamID: number, wasmModuleId: number) {
+    let wasmModuleStreams = streamsMap.get(wasmModuleId);
+    if (wasmModuleStreams) {
+        return wasmModuleStreams.streams[streamID];
+    }
+    return undefined;
 }
 
-export function clarStremIDs() {
-    streamIDs.clear();
+export function clearStremIDs(wasmModuleId: number) {
+    streamsMap.delete(wasmModuleId);
 }

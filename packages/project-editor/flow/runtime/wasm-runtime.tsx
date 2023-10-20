@@ -52,7 +52,7 @@ import {
 
 import {
     ArrayValue,
-    clarStremIDs,
+    clearStremIDs,
     createJsArrayValue,
     createWasmValue,
     getValue
@@ -252,7 +252,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.destroyGlobalVariables();
 
-        clarStremIDs();
+        clearStremIDs(this.wasmModuleId);
 
         if (this.lgvlPageRuntime) {
             this.lgvlPageRuntime.unmount();
