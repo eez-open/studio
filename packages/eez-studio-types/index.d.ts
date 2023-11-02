@@ -505,7 +505,7 @@ export interface IWasmFlowRuntime {
     writeSettings: (key: string, value: any) => any;
 
     // eez framework API
-    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number): void;
+    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, timeZone: number): void;
     _mainLoop(): boolean;
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number): void;

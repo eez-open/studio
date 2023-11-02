@@ -441,7 +441,8 @@ export function createWasmWorker(
                 ptr,
                 assets.length,
                 displayWidth,
-                displayHeight
+                displayHeight,
+                -(new Date().getTimezoneOffset() / 60) * 100
             );
 
             WasmFlowRuntime._free(ptr);

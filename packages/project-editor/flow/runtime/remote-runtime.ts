@@ -102,7 +102,7 @@ export class RemoteRuntime extends RuntimeBase {
     debuggerConnection: DebuggerConnectionBase | undefined;
     instrument: InstrumentObject | undefined;
     assetsMap: AssetsMap;
-    debuggerValues = new Map<number, DebuggerValue>();
+    debuggerValues = new Map<number, DebuggerValue[]>();
     flowStateMap = new Map<
         number,
         { flowIndex: number; flowState: FlowState }
@@ -655,9 +655,12 @@ export abstract class DebuggerConnectionBase {
                 propertyType
             );
 
+            const arr = this.runtime.debuggerValues.get(
+                arrayElementAddresses[i]
+            );
             this.runtime.debuggerValues.set(
                 arrayElementAddresses[i],
-                objectMemberValue
+                arr ? [...arr, objectMemberValue] : [objectMemberValue]
             );
         }
 
@@ -978,9 +981,14 @@ export abstract class DebuggerConnectionBase {
 
                         globalVariableValue.set(this.parseDebuggerValue(value));
 
+                        const arr =
+                            this.runtime.debuggerValues.get(valueAddress);
+
                         runtime.debuggerValues.set(
                             valueAddress,
-                            globalVariableValue
+                            arr
+                                ? [...arr, globalVariableValue]
+                                : [globalVariableValue]
                         );
                     }
                     break;
@@ -1042,9 +1050,14 @@ export abstract class DebuggerConnectionBase {
 
                         localVariableValue.set(this.parseDebuggerValue(value));
 
+                        const arr =
+                            this.runtime.debuggerValues.get(valueAddress);
+
                         runtime.debuggerValues.set(
                             valueAddress,
-                            localVariableValue
+                            arr
+                                ? [...arr, localVariableValue]
+                                : [localVariableValue]
                         );
                     }
                     break;
@@ -1117,9 +1130,14 @@ export abstract class DebuggerConnectionBase {
 
                         componentInputValue.set(this.parseDebuggerValue(value));
 
+                        const arr =
+                            this.runtime.debuggerValues.get(valueAddress);
+
                         runtime.debuggerValues.set(
                             valueAddress,
-                            componentInputValue
+                            arr
+                                ? [...arr, componentInputValue]
+                                : [componentInputValue]
                         );
                     }
                     break;
@@ -1129,9 +1147,9 @@ export abstract class DebuggerConnectionBase {
                         const valueAddress = parseInt(messageParameters[1], 16);
                         const value = messageParameters[2];
 
-                        const debuggerValue =
+                        const debuggerValueArr =
                             runtime.debuggerValues.get(valueAddress);
-                        if (!debuggerValue) {
+                        if (!debuggerValueArr) {
                             console.log(
                                 "MESSAGE_TO_DEBUGGER_VALUE_CHANGED",
                                 messageParameters
@@ -1140,7 +1158,11 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
-                        debuggerValue.set(this.parseDebuggerValue(value));
+                        const parsedValue = this.parseDebuggerValue(value);
+
+                        debuggerValueArr.forEach(debuggerValue =>
+                            debuggerValue.set(parsedValue)
+                        );
                     }
                     break;
 

@@ -133,6 +133,8 @@ export function createJsArrayValue(
                                     ) {
                                         fieldValue =
                                             Number.parseInt(fieldValue);
+                                    } else if (fieldType.valueType == "date") {
+                                        fieldValue = new Date(fieldValue);
                                     }
                                 } else if (fieldValue instanceof Date) {
                                     if (fieldType.valueType == "string") {
@@ -144,6 +146,10 @@ export function createJsArrayValue(
                                                 11,
                                                 fieldValue.length - 1
                                             );
+                                    }
+                                } else if (field.valueType == "date") {
+                                    if (typeof fieldValue == "number") {
+                                        fieldValue = new Date(fieldValue);
                                     }
                                 }
                             }

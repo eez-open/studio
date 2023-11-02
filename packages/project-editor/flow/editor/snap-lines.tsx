@@ -156,7 +156,11 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             node.object &&
             (node.object instanceof ProjectEditor.PageClass ||
                 node.object instanceof ProjectEditor.ComponentClass) &&
-            !isSelectedObject(node.object)
+            !isSelectedObject(node.object) &&
+            !(
+                node.object instanceof ProjectEditor.WidgetClass &&
+                node.object.hiddenInEditor
+            )
         ) {
             const rect1 = getObjectBoundingRect(node);
             addLines(rect1, false);

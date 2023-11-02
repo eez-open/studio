@@ -4,7 +4,8 @@ import {
     reaction,
     makeObservable,
     runInAction,
-    autorun
+    autorun,
+    IReactionDisposer
 } from "mobx";
 
 import {
@@ -50,29 +51,29 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LineChartElement = observer(
-    ({
-        widget,
-        flowContext,
-        width,
-        height
-    }: {
+const LineChartElement2 = observer(
+    class LineChartElement2 extends React.Component<{
         widget: LineChartWidget;
         flowContext: IFlowContext;
         width: number;
         height: number;
-    }) => {
-        const executionState =
-            flowContext.flowState?.getComponentExecutionState<ExecutionState>(
-                widget
-            );
+    }> {
+        ref = React.createRef<HTMLDivElement>();
 
-        const ref = React.useRef<HTMLDivElement>(null);
-        const [plotly, setPlotly] = React.useState<
-            PlotlyModule.PlotlyHTMLElement | undefined
-        >();
+        plotly: PlotlyModule.PlotlyHTMLElement | undefined;
+        plotlyEl: HTMLDivElement | undefined;
 
-        function getData(): PlotlyModule.Data[] {
+        dispose1: IReactionDisposer | undefined;
+        dispose2: IReactionDisposer | undefined;
+
+        get data(): PlotlyModule.Data[] {
+            const { widget, flowContext } = this.props;
+
+            const executionState =
+                flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                    widget
+                );
+
             return widget.lines.map((line, i) => {
                 let name;
 
@@ -114,21 +115,64 @@ const LineChartElement = observer(
             });
         }
 
-        function getLayout(): Partial<PlotlyModule.Layout> {
+        get emptyData(): PlotlyModule.Data[] {
+            const { widget, flowContext } = this.props;
+
+            const executionState =
+                flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                    widget
+                );
+
+            return widget.lines.map((line, i) => {
+                let name;
+
+                if (executionState) {
+                    name = executionState.labels[i];
+                } else {
+                    try {
+                        name = evalConstantExpression(
+                            flowContext.projectStore.project,
+                            line.label
+                        ).value;
+                    } catch (err) {
+                        name = undefined;
+                    }
+                }
+
+                return {
+                    x: [],
+                    y: [],
+                    type: "scatter",
+                    name,
+                    showlegend: widget.showLegend,
+                    line: {
+                        color: line.color
+                    }
+                };
+            });
+        }
+
+        get layout(): Partial<PlotlyModule.Layout> {
+            const { widget, flowContext } = this.props;
+
             let range;
-            if (widget.yAxisRangeOption == "fixed") {
+            if (this.props.widget.yAxisRangeOption == "fixed") {
+                // this is calculated from expression
                 const yAxisRangeFrom = getNumberValue(
                     flowContext,
                     widget,
                     "yAxisRangeFrom",
                     0
                 );
+
+                // this is calculated from expression
                 const yAxisRangeTo = getNumberValue(
                     flowContext,
                     widget,
                     "yAxisRangeTo",
                     10
                 );
+
                 range = [yAxisRangeFrom, yAxisRangeTo];
             }
 
@@ -146,131 +190,186 @@ const LineChartElement = observer(
             };
         }
 
-        function getConfig(): Partial<PlotlyModule.Config> {
+        get config(): Partial<PlotlyModule.Config> {
             return {
                 autosizable: false
             };
         }
 
-        React.useEffect(() => {
-            let disposed = false;
-            let disposeReaction: any;
+        async createChart(el: HTMLDivElement) {
+            if (this.dispose1) {
+                this.dispose1();
+            }
 
-            const el = ref.current;
-            if (el) {
-                (async () => {
-                    const plotly = await newPlotOrReact(
+            if (this.dispose2) {
+                this.dispose2();
+            }
+
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
+            }
+
+            this.plotly = await newPlotOrReact(
+                el,
+                this.data,
+                this.layout,
+                this.config,
+                true
+            );
+            this.plotlyEl = el;
+
+            this.dispose1 = reaction(
+                () => ({
+                    layout: this.layout
+                }),
+                async params => {
+                    this.plotly = await newPlotOrReact(
                         el,
-                        getData(),
-                        getLayout(),
-                        getConfig(),
-                        true
+                        this.data,
+                        params.layout,
+                        this.config,
+                        false
                     );
+                }
+            );
 
-                    if (!disposed) {
-                        setPlotly(plotly);
+            this.dispose2 = autorun(
+                () => {
+                    const { widget, flowContext } = this.props;
 
-                        disposeReaction = reaction(
-                            () => {
-                                let executionState;
-                                if (flowContext.flowState) {
-                                    executionState =
-                                        flowContext.flowState.getComponentExecutionState<ExecutionState>(
-                                            widget
-                                        );
-                                }
-                                return executionState
-                                    ? executionState.values[
-                                          executionState.values.length - 1
-                                      ]
-                                    : undefined;
-                            },
-                            inputData => {
-                                if (inputData !== undefined) {
-                                    updateLineChart(
-                                        el,
-                                        inputData,
-                                        widget.maxPoints
-                                    );
-                                }
-                            }
+                    const executionState =
+                        flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                            widget
                         );
-                    } else {
-                        removeChart(el);
+                    if (!executionState) {
+                        return;
                     }
-                })();
+
+                    executionState.values;
+
+                    const operations = executionState.operations;
+                    executionState.operations = [];
+
+                    const indices = this.props.widget.lines.map((_, i) => i);
+                    const maxPoints = executionState.maxPoints;
+
+                    (async () => {
+                        let inputDataArray: InputData[] = [];
+
+                        function extend() {
+                            if (inputDataArray.length == 0) {
+                                return;
+                            }
+
+                            const update = {
+                                x: widget.lines.map(() =>
+                                    inputDataArray.map(
+                                        inputData => inputData.xValue
+                                    )
+                                ),
+                                y: widget.lines.map((_, i) =>
+                                    inputDataArray.map(
+                                        inputData => inputData.lineValues[i]
+                                    )
+                                )
+                            };
+
+                            Plotly().extendTraces(
+                                el,
+                                update,
+                                indices,
+                                maxPoints
+                            );
+
+                            inputDataArray = [];
+                        }
+
+                        for (const operation of operations) {
+                            if (operation.cmd == "reset") {
+                                inputDataArray = [];
+                                this.plotly = await newPlotOrReact(
+                                    el,
+                                    this.emptyData,
+                                    this.layout,
+                                    this.config,
+                                    false
+                                );
+                            } else {
+                                inputDataArray.push(operation.inputData);
+                            }
+                        }
+
+                        extend();
+                    })();
+                },
+                { delay: 16 }
+            );
+        }
+
+        componentDidMount() {
+            if (this.ref.current) {
+                this.createChart(this.ref.current);
+            }
+        }
+
+        componentDidUpdate() {
+            if (this.ref.current) {
+                this.createChart(this.ref.current);
+            }
+        }
+
+        componentWillUnmount(): void {
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
             }
 
-            return () => {
-                if (disposeReaction) {
-                    disposeReaction();
-                }
-                if (el) {
-                    removeChart(el);
-                }
-                disposed = true;
-            };
-        }, [ref.current]);
-
-        React.useEffect(() => {
-            if (plotly) {
-                Plotly().Plots.resize(ref.current!);
+            if (this.dispose1) {
+                this.dispose1();
             }
-        }, [plotly, width, height]);
 
-        React.useEffect(() => {
-            if (plotly) {
-                newPlotOrReact(
-                    plotly,
-                    getData(),
-                    getLayout(),
-                    getConfig(),
-                    false
-                );
+            if (this.dispose2) {
+                this.dispose2();
             }
-        }, [
-            plotly,
-            widget.title,
-            widget.showLegend,
-            widget.yAxisRangeOption,
-            widget.yAxisRangeOption == "fixed"
-                ? getNumberValue(flowContext, widget, "yAxisRangeFrom", 0)
-                : undefined,
-            widget.yAxisRangeOption == "fixed"
-                ? getNumberValue(flowContext, widget, "yAxisRangeTo", 10)
-                : undefined,
-            widget.margin.top,
-            widget.margin.right,
-            widget.margin.bottom,
-            widget.margin.left,
-            widget.lines
-                .map(line => `${line.label},${line.value},${line.color}`)
-                .join("/"),
-            executionState
-        ]);
+        }
 
-        return (
-            <div
-                ref={ref}
-                style={{
-                    width,
-                    height
-                }}
-                className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.projectStore.runtime
-                })}
-            ></div>
-        );
+        render() {
+            const { width, height, flowContext } = this.props;
+
+            return (
+                <div
+                    ref={this.ref}
+                    style={{
+                        width,
+                        height
+                    }}
+                    className={classNames("EezStudio_Plotly", {
+                        interactive: !!flowContext.projectStore.runtime
+                    })}
+                ></div>
+            );
+        }
     }
 );
 
 class ExecutionState {
     values: InputData[] = [];
+    maxPoints: number;
     labels: string[] = [];
+
+    operations: (
+        | {
+              cmd: "reset";
+          }
+        | {
+              cmd: "extend";
+              inputData: InputData;
+          }
+    )[] = [];
 
     constructor() {
         makeObservable(this, {
             values: observable,
+            maxPoints: observable,
             labels: observable
         });
     }
@@ -424,11 +523,14 @@ export class LineChartWidget extends Widget {
                 },
                 "double"
             ),
-            {
-                name: "maxPoints",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
+            makeExpressionProperty(
+                {
+                    name: "maxPoints",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
             {
                 name: "margin",
                 type: PropertyType.Object,
@@ -463,6 +565,10 @@ export class LineChartWidget extends Widget {
             if (jsObject.showLegend == undefined) {
                 jsObject.showLegend = true;
             }
+
+            if (typeof jsObject.maxPoints == "number") {
+                jsObject.maxPoints = jsObject.maxPoints.toString();
+            }
         },
 
         defaultValue: {
@@ -477,7 +583,7 @@ export class LineChartWidget extends Widget {
             yAxisRangeOption: "floating",
             yAxisRangeFrom: 0,
             yAxisRangeTo: 10,
-            maxPoints: 40,
+            maxPoints: "40",
             minRange: 0,
             maxRange: 1,
             margin: {
@@ -501,40 +607,55 @@ export class LineChartWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {
             const value = context.getInputValue("reset");
 
-            const maxPoints = context.getUint32Param(0);
+            const labels = context.getExpressionListParam(0);
 
-            const labels = context.getExpressionListParam(4);
+            let executionState =
+                context.getComponentExecutionState<ExecutionState>();
+
+            if (!executionState) {
+                executionState = new ExecutionState();
+                context.setComponentExecutionState(executionState);
+            }
+
+            runInAction(() => {
+                executionState!.labels = labels;
+            });
 
             if (value !== undefined) {
                 context.clearInputValue("reset");
 
-                const newExecutionState = new ExecutionState();
-                newExecutionState.labels = labels;
-
-                context.setComponentExecutionState(newExecutionState);
-            } else {
-                let executionState =
-                    context.getComponentExecutionState<ExecutionState>();
-
-                if (!executionState) {
-                    executionState = new ExecutionState();
-                    context.setComponentExecutionState(executionState);
-                }
-
-                const xValue = context.evalProperty("xValue");
-                const values = context.getExpressionListParam(12);
+                executionState!.operations = [{ cmd: "reset" }];
 
                 runInAction(() => {
-                    executionState!.labels = labels;
+                    executionState!.values = [];
+                });
+            } else {
+                const maxPoints = context.evalProperty("maxPoints");
 
-                    executionState!.values.push({
-                        xValue,
-                        lineValues: values
-                    });
+                const xValue = context.evalProperty("xValue");
+                const lineValues = context.getExpressionListParam(8);
 
-                    if (executionState!.values.length == maxPoints) {
-                        executionState!.values.shift();
-                    }
+                let values = executionState.values.slice();
+
+                if (values.length == maxPoints) {
+                    values.shift();
+                }
+
+                const inputData = {
+                    xValue,
+                    lineValues
+                };
+
+                values.push(inputData);
+
+                executionState.operations.push({
+                    cmd: "extend",
+                    inputData: inputData
+                });
+
+                runInAction(() => {
+                    executionState!.maxPoints = maxPoints;
+                    executionState!.values = values;
                 });
             }
         }
@@ -547,7 +668,7 @@ export class LineChartWidget extends Widget {
     yAxisRangeOption: "floating" | "fixed";
     yAxisRangeFrom: number;
     yAxisRangeTo: number;
-    maxPoints: number;
+    maxPoints: string;
     margin: RectObject;
 
     constructor() {
@@ -585,7 +706,7 @@ export class LineChartWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <LineChartElement
+                <LineChartElement2
                     widget={this}
                     flowContext={flowContext}
                     width={width}
@@ -597,8 +718,6 @@ export class LineChartWidget extends Widget {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint32(this.maxPoints);
-
         dataBuffer.writeArray(this.lines, line => {
             try {
                 // as property
@@ -930,7 +1049,7 @@ registerClass("GaugeWidget", GaugeWidget);
 
 interface InputData {
     xValue: number;
-    lineValues: any[];
+    lineValues: number[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1008,7 +1127,6 @@ interface ILineChart {
         x: number[][];
         y: number[][];
     };
-    maxPoints: number;
 }
 
 interface IGauge {
@@ -1035,8 +1153,7 @@ function doUpdateChart() {
         Plotly().extendTraces(
             el,
             chart.data,
-            chart.data.x.map((_, i) => i),
-            chart.maxPoints
+            chart.data.x.map((_, i) => i)
         );
     } else {
         Plotly().update(
@@ -1062,35 +1179,6 @@ function doUpdateChart() {
 
     if (updateQueue.length > 0) {
         doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-    }
-}
-
-function updateLineChart(
-    el: HTMLElement,
-    inputValue: InputData,
-    maxPoints: number
-) {
-    let chart = charts.get(el) as ILineChart | undefined;
-    if (!chart) {
-        chart = {
-            type: "lineChart",
-            data: {
-                x: inputValue.lineValues.map(() => [inputValue.xValue]),
-                y: inputValue.lineValues.map(value => [value])
-            },
-            maxPoints
-        };
-        charts.set(el, chart);
-        updateQueue.push(el);
-
-        if (!doUpdateChartTimeoutId) {
-            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-        }
-    } else {
-        for (let i = 0; i < inputValue.lineValues.length; i++) {
-            chart.data.x[i].push(inputValue.xValue);
-            chart.data.y[i].push(inputValue.lineValues[i]);
-        }
     }
 }
 

@@ -346,6 +346,14 @@ export class Variable extends EezObject {
                     }
                 }
             }
+        },
+
+        addObjectHook: (variable: Variable, parent: IEezObject) => {
+            if (
+                ProjectEditor.getProject(parent).projectTypeTraits.isDashboard
+            ) {
+                variable.native = false;
+            }
         }
     };
 

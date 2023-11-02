@@ -601,12 +601,7 @@ export class WasmRuntime extends RemoteRuntime {
                         +this.assetsMap.typeIndexes[variable.type],
                         value,
                         this.assetsMap,
-                        (type: string) => {
-                            return getObjectVariableTypeFromType(
-                                this.projectStore,
-                                type
-                            );
-                        }
+                        undefined
                     );
 
                     this.globalVariables.push({
@@ -785,6 +780,18 @@ export class WasmRuntime extends RemoteRuntime {
                 this.projectStore.dataContext.set(
                     globalVariable.variable.name,
                     globalVariable.objectVariableValue
+                );
+            } else {
+                const engineValuePtr = this.worker.wasm._getGlobalVariable(
+                    globalVariable.globalVariableIndex
+                );
+                const engineValueWithType = getValue(
+                    this.worker.wasm,
+                    engineValuePtr
+                );
+                this.projectStore.dataContext.set(
+                    globalVariable.variable.name,
+                    engineValueWithType.value
                 );
             }
         }
@@ -1068,6 +1075,14 @@ export class WasmRuntime extends RemoteRuntime {
 
     onKeyDown(key: string) {
         if (!this.projectStore.projectTypeTraits.isDashboard) {
+            return;
+        }
+
+        if (!this.projectStore.runtime) {
+            return;
+        }
+
+        if (this.projectStore.runtime.isDebuggerActive && this.isPaused) {
             return;
         }
 

@@ -17,6 +17,7 @@
 #include <eez/flow/flow_defs_v3.h>
 #include <eez/flow/operations.h>
 #include <eez/flow/lvgl_api.h>
+#include <eez/flow/date.h>
 
 #include "flow.h"
 
@@ -760,7 +761,7 @@ static const void *getLvglImageByName(const char *name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize) {
+extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t timeZone) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
                                                false, LV_FONT_DEFAULT);
@@ -770,6 +771,8 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     //DISPLAY_HEIGHT = eez::g_mainAssets->settings->displayHeight;
 
     eez::flow::g_wasmModuleId = wasmModuleId;
+
+    eez::flow::date::g_timeZone = timeZone;
 
     eez::initAssetsMemory();
     eez::loadMainAssets(assets, assetsSize);

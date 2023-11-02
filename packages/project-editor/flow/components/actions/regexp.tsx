@@ -131,10 +131,20 @@ registerActionComponents("Dashboard Specific", [
                 const caseInsensitive: any =
                     !!context.evalProperty("caseInsensitive");
 
-                const re = new RegExp(
-                    patternValue,
-                    "md" + (global ? "g" : "") + (caseInsensitive ? "i" : "")
-                );
+                let re;
+                try {
+                    re = new RegExp(
+                        patternValue,
+                        "md" +
+                            (global ? "g" : "") +
+                            (caseInsensitive ? "i" : "")
+                    );
+                } catch (err) {
+                    context.throwError(
+                        "Invalid regular expression" + err.toString()
+                    );
+                    return;
+                }
 
                 const textValue: any = context.evalProperty("text");
                 if (typeof textValue == "string") {
@@ -178,7 +188,13 @@ function getMatchStruct(m: RegExpExecArray) {
     return {
         index: m.index,
         texts: m.map(x => x),
-        indices: (m as any).indices.map((a: any) => a.map((x: any) => x))
+        indices: (m as any).indices.map((a: any) => {
+            try {
+                return a.map((x: any) => x);
+            } catch (err) {
+                return [];
+            }
+        })
     };
 }
 

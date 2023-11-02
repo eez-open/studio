@@ -64,7 +64,8 @@ export class RuntimeSettings {
             if (!this.settings.__persistentVariables) {
                 this.settings.__persistentVariables = {};
             }
-            this.settings.__persistentVariables[variable.fullName] = value;
+            this.settings.__persistentVariables[variable.fullName] =
+                toJS(value);
         });
         this.modified = true;
     }

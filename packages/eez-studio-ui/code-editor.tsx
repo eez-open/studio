@@ -21,6 +21,8 @@ function createEditor(
 ) {
     const editor = ace.edit(element);
 
+    //editor.$blockScrolling = Infinity;
+
     editor.getSession().setUseWorker(false);
     editor.getSession().setMode("ace/mode/" + mode);
     editor.setShowPrintMargin(false);

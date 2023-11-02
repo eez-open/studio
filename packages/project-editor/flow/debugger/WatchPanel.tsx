@@ -419,7 +419,8 @@ const WatchTable = observer(
                                     value,
                                     type
                                 ),
-                                selected: false,
+                                selected:
+                                    this.props.selectedExpression.get() == i,
                                 expanded: this.expanded(
                                     "expressions-" + expression,
                                     false

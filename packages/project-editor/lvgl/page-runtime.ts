@@ -270,7 +270,15 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.page._lvglObj = undefined;
             });
 
-            this.wasm._init(0, 0, 0, 0, this.displayWidth, this.displayHeight);
+            this.wasm._init(
+                0,
+                0,
+                0,
+                0,
+                this.displayWidth,
+                this.displayHeight,
+                -(new Date().getTimezoneOffset() / 60) * 100
+            );
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick
@@ -407,7 +415,15 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                 this.page._lvglObj = undefined;
             });
 
-            this.wasm._init(0, 0, 0, 0, this.page.width, this.page.height);
+            this.wasm._init(
+                0,
+                0,
+                0,
+                0,
+                this.page.width,
+                this.page.height,
+                -(new Date().getTimezoneOffset() / 60) * 100
+            );
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick
@@ -701,7 +717,15 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 this.page._lvglObj = undefined;
             });
 
-            this.wasm._init(0, 0, 0, 0, this.displayWidth, this.displayHeight);
+            this.wasm._init(
+                0,
+                0,
+                0,
+                0,
+                this.displayWidth,
+                this.displayHeight,
+                -(new Date().getTimezoneOffset() / 60) * 100
+            );
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
                 this.tick

@@ -69,7 +69,7 @@ export class DragAndDropManagerClass {
         force: boolean,
         options?: { dropPlace?: IEezObject | PropertyInfo }
     ) {
-        if (force || (this.dropObject && this.dropEffect == "move")) {
+        if ((force || this.dropObject) && this.dropEffect == "move") {
             if (this.dragObject) {
                 this.undoManager?.projectStore.deleteObject(
                     this.dragObject,

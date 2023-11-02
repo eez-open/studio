@@ -1116,9 +1116,7 @@ export class SelectWidget extends Widget {
         let selectedWidget =
             index >= 0 && index < this.widgets.length
                 ? this.widgets[index]
-                : index == -1
-                ? null
-                : undefined;
+                : null;
 
         return (
             <>

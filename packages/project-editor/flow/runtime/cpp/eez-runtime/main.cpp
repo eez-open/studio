@@ -9,6 +9,7 @@
 #include <eez/flow/debugger.h>
 #include <eez/flow/components.h>
 #include <eez/flow/flow_defs_v3.h>
+#include <eez/flow/date.h>
 
 #include "./gui/keypad.h"
 
@@ -95,8 +96,10 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, uint32_t timeZone) {
     eez::flow::g_wasmModuleId = wasmModuleId;
+
+    eez::flow::date::g_timeZone = timeZone;
 
     eez::initAssetsMemory();
     eez::loadMainAssets(assets, assetsSize);

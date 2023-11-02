@@ -44,7 +44,10 @@ import {
     ValueType,
     variableTypeProperty
 } from "project-editor/features/variable/value-type";
-import type { Structure } from "project-editor/features/variable/variable";
+import type {
+    Enum,
+    Structure
+} from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -249,6 +252,7 @@ export function* searchForReference(
 
     let identifierType: IdentifierType | undefined;
     let structType: ValueType | undefined;
+    let enumType: ValueType | undefined;
 
     if (object instanceof ProjectEditor.VariableClass) {
         let flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
@@ -268,6 +272,11 @@ export function* searchForReference(
         identifierType = "enum";
     } else if (object instanceof ProjectEditor.EnumMemberClass) {
         identifierType = "enum-member";
+        const parentEnum = getAncestorOfType<Enum>(
+            object,
+            ProjectEditor.EnumClass.classInfo
+        );
+        enumType = `enum:${parentEnum!.name}`;
     } else if (object instanceof ProjectEditor.CustomInputClass) {
         identifierType = "input";
         root = getAncestorOfType(
@@ -347,7 +356,7 @@ export function* searchForReference(
             if (
                 (valueObject.propertyInfo.type ===
                     PropertyType.ObjectReference &&
-                    (!project.settings.general.flowSupport ||
+                    (!project.projectTypeTraits.hasFlowSupport ||
                         valueObject.propertyInfo
                             .referencedObjectCollectionPath !=
                             "variables/globalVariables")) ||
@@ -493,6 +502,8 @@ export function* searchForReference(
                                     if (
                                         node.identifierType ===
                                             identifierType &&
+                                        (identifierType != "enum-member" ||
+                                            node.valueType == enumType) &&
                                         node.name == objectName
                                     ) {
                                         node.location.start.offset +=
