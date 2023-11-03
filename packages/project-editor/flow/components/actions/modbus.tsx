@@ -267,6 +267,7 @@ export class ModbusActionComponent extends ActionComponent {
                             client
                         );
                     } catch (err) {
+                        console.warn(err);
                         context.throwError(err.toString());
                         return;
                     }
@@ -289,6 +290,7 @@ export class ModbusActionComponent extends ActionComponent {
                             context.endAsyncExecution();
                         },
                         error => {
+                            console.warn(error);
                             context.throwError(error.message);
                             context.endAsyncExecution();
                         }
@@ -335,6 +337,7 @@ export class ModbusActionComponent extends ActionComponent {
                         timeout
                     );
                 } catch (err) {
+                    console.warn(err);
                     context.throwError(err.toString());
                     return;
                 }
@@ -347,6 +350,7 @@ export class ModbusActionComponent extends ActionComponent {
                         context.endAsyncExecution();
                     },
                     error => {
+                        console.warn(error);
                         context.throwError(error.message);
                         context.endAsyncExecution();
                     }
@@ -392,6 +396,7 @@ export class ModbusActionComponent extends ActionComponent {
                         timeout
                     );
                 } catch (err) {
+                    console.warn(err);
                     context.throwError(err.toString());
                     return;
                 }
@@ -409,6 +414,7 @@ export class ModbusActionComponent extends ActionComponent {
                             context.endAsyncExecution();
                         },
                         error => {
+                            console.warn(error);
                             context.throwError(error.message);
                             context.endAsyncExecution();
                         }

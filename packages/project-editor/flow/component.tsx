@@ -2074,14 +2074,14 @@ export class Component extends EezObject {
             if (projectStore.projectTypeTraits.hasFlowSupport) {
                 // check properties
                 for (const propertyInfo of getClassInfo(component).properties) {
-                    if (isPropertyHidden(component, propertyInfo)) {
-                        continue;
-                    }
-
                     if (
                         propertyInfo.type == PropertyType.Array &&
                         propertyInfo.hasExpressionProperties
                     ) {
+                        if (isPropertyHidden(component, propertyInfo)) {
+                            continue;
+                        }
+
                         const value = getProperty(component, propertyInfo.name);
 
                         for (const object of value) {
@@ -4307,6 +4307,10 @@ function checkProperty(
     propertyInfo: PropertyInfo
 ) {
     if (isFlowProperty(object, propertyInfo, ["input"])) {
+        if (isPropertyHidden(component, propertyInfo)) {
+            return;
+        }
+
         const value = getProperty(object, propertyInfo.name);
         if (value != undefined && value !== "") {
             try {
@@ -4332,6 +4336,10 @@ function checkProperty(
             messages.push(propertyNotSetMessage(object, propertyInfo.name));
         }
     } else if (isFlowProperty(object, propertyInfo, ["assignable"])) {
+        if (isPropertyHidden(component, propertyInfo)) {
+            return;
+        }
+
         const value = getProperty(object, propertyInfo.name);
         if (value != undefined && value !== "") {
             try {
@@ -4353,6 +4361,10 @@ function checkProperty(
             messages.push(propertyNotSetMessage(object, propertyInfo.name));
         }
     } else if (isFlowProperty(object, propertyInfo, ["template-literal"])) {
+        if (isPropertyHidden(component, propertyInfo)) {
+            return;
+        }
+
         const value = getProperty(object, propertyInfo.name);
         if (value != undefined && value !== "") {
             try {
