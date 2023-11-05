@@ -25,6 +25,7 @@ import {
     makeDataPropertyInfo,
     makeExpressionProperty,
     makeStylePropertyInfo,
+    migrateStyleProperty,
     Widget
 } from "project-editor/flow/component";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -33,7 +34,11 @@ import { observer } from "mobx-react";
 import type * as PlotlyModule from "plotly.js-dist-min";
 import classNames from "classnames";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { evalProperty, getNumberValue } from "project-editor/flow/helper";
+import {
+    evalProperty,
+    getAnyValue,
+    getNumberValue
+} from "project-editor/flow/helper";
 import { getChildOfObject, Message, Section } from "project-editor/store";
 import {
     buildExpression,
@@ -48,11 +53,13 @@ import {
     GAUGE_ICON,
     LINE_CHART_ICON
 } from "project-editor/ui-components/icons";
+import type { Style } from "project-editor/features/style/style";
+import { getThemedColor } from "project-editor/features/style/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LineChartElement2 = observer(
-    class LineChartElement2 extends React.Component<{
+const LineChartElement = observer(
+    class LineChartElement extends React.Component<{
         widget: LineChartWidget;
         flowContext: IFlowContext;
         width: number;
@@ -155,7 +162,28 @@ const LineChartElement2 = observer(
         get layout(): Partial<PlotlyModule.Layout> {
             const { widget, flowContext } = this.props;
 
-            let range;
+            let xRange;
+            if (this.props.widget.xAxisRangeOption == "fixed") {
+                // this is calculated from expression
+                const xAxisRangeFrom = getNumberValue(
+                    flowContext,
+                    widget,
+                    "xAxisRangeFrom",
+                    0
+                );
+
+                // this is calculated from expression
+                const xAxisRangeTo = getNumberValue(
+                    flowContext,
+                    widget,
+                    "xAxisRangeTo",
+                    4
+                );
+
+                xRange = [xAxisRangeFrom, xAxisRangeTo];
+            }
+
+            let yRange;
             if (this.props.widget.yAxisRangeOption == "fixed") {
                 // this is calculated from expression
                 const yAxisRangeFrom = getNumberValue(
@@ -173,26 +201,94 @@ const LineChartElement2 = observer(
                     10
                 );
 
-                range = [yAxisRangeFrom, yAxisRangeTo];
+                yRange = [yAxisRangeFrom, yAxisRangeTo];
             }
+
+            let shapes: Array<Partial<PlotlyModule.Shape>> | undefined;
+            if (this.props.widget.marker) {
+                // this is calculated from expression
+                let marker = getAnyValue(flowContext, widget, "marker", null);
+
+                if (marker != null) {
+                    const color =
+                        (widget.markerStyle &&
+                            widget.markerStyle.borderColor &&
+                            getThemedColor(
+                                flowContext.projectStore,
+                                widget.markerStyle.borderColor
+                            )) ||
+                        "black";
+
+                    const width =
+                        ((widget.markerStyle &&
+                            widget.markerStyle.borderSize) as any as number) ||
+                        1;
+
+                    const dash: PlotlyModule.Dash =
+                        ((widget.markerStyle &&
+                            widget.markerStyle
+                                .borderStyle) as PlotlyModule.Dash) || "solid";
+
+                    shapes = [
+                        {
+                            type: "line",
+                            x0: marker,
+                            y0: 0,
+                            x1: marker,
+                            yref: "paper",
+                            y1: 100,
+                            line: {
+                                color,
+                                width,
+                                dash
+                            }
+                        }
+                    ];
+                }
+            }
+
+            const bgcolor = widget.style.backgroundColor
+                ? getThemedColor(
+                      flowContext.projectStore,
+                      widget.style.backgroundColor
+                  )
+                : "white";
 
             return {
                 title: widget.title,
-                yaxis: {
-                    range
+                xaxis: {
+                    visible: widget.showXAxis,
+                    showgrid: widget.showGrid,
+                    zeroline: widget.showZeroLines,
+                    range: xRange
                 },
+                yaxis: {
+                    visible: widget.showYAxis,
+                    showgrid: widget.showGrid,
+                    zeroline: widget.showZeroLines,
+                    range: yRange
+                },
+                shapes,
                 margin: {
                     t: widget.margin.top,
                     r: widget.margin.right,
                     b: widget.margin.bottom,
                     l: widget.margin.left
-                }
+                },
+                plot_bgcolor: bgcolor,
+                paper_bgcolor: bgcolor
             };
         }
 
         get config(): Partial<PlotlyModule.Config> {
             return {
-                autosizable: false
+                autosizable: false,
+                displayModeBar:
+                    this.props.widget.displayModebar == "hover"
+                        ? "hover"
+                        : this.props.widget.displayModebar == "always"
+                        ? true
+                        : false
             };
         }
 
@@ -484,10 +580,75 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             {
+                name: "displayModebar",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "hover", label: "Hover" },
+                    { id: "always", label: "Always" },
+                    { id: "never", label: "Never" }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            {
                 name: "showLegend",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup
             },
+            {
+                name: "showXAxis",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "showYAxis",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "showGrid",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "showZeroLines",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "xAxisRangeOption",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "floating",
+                        label: "Floating"
+                    },
+                    {
+                        id: "fixed",
+                        label: "Fixed"
+                    }
+                ],
+                propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "xAxisRangeFrom",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                        widget.xAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "xAxisRangeTo",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                        widget.xAxisRangeOption != "fixed"
+                },
+                "double"
+            ),
             {
                 name: "yAxisRangeOption",
                 type: PropertyType.Enum,
@@ -538,7 +699,16 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 enumerable: false
             },
-            makeStylePropertyInfo("style", "Default style")
+            makeExpressionProperty(
+                {
+                    name: "marker",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "float"
+            ),
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("markerStyle", "Marker")
         ],
 
         beforeLoadHook: (object: LineChartWidget, jsObject: any) => {
@@ -556,6 +726,12 @@ export class LineChartWidget extends Widget {
                 delete jsObject.data;
             }
 
+            if (jsObject.xAxisRangeOption == undefined) {
+                jsObject.xAxisRangeOption = "floating";
+                jsObject.xAxisRangeFrom = 0;
+                jsObject.xAxisRangeTo = 10;
+            }
+
             if (jsObject.yAxisRangeOption == undefined) {
                 jsObject.yAxisRangeOption = "floating";
                 jsObject.yAxisRangeFrom = 0;
@@ -566,9 +742,31 @@ export class LineChartWidget extends Widget {
                 jsObject.showLegend = true;
             }
 
+            if (jsObject.displayModebar == undefined) {
+                jsObject.displayModebar = "hover";
+            }
+
             if (typeof jsObject.maxPoints == "number") {
                 jsObject.maxPoints = jsObject.maxPoints.toString();
             }
+
+            if (jsObject.showXAxis == undefined) {
+                jsObject.showXAxis = true;
+            }
+
+            if (jsObject.showYAxis == undefined) {
+                jsObject.showYAxis = true;
+            }
+
+            if (jsObject.showGrid == undefined) {
+                jsObject.showGrid = true;
+            }
+
+            if (jsObject.showZeroLines == undefined) {
+                jsObject.showZeroLines = true;
+            }
+
+            migrateStyleProperty(jsObject, "markerStyle");
         },
 
         defaultValue: {
@@ -580,6 +778,14 @@ export class LineChartWidget extends Widget {
             lines: [],
             title: "",
             showLegend: true,
+            displayModebar: "hover",
+            showXAxis: true,
+            showYAxis: true,
+            showGrid: true,
+            showZeroLines: true,
+            xAxisRangeOption: "floating",
+            xAxisRangeFrom: 0,
+            xAxisRangeTo: 10,
             yAxisRangeOption: "floating",
             yAxisRangeFrom: 0,
             yAxisRangeTo: 10,
@@ -592,6 +798,7 @@ export class LineChartWidget extends Widget {
                 bottom: 50,
                 left: 50
             },
+            marker: "",
             customInputs: [
                 {
                     name: "value",
@@ -605,7 +812,7 @@ export class LineChartWidget extends Widget {
         showTreeCollapseIcon: "never",
 
         execute: (context: IDashboardComponentContext) => {
-            const value = context.getInputValue("reset");
+            const resetInputValue = context.getInputValue("reset");
 
             const labels = context.getExpressionListParam(0);
 
@@ -621,7 +828,7 @@ export class LineChartWidget extends Widget {
                 executionState!.labels = labels;
             });
 
-            if (value !== undefined) {
+            if (resetInputValue !== undefined) {
                 context.clearInputValue("reset");
 
                 executionState!.operations = [{ cmd: "reset" }];
@@ -629,47 +836,59 @@ export class LineChartWidget extends Widget {
                 runInAction(() => {
                     executionState!.values = [];
                 });
-            } else {
-                const maxPoints = context.evalProperty("maxPoints");
-
-                const xValue = context.evalProperty("xValue");
-                const lineValues = context.getExpressionListParam(8);
-
-                let values = executionState.values.slice();
-
-                if (values.length == maxPoints) {
-                    values.shift();
-                }
-
-                const inputData = {
-                    xValue,
-                    lineValues
-                };
-
-                values.push(inputData);
-
-                executionState.operations.push({
-                    cmd: "extend",
-                    inputData: inputData
-                });
-
-                runInAction(() => {
-                    executionState!.maxPoints = maxPoints;
-                    executionState!.values = values;
-                });
             }
+
+            const maxPoints = context.evalProperty("maxPoints");
+
+            const xValue = context.evalProperty("xValue");
+            const lineValues = context.getExpressionListParam(8);
+
+            let values = executionState.values.slice();
+
+            if (values.length == maxPoints) {
+                values.shift();
+            }
+
+            const inputData = {
+                xValue,
+                lineValues
+            };
+
+            values.push(inputData);
+
+            executionState.operations.push({
+                cmd: "extend",
+                inputData: inputData
+            });
+
+            runInAction(() => {
+                executionState!.maxPoints = maxPoints;
+                executionState!.values = values;
+            });
+
+            context.clearInputValue("value");
         }
     });
 
     xValue: string;
     lines: LineChartLine[];
     title: string;
+    displayModebar: "hover" | "always" | "never";
     showLegend: boolean;
+    showXAxis: boolean;
+    showYAxis: boolean;
+    showGrid: boolean;
+    showZeroLines: boolean;
+    xAxisRangeOption: "floating" | "fixed";
+    xAxisRangeFrom: number;
+    xAxisRangeTo: number;
     yAxisRangeOption: "floating" | "fixed";
     yAxisRangeFrom: number;
     yAxisRangeTo: number;
     maxPoints: string;
     margin: RectObject;
+    marker: string;
+    markerStyle: Style;
 
     constructor() {
         super();
@@ -678,12 +897,22 @@ export class LineChartWidget extends Widget {
             xValue: observable,
             lines: observable,
             title: observable,
+            displayModebar: observable,
             showLegend: observable,
+            showXAxis: observable,
+            showYAxis: observable,
+            showGrid: observable,
+            showZeroLines: observable,
+            xAxisRangeOption: observable,
+            xAxisRangeFrom: observable,
+            xAxisRangeTo: observable,
             yAxisRangeOption: observable,
             yAxisRangeFrom: observable,
             yAxisRangeTo: observable,
             maxPoints: observable,
-            margin: observable
+            margin: observable,
+            marker: observable,
+            markerStyle: observable
         });
     }
 
@@ -706,7 +935,7 @@ export class LineChartWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <LineChartElement2
+                <LineChartElement
                     widget={this}
                     flowContext={flowContext}
                     width={width}

@@ -45,7 +45,7 @@ export const ComponentsContainerEnclosure = observer(
                 parentRect = this.props.parent.rect;
             }
 
-            return components.map((component, i) => {
+            const renderComponent = (component: Component, i: number) => {
                 let left: number | undefined;
                 let top: number | undefined;
                 let width: number | undefined;
@@ -123,7 +123,13 @@ export const ComponentsContainerEnclosure = observer(
                         height={height}
                     />
                 );
-            });
+            };
+
+            if (visibleComponent && flowContext.flowState) {
+                return renderComponent(visibleComponent, 0);
+            }
+
+            return components.map(renderComponent);
         }
     }
 );

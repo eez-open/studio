@@ -217,16 +217,12 @@ registerActionComponents("Serial Port", [
                     try {
                         await serialConnection.connect();
 
-                        try {
-                            context.setPropertyField(
-                                "connection",
-                                "id",
-                                serialConnection.id
-                            );
-                            context.propagateValueThroughSeqout();
-                        } catch (err) {
-                            context.throwError(err.toString());
-                        }
+                        context.setPropertyField(
+                            "connection",
+                            "id",
+                            serialConnection.id
+                        );
+                        context.propagateValueThroughSeqout();
                     } catch (err) {
                         context.throwError(err.toString());
                     }

@@ -1206,8 +1206,8 @@ export class DropDownListDashboardWidget extends Widget {
                 >
                     {options
                         .filter(option => typeof option === "string")
-                        .map(option => (
-                            <option key={option} value={option}>
+                        .map((option, i) => (
+                            <option key={i} value={option}>
                                 {option}
                             </option>
                         ))}
