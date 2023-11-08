@@ -452,7 +452,6 @@ const Editors = observer(
                 | FlexLayout.BorderNode,
             event: React.MouseEvent<HTMLElement, MouseEvent>
         ) => {
-            console.log(node, event);
             if (
                 node instanceof FlexLayout.TabNode &&
                 node.getComponent() == "editor"

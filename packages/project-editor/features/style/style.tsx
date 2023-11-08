@@ -1960,28 +1960,43 @@ export class Style extends EezObject {
             return "";
         }
 
-        let cssPreview = "";
-
-        if (this.parentStyle && this.parentStyle.cssPreview) {
-            if (cssPreview) {
-                cssPreview += "\n";
+        function getCssPreview(style: Style, visited: Style[]): string {
+            if (visited.indexOf(style) != -1) {
+                return "";
             }
-            cssPreview += this.parentStyle.cssPreview;
+            visited.push(style);
+
+            let cssPreview = "";
+
+            if (style.parentStyle) {
+                const parentCssPreview = getCssPreview(
+                    style.parentStyle,
+                    visited
+                );
+                if (parentCssPreview) {
+                    if (cssPreview) {
+                        cssPreview += "\n";
+                    }
+                    cssPreview += parentCssPreview;
+                }
+            }
+
+            if (style.cssDeclarations) {
+                if (cssPreview) {
+                    cssPreview += "\n";
+                }
+                if (style.name) {
+                    cssPreview += `/* ${style.name} */\n`;
+                } else {
+                    cssPreview += `/* inline style */\n`;
+                }
+                cssPreview += style.cssDeclarations;
+            }
+
+            return cssPreview;
         }
 
-        if (this.cssDeclarations) {
-            if (cssPreview) {
-                cssPreview += "\n";
-            }
-            if (this.name) {
-                cssPreview += `/* ${this.name} */\n`;
-            } else {
-                cssPreview += `/* inline style */\n`;
-            }
-            cssPreview += this.cssDeclarations;
-        }
-
-        return cssPreview;
+        return getCssPreview(this, []);
     }
 
     get globalClassName() {
@@ -1989,19 +2004,31 @@ export class Style extends EezObject {
     }
 
     get classNames(): string[] {
-        const classNames = [];
+        function getClassNames(style: Style, visited: Style[]): string[] {
+            const classNames = [];
 
-        if (isDashboardProject(this)) {
-            if (this.parentStyle) {
-                classNames.push(...this.parentStyle.classNames);
+            if (visited.indexOf(style) == -1) {
+                visited.push(style);
+
+                if (style.parentStyle) {
+                    classNames.push(
+                        ...getClassNames(style.parentStyle, visited)
+                    );
+                }
+
+                if (style.cssDeclarations) {
+                    classNames.push(style.globalClassName);
+                }
             }
 
-            if (this.cssDeclarations) {
-                classNames.push(this.globalClassName);
-            }
+            return classNames;
         }
 
-        return classNames;
+        if (!isDashboardProject(this)) {
+            return [];
+        }
+
+        return getClassNames(this, []);
     }
 
     render() {
@@ -2038,45 +2065,66 @@ function getInheritedValue(
     propertyName: string,
     translateThemedColors?: boolean
 ): InheritedValue {
-    if (translateThemedColors == undefined) {
-        translateThemedColors = true;
-    }
+    function getInheritedValue(
+        styleObject: Style,
+        propertyName: string,
+        translateThemedColors: boolean | undefined,
+        visited: Style[]
+    ): InheritedValue {
+        if (visited.indexOf(styleObject) != -1) {
+            return undefined;
+        }
 
-    let value = getProperty(styleObject, propertyName);
-    if (value !== undefined) {
-        if (
-            translateThemedColors &&
-            (propertyName === "color" ||
-                propertyName === "backgroundColor" ||
-                propertyName === "activeColor" ||
-                propertyName === "activeBackgroundColor" ||
-                propertyName === "focusColor" ||
-                propertyName === "focusBackgroundColor" ||
-                propertyName === "borderColor")
-        ) {
-            value = getThemedColor(getProjectStore(styleObject), value);
+        visited.push(styleObject);
+
+        if (translateThemedColors == undefined) {
+            translateThemedColors = true;
+        }
+
+        let value = getProperty(styleObject, propertyName);
+        if (value !== undefined) {
+            if (
+                translateThemedColors &&
+                (propertyName === "color" ||
+                    propertyName === "backgroundColor" ||
+                    propertyName === "activeColor" ||
+                    propertyName === "activeBackgroundColor" ||
+                    propertyName === "focusColor" ||
+                    propertyName === "focusBackgroundColor" ||
+                    propertyName === "borderColor")
+            ) {
+                value = getThemedColor(getProjectStore(styleObject), value);
+            }
+
+            return {
+                value: value,
+                source: styleObject
+            };
+        }
+
+        if (styleObject.parentStyle) {
+            return getInheritedValue(
+                styleObject.parentStyle,
+                propertyName,
+                translateThemedColors,
+                visited
+            );
         }
 
         return {
-            value: value,
-            source: styleObject
+            value: getProjectStore(styleObject).projectTypeTraits.isDashboard
+                ? undefined
+                : propertiesMap[propertyName]?.defaultValue,
+            source: undefined
         };
     }
 
-    if (styleObject.parentStyle) {
-        return getInheritedValue(
-            styleObject.parentStyle,
-            propertyName,
-            translateThemedColors
-        );
-    }
-
-    return {
-        value: getProjectStore(styleObject).projectTypeTraits.isDashboard
-            ? undefined
-            : propertiesMap[propertyName]?.defaultValue,
-        source: undefined
-    };
+    return getInheritedValue(
+        styleObject,
+        propertyName,
+        translateThemedColors,
+        []
+    );
 }
 
 export function getStyleProperty(

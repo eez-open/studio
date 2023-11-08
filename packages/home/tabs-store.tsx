@@ -672,13 +672,7 @@ export class ProjectEditorTab implements IHomeTab {
 
         const onKeyDown = (e: KeyboardEvent) => {
             if (this.projectStore?.runtime) {
-                if (
-                    e.target instanceof HTMLInputElement ||
-                    e.target instanceof HTMLSelectElement
-                ) {
-                    return;
-                }
-                this.projectStore?.runtime.onKeyDown(e.key);
+                this.projectStore.runtime.onKeyDown(e);
             }
         };
 

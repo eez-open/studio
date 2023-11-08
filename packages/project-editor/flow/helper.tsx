@@ -110,7 +110,7 @@ export function getAnyValue(
         // console.error(err);
     }
 
-    return value || defaultValue;
+    return value != undefined ? value : defaultValue;
 }
 
 export function getTextValue(

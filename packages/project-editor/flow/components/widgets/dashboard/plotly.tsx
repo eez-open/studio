@@ -315,9 +315,11 @@ const LineChartElement = observer(
             this.plotlyEl = el;
 
             this.dispose1 = reaction(
-                () => ({
-                    layout: this.layout
-                }),
+                () => {
+                    return {
+                        layout: this.layout
+                    };
+                },
                 async params => {
                     this.plotly = await newPlotOrReact(
                         el,
@@ -408,9 +410,19 @@ const LineChartElement = observer(
             }
         }
 
-        componentDidUpdate() {
+        async componentDidUpdate() {
             if (this.ref.current) {
-                this.createChart(this.ref.current);
+                if (!this.plotly) {
+                    this.createChart(this.ref.current);
+                } else {
+                    this.plotly = await newPlotOrReact(
+                        this.ref.current,
+                        this.data,
+                        this.layout,
+                        this.config,
+                        false
+                    );
+                }
             }
         }
 

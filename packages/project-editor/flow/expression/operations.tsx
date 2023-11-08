@@ -1076,16 +1076,29 @@ export const builtInFunctions: {
         }
     },
 
-    "String.fromCharCode": {
+    "String.fromCodePoint": {
         operationIndex: 72,
         arity: 1,
         args: ["charCode"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
-        ) => String.fromCharCode(args[0]),
+        ) => String.fromCodePoint(args[0]),
         getValueType: (...args: ValueType[]) => {
             return "string";
+        }
+    },
+
+    "String.codePointAt": {
+        operationIndex: 73,
+        arity: 2,
+        args: ["string", "index"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0].codePointAt(args[1]),
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
         }
     },
 
@@ -1104,7 +1117,7 @@ export const builtInFunctions: {
 
     "Array.slice": {
         operationIndex: 53,
-        arity: { min: 2, max: 3 },
+        arity: { min: 1, max: 3 },
         args: ["array", "start", "[end]"],
         eval: (
             expressionContext: IExpressionContext | undefined,

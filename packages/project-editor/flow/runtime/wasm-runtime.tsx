@@ -81,6 +81,7 @@ import { getClassByName } from "project-editor/core/object";
 import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
 import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
 import { releaseRuntimeDashboardStates } from "project-editor/flow/runtime/component-execution-states";
+import { hasClass } from "eez-studio-shared/dom";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -1073,7 +1074,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.worker.postMessage(message);
     }
 
-    onKeyDown(key: string) {
+    onKeyDown(e: KeyboardEvent) {
         if (!this.projectStore.projectTypeTraits.isDashboard) {
             return;
         }
@@ -1100,6 +1101,34 @@ export class WasmRuntime extends RemoteRuntime {
             console.error("Unexpected!");
             return;
         }
+
+        let key;
+
+        if (key != "Shift" && key != "Control" && key != "Alt") {
+            key =
+                (e.ctrlKey ? "Control" : "") +
+                (e.altKey ? "Alt" : "") +
+                (e.shiftKey ? "Shift" : "") +
+                e.key;
+        } else {
+            key = e.key;
+        }
+
+        if (e.target instanceof HTMLInputElement) {
+            if (
+                (key != "Tab" && key != "ShiftTab") ||
+                !hasClass(e.target, "eez-studio-disable-default-tab-handling")
+            ) {
+                return;
+            }
+        }
+
+        if (e.target instanceof HTMLSelectElement) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
 
         let valuePtr = createWasmValue(this.worker.wasm, key);
 

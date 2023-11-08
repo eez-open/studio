@@ -831,7 +831,7 @@ export abstract class RuntimeBase {
 
     setObjectVariableValue(variableName: string, value: IObjectVariableValue) {}
 
-    onKeyDown(key: string) {}
+    onKeyDown(e: KeyboardEvent) {}
 }
 
 export class FlowState {

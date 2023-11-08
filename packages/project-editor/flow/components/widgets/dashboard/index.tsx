@@ -587,6 +587,7 @@ const NumberInputDashboardWidgetElement = observer(
         flowContext: IFlowContext;
         width: number;
         height: number;
+        disableDefaultTabHandling: boolean;
     }> {
         constructor(props: any) {
             super(props);
@@ -596,7 +597,13 @@ const NumberInputDashboardWidgetElement = observer(
             });
         }
 
-        componentWillUnmount(): void {}
+        inputElement = React.createRef<HTMLInputElement>();
+
+        componentDidMount() {
+            if (this.props.flowContext.flowState && this.inputElement.current) {
+                this.inputElement.current.focus();
+            }
+        }
 
         dispose: IReactionDisposer;
         latestFlowValue: any;
@@ -622,8 +629,12 @@ const NumberInputDashboardWidgetElement = observer(
 
             return (
                 <input
+                    ref={this.inputElement}
                     type="number"
-                    className={this.props.className}
+                    className={classNames(this.props.className, {
+                        "eez-studio-disable-default-tab-handling":
+                            this.props.disableDefaultTabHandling
+                    })}
                     value={
                         this.inputValue != undefined ? this.inputValue : value
                     }
@@ -715,6 +726,12 @@ export class NumberInputDashboardWidget extends Widget {
                 },
                 "double"
             ),
+            {
+                name: "disableDefaultTabHandling",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            },
             makeStylePropertyInfo("style", "Default style")
         ],
 
@@ -768,6 +785,8 @@ export class NumberInputDashboardWidget extends Widget {
     value: string;
     min: string;
     max: string;
+    step: string;
+    disableDefaultTabHandling: boolean;
 
     constructor() {
         super();
@@ -775,7 +794,9 @@ export class NumberInputDashboardWidget extends Widget {
         makeObservable(this, {
             value: observable,
             min: observable,
-            max: observable
+            max: observable,
+            step: observable,
+            disableDefaultTabHandling: observable
         });
     }
 
@@ -798,6 +819,7 @@ export class NumberInputDashboardWidget extends Widget {
                     flowContext={flowContext}
                     width={width}
                     height={height}
+                    disableDefaultTabHandling={this.disableDefaultTabHandling}
                 />
                 {super.render(flowContext, width, height)}
             </>
