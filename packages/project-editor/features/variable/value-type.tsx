@@ -71,6 +71,7 @@ export const FIRMWARE_BASIC_TYPE_NAMES = [
     "boolean",
     "string",
     "date",
+    "blob",
     "any"
 ];
 

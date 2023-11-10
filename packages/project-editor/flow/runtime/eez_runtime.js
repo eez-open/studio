@@ -969,23 +969,23 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  60408: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 60514: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 60550: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 60587: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 60627: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 60684: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 60743: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
- 60816: ($0, $1) => { freeComponentExecutionState($0, $1); },  
- 60857: ($0, $1, $2, $3, $4, $5, $6) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4, $5, $6); },  
- 60940: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
- 61101: ($0) => { startToDebuggerMessage($0); },  
- 61133: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 61208: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 61283: ($0) => { finishToDebuggerMessage($0); },  
- 61316: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
- 61363: ($0, $1) => { onArrayValueFree($0, $1); },  
- 61393: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
+  60824: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 60930: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 60966: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 61003: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 61043: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 61100: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 61159: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
+ 61232: ($0, $1) => { freeComponentExecutionState($0, $1); },  
+ 61273: ($0, $1, $2, $3, $4, $5, $6) => { executeScpi($0, $1, new Uint8Array(Module.HEAPU8.buffer, $2, $3), $4, $5, $6); },  
+ 61356: () => { FS.mkdir("/min_eez_sample"); FS.mount(IDBFS, {}, "/min_eez_sample"); Module.syncdone = 0; FS.syncfs(true, function(err) { assert(!err); Module.syncdone = 1; }); },  
+ 61517: ($0) => { startToDebuggerMessage($0); },  
+ 61549: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 61624: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 61699: ($0) => { finishToDebuggerMessage($0); },  
+ 61732: ($0, $1, $2, $3) => { executeDashboardComponent($0, $1, $2, $3); },  
+ 61779: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 61809: () => { if (Module.syncdone) { Module.syncdone = 0; FS.syncfs(false, function(err) { assert(!err); Module.syncdone = 1; }); } }
 };
 
 

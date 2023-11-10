@@ -386,6 +386,8 @@ export function findValueTypeInExpressionNode(
             if (node.computed) {
                 if (node.object.valueType == "any") {
                     node.valueType = "any";
+                } else if (node.object.valueType == "blob") {
+                    node.valueType = "integer";
                 } else {
                     const valueType = getArrayElementTypeFromType(
                         node.object.valueType

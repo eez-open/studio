@@ -7,6 +7,7 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 import type { IExpressionContext } from "project-editor/flow/expression";
 import type { ProjectStore } from "project-editor/store";
 import { findBitmap } from "project-editor/project/assets";
+import sha256 from "sha256";
 
 function roundN(value: number, decimals: number) {
     return Number(Math.round(Number(value + "e" + decimals)) + "e-" + decimals);
@@ -595,6 +596,19 @@ export const builtInFunctions: {
             expressionContext
                 ? findBitmap(expressionContext?.projectStore.project, args[0])
                 : undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "blob";
+        }
+    },
+
+    "Crypto.sha256": {
+        operationIndex: 74,
+        arity: 1,
+        args: ["string_or_blob"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => sha256(args[0]),
         getValueType: (...args: ValueType[]) => {
             return "blob";
         }

@@ -848,37 +848,35 @@ export class LineChartWidget extends Widget {
                 runInAction(() => {
                     executionState!.values = [];
                 });
+            } else {
+                const maxPoints = context.evalProperty("maxPoints");
+
+                const xValue = context.evalProperty("xValue");
+                const lineValues = context.getExpressionListParam(8);
+
+                let values = executionState.values.slice();
+
+                if (values.length == maxPoints) {
+                    values.shift();
+                }
+
+                const inputData = {
+                    xValue,
+                    lineValues
+                };
+
+                values.push(inputData);
+
+                executionState.operations.push({
+                    cmd: "extend",
+                    inputData: inputData
+                });
+
+                runInAction(() => {
+                    executionState!.maxPoints = maxPoints;
+                    executionState!.values = values;
+                });
             }
-
-            const maxPoints = context.evalProperty("maxPoints");
-
-            const xValue = context.evalProperty("xValue");
-            const lineValues = context.getExpressionListParam(8);
-
-            let values = executionState.values.slice();
-
-            if (values.length == maxPoints) {
-                values.shift();
-            }
-
-            const inputData = {
-                xValue,
-                lineValues
-            };
-
-            values.push(inputData);
-
-            executionState.operations.push({
-                cmd: "extend",
-                inputData: inputData
-            });
-
-            runInAction(() => {
-                executionState!.maxPoints = maxPoints;
-                executionState!.values = values;
-            });
-
-            context.clearInputValue("value");
         }
     });
 
