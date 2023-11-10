@@ -412,7 +412,7 @@ const LineChartElement = observer(
 
         async componentDidUpdate() {
             if (this.ref.current) {
-                if (!this.plotly) {
+                if (!this.plotly || !this.props.flowContext.flowState) {
                     this.createChart(this.ref.current);
                 } else {
                     this.plotly = await newPlotOrReact(
