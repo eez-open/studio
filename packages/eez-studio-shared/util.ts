@@ -1,4 +1,4 @@
-import MobXModule from "mobx";
+import { toJS, isObservableArray } from "mobx";
 import type MomentModule from "moment";
 import stringify from "json-stable-stringify";
 
@@ -64,8 +64,6 @@ export function formatTransferSpeed(speed: number) {
 }
 
 export function objectClone(obj: any) {
-    const { toJS } = require("mobx") as typeof MobXModule;
-
     let a: any = {};
     for (const key in obj) {
         if (obj.hasOwnProperty(key) && !key.startsWith("$eez_noser")) {
@@ -83,7 +81,6 @@ export function objectClone(obj: any) {
 }
 
 export function objectEqual<T>(a: T, b: T) {
-    const { toJS } = require("mobx") as typeof MobXModule;
     const astr = stringify(toJS(a));
     const bstr = stringify(toJS(b));
     return astr === bstr;
@@ -214,4 +211,10 @@ export function remap(
 
 export function sourceRootDir() {
     return __dirname + "/..";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function isArray(value: any): value is any[] {
+    return Array.isArray(value) || isObservableArray(value);
 }

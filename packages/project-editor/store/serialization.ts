@@ -24,9 +24,10 @@ import type { Project } from "project-editor/project/project";
 import {
     getAncestorOfType,
     getClassInfo,
-    isArray,
     ProjectStore
 } from "project-editor/store";
+
+import { isArray } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,7 +175,7 @@ function loadObjectInternal(
             ? JSON.parse(jsObjectOrString)
             : jsObjectOrString;
 
-    if (Array.isArray(jsObject)) {
+    if (isArray(jsObject)) {
         return loadArrayObject(jsObject, parent, {
             type: PropertyType.Array,
             name: key!,

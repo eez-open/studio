@@ -66,6 +66,8 @@ import {
     RulersDockView
 } from "eez-studio-ui/chart/rulers";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const CONF_CURSOR_RADIUS = 8;
@@ -3859,9 +3861,7 @@ class DynamicAxisController extends AxisController {
             if (this.position === "x") {
                 steps = this.chartsController.viewOptions.axesLines.steps.x;
             } else if (
-                Array.isArray(
-                    this.chartsController.viewOptions.axesLines.steps.y
-                )
+                isArray(this.chartsController.viewOptions.axesLines.steps.y)
             ) {
                 steps =
                     this.chartsController.viewOptions.axesLines.steps.y.find(

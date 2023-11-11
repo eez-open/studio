@@ -25,6 +25,8 @@ import type {
 } from "eez-studio-ui/chart/chart";
 import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
+import { isArray } from "eez-studio-shared/util";
+
 export interface IRulersController {
     rulersModel: IRulersModel;
     chartsController: IChartsController;
@@ -1143,7 +1145,7 @@ export class RulersModel {
         });
 
         if (props) {
-            if (!Array.isArray(props.yAxisRulersEnabled)) {
+            if (!isArray(props.yAxisRulersEnabled)) {
                 props.yAxisRulersEnabled = [props.yAxisRulersEnabled];
                 props.y1 = [props.y1];
                 props.y2 = [props.y2];

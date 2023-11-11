@@ -49,6 +49,8 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Checkbox } from "./Checkbox";
 import { ImageProperty } from "./ImageProperty";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Property = observer(
@@ -1099,7 +1101,7 @@ function getEnumItems(objects: IEezObject[], propertyInfo: PropertyInfo) {
         return [];
     }
 
-    if (Array.isArray(propertyInfo.enumItems)) {
+    if (isArray(propertyInfo.enumItems)) {
         return propertyInfo.enumItems;
     }
 

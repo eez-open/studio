@@ -6,6 +6,8 @@ import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export type StoreOperation =
@@ -847,13 +849,13 @@ export function createStore({
                     } else if (params.op === "read") {
                         params.object.forEach(createObject);
                     } else if (params.op === "update") {
-                        if (Array.isArray(params.object)) {
+                        if (isArray(params.object)) {
                             params.object.forEach(updateObject);
                         } else {
                             updateObject(params.object);
                         }
                     } else {
-                        if (Array.isArray(params.object)) {
+                        if (isArray(params.object)) {
                             params.object.forEach(deleteObject);
                         } else {
                             if (

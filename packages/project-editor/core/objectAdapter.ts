@@ -43,7 +43,6 @@ import {
     setClipboardData,
     objectToClipboardData,
     findPastePlaceInside,
-    isArray,
     objectToString,
     isShowOnlyChildrenInTree,
     isArrayElement,
@@ -63,6 +62,8 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { onAfterPaste } from "project-editor/core/util";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+
+import { isArray } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -541,7 +542,7 @@ export class TreeObjectAdapter {
             newObject = pasteItem(fromObject);
             if (newObject) {
                 onAfterPaste(newObject, fromObject);
-                if (Array.isArray(newObject)) {
+                if (isArray(newObject)) {
                     this.selectObjects(newObject);
                 } else {
                     this.selectObject(newObject);
@@ -929,7 +930,7 @@ export class TreeAdapter {
             return false;
         }
         return (
-            (Array.isArray(item.children) && item.children.length > 0) ||
+            (isArray(item.children) && item.children.length > 0) ||
             Object.keys(item.children).length > 0
         );
     }

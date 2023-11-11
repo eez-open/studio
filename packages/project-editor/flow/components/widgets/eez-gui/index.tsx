@@ -138,6 +138,8 @@ const BAR_GRAPH_ORIENTATION_TOP_BOTTOM = 3;
 const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum DisplayOption {
@@ -1817,7 +1819,7 @@ export class ButtonGroupWidget extends Widget {
                 "v3"
         ) {
             const buttonLabels = getAnyValue(flowContext, this, "data", []);
-            if (Array.isArray(buttonLabels)) {
+            if (isArray(buttonLabels)) {
                 return buttonLabels.map(label => label.toString());
             }
             return [];
@@ -3233,7 +3235,7 @@ export class ScrollBarWidget extends Widget {
                             100, 25, 20
                         ];
 
-                        if (!Array.isArray(data)) {
+                        if (!isArray(data)) {
                             data = [
                                 data.numItems,
                                 data.position,

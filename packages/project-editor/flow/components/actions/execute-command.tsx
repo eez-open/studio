@@ -11,6 +11,8 @@ import { registerActionComponents } from "project-editor/flow/component";
 
 import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const activeExecuteProcesses = new Map<
@@ -120,7 +122,7 @@ registerActionComponents("Dashboard Specific", [
                 return;
             }
             const argsValue: any = context.evalProperty("arguments");
-            if (!Array.isArray(argsValue)) {
+            if (!isArray(argsValue)) {
                 context.throwError("arguments is not an array");
                 return;
             }

@@ -30,6 +30,8 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import type { LVGLParts } from "project-editor/lvgl/style-helper";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export enum Section {
@@ -250,10 +252,7 @@ export class MessagesCollection {
 
             if (
                 groupObject instanceof EezValueObject ||
-                !(
-                    Array.isArray(groupObject) ||
-                    groupObject instanceof EezObject
-                )
+                !(isArray(groupObject) || groupObject instanceof EezObject)
             ) {
                 break;
             }

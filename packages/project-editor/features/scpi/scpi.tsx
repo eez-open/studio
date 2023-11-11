@@ -41,6 +41,8 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScpiParameterType extends EezObject implements IParameterType {
@@ -644,7 +646,7 @@ export class ScpiResponse extends EezObject {
         ],
         defaultValue: {},
         beforeLoadHook(object: IEezObject, jsObject: any) {
-            if (!Array.isArray(jsObject.type)) {
+            if (!isArray(jsObject.type)) {
                 jsObject.type = [
                     {
                         type: jsObject.type,

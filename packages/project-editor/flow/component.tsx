@@ -35,7 +35,7 @@ import {
 } from "project-editor/core/object";
 import {
     getChildOfObject,
-    isArray,
+    isEezObjectArray,
     getClassInfo,
     getLabel,
     findPropertyByNameInObject,
@@ -588,7 +588,7 @@ export function isFlowProperty(
 // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
 export function getWidgetParent(widget: Component | Page) {
     let parent = getParent(widget);
-    if (isArray(parent)) {
+    if (isEezObjectArray(parent)) {
         parent = getParent(parent);
     }
     return parent as Component | Page;

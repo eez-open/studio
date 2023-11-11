@@ -206,17 +206,20 @@ export class RuntimeLogs {
 
     addLogItem(logItem: LogItem) {
         this.logs.push(logItem);
-        if (this.logs.length > MAX_LOGS_ITEMS) {
-            // remove oldest non error log item
-            for (let i = 0; i < this.logs.length; i++) {
-                if (this.logs[i].type != "error") {
-                    this.logs.splice(i, 1);
-                    return;
+
+        if (logItem.type != "error") {
+            const numLogItems = this.logs.filter(
+                existingLogItem => existingLogItem.type == logItem.type
+            ).length;
+
+            if (numLogItems > MAX_LOGS_ITEMS) {
+                for (let i = 0; i < this.logs.length; i++) {
+                    if (this.logs[i].type === logItem.type) {
+                        this.logs.splice(i, 1);
+                        return;
+                    }
                 }
             }
-
-            // remove oldest error item
-            this.logs.shift();
         }
     }
 

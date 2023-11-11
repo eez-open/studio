@@ -129,7 +129,7 @@ const LogItemRow = observer(
     class LogItemRow extends React.Component<{
         index: number;
         style: React.CSSProperties;
-        data: LogItem;
+        data: any;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -194,7 +194,9 @@ const LogItemRow = observer(
         }
 
         render() {
-            const logItem = (this.props.data as any).logs[this.props.index];
+            const logItem = ((this.props.data as any).logs as LogItem[])[
+                this.props.index
+            ];
 
             return (
                 <div
@@ -205,6 +207,7 @@ const LogItemRow = observer(
                     onClick={() => this.selectNode(logItem)}
                 >
                     <small>{logItem.date.toLocaleTimeString()}</small>
+                    <small>{logItem.flowState?.flowStateIndex}</small>
                     <span title={logItem.label}>{logItem.label}</span>
                 </div>
             );

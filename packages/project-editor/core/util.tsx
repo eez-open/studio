@@ -12,6 +12,8 @@ import { ProjectStore, getClassInfo } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import type { IEezObject } from "./object";
 
+import { isArray } from "eez-studio-shared/util";
+
 export async function confirm(
     message: string,
     detail: string | undefined,
@@ -93,14 +95,14 @@ export function onAfterPaste(
     fromObjectOrObjects: IEezObject | IEezObject[]
 ) {
     let newObjects: IEezObject[];
-    if (Array.isArray(newObjectOrObjects)) {
+    if (isArray(newObjectOrObjects)) {
         newObjects = newObjectOrObjects;
     } else {
         newObjects = [newObjectOrObjects];
     }
 
     let fromObjects: IEezObject[];
-    if (Array.isArray(fromObjectOrObjects)) {
+    if (isArray(fromObjectOrObjects)) {
         fromObjects = fromObjectOrObjects as IEezObject[];
     } else {
         fromObjects = [fromObjectOrObjects];

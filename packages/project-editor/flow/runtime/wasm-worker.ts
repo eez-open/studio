@@ -17,6 +17,8 @@ import {
 
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 
+import { isArray } from "eez-studio-shared/util";
+
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
 const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
 
@@ -288,7 +290,7 @@ export function createWasmWorker(
                 return oldValue == newValue;
             }
 
-            if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+            if (isArray(oldValue) && isArray(newValue)) {
                 if (oldValue.length != newValue.length) {
                     return false;
                 }

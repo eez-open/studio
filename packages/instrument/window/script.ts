@@ -27,6 +27,8 @@ import type { InstrumentAppStore } from "instrument/window/app-store";
 
 import type { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const showScriptError = action(
@@ -175,7 +177,7 @@ class JavaScriptSession {
         };
 
         let data;
-        if (Array.isArray(config.data)) {
+        if (isArray(config.data)) {
             var dataBuffers = [];
             for (let i = 0; i < config.data.length; i++) {
                 if (typeof config.data[i] === "string") {

@@ -26,7 +26,7 @@ import {
     Message,
     propertyNotSetMessage,
     createObject,
-    isArray
+    isEezObjectArray
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -1009,7 +1009,7 @@ export class EnumMember extends EezObject {
             const enumMemberProperties: Partial<EnumMember> = {
                 name: result.values.name,
                 value:
-                    isArray(parent) && parent.length > 0
+                    isEezObjectArray(parent) && parent.length > 0
                         ? (parent[parent.length - 1] as EnumMember).value + 1
                         : 0
             };

@@ -25,6 +25,7 @@ import {
     FLOW_VALUE_TYPE_UNDEFINED
 } from "project-editor/build/value-types";
 import { Project } from "project-editor/project/project";
+import { isArray } from "eez-studio-shared/util";
 
 export interface FlowValue {
     type: number;
@@ -205,7 +206,7 @@ function buildFlowValue(
             dataBuffer.writeObjectOffset(() => {
                 let elements: FlowValue[];
 
-                if (Array.isArray(flowValue.value)) {
+                if (isArray(flowValue.value)) {
                     const elementType =
                         getArrayElementTypeFromType(flowValue.valueType) ||
                         "any";

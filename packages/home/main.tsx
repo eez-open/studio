@@ -27,7 +27,7 @@ import "home/settings";
 import { extensionsCatalog } from "./extensions-manager/catalog";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 
-configure({ enforceActions: "observed" });
+configure({ enforceActions: "observed", useProxies: "never" });
 
 // make sure we store all the values waiting to be stored inside blur event handler
 function blurAll() {

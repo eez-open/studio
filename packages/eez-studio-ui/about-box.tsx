@@ -6,6 +6,8 @@ import { formatDateTimeLong, compareVersions } from "eez-studio-shared/util";
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 
+import { isArray } from "eez-studio-shared/util";
+
 const STUDIO_RELEASES_URL =
     "https://api.github.com/repos/eez-open/studio/releases";
 const STUDIO_SPECIFIC_RELEASE_URL =
@@ -29,7 +31,7 @@ async function getLatestVersion() {
         req.open("GET", STUDIO_RELEASES_URL);
 
         req.addEventListener("load", async () => {
-            if (Array.isArray(req.response)) {
+            if (isArray(req.response)) {
                 let latestReleaseVersion: string | undefined = undefined;
                 for (const release of req.response) {
                     if (typeof release.tag_name == "string") {

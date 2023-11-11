@@ -75,6 +75,8 @@ import { showSelectProjectExtensionDialog } from "home/extensions-manager/select
 
 export { ProjectType } from "project-editor/core/object";
 
+import { isArray } from "eez-studio-shared/util";
+
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
 
@@ -1069,7 +1071,7 @@ function getProjectClassInfo() {
                                     globalVariable.enumItems
                                 );
 
-                                if (Array.isArray(enumItems)) {
+                                if (isArray(enumItems)) {
                                     const prefix = pascalCase(
                                         globalVariable.name
                                     );

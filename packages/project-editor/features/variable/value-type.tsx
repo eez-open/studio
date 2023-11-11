@@ -50,6 +50,8 @@ export type {
     ValueType
 } from "eez-studio-types";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const BASIC_TYPE_NAMES = [
@@ -338,7 +340,7 @@ export function getValueLabel(
         }
     }
 
-    if (Array.isArray(value) || value instanceof Uint8Array) {
+    if (isArray(value) || value instanceof Uint8Array) {
         return `${value.length} element(s)`;
     }
 
@@ -1055,7 +1057,7 @@ export function isValueTypeOf(
     } else if (type == "date") {
         return null;
     } else if (isArrayType(type)) {
-        if (Array.isArray(value)) {
+        if (isArray(value)) {
             const arrayElementType = getArrayElementTypeFromType(type);
 
             for (let i = 0; i < value.length; i++) {

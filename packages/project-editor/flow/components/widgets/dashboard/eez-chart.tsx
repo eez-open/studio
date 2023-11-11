@@ -37,6 +37,8 @@ import type { DlogWaveform } from "instrument/window/waveform/dlog";
 
 import type * as ChartPreviewModule from "instrument/window/chart-preview";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class WaveformDefinition extends EezObject {
@@ -622,7 +624,7 @@ class SingleEEZChart extends EEZChart {
                 ? WaveformFormat.CSV_STRING
                 : WaveformFormat.JS_NUMBERS;
 
-        if (Array.isArray(this.data)) {
+        if (isArray(this.data)) {
             format = WaveformFormat.JS_NUMBERS;
         }
 
@@ -721,7 +723,7 @@ class MultiEEZChart extends EEZChart {
                             ? WaveformFormat.CSV_STRING
                             : WaveformFormat.JS_NUMBERS;
 
-                    if (Array.isArray(waveformDefinition.data)) {
+                    if (isArray(waveformDefinition.data)) {
                         format = WaveformFormat.JS_NUMBERS;
                     }
 

@@ -18,7 +18,7 @@ import {
     getChildOfObject,
     getClass,
     getClassInfo,
-    isArray,
+    isEezObjectArray,
     isObject,
     objectToJson,
     ProjectStore,
@@ -138,7 +138,10 @@ export function findPastePlaceInside(
     classInfo: ClassInfo,
     isSingleObject: boolean
 ) {
-    if (isArray(object) && isSubclassOf(classInfo, getClassInfo(object))) {
+    if (
+        isEezObjectArray(object) &&
+        isSubclassOf(classInfo, getClassInfo(object))
+    ) {
         return object;
     }
 

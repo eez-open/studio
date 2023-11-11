@@ -93,6 +93,8 @@ import { getComponentName } from "project-editor/flow/components/components-regi
 import type { Page } from "project-editor/features/page/page";
 import { visitObjects } from "project-editor/core/search";
 
+import { isArray } from "eez-studio-shared/util";
+
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
 
@@ -543,7 +545,7 @@ export class ListWidget extends Widget {
             }
         }
 
-        if (!Array.isArray(dataValue)) {
+        if (!isArray(dataValue)) {
             dataValue = [{}];
         }
 
@@ -751,7 +753,7 @@ export class GridWidget extends Widget {
             return null;
         }
 
-        if (!Array.isArray(dataValue)) {
+        if (!isArray(dataValue)) {
             dataValue = [{}];
         }
 

@@ -12,6 +12,8 @@ import {
 } from "eez-studio-shared/store";
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
@@ -300,7 +302,7 @@ export const activityLogStore = createStore({
         },
         filterSpecification: IActivityLogFilterSpecification
     ) {
-        if (Array.isArray(message.object)) {
+        if (isArray(message.object)) {
             return true;
         }
 

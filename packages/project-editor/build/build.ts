@@ -17,7 +17,7 @@ import {
 } from "project-editor/core/object";
 import {
     ProjectStore,
-    isArray,
+    isEezObjectArray,
     getArrayAndObjectProperties,
     getClassInfo,
     Section,
@@ -594,7 +594,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         let messages: IMessage[] = [];
 
         // call check method of the object
-        if (!isArray(object)) {
+        if (!isEezObjectArray(object)) {
             const classCheckMethod = getClassInfo(object).check;
             if (classCheckMethod) {
                 classCheckMethod(object, messages);
@@ -608,7 +608,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
             propertyCheckMethod(object, messages);
         }
 
-        if (isArray(object)) {
+        if (isEezObjectArray(object)) {
             // check array elements
             for (const childObject of object) {
                 messages = messages.concat(checkTransformer(childObject));

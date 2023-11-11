@@ -9,7 +9,7 @@ import {
 } from "project-editor/core/object";
 import {
     getObjectPropertyAsObject,
-    isArray,
+    isEezObjectArray,
     getObjectPath,
     getClassInfo,
     EezValueObject,
@@ -56,7 +56,7 @@ type VisitResult = EezValueObject | null;
 function* visitWithPause(
     parentObject: IEezObject
 ): IterableIterator<VisitResult> {
-    if (isArray(parentObject)) {
+    if (isEezObjectArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithPause(arrayOfObjects[i]);
@@ -97,7 +97,7 @@ function* visitWithPause(
 function* visitWithoutPause(
     parentObject: IEezObject
 ): IterableIterator<VisitResult> {
-    if (isArray(parentObject)) {
+    if (isEezObjectArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitWithoutPause(arrayOfObjects[i]);
@@ -135,7 +135,7 @@ function* visitWithoutPause(
 export function* visitObjects(
     parentObject: IEezObject
 ): IterableIterator<IEezObject> {
-    if (isArray(parentObject)) {
+    if (isEezObjectArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
         for (let i = 0; i < arrayOfObjects.length; i++) {
             yield* visitObjects(arrayOfObjects[i]);

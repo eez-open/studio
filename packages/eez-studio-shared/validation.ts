@@ -10,6 +10,8 @@ export {
     filterNumber
 } from "eez-studio-shared/validation-filters";
 
+import { isArray } from "eez-studio-shared/util";
+
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
 export const VALIDATION_MESSAGE_REQUIRED = "Please fill out this field.";
 export const VALIDATION_MESSAGE_RANGE_INCLUSIVE =
@@ -201,7 +203,7 @@ export function makeValidator<T extends Rules>(rules: T) {
 
                 Object.keys(rules).forEach(ruleName => {
                     const rule = rules[ruleName];
-                    if (Array.isArray(rule)) {
+                    if (isArray(rule)) {
                         rule.forEach(rule => checkRule(ruleName, rule));
                     } else {
                         checkRule(ruleName, rule);

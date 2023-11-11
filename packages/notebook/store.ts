@@ -9,6 +9,8 @@ import {
 
 import { extensions } from "eez-studio-shared/extensions/extensions";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface INotebook {
@@ -256,7 +258,7 @@ export const itemsStore = createStore({
         },
         filterSpecification: INotebookItemsFilterSpecification
     ) {
-        if (Array.isArray(message.object)) {
+        if (isArray(message.object)) {
             return true;
         }
 

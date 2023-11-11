@@ -13,6 +13,8 @@ import {
     getDashboardState
 } from "project-editor/flow/runtime/component-execution-states";
 
+import { isArray } from "eez-studio-shared/util";
+
 export class DashboardComponentContext implements IDashboardComponentContext {
     constructor(
         public WasmFlowRuntime: IWasmFlowRuntime,
@@ -148,7 +150,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
         if (
             expectedTypes &&
-            (Array.isArray(expectedTypes)
+            (isArray(expectedTypes)
                 ? expectedTypes.indexOf(result.valueType) == -1
                 : expectedTypes != result.valueType)
         ) {
@@ -228,7 +230,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
         if (
             expectedTypes &&
-            (Array.isArray(expectedTypes)
+            (isArray(expectedTypes)
                 ? expectedTypes.indexOf(result.valueType) == -1
                 : expectedTypes != result.valueType)
         ) {

@@ -10,6 +10,8 @@ import {
 import type { BuildResult } from "project-editor/store/features";
 import { getProjectStore } from "project-editor/store";
 
+import { isArray } from "eez-studio-shared/util";
+
 import {
     TAB,
     NamingConvention,
@@ -230,7 +232,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
             if (!(object instanceof Component)) {
                 let widgetsItemChildren = item.children;
 
-                if (!Array.isArray(widgetsItemChildren)) {
+                if (!isArray(widgetsItemChildren)) {
                     widgetsItemChildren =
                         widgetsItemChildren["widgets"].children;
                 }
@@ -258,7 +260,7 @@ function createWidgetTree(widgetContainer: IEezObject, draw: boolean) {
                         const dataValue = getProjectStore(
                             flowContainerDisplayItem.object
                         ).dataContext.get(widget.data as string);
-                        if (dataValue && Array.isArray(dataValue)) {
+                        if (dataValue && isArray(dataValue)) {
                             for (let i = 0; i < dataValue.length; i++) {
                                 enumWidget(treeNode, itemWidgetItem, x, y);
 

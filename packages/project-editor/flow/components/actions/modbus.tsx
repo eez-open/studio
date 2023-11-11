@@ -33,6 +33,8 @@ import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { serialConnections } from "project-editor/flow/components/actions/serial";
 import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const modbusClients = new Map<number, Map<string, ModbusRTUClient>>();
@@ -369,7 +371,7 @@ export class ModbusActionComponent extends ActionComponent {
                 }
 
                 const registerValues = context.evalProperty("registerValues");
-                if (!Array.isArray(registerValues)) {
+                if (!isArray(registerValues)) {
                     context.throwError(`invalid Register values`);
                     return;
                 }

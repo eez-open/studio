@@ -96,6 +96,8 @@ import type * as FileTypeModule from "instrument/connection/file-type";
 
 import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TextDashboardWidget extends Widget {
@@ -1191,7 +1193,7 @@ export class DropDownListDashboardWidget extends Widget {
 
     render(flowContext: IFlowContext, width: number, height: number) {
         let options: string[] = evalProperty(flowContext, this, "options");
-        if (options == undefined && !Array.isArray(options)) {
+        if (options == undefined && !isArray(options)) {
             options = [];
         }
 

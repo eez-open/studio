@@ -43,6 +43,8 @@ import { createObject, objectToJson } from "project-editor/store/serialization";
 import { confirm } from "project-editor/core/util";
 import type { Flow } from "project-editor/flow/flow";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class EezValueObject extends EezObject {
@@ -259,10 +261,10 @@ export function isObject(object: IEezObject | undefined) {
     return !!object && !isValue(object) && !isArray(object);
 }
 
-export function isArray(
+export function isEezObjectArray(
     object: IEezObject | PropertyInfo | undefined
 ): object is EezObject[] {
-    return !!object && !isValue(object) && Array.isArray(object);
+    return isArray(object);
 }
 
 export function getChildren(parent: IEezObject): IEezObject[] {

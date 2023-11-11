@@ -33,6 +33,8 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getValueLabel } from "project-editor/features/variable/value-type";
 import { stringCompare } from "eez-studio-shared/string";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function valueToString(value: any) {
@@ -246,7 +248,7 @@ const WatchTable = observer(
 
                 const MAX_CHILDREN = 1000;
 
-                if (Array.isArray(value) || value instanceof Uint8Array) {
+                if (isArray(value) || value instanceof Uint8Array) {
                     return () => {
                         const elementType = type
                             ? getArrayElementTypeFromType(type)

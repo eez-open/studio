@@ -46,6 +46,8 @@ import * as notification from "eez-studio-ui/notification";
 import { ConnectionBase } from "instrument/connection/connection-base";
 import { bb3InstrumentsMap } from "../global-objects";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IMcu {
@@ -70,7 +72,7 @@ function findLatestFirmwareReleases(bb3Instrument: BB3Instrument) {
     req.open("GET", FIRMWARE_RELEASES_URL);
 
     req.addEventListener("load", async () => {
-        if (Array.isArray(req.response)) {
+        if (isArray(req.response)) {
             let latestReleaseVersion: string | undefined = undefined;
             for (const release of req.response) {
                 if (
@@ -120,7 +122,7 @@ function getModuleFirmwareReleases(moduleType: string) {
         req.open("GET", MODULE_FIRMWARE_RELEASES_URL(moduleType));
 
         req.addEventListener("load", async () => {
-            if (Array.isArray(req.response)) {
+            if (isArray(req.response)) {
                 resolve(
                     req.response.map((release: any) => ({
                         version: release.tag_name.startsWith("v")

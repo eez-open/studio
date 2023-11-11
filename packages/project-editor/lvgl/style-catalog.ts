@@ -6,6 +6,8 @@ import {
 
 import { ProjectStore } from "project-editor/store";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const BUILT_IN_FONTS = [
@@ -174,7 +176,7 @@ function makeEnumPropertyInfo(
     buildPrefix: string
 ): LVGLPropertyInfo {
     let enumItemToCode: { [key: string]: number };
-    if (Array.isArray(enumItemToCodeOrStringArray)) {
+    if (isArray(enumItemToCodeOrStringArray)) {
         enumItemToCode = {};
         for (let i = 0; i < enumItemToCodeOrStringArray.length; i++) {
             enumItemToCode[enumItemToCodeOrStringArray[i]] = i;

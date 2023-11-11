@@ -17,6 +17,8 @@ import {
 import { getInputDescription } from "./components/ComponentInputs";
 import { getOutputDescription } from "./components/ComponentOutputs";
 
+import { isArray } from "eez-studio-shared/util";
+
 class Context {
     listID = 1;
     images = new Set<string>();
@@ -74,12 +76,12 @@ function lexemesToODT(
             )}</text:p>`;
         } else if (token.type == "text") {
             const subtokens = (token as any).tokens;
-            if (!Array.isArray(subtokens) || subtokens.length == 0) {
+            if (!isArray(subtokens) || subtokens.length == 0) {
                 odt += token.text;
             } else if (subtokens.length == 1) {
                 if (
                     subtokens[0].type == "text" &&
-                    (!Array.isArray((subtokens[0] as any).tokens) ||
+                    (!isArray((subtokens[0] as any).tokens) ||
                         (subtokens[0] as any).tokens.length == 0)
                 ) {
                     odt += token.text;
@@ -137,7 +139,7 @@ function lexemesToODT(
                         const lastToken = item.tokens[item.tokens.length - 1];
                         if (
                             lastToken.type == "text" &&
-                            Array.isArray((lastToken as any).tokens) &&
+                            isArray((lastToken as any).tokens) &&
                             (lastToken as any).tokens.length == 1 &&
                             (lastToken as any).tokens[0].type == "image"
                         ) {

@@ -19,6 +19,8 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 import type { LVGLParts } from "project-editor/lvgl/style-helper";
 import type { Project } from "project-editor/project/project";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const enum PropertyType {
@@ -588,8 +590,7 @@ export function getAllClasses() {
 export function isEezObject(object: any): object is IEezObject {
     return (
         object instanceof EezObject ||
-        (Array.isArray(object) &&
-            (object.length == 0 || isEezObject(object[0])))
+        (isArray(object) && (object.length == 0 || isEezObject(object[0])))
     );
 }
 
@@ -696,7 +697,7 @@ export function getParent(object: IEezObject): IEezObject {
 
     // make _eez_parent observable
     if (parent) {
-        if (Array.isArray(parent)) {
+        if (isArray(parent)) {
             parent.indexOf(object);
         } else {
             parent[(object as any)._eez_key];

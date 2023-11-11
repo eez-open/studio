@@ -47,6 +47,8 @@ import type * as ConnectionMainModule from "instrument/connection/connection-mai
 import type * as ConnectionRendererModule from "instrument/connection/connection-renderer";
 import type { IResponseTypeType } from "instrument/scpi";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_LISTS_MAX_POINTS = 256;
@@ -550,7 +552,7 @@ export class InstrumentObject {
             connection &&
             connection.serial &&
             connection.serial.baudRates !== undefined &&
-            Array.isArray(connection.serial.baudRates) &&
+            isArray(connection.serial.baudRates) &&
             connection.serial.baudRates.length > 0
         ) {
             return connection.serial.baudRates;

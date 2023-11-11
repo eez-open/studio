@@ -28,6 +28,8 @@ import {
 } from "shortcuts/shortcuts-store";
 import { isSameShortcutFromDifferentExtension } from "./isSameShortcutFromDifferentExtension";
 
+import { isArray } from "eez-studio-shared/util";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 const selectedShortcutId = observable.box<string>();
@@ -248,7 +250,7 @@ class ShortcutRow implements IRow {
     }
 
     get shortcut() {
-        if (Array.isArray(this.props.shortcut)) {
+        if (isArray(this.props.shortcut)) {
             return this.props.shortcut[0];
         } else {
             return this.props.shortcut;
@@ -320,7 +322,7 @@ class ShortcutRow implements IRow {
     }
 
     get group() {
-        if (Array.isArray(this.props.shortcut)) {
+        if (isArray(this.props.shortcut)) {
             return this.props.shortcut
                 .map(shortcut => this.getExtension(shortcut))
                 .filter(extension => !!extension)
@@ -333,7 +335,7 @@ class ShortcutRow implements IRow {
     }
 
     get groupComponent() {
-        if (Array.isArray(this.props.shortcut)) {
+        if (isArray(this.props.shortcut)) {
             return this.props.shortcut
                 .map(shortcut => this.getExtension(shortcut))
                 .filter(extension => !!extension)
@@ -387,7 +389,7 @@ class ShortcutRow implements IRow {
     }
 
     get isExtensionShortcut() {
-        if (Array.isArray(this.props.shortcut)) {
+        if (isArray(this.props.shortcut)) {
             return true;
         } else {
             return (
