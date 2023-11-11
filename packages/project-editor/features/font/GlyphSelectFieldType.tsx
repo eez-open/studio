@@ -318,7 +318,13 @@ export const Glyphs = observer(
                     </div>
                     <div>
                         <AutoSizer>
-                            {({ width, height }) => {
+                            {({
+                                width,
+                                height
+                            }: {
+                                width: number;
+                                height: number;
+                            }) => {
                                 this.columnCount = Math.floor(
                                     width / GLYPH_WIDTH
                                 );

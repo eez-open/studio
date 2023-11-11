@@ -4886,7 +4886,7 @@ function runWasmModule(Module) {
     var readEmAsmArgsArray = [];
     var readEmAsmArgs = (sigPtr, buf) => {
         // Nobody should have mutated _readEmAsmArgsArray underneath us to be something else than an array.
-        assert(isArrayUnknown(readEmAsmArgsArray));
+        assert(Array.isArray(readEmAsmArgsArray));
         // The input buffer is allocated on the stack, so it must be stack-aligned.
         assert(buf % 16 == 0);
         readEmAsmArgsArray.length = 0;

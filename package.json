@@ -79,7 +79,7 @@
         "@types/wpapi": "^1.1.1",
         "@types/xml-formatter": "^2.1.1",
         "@types/xterm": "^3.0.0",
-        "electron": "^26.4.0",
+        "electron": "^27.0.4",
         "electron-builder": "^24.6.4",
         "electron-rebuild": "^3.2.9",
         "globby": "^11.1.0",

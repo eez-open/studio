@@ -103,7 +103,13 @@ const LogList = observer(
             return (
                 <div style={{ height: "100%" }}>
                     <AutoSizer>
-                        {({ width, height }) => (
+                        {({
+                            width,
+                            height
+                        }: {
+                            width: number;
+                            height: number;
+                        }) => (
                             <List
                                 itemCount={itemCount}
                                 itemData={
