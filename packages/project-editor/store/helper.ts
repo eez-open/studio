@@ -411,35 +411,37 @@ export function getAncestorOfType<T extends EezObject = EezObject>(
     object: IEezObject,
     classInfo: ClassInfo
 ): T | undefined {
-    if (object) {
+    while (object) {
         if (isObjectInstanceOf(object, classInfo)) {
             return object as T;
         }
-        return (
-            getParent(object) && getAncestorOfType(getParent(object), classInfo)
-        );
+        object = getParent(object);
     }
     return undefined;
 }
 
-export function getObjectPath(object: IEezObject): (string | number)[] {
-    let parent = getParent(object);
-    if (parent) {
+export function getObjectPath(child: IEezObject) {
+    let result = [];
+
+    for (let parent = getParent(child); parent; parent = getParent(parent)) {
         if (isArray(parent)) {
-            let index = parent.indexOf(object as EezObject);
+            let index = parent.indexOf(child as EezObject);
             if (index === -1) {
-                const classInfo = getClassInfo(object);
+                const classInfo = getClassInfo(child);
                 if (classInfo.findChildIndex) {
-                    index = classInfo.findChildIndex(parent, object);
+                    index = classInfo.findChildIndex(parent, child);
                 }
             }
 
-            return getObjectPath(parent).concat(index);
+            result.unshift(index);
         } else {
-            return getObjectPath(parent).concat(getKey(object));
+            result.unshift(getKey(child));
         }
+
+        child = parent;
     }
-    return [];
+
+    return result;
 }
 
 export function getObjectPathAsString(object: IEezObject) {

@@ -685,6 +685,12 @@ export function setId(
     projectStore.objects.set(id, object);
 }
 
+export function getParentNotObservable(
+    object: IEezObject
+): IEezObject | undefined {
+    return (object as any)._eez_parent;
+}
+
 export function getParent(object: IEezObject): IEezObject {
     const parent = (object as any)._eez_parent;
 
@@ -906,8 +912,11 @@ export function getObjectPropertyDisplayName(
 }
 
 export function getRootObject(object: IEezObject) {
-    let parent;
-    while (!!(parent = getParent(object))) {
+    for (
+        let parent = getParentNotObservable(object);
+        parent;
+        parent = getParentNotObservable(object)
+    ) {
         object = parent;
     }
     return object;
@@ -916,11 +925,11 @@ export function getRootObject(object: IEezObject) {
 // Get object ancestors as array,
 // from the root object up to the given object (including given object)
 export function getAncestors(object: IEezObject): IEezObject[] {
-    let parent = getParent(object);
-    if (parent) {
-        return getAncestors(parent).concat([object]);
+    let result = [object];
+    for (let parent = getParent(object); parent; parent = getParent(parent)) {
+        result.unshift(parent);
     }
-    return [object];
+    return result;
 }
 
 export function areAllChildrenOfTheSameParent(objects: IEezObject[]) {
