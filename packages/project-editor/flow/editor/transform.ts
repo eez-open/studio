@@ -1,6 +1,6 @@
 import { observable, action, runInAction, makeObservable } from "mobx";
 
-import { Point, Rect } from "eez-studio-shared/geometry";
+import type { Point, Rect } from "eez-studio-shared/geometry";
 import type { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
 // prettier-ignore

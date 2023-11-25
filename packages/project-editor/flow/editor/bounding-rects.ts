@@ -12,7 +12,7 @@ import type {
     IViewState,
     ObjectIdUnderPointer
 } from "project-editor/flow/flow-interfaces";
-import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
+import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function getObjectBoundingRect(objectAdapter: TreeObjectAdapter) {

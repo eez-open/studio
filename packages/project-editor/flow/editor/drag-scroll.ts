@@ -1,5 +1,5 @@
-import { Point } from "eez-studio-shared/geometry";
-import { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
+import type { Point } from "eez-studio-shared/geometry";
+import type { IPointerEvent } from "project-editor/flow/editor/mouse-handler";
 
 const DRAG_SCROLL_BORDER_THRESHOLD = 10;
 const DRAG_SCROLL_MIN_SPEED = 50; // px per second

@@ -1,7 +1,7 @@
 import { computed, makeObservable } from "mobx";
 import { intersection } from "lodash";
 
-import { Point, Rect } from "eez-studio-shared/geometry";
+import type { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import {
@@ -12,7 +12,7 @@ import {
 import { IEezObject, getParent } from "project-editor/core/object";
 import { createObject, getProjectStore } from "project-editor/store";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { Flow } from "project-editor/flow/flow";
+import type { Flow } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";

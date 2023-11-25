@@ -17,7 +17,7 @@ import type {
 
 import { Component, getWidgetParent } from "project-editor/flow/component";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
-import { ConnectionLine } from "project-editor/flow/connection-line";
+import type { ConnectionLine } from "project-editor/flow/connection-line";
 
 import { FlowDocument } from "project-editor/flow/editor/flow-document";
 import { Transform } from "project-editor/flow/editor/transform";

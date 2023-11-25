@@ -1,4 +1,4 @@
-import { Point, Rect } from "eez-studio-shared/geometry";
+import type { Point, Rect } from "eez-studio-shared/geometry";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { ProjectStore } from "project-editor/store";

@@ -19,10 +19,10 @@ import {
     getObjectBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
-import { Transform } from "project-editor/flow/editor/transform";
+import type { Transform } from "project-editor/flow/editor/transform";
 import { generateConnectionLinePath } from "project-editor/flow/connection-line/connection-line-shape";
 import type { Flow } from "project-editor/flow/flow";
-import { ConnectionLine } from "project-editor/flow/connection-line";
+import type { ConnectionLine } from "project-editor/flow/connection-line";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
