@@ -158,29 +158,38 @@ function interpolation3(pointsPolyline: Point[], A: number, B: number) {
     );
 
     if (pointsPolyline.length == 4) {
+        const midPoint12 = midPoint(pointsPolyline[1], pointsPolyline[2]);
+
         points[0] = pointsPolyline[0];
         points[1] = pointOnSegment(pointsPolyline[0], pointsPolyline[1], A);
-        points[2] = pointOnSegment(pointsPolyline[2], pointsPolyline[1], B);
-        points[3] = midPoint(pointsPolyline[1], pointsPolyline[2]);
-        points[4] = pointOnSegment(pointsPolyline[1], pointsPolyline[2], B);
+        points[2] = pointOnSegment(midPoint12, pointsPolyline[1], B);
+        points[3] = midPoint12;
+        points[4] = pointOnSegment(midPoint12, pointsPolyline[2], B);
         points[5] = pointOnSegment(pointsPolyline[3], pointsPolyline[2], A);
         points[6] = pointsPolyline[3];
     } else {
+        const midPoint12 = midPoint(pointsPolyline[1], pointsPolyline[2]);
+        const midPoint23 = midPoint(pointsPolyline[2], pointsPolyline[3]);
+        const midPoint34 = midPoint(pointsPolyline[3], pointsPolyline[4]);
+
         points[0] = pointsPolyline[0];
         points[1] = pointOnSegment(pointsPolyline[0], pointsPolyline[1], A);
-        points[2] = pointOnSegment(pointsPolyline[2], pointsPolyline[1], A);
-        points[3] = midPoint(pointsPolyline[1], pointsPolyline[2]);
-        points[4] = pointOnSegment(pointsPolyline[1], pointsPolyline[2], B);
-        points[5] = pointOnSegment(pointsPolyline[3], pointsPolyline[2], B);
-        points[6] = midPoint(pointsPolyline[2], pointsPolyline[3]);
-        points[7] = pointOnSegment(pointsPolyline[2], pointsPolyline[3], B);
-        points[8] = pointOnSegment(pointsPolyline[4], pointsPolyline[3], B);
-        points[9] = midPoint(pointsPolyline[3], pointsPolyline[4]);
-        points[10] = pointOnSegment(pointsPolyline[3], pointsPolyline[4], A);
+        points[2] = pointOnSegment(midPoint12, pointsPolyline[1], A);
+
+        points[3] = midPoint12;
+        points[4] = pointOnSegment(midPoint12, pointsPolyline[2], B);
+        points[5] = pointOnSegment(midPoint23, pointsPolyline[2], B);
+
+        points[6] = midPoint23;
+        points[7] = pointOnSegment(midPoint23, pointsPolyline[3], B);
+        points[8] = pointOnSegment(midPoint34, pointsPolyline[3], B);
+
+        points[9] = midPoint34;
+        points[10] = pointOnSegment(midPoint34, pointsPolyline[4], A);
         points[11] = pointOnSegment(pointsPolyline[5], pointsPolyline[4], A);
+
         points[12] = pointsPolyline[5];
     }
-
     return points;
 }
 
@@ -530,8 +539,8 @@ export const ConnectionLineParams = observer(
                             <input
                                 type="range"
                                 value={PARAMS.A}
-                                min={0.75}
-                                max={1.25}
+                                min={0}
+                                max={1}
                                 step={0.001}
                                 className="form-control"
                                 id="ConnectionLineParams_A"
@@ -553,8 +562,8 @@ export const ConnectionLineParams = observer(
                             <input
                                 type="range"
                                 value={PARAMS.B}
-                                min={0.75}
-                                max={1.25}
+                                min={0}
+                                max={1}
                                 step={0.001}
                                 className="form-control"
                                 id="ConnectionLineParams_B"
