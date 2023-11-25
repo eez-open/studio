@@ -565,7 +565,7 @@ export class EezObject {
 export type EezClass = typeof EezObject;
 
 let classNameToEezClassMap = new Map<string, EezClass>();
-let eezClassToClassNameMap = new Map<EezClass, string>();
+export let eezClassToClassNameMap = new Map<EezClass, string>();
 
 export function registerClass(name: string, eezClass: EezClass) {
     classNameToEezClassMap.set(name, eezClass);
