@@ -1,10 +1,12 @@
 {
-	"detectiveOptions": {
-		"ts": {
-			"skipTypeImports": true
-		},
-		"tsx": {
-			"skipTypeImports": true
-		}
-	}
+    "detectiveOptions": {
+        "ts": {
+            "skipTypeImports": true,
+            "skipAsyncImports": true
+        },
+        "tsx": {
+            "skipTypeImports": true,
+            "skipAsyncImports": true
+        }
+    }
 }
