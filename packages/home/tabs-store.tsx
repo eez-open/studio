@@ -552,7 +552,7 @@ export class ProjectEditorTab implements IHomeTab {
 
             this.ProjectEditor = ProjectEditorView;
 
-            await initProjectEditor(tabs, ProjectEditorTab);
+            initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = await ProjectStore.create();
             projectStore.mount();
 

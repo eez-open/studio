@@ -127,7 +127,7 @@ export async function importInstrumentDefinitionAsProject(
             return;
         }
 
-        await initProjectEditor(tabs, ProjectEditorTab);
+        initProjectEditor(tabs, ProjectEditorTab);
         const projectStore = await ProjectStore.create();
         projectStore.mount();
 
