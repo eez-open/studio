@@ -72,6 +72,8 @@ import {
     DragSnapLinesOverlay
 } from "project-editor/flow/editor/snap-lines";
 
+// import { ConnectionLineParams } from "project-editor/flow/connection-line/connection-line-shape";
+
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
 
@@ -1190,6 +1192,8 @@ export const FlowEditor = observer(
                             </>
                         )}
                     </Canvas>
+
+                    {/* <ConnectionLineParams /> */}
                 </div>
             );
         }

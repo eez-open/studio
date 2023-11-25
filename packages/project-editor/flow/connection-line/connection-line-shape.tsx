@@ -1,4 +1,7 @@
-import { observable } from "mobx";
+import React from "react";
+import { action, makeAutoObservable } from "mobx";
+import { observer } from "mobx-react";
+
 import {
     midPoint,
     Point,
@@ -10,6 +13,8 @@ import { ConnectionLine } from "project-editor/flow/connection-line";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getClassInfo } from "project-editor/store";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function getConnectionLineShape(
     context: IFlowContext,
@@ -104,13 +109,22 @@ export function getConnectionLineShape(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const PARAMS = makeAutoObservable({
+    SPACE: 30,
+    A: 0.8,
+    B: 0.98,
+    nodeRed: false
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function generateConnectionLinePath(
     source: Point,
     sourceRect: Rect | undefined,
     target: Point,
     targetRect: Rect | undefined
 ) {
-    if (!sourceRect || !targetRect || nodeRed.get()) {
+    if (!sourceRect || !targetRect || PARAMS.nodeRed) {
         const nodeHeight = Math.max(
             sourceRect?.height ?? 0,
             targetRect?.height ?? 0
@@ -162,7 +176,7 @@ function interpolation3(pointsPolyline: Point[], A: number, B: number) {
         points[7] = pointOnSegment(pointsPolyline[2], pointsPolyline[3], B);
         points[8] = pointOnSegment(pointsPolyline[4], pointsPolyline[3], B);
         points[9] = midPoint(pointsPolyline[3], pointsPolyline[4]);
-        points[10] = pointOnSegment(pointsPolyline[4], pointsPolyline[4], A);
+        points[10] = pointOnSegment(pointsPolyline[3], pointsPolyline[4], A);
         points[11] = pointOnSegment(pointsPolyline[5], pointsPolyline[4], A);
         points[12] = pointsPolyline[5];
     }
@@ -199,14 +213,16 @@ function generatePath(
     /////
     let pointsPolyline: Point[];
 
-    const SPACE = 30;
-
     const intersect = !(
         sourceBottom.y < targetTop.y || sourceTop.y > targetBottom.y
     );
 
-    if (source.x + SPACE < target.x || (intersect && source.x < target.x)) {
-        const HALF_SPACE = Math.min(SPACE, (target.x - source.x) / 2);
+    if (
+        source.x + PARAMS.SPACE < target.x ||
+        (intersect && source.x < target.x)
+    ) {
+        const HALF_SPACE = Math.min(PARAMS.SPACE, (target.x - source.x) / 2);
+
         pointsPolyline = [
             source,
             pointTranslate(source, HALF_SPACE, 0),
@@ -222,71 +238,75 @@ function generatePath(
                 const y = Math.min(sourceTop.y, targetTop.y);
                 pointsPolyline = [
                     source,
-                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(source, PARAMS.SPACE, 0),
                     pointTranslate(
                         sourceTop,
-                        SPACE,
-                        -(sourceTop.y - y + SPACE)
+                        PARAMS.SPACE,
+                        -(sourceTop.y - y + PARAMS.SPACE)
                     ),
                     pointTranslate(
                         targetTop,
-                        -SPACE,
-                        -(targetTop.y - y + SPACE)
+                        -PARAMS.SPACE,
+                        -(targetTop.y - y + PARAMS.SPACE)
                     ),
-                    pointTranslate(target, -SPACE, 0),
+                    pointTranslate(target, -PARAMS.SPACE, 0),
                     target
                 ];
             } else {
                 const y = Math.max(sourceBottom.y, targetBottom.y);
                 pointsPolyline = [
                     source,
-                    pointTranslate(source, SPACE, 0),
+                    pointTranslate(source, PARAMS.SPACE, 0),
                     pointTranslate(
                         sourceBottom,
-                        SPACE,
-                        y - sourceBottom.y + SPACE
+                        PARAMS.SPACE,
+                        y - sourceBottom.y + PARAMS.SPACE
                     ),
                     pointTranslate(
                         targetBottom,
-                        -SPACE,
-                        y - targetBottom.y + SPACE
+                        -PARAMS.SPACE,
+                        y - targetBottom.y + PARAMS.SPACE
                     ),
-                    pointTranslate(target, -SPACE, 0),
+                    pointTranslate(target, -PARAMS.SPACE, 0),
                     target
                 ];
             }
         } else {
             if (source.y > target.y) {
                 const AVAILABLE_SPACE = Math.min(
-                    SPACE,
+                    PARAMS.SPACE,
                     (sourceTop.y - targetBottom.y) / 2
                 );
                 pointsPolyline = [
                     source,
-                    pointTranslate(source, SPACE, 0),
-                    pointTranslate(sourceTop, SPACE, -AVAILABLE_SPACE),
-                    pointTranslate(targetBottom, -SPACE, AVAILABLE_SPACE),
-                    pointTranslate(target, -SPACE, 0),
+                    pointTranslate(source, PARAMS.SPACE, 0),
+                    pointTranslate(sourceTop, PARAMS.SPACE, -AVAILABLE_SPACE),
+                    pointTranslate(
+                        targetBottom,
+                        -PARAMS.SPACE,
+                        AVAILABLE_SPACE
+                    ),
+                    pointTranslate(target, -PARAMS.SPACE, 0),
                     target
                 ];
             } else {
                 const AVAILABLE_SPACE = Math.min(
-                    SPACE,
+                    PARAMS.SPACE,
                     (targetTop.y - sourceBottom.y) / 2
                 );
                 pointsPolyline = [
                     source,
-                    pointTranslate(source, SPACE, 0),
-                    pointTranslate(sourceBottom, SPACE, AVAILABLE_SPACE),
-                    pointTranslate(targetTop, -SPACE, -AVAILABLE_SPACE),
-                    pointTranslate(target, -SPACE, 0),
+                    pointTranslate(source, PARAMS.SPACE, 0),
+                    pointTranslate(sourceBottom, PARAMS.SPACE, AVAILABLE_SPACE),
+                    pointTranslate(targetTop, -PARAMS.SPACE, -AVAILABLE_SPACE),
+                    pointTranslate(target, -PARAMS.SPACE, 0),
                     target
                 ];
             }
         }
     }
 
-    const points = interpolation3(pointsPolyline, 0.8, 0.98);
+    const points = interpolation3(pointsPolyline, PARAMS.A, PARAMS.B);
 
     let path = `M ${points[0].x} ${points[0].y}`;
     for (let i = 1; i < points.length; i += 3) {
@@ -459,10 +479,116 @@ function generateNodeRedLinkPath(
     }
 }
 
-const nodeRed = observable.box<boolean>(false);
+////////////////////////////////////////////////////////////////////////////////
 
-document.addEventListener("keydown", event => {
-    if (event.ctrlKey && event.shiftKey && event.key == "N") {
-        nodeRed.set(!nodeRed.get());
+export const ConnectionLineParams = observer(
+    class ConnectionLineParams extends React.Component {
+        render() {
+            return (
+                <form
+                    style={{
+                        position: "absolute",
+                        top: 10,
+                        left: 10,
+                        width: 600,
+                        backgroundColor: "#ddd",
+                        padding: 10
+                    }}
+                >
+                    <div className="row mb-3">
+                        <label
+                            htmlFor="ConnectionLineParams_Space"
+                            className="col-sm-2 col-form-label"
+                        >
+                            Space ({PARAMS.SPACE}):
+                        </label>
+                        <div className="col-sm-10">
+                            <input
+                                type="range"
+                                value={PARAMS.SPACE}
+                                min={0}
+                                max={100}
+                                className="form-control"
+                                id="ConnectionLineParams_Space"
+                                onChange={action(
+                                    event =>
+                                        (PARAMS.SPACE = Number(
+                                            event.target.value
+                                        ))
+                                )}
+                            />
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <label
+                            htmlFor="ConnectionLineParams_A"
+                            className="col-sm-2 col-form-label"
+                        >
+                            A ({PARAMS.A}):
+                        </label>
+                        <div className="col-sm-10">
+                            <input
+                                type="range"
+                                value={PARAMS.A}
+                                min={0.75}
+                                max={1.25}
+                                step={0.001}
+                                className="form-control"
+                                id="ConnectionLineParams_A"
+                                onChange={action(
+                                    event =>
+                                        (PARAMS.A = Number(event.target.value))
+                                )}
+                            />
+                        </div>
+                    </div>
+                    <div className="row mb-3">
+                        <label
+                            htmlFor="ConnectionLineParams_B"
+                            className="col-sm-2 col-form-label"
+                        >
+                            B ({PARAMS.B}):
+                        </label>
+                        <div className="col-sm-10">
+                            <input
+                                type="range"
+                                value={PARAMS.B}
+                                min={0.75}
+                                max={1.25}
+                                step={0.001}
+                                className="form-control"
+                                id="ConnectionLineParams_B"
+                                onChange={action(
+                                    event =>
+                                        (PARAMS.B = Number(event.target.value))
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="row mb-3">
+                        <div className="col-sm-10 offset-sm-2">
+                            <div className="form-check">
+                                <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id="ConnectionLineParams_UseNodeRed"
+                                    checked={PARAMS.nodeRed}
+                                    onChange={action(event => {
+                                        PARAMS.nodeRed = event.target.checked;
+                                    })}
+                                />
+                                <label
+                                    className="form-check-label"
+                                    htmlFor="ConnectionLineParams_UseNodeRed"
+                                >
+                                    Use NodeRED algorithm
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            );
+        }
     }
-});
+);
