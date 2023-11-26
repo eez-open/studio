@@ -80,7 +80,3 @@ let features: ProjectEditorFeature[] = [
 export function getProjectFeatures() {
     return features;
 }
-
-export function getProjectFeature(key: string) {
-    return features.find(feature => feature.key == key);
-}

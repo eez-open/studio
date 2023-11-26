@@ -85,7 +85,7 @@ ipcRenderer.on("show-documentation-browser", async () => {
     const { showDocumentationBrowser } = await import(
         "home/documentation-browser"
     );
-    initProjectEditor(tabs, ProjectEditorTab);
+    await initProjectEditor(tabs, ProjectEditorTab);
     showDocumentationBrowser();
 });
 

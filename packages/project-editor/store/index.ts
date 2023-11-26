@@ -78,7 +78,6 @@ import {
 } from "project-editor/store/commands";
 
 import { objectsToClipboardData } from "project-editor/store/clipboard";
-import { getProjectFeatures } from "./features";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
@@ -629,7 +628,7 @@ export class ProjectStore {
             }
         };
 
-        const features = getProjectFeatures();
+        const features = ProjectEditor.extensions;
         for (const feature of features) {
             if (feature.mandatory) {
                 project[feature.key] = feature.create();

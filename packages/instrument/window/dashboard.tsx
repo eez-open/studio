@@ -78,7 +78,7 @@ export class DashboardProject {
 
             this.ProjectEditor = ProjectEditorView;
 
-            initProjectEditor(tabs, ProjectEditorTab);
+            await initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = await ProjectStore.create();
 
             projectStore.dashboardInstrument = this.instrument;

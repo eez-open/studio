@@ -22,7 +22,6 @@ import {
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import classNames from "classnames";
-import { getProjectFeatures } from "project-editor/store/features";
 import {
     EezObject,
     getObjectPropertyDisplayName,
@@ -757,7 +756,7 @@ export const ObjectChangesComponent = observer(
                     (propertyChange.propertyInfo.type == PropertyType.Object ||
                         propertyChange.propertyInfo.type == PropertyType.Array)
                 ) {
-                    const features = getProjectFeatures();
+                    const features = ProjectEditor.extensions;
                     const feature = features.find(
                         feature =>
                             feature.key == propertyChange.propertyInfo.name
