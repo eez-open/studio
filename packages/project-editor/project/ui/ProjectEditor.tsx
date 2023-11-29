@@ -89,6 +89,7 @@ const Content = observer(
 
         componentDidMount(): void {
             this.context.editorsStore.openInitialEditors();
+            this.context.editorsStore.refresh(true);
         }
 
         factory = (node: FlexLayout.TabNode) => {
@@ -232,8 +233,30 @@ const Content = observer(
                 return <ReferencesPanel />;
             }
 
-            if (component === "editors") {
-                return <Editors />;
+            if (component === "editor") {
+                const editor = this.context.editorsStore.tabIdToEditorMap.get(
+                    node.getId()
+                );
+
+                node.setEventListener("visibility", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                node.setEventListener("close", (p: any) => {
+                    this.context.editorsStore.refresh(true);
+                });
+
+                if (editor) {
+                    let result = getEditorComponent(
+                        editor.object,
+                        editor.params
+                    );
+                    if (result) {
+                        return <result.EditorComponent editor={editor} />;
+                    }
+                }
+
+                return null;
             }
 
             return null;
@@ -302,134 +325,7 @@ const Content = observer(
                         </div>
                     );
                 }
-            }
-        };
-
-        render() {
-            if (
-                this.context.runtime &&
-                !this.context.runtime.isDebuggerActive
-            ) {
-                return (
-                    <PageEditor
-                        editor={
-                            new Editor(
-                                this.context,
-                                this.context.runtime.selectedPage,
-                                undefined,
-                                undefined,
-                                new PageTabState(
-                                    this.context.runtime.selectedPage
-                                )
-                            )
-                        }
-                    ></PageEditor>
-                );
-            }
-
-            // to make sure onRenderTab is observable
-            const checksSection = this.context.outputSectionsStore.getSection(
-                Section.CHECKS
-            );
-            checksSection.numErrors;
-            checksSection.numWarnings;
-            checksSection.loading;
-
-            const sectionOutput = this.context.outputSectionsStore.getSection(
-                Section.OUTPUT
-            );
-            sectionOutput.numErrors;
-            sectionOutput.numWarnings;
-            sectionOutput.loading;
-
-            const sectionSearch = this.context.outputSectionsStore.getSection(
-                Section.SEARCH
-            );
-            sectionSearch.messages.searchResults.length;
-            sectionSearch.loading;
-
-            const sectionReferences =
-                this.context.outputSectionsStore.getSection(Section.REFERENCES);
-            sectionReferences.messages.searchResults.length;
-            sectionReferences.loading;
-
-            this.context.runtime && this.context.runtime.error;
-
-            return (
-                <div
-                    style={{
-                        flexGrow: 1,
-                        display: "flex",
-                        flexDirection: "row"
-                    }}
-                >
-                    <div
-                        style={{
-                            position: "relative",
-                            flexGrow: 1
-                        }}
-                    >
-                        <FlexLayout.Layout
-                            model={this.context.layoutModels.root}
-                            factory={this.factory}
-                            realtimeResize={true}
-                            font={LayoutModels.FONT}
-                            onRenderTab={this.onRenderTab}
-                            iconFactory={LayoutModels.iconFactory}
-                        />
-                    </div>
-                </div>
-            );
-        }
-    }
-);
-
-const Editors = observer(
-    class Editors extends React.Component {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        componentDidMount() {
-            this.context.editorsStore.refresh(true);
-        }
-
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "editor") {
-                const editor = this.context.editorsStore.tabIdToEditorMap.get(
-                    node.getId()
-                );
-
-                node.setEventListener("visibility", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                node.setEventListener("close", (p: any) => {
-                    this.context.editorsStore.refresh(true);
-                });
-
-                if (editor) {
-                    let result = getEditorComponent(
-                        editor.object,
-                        editor.params
-                    );
-                    if (result) {
-                        return <result.EditorComponent editor={editor} />;
-                    }
-                }
-
-                return null;
-            }
-
-            return null;
-        };
-
-        onRenderTab = (
-            node: FlexLayout.TabNode,
-            renderValues: FlexLayout.ITabRenderValues
-        ) => {
-            if (node.getComponent() == "editor") {
+            } else if (node.getComponent() == "editor") {
                 const editor = this.context.editorsStore.tabIdToEditorMap.get(
                     node.getId()
                 );
@@ -515,23 +411,86 @@ const Editors = observer(
         };
 
         render() {
+            if (
+                this.context.runtime &&
+                !this.context.runtime.isDebuggerActive
+            ) {
+                return (
+                    <PageEditor
+                        editor={
+                            new Editor(
+                                this.context,
+                                this.context.runtime.selectedPage,
+                                undefined,
+                                undefined,
+                                new PageTabState(
+                                    this.context.runtime.selectedPage
+                                )
+                            )
+                        }
+                    ></PageEditor>
+                );
+            }
+
             // to make sure onRenderTab is observable
             this.context.editorsStore.editors.forEach(editor => {
                 editor.permanent;
             });
 
+            const checksSection = this.context.outputSectionsStore.getSection(
+                Section.CHECKS
+            );
+            checksSection.numErrors;
+            checksSection.numWarnings;
+            checksSection.loading;
+
+            const sectionOutput = this.context.outputSectionsStore.getSection(
+                Section.OUTPUT
+            );
+            sectionOutput.numErrors;
+            sectionOutput.numWarnings;
+            sectionOutput.loading;
+
+            const sectionSearch = this.context.outputSectionsStore.getSection(
+                Section.SEARCH
+            );
+            sectionSearch.messages.searchResults.length;
+            sectionSearch.loading;
+
+            const sectionReferences =
+                this.context.outputSectionsStore.getSection(Section.REFERENCES);
+            sectionReferences.messages.searchResults.length;
+            sectionReferences.loading;
+
+            this.context.runtime && this.context.runtime.error;
+
             return (
-                <FlexLayout.Layout
-                    model={this.context.editorsStore.tabsModel}
-                    factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT}
-                    onRenderTab={this.onRenderTab}
-                    iconFactory={LayoutModels.iconFactory}
-                    onAuxMouseClick={this.onAuxMouseClick}
-                    onContextMenu={this.onContextMenu}
-                    onModelChange={this.onModelChange}
-                />
+                <div
+                    style={{
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "row"
+                    }}
+                >
+                    <div
+                        style={{
+                            position: "relative",
+                            flexGrow: 1
+                        }}
+                    >
+                        <FlexLayout.Layout
+                            model={this.context.layoutModels.root}
+                            factory={this.factory}
+                            realtimeResize={true}
+                            font={LayoutModels.FONT}
+                            onRenderTab={this.onRenderTab}
+                            iconFactory={LayoutModels.iconFactory}
+                            onAuxMouseClick={this.onAuxMouseClick}
+                            onContextMenu={this.onContextMenu}
+                            onModelChange={this.onModelChange}
+                        />
+                    </div>
+                </div>
             );
         }
     }

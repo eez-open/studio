@@ -198,8 +198,6 @@ export class LayoutModels extends AbstractLayoutModels {
     themes: FlexLayout.Model;
     scpi: FlexLayout.Model;
     texts: FlexLayout.Model;
-    editors: FlexLayout.Model;
-    viewers: FlexLayout.Model;
 
     constructor(public projectStore: ProjectStore) {
         super();
@@ -355,7 +353,7 @@ export class LayoutModels extends AbstractLayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 110,
+                version: 113,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -410,15 +408,10 @@ export class LayoutModels extends AbstractLayoutModels {
                             {
                                 type: "tabset",
                                 weight: 60,
+                                enableDeleteWhenEmpty: false,
                                 enableClose: false,
-                                enableTabStrip: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        component: "editors"
-                                    }
-                                ]
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
+                                children: []
                             },
                             {
                                 type: "row",
@@ -462,7 +455,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "rootEditorForIEXT",
-                version: 3,
+                version: 5,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.bordersIEXT,
@@ -493,14 +486,9 @@ export class LayoutModels extends AbstractLayoutModels {
                                 type: "tabset",
                                 weight: 60,
                                 enableClose: false,
-                                enableTabStrip: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        component: "editors"
-                                    }
-                                ]
+                                enableDeleteWhenEmpty: false,
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
+                                children: []
                             },
                             {
                                 type: "row",
@@ -530,7 +518,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "rootRuntime",
-                version: 52,
+                version: 54,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -581,14 +569,9 @@ export class LayoutModels extends AbstractLayoutModels {
                                 type: "tabset",
                                 weight: 60,
                                 enableClose: false,
-                                enableTabStrip: false,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        component: "editors"
-                                    }
-                                ]
+                                enableDeleteWhenEmpty: false,
+                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
+                                children: []
                             },
                             {
                                 type: "row",
@@ -983,50 +966,6 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
-            },
-            {
-                name: "editors",
-                version: 3,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                enableClose: false,
-                                enableDeleteWhenEmpty: false,
-                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
-                                children: []
-                            }
-                        ]
-                    }
-                },
-                get: () => this.editors,
-                set: action(model => (this.editors = model))
-            },
-            {
-                name: "viewers",
-                version: 3,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                enableClose: false,
-                                enableDeleteWhenEmpty: false,
-                                id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
-                                children: []
-                            }
-                        ]
-                    }
-                },
-                get: () => this.viewers,
-                set: action(model => (this.viewers = model))
             }
         ];
     }

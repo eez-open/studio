@@ -117,9 +117,6 @@ export class Editor implements IEditor {
         }
 
         if (this.subObject != subObject) {
-            if (this.object === this.projectStore.project.scpi) {
-                return true;
-            }
             if (this.object === this.projectStore.project.settings) {
                 return true;
             }

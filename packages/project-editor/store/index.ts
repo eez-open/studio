@@ -134,14 +134,17 @@ export class ProjectStore {
     undoManager = new UndoManager(this);
     navigationStore = new NavigationStore(this);
     layoutModels = new LayoutModels(this);
-    editorModeEditorsStore = new EditorsStore(
+    editorModeEditorsStore: EditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.editors,
+        () =>
+            this.projectTypeTraits.isIEXT
+                ? this.layoutModels.rootEditorForIEXT
+                : this.layoutModels.rootEditor,
         LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
     );
     runtimeModeEditorsStore = new EditorsStore(
         this,
-        () => this.layoutModels.viewers,
+        () => this.layoutModels.rootRuntime,
         LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
     );
     uiStateStore = new UIStateStore(this);
