@@ -1476,7 +1476,10 @@ export abstract class DebuggerConnectionBase {
                     {
                         const flowStateIndex = parseInt(messageParameters[1]);
                         const componentIndex = parseInt(messageParameters[2]);
-                        const executionState = parseInt(messageParameters[3]);
+                        const executionState = parseInt(
+                            messageParameters[3],
+                            16
+                        );
 
                         const { flowIndex, flowState } =
                             this.getFlowState(flowStateIndex);

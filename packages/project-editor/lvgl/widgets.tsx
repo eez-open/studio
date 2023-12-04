@@ -7286,7 +7286,7 @@ export class LVGLMeterWidget extends LVGLWidget {
                 );
                 build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
 
-                build.line(`const char *label;`);
+                build.line(`const char *temp;`);
                 if (
                     build.assets.projectStore.projectTypeTraits.hasFlowSupport
                 ) {
@@ -7298,17 +7298,24 @@ export class LVGLMeterWidget extends LVGLWidget {
                         );
 
                     build.line(
-                        `label = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
+                        `temp = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
                     );
                 } else {
                     build.line(
-                        `label = ${build.getVariableGetterFunctionName(
+                        `temp = ${build.getVariableGetterFunctionName(
                             getProperty(this, `scales[${scaleIndex}].label`)
                         )}();`
                     );
                 }
-                build.line(`strncpy(draw_part_dsc->text, label, 15);`);
-                build.line(`draw_part_dsc->text[15] = 0;`);
+                build.line(`if (temp) {`);
+                build.indent();
+                build.line(`static char label[32];`);
+                build.line(`strncpy(label, temp, sizeof(label));`);
+                build.line(`label[sizeof(label) - 1] = 0;`);
+                build.line(`draw_part_dsc->text = label;`);
+                build.line(`draw_part_dsc->text_length = sizeof(label);`);
+                build.unindent();
+                build.line("}");
 
                 build.unindent();
                 build.line("}");

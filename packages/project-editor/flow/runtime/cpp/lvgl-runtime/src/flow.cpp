@@ -545,10 +545,14 @@ void flow_event_meter_tick_label_event_callback(lv_event_t *e) {
 
     g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-    const char *label = evalTextProperty(data->flow_state, data->component_index, data->output_or_property_index, "Failed to evalute scale label in Meter widget");
-
-    strncpy(draw_part_dsc->text, label, 15);
-    draw_part_dsc->text[15] = 0;
+    const char *temp = evalTextProperty(data->flow_state, data->component_index, data->output_or_property_index, "Failed to evalute scale label in Meter widget");
+    if (temp) {
+        static char label[32];
+        strncpy(label, temp, sizeof(label));
+        label[sizeof(label) - 1] = 0;
+        draw_part_dsc->text = label;
+        draw_part_dsc->text_length = sizeof(label);
+    }
 
 }
 
