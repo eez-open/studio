@@ -78,7 +78,10 @@ import {
     NamingConvention,
     TAB
 } from "project-editor/build/helper";
-import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component-types";
+import {
+    FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
+    FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE
+} from "project-editor/flow/components/component-types";
 
 import { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -158,7 +161,8 @@ export class Assets {
     dashboardComponentClassNameToComponentIdMap: {
         [name: string]: number;
     } = {};
-    nextDashboardComponentId = FIRST_DASHBOARD_COMPONENT_TYPE;
+    nextDashboardActionComponentId = FIRST_DASHBOARD_ACTION_COMPONENT_TYPE;
+    nextDashboardWidgetComponentId = FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE;
     dashboardComponentTypeToNameMap: {
         [componentType: number]: string;
     } = {};

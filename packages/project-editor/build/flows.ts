@@ -36,7 +36,10 @@ import {
     buildVariableFlowValue
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
-import { FIRST_DASHBOARD_COMPONENT_TYPE } from "project-editor/flow/components/component-types";
+import {
+    FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
+    FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE
+} from "project-editor/flow/components/component-types";
 import {
     BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES,
@@ -51,6 +54,7 @@ import {
     objectVariableTypes
 } from "project-editor/features/variable/value-type";
 import type { Structure } from "project-editor/features/variable/variable";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 function getComponentName(componentType: IObjectClassInfo) {
     if (componentType.name.endsWith("Component")) {
@@ -99,7 +103,12 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
             flowComponentId =
                 assets.dashboardComponentClassNameToComponentIdMap[name];
             if (flowComponentId == undefined) {
-                flowComponentId = assets.nextDashboardComponentId++;
+                if (component instanceof ProjectEditor.ActionComponentClass) {
+                    flowComponentId = assets.nextDashboardActionComponentId++;
+                } else {
+                    flowComponentId = assets.nextDashboardWidgetComponentId++;
+                }
+                console.log(name, flowComponentId);
                 assets.dashboardComponentClassNameToComponentIdMap[name] =
                     flowComponentId;
                 assets.dashboardComponentTypeToNameMap[flowComponentId] = name;
@@ -498,7 +507,11 @@ export function buildFlowDefs(assets: Assets) {
     componentTypeEnumItems.unshift(`${TAB}COMPONENT_TYPE_NONE = 0`);
 
     componentTypeEnumItems.push(
-        `${TAB}FIRST_DASHBOARD_COMPONENT_TYPE = ${FIRST_DASHBOARD_COMPONENT_TYPE}`
+        `${TAB}FIRST_DASHBOARD_ACTION_COMPONENT_TYPE = ${FIRST_DASHBOARD_ACTION_COMPONENT_TYPE}`
+    );
+
+    componentTypeEnumItems.push(
+        `${TAB}FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE = ${FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE}`
     );
 
     defs.push(

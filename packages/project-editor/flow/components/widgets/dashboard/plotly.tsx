@@ -5,7 +5,8 @@ import {
     makeObservable,
     runInAction,
     autorun,
-    IReactionDisposer
+    IReactionDisposer,
+    toJS
 } from "mobx";
 
 import {
@@ -461,7 +462,7 @@ const LineChartElement = observer(
 
 class ExecutionState {
     values: InputData[] = [];
-    maxPoints: number;
+    maxPoints: number = 0;
     labels: string[] = [];
 
     operations: (
@@ -854,7 +855,7 @@ export class LineChartWidget extends Widget {
                 const xValue = context.evalProperty("xValue");
                 const lineValues = context.getExpressionListParam(8);
 
-                let values = executionState.values.slice();
+                let values = toJS(executionState.values).slice();
 
                 if (values.length == maxPoints) {
                     values.shift();
