@@ -16,7 +16,6 @@
         "baseUrl": "./packages",
         "inlineSourceMap": false,
         "pretty": true,
-        "watch": true,
         "outDir": "./build",
         "skipLibCheck": true,
         "strictPropertyInitialization": false,

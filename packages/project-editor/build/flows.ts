@@ -108,7 +108,6 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
                 } else {
                     flowComponentId = assets.nextDashboardWidgetComponentId++;
                 }
-                console.log(name, flowComponentId);
                 assets.dashboardComponentClassNameToComponentIdMap[name] =
                     flowComponentId;
                 assets.dashboardComponentTypeToNameMap[flowComponentId] = name;

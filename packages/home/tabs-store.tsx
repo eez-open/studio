@@ -567,7 +567,7 @@ export class ProjectEditorTab implements IHomeTab {
             });
 
             if (!projectStore.project._isDashboardBuild) {
-                projectStore.startBackgroundCheck();
+                setTimeout(() => projectStore.startBackgroundCheck(), 0);
             } else {
                 projectStore.setRuntimeMode(false);
             }

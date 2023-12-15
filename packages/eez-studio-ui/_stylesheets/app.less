@@ -5820,7 +5820,6 @@ button.EezStudio_Action {
     .tree-row {
         width: 100%;
 
-        &.selected,
         &:hover {
             .EezStudio_Toolbar {
                 padding-left: 5px;
@@ -5855,11 +5854,8 @@ button.EezStudio_Action {
         opacity: 0.5;
     }
 
-    span {
+    & > span {
         flex: 1;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
         display: flex;
         align-items: center;
 
@@ -5867,6 +5863,15 @@ button.EezStudio_Action {
         img {
             flex-shrink: 0;
         }
+    }
+
+    & > span > span {
+        display: block;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 0;
+        flex: 1;
     }
 
     .EezStudio_IconAction {
@@ -6640,8 +6645,10 @@ button.EezStudio_Action {
         padding: 4px;
         background-color: @panelHeaderColorInsideFlexLayout;
 
+        font-size: 95%;
+
         & > .nav-item {
-            margin-right: 4px;
+            margin-right: 2px;
             &:last-child {
                 margin-right: 0;
             }
@@ -6649,7 +6656,7 @@ button.EezStudio_Action {
 
         a {
             color: @textColor;
-            padding: 2px 8px;
+            padding: 2px 4px;
             &:hover:not(.active) {
                 color: @hoverColor;
                 background-color: @hoverBackgroundColor;

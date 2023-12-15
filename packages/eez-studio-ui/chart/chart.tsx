@@ -2212,11 +2212,13 @@ export const ChartView = observer(
         }
 
         componentDidMount() {
-            this.draggable.element!.addEventListener(
-                "wheel",
-                this.onWheelEnclosure,
-                { passive: false }
-            );
+            if (this.props.mode != "preview") {
+                this.draggable.element!.addEventListener(
+                    "wheel",
+                    this.onWheelEnclosure,
+                    { passive: false }
+                );
+            }
         }
 
         componentDidUpdate() {
@@ -2224,10 +2226,12 @@ export const ChartView = observer(
         }
 
         componentWillUnmount() {
-            this.draggable.element!.removeEventListener(
-                "mousewheel",
-                this.onWheelEnclosure
-            );
+            if (this.props.mode != "preview") {
+                this.draggable.element!.removeEventListener(
+                    "mousewheel",
+                    this.onWheelEnclosure
+                );
+            }
 
             if (this.mouseHandler) {
                 this.mouseHandler.up(undefined, undefined, true);
@@ -2317,7 +2321,11 @@ export const ChartView = observer(
             return (
                 <div
                     className="EezStudio_ChartContainer"
-                    ref={ref => this.draggable.attach(ref)}
+                    ref={
+                        this.props.mode != "preview"
+                            ? ref => this.draggable.attach(ref)
+                            : undefined
+                    }
                 >
                     <svg
                         className="EezStudio_Chart"
