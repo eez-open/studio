@@ -72,7 +72,7 @@ export class MarkdownWidget extends Widget {
         });
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number

@@ -350,7 +350,7 @@ export class DisplayDataWidget extends Widget {
         return text;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -554,7 +554,7 @@ export class TextWidget extends Widget {
         }
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -949,7 +949,7 @@ export class MultilineTextWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -1068,7 +1068,7 @@ export class RectangleWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const invertColors = isV3OrNewerProject(this)
             ? true
             : this.invertColors;
@@ -1326,7 +1326,7 @@ export class BitmapWidget extends Widget {
         return undefined;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const bitmap = this.getBitmap(flowContext);
 
         return (
@@ -1550,7 +1550,7 @@ export class ButtonWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(
             flowContext,
             this,
@@ -1692,7 +1692,7 @@ export class ToggleButtonWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -1842,7 +1842,7 @@ export class ButtonGroupWidget extends Widget {
         return (this.data && flowContext.dataContext.get(this.data)) || 0;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -2112,7 +2112,7 @@ export class BarGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -2434,7 +2434,7 @@ export class YTGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -2561,7 +2561,7 @@ export class UpDownWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         let text = this.data
             ? (flowContext.dataContext.get(this.data) as string)
             : "";
@@ -2761,7 +2761,7 @@ export class ListGraphWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -2928,7 +2928,7 @@ export class ProgressWidget extends Widget {
         return 25;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const percent = this.getPercent(flowContext);
         let isHorizontal = this.orientation == "horizontal";
 
@@ -3053,7 +3053,7 @@ export class AppViewWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         let element;
 
         if (this.data) {
@@ -3175,7 +3175,7 @@ export class ScrollBarWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -3360,7 +3360,7 @@ export class CanvasWidget extends Widget {
         }
     });
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -3735,7 +3735,7 @@ export class LineChartEmbeddedWidget extends Widget {
         return this.title;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -4523,7 +4523,7 @@ export class GaugeEmbeddedWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         let widget = this;
         let style = widget.style;
 
@@ -5039,7 +5039,7 @@ export class InputEmbeddedWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -5270,7 +5270,7 @@ export class RollerWidget extends Widget {
         ];
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -5379,7 +5379,7 @@ export class SwitchWidget extends Widget {
         icon: SWITCH_WIDGET_ICON
     });
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const enabled = getBooleanValue(flowContext, this, "data", false);
 
         return (
@@ -5527,7 +5527,7 @@ export class SliderWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -5681,7 +5681,7 @@ export class DropDownListWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <ComponentCanvas
@@ -5885,7 +5885,7 @@ export class QRCodeWidget extends Widget {
         );
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const text = this.getText(flowContext) || "";
 
         const qr0 = QRC.encodeText(text, this.errorCorrectionValue);

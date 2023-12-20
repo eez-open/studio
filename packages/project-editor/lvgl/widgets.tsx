@@ -1863,7 +1863,7 @@ export class LVGLWidget extends Widget {
 
     buildEventHandlerSpecific(build: LVGLBuild) {}
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return this._lvglObj ? (
             <>
                 <ComponentsContainerEnclosure

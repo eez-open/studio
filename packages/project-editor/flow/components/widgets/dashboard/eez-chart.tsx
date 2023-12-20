@@ -373,7 +373,7 @@ export class EEZChartWidget extends Widget {
 
     historyItemID: string;
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number

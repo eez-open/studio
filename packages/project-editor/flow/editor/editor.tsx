@@ -135,7 +135,7 @@ function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
     const CENTER_LINES_WIDTH = 1 / transform.scale;
 
     const centerLineStyle = {
-        fill: "transparent",
+        fill: "url(#page-background)",
         stroke: CENTER_LINES_COLOR,
         strokeWidth: CENTER_LINES_WIDTH
     };

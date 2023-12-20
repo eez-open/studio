@@ -334,6 +334,21 @@ export const LineMarkers = () => (
                 color={selectedLineColorInViewer()}
             />
             <AnimationCurveEndMarker />
+            <pattern
+                id="page-background"
+                patternUnits="userSpaceOnUse"
+                width="16"
+                height="16"
+            >
+                <image
+                    href="../eez-studio-ui/_images/image_background.png"
+                    x="0"
+                    y="0"
+                    width="16"
+                    height="16"
+                    imageRendering="pixelated"
+                />
+            </pattern>
         </defs>
     </svg>
 );

@@ -207,7 +207,7 @@ export class TextDashboardWidget extends Widget {
         }
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(flowContext, this, "data", this.name, "");
         let text: string;
         let node: React.ReactNode | null;
@@ -302,7 +302,7 @@ export class RectangleDashboardWidget extends Widget {
         makeObservable(this, {});
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return <>{super.render(flowContext, width, height)}</>;
     }
 }
@@ -384,6 +384,18 @@ function TextInputWidgetInput({
                                 `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
                             );
                         }
+                    }
+                }}
+                onBlur={() => {
+                    const flowState = flowContext.flowState as FlowState;
+                    if (flowState && flowState.runtime) {
+                        flowState.runtime.executeWidgetAction(
+                            flowContext,
+                            textInputWidget,
+                            "ON_CHANGE",
+                            makeTextInputChangeEventValue(flowContext, value),
+                            `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
+                        );
                     }
                 }}
                 onKeyDown={handleKeyDown}
@@ -553,7 +565,7 @@ export class TextInputWidget extends Widget {
         return "";
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -810,7 +822,7 @@ export class NumberInputDashboardWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const style: React.CSSProperties = {};
         this.styleHook(style, flowContext);
         return (
@@ -920,7 +932,7 @@ export class CheckboxWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -1071,7 +1083,7 @@ export class SwitchDashboardWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -1191,7 +1203,7 @@ export class DropDownListDashboardWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         let options: string[] = evalProperty(flowContext, this, "options");
         if (options == undefined && !isArray(options)) {
             options = [];
@@ -1362,7 +1374,7 @@ export class ProgressDashboardWidget extends Widget {
         return 25;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const percent = this.getPercent(flowContext);
         let isHorizontal = this.orientation == "horizontal";
 
@@ -1467,7 +1479,7 @@ export class SpinnerWidget extends Widget {
         makeObservable(this, {});
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -1619,7 +1631,7 @@ export class QRCodeDashboardWidget extends Widget {
         );
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const text = this.getText(flowContext) || "";
 
         const qr0 = QRC.encodeText(text, this.errorCorrectionValue);
@@ -1736,7 +1748,7 @@ export class ButtonDashboardWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const result = getTextValue(flowContext, this, "data", undefined, "");
         let text: string;
         let node: React.ReactNode | null;
@@ -2023,7 +2035,7 @@ export class BitmapDashboardWidget extends Widget {
         return undefined;
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const bitmap = this.getBitmap(flowContext);
 
         return (
@@ -2303,7 +2315,7 @@ export class SliderDashboardWidget extends Widget {
         return classNames("eez-widget", this.type);
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         return (
             <>
                 <SliderDashboardWidgetElement

@@ -939,7 +939,7 @@ export class LineChartWidget extends Widget {
         ];
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -1263,7 +1263,7 @@ export class GaugeWidget extends Widget {
         });
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
 
         width: number,

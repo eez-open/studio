@@ -3462,7 +3462,7 @@ export class Widget extends Component {
         }
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
@@ -3827,7 +3827,7 @@ export class ActionComponent extends Component {
         return null;
     }
 
-    render(flowContext: IFlowContext) {
+    override render(flowContext: IFlowContext) {
         return renderActionComponent(this, flowContext);
     }
 }
@@ -3888,7 +3888,7 @@ export class NotFoundComponent extends ActionComponent {
         return this.type.endsWith("ActionComponent") ? "both" : "none";
     }
 
-    render(flowContext: IFlowContext): JSX.Element {
+    override render(flowContext: IFlowContext): JSX.Element {
         return renderActionComponent(this, flowContext);
     }
 }

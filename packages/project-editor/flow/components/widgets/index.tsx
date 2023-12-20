@@ -235,7 +235,7 @@ export class ContainerWidget extends Widget {
         });
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         containerWidth: number,
         containerHeight: number
@@ -526,7 +526,7 @@ export class ListWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -730,7 +730,7 @@ export class GridWidget extends Widget {
         });
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const itemWidget = this.itemWidget;
         if (!itemWidget) {
             return null;
@@ -1112,7 +1112,7 @@ export class SelectWidget extends Widget {
         }
     }
 
-    render(flowContext: IFlowContext, width: number, height: number) {
+    override render(flowContext: IFlowContext, width: number, height: number) {
         const index = this.getSelectedIndex(flowContext);
 
         let selectedWidget =
@@ -1506,7 +1506,7 @@ export class UserWidgetWidget extends Widget {
         return [...endComponents, ...outputComponents, ...super.getOutputs()];
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number

@@ -105,7 +105,7 @@ export class TerminalWidget extends Widget {
         ];
     }
 
-    render(
+    override render(
         flowContext: IFlowContext,
         width: number,
         height: number
