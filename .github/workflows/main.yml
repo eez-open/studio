@@ -21,6 +21,10 @@ jobs:
               with:
                   node-version: 16
 
+            - name: Additional step from MaCOS
+              if: startsWith(matrix.os, 'macos')
+              run: sudo -H pip install setuptools
+
             #- name: Install Snapcraft
             #  uses: samuelmeuli/action-snapcraft@v1
             #  # Only install Snapcraft on Ubuntu
