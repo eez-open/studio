@@ -17,7 +17,8 @@ import {
     MessageType,
     PropertyProps,
     getParent,
-    IMessage
+    IMessage,
+    getKey
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -28,7 +29,8 @@ import {
     updateObject,
     propertyNotSetMessage,
     createObject,
-    isEezObjectArray
+    isEezObjectArray,
+    getAncestorOfType
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -56,6 +58,9 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import type { Widget } from "project-editor/flow/component";
+import { checkExpression } from "project-editor/flow/expression";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
 export type BorderRadiusSpec = {
     topLeftX: number;
@@ -144,6 +149,76 @@ const backgroundColorPropertyMenu = (
 
     return menuItems;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class ConditionalStyle extends EezObject {
+    style: string;
+    condition: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "allStyles"
+            }
+        ],
+        check: (
+            conditionalStyleItem: ConditionalStyle,
+            messages: IMessage[]
+        ) => {
+            if (
+                conditionalStyleItem.style &&
+                !findStyle(
+                    ProjectEditor.getProject(conditionalStyleItem),
+                    conditionalStyleItem.style
+                )
+            ) {
+                messages.push(
+                    propertyNotFoundMessage(conditionalStyleItem, "style")
+                );
+            }
+
+            try {
+                checkExpression(
+                    getAncestorOfType<Widget>(
+                        conditionalStyleItem,
+                        ProjectEditor.WidgetClass.classInfo
+                    )!,
+                    conditionalStyleItem.condition
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid condition: ${err}`,
+                        getChildOfObject(conditionalStyleItem, "condition")
+                    )
+                );
+            }
+        },
+        defaultValue: {},
+        listLabel: (conditionalStyleItem: ConditionalStyle, collapsed) =>
+            !collapsed ? (
+                ""
+            ) : (
+                <>
+                    {conditionalStyleItem.style}:
+                    {conditionalStyleItem.condition}
+                </>
+            )
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            style: observable,
+            condition: observable
+        });
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -347,6 +422,27 @@ const useStyleProperty: PropertyInfo = {
         }
 
         return menuItems;
+    }
+};
+
+export const conditionalStylesProperty: PropertyInfo = {
+    name: "conditionalStyles",
+    type: PropertyType.Array,
+    typeClass: ConditionalStyle,
+    arrayItemOrientation: "vertical",
+    partOfNavigation: false,
+    enumerable: false,
+    defaultValue: [],
+    hideInPropertyGrid: (object: IEezObject, propertyInfo: PropertyInfo) => {
+        if (isNotDashboardProject(object)) {
+            return true;
+        }
+        if (
+            !getAncestorOfType(object, ProjectEditor.ComponentClass.classInfo)
+        ) {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -735,6 +831,7 @@ const properties = [
     nameProperty,
     descriptionProperty,
     useStyleProperty,
+    conditionalStylesProperty,
     fontProperty,
     fontFamilyProperty,
     fontSizeProperty,
@@ -778,6 +875,7 @@ export class Style extends EezObject {
     name: string;
     description?: string;
     useStyle?: string;
+    conditionalStyles?: ConditionalStyle[];
     childStyles: Style[];
     alwaysBuild: boolean;
 
@@ -820,6 +918,7 @@ export class Style extends EezObject {
             name: observable,
             description: observable,
             useStyle: observable,
+            conditionalStyles: observable,
             childStyles: observable,
             alwaysBuild: observable,
             font: observable,
@@ -2029,6 +2128,44 @@ export class Style extends EezObject {
         }
 
         return getClassNames(this, []);
+    }
+
+    getConditionalClassNames(flowContext: IFlowContext): string[] {
+        const classNames: string[] = [];
+
+        if (this.conditionalStyles) {
+            const widget = getAncestorOfType<Widget>(
+                this,
+                ProjectEditor.WidgetClass.classInfo
+            );
+            if (widget) {
+                this.conditionalStyles.forEach((conditionalStyle, index) => {
+                    let condition =
+                        ProjectEditor.evalProperty(
+                            flowContext,
+                            widget,
+                            `${getKey(this)}.${
+                                conditionalStylesProperty.name
+                            }[${index}].${
+                                ProjectEditor.conditionalStyleConditionProperty
+                                    .name
+                            }`
+                        ) ?? false;
+
+                    if (condition) {
+                        const style = findStyle(
+                            flowContext.projectStore.project,
+                            conditionalStyle.style
+                        );
+
+                        if (style) {
+                            classNames.push(...style.classNames);
+                        }
+                    }
+                });
+            }
+        }
+        return classNames;
     }
 
     render() {

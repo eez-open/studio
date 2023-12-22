@@ -48,12 +48,10 @@ import type {
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
     CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
-    CLICK_EVENT_STRUCT_NAME,
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
     SLIDER_CHANGE_EVENT_STRUCT_NAME,
     SWITCH_CHANGE_EVENT_STRUCT_NAME,
     TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
-    makeActionParamsValue,
     makeCheckboxActionParamsValue as makeCheckboxChangeEventValue,
     makeDropDownListActionParamsValue,
     makeSliderActionParamsValue,
@@ -191,7 +189,7 @@ export class TextDashboardWidget extends Widget {
         });
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -225,21 +223,11 @@ export class TextDashboardWidget extends Widget {
         return (
             <>
                 <span
-                    className={classNames(this.style.classNames)}
-                    onClick={event => {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        if (flowContext.projectStore.runtime) {
-                            flowContext.projectStore.runtime.executeWidgetAction(
-                                flowContext,
-                                this,
-                                "CLICKED",
-                                makeActionParamsValue(flowContext),
-                                `struct:${CLICK_EVENT_STRUCT_NAME}`
-                            );
-                        }
-                    }}
+                    className={classNames(
+                        this.style.classNames,
+                        this.style.getConditionalClassNames(flowContext)
+                    )}
+                    onClick={this.onClick(flowContext)}
                     style={{ opacity: style.opacity }}
                 >
                     {node || text}
@@ -818,7 +806,7 @@ export class NumberInputDashboardWidget extends Widget {
         return [...super.getOutputs()];
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -828,7 +816,10 @@ export class NumberInputDashboardWidget extends Widget {
         return (
             <>
                 <NumberInputDashboardWidgetElement
-                    className={classNames(this.style.classNames)}
+                    className={classNames(
+                        this.style.classNames,
+                        this.style.getConditionalClassNames(flowContext)
+                    )}
                     component={this}
                     flowContext={flowContext}
                     width={width}
@@ -928,7 +919,7 @@ export class CheckboxWidget extends Widget {
         return false;
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -965,7 +956,11 @@ export class CheckboxWidget extends Widget {
         return (
             <>
                 <div
-                    className={classNames("form-check", this.style.classNames)}
+                    className={classNames(
+                        "form-check",
+                        this.style.classNames,
+                        this.style.getConditionalClassNames(flowContext)
+                    )}
                     style={{ opacity: style.opacity }}
                 >
                     <input
@@ -1079,7 +1074,7 @@ export class SwitchDashboardWidget extends Widget {
         return false;
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -1098,7 +1093,8 @@ export class SwitchDashboardWidget extends Widget {
                 <div
                     className={classNames(
                         "form-check form-switch",
-                        this.style.classNames
+                        this.style.classNames,
+                        this.style.getConditionalClassNames(flowContext)
                     )}
                     style={{ opacity: style.opacity }}
                 >
@@ -1744,7 +1740,7 @@ export class ButtonDashboardWidget extends Widget {
         return [this.style, this.disabledStyle];
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -1775,23 +1771,13 @@ export class ButtonDashboardWidget extends Widget {
         return (
             <>
                 <button
-                    className={classNames(buttonStyle.classNames)}
+                    className={classNames(
+                        buttonStyle.classNames,
+                        this.style.getConditionalClassNames(flowContext)
+                    )}
                     style={{ opacity: style.opacity }}
                     disabled={!buttonEnabled}
-                    onClick={event => {
-                        event.preventDefault();
-                        event.stopPropagation();
-
-                        if (flowContext.projectStore.runtime) {
-                            flowContext.projectStore.runtime.executeWidgetAction(
-                                flowContext,
-                                this,
-                                "CLICKED",
-                                makeActionParamsValue(flowContext),
-                                `struct:${CLICK_EVENT_STRUCT_NAME}`
-                            );
-                        }
-                    }}
+                    onClick={this.onClick(flowContext)}
                 >
                     {node || text}
                 </button>
@@ -2102,7 +2088,10 @@ const SliderDashboardWidgetElement = observer(
             return (
                 <input
                     className={classNames(
-                        this.props.component.style.classNames
+                        this.props.component.style.classNames,
+                        this.props.component.style.getConditionalClassNames(
+                            flowContext
+                        )
                     )}
                     type="range"
                     value={value ?? 0}
@@ -2311,7 +2300,7 @@ export class SliderDashboardWidget extends Widget {
         return [...super.getOutputs()];
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 

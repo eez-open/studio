@@ -25,7 +25,8 @@ import type {
     getWidgetParent,
     CustomInput,
     CustomOutput,
-    createActionComponentClass
+    createActionComponentClass,
+    makeExpressionProperty
 } from "project-editor/flow/component";
 import type {
     Glyph,
@@ -85,6 +86,8 @@ import type {
 } from "project-editor/features/variable/variable";
 
 import type { Style } from "project-editor/features/style/style";
+import type { evalProperty } from "project-editor/flow/helper";
+import type { PropertyInfo } from "project-editor/core/object";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -152,6 +155,9 @@ export interface IProjectEditor {
     CustomOutputClass: typeof CustomOutput;
     ImportDirectiveClass: typeof ImportDirective;
     createActionComponentClass: typeof createActionComponentClass;
+    makeExpressionProperty: typeof makeExpressionProperty;
+    evalProperty: typeof evalProperty;
+    conditionalStyleConditionProperty: PropertyInfo;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

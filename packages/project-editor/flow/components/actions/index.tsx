@@ -3945,9 +3945,9 @@ export class CommentActionComponent extends ActionComponent {
         ];
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames(
-            super.getClassName(),
+            super.getClassName(flowContext),
             "EezStudio_CommentActionComponent"
         );
     }

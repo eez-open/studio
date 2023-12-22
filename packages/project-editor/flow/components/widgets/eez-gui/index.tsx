@@ -538,7 +538,7 @@ export class TextWidget extends Widget {
         });
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 
@@ -1546,7 +1546,7 @@ export class ButtonWidget extends Widget {
         });
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return classNames("eez-widget", this.type);
     }
 

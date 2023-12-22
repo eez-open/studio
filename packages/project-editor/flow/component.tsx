@@ -68,7 +68,10 @@ import {
 } from "project-editor/flow/editor/resizing-widget-property";
 
 import type { Page } from "project-editor/features/page/page";
-import { Style } from "project-editor/features/style/style";
+import {
+    conditionalStylesProperty,
+    Style
+} from "project-editor/features/style/style";
 import type {
     ContainerWidget,
     UserWidgetWidget,
@@ -92,7 +95,8 @@ import {
     VariableTypeFieldComponent,
     CLICK_EVENT_STRUCT_NAME,
     isValidType,
-    migrateType
+    migrateType,
+    makeActionParamsValue
 } from "project-editor/features/variable/value-type";
 import { expressionBuilder } from "./expression/ExpressionBuilder";
 import { getComponentName } from "project-editor/flow/components/components-registry";
@@ -2323,7 +2327,7 @@ export class Component extends EezObject {
         return null;
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return "";
     }
 
@@ -2943,6 +2947,41 @@ export class Widget extends Component {
             return !widget.locked && !getTimelineEditorState(widget);
         },
 
+        getAdditionalFlowProperties: (widget: Widget) => {
+            const additionalProperties: PropertyInfo[] = [];
+
+            const classInfo = getClassInfo(widget);
+
+            for (const propertyInfo of classInfo.properties) {
+                if (
+                    propertyInfo.type == PropertyType.Object &&
+                    propertyInfo.typeClass == Style
+                ) {
+                    const style = (widget as any)[propertyInfo.name] as Style;
+
+                    if (style.conditionalStyles) {
+                        for (
+                            let index = 0;
+                            index < style.conditionalStyles.length;
+                            index++
+                        ) {
+                            additionalProperties.push(
+                                Object.assign(
+                                    {},
+                                    ProjectEditor.conditionalStyleConditionProperty,
+                                    {
+                                        name: `${propertyInfo.name}.${conditionalStylesProperty.name}[${index}].${ProjectEditor.conditionalStyleConditionProperty.name}`
+                                    }
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+
+            return additionalProperties;
+        },
+
         widgetEvents: {
             CLICKED: {
                 code: 1,
@@ -3450,8 +3489,40 @@ export class Widget extends Component {
         ];
     }
 
-    getClassName() {
-        return classNames("eez-widget", this.type, this.style.classNames);
+    onClick(flowContext: IFlowContext) {
+        if (
+            !flowContext.projectStore.runtime ||
+            !flowContext.projectStore.projectTypeTraits.isDashboard ||
+            !this.eventHandlers.find(
+                eventHandler => eventHandler.eventName == "CLICKED"
+            )
+        ) {
+            return undefined;
+        }
+
+        return (event: React.MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (flowContext.projectStore.runtime) {
+                flowContext.projectStore.runtime.executeWidgetAction(
+                    flowContext,
+                    this,
+                    "CLICKED",
+                    makeActionParamsValue(flowContext),
+                    `struct:${CLICK_EVENT_STRUCT_NAME}`
+                );
+            }
+        };
+    }
+
+    getClassName(flowContext: IFlowContext) {
+        return classNames(
+            "eez-widget",
+            this.type,
+            this.style.classNames,
+            this.style.getConditionalClassNames(flowContext)
+        );
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
@@ -3819,7 +3890,7 @@ export class ActionComponent extends Component {
         return [];
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         return "eez-action";
     }
 

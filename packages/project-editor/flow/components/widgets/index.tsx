@@ -340,7 +340,7 @@ export class ContainerWidget extends Widget {
             );
         }
 
-        return (
+        const fragment = (
             <>
                 {flowContext.projectStore.projectTypeTraits
                     .isDashboard ? null : (
@@ -367,6 +367,24 @@ export class ContainerWidget extends Widget {
                 {super.render(flowContext, containerWidth, containerHeight)}
             </>
         );
+
+        const onClick = this.onClick(flowContext);
+
+        if (onClick) {
+            return (
+                <div
+                    onClick={onClick}
+                    style={{
+                        width: containerWidth,
+                        height: containerHeight
+                    }}
+                >
+                    {fragment}
+                </div>
+            );
+        } else {
+            return fragment;
+        }
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
@@ -1120,7 +1138,7 @@ export class SelectWidget extends Widget {
                 ? this.widgets[index]
                 : null;
 
-        return (
+        const fragment = (
             <>
                 {flowContext.projectStore.projectTypeTraits
                     .isDashboard ? null : (
@@ -1152,6 +1170,24 @@ export class SelectWidget extends Widget {
                 {super.render(flowContext, width, height)}
             </>
         );
+
+        const onClick = this.onClick(flowContext);
+
+        if (onClick) {
+            return (
+                <div
+                    onClick={onClick}
+                    style={{
+                        width: width,
+                        height: height
+                    }}
+                >
+                    {fragment}
+                </div>
+            );
+        } else {
+            return fragment;
+        }
     }
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {

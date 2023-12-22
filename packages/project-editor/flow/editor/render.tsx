@@ -340,7 +340,9 @@ export const ComponentEnclosure = observer(
                 }
             }
 
-            const componentClassName = component.getClassName();
+            const componentClassName = component.getClassName(
+                this.props.flowContext
+            );
 
             const className = classNames(
                 "EezStudio_ComponentEnclosure",

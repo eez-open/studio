@@ -831,7 +831,7 @@ export class Page extends Flow {
         );
     }
 
-    getClassName() {
+    getClassName(flowContext: IFlowContext) {
         const project = ProjectEditor.getProject(this);
         let style = findStyle(project, this.style);
         if (!project.projectTypeTraits.isLVGL) {

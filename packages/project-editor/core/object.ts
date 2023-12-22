@@ -535,6 +535,21 @@ export function makeDerivedClassInfo(
         };
     }
 
+    const baseAdditionalFlowProperties =
+        baseClassInfo.getAdditionalFlowProperties;
+    const derivedAdditionalFlowProperties =
+        derivedClassInfoProperties.getAdditionalFlowProperties;
+    if (baseAdditionalFlowProperties && derivedAdditionalFlowProperties) {
+        derivedClassInfoProperties.getAdditionalFlowProperties = (
+            object: IEezObject
+        ) => {
+            return [
+                ...baseAdditionalFlowProperties(object),
+                ...derivedAdditionalFlowProperties(object)
+            ];
+        };
+    }
+
     const derivedClassInfo = Object.assign(
         {},
         baseClassInfo,
@@ -875,8 +890,11 @@ export function getProperty(object: IEezObject, name: string): any {
     //    - array[index].{name}
     //    - object.{name}
 
-    let i = name.indexOf("[");
-    if (i != -1) {
+    let i1 = name.indexOf("[");
+    let i2 = name.indexOf(".");
+
+    if (i1 != -1 && i1 < i2) {
+        const i = i1;
         // arr[index].{name}
         let j = name.indexOf("]", i + 1);
         return getProperty(
@@ -887,8 +905,8 @@ export function getProperty(object: IEezObject, name: string): any {
         );
     }
 
-    i = name.indexOf(".");
-    if (i != -1) {
+    if (i2 != -1) {
+        const i = i2;
         // object.{name}
         return getProperty(
             (object as any)[name.substring(0, i)],

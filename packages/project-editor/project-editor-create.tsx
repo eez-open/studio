@@ -28,7 +28,8 @@ import {
     getWidgetParent,
     CustomInput,
     CustomOutput,
-    createActionComponentClass
+    createActionComponentClass,
+    makeExpressionProperty
 } from "project-editor/flow/component";
 
 import { Page } from "project-editor/features/page/page";
@@ -104,7 +105,18 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import { Style } from "project-editor/features/style/style";
+import { ConditionalStyle, Style } from "project-editor/features/style/style";
+
+import { PropertyType } from "project-editor/core/object";
+import { evalProperty } from "project-editor/flow/helper";
+
+export const conditionalStyleConditionProperty = makeExpressionProperty(
+    {
+        name: "condition",
+        type: PropertyType.MultilineText
+    },
+    "boolean"
+);
 
 export async function createProjectEditor(
     homeTabs: Tabs | undefined,
@@ -179,8 +191,15 @@ export async function createProjectEditor(
         CustomInputClass: CustomInput,
         CustomOutputClass: CustomOutput,
         ImportDirectiveClass: ImportDirective,
-        createActionComponentClass
+        createActionComponentClass,
+        makeExpressionProperty,
+        evalProperty,
+        conditionalStyleConditionProperty
     };
+
+    ConditionalStyle.classInfo.properties.push(
+        conditionalStyleConditionProperty
+    );
 
     return projectEditor;
 }
