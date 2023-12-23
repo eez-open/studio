@@ -1788,7 +1788,6 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                propertyGridColSpan: true,
                 hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
@@ -1800,7 +1799,6 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                propertyGridColSpan: true,
                 hideInPropertyGrid: isNotProjectWithFlowSupport
             },
             {
@@ -2594,7 +2592,6 @@ export const eventHandlersProperty: PropertyInfo = {
     typeClass: EventHandler,
     arrayItemOrientation: "vertical",
     propertyGridGroup: eventsGroup,
-    propertyGridColSpan: true,
     partOfNavigation: false,
     enumerable: false,
     defaultValue: []

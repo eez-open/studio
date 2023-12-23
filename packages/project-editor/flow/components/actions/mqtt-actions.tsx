@@ -642,7 +642,6 @@ export class MQTTEventActionComponent extends ActionComponent {
                 typeClass: EventHandler,
                 arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
-                propertyGridColSpan: true,
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []

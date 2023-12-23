@@ -242,11 +242,7 @@ export const ArrayProperty = observer(
 
             const toolbar = (
                 <div className="d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
-                    {propertyInfo.propertyGridColSpan === true ? (
-                        <PropertyName {...this.props} />
-                    ) : (
-                        <span>&nbsp;</span>
-                    )}
+                    <PropertyName {...this.props} />
                     <Toolbar>
                         <IconAction
                             icon="material:add"

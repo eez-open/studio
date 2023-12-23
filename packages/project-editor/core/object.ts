@@ -242,8 +242,6 @@ export interface PropertyInfo {
     inputPlaceholder?: (object: IEezObject) => string;
     embeddedImage?: boolean;
 
-    propertyGridColSpan?: boolean;
-
     visitProperty?: (parentObject: IEezObject) => EezValueObject[];
 
     formText?:
