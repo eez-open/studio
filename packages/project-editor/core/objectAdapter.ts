@@ -988,10 +988,27 @@ export class TreeAdapter {
         this.rootItem.selectItems(items);
     }
 
+    expandItem(item: TreeObjectAdapter) {
+        if (!item.expanded) {
+            runInAction(() => {
+                item.expanded = true;
+            });
+        }
+        const parent = this.getItemParent(item);
+        if (parent) {
+            this.expandItem(parent);
+        }
+    }
+
     selectObject(object: IEezObject) {
         const item = this.getItemFromId(getId(object));
         if (item) {
             this.selectItem(item);
+
+            const parent = this.getItemParent(item);
+            if (parent) {
+                this.expandItem(parent);
+            }
         }
     }
 
@@ -1163,6 +1180,7 @@ export class TreeAdapter {
                             dragObjectClone,
                             (dropPlace as PropertyInfo).name
                         );
+                        aNewObject = dragObjectClone;
                     }
                 }
             }

@@ -31,7 +31,8 @@ import {
     setParent,
     IMessage,
     IPropertyGridGroupDefinition,
-    isPropertyOptional
+    isPropertyOptional,
+    setKey
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -3268,6 +3269,7 @@ export class Widget extends Component {
 
         listWidget.itemWidget = containerWidget;
         setParent(containerWidget, listWidget);
+        setKey(containerWidget, "itemWidget");
 
         listWidget.left = containerWidget.left;
         listWidget.top = containerWidget.top;
