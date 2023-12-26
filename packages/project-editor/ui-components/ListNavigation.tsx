@@ -266,13 +266,21 @@ export const ListNavigation = observer(
                     result.object,
                     result.subObject
                 );
-                return;
             }
         };
 
         onDoubleClickItem = (object: IEezObject) => {
             if (this.props.onDoubleClickItem) {
                 this.props.onDoubleClickItem(object);
+                return;
+            }
+
+            const result = ProjectEditor.getEditorComponent(object, undefined);
+            if (result) {
+                this.context.editorsStore.openPermanentEditor(
+                    result.object,
+                    result.subObject
+                );
             }
         };
 

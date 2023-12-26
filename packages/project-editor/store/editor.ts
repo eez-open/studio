@@ -365,7 +365,12 @@ export class EditorsStore {
         } catch (err) {}
     }
 
-    openEditor(object: IEezObject, subObject?: IEezObject, params?: any) {
+    openEditor(
+        object: IEezObject,
+        subObject?: IEezObject,
+        params?: any,
+        permanent?: boolean
+    ) {
         const editors = this.refresh(false);
 
         let editorFound: Editor | undefined;
@@ -379,9 +384,20 @@ export class EditorsStore {
 
         if (editorFound) {
             editorFound.subObject = subObject;
+
+            if (permanent) {
+                editorFound.permanent = permanent;
+                this.tabsModel.doAction(
+                    FlexLayout.Actions.updateNodeAttributes(editorFound.tabId, {
+                        config: editorFound.getConfig()
+                    })
+                );
+            }
+
             this.tabsModel.doAction(
                 FlexLayout.Actions.selectTab(editorFound.tabId)
             );
+
             this.tabsModel.doAction(
                 FlexLayout.Actions.renameTab(
                     editorFound.tabId,
@@ -401,6 +417,9 @@ export class EditorsStore {
         editor.subObject = subObject;
         editor.params = params;
         editor.state = ProjectEditor.createEditorState(object);
+        if (permanent != undefined) {
+            editor.permanent = permanent;
+        }
 
         try {
             let icon = getObjectIcon(object);
@@ -472,6 +491,14 @@ export class EditorsStore {
         } catch (err) {}
 
         return editor;
+    }
+
+    openPermanentEditor(
+        object: IEezObject,
+        subObject?: IEezObject,
+        params?: any
+    ) {
+        this.openEditor(object, subObject, params, true);
     }
 
     closeEditor(editor: Editor) {
