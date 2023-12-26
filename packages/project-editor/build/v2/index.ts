@@ -56,6 +56,7 @@ import { propertyNotFoundMessage, Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import { build as buildVariables } from "project-editor/build/v2/variables";
 import { build as buildActions } from "project-editor/build/v2/actions";
+import { compress } from "project-editor/build/lz4";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1493,18 +1494,11 @@ async function buildGuiAssetsData(assets: Assets) {
         dataBuffer.buffer.slice(0, dataBuffer.offset)
     );
 
-    const lz4ModuleName = "lz4";
-    const LZ4 = require(lz4ModuleName);
-    var outputBuffer = Buffer.alloc(LZ4.encodeBound(inputBuffer.length));
-    var compressedSize = LZ4.encodeBlock(inputBuffer, outputBuffer);
-
-    // console.log(assetRegions.map(x => x.length));
-    // outputBuffer = inputBuffer;
-    // compressedSize = outputBuffer.length;
+    var { compressedBuffer, compressedSize } = await compress(inputBuffer, 9);
 
     const compressedData = Buffer.alloc(4 + compressedSize);
     compressedData.writeUInt32LE(inputBuffer.length, 0); // write uncomprresed size at the beginning
-    outputBuffer.copy(compressedData, 4, 0, compressedSize);
+    compressedBuffer.copy(compressedData, 4, 0, compressedSize);
 
     assets.projectStore.outputSectionsStore.write(
         Section.OUTPUT,

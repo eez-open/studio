@@ -48,12 +48,20 @@ if (isRenderer()) {
             NEW_TASK_CHANNEL,
             (event: Electron.Event, task: ITask) => {
                 function send(taskResult: ITaskResult) {
-                    // send result back to calling process
-                    ipcRenderer.sendTo(
-                        task.windowId,
-                        TASK_DONE_CHANNEL + task.taskId,
-                        taskResult
+                    const { BrowserWindow } =
+                        require("@electron/remote") as typeof ElectronRemoteModule;
+
+                    const originWindow = BrowserWindow.getAllWindows().find(
+                        window => window.id === task.windowId
                     );
+
+                    if (originWindow) {
+                        // send result back to calling process
+                        originWindow.webContents.send(
+                            TASK_DONE_CHANNEL + task.taskId,
+                            taskResult
+                        );
+                    }
                 }
 
                 function sendResult(result: any) {

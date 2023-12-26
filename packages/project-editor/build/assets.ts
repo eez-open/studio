@@ -1344,7 +1344,15 @@ export async function buildGuiAssetsData(assets: Assets) {
 
     const decompressedSize = dataBuffer.size;
 
-    const { compressedBuffer, compressedSize } = dataBuffer.compress();
+    const COMPRESSION_LEVEL_FOR_DASHBOARD_PROJECTS = 1;
+    const COMPRESSION_LEVEL_DEFAULT = 12;
+    const { compressedBuffer, compressedSize } = await dataBuffer.compress(
+        // use min compression level for dashboard projects to be faster,
+        // for other projects we
+        assets.projectStore.projectTypeTraits.isDashboard
+            ? COMPRESSION_LEVEL_FOR_DASHBOARD_PROJECTS
+            : COMPRESSION_LEVEL_DEFAULT
+    );
 
     const headerBuffer = new DataBuffer(assets.utf8Support);
     buildHeaderData(assets, decompressedSize, headerBuffer);

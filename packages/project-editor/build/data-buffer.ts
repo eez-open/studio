@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
+import { compress } from "project-editor/build/lz4";
 
 export class DataBuffer {
     buffer = Buffer.alloc(10 * 1024 * 1024);
@@ -249,12 +249,8 @@ export class DataBuffer {
         this.buffer = buffer;
     }
 
-    compress() {
-        const lz4ModuleName = "lz4";
-        const LZ4 = require(lz4ModuleName);
-        var compressedBuffer = Buffer.alloc(LZ4.encodeBound(this.size));
-        var compressedSize = LZ4.encodeBlockHC(this.buffer, compressedBuffer);
-        return { compressedBuffer, compressedSize };
+    async compress(compressionLevel: number) {
+        return compress(this.buffer, compressionLevel);
     }
 }
 
@@ -340,7 +336,7 @@ export class DummyDataBuffer {
         return 0;
     }
 
-    compress() {
+    async compress(compressionLevel: number) {
         return { compressedBuffer: this.buffer, compressedSize: 0 };
     }
 }
