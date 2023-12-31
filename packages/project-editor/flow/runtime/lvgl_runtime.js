@@ -969,19 +969,19 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1033840: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1033946: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1033982: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1034019: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1034059: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1034116: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1034175: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
- 1034248: ($0) => { startToDebuggerMessage($0); },  
- 1034280: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034355: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034430: ($0) => { finishToDebuggerMessage($0); },  
- 1034463: ($0, $1) => { onArrayValueFree($0, $1); },  
- 1034493: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  1033856: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1033962: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1033998: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1034035: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1034075: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1034132: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1034191: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
+ 1034264: ($0) => { startToDebuggerMessage($0); },  
+ 1034296: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034371: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034446: ($0) => { finishToDebuggerMessage($0); },  
+ 1034479: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 1034509: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
 };
 
 

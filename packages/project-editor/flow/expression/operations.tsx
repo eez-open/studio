@@ -1207,6 +1207,19 @@ export const builtInFunctions: {
         }
     },
 
+    "Blob.allocate": {
+        operationIndex: 75,
+        arity: 1,
+        args: ["size"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => Buffer.alloc(args[0]),
+        getValueType: (...args: ValueType[]) => {
+            return "blob";
+        }
+    },
+
     "LVGL.MeterTickIndex": {
         operationIndex: 69,
         arity: 0,

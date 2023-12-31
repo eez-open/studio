@@ -641,7 +641,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
 let setMessagesTimeoutId: any;
 
 export function backgroundCheck(projectStore: ProjectStore) {
-    console.time("backgroundCheck");
+    // console.time("backgroundCheck");
 
     projectStore.outputSectionsStore.setLoading(Section.CHECKS, true);
 
@@ -659,5 +659,5 @@ export function backgroundCheck(projectStore: ProjectStore) {
         projectStore.outputSectionsStore.setLoading(Section.CHECKS, false);
     }, 100);
 
-    console.timeEnd("backgroundCheck");
+    // console.timeEnd("backgroundCheck");
 }

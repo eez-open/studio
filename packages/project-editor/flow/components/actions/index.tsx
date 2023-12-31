@@ -2,6 +2,7 @@ import React from "react";
 import { observable, action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { clipboard, nativeImage } from "electron";
 
 import {
     registerClass,
@@ -101,7 +102,11 @@ import {
 } from "project-editor/flow/components/component-types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { LANGUAGE_ICON, LOG_ICON } from "project-editor/ui-components/icons";
+import {
+    CLIPBOARD_WRITE_ICON,
+    LANGUAGE_ICON,
+    LOG_ICON
+} from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
 import { LeftArrow, RightArrow } from "project-editor/ui-components/icons";
 import type { IDashboardComponentContext } from "eez-studio-types";
@@ -3693,6 +3698,89 @@ export class AnimateActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class ClipboardWriteActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "data",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: CLIPBOARD_WRITE_ICON,
+        componentHeaderColor: "#DEB887",
+        defaultValue: {},
+
+        execute: (context: IDashboardComponentContext) => {
+            let data = context.evalProperty<any>("data");
+
+            if (
+                data == undefined ||
+                !(
+                    typeof data == "string" ||
+                    data instanceof Buffer ||
+                    data instanceof Uint8Array
+                )
+            ) {
+                console.log(data);
+                context.throwError(`Invalid data property`);
+                return;
+            }
+
+            if (typeof data == "string") {
+                clipboard.writeText(data);
+            } else {
+                let image = nativeImage.createFromBuffer(
+                    data instanceof Uint8Array ? Buffer.from(data) : data
+                );
+                clipboard.writeImage(image);
+            }
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    data: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            data: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class NoopActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_NOOP_ACTION,
@@ -4154,6 +4242,7 @@ registerClass(
 registerClass("OverrideStyleActionComponent", OverrideStyleActionComponent);
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
+registerClass("ClipboardWriteActionComponent", ClipboardWriteActionComponent);
 
 registerClass("ErrorActionComponent", ErrorActionComponent);
 registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
