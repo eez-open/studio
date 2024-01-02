@@ -164,7 +164,27 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        const result = await this.projectStore.buildAssets();
+        let result;
+
+        if (this.projectStore.standalone) {
+            try {
+                const fs = await import("fs");
+                result = JSON.parse(
+                    await fs.promises.readFile(
+                        this.projectStore.filePath + "-build",
+                        "utf8"
+                    )
+                );
+                // convert plain javascript array of numbers to buffer
+                result.GUI_ASSETS_DATA = Buffer.from(
+                    new Uint8Array(result.GUI_ASSETS_DATA.data)
+                );
+            } catch (err) {}
+        }
+
+        if (!result) {
+            result = await this.projectStore.buildAssets();
+        }
 
         const outputSection = this.projectStore.outputSectionsStore.getSection(
             Section.OUTPUT

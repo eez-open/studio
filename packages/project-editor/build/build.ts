@@ -331,64 +331,55 @@ export async function build(
         } = {};
 
         if (
-            option == "check" ||
-            option == "buildAssets" ||
-            !project.projectTypeTraits.isDashboard
+            project.settings.general.projectVersion !== "v1" &&
+            project.settings.build.configurations.length > 0 &&
+            !projectStore.masterProject
         ) {
-            if (
-                project.settings.general.projectVersion !== "v1" &&
-                project.settings.build.configurations.length > 0 &&
-                !projectStore.masterProject
-            ) {
-                for (const configuration of project.settings.build
-                    .configurations) {
-                    OutputSections.openGroup(
-                        Section.OUTPUT,
-                        `Configuration: ${configuration.name}`
-                    );
+            for (const configuration of project.settings.build.configurations) {
+                OutputSections.openGroup(
+                    Section.OUTPUT,
+                    `Configuration: ${configuration.name}`
+                );
 
-                    try {
-                        configurationBuildResults[configuration.name] =
-                            await getBuildResults(
-                                projectStore,
-                                sectionNames,
-                                configuration,
-                                option
-                            );
-                    } finally {
-                        OutputSections.closeGroup(Section.OUTPUT, false);
-                    }
+                try {
+                    configurationBuildResults[configuration.name] =
+                        await getBuildResults(
+                            projectStore,
+                            sectionNames,
+                            configuration,
+                            option
+                        );
+                } finally {
+                    OutputSections.closeGroup(Section.OUTPUT, false);
                 }
-            } else {
-                const selectedBuildConfiguration =
-                    projectStore.selectedBuildConfiguration ||
-                    project.settings.build.configurations[0];
-                if (selectedBuildConfiguration) {
-                    OutputSections.openGroup(
-                        Section.OUTPUT,
-                        `Configuration: ${selectedBuildConfiguration.name}`
-                    );
-                    try {
-                        configurationBuildResults[
-                            selectedBuildConfiguration.name
-                        ] = await getBuildResults(
+            }
+        } else {
+            const selectedBuildConfiguration =
+                projectStore.selectedBuildConfiguration ||
+                project.settings.build.configurations[0];
+            if (selectedBuildConfiguration) {
+                OutputSections.openGroup(
+                    Section.OUTPUT,
+                    `Configuration: ${selectedBuildConfiguration.name}`
+                );
+                try {
+                    configurationBuildResults[selectedBuildConfiguration.name] =
+                        await getBuildResults(
                             projectStore,
                             sectionNames,
                             selectedBuildConfiguration,
                             option
                         );
-                    } finally {
-                        OutputSections.closeGroup(Section.OUTPUT, false);
-                    }
-                } else {
-                    configurationBuildResults["default"] =
-                        await getBuildResults(
-                            projectStore,
-                            sectionNames,
-                            undefined,
-                            option
-                        );
+                } finally {
+                    OutputSections.closeGroup(Section.OUTPUT, false);
                 }
+            } else {
+                configurationBuildResults["default"] = await getBuildResults(
+                    projectStore,
+                    sectionNames,
+                    undefined,
+                    option
+                );
             }
         }
 
@@ -438,7 +429,7 @@ export async function build(
                 ".eez-project"
             );
 
-            const destinationFilePahth =
+            const destinationFilePath =
                 destinationFolderPath + "/" + baseName + ".eez-dashboard";
 
             const archiver = await import("archiver");
@@ -450,7 +441,7 @@ export async function build(
                     }
                 });
 
-                var output = fs.createWriteStream(destinationFilePahth);
+                var output = fs.createWriteStream(destinationFilePath);
 
                 output.on("close", function () {
                     resolve();
@@ -471,6 +462,30 @@ export async function build(
 
                 archive.finalize();
             });
+
+            {
+                const destinationFilePath =
+                    destinationFolderPath +
+                    "/" +
+                    baseName +
+                    ".eez-project-build";
+
+                const defaultConfiguration =
+                    project.settings.build.configurations[0];
+                const buildResults =
+                    configurationBuildResults[defaultConfiguration.name];
+
+                parts = {};
+                for (const buildResult of buildResults) {
+                    parts = Object.assign(parts, buildResult);
+                }
+
+                fs.writeFileSync(
+                    destinationFilePath,
+                    JSON.stringify(parts),
+                    "utf8"
+                );
+            }
         }
 
         OutputSections.write(
