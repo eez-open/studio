@@ -482,7 +482,11 @@ export async function build(
 
                 fs.writeFileSync(
                     destinationFilePath,
-                    JSON.stringify(parts),
+                    JSON.stringify({
+                        GUI_ASSETS_DATA_MAP_JS: parts.GUI_ASSETS_DATA_MAP_JS,
+                        GUI_ASSETS_DATA:
+                            parts.GUI_ASSETS_DATA.toString("base64")
+                    }),
                     "utf8"
                 );
             }

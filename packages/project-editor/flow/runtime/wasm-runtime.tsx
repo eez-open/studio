@@ -177,7 +177,8 @@ export class WasmRuntime extends RemoteRuntime {
                 );
                 // convert plain javascript array of numbers to buffer
                 result.GUI_ASSETS_DATA = Buffer.from(
-                    new Uint8Array(result.GUI_ASSETS_DATA.data)
+                    result.GUI_ASSETS_DATA,
+                    "base64"
                 );
             } catch (err) {}
         }

@@ -2298,7 +2298,7 @@ const feature: ProjectEditorFeature = {
         if (projects.length > 1) {
             const projectNames = projects.map(project =>
                 path.basename(
-                    projectStore.openProjectsManager.getProjectAbsoluteFilePath(
+                    projectStore.openProjectsManager.getProjectFilePath(
                         project
                     )!
                 )

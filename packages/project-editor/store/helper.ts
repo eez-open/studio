@@ -165,7 +165,7 @@ export function getObjectFromStringPath(
         const absoluteFilePath = stringPath.substring(1, i);
         const projectStore = getProjectStore(rootObject);
         const project =
-            projectStore.openProjectsManager.getProjectFromAbsoluteFilePath(
+            projectStore.openProjectsManager.getProjectFromFilePath(
                 absoluteFilePath
             );
         stringPath = stringPath.substring(i + 2);
@@ -451,7 +451,7 @@ export function getObjectPathAsString(object: IEezObject) {
     const project = getProject(object);
     const projectStore = project._store;
     const absoluteFilePath =
-        projectStore.openProjectsManager.getProjectAbsoluteFilePath(project);
+        projectStore.openProjectsManager.getProjectFilePath(project);
     if (absoluteFilePath != undefined) {
         return `[${absoluteFilePath}]:/${path}`;
     }

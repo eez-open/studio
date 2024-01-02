@@ -524,7 +524,7 @@ export class ProjectStore {
         if (project == this.project) {
             return this.filePath;
         } else {
-            return this.openProjectsManager.getProjectAbsoluteFilePath(project);
+            return this.openProjectsManager.getProjectFilePath(project);
         }
     }
 

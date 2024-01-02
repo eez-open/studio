@@ -142,14 +142,21 @@ export class OpenProjectsManager {
         return this.importDirectiveProjects.get(importDirective);
     }
 
-    getProjectFromAbsoluteFilePath(absoluteFilePath: string) {
+    getProjectFromFilePath(relativeFilePath: string) {
+        const absoluteFilePath = this.getAbsoluteFilePath(
+            this.projectStore.filePath!,
+            relativeFilePath
+        );
+
         return this.mapPathToOpenProject.get(
             absoluteFilePath.replace(/(\\|\/)/g, "/")
         )?.project;
     }
 
-    getProjectAbsoluteFilePath(project: Project) {
-        return this.mapProjectToOpenProject.get(project)?.filePath;
+    getProjectFilePath(project: Project) {
+        return this.projectStore.getFilePathRelativeToProjectPath(
+            this.mapProjectToOpenProject.get(project)?.filePath!
+        );
     }
 
     getAbsoluteFilePath(filePath: string, relativeFilePath: string) {
@@ -380,14 +387,14 @@ export class OpenProjectsManager {
                         "\t" +
                             ref.type +
                             ": " +
-                            this.getProjectAbsoluteFilePath(ref.project)
+                            this.getProjectFilePath(ref.project)
                     );
                 } else {
                     console.log(
                         "\t" +
                             ref.type +
                             ": " +
-                            this.getProjectAbsoluteFilePath(
+                            this.getProjectFilePath(
                                 ProjectEditor.getProject(ref.importDirective)
                             )
                     );
