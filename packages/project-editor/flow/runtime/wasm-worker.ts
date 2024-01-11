@@ -534,97 +534,90 @@ export function createWasmWorker(
 
         const workerToRenderMessage: WorkerToRenderMessage = {};
 
-        if (WasmFlowRuntime._mainLoop()) {
-            let propertyValues: IPropertyValue[] | undefined;
-            if (rendererToWorkerMessage.evalProperties) {
-                rendererToWorkerMessage.evalProperties.forEach(evalProperty => {
-                    const {
-                        flowStateIndex,
-                        componentIndex,
-                        propertyIndex,
-                        propertyValueIndex,
-                        indexes
-                    } = evalProperty;
+        let propertyValues: IPropertyValue[] | undefined;
+        if (rendererToWorkerMessage.evalProperties) {
+            rendererToWorkerMessage.evalProperties.forEach(evalProperty => {
+                const {
+                    flowStateIndex,
+                    componentIndex,
+                    propertyIndex,
+                    propertyValueIndex,
+                    indexes
+                } = evalProperty;
 
-                    let iteratorsPtr = 0;
-                    if (indexes) {
-                        const MAX_ITERATORS = 4;
+                let iteratorsPtr = 0;
+                if (indexes) {
+                    const MAX_ITERATORS = 4;
 
-                        const arr = new Uint32Array(MAX_ITERATORS);
-                        for (let i = 0; i < MAX_ITERATORS; i++) {
-                            arr[i] =
-                                indexes.length < MAX_ITERATORS ? indexes[i] : 0;
-                        }
-                        iteratorsPtr = WasmFlowRuntime._malloc(
-                            MAX_ITERATORS * 4
-                        );
-                        WasmFlowRuntime.HEAP32.set(arr, iteratorsPtr >> 2);
+                    const arr = new Uint32Array(MAX_ITERATORS);
+                    for (let i = 0; i < MAX_ITERATORS; i++) {
+                        arr[i] =
+                            indexes.length < MAX_ITERATORS ? indexes[i] : 0;
                     }
+                    iteratorsPtr = WasmFlowRuntime._malloc(MAX_ITERATORS * 4);
+                    WasmFlowRuntime.HEAP32.set(arr, iteratorsPtr >> 2);
+                }
 
-                    const valuePtr = WasmFlowRuntime._evalProperty(
-                        flowStateIndex,
-                        componentIndex,
-                        propertyIndex,
-                        iteratorsPtr,
-                        true
-                    );
-
-                    if (iteratorsPtr) {
-                        WasmFlowRuntime._free(iteratorsPtr);
-                    }
-
-                    let propertyValue: IPropertyValue;
-
-                    if (!valuePtr) {
-                        propertyValue = {
-                            propertyValueIndex,
-                            valueWithType: {
-                                valueType: "undefined",
-                                value: undefined
-                            }
-                        };
-                    } else {
-                        const valueWithType = getValue(
-                            WasmFlowRuntime,
-                            valuePtr
-                        );
-
-                        WasmFlowRuntime._valueFree(valuePtr);
-
-                        propertyValue = {
-                            propertyValueIndex,
-                            valueWithType
-                        };
-                    }
-
-                    if (isPropertyValueChanged(propertyValue)) {
-                        if (!propertyValues) {
-                            propertyValues = [];
-                        }
-                        propertyValues.push(propertyValue);
-                    }
-                });
-            } else {
-                savedPropertyValues.clear();
-            }
-
-            workerToRenderMessage.propertyValues = propertyValues;
-
-            var buf_addr = WasmFlowRuntime._getSyncedBuffer();
-            if (buf_addr != 0) {
-                workerToRenderMessage.screen = new Uint8ClampedArray(
-                    WasmFlowRuntime.HEAPU8.subarray(
-                        buf_addr,
-                        buf_addr +
-                            WasmFlowRuntime.assetsMap.displayWidth *
-                                WasmFlowRuntime.assetsMap.displayHeight *
-                                4
-                    )
+                const valuePtr = WasmFlowRuntime._evalProperty(
+                    flowStateIndex,
+                    componentIndex,
+                    propertyIndex,
+                    iteratorsPtr,
+                    true
                 );
-            }
 
-            workerToRenderMessage.isRTL = WasmFlowRuntime._isRTL();
+                if (iteratorsPtr) {
+                    WasmFlowRuntime._free(iteratorsPtr);
+                }
+
+                let propertyValue: IPropertyValue;
+
+                if (!valuePtr) {
+                    propertyValue = {
+                        propertyValueIndex,
+                        valueWithType: {
+                            valueType: "undefined",
+                            value: undefined
+                        }
+                    };
+                } else {
+                    const valueWithType = getValue(WasmFlowRuntime, valuePtr);
+
+                    WasmFlowRuntime._valueFree(valuePtr);
+
+                    propertyValue = {
+                        propertyValueIndex,
+                        valueWithType
+                    };
+                }
+
+                if (isPropertyValueChanged(propertyValue)) {
+                    if (!propertyValues) {
+                        propertyValues = [];
+                    }
+                    propertyValues.push(propertyValue);
+                }
+            });
+        } else {
+            savedPropertyValues.clear();
         }
+
+        workerToRenderMessage.propertyValues = propertyValues;
+
+        var buf_addr = WasmFlowRuntime._getSyncedBuffer();
+        if (buf_addr != 0) {
+            workerToRenderMessage.screen = new Uint8ClampedArray(
+                WasmFlowRuntime.HEAPU8.subarray(
+                    buf_addr,
+                    buf_addr +
+                        WasmFlowRuntime.assetsMap.displayWidth *
+                            WasmFlowRuntime.assetsMap.displayHeight *
+                            4
+                )
+            );
+        }
+
+        workerToRenderMessage.isRTL = WasmFlowRuntime._isRTL();
 
         let messageToDebugger = wasmModuleToMessageToDebugger.get(wasmModuleId);
         if (messageToDebugger != undefined) {

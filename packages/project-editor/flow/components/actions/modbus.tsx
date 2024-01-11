@@ -290,6 +290,9 @@ export class ModbusActionComponent extends ActionComponent {
                             );
                             context.propagateValueThroughSeqout();
                             context.endAsyncExecution();
+
+                            // optimization: run main loop as soon as possible
+                            context.WasmFlowRuntime._mainLoop();
                         },
                         error => {
                             console.warn(error);

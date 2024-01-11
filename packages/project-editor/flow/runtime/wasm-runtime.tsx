@@ -140,6 +140,8 @@ export class WasmRuntime extends RemoteRuntime {
     wheelClicked = 0;
     screen: any;
     lastScreen: any;
+
+    mainLoopTimeoutId: any;
     requestAnimationFrameId: number | undefined;
 
     componentProperties = new ComponentProperties(this);
@@ -268,6 +270,10 @@ export class WasmRuntime extends RemoteRuntime {
             notifyUser = false;
         }
 
+        if (this.mainLoopTimeoutId) {
+            window.cancelAnimationFrame(this.mainLoopTimeoutId);
+        }
+
         if (this.requestAnimationFrameId) {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
         }
@@ -367,6 +373,8 @@ export class WasmRuntime extends RemoteRuntime {
 
             await this.worker.postMessage(message);
 
+            this.runMainLoop();
+
             if (this.lgvlPageRuntime) {
                 this.lgvlPageRuntime.mount();
             }
@@ -444,12 +452,32 @@ export class WasmRuntime extends RemoteRuntime {
             });
 
             this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
+                this.animationFrameLoop
             );
         }
     };
 
-    tick = () => {
+    //mainLoopCounter = 0;
+    //mainLoopCounterTime = performance.now();
+
+    runMainLoop = () => {
+        // this.mainLoopCounter++;
+        // if (performance.now() - this.mainLoopCounterTime >= 1000) {
+        //     console.log(this.mainLoopCounter);
+        //     this.mainLoopCounterTime = performance.now();
+        //     this.mainLoopCounter = 0;
+        // }
+
+        if (this.isStopped) {
+            return;
+        }
+
+        this.worker.wasm._mainLoop(); // should run max. 5 ms so it doesn't block the UI
+
+        this.mainLoopTimeoutId = setTimeout(this.runMainLoop, 0);
+    };
+
+    animationFrameLoop = () => {
         if (this.isStopped) {
             return;
         }
