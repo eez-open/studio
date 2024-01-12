@@ -228,7 +228,6 @@ ipcMain.on(
             hasExtensionDefinitions: boolean;
         }
     ) => {
-        console.log(state);
         const window = findWindowByWebContents(event.sender);
         if (window) {
             runInAction(() => {

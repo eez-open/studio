@@ -835,7 +835,6 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
     let keybindings: string[] = [];
 
     function addKeybinding(accelerator: Electron.Accelerator) {
-        console.log(accelerator);
         let keybinding = accelerator.toString();
 
         if (isMacOs()) {
