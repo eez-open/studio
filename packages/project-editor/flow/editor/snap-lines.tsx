@@ -5,7 +5,7 @@ import { each } from "lodash";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { IEezObject, isAncestor } from "project-editor/core/object";
+import { IEezObject, getParent, isAncestor } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -76,6 +76,37 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             selectedObject =>
                 selectedObject == object || isAncestor(object, selectedObject)
         );
+    };
+
+    const isHiddenBySelectWidget = (
+        flowContext: IFlowContext,
+        childObject: IEezObject
+    ) => {
+        while (true) {
+            let parent = getParent(childObject);
+            if (!parent) {
+                break;
+            }
+            parent = getParent(parent);
+            if (!parent || !(parent instanceof ProjectEditor.WidgetClass)) {
+                break;
+            }
+
+            if (parent instanceof ProjectEditor.SelectWidgetClass) {
+                const index = parent.getSelectedIndex(flowContext);
+                let selectedWidget =
+                    index >= 0 && index < parent.widgets.length
+                        ? parent.widgets[index]
+                        : null;
+                if (selectedWidget != childObject) {
+                    return true;
+                }
+            }
+
+            childObject = parent;
+        }
+
+        return false;
     };
 
     let horizontalLines: ISnapLine[] = [];
@@ -159,7 +190,8 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
             !isSelectedObject(node.object) &&
             !(
                 node.object instanceof ProjectEditor.WidgetClass &&
-                node.object.hiddenInEditor
+                (node.object.hiddenInEditor ||
+                    isHiddenBySelectWidget(flowContext, node.object))
             )
         ) {
             const rect1 = getObjectBoundingRect(node);
