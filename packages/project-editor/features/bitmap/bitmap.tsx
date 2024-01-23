@@ -6,7 +6,8 @@ import {
     observable,
     action,
     makeObservable,
-    runInAction
+    runInAction,
+    autorun
     //,autorun
 } from "mobx";
 import { observer } from "mobx-react";
@@ -348,43 +349,62 @@ export class Bitmap extends EezObject {
                     project._store.updateObject(bitmap, {});
                 }
             }
-        }
+        },
 
-        /*,
         // MIGRATION TO LOW RES
         beforeLoadHook: (bitmap: Bitmap, jsWidget: Partial<Bitmap>) => {
-            const dispose = autorun(() => {
-                const image = bitmap.imageElement;
-                if (image) {
-                    dispose();
+            if ((window as any).__eezProjectMigration) {
+                const dispose = autorun(() => {
+                    const image = bitmap.imageElement;
+                    if (image) {
+                        dispose();
 
-                    setTimeout(() => {
-                        let canvas = document.createElement("canvas");
-                        canvas.width = Math.floor((image.width * 480) / 800);
-                        canvas.height = Math.floor((image.height * 480) / 800);
+                        setTimeout(() => {
+                            let canvas = document.createElement("canvas");
+                            canvas.width = Math.floor(
+                                (image.width *
+                                    __eezProjectMigration.displayTargetWidth) /
+                                    __eezProjectMigration.displaySourceWidth
+                            );
+                            canvas.height = Math.floor(
+                                (image.height *
+                                    __eezProjectMigration.displayTargetHeight) /
+                                    __eezProjectMigration.displaySourceHeight
+                            );
 
-                        let ctx = canvas.getContext("2d");
-                        if (ctx == null) {
-                            return;
-                        }
+                            let ctx = canvas.getContext("2d");
+                            if (ctx == null) {
+                                return;
+                            }
 
-                        if (bitmap.backgroundColor !== "transparent") {
-                            ctx.fillStyle = bitmap.backgroundColor;
-                            ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        } else {
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        }
+                            if (bitmap.backgroundColor !== "transparent") {
+                                ctx.fillStyle = bitmap.backgroundColor;
+                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            } else {
+                                ctx.clearRect(
+                                    0,
+                                    0,
+                                    canvas.width,
+                                    canvas.height
+                                );
+                            }
 
-                        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(
+                                image,
+                                0,
+                                0,
+                                canvas.width,
+                                canvas.height
+                            );
 
-                        runInAction(() => {
-                            bitmap.image = canvas.toDataURL();
-                        });
-                    }, 1000);
-                }
-            });
+                            runInAction(() => {
+                                bitmap.image = canvas.toDataURL();
+                            });
+                        }, 1000);
+                    }
+                });
+            }
         }
-        */
     };
 
     private _imageElement: HTMLImageElement | null | undefined = undefined;

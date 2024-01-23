@@ -372,16 +372,24 @@ export class Page extends Flow {
             return label;
         },
         beforeLoadHook: (page: Page, jsObject: any) => {
-            /*
             // MIGRATION TO LOW RES
-            if (!jsObject.isUsedAsUserWidget) {
-                jsObject.width = 480;
-                jsObject.height = 272;
-            } else {
-                jsObject.width = Math.floor((jsObject.width * 480) / 800);
-                jsObject.height = Math.floor((jsObject.height * 480) / 800);
+            if ((window as any).__eezProjectMigration) {
+                if (!jsObject.isUsedAsUserWidget) {
+                    jsObject.width = __eezProjectMigration.displayTargetWidth;
+                    jsObject.height = __eezProjectMigration.displayTargetHeight;
+                } else {
+                    jsObject.width = Math.floor(
+                        (jsObject.width *
+                            __eezProjectMigration.displayTargetWidth) /
+                            __eezProjectMigration.displaySourceWidth
+                    );
+                    jsObject.height = Math.floor(
+                        (jsObject.height *
+                            __eezProjectMigration.displayTargetHeight) /
+                            __eezProjectMigration.displaySourceHeight
+                    );
+                }
             }
-            */
 
             if (jsObject.widgets) {
                 jsObject.components = jsObject.widgets;

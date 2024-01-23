@@ -1,7 +1,7 @@
 import { compress } from "project-editor/build/lz4";
 
 export class DataBuffer {
-    buffer = Buffer.alloc(10 * 1024 * 1024);
+    buffer = Buffer.alloc(32 * 1024 * 1024);
 
     currentOffset: number = 0;
 

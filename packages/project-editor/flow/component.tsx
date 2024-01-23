@@ -2679,6 +2679,28 @@ export class Widget extends Component {
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            // MIGRATION TO LOW RES
+            if ((window as any).__eezProjectMigration) {
+                jsObject.left = Math.floor(
+                    (jsObject.left * __eezProjectMigration.displayTargetWidth) /
+                        __eezProjectMigration.displaySourceWidth
+                );
+                jsObject.top = Math.floor(
+                    (jsObject.top * __eezProjectMigration.displayTargetHeight) /
+                        __eezProjectMigration.displaySourceHeight
+                );
+                jsObject.width = Math.floor(
+                    (jsObject.width *
+                        __eezProjectMigration.displayTargetWidth) /
+                        __eezProjectMigration.displaySourceWidth
+                );
+                jsObject.height = Math.floor(
+                    (jsObject.height *
+                        __eezProjectMigration.displayTargetHeight) /
+                        __eezProjectMigration.displaySourceHeight
+                );
+            }
+
             if (jsObject.eventHandlers == undefined) {
                 jsObject.eventHandlers = [];
             }

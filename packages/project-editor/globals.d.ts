@@ -10,3 +10,16 @@ declare const ace: {
 };
 
 declare module "jspanel4";
+
+/*
+__eezProjectMigration = { sourceWidth: 480, sourceHeight: 272, targetWidth: 800, targetHeight: 480 };
+*/
+declare const __eezProjectMigration: {
+    displaySourceWidth: number;
+    displaySourceHeight: number;
+    displayTargetWidth: number;
+    displayTargetHeight: number;
+    fonts: {
+        [source: string]: string;
+    };
+};

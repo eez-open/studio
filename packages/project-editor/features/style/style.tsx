@@ -1111,6 +1111,13 @@ export class Style extends EezObject {
             if (typeof jsObject.borderRadius == "number") {
                 jsObject.borderRadius = jsObject.borderRadius.toString();
             }
+
+            if ((window as any).__eezProjectMigration) {
+                const targetFont = __eezProjectMigration.fonts[jsObject.font];
+                if (targetFont) {
+                    jsObject.font = targetFont;
+                }
+            }
         },
         propertiesPanelLabel: (style: Style) => {
             return `Project style: ${style.name}`;

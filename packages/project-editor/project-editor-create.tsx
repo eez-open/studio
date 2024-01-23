@@ -122,6 +122,18 @@ export async function createProjectEditor(
     homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
 ) {
+    // (window as any).__eezProjectMigration = {
+    //     displaySourceWidth: 480,
+    //     displaySourceHeight: 272,
+    //     displayTargetWidth: 800,
+    //     displayTargetHeight: 480,
+    //     fonts: {
+    //         Oswald_9: "Oswald_12",
+    //         Oswald_12: "Oswald_17",
+    //         Oswald_17: "Oswald_24"
+    //     }
+    // };
+
     const projectEditor: IProjectEditor = {
         homeTabs,
         ProjectEditorTabClass,
