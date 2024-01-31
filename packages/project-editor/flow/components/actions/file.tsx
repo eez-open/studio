@@ -1,6 +1,7 @@
 import path from "path";
 import { shell } from "electron";
 import { dialog } from "@electron/remote";
+import type { FileFilter } from "electron";
 import React from "react";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
@@ -298,6 +299,14 @@ registerActionComponents("File", [
         name: "FileOpenDialog",
         icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAABHhJREFUWIXdlktslVUQx39zvvvobcsFSmmxPCoEKkYwRhrwhQ1oYqML2enCxJgY48aVS9GkbDQhhkSiwTfRjbjRBGPUGARFIwVFKSAp7yoWyO3jPtrS3u/MuPgAS/q6FywLJ5nFd87M/P8z38w5B/4v0nJo9YaWjjWfl+vn/isC4nhEhMfXdjQ/UZZfOcYPH75/UTyIPRri7zDVdGg6YKKnRHS/efeuiCwzswvehm7fe2dHXykxY6UYtXa2zo1buEXxT6pZICaYCM5ATcAC5HIqIlIfSMVm4NlSYk9ZgQ0nH2rCu28VW+hNUVO8edQUVY9iY3zMzMCv37Pyl91TxZ+0B1o7W9OOxJeIWzhVoNEiIoIEb7d811gxle2kv6A6Fjzv1W90ibB9eFCqAtE6xRZjrARba3AXE1RRkCY/t/4+OLvrugi0nG6pEJVPPlv6VddENg8cal4SiHtFRJ4evW5mhtnH3X/1/TgZOBOxL0daDjU/Iy74YBT4r4q+8MPKAz+V4l/SFEwm5oJ1EiFnVOSl71e0v4egpfpPSKBQKDwGmKq2p9PpzER2YrrK4E1vl17eu7K02b/Gf7zFrq6uVE1NTVZE4tFIcRrYZ2btqtqezWYPLlq0aAhgaefS5ImmE8Oj/a1zaTIsxB4Usbrx4nsA08PJu4//fg0BM5sJLM7lcvO9918457ii2cIQvblBatIpKpOJopl2iMg+73070L5169ZjbW1tGh5sesojr4vIuOBXscAQfU76PmycFU+kNgm2PLF+e1NQv6bxMhnCMMR7j/eenv4ClRVxujM5+nKDJOIOVWNGVQVz0pUk4kGuIr/9aDL3/hqRUpvbjsRckNimqtEFEqu8uiUixONxMtlB+vKDBCK4GMyfV8uyxqh1VJXBoWF6swNIf0e6sfjRPWDY2MNxIgJdMTVtFosIS6p+jEmmP8/s6jjg6DrfS8PcWfzc0c2Culn0ZAeYnU4hWmC5vobY8Bj/SeGNXU699nmveHNIqhaAgaKy7XCOY71RwONnurjQ20/d7GoaatPUpFMc6TxCKhlDiudZopuQYhfR+VO6hqq7Yqo+A4KrvAWR6Go4P6QcPXeAVclhan2BofAiM/xsZlKN5VNUFrtpqOimQfdQZ1/jNF9W5gAGvVU7T/4WU68ZQ3Cpf5t2Qf4NNte9BYXou6EKCIGeSG9zwJwoStTO5YuZ7ZY2NOa99iAgqXnRxsg5uPgOZXTSdYnALoBYqGFGcEhlRCC8uB2zkWkFBwjFIgIWkjGnuKp5mM/jMzuwac4eozu9+uwfEQEJM1hAUN1AmNmBhbnpBY8YXH0jxAKVjHcQVNXjL7yKXVdL3QCBEdWewDkIO9DhP28COARaHFUBCTK4GJbbeVOyF7NTqXsvnLny7QrZTE+QwnxhfzR606w2qvwAbkUbI8k6zZd7jF6vjoxcSyAGEK+RfrD0dJe/GNqloWH3zRgC/QXZkoiz0YnMmS5wM8uPFOXFW1v/7hm9fu2L6FOC3Udu/KU8nqxrwzPOtfEPmju7fm01yQcAAAAASUVORK5CYII=",
         componentHeaderColor,
+        properties: [
+            {
+                name: "filters",
+                type: "expression",
+                valueType: "array:string",
+                optional: () => true
+            }
+        ],
         inputs: [],
         outputs: [
             {
@@ -307,14 +316,56 @@ registerActionComponents("File", [
                 isOptionalOutput: false
             }
         ],
-        properties: [],
         execute: (context: IDashboardComponentContext) => {
             context = context.startAsyncExecution();
 
             (async () => {
+                const filtersValue = context.evalProperty("filters");
+
+                let filters: FileFilter[];
+                if (filtersValue != undefined) {
+                    if (!Array.isArray(filtersValue)) {
+                        context.throwError("filters is not an array");
+                        return;
+                    }
+
+                    if (filtersValue.length == 0) {
+                        context.throwError("filters empty");
+                        return;
+                    }
+
+                    filters = [];
+
+                    for (let i = 0; i < filtersValue.length; i++) {
+                        if (typeof filtersValue[i] != "string") {
+                            context.throwError(
+                                "filters is not an array of strings"
+                            );
+                            return;
+                        }
+
+                        const parts = filtersValue[i].split("|");
+                        if (parts.length < 2) {
+                            context.throwError(
+                                `invalid filter at position ${i + 1}`
+                            );
+                            return;
+                        }
+
+                        filters.push({
+                            name: parts[0],
+                            extensions: parts.slice(1)
+                        });
+                    }
+
+                    console.log(filters);
+                } else {
+                    filters = [{ name: "All Files", extensions: ["*"] }];
+                }
+
                 const result = await dialog.showOpenDialog({
                     properties: ["openFile"],
-                    filters: [{ name: "All Files", extensions: ["*"] }]
+                    filters
                 });
 
                 // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
@@ -349,6 +400,12 @@ registerActionComponents("File", [
                 name: "fileName",
                 type: "expression",
                 valueType: "string"
+            },
+            {
+                name: "filters",
+                type: "expression",
+                valueType: "array:string",
+                optional: () => true
             }
         ],
         execute: (context: IDashboardComponentContext) => {
@@ -361,8 +418,52 @@ registerActionComponents("File", [
             context = context.startAsyncExecution();
 
             (async () => {
+                const filtersValue = context.evalProperty("filters");
+
+                let filters: FileFilter[] | undefined;
+                if (filtersValue != undefined) {
+                    if (!Array.isArray(filtersValue)) {
+                        context.throwError("filters is not an array");
+                        return;
+                    }
+
+                    if (filtersValue.length == 0) {
+                        context.throwError("filters empty");
+                        return;
+                    }
+
+                    filters = [];
+
+                    for (let i = 0; i < filtersValue.length; i++) {
+                        if (typeof filtersValue[i] != "string") {
+                            context.throwError(
+                                "filters is not an array of strings"
+                            );
+                            return;
+                        }
+
+                        const parts = filtersValue[i].split("|");
+                        if (parts.length < 2) {
+                            context.throwError(
+                                `invalid filter at position ${i + 1}`
+                            );
+                            return;
+                        }
+
+                        filters.push({
+                            name: parts[0],
+                            extensions: parts.slice(1)
+                        });
+                    }
+
+                    console.log(filters);
+                } else {
+                    filters = undefined;
+                }
+
                 const result = await dialog.showSaveDialog({
-                    defaultPath: fileNameValue
+                    defaultPath: fileNameValue,
+                    filters
                 });
 
                 // workaround: for some reason electron returs "\\" as path separator on windows, probably bug
