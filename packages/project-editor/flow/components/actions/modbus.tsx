@@ -202,6 +202,66 @@ export class ModbusActionComponent extends ActionComponent {
                 return;
             }
 
+            function getModbusClient() {
+                const serialConnection = serialConnections.get(connection.id);
+                if (!serialConnection) {
+                    context.throwError(`invalid Connection`);
+                    return undefined;
+                }
+                serialConnection.read(); // do not accumulate read data
+
+                let client;
+                let runtimeModbusClients = modbusClients.get(
+                    context.WasmFlowRuntime.wasmModuleId
+                );
+                if (runtimeModbusClients) {
+                    client = runtimeModbusClients.get(
+                        serialConnection.connectionId
+                    );
+                }
+                if (!client) {
+                    try {
+                        const { getSerialPort } =
+                            require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+                        const serialPort = getSerialPort(
+                            serialConnection.connectionId
+                        );
+
+                        const { ModbusRTUClient } =
+                            require("jsmodbus") as typeof JsmodbusModule;
+
+                        client = new ModbusRTUClient(
+                            serialPort,
+                            serverAddress,
+                            timeout
+                        );
+
+                        if (!runtimeModbusClients) {
+                            runtimeModbusClients = new Map();
+                            modbusClients.set(
+                                context.WasmFlowRuntime.wasmModuleId,
+                                runtimeModbusClients
+                            );
+                        }
+                        runtimeModbusClients.set(
+                            serialConnection.connectionId,
+                            client
+                        );
+                    } catch (err) {
+                        console.warn(err);
+                        context.throwError(err.toString());
+                        return undefined;
+                    }
+                }
+
+                return client;
+            }
+
+            let modbusClient = getModbusClient();
+            if (!modbusClient) {
+                return;
+            }
+
             if (command == 1) {
                 // 01 (0x01) Read Coils
                 context.throwError("Not implemented");
@@ -226,58 +286,9 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
-                const serialConnection = serialConnections.get(connection.id);
-
-                if (!serialConnection) {
-                    context.throwError(`invalid Connection`);
-                    return;
-                }
-
-                const { getSerialPort } =
-                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
-
-                const serialPort = getSerialPort(serialConnection.connectionId);
-
-                let client;
-                let runtimeModbusClients = modbusClients.get(
-                    context.WasmFlowRuntime.wasmModuleId
-                );
-                if (runtimeModbusClients) {
-                    client = runtimeModbusClients.get(
-                        serialConnection.connectionId
-                    );
-                }
-                if (!client) {
-                    try {
-                        const { ModbusRTUClient } =
-                            require("jsmodbus") as typeof JsmodbusModule;
-
-                        client = new ModbusRTUClient(
-                            serialPort,
-                            serverAddress,
-                            timeout
-                        );
-                        if (!runtimeModbusClients) {
-                            runtimeModbusClients = new Map();
-                            modbusClients.set(
-                                context.WasmFlowRuntime.wasmModuleId,
-                                runtimeModbusClients
-                            );
-                        }
-                        runtimeModbusClients.set(
-                            serialConnection.connectionId,
-                            client
-                        );
-                    } catch (err) {
-                        console.warn(err);
-                        context.throwError(err.toString());
-                        return;
-                    }
-                }
-
                 context.startAsyncExecution();
 
-                client
+                modbusClient
                     .readHoldingRegisters(
                         startingRegisterAddress,
                         quantityOfRegisters
@@ -320,46 +331,21 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
-                const serialConnection = serialConnections.get(connection.id);
-
-                if (!serialConnection) {
-                    context.throwError(`invalid Connection`);
-                    return;
-                }
-
-                const { getSerialPort } =
-                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
-
-                const serialPort = getSerialPort(serialConnection.connectionId);
-
-                let client;
-                try {
-                    const { ModbusRTUClient } =
-                        require("jsmodbus") as typeof JsmodbusModule;
-                    client = new ModbusRTUClient(
-                        serialPort,
-                        serverAddress,
-                        timeout
-                    );
-                } catch (err) {
-                    console.warn(err);
-                    context.throwError(err.toString());
-                    return;
-                }
-
                 context.startAsyncExecution();
 
-                client.writeSingleRegister(registerAddress, registerValue).then(
-                    resp => {
-                        context.propagateValueThroughSeqout();
-                        context.endAsyncExecution();
-                    },
-                    error => {
-                        console.warn(error);
-                        context.throwError(error.message);
-                        context.endAsyncExecution();
-                    }
-                );
+                modbusClient
+                    .writeSingleRegister(registerAddress, registerValue)
+                    .then(
+                        resp => {
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+                        },
+                        error => {
+                            console.warn(error);
+                            context.throwError(error.message);
+                            context.endAsyncExecution();
+                        }
+                    );
             } else if (command == 15) {
                 // 15 (0x0F) Write Multiple Coils
                 context.throwError("Not implemented");
@@ -379,36 +365,9 @@ export class ModbusActionComponent extends ActionComponent {
                     return;
                 }
 
-                const serialConnection = serialConnections.get(connection.id);
-
-                if (!serialConnection) {
-                    context.throwError(`invalid Connection`);
-                    return;
-                }
-
-                const { getSerialPort } =
-                    require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
-
-                const serialPort = getSerialPort(serialConnection.connectionId);
-
-                let client;
-                try {
-                    const { ModbusRTUClient } =
-                        require("jsmodbus") as typeof JsmodbusModule;
-                    client = new ModbusRTUClient(
-                        serialPort,
-                        serverAddress,
-                        timeout
-                    );
-                } catch (err) {
-                    console.warn(err);
-                    context.throwError(err.toString());
-                    return;
-                }
-
                 context.startAsyncExecution();
 
-                client
+                modbusClient
                     .writeMultipleRegisters(
                         startingRegisterAddress,
                         registerValues
