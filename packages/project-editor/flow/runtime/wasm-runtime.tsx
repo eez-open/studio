@@ -1151,16 +1151,16 @@ export class WasmRuntime extends RemoteRuntime {
             return;
         }
 
-        let key;
+        let key: string | undefined;
 
-        if (key != "Shift" && key != "Control" && key != "Alt") {
+        if (e.key != "Shift" && e.key != "Control" && e.key != "Alt") {
             key =
                 (e.ctrlKey ? "Control" : "") +
                 (e.altKey ? "Alt" : "") +
                 (e.shiftKey ? "Shift" : "") +
                 e.key;
         } else {
-            key = e.key;
+            //key = e.key;
         }
 
         if (e.target instanceof HTMLInputElement) {
@@ -1173,6 +1173,10 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         if (e.target instanceof HTMLSelectElement) {
+            return;
+        }
+
+        if (key == undefined) {
             return;
         }
 
