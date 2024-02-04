@@ -3,6 +3,9 @@ import React from "react";
 import { computed, makeObservable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import { Icon } from "eez-studio-ui/icon";
+
 import { getProperty, getParent, IEezObject } from "project-editor/core/object";
 import {
     addItem,
@@ -36,7 +39,6 @@ import {
     EditorComponent,
     IEditor
 } from "project-editor/project/ui/EditorComponent";
-import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -248,11 +250,9 @@ export const SettingsEditor = observer(
 
         render() {
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.layoutModel}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
                 />
             );
         }
@@ -431,11 +431,9 @@ export const SettingsContent = observer(
                     this.context.project.settings.build.files
                 ) {
                     return (
-                        <FlexLayout.Layout
+                        <FlexLayoutContainer
                             model={this.layoutModel}
                             factory={this.factory}
-                            realtimeResize={true}
-                            font={LayoutModels.FONT_SUB}
                         />
                     );
                 } else {

@@ -4,6 +4,11 @@ import { computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
+import { validators } from "eez-studio-shared/validation";
+
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+
 import {
     ClassInfo,
     EezObject,
@@ -18,10 +23,8 @@ import {
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { createObject, LayoutModels } from "project-editor/store";
+import { createObject } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { LVGLStylesEditorRuntime } from "project-editor/lvgl/page-runtime";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
@@ -469,11 +472,9 @@ export const LVGLStylesNavigation = observer(
 
         render() {
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.context.layoutModels.lvglStyles}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
                 />
             );
         }

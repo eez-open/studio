@@ -65,6 +65,7 @@ import {
     RulersController,
     RulersDockView
 } from "eez-studio-ui/chart/rulers";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
 import { isArray } from "eez-studio-shared/util";
 
@@ -3766,11 +3767,9 @@ export class ChartMeasurementsComponent extends React.Component<{
     render() {
         return (
             <>
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.flexLayoutModel}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT}
                 />
             </>
         );

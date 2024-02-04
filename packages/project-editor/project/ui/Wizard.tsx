@@ -4,7 +4,8 @@ import { rmdir } from "fs/promises";
 import path, { resolve } from "path";
 import React from "react";
 import ReactDOM from "react-dom";
-
+import { SimpleGitProgressEvent } from "simple-git";
+import classNames from "classnames";
 import {
     action,
     reaction,
@@ -25,15 +26,19 @@ import {
     readJsObjectFromFile
 } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
+import { guid } from "eez-studio-shared/guid";
+import { stringCompare } from "eez-studio-shared/string";
 
 import { showDialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import { Icon } from "eez-studio-ui/icon";
 
-import { SimpleGitProgressEvent } from "simple-git";
+import { homeLayoutModels } from "home/home-layout-models";
 import { openProject } from "home/open-project";
-import classNames from "classnames";
+
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
@@ -42,19 +47,15 @@ import {
     APPLET_ICON,
     IEXT_PROJECT_ICON
 } from "project-editor/ui-components/icons";
-import { Icon } from "eez-studio-ui/icon";
 import {
     EEZ_PROJECT_EXAMPLES_REPOSITORY,
     examplesCatalog
 } from "project-editor/store/examples-catalog";
-import { stringCompare } from "eez-studio-shared/string";
 
 import {
     PROJECT_TYPE_NAMES,
     ProjectType
 } from "project-editor/project/project";
-import { homeLayoutModels } from "home/home-layout-models";
-import { guid } from "eez-studio-shared/guid";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -2555,17 +2556,13 @@ export const NewProjectWizard = observer(
 
                     <div className="EezStudio_NewProjectWizard_Body">
                         {wizardModel.folders.children.length > 0 ? (
-                            <FlexLayout.Layout
+                            <FlexLayoutContainer
                                 model={
                                     this.props.modalDialog.get()
                                         ? homeLayoutModels.newProjectWizardDialog
                                         : homeLayoutModels.newProjectWizard
                                 }
                                 factory={this.factory}
-                                realtimeResize={true}
-                                font={{
-                                    size: "small"
-                                }}
                             />
                         ) : (
                             <div className="EezStudio_NewProjectWizard_NoProjects">

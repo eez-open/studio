@@ -2,26 +2,29 @@ import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { Menu, MenuItem } from "@electron/remote";
+import classNames from "classnames";
+import { action, computed, makeObservable, runInAction } from "mobx";
 
 import { Messages } from "project-editor/ui-components/Output";
-
-import { ProjectContext } from "project-editor/project/context";
 import { Toolbar } from "project-editor/project/ui/Toolbar";
+import { Icon } from "eez-studio-ui/icon";
+import { Loader } from "eez-studio-ui/loader";
+import { Button } from "eez-studio-ui/button";
+import { IExtension } from "eez-studio-shared/extensions/extension";
+import * as notification from "eez-studio-ui/notification";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+
 import {
     PageEditor,
     PageTabState
 } from "project-editor/features/page/PageEditor";
-
-import * as notification from "eez-studio-ui/notification";
-
+import { ProjectContext } from "project-editor/project/context";
 import { Editor, LayoutModels, Section } from "project-editor/store";
 import { PropertiesPanel } from "./PropertiesPanel";
 import { ComponentsPalette } from "project-editor/flow/editor/ComponentsPalette";
 import { BreakpointsPanel } from "project-editor/flow/debugger/BreakpointsPanel";
 import { ThemesSideView } from "project-editor/features/style/theme";
 import { getEditorComponent } from "project-editor/project/ui/EditorComponentFactory";
-import { Icon } from "eez-studio-ui/icon";
-import { Loader } from "eez-studio-ui/loader";
 import { QueuePanel } from "project-editor/flow/debugger/QueuePanel";
 import { WatchPanel } from "project-editor/flow/debugger/WatchPanel";
 import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel";
@@ -36,16 +39,12 @@ import { TextsTab } from "project-editor/features/texts/navigation";
 import { ScpiTab } from "project-editor/features/scpi/ScpiNavigation";
 import { ExtensionDefinitionsTab } from "project-editor/features/extension-definitions/extension-definitions";
 import { ChangesTab } from "project-editor/features/changes/navigation";
-import classNames from "classnames";
-import { action, computed, makeObservable, runInAction } from "mobx";
 import { SearchPanel } from "project-editor/project/ui/SearchPanel";
 import { ReferencesPanel } from "project-editor/project/ui/ReferencesPanel";
-import { Button } from "eez-studio-ui/button";
 import {
     downloadAndInstallExtension,
     extensionsManagerStore
 } from "home/extensions-manager/extensions-manager";
-import { IExtension } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -478,11 +477,9 @@ const Content = observer(
                             flexGrow: 1
                         }}
                     >
-                        <FlexLayout.Layout
+                        <FlexLayoutContainer
                             model={this.context.layoutModels.root}
                             factory={this.factory}
-                            realtimeResize={true}
-                            font={LayoutModels.FONT}
                             onRenderTab={this.onRenderTab}
                             iconFactory={LayoutModels.iconFactory}
                             onAuxMouseClick={this.onAuxMouseClick}

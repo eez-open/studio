@@ -10,10 +10,11 @@ import {
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+
 import { getParent, getProperty, IEezObject } from "project-editor/core/object";
 import {
     IPanel,
-    LayoutModels,
     objectToJS,
     getProjectStore,
     createObject,
@@ -697,11 +698,9 @@ export const FontEditor = observer(
                     tabIndex={0}
                     onKeyDown={this.onKeyDown}
                 >
-                    <FlexLayout.Layout
+                    <FlexLayoutContainer
                         model={this.context.layoutModels.fonts}
                         factory={this.factory}
-                        realtimeResize={true}
-                        font={LayoutModels.FONT_SUB}
                     />
                 </div>
             );

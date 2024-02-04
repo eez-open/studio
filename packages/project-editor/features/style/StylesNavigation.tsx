@@ -4,7 +4,9 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 import * as FlexLayout from "flexlayout-react";
 
-import { LayoutModels, isObjectExists } from "project-editor/store";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+
+import { isObjectExists } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Style } from "./style";
 import { drawText } from "project-editor/flow/editor/eez-gui-draw";
@@ -78,11 +80,9 @@ const StylesNavigation = observer(
 
         render() {
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.context.layoutModels.styles}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
                 />
             );
         }

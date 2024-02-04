@@ -3,10 +3,10 @@ import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
 import { IconAction } from "eez-studio-ui/action";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
 import { IEezObject } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { LayoutModels } from "project-editor/store";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { ScpiSubsystem, ScpiCommand } from "project-editor/features/scpi/scpi";
 import { showImportScpiDocDialog } from "project-editor/features/scpi/importScpiDoc";
@@ -48,11 +48,9 @@ export const ScpiTab = observer(
 
         render() {
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.context.layoutModels.scpi}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
                 />
             );
         }

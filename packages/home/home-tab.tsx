@@ -40,6 +40,7 @@ import { Setup } from "./setup";
 import { firstTime } from "./first-time";
 import { homeLayoutModels } from "home/home-layout-models";
 import { NewProjectWizard } from "project-editor/project/ui/Wizard";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -483,13 +484,9 @@ export const Properties = observer(
             }
 
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={homeLayoutModels.instrumentProperties}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={{
-                        size: "small"
-                    }}
                 />
             );
         }
@@ -686,13 +683,9 @@ export const Workbench = observer(
                             {firstTime.get() ? (
                                 <Setup onlyBody={false} />
                             ) : (
-                                <FlexLayout.Layout
+                                <FlexLayoutContainer
                                     model={homeLayoutModels.instrumentsBody}
                                     factory={this.factory}
-                                    realtimeResize={true}
-                                    font={{
-                                        size: "small"
-                                    }}
                                 />
                             )}
                         </Body>
@@ -1081,13 +1074,9 @@ export const Home = observer(
                         )}
                     </div>
                     <div className="EezStudio_HomeTab_Projects_And_Instruments">
-                        <FlexLayout.Layout
+                        <FlexLayoutContainer
                             model={this.layoutModel}
                             factory={this.factory}
-                            realtimeResize={true}
-                            font={{
-                                size: "small"
-                            }}
                         />
                     </div>
                 </div>
