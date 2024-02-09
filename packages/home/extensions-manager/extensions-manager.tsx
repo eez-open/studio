@@ -59,6 +59,7 @@ import {
 } from "eez-studio-ui/dialog-electron";
 import * as notification from "eez-studio-ui/notification";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
 import { ExtensionShortcuts } from "home/extensions-manager/extension-shortcuts";
 import { extensionsCatalog } from "home/extensions-manager/catalog";
@@ -1622,13 +1623,9 @@ export const ExtensionsList = observer(
             }
 
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={homeLayoutModels.extensionManager}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={{
-                        size: "small"
-                    }}
                 />
             );
         }

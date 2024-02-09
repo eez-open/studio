@@ -4,6 +4,10 @@ import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
+import { validators } from "eez-studio-shared/validation";
+
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+
 import {
     ClassInfo,
     IEezObject,
@@ -17,10 +21,8 @@ import {
     ProjectStore,
     IContextMenuContext,
     getProjectStore,
-    LayoutModels,
     createObject
 } from "project-editor/store";
-import { validators } from "eez-studio-shared/validation";
 import { replaceObjectReference } from "project-editor/core/search";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -284,11 +286,9 @@ export const ThemesSideView = observer(
 
         render() {
             return (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.context.layoutModels.themes}
                     factory={this.factory}
-                    realtimeResize={true}
-                    font={LayoutModels.FONT_SUB}
                 />
             );
         }

@@ -19,10 +19,6 @@ export class LayoutModels extends AbstractLayoutModels {
         size: "small"
     };
 
-    static FONT_SUB = {
-        size: "small"
-    };
-
     static GLOBAL_OPTIONS = {
         borderEnableAutoHide: true,
         splitterSize: 4,

@@ -10,6 +10,7 @@ import {
     Header,
     Body
 } from "eez-studio-ui/header-with-body";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,13 +65,9 @@ export class SideDockComponent2 extends React.Component<{
 
         if (this.isOpen) {
             const container = (
-                <FlexLayout.Layout
+                <FlexLayoutContainer
                     model={this.props.flexLayoutModel}
                     factory={this.props.factory}
-                    realtimeResize={true}
-                    font={{
-                        size: "small"
-                    }}
                 />
             );
 

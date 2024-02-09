@@ -6,6 +6,7 @@ import { isDev } from "eez-studio-shared/util-electron";
 import { Loader } from "eez-studio-ui/loader";
 import { Tree } from "eez-studio-ui/tree";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { homeLayoutModels } from "home/home-layout-models";
 import { getModel } from "../model";
 import { generateMarkdownFilesForAllComponents } from "../doc-markdown";
@@ -168,13 +169,9 @@ export const DocumentationBrowser = observer(
                         )}
                     </div>
                     <div className="EezStudio_DocumentationBrowser_Content">
-                        <FlexLayout.Layout
+                        <FlexLayoutContainer
                             model={homeLayoutModels.documentationBrowser}
                             factory={this.factory}
-                            realtimeResize={true}
-                            font={{
-                                size: "small"
-                            }}
                         />
                     </div>
                 </div>
