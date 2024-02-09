@@ -382,18 +382,18 @@ export abstract class RuntimeBase {
 
     skipNextQueueTask(nextQueueTask: QueueTask) {
         if (this.state != State.PAUSED) {
-            return;
+            return false;
         }
 
         if (!this.singleStepQueueTask) {
-            return;
+            return false;
         }
 
         if (
             nextQueueTask == this.singleStepQueueTask ||
             nextQueueTask == this.singleStepLastSkippedTask
         ) {
-            return;
+            return false;
         }
 
         if (
@@ -402,7 +402,7 @@ export abstract class RuntimeBase {
         ) {
             this.singleStepQueueTask = undefined;
             this.singleStepLastSkippedTask = undefined;
-            return;
+            return false;
         }
 
         let doSkip: boolean = false;
@@ -426,16 +426,21 @@ export abstract class RuntimeBase {
         if (doSkip) {
             this.singleStepLastSkippedTask = nextQueueTask;
             this.runSingleStep();
+            return true;
         } else {
             this.singleStepQueueTask = nextQueueTask;
         }
+
+        return false;
     }
 
     showNextQueueTask() {
         const nextQueueTask = this.queue.length > 0 ? this.queue[0] : undefined;
 
         if (nextQueueTask) {
-            this.skipNextQueueTask(nextQueueTask);
+            if (this.skipNextQueueTask(nextQueueTask)) {
+                return;
+            }
         }
 
         this.selectQueueTask(nextQueueTask);
