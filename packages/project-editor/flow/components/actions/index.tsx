@@ -4218,6 +4218,21 @@ export class LabelOutActionComponent extends ActionComponent {
                 name: "label",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "customInputs",
+                type: PropertyType.Array,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "customOutputs",
+                type: PropertyType.Array,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "catchError",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true
             }
         ],
 
@@ -4346,6 +4361,21 @@ export class LabelInActionComponent extends ActionComponent {
                 name: "label",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "customInputs",
+                type: PropertyType.Array,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "customOutputs",
+                type: PropertyType.Array,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "catchError",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true
             }
         ],
 
