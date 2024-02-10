@@ -4228,8 +4228,8 @@ export class LabelOutActionComponent extends ActionComponent {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        `Corresponding Label In component with label "${component.label}" is not found`,
-                        getChildOfObject(component, "name")
+                        `Label IN component with label "${component.label}" is not found`,
+                        getChildOfObject(component, "label")
                     )
                 );
             }
@@ -4349,9 +4349,34 @@ export class LabelInActionComponent extends ActionComponent {
             }
         ],
 
-        check: (component: LabelOutActionComponent, messages: IMessage[]) => {
-            if (!component.label) {
-                messages.push(propertyNotSetMessage(component, "label"));
+        check: (
+            thisComponent: LabelInActionComponent,
+            messages: IMessage[]
+        ) => {
+            if (!thisComponent.label) {
+                messages.push(propertyNotSetMessage(thisComponent, "label"));
+            } else {
+                const components = getParent(thisComponent) as Component[];
+
+                for (let i = 0; i < components.length; i++) {
+                    const component = components[i];
+                    if (
+                        component instanceof LabelInActionComponent &&
+                        component != thisComponent &&
+                        component.label == thisComponent.label
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Label name "${component.label}" is not unique, each Label IN component must have unique label.`,
+                                getChildOfObject(thisComponent, "label")
+                            )
+                        );
+                        break;
+                    }
+                }
+
+                return undefined;
             }
         }
     });
