@@ -3635,7 +3635,7 @@ export class Widget extends Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function ComponentInputSpan({
+export function ComponentInputSpan({
     componentInput,
     title
 }: {
@@ -3658,7 +3658,7 @@ function ComponentInputSpan({
     );
 }
 
-function ComponentOutputSpan({
+export function ComponentOutputSpan({
     componentOutput,
     title
 }: {

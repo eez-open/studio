@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, action, runInAction, makeObservable } from "mobx";
+import {
+    observable,
+    action,
+    runInAction,
+    makeObservable,
+    computed
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { clipboard, nativeImage } from "electron";
@@ -19,6 +25,7 @@ import {
 import {
     getAncestorOfType,
     getChildOfObject,
+    getClassInfo,
     getListLabel,
     getProjectStore,
     Message,
@@ -39,7 +46,9 @@ import {
     AutoSize,
     Component,
     ComponentInput,
+    ComponentInputSpan,
     ComponentOutput,
+    ComponentOutputSpan,
     CustomOutput,
     componentOutputUnique,
     makeAssignableExpressionProperty,
@@ -98,7 +107,9 @@ import {
     COMPONENT_TYPE_ON_EVENT_ACTION,
     COMPONENT_TYPE_OVERRIDE_STYLE_ACTION,
     COMPONENT_TYPE_SORT_ARRAY_ACTION,
-    COMPONENT_TYPE_TEST_AND_SET_ACTION
+    COMPONENT_TYPE_TEST_AND_SET_ACTION,
+    COMPONENT_TYPE_LABEL_IN_ACTION,
+    COMPONENT_TYPE_LABEL_OUT_ACTION
 } from "project-editor/flow/components/component-types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -4190,6 +4201,229 @@ export class TestAndSetActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class LabelOutActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_LABEL_OUT_ACTION,
+
+        icon: (
+            <svg transform="scale(-1, 1) translate(0, 0)" viewBox="0 0 24 24">
+                <path d="M16 17H5V7h11l3.55 5m-1.92-6.16C17.27 5.33 16.67 5 16 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11c.67 0 1.27-.34 1.63-.85L22 12l-4.37-6.16Z" />
+            </svg>
+        ),
+        componentHeaderColor: "#c9e4de",
+        componentPaletteLabel: "Label OUT",
+
+        properties: [
+            {
+                name: "label",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        check: (component: LabelOutActionComponent, messages: IMessage[]) => {
+            if (!component.label) {
+                messages.push(propertyNotSetMessage(component, "label"));
+            } else if (!component.labelInComponent) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Corresponding Label In component with label "${component.label}" is not found`,
+                        getChildOfObject(component, "name")
+                    )
+                );
+            }
+        }
+    });
+
+    label: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable,
+            labelInComponent: computed
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            }
+        ];
+    }
+
+    get labelInComponent() {
+        const components = getParent(this) as Component[];
+
+        for (let i = 0; i < components.length; i++) {
+            const component = components[i];
+            if (
+                component instanceof LabelInActionComponent &&
+                component.label == this.label
+            ) {
+                return component;
+            }
+        }
+
+        return undefined;
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // labelInComponentIndex
+        const labelInComponent = this.labelInComponent;
+        dataBuffer.writeUint16(
+            labelInComponent ? assets.getComponentIndex(labelInComponent) : -1
+        );
+    }
+
+    getClassName(flowContext: IFlowContext) {
+        return "eez-action LabelOutActionComponent";
+    }
+
+    override render(flowContext: IFlowContext) {
+        const classInfo = getClassInfo(this);
+
+        let titleStyle: React.CSSProperties | undefined;
+        if (classInfo.componentHeaderColor) {
+            titleStyle = {
+                backgroundColor: classInfo.componentHeaderColor
+            };
+        }
+
+        return (
+            <>
+                <div className="title-enclosure">
+                    <svg
+                        viewBox={`0 0 ${this.width} ${this.height}`}
+                        width={this.width}
+                        height={this.height}
+                    >
+                        <polygon
+                            points={`0.5,${this.height / 2} ${
+                                this.height / 2
+                            },0.5 ${this.width - 0.5},0.5 ${this.width - 0.5},${
+                                this.height - 0.5
+                            } ${this.height / 2},${this.height - 0.5}`}
+                        />
+                    </svg>
+                    <ComponentInputSpan
+                        componentInput={this.inputs[0]}
+                        title="Sequence input"
+                    />
+                    <div className="title empty-content" style={titleStyle}>
+                        <span className="title-text">
+                            {this.label ? this.label : "<No Label>"}
+                        </span>
+                    </div>
+                </div>
+            </>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LabelInActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_LABEL_IN_ACTION,
+
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M16 17H5V7h11l3.55 5m-1.92-6.16C17.27 5.33 16.67 5 16 5H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11c.67 0 1.27-.34 1.63-.85L22 12l-4.37-6.16Z" />
+            </svg>
+        ),
+        componentHeaderColor: "#c9e4de",
+        componentPaletteLabel: "Label IN",
+
+        properties: [
+            {
+                name: "label",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        check: (component: LabelOutActionComponent, messages: IMessage[]) => {
+            if (!component.label) {
+                messages.push(propertyNotSetMessage(component, "label"));
+            }
+        }
+    });
+
+    label: string;
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            label: observable
+        });
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: false
+            }
+        ];
+    }
+
+    getClassName(flowContext: IFlowContext) {
+        return "eez-action LabelInActionComponent";
+    }
+
+    override render(flowContext: IFlowContext) {
+        const classInfo = getClassInfo(this);
+
+        let titleStyle: React.CSSProperties | undefined;
+        if (classInfo.componentHeaderColor) {
+            titleStyle = {
+                backgroundColor: classInfo.componentHeaderColor
+            };
+        }
+
+        return (
+            <>
+                <div className="title-enclosure">
+                    <div className="title empty-content" style={titleStyle}>
+                        <span className="title-text">
+                            {this.label ? this.label : "<No Label>"}
+                        </span>
+                    </div>
+                    <svg
+                        viewBox={`0 0 ${this.width} ${this.height}`}
+                        width={this.width}
+                        height={this.height}
+                    >
+                        <polygon
+                            points={`0.5,0.5 ${
+                                this.width - 0.5 - this.height / 2
+                            },0.5 ${this.width - 0.5},${this.height / 2} ${
+                                this.width - 0.5 - this.height / 2
+                            },${this.height - 0.5} 0.5,${this.height - 0.5}`}
+                        />
+                    </svg>
+                    <ComponentOutputSpan
+                        componentOutput={this.outputs[0]}
+                        title="Sequence output"
+                    />
+                </div>
+            </>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("StartActionComponent", StartActionComponent);
 registerClass("EndActionComponent", EndActionComponent);
 registerClass("InputActionComponent", InputActionComponent);
@@ -4246,6 +4480,9 @@ registerClass("ClipboardWriteActionComponent", ClipboardWriteActionComponent);
 
 registerClass("ErrorActionComponent", ErrorActionComponent);
 registerClass("CatchErrorActionComponent", CatchErrorActionComponent);
+
+registerClass("LabelOutActionComponent", LabelOutActionComponent);
+registerClass("LabelInActionComponent", LabelInActionComponent);
 
 registerClass("NoopActionComponent", NoopActionComponent);
 registerClass("CommentActionComponent", CommentActionComponent);

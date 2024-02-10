@@ -5071,6 +5071,48 @@ button.EezStudio_Action {
                     margin-bottom: 0;
                 }
             }
+
+            &.LabelInActionComponent,
+            &.LabelOutActionComponent {
+                background-color: transparent;
+                border-radius: 0;
+                box-shadow: none;
+
+                > .title-enclosure {
+                    background-color: transparent;
+                    > svg {
+                        position: absolute;
+                        fill: transparent;
+                        stroke: @textColor;
+                    }
+                    > .title {
+                        background-color: transparent !important;
+                        border-radius: 0;
+                        padding-left: 0 !important;
+                        padding-right: 0 !important;
+                        height: 24px !important;
+                        background-color: transparent;
+                        text-align: center;
+                        color: @textColor;
+                    }
+                }
+            }
+
+            &.LabelInActionComponent {
+                > .title-enclosure {
+                    > .title {
+                        padding-right: 12px !important;
+                    }
+                }
+            }
+
+            &.LabelOutActionComponent {
+                > .title-enclosure {
+                    > .title {
+                        padding-left: 12px !important;
+                    }
+                }
+            }
         }
 
         &.eez-widget {
