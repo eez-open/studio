@@ -159,7 +159,7 @@ export function* visitObjects(
         yield parentObject;
 
         for (const propertyInfo of getClassInfo(parentObject).properties) {
-            if (isPropertySearchable(parentObject, propertyInfo)) {
+            if (!propertyInfo.skipSearch) {
                 if (
                     propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array
