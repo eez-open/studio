@@ -88,7 +88,7 @@ export class SCPIActionComponent extends ActionComponent {
                     name: "instrument",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: isNotDashboardProject
+                    disabled: isNotDashboardProject
                 },
                 "object:Instrument"
             ),
@@ -1241,7 +1241,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartDescription",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1254,7 +1254,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartData",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1267,7 +1267,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartSamplingRate",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1280,7 +1280,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartOffset",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1293,7 +1293,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartScale",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1306,7 +1306,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartFormat",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1320,7 +1320,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartUnit",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1334,7 +1334,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartColor",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1347,7 +1347,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartColorInverse",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1360,7 +1360,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartLabel",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1373,7 +1373,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartMajorSubdivisionHorizontal",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1386,7 +1386,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartMajorSubdivisionVertical",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1399,7 +1399,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartMinorSubdivisionHorizontal",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1412,7 +1412,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartMinorSubdivisionVertical",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1425,7 +1425,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartHorizontalScale",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";
@@ -1438,7 +1438,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     name: "chartVerticalScale",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
+                    disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
                         return component.itemType != "chart";

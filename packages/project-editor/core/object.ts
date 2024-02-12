@@ -175,12 +175,16 @@ export interface PropertyInfo {
     ) => Promise<any>;
     isOnSelectAvailable?: (object: IEezObject) => boolean;
     onSelectTitle?: string;
+
+    disabled?: (object: IEezObject, propertyInfo: PropertyInfo) => boolean;
+
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
     readOnlyInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridRowComponent?: React.ComponentType<PropertyProps>;
     propertyGridColumnComponent?: React.ComponentType<PropertyProps>;
@@ -819,15 +823,18 @@ export function isPropertyHidden(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    if (propertyInfo.hideInPropertyGrid === undefined) {
-        return false;
+    if (propertyInfo.disabled && propertyInfo.disabled(object, propertyInfo)) {
+        return true;
     }
 
-    if (typeof propertyInfo.hideInPropertyGrid === "boolean") {
-        return propertyInfo.hideInPropertyGrid;
+    if (propertyInfo.hideInPropertyGrid != undefined) {
+        if (typeof propertyInfo.hideInPropertyGrid == "boolean") {
+            return propertyInfo.hideInPropertyGrid;
+        }
+        return propertyInfo.hideInPropertyGrid(object, propertyInfo);
     }
 
-    return propertyInfo.hideInPropertyGrid(object, propertyInfo);
+    return false;
 }
 
 export function isPropertyReadOnly(

@@ -174,6 +174,7 @@ const resizingProperty: PropertyInfo = {
     type: PropertyType.Any,
     propertyGridGroup: geometryGroup,
     propertyGridRowComponent: ResizingProperty,
+    skipSearch: true,
     hideInPropertyGrid: isLVGLProject
 };
 
@@ -1705,6 +1706,7 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 computed: true,
                 propertyGridRowComponent: AlignAndDistributePropertyGridUI,
+                skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) => {
                     const projectStore = ProjectEditor.getProjectStore(widget);
                     const propertyGridObjects =
@@ -1729,28 +1731,28 @@ export class Component extends EezObject {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent,
+                disabled: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent,
+                disabled: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent,
+                disabled: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isActionComponent,
+                disabled: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
@@ -1758,7 +1760,7 @@ export class Component extends EezObject {
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
-                hideInPropertyGrid: isActionComponent,
+                disabled: isActionComponent,
                 hideInDocumentation: "action"
             },
             {
@@ -1768,8 +1770,12 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 computed: true,
                 propertyGridRowComponent: CenterWidgetUI,
+                skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) => {
                     const projectStore = ProjectEditor.getProjectStore(widget);
+                    if (!projectStore) {
+                        return false;
+                    }
                     const propertyGridObjects =
                         projectStore.navigationStore.propertyGridObjects;
                     return !(
@@ -1788,7 +1794,7 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             },
             {
                 name: "customOutputs",
@@ -1799,13 +1805,13 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             },
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup,
-                hideInPropertyGrid: isNotProjectWithFlowSupport,
+                disabled: isNotProjectWithFlowSupport,
                 checkboxStyleSwitch: true
             }
         ],
@@ -2408,7 +2414,7 @@ export class EventHandler extends EezObject {
                     { id: "action", label: "Action" }
                 ],
                 enumDisallowUndefined: true,
-                hideInPropertyGrid: eventHandler =>
+                disabled: eventHandler =>
                     !ProjectEditor.getProject(eventHandler).projectTypeTraits
                         .hasFlowSupport
             },
@@ -2416,7 +2422,7 @@ export class EventHandler extends EezObject {
                 name: "action",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "actions",
-                hideInPropertyGrid: (eventHandler: EventHandler) => {
+                disabled: (eventHandler: EventHandler) => {
                     return eventHandler.handlerType != "action";
                 }
             }
@@ -2618,13 +2624,13 @@ export class Widget extends Component {
         properties: [
             resizingProperty,
             makeDataPropertyInfo("data", {
-                hideInPropertyGrid: isLVGLProject,
+                disabled: isLVGLProject,
                 hideInDocumentation: "all"
             }),
             makeDataPropertyInfo(
                 "visible",
                 {
-                    hideInPropertyGrid: isLVGLProject
+                    disabled: isLVGLProject
                 },
                 "boolean"
             ),
@@ -2637,6 +2643,7 @@ export class Widget extends Component {
                 propertyGridGroup: styleGroup,
                 propertyGridRowComponent: StylePropertyUI,
                 computed: true,
+                skipSearch: true,
                 hideInPropertyGrid: isLVGLProject
             },
             {
@@ -2644,7 +2651,7 @@ export class Widget extends Component {
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: component => isLVGLProject(component)
+                disabled: component => isLVGLProject(component)
             },
             {
                 name: "locked",
@@ -2672,6 +2679,7 @@ export class Widget extends Component {
                 propertyGridGroup: timelineGroup,
                 propertyGridRowComponent: TimelineKeyframePropertyUI,
                 computed: true,
+                skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) =>
                     !isTimelineEditorActive(widget)
             },
@@ -3991,11 +3999,11 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
     const properties: PropertyInfo[] = [];
 
     for (const propertyDefinition of propertyDefinitions) {
-        let hideInPropertyGrid;
-        const enabled = propertyDefinition.enabled;
-        if (enabled) {
-            hideInPropertyGrid = (object: any, propertyInfo: PropertyInfo) =>
-                enabled(...(object?._props ?? []));
+        let disabled;
+        const propertyDefinitionDisabled = propertyDefinition.disabled;
+        if (propertyDefinitionDisabled) {
+            disabled = (object: any, propertyInfo: PropertyInfo) =>
+                propertyDefinitionDisabled(...(object?._props ?? []));
         }
 
         let isOptional;
@@ -4014,7 +4022,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
                         formText: propertyDefinition.formText,
-                        hideInPropertyGrid,
+                        disabled,
                         isOptional
                     },
                     propertyDefinition.valueType
@@ -4029,7 +4037,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                         type: PropertyType.MultilineText,
                         propertyGridGroup: specificGroup,
                         formText: propertyDefinition.formText,
-                        hideInPropertyGrid,
+                        disabled,
                         isOptional
                     },
                     propertyDefinition.valueType
@@ -4043,7 +4051,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     formText: propertyDefinition.formText,
-                    hideInPropertyGrid,
+                    disabled,
                     isOptional
                 })
             );
@@ -4055,7 +4063,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 enumItems: propertyDefinition.enumItems,
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid,
+                disabled,
                 isOptional
             });
         } else if (propertyDefinition.type === "inline-code") {
@@ -4073,7 +4081,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: languageToType[propertyDefinition.language],
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid,
+                disabled,
                 isOptional
             });
         } else if (propertyDefinition.type === "list") {
@@ -4165,7 +4173,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                hideInPropertyGrid,
+                disabled,
                 isOptional
             });
         } else if (propertyDefinition.type == "boolean") {
@@ -4175,7 +4183,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 formText: propertyDefinition.formText,
-                hideInPropertyGrid,
+                disabled,
                 isOptional
             });
         }

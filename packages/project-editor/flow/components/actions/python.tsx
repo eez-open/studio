@@ -61,7 +61,7 @@ registerActionComponents("Python", [
                 displayName: "Inline script",
                 type: "inline-code",
                 language: "Python",
-                enabled: (...props: string[]) => {
+                disabled: (...props: string[]) => {
                     return props[0] != "inline-script";
                 }
             },
@@ -70,7 +70,7 @@ registerActionComponents("Python", [
                 displayName: "Inline script as expression",
                 type: "expression",
                 valueType: "string",
-                enabled: (...props: string[]) => {
+                disabled: (...props: string[]) => {
                     return props[0] != "inline-script-as-expression";
                 }
             },
@@ -79,7 +79,7 @@ registerActionComponents("Python", [
                 displayName: "Script file",
                 type: "expression",
                 valueType: "string",
-                enabled: (...props: string[]) => {
+                disabled: (...props: string[]) => {
                     return props[0] != "script-file";
                 }
             },

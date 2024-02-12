@@ -190,7 +190,7 @@ export class Bitmap extends EezObject {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: (bitmap: Bitmap) =>
+                disabled: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap) || isDashboardProject(bitmap)
             },
             {
@@ -219,13 +219,13 @@ export class Bitmap extends EezObject {
                         ? LVGL_COLOR_FORMATS
                         : [{ id: 16 }, { id: 32 }],
                 defaultValue: 16,
-                hideInPropertyGrid: isDashboardProject
+                disabled: isDashboardProject
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "allStyles",
-                hideInPropertyGrid: (bitmap: Bitmap) =>
+                disabled: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap) ||
                     isDashboardProject(bitmap) ||
                     bitmap.bpp == 32
@@ -234,7 +234,7 @@ export class Bitmap extends EezObject {
                 name: "alwaysBuild",
                 displayName: "Always add to the generated code",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isLVGLProject(object) || isDashboardProject(object)
             },
             {
@@ -242,6 +242,7 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridRowComponent: ExportBitmapFilePropertyGridUI,
+                skipSearch: true,
                 hideInPropertyGrid: (bitmap: Bitmap) =>
                     bitmap.image &&
                     typeof bitmap.image == "string" &&

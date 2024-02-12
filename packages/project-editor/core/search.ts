@@ -5,7 +5,8 @@ import {
     getParent,
     getKey,
     getRootObject,
-    isPropertyHidden
+    isPropertyHidden,
+    PropertyInfo
 } from "project-editor/core/object";
 import {
     getObjectPropertyAsObject,
@@ -51,6 +52,20 @@ import type {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function isPropertySearchable(object: IEezObject, propertyInfo: PropertyInfo) {
+    if (propertyInfo.skipSearch) {
+        return false;
+    }
+
+    if (propertyInfo.disabled) {
+        return !propertyInfo.disabled(object, propertyInfo);
+    }
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 type VisitResult = EezValueObject | null;
 
 function* visitWithPause(
@@ -63,7 +78,7 @@ function* visitWithPause(
         }
     } else {
         for (const propertyInfo of getClassInfo(parentObject).properties) {
-            if (!propertyInfo.skipSearch) {
+            if (isPropertySearchable(parentObject, propertyInfo)) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value != undefined) {
                     if (
@@ -104,7 +119,7 @@ function* visitWithoutPause(
         }
     } else {
         for (const propertyInfo of getClassInfo(parentObject).properties) {
-            if (!propertyInfo.skipSearch) {
+            if (isPropertySearchable(parentObject, propertyInfo)) {
                 let value = getProperty(parentObject, propertyInfo.name);
                 if (value != undefined) {
                     if (
@@ -144,7 +159,7 @@ export function* visitObjects(
         yield parentObject;
 
         for (const propertyInfo of getClassInfo(parentObject).properties) {
-            if (!propertyInfo.skipSearch) {
+            if (isPropertySearchable(parentObject, propertyInfo)) {
                 if (
                     propertyInfo.type === PropertyType.Object ||
                     propertyInfo.type === PropertyType.Array
@@ -337,7 +352,13 @@ export function* searchForReference(
 
         let valueObject = visitResult.value;
         if (valueObject) {
-            if (valueObject.propertyInfo.skipSearch || !valueObject.value) {
+            if (
+                !isPropertySearchable(
+                    getParent(valueObject),
+                    valueObject.propertyInfo
+                ) ||
+                !valueObject.value
+            ) {
                 continue;
             }
 
@@ -624,7 +645,12 @@ export function* searchForAllReferences(
 
         let valueObject = visitResult.value;
         if (valueObject) {
-            if (!valueObject.propertyInfo.skipSearch) {
+            if (
+                isPropertySearchable(
+                    getParent(valueObject),
+                    valueObject.propertyInfo
+                )
+            ) {
                 if (valueObject.value) {
                     if (
                         valueObject.propertyInfo.type ===

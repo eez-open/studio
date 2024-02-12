@@ -738,7 +738,7 @@ export class ScpiCommand extends EezObject {
                 name: "response",
                 type: PropertyType.Object,
                 typeClass: ScpiResponse,
-                hideInPropertyGrid: (command: ScpiCommand) => {
+                disabled: (command: ScpiCommand) => {
                     return !command.isQuery;
                 },
                 defaultValue: {}
@@ -747,7 +747,7 @@ export class ScpiCommand extends EezObject {
                 name: "sendsBackDataBlock",
                 displayName: "This command sends back data block",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: (command: ScpiCommand) => {
+                disabled: (command: ScpiCommand) => {
                     return command.isQuery;
                 },
                 defaultValue: false

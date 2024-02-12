@@ -458,7 +458,7 @@ class EventHandler extends EezObject {
                     { id: "action", label: "Action" }
                 ],
                 enumDisallowUndefined: true,
-                hideInPropertyGrid: eventHandler =>
+                disabled: eventHandler =>
                     !ProjectEditor.getProject(eventHandler).projectTypeTraits
                         .hasFlowSupport
             },
@@ -466,7 +466,7 @@ class EventHandler extends EezObject {
                 name: "action",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "actions",
-                hideInPropertyGrid: (eventHandler: EventHandler) => {
+                disabled: (eventHandler: EventHandler) => {
                     return eventHandler.handlerType != "action";
                 }
             }

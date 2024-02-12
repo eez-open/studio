@@ -225,7 +225,7 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
                 name: "screen",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "userPages",
-                hideInPropertyGrid: (action: LVGLChangeScreenActionType) =>
+                disabled: (action: LVGLChangeScreenActionType) =>
                     action.showPreviousScreen
             },
             {
@@ -777,9 +777,8 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                         }
                         return "Value";
                     },
-                    hideInPropertyGrid: (
-                        actionType: LVGLSetPropertyActionType
-                    ) => actionType.propertyInfo.type == "textarea"
+                    disabled: (actionType: LVGLSetPropertyActionType) =>
+                        actionType.propertyInfo.type == "textarea"
                 }
             ),
             {
@@ -801,14 +800,14 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
                             label: lvglWidget.identifier
                         }));
                 },
-                hideInPropertyGrid: (actionType: LVGLSetPropertyActionType) =>
+                disabled: (actionType: LVGLSetPropertyActionType) =>
                     actionType.propertyInfo.type != "textarea"
             },
             {
                 name: "animated",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                hideInPropertyGrid: (actionType: LVGLSetPropertyActionType) =>
+                disabled: (actionType: LVGLSetPropertyActionType) =>
                     !actionType.propertyInfo.animated
             }
         ],

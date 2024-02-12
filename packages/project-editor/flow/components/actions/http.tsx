@@ -104,7 +104,7 @@ registerActionComponents("Dashboard Specific", [
                 name: "body",
                 type: "expression",
                 valueType: "string",
-                enabled: (...props: string[]) =>
+                disabled: (...props: string[]) =>
                     !(
                         props[0] == "post" ||
                         props[0] == "put" ||

@@ -275,8 +275,8 @@ function anythingToBuild(projectStore: ProjectStore) {
     return (
         project.settings.build.files.length > 0 ||
         projectStore.masterProject ||
-        projectStore.projectTypeTraits.isDashboard ||
-        projectStore.projectTypeTraits.isLVGL
+        project.projectTypeTraits.isDashboard ||
+        project.projectTypeTraits.isLVGL
     );
 }
 

@@ -467,7 +467,7 @@ export class LVGLWidget extends Widget {
                 {
                     displayName: "Hidden",
                     propertyGridGroup: flagsGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                    disabled: (widget: LVGLWidget) =>
                         !flagEnabledInWidget(widget, "HIDDEN")
                 }
             ),
@@ -479,7 +479,7 @@ export class LVGLWidget extends Widget {
                 {
                     displayName: "Clickable",
                     propertyGridGroup: flagsGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                    disabled: (widget: LVGLWidget) =>
                         !flagEnabledInWidget(widget, "CLICKABLE")
                 }
             ),
@@ -560,7 +560,7 @@ export class LVGLWidget extends Widget {
                 {
                     displayName: "Checked",
                     propertyGridGroup: statesGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                    disabled: (widget: LVGLWidget) =>
                         !stateEnabledInWidget(widget, "CHECKED")
                 }
             ),
@@ -572,7 +572,7 @@ export class LVGLWidget extends Widget {
                 {
                     displayName: "Disabled",
                     propertyGridGroup: statesGroup,
-                    hideInPropertyGrid: (widget: LVGLWidget) =>
+                    disabled: (widget: LVGLWidget) =>
                         !stateEnabledInWidget(widget, "DISABLED")
                 }
             ),
@@ -2345,6 +2345,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridRowComponent: LVGLUserWidgetWidgetPropertyGridUI,
+                skipSearch: true,
                 hideInPropertyGrid: (widget: LVGLUserWidgetWidget) => {
                     if (!widget.userWidgetPageName) {
                         return true;
@@ -3064,7 +3065,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 ["literal", "expression"],
                 {
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (slider: LVGLSliderWidget) =>
+                    disabled: (slider: LVGLSliderWidget) =>
                         slider.mode != "RANGE"
                 }
             )
@@ -3693,8 +3694,7 @@ export class LVGLBarWidget extends LVGLWidget {
                 ["literal", "expression"],
                 {
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (bar: LVGLBarWidget) =>
-                        bar.mode != "RANGE"
+                    disabled: (bar: LVGLBarWidget) => bar.mode != "RANGE"
                 }
             )
         ],

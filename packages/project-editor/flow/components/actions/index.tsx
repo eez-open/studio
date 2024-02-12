@@ -1147,7 +1147,7 @@ export class CompareActionComponent extends ActionComponent {
                     displayName: "B",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (object: CompareActionComponent) => {
+                    disabled: (object: CompareActionComponent) => {
                         return object.operator == "NOT";
                     }
                 },
@@ -1159,7 +1159,7 @@ export class CompareActionComponent extends ActionComponent {
                     displayName: "C",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (object: CompareActionComponent) => {
+                    disabled: (object: CompareActionComponent) => {
                         return object.operator !== "BETWEEN";
                     }
                 },
@@ -1627,7 +1627,7 @@ export class SortArrayActionComponent extends ActionComponent {
                     }));
                 },
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (component: SortArrayActionComponent) => {
+                disabled: (component: SortArrayActionComponent) => {
                     if (!component.structureName) {
                         return true;
                     }
@@ -3015,9 +3015,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
                     name: "buttons",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (
-                        component: ShowMessageBoxActionComponent
-                    ) => component.messageType != MESSAGE_BOX_TYPE_QUESTION
+                    disabled: (component: ShowMessageBoxActionComponent) =>
+                        component.messageType != MESSAGE_BOX_TYPE_QUESTION
                 },
                 "array:string"
             )

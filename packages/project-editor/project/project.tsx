@@ -114,7 +114,7 @@ export class BuildConfiguration extends EezObject {
                         id: "portrait"
                     }
                 ],
-                hideInPropertyGrid: isNotV1Project
+                disabled: isNotV1Project
             }
         ],
         newItem: async (parent: IEezObject) => {
@@ -278,7 +278,7 @@ export class Build extends EezObject {
                 name: "lvglInclude",
                 displayName: "LVGL include",
                 type: PropertyType.String,
-                hideInPropertyGrid: isNotLVGLProject
+                disabled: isNotLVGLProject
             }
         ],
 
@@ -345,6 +345,7 @@ export class ImportDirective extends EezObject {
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridRowComponent: ImportDirectiveCustomUI,
+                skipSearch: true,
                 hideInPropertyGrid: (importObject: ImportDirective) =>
                     !importObject.project
             }
@@ -665,7 +666,7 @@ export class General extends EezObject {
                         return [{ id: "v1" }, { id: "v2" }, { id: "v3" }];
                     }
                 },
-                hideInPropertyGrid: (general: General) =>
+                disabled: (general: General) =>
                     general.projectType != ProjectType.UNDEFINED &&
                     general.projectType != ProjectType.RESOURCE &&
                     general.projectVersion == "v3"
@@ -674,8 +675,7 @@ export class General extends EezObject {
                 name: "scpiDocFolder",
                 displayName: "SCPI documentation folder",
                 type: PropertyType.RelativeFolder,
-                hideInPropertyGrid: (object: IEezObject) =>
-                    !getProject(object).scpi
+                disabled: (object: IEezObject) => !getProject(object).scpi
             },
             {
                 name: "masterProject",
@@ -684,7 +684,7 @@ export class General extends EezObject {
                     { name: "EEZ Project", extensions: ["eez-project"] },
                     { name: "All Files", extensions: ["*"] }
                 ],
-                hideInPropertyGrid: (general: General) => {
+                disabled: (general: General) => {
                     return !(
                         general.projectType == ProjectType.RESOURCE ||
                         general.projectType == ProjectType.APPLET
@@ -701,9 +701,8 @@ export class General extends EezObject {
                 enumerable: false,
                 formText:
                     "After adding an extension, you need to reload the project to see the changes. To reload the project select 'Reload Project' from the 'File' menu.",
-                hideInPropertyGrid: (general: General) =>
-                    ProjectEditor.getProjectStore(general).projectTypeTraits
-                        .isIEXT
+                disabled: (general: General) =>
+                    ProjectEditor.getProject(general).projectTypeTraits.isIEXT
             },
             {
                 name: "imports",
@@ -711,12 +710,12 @@ export class General extends EezObject {
                 typeClass: ImportDirective,
                 defaultValue: [],
                 arrayItemOrientation: "vertical",
-                hideInPropertyGrid: (general: General) => {
-                    const projectStore = getProjectStore(general);
+                disabled: (general: General) => {
+                    const project = getProject(general);
                     return (
-                        !!getProject(general).masterProject ||
-                        projectStore.projectTypeTraits.isApplet ||
-                        projectStore.projectTypeTraits.isIEXT
+                        !!project.masterProject ||
+                        project.projectTypeTraits.isApplet ||
+                        project.projectTypeTraits.isIEXT
                     );
                 }
             },
@@ -729,14 +728,14 @@ export class General extends EezObject {
             {
                 name: "displayWidth",
                 type: PropertyType.Number,
-                hideInPropertyGrid: (general: General) =>
+                disabled: (general: General) =>
                     !ProjectEditor.getProject(general).projectTypeTraits
                         .hasDisplaySizeProperty
             },
             {
                 name: "displayHeight",
                 type: PropertyType.Number,
-                hideInPropertyGrid: (general: General) =>
+                disabled: (general: General) =>
                     !ProjectEditor.getProject(general).projectTypeTraits
                         .hasDisplaySizeProperty
             },
@@ -747,16 +746,16 @@ export class General extends EezObject {
                     { id: "RGB", label: "RGB" },
                     { id: "BGR", label: "BGR" }
                 ],
-                hideInPropertyGrid: (general: General) => {
-                    const projectStore = getProjectStore(general);
-                    return !projectStore.projectTypeTraits.isFirmware;
+                disabled: (general: General) => {
+                    const project = getProject(general);
+                    return !project.projectTypeTraits.isFirmware;
                 }
             },
             {
                 name: "flowSupport",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                hideInPropertyGrid: (general: General) => {
+                disabled: (general: General) => {
                     return (
                         general.projectType != ProjectType.FIRMWARE &&
                         general.projectType != ProjectType.FIRMWARE_MODULE &&
@@ -767,13 +766,13 @@ export class General extends EezObject {
             {
                 name: "title",
                 type: PropertyType.String,
-                hideInPropertyGrid: isNotDashboardProject
+                disabled: isNotDashboardProject
             },
             {
                 name: "icon",
                 type: PropertyType.Image,
                 embeddedImage: true,
-                hideInPropertyGrid: isNotDashboardProject
+                disabled: isNotDashboardProject
             },
 
             {
@@ -813,7 +812,7 @@ export class General extends EezObject {
                 arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
-                hideInPropertyGrid: (general: General) =>
+                disabled: (general: General) =>
                     general.projectType == ProjectType.IEXT
             }
         ],

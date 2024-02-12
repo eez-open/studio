@@ -225,7 +225,7 @@ export interface IComponentOutput {
 export interface IComponentPropertyBase {
     name: string;
     displayName?: string;
-    enabled?: (...props: string[]) => boolean;
+    disabled?: (...props: string[]) => boolean;
     optional?: (...props: string[]) => boolean;
     formText?: string;
 }

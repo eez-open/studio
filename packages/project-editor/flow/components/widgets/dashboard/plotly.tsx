@@ -647,7 +647,7 @@ export class LineChartWidget extends Widget {
                     name: "xAxisRangeFrom",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                    disabled: (widget: LineChartWidget) =>
                         widget.xAxisRangeOption != "fixed"
                 },
                 "double"
@@ -657,7 +657,7 @@ export class LineChartWidget extends Widget {
                     name: "xAxisRangeTo",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                    disabled: (widget: LineChartWidget) =>
                         widget.xAxisRangeOption != "fixed"
                 },
                 "double"
@@ -682,7 +682,7 @@ export class LineChartWidget extends Widget {
                     name: "yAxisRangeFrom",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                    disabled: (widget: LineChartWidget) =>
                         widget.yAxisRangeOption != "fixed"
                 },
                 "double"
@@ -692,7 +692,7 @@ export class LineChartWidget extends Widget {
                     name: "yAxisRangeTo",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: LineChartWidget) =>
+                    disabled: (widget: LineChartWidget) =>
                         widget.yAxisRangeOption != "fixed"
                 },
                 "double"

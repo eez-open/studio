@@ -119,7 +119,7 @@ export class Variable extends EezObject {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: (variable: Variable) =>
+                disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) || isLVGLProject(variable)
             },
             {
@@ -135,7 +135,7 @@ export class Variable extends EezObject {
             {
                 name: "native",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: (variable: Variable) =>
+                disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
                     !hasFlowSupport(variable) ||
                     !ProjectEditor.getProject(
@@ -152,7 +152,7 @@ export class Variable extends EezObject {
                 flowProperty: "input",
                 monospaceFont: true,
                 disableSpellcheck: true,
-                hideInPropertyGrid: object => {
+                disabled: object => {
                     const project = ProjectEditor.getProject(object);
                     return (
                         project.projectTypeTraits.isLVGL &&
@@ -163,7 +163,7 @@ export class Variable extends EezObject {
             {
                 name: "defaultValueList",
                 type: PropertyType.MultilineText,
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isLVGLProject(object) || hasFlowSupport(object),
                 monospaceFont: true,
                 disableSpellcheck: true
@@ -172,13 +172,13 @@ export class Variable extends EezObject {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
             },
             {
                 name: "persistent",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: (variable: Variable) =>
+                disabled: (variable: Variable) =>
                     isLVGLProject(variable) ||
                     !isGlobalVariable(variable) ||
                     variable.native ||
@@ -193,6 +193,7 @@ export class Variable extends EezObject {
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridRowComponent: RenderVariableStatusPropertyUI,
+                skipSearch: true,
                 hideInPropertyGrid: (variable: Variable) =>
                     isLVGLProject(variable) ||
                     !variable.persistent ||

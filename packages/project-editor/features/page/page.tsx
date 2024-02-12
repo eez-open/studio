@@ -233,7 +233,7 @@ export class Page extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "name",
@@ -282,7 +282,7 @@ export class Page extends Flow {
                 displayName: "Data context",
                 type: PropertyType.JSON,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "left",
@@ -308,21 +308,21 @@ export class Page extends Flow {
                 name: "scaleToFit",
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "style",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "allStyles",
                 propertyGridGroup: styleGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
             },
             {
@@ -343,7 +343,7 @@ export class Page extends Flow {
                 name: "closePageIfTouchedOutside",
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
             },
             {
@@ -355,7 +355,7 @@ export class Page extends Flow {
                 propertyGridCollapsable: true,
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false,
-                hideInPropertyGrid: isNotLVGLProject
+                disabled: isNotLVGLProject
             }
         ],
         label: (page: Page) => {

@@ -60,7 +60,7 @@ export class Action extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "name",
@@ -83,20 +83,20 @@ export class Action extends Flow {
                     }
                 ],
                 enumDisallowUndefined: true,
-                hideInPropertyGrid: (action: Action) => {
+                disabled: (action: Action) => {
                     return isNotV1Project(action) && !hasFlowSupport(action);
                 }
             },
             {
                 name: "implementation",
                 type: PropertyType.CPP,
-                hideInPropertyGrid: isNotV1Project
+                disabled: isNotV1Project
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
-                hideInPropertyGrid: object =>
+                disabled: object =>
                     isDashboardProject(object) ||
                     isLVGLProject(object) ||
                     isAppletProject(object)

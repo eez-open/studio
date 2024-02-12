@@ -1030,7 +1030,7 @@ export class Font extends EezObject {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "name",
@@ -1054,7 +1054,7 @@ export class Font extends EezObject {
                         label: "OpenType"
                     }
                 ],
-                hideInPropertyGrid: (font: Font) => isLVGLProject(font),
+                disabled: (font: Font) => isLVGLProject(font),
                 enumDisallowUndefined: true
             },
             {
@@ -1074,14 +1074,13 @@ export class Font extends EezObject {
                 enumItems: [{ id: 1 }, { id: 8 }],
                 defaultValue: 1,
                 readOnlyInPropertyGrid: true,
-                hideInPropertyGrid: isNotV1Project
+                disabled: isNotV1Project
             },
             {
                 name: "threshold",
                 type: PropertyType.Number,
                 defaultValue: 128,
-                hideInPropertyGrid: (font: Font) =>
-                    isLVGLProject(font) || font.bpp == 8
+                disabled: (font: Font) => isLVGLProject(font) || font.bpp == 8
             },
             {
                 name: "height",
@@ -1119,13 +1118,13 @@ export class Font extends EezObject {
                         id: "landscape"
                     }
                 ],
-                hideInPropertyGrid: isNotV1Project
+                disabled: isNotV1Project
             },
             {
                 name: "alwaysBuild",
                 displayName: "Always add to the generated code",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: isLVGLProject
+                disabled: isLVGLProject
             },
             {
                 name: "lvglGlyphs",
@@ -1137,30 +1136,33 @@ export class Font extends EezObject {
                 displayName: "Ranges",
                 type: PropertyType.String,
                 computed: true,
-                hideInPropertyGrid: object => !isLVGLProject(object)
+                disabled: object => !isLVGLProject(object)
             },
             {
                 name: "lvglSymbols",
                 displayName: "Symbols",
                 type: PropertyType.String,
                 computed: true,
-                hideInPropertyGrid: object => !isLVGLProject(object)
+                disabled: object => !isLVGLProject(object)
             },
             {
                 name: "lvglBinFile",
                 type: PropertyType.String,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                skipSearch: true
             },
             {
                 name: "lvglSourceFile",
                 type: PropertyType.String,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                skipSearch: true
             },
             {
                 name: "customUI",
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridRowComponent: ExportFontFilePropertyGridUI,
+                skipSearch: true,
                 hideInPropertyGrid: (font: Font) => {
                     return !font.embeddedFontFile;
                 }

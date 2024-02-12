@@ -180,7 +180,7 @@ export class EEZChartWidget extends Widget {
                     displayName: "Chart data",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType == "multi" ||
                         widget.chartType == "history-item"
                 },
@@ -192,7 +192,7 @@ export class EEZChartWidget extends Widget {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     formText: `"float", "double", "rigol-byte", "rigol-word", "csv"`,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "string"
@@ -202,7 +202,7 @@ export class EEZChartWidget extends Widget {
                     name: "samplingRate",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "integer"
@@ -212,7 +212,7 @@ export class EEZChartWidget extends Widget {
                     name: "unitName",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single",
                     formText: `"voltage", "current", "watt", "power", "time", "frequency", "joule"`
                 },
@@ -223,7 +223,7 @@ export class EEZChartWidget extends Widget {
                     name: "color",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "string"
@@ -233,7 +233,7 @@ export class EEZChartWidget extends Widget {
                     name: "label",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "string"
@@ -243,7 +243,7 @@ export class EEZChartWidget extends Widget {
                     name: "offset",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "string"
@@ -253,7 +253,7 @@ export class EEZChartWidget extends Widget {
                     name: "scale",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType !== "single"
                 },
                 "string"
@@ -268,7 +268,7 @@ export class EEZChartWidget extends Widget {
                 enumerable: false,
                 defaultValue: [],
                 hasExpressionProperties: true,
-                hideInPropertyGrid: (widget: EEZChartWidget) =>
+                disabled: (widget: EEZChartWidget) =>
                     widget.chartType !== "multi"
             },
             makeExpressionProperty(
@@ -277,7 +277,7 @@ export class EEZChartWidget extends Widget {
                     displayName: "History item ID",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (widget: EEZChartWidget) =>
+                    disabled: (widget: EEZChartWidget) =>
                         widget.chartType != "history-item"
                 },
                 "string"

@@ -99,7 +99,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "registerAddress",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command != "05" && component.command !== "06"
                 },
                 "integer"
@@ -109,7 +109,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "startingRegisterAddress",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command == "05" || component.command == "06"
                 },
                 "integer"
@@ -119,7 +119,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "quantityOfRegisters",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command == "05" ||
                         component.command == "06" ||
                         component.command == "15" ||
@@ -132,7 +132,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "coilValue",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command != "05"
                 },
                 "boolean"
@@ -142,7 +142,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "registerValue",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command != "06"
                 },
                 "integer"
@@ -152,7 +152,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "coilValues",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command != "15"
                 },
                 "array:boolean"
@@ -162,7 +162,7 @@ export class ModbusActionComponent extends ActionComponent {
                     name: "registerValues",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
-                    hideInPropertyGrid: (component: ModbusActionComponent) =>
+                    disabled: (component: ModbusActionComponent) =>
                         component.command != "16"
                 },
                 "array:integer"

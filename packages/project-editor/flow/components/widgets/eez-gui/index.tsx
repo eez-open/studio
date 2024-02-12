@@ -221,7 +221,7 @@ export class DisplayDataWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("refreshRate", {
-                hideInPropertyGrid: hasNotFlowSupport
+                disabled: hasNotFlowSupport
             })
         ],
 
@@ -458,19 +458,19 @@ export class TextWidget extends Widget {
             }),
             makeTextPropertyInfo("text", {
                 displayName: "Static text",
-                hideInPropertyGrid: isProjectWithFlowSupport
+                disabled: isProjectWithFlowSupport
             }),
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 defaultValue: false,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: isV3OrNewerProject
+                disabled: isV3OrNewerProject
             },
             makeStylePropertyInfo("style", "Default style"),
             Object.assign(
                 makeStylePropertyInfo("focusStyle", "Focused style"),
-                { hideInPropertyGrid: isNotV1Project },
+                { enabled: isNotV1Project },
                 {
                     isOptional: true
                 }
@@ -871,7 +871,7 @@ export class MultilineTextWidget extends Widget {
             }),
             makeTextPropertyInfo("text", {
                 displayName: "Static text",
-                hideInPropertyGrid: isProjectWithFlowSupport
+                disabled: isProjectWithFlowSupport
             }),
             {
                 name: "firstLineIndent",
@@ -1019,14 +1019,14 @@ export class RectangleWidget extends Widget {
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 defaultValue: false,
-                hideInPropertyGrid: isV3OrNewerProject
+                disabled: isV3OrNewerProject
             },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 defaultValue: false,
-                hideInPropertyGrid: isV3OrNewerProject
+                disabled: isV3OrNewerProject
             },
             makeStylePropertyInfo("style", "Default style")
         ],
@@ -1444,7 +1444,7 @@ export class ButtonWidget extends Widget {
                 }
             }),
             makeTextPropertyInfo("text", {
-                hideInPropertyGrid: isProjectWithFlowSupport
+                disabled: isProjectWithFlowSupport
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style"),
@@ -1755,7 +1755,7 @@ export class ButtonGroupWidget extends Widget {
                 }
             }),
             makeDataPropertyInfo("selectedButton", {
-                hideInPropertyGrid: (widget: ButtonGroupWidget) => {
+                disabled: (widget: ButtonGroupWidget) => {
                     const project = ProjectEditor.getProject(widget);
                     return !(
                         project.projectTypeTraits.hasFlowSupport &&
@@ -2018,13 +2018,13 @@ export class BarGraphWidget extends Widget {
             makeDataPropertyInfo("line1Data", { displayName: "Threshold1" }),
             makeDataPropertyInfo("line2Data", { displayName: "Threshold2" }),
             makeDataPropertyInfo("min", {
-                hideInPropertyGrid: hasNotFlowSupport
+                disabled: hasNotFlowSupport
             }),
             makeDataPropertyInfo("max", {
-                hideInPropertyGrid: hasNotFlowSupport
+                disabled: hasNotFlowSupport
             }),
             makeDataPropertyInfo("refreshRate", {
-                hideInPropertyGrid: hasNotFlowSupport
+                disabled: hasNotFlowSupport
             }),
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("textStyle"),
@@ -2480,10 +2480,10 @@ export class UpDownWidget extends Widget {
             makeTextPropertyInfo("downButtonText"),
             makeTextPropertyInfo("upButtonText"),
             makeDataPropertyInfo("min", {
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             }),
             makeDataPropertyInfo("max", {
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             }),
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("buttonsStyle")
@@ -2822,10 +2822,10 @@ export class ProgressWidget extends Widget {
         properties: [
             makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("min", {
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             }),
             makeDataPropertyInfo("max", {
-                hideInPropertyGrid: isNotProjectWithFlowSupport
+                disabled: isNotProjectWithFlowSupport
             }),
             {
                 name: "orientation",
@@ -3545,7 +3545,7 @@ export class LineChartEmbeddedWidget extends Widget {
             makeDataPropertyInfo(
                 "yAxisRangeFrom",
                 {
-                    hideInPropertyGrid: (widget: LineChartEmbeddedWidget) =>
+                    disabled: (widget: LineChartEmbeddedWidget) =>
                         widget.yAxisRangeOption != "fixed"
                 },
                 "double"
@@ -3553,7 +3553,7 @@ export class LineChartEmbeddedWidget extends Widget {
             makeDataPropertyInfo(
                 "yAxisRangeTo",
                 {
-                    hideInPropertyGrid: (widget: LineChartEmbeddedWidget) =>
+                    disabled: (widget: LineChartEmbeddedWidget) =>
                         widget.yAxisRangeOption != "fixed"
                 },
                 "double"
@@ -4953,18 +4953,18 @@ export class InputEmbeddedWidget extends Widget {
             },
             {
                 ...makeDataPropertyInfo("precision"),
-                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "number"
             },
             {
                 ...makeDataPropertyInfo("unit"),
-                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "number"
             },
             {
                 name: "password",
                 type: PropertyType.Boolean,
-                hideInPropertyGrid: (widget: InputEmbeddedWidget) =>
+                disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "text",
                 propertyGridGroup: specificGroup
             },

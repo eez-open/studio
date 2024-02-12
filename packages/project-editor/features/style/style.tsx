@@ -228,7 +228,7 @@ const idProperty: PropertyInfo = {
     isOptional: true,
     unique: true,
     inheritable: false,
-    hideInPropertyGrid: style =>
+    disabled: style =>
         isWidgetParentOfStyle(style) || isDashboardProject(style),
     defaultValue: undefined
 };
@@ -268,13 +268,13 @@ const nameProperty: PropertyInfo = {
 
         return styleNameUnique(parent, oldIdentifier);
     },
-    hideInPropertyGrid: isWidgetParentOfStyle
+    disabled: isWidgetParentOfStyle
 };
 
 const descriptionProperty: PropertyInfo = {
     name: "description",
     type: PropertyType.MultilineText,
-    hideInPropertyGrid: isWidgetParentOfStyle
+    disabled: isWidgetParentOfStyle
 };
 
 const useStyleProperty: PropertyInfo = {
@@ -433,7 +433,7 @@ export const conditionalStylesProperty: PropertyInfo = {
     partOfNavigation: false,
     enumerable: false,
     defaultValue: [],
-    hideInPropertyGrid: (object: IEezObject, propertyInfo: PropertyInfo) => {
+    disabled: (object: IEezObject, propertyInfo: PropertyInfo) => {
         if (isNotDashboardProject(object)) {
             return true;
         }
@@ -452,7 +452,7 @@ const fontProperty: PropertyInfo = {
     referencedObjectCollectionPath: "fonts",
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isDashboardProject
+    disabled: isDashboardProject
 };
 
 const fontFamilyProperty: PropertyInfo = {
@@ -460,7 +460,7 @@ const fontFamilyProperty: PropertyInfo = {
     type: PropertyType.String,
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     cssAttributeName: "font-family",
     propertyMenu
 };
@@ -470,7 +470,7 @@ const fontSizeProperty: PropertyInfo = {
     type: PropertyType.String,
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     cssAttributeName: "font-size",
     propertyMenu
 };
@@ -521,7 +521,7 @@ const fontWeightProperty: PropertyInfo = {
     ],
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     cssAttributeName: "font-weight",
     propertyMenu
 };
@@ -542,7 +542,7 @@ const fontStyleProperty: PropertyInfo = {
     ],
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     cssAttributeName: "font-style",
     propertyMenu
 };
@@ -602,7 +602,7 @@ const directionProperty: PropertyInfo = {
     ],
     defaultValue: undefined,
     inheritable: true,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     cssAttributeName: "direction",
     propertyMenu
 };
@@ -643,7 +643,7 @@ const activeColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
-    hideInPropertyGrid: isV1Project
+    disabled: isV1Project
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
@@ -653,7 +653,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    hideInPropertyGrid: isV1Project,
+    disabled: isV1Project,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu
 };
@@ -666,7 +666,7 @@ const focusColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
-    hideInPropertyGrid: isV1Project
+    disabled: isV1Project
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
@@ -678,7 +678,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu,
-    hideInPropertyGrid: isV1Project
+    disabled: isV1Project
 };
 
 const borderSizeProperty: PropertyInfo = {
@@ -748,7 +748,7 @@ const borderStyleProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "border-style",
     propertyMenu,
-    hideInPropertyGrid: isNotDashboardProject
+    disabled: isNotDashboardProject
 };
 
 const paddingProperty: PropertyInfo = {
@@ -765,7 +765,7 @@ const marginProperty: PropertyInfo = {
     type: PropertyType.String,
     defaultValue: "0",
     inheritable: true,
-    hideInPropertyGrid: isV3OrNewerProject
+    disabled: isV3OrNewerProject
 };
 
 const opacityProperty: PropertyInfo = {
@@ -784,7 +784,7 @@ const boxShadowProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "box-shadow",
     propertyMenu,
-    hideInPropertyGrid: isNotDashboardProject
+    disabled: isNotDashboardProject
 };
 
 const blinkProperty: PropertyInfo = {
@@ -803,7 +803,7 @@ const cssProperty: PropertyInfo = {
     cssAttributeName: "css",
     nonInheritable: true,
     propertyMenu,
-    hideInPropertyGrid: isNotDashboardProject
+    disabled: isNotDashboardProject
 };
 
 const cssPreviewProperty: PropertyInfo = {
@@ -811,7 +811,7 @@ const cssPreviewProperty: PropertyInfo = {
     displayName: "CSS preview",
     propertyNameAbove: true,
     type: PropertyType.CSS,
-    hideInPropertyGrid: isNotDashboardProject,
+    disabled: isNotDashboardProject,
     readOnlyInPropertyGrid: true,
     computed: true
 };
@@ -822,7 +822,7 @@ const alwaysBuildProperty: PropertyInfo = {
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: false,
-    hideInPropertyGrid: (style: Style) =>
+    disabled: (style: Style) =>
         isWidgetParentOfStyle(style) || isDashboardProject(style)
 };
 

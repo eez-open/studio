@@ -144,7 +144,7 @@ export class ContainerWidget extends Widget {
                 hideInDocumentation: "all"
             }),
             makeDataPropertyInfo("overlay", {
-                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                disabled: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);
                     return (
                         project.projectTypeTraits.hasFlowSupport ||
@@ -156,7 +156,7 @@ export class ContainerWidget extends Widget {
                 name: "shadow",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (containerWidget: ContainerWidget) => {
+                disabled: (containerWidget: ContainerWidget) => {
                     return !containerWidget.overlay;
                 }
             },
@@ -1250,6 +1250,7 @@ export class UserWidgetWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 computed: true,
                 propertyGridRowComponent: UserWidgetPropertyGridUI,
+                skipSearch: true,
                 hideInPropertyGrid: (widget: UserWidgetWidget) => {
                     if (!widget.userWidgetPageName) {
                         return true;
