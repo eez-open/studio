@@ -264,10 +264,87 @@ export class ModbusActionComponent extends ActionComponent {
 
             if (command == 1) {
                 // 01 (0x01) Read Coils
-                context.throwError("Not implemented");
+                const startingRegisterAddress = context.evalProperty(
+                    "startingRegisterAddress"
+                );
+                if (typeof startingRegisterAddress != "number") {
+                    context.throwError(`invalid Starting register address`);
+                    return;
+                }
+
+                const quantityOfRegisters = context.evalProperty(
+                    "quantityOfRegisters"
+                );
+                if (typeof quantityOfRegisters != "number") {
+                    context.throwError(`invalid Quantity of registers`);
+                    return;
+                }
+
+                context.startAsyncExecution();
+
+                modbusClient
+                    .readCoils(startingRegisterAddress, quantityOfRegisters)
+                    .then(
+                        resp => {
+                            context.propagateValue(
+                                "values",
+                                resp.response.body.values
+                            );
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+
+                            // optimization: run main loop as soon as possible
+                            context.WasmFlowRuntime._mainLoop();
+                        },
+                        error => {
+                            console.warn(error);
+                            context.throwError(error.message);
+                            context.endAsyncExecution();
+                        }
+                    );
             } else if (command == 2) {
                 // 02 (0x02) Read Discrete Inputs
-                context.throwError("Not implemented");
+                const startingRegisterAddress = context.evalProperty(
+                    "startingRegisterAddress"
+                );
+                if (typeof startingRegisterAddress != "number") {
+                    context.throwError(`invalid Starting register address`);
+                    return;
+                }
+
+                const quantityOfRegisters = context.evalProperty(
+                    "quantityOfRegisters"
+                );
+                if (typeof quantityOfRegisters != "number") {
+                    context.throwError(`invalid Quantity of registers`);
+                    return;
+                }
+
+                context.startAsyncExecution();
+
+                modbusClient
+                    .readDiscreteInputs(
+                        startingRegisterAddress,
+                        quantityOfRegisters
+                    )
+                    .then(
+                        resp => {
+                            context.propagateValue(
+                                "values",
+                                resp.response.body.discrete
+                            );
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+
+                            // optimization: run main loop as soon as possible
+                            context.WasmFlowRuntime._mainLoop();
+                        },
+                        error => {
+                            console.warn(error);
+                            context.throwError(error.message);
+                            context.endAsyncExecution();
+                        }
+                    );
             } else if (command == 3) {
                 // 03 (0x03) Read Holding Registers
                 const startingRegisterAddress = context.evalProperty(
@@ -313,10 +390,74 @@ export class ModbusActionComponent extends ActionComponent {
                     );
             } else if (command == 4) {
                 // 04 (0x04) Read Input Registers
-                context.throwError("Not implemented");
+                const startingRegisterAddress = context.evalProperty(
+                    "startingRegisterAddress"
+                );
+                if (typeof startingRegisterAddress != "number") {
+                    context.throwError(`invalid Starting register address`);
+                    return;
+                }
+
+                const quantityOfRegisters = context.evalProperty(
+                    "quantityOfRegisters"
+                );
+                if (typeof quantityOfRegisters != "number") {
+                    context.throwError(`invalid Quantity of registers`);
+                    return;
+                }
+
+                context.startAsyncExecution();
+
+                modbusClient
+                    .readInputRegisters(
+                        startingRegisterAddress,
+                        quantityOfRegisters
+                    )
+                    .then(
+                        resp => {
+                            context.propagateValue(
+                                "values",
+                                resp.response.body.values
+                            );
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+
+                            // optimization: run main loop as soon as possible
+                            context.WasmFlowRuntime._mainLoop();
+                        },
+                        error => {
+                            console.warn(error);
+                            context.throwError(error.message);
+                            context.endAsyncExecution();
+                        }
+                    );
             } else if (command == 5) {
                 // 05 (0x05) Write Single Coil
-                context.throwError("Not implemented");
+                const registerAddress = context.evalProperty("registerAddress");
+                if (typeof registerAddress != "number") {
+                    context.throwError(`invalid Register address`);
+                    return;
+                }
+
+                const coilValue = context.evalProperty("coilValue");
+                if (typeof coilValue != "boolean") {
+                    context.throwError(`invalid Coil value`);
+                    return;
+                }
+
+                context.startAsyncExecution();
+
+                modbusClient.writeSingleCoil(registerAddress, coilValue).then(
+                    resp => {
+                        context.propagateValueThroughSeqout();
+                        context.endAsyncExecution();
+                    },
+                    error => {
+                        console.warn(error);
+                        context.throwError(error.message);
+                        context.endAsyncExecution();
+                    }
+                );
             } else if (command == 6) {
                 // 06 (0x06) Write Single Register
                 const registerAddress = context.evalProperty("registerAddress");
@@ -348,7 +489,35 @@ export class ModbusActionComponent extends ActionComponent {
                     );
             } else if (command == 15) {
                 // 15 (0x0F) Write Multiple Coils
-                context.throwError("Not implemented");
+                const startingRegisterAddress = context.evalProperty(
+                    "startingRegisterAddress"
+                );
+                if (typeof startingRegisterAddress != "number") {
+                    context.throwError(`invalid Starting register address`);
+                    return;
+                }
+
+                const coilValues = context.evalProperty("coilValues");
+                if (!isArray(coilValues)) {
+                    context.throwError(`invalid Coil values`);
+                    return;
+                }
+
+                context.startAsyncExecution();
+
+                modbusClient
+                    .writeMultipleCoils(startingRegisterAddress, coilValues)
+                    .then(
+                        resp => {
+                            context.propagateValueThroughSeqout();
+                            context.endAsyncExecution();
+                        },
+                        error => {
+                            console.warn(error);
+                            context.throwError(error.message);
+                            context.endAsyncExecution();
+                        }
+                    );
             } else if (command == 16) {
                 // 16 (0x10) Write Multiple Registers
                 const startingRegisterAddress = context.evalProperty(
