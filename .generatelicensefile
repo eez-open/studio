@@ -1,0 +1,23 @@
+{
+    "inputs": [
+        "./package.json",
+        "./libs/package.json"
+    ],
+    "output": "./THIRD-PARTY-LICENSES.TXT",
+    "lineEnding": "lf",
+    "replace": {
+        "atob@2.1.2": "./node_modules/atob/license",
+        "rc@1.2.8": "./node_modules/rc/LICENSE.MIT",
+        "through@2.3.8": "./node_modules/rc/LICENSE.MIT"
+    },
+    "append": [
+        "./libs/licenses/brace@0.11.1.txt",
+        "./libs/licenses/Free FFT and convolution.txt",
+        "./libs/licenses/lv_drivers.txt",
+        "./libs/licenses/LVGL.txt",
+        "./libs/licenses/pdfjs.txt",
+        "./libs/licenses/QR Code generator library.txt",
+        "./libs/licenses/trix.txt",
+        "./libs/licenses/yarn@1.22.10.txt"
+    ]
+}

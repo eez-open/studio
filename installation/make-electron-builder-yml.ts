@@ -184,6 +184,7 @@ let files = [
     "icon.icns",
     "icon.ico",
     "LICENSE.TXT",
+    "THIRD-PARTY-LICENSES.TXT",
     "node_modules/**",
     "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
     "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
@@ -231,6 +232,17 @@ files.push(
         buildDependenciesFromSource: true,
 
         files,
+
+        extraFiles: [
+            {
+                from: "./LICENSE.txt",
+                to: "."
+            },
+            {
+                from: "./THIRD-PARTY-LICENSES.TXT",
+                to: "."
+            }
+        ],
 
         extraResources: await getExtraResource(),
 

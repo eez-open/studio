@@ -38,7 +38,8 @@
         "publish-types": "cd packages/eez-studio-types && npm publish",
         "pubdoc-dev": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/dev.json",
         "pubdoc-prod": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/prod.json",
-        "npm-module-publish": "node npm-module-publish.js"
+        "npm-module-publish": "node npm-module-publish.js",
+        "generate-license-file": "npx generate-license-file"
     },
     "prettier": {
         "printWidth": 80,
@@ -100,7 +101,8 @@
         "request-promise-native": "^1.0.8",
         "run-script-os": "^1.1.6",
         "typescript": "^5.3.3",
-        "wpapi": "^1.2.2"
+        "wpapi": "^1.2.2",
+        "animate.css": "3.5.2"
     },
     "dependencies": {
         "@electron/remote": "^2.1.1",
