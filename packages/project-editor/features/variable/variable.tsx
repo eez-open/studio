@@ -71,8 +71,8 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function isGlobalVariable(variable: Variable) {
-    return !ProjectEditor.getFlow(variable);
+function isGlobalVariable(object: IEezObject) {
+    return !ProjectEditor.getFlow(object);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,6 +228,18 @@ export class Variable extends EezObject {
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);
 
+            function isNativeFlagEnabled(values: any) {
+                return (
+                    isGlobalVariable(parent) &&
+                    hasFlowSupport(parent) &&
+                    ProjectEditor.getProject(
+                        parent
+                    ).projectTypeTraits.isVariableTypeSupportedAsNative(
+                        values.type
+                    )
+                );
+            }
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: ProjectEditor.getFlow(parent)
@@ -255,6 +267,11 @@ export class Variable extends EezObject {
                             visible: () =>
                                 !project.projectTypeTraits.isLVGL ||
                                 project.projectTypeTraits.hasFlowSupport
+                        },
+                        {
+                            name: "native",
+                            type: "boolean",
+                            visible: isNativeFlagEnabled
                         }
                     ]
                 },
@@ -270,7 +287,10 @@ export class Variable extends EezObject {
                 name: result.values.name,
                 type: result.values.type,
                 defaultValue: result.values.defaultValue,
-                persistent
+                persistent,
+                native: isNativeFlagEnabled(result.values)
+                    ? result.values.native
+                    : false
             };
 
             const variable = createObject<Variable>(
