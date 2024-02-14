@@ -671,6 +671,14 @@ class WizardModel {
                 description: "Start your new LVGL project development here."
             },
             {
+                id: "LVGL with EEZ Flow",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
+                image: LVGL_PROJECT_ICON(128),
+                projectName: "LVGL with EEZ Flow",
+                description:
+                    "Start your new LVGL with EEZ Flow project development here."
+            },
+            {
                 id: "IEXT",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.IEXT],
                 image: IEXT_PROJECT_ICON(128),
