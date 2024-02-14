@@ -9,6 +9,7 @@ packages/**/*.js.map
 packages/eez-studio-ui/_stylesheets/main.css
 
 electron-builder.yml
+electron-builder-mac.yml
 
 installation/make-electron-builder-yml.js
 installation/extra-resources

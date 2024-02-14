@@ -235,13 +235,13 @@ files.push(
 );
 
 (async function () {
-    const config = {
+    const config: any = {
         appId: "hr.envox.eez.studio",
         copyright: "Copyright © 2022 Envox d.o.o.",
         productName,
 
         nodeGypRebuild: false,
-        npmRebuild: true,
+        npmRebuild: false,
         buildDependenciesFromSource: true,
 
         files,
@@ -338,10 +338,15 @@ files.push(
             description:
                 "EEZ Studio is a free and open source cross-platform low-code tool for embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple T&M equipment.",
             mimeTypes: ["application/x-eez-project"]
-        },
-        afterSign: "installation/notarize.js"
+        }
     };
 
-    const configYAML = YAML.stringify(config);
+    let configYAML = YAML.stringify(config);
     fs.writeFileSync("electron-builder.yml", configYAML);
+
+    config.npmRebuild = true;
+    config.afterSign = "installation/notarize.js";
+
+    configYAML = YAML.stringify(config);
+    fs.writeFileSync("electron-builder-mac.yml", configYAML);
 })();
