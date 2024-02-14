@@ -172,7 +172,20 @@ async function getExtraResource() {
             to: "project-templates/" + file
         }));
 
-    return [...extraResources, ...projectTemplates];
+    return [
+        ...extraResources,
+        ...projectTemplates,
+        ...[
+            {
+                from: "./LICENSE.txt",
+                to: "."
+            },
+            {
+                from: "./THIRD-PARTY-LICENSES.TXT",
+                to: "."
+            }
+        ]
+    ];
 }
 
 const productName = "EEZ Studio";
@@ -213,8 +226,8 @@ let files = [
     "node_modules/mapbox-gl/dist/mapbox-gl.js",
     "!node_modules/xterm/src/**",
     "!node_modules/koffi/src",
-    "!node_modules/koffi/doc",
-    "!node_modules/koffi/build/koffi/**"
+    "!node_modules/koffi/doc"
+    //"!node_modules/koffi/build/koffi/**"
 ];
 
 files.push(
@@ -228,21 +241,10 @@ files.push(
         productName,
 
         nodeGypRebuild: false,
-        npmRebuild: false,
+        npmRebuild: true,
         buildDependenciesFromSource: true,
 
         files,
-
-        extraFiles: [
-            {
-                from: "./LICENSE.txt",
-                to: "."
-            },
-            {
-                from: "./THIRD-PARTY-LICENSES.TXT",
-                to: "."
-            }
-        ],
 
         extraResources: await getExtraResource(),
 
@@ -265,21 +267,25 @@ files.push(
             target: [
                 {
                     target: "dmg",
-                    arch: ["x64"]
+                    arch: ["x64", "arm64"]
                 },
                 {
                     target: "pkg",
-                    arch: ["x64"]
+                    arch: ["x64", "arm64"]
                 },
                 {
                     target: "zip",
-                    arch: ["x64"]
+                    arch: ["x64", "arm64"]
                 }
             ],
             category: "public.app-category.utilities",
             bundleVersion: packageJson.version,
             icon: "./icon.icns",
-            type: "distribution"
+            type: "distribution",
+            hardenedRuntime: true,
+            gatekeeperAssess: false,
+            entitlements: "entitlements.mac.plist",
+            entitlementsInherit: "entitlements.mac.plist"
         },
 
         dmg: {
@@ -332,7 +338,8 @@ files.push(
             description:
                 "EEZ Studio is a free and open source cross-platform low-code tool for embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple T&M equipment.",
             mimeTypes: ["application/x-eez-project"]
-        }
+        },
+        afterSign: "installation/notarize.js"
     };
 
     const configYAML = YAML.stringify(config);

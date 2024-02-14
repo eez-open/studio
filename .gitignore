@@ -49,3 +49,5 @@ npm-module/libs
 npm-module/resources
 
 tools/pubdoc/build
+
+.env
