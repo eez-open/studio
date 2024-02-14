@@ -138,10 +138,22 @@ Start with:
 npm start
 ```
 
-Create distribution packages (except Raspbian):
+Create distribution packages (except Mac and Raspbian):
 
 ```
 npm run dist
+```
+
+On Mac:
+
+```
+npm run dist-mac-arm64
+```
+
+or
+
+```
+npm run dist-mac-x64
 ```
 
 On Raspbian:
