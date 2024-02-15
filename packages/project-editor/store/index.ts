@@ -509,7 +509,9 @@ export class ProjectStore {
 
         ipcRenderer.send("setMruFilePath", {
             filePath: this.filePath,
-            projectType: this.project?.settings?.general?.projectType
+            projectType: this.project?.settings?.general?.projectType,
+            hasFlowSupport:
+                this.project?.projectTypeTraits.hasFlowSupport ?? false
         });
     }
 

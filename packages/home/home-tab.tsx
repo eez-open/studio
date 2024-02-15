@@ -907,7 +907,8 @@ const Projects = observer(
                                                 leftIcon={getProjectIcon(
                                                     mruItem.filePath,
                                                     mruItem.projectType,
-                                                    48
+                                                    48,
+                                                    mruItem.hasFlowSupport
                                                 )}
                                                 leftIconSize={48}
                                                 label={

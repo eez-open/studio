@@ -43,6 +43,7 @@ import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
     LVGL_PROJECT_ICON,
+    LVGL_WITH_FLOW_PROJECT_ICON,
     MICROPYTHON_ICON,
     APPLET_ICON,
     IEXT_PROJECT_ICON
@@ -673,7 +674,7 @@ class WizardModel {
             {
                 id: "LVGL with EEZ Flow",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
-                image: LVGL_PROJECT_ICON(128),
+                image: LVGL_WITH_FLOW_PROJECT_ICON(128),
                 projectName: "LVGL with EEZ Flow",
                 description:
                     "Start your new LVGL with EEZ Flow project development here."

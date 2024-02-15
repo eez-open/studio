@@ -3,6 +3,7 @@ import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
     LVGL_PROJECT_ICON,
+    LVGL_WITH_FLOW_PROJECT_ICON,
     MICROPYTHON_ICON,
     APPLET_ICON,
     IEXT_PROJECT_ICON
@@ -11,14 +12,17 @@ import {
 export function getProjectIcon(
     filePath: string,
     projectType: string,
-    size: number
+    size: number,
+    hasFlowSupport: boolean
 ) {
     if (projectType == ProjectType.IEXT) {
         return IEXT_PROJECT_ICON(size);
     }
 
     if (projectType == ProjectType.LVGL) {
-        return LVGL_PROJECT_ICON(size);
+        return hasFlowSupport
+            ? LVGL_WITH_FLOW_PROJECT_ICON(size)
+            : LVGL_PROJECT_ICON(size);
     }
 
     const isProject = filePath.endsWith(".eez-project");

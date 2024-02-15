@@ -26,6 +26,7 @@ interface WindowState {
 export interface IMruItem {
     filePath: string;
     projectType: string;
+    hasFlowSupport: boolean;
 }
 
 class Settings {

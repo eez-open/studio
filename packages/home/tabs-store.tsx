@@ -778,7 +778,8 @@ export class ProjectEditorTab implements IHomeTab {
             return getProjectIcon(
                 this.filePath,
                 this.projectStore.project.settings.general.projectType,
-                24
+                24,
+                this.projectStore.projectTypeTraits.hasFlowSupport
             );
         }
 
@@ -794,7 +795,12 @@ export class ProjectEditorTab implements IHomeTab {
                 );
                 const json = JSON.parse(jsonStr);
                 const projectType = json.settings.general.projectType;
-                const icon = getProjectIcon(this.filePath, projectType, 24);
+                const icon = getProjectIcon(
+                    this.filePath,
+                    projectType,
+                    24,
+                    this.projectStore?.projectTypeTraits.hasFlowSupport ?? false
+                );
                 runInAction(() => (this._icon = icon));
             })();
         }
