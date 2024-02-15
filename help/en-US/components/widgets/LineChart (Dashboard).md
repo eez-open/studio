@@ -38,9 +38,44 @@ Defines one or more lines on the Y-axis. The following must be specified for eac
 
 Name of the chart.
 
+## Display mode bar
+
+When the mode bar with buttons will be displayed in the top right corner of the chart, possible options are: `Hover`, `Always` and `Never`.
+
 ## Show legend
 
-It should be set if we want to render the legend.
+It should be set if we want to display the legend.
+
+## Show xaxis
+
+It should be set if we want to display the X-axis.
+
+## Show yaxis
+
+It should be set if we want to display the Y-axis.
+
+## Show grid
+
+It should be set if we want to display the grid.
+
+## Show zero lines
+
+It should be set if we want to display zero lines.
+
+## X axis range option
+
+Here we have two options:
+
+-   `Floating` – X-axis range will be automatically selected based on the X value at all points.
+-   `Fixed` – X-axis range is set via `X axis range from` and `X axis range to` items.
+
+## X axis range from
+
+If `Fixed` is selected for `X axis range option`, then the lower limit of the X-axis range is set with this item.
+
+## X axis range to
+
+If `Fixed` is selected for `X axis range option`, then the upper limit of the X-axis range is set with this item.
 
 ## Y axis range option
 
@@ -64,6 +99,14 @@ The maximum number of points that will be displayed.
 ## Margin
 
 Manually selected margin values between the Widget borders and the chart itself within the Widget. It is necessary to leave an empty space for Title (displayed above the chart, so the appropriate `Top` margin should be selected), X-axis (displayed below the chart, `Bottom` margin), Y-axis (displayed to the left of the chart, `Left` margin) and Legend (displayed to the right of the chart, `Right` margin).
+
+## Marker
+
+At this position, a vertical line will be displayed inside the chart using `Marker` style.
+
+## Marker style
+
+Style used to render the marker.
 
 # INPUTS
 

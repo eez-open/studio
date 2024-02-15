@@ -23,6 +23,18 @@ The minimum value that can be selected.
 
 The maximum value that can be selected.
 
+## Step
+
+The step is a number that specifies the granularity that the value must adhere to.
+
+## View min
+
+The minimum value that is displayed.
+
+## View max
+
+The maximum value that is displayed.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

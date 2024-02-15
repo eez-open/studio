@@ -594,6 +594,7 @@ export class LineChartWidget extends Widget {
             },
             {
                 name: "displayModebar",
+                displayName: "Display mode bar",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "hover", label: "Hover" },
@@ -721,7 +722,7 @@ export class LineChartWidget extends Widget {
                 "float"
             ),
             makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("markerStyle", "Marker")
+            makeStylePropertyInfo("markerStyle", "Marker style")
         ],
 
         beforeLoadHook: (object: LineChartWidget, jsObject: any) => {

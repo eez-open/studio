@@ -8,6 +8,10 @@ Displays the system file save dialog and sends the set file path to the `file_pa
 
 The file name to be used by default.
 
+## Filters [DRAFT]
+
+Ako se želi ograničiti koji vrste fajlova se pojavljuju unutar file save dialoga onda se može zadati lista filtera kao `array:string`, npr. `["PNG Images|png", "JPG Images|jpg", "GIF Images|gif"]`. Ovo je opcionalni property i ako se ne zada onda će se prikazati svi fajlovi.
+
 # INPUTS
 
 ## seqin
@@ -26,4 +30,4 @@ Output to which the set file path is sent.
 
 # EXAMPLES
 
-- _Screen Capture_
+-   _Screen Capture_

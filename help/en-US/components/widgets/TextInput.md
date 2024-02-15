@@ -12,6 +12,10 @@ The variable in which the entered text will be stored.
 
 Style used when rendering of the Widget.
 
+## Read only
+
+Set to `true` if you want for this Widget to be read only, i.e. disabled for user input.
+
 ## Placehoder
 
 The text that is displayed at the beginning when nothing has been entered yet.
@@ -26,4 +30,4 @@ If password is entered, then this property should be enabled so that `*` is disp
 
 # EXAMPLES
 
-* _Dashboard Widgets Demo_
+-   _Dashboard Widgets Demo_

@@ -693,7 +693,8 @@ export class NumberInputDashboardWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
             }),
 
             makeExpressionProperty(
