@@ -90,6 +90,18 @@
                         "sha256": "94c78283c7fdc1913ca8d028ce3bea26bd4d87aa189ea8f3a15919d94de2ee9d"
                     },
                     {
+                        "content": "Label IN.html",
+                        "status": "publish",
+                        "id": 12569,
+                        "sha256": "99260252b2dbd51eaef80691999459742a26e1694795e9cafa461618dbb1ef8c"
+                    },
+                    {
+                        "content": "Label OUT.html",
+                        "status": "publish",
+                        "id": 12570,
+                        "sha256": "32b58d978bb710f8ab04b0566bbe2b272944c3c6ace843b01b75ed63c452c1c2"
+                    },
+                    {
                         "content": "Counter.html",
                         "status": "publish",
                         "id": 10070,
@@ -156,6 +168,12 @@
                         "status": "publish",
                         "id": 10079,
                         "sha256": "c781b46ef669d1065d156866d99779a605bda23d8b501a49083da4c55722a958"
+                    },
+                    {
+                        "content": "ClipboardWrite.html",
+                        "status": "publish",
+                        "id": 12571,
+                        "sha256": "3b1e4861652dca3a2469c6522fc1294bc54bc598ebad8abf8bc740994e8f24f2"
                     },
                     {
                         "content": "OnEvent.html",
@@ -367,7 +385,7 @@
                         "content": "FileOpenDialog.html",
                         "status": "publish",
                         "id": 10109,
-                        "sha256": "58305941cac615f1e355be281dd8afb2c6f797065edd34bc1b60f6e685cb37e5"
+                        "sha256": "3cd0b97e58ba6f02e9fd4da948beb185a23641bf9a7a826df5be562af397aa75"
                     },
                     {
                         "content": "FileRead.html",
@@ -379,7 +397,7 @@
                         "content": "FileSaveDialog.html",
                         "status": "publish",
                         "id": 10111,
-                        "sha256": "65056c9cc50f26c6a5a459c6bbd7b6cb6669bdde80ce75ca554c73f20157b799"
+                        "sha256": "b864a373e0f6a300c0416484dc2c05a07d7e14cd99664ea8db72421e74fb1233"
                     },
                     {
                         "content": "FileWrite.html",
@@ -430,6 +448,12 @@
                         "status": "publish",
                         "id": 10118,
                         "sha256": "c76d8cc0fb9c0d0e12c409331ef353cd48ecdf43730e5d65a930f97d7a56cb68"
+                    },
+                    {
+                        "content": "Modbus.html",
+                        "status": "publish",
+                        "id": 12574,
+                        "sha256": "5c39dfd1cc1534e6b35f570c453502b8e952e80a6c4bb7d93c14be139f29789e"
                     },
                     {
                         "content": "SCPI.html",
@@ -742,6 +766,12 @@
                         "status": "publish",
                         "id": 12094,
                         "sha256": "5c70b04e6b5b20685d1a2d4bc1398325f9e3063b88b44f8351611f9dd25ad415"
+                    },
+                    {
+                        "content": "NumberInput.html",
+                        "status": "publish",
+                        "id": 12575,
+                        "sha256": "87ba0a6975862ad6ae8ebdf77805c867bfe73ffecedad3a6d6fb8cfb604bfa64"
                     },
                     {
                         "content": "Roller (EEZ-GUI).html",
