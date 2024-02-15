@@ -25,7 +25,7 @@ interface ICatalogVersion {
 }
 
 class ExamplesCatalog {
-    catalogAtStart: ExampleProject[] = [];
+    catalogAtStart: ExampleProject[];
 
     catalog: ExampleProject[] = [];
     catalogVersion: ICatalogVersion;
@@ -43,7 +43,9 @@ class ExamplesCatalog {
         try {
             const catalog = await this._loadCatalog();
             runInAction(() => {
-                this.catalogAtStart = catalog;
+                if (!this.catalogAtStart) {
+                    this.catalogAtStart = catalog;
+                }
                 this.catalog = catalog;
             });
         } catch (error) {

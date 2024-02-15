@@ -978,7 +978,7 @@ export class Tabs {
         this._homeSectionsVisibilityOption =
             (localStorage.getItem(
                 LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION
-            ) as HomeSectionVisibilityOption) ?? "both";
+            ) as HomeSectionVisibilityOption) ?? "projects";
 
         makeObservable(this, {
             tabs: observable,
@@ -1299,7 +1299,7 @@ export const LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION =
     "homeSectionVisibilityOption";
 
 export function onSetupSkip() {
-    tabs.homeSectionsVisibilityOption = "projects";
+    //tabs.homeSectionsVisibilityOption = "projects";
     runInAction(() => firstTime.set(false));
     tabs.openTabById("home", true);
 }
