@@ -27,7 +27,7 @@ EEZ Studio is a free and open source cross-platform low-code visual tool for des
 -   Generate C++ code for embedded GUI functionality that can be directly included in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for BB3 and other STM32 target platforms or [Arduino IDE](https://www.arduino.cc/en/software) for H24005 and other Arduino compatible target platforms
 -   _Instrument definition file_ (IDF) builder with context sensitive SCPI commands help (based on Keysight’s [Offline Command Expert command set](https://www.keysight.com/main/software.jspx?cc=US&lc=eng&ckey=2333687&nid=-11143.0.00&id=2333687) XML structure) suitable for EEZ Studio _Instrument_ and [Keysight Command Expert](https://www.keysight.com/en/pd-2036130/command-expert)
 -   SCPI command help generator based on bookmarked HTML generated directly from .odt file using [EEZ WebPublish](https://github.com/eez-open/WebPublish) extension for OpenOffice/LibreOffice.
--   [LVGL](https://lvgl.io/) (Light and Versatile Graphivs Library) support
+-   [LVGL](https://lvgl.io/) (Light and Versatile Graphics Library) support
 -   Project templates (using giteo.io repositories) and comparison of projects
 -   Drag&drop editor for creating instrument's desktop dashboard (for remote control and management)
 -   Flowchart based low-code programming for desktop dashboard
