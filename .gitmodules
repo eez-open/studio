@@ -4,6 +4,3 @@
 [submodule "packages/project-editor/flow/runtime/cpp/lvgl-runtime/lvgl"]
 	path = packages/project-editor/flow/runtime/cpp/lvgl-runtime/lvgl
 	url = https://github.com/littlevgl/lvgl.git
-[submodule "packages/project-editor/flow/runtime/cpp/lvgl-runtime/lv_drivers"]
-	path = packages/project-editor/flow/runtime/cpp/lvgl-runtime/lv_drivers
-	url = https://github.com/littlevgl/lv_drivers.git
