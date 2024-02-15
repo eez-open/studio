@@ -1,20 +1,20 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ova akcija služi za slanje Modbus komandi prema Modbus serveru. Ako se čitaju coilsi onda će se kroz output `values` proslijediti pročitane vrijednost kao vrijednost tipa `array:boolean`, a u slučaju registara onda će se kroz output `values` proslijedioti vrijednost tipa `array:integer`.
+This action is used to send Modbus commands to the Modbus server. If coils are read, then the read value will be passed through output `values` as a value of type `array:boolean`, and in the case of registers, then a value of type `array:integer` will be passed through output `values`.
 
 # PROPERTIES
 
-## Connection [DRAFT]
+## Connection
 
-Serial konekcija preko koje se šalju Modbus komande.
+Serial connection used to send Modbus commands.
 
-## Server address [DRAFT]
+## Server address
 
-Broj između 0 i 255 s kojim se bira Modbus server na serial konekciji.
+A number between 0 and 255 used to select the Modbus server on the serial connection.
 
-## Command [DRAFT]
+## Command
 
-Komanda koja se šalje:
+Command to be sent:
 
 -   01 (0x01) Read Coils
 -   02 (0x02) Read Discrete Inputs
@@ -25,37 +25,37 @@ Komanda koja se šalje:
 -   15 (0x0F) Write Multiple Coils
 -   16 (0x10) Write Multiple Registers
 
-## Register address [DRAFT]
+## Register address
 
-Adresa registra kod pojedinačnog write (05 (0x05) Write Single Coil ili 06 (0x06) Write Single Register).
+Register address for single write: 05 (0x05) Write Single Coil or 06 (0x06) Write Single Register.
 
-## Starting register address [DRAFT]
+## Starting register address
 
-Adresa prvog registra kod višestrukog read ili write.
+The address of the first register for multiple read and write.
 
-## Quantity of registers [DRAFT]
+## Quantity of registers
 
-Broj registara kod višestrukog read ili write.
+The register number for multiple read and write.
 
-## Coil value [DRAFT]
+## Coil value
 
-Coil vrijednost (`boolean`) koja se šalje kod pojedinačnog write (05 (0x05) Write Single Coil).
+Coil value (`boolean`) that is sent during a single write (i.e. when 05 (0x05) Write Single Coil is used).
 
-## Register value [DRAFT]
+## Register value
 
-Register vrijednost (`integer`) koja se šalje kod pojedinačnog write (06 (0x06) Write Single Register).
+Register value (`integer`) that is sent during a single write (i.e. when 06 (0x06) Write Single Register is used).
 
-## Coil values [DRAFT]
+## Coil values
 
-Coil vrijednosti (tipa `array:boolean`) kod višestrukog write.
+Coil values (of type `array:boolean`) when multiple writes are performing.
 
-## Register values [DRAFT]
+## Register values
 
-Registar vrijednosti (tipa `array:integer`) kod višestrukog write.
+Registar values (of type `array:integer`) when multiple writes are performing.
 
-## Timeout (ms) [DRAFT]
+## Timeout (ms)
 
-Definira koliko dugo se čeka na odgovor servera, zadaje se u milisekundama.
+Maximum waiting time for server response. It is set in milliseconds.
 
 # INPUTS
 

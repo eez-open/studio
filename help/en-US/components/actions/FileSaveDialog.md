@@ -8,9 +8,9 @@ Displays the system file save dialog and sends the set file path to the `file_pa
 
 The file name to be used by default.
 
-## Filters [DRAFT]
+## Filters
 
-Ako se želi ograničiti koji vrste fajlova se pojavljuju unutar file save dialoga onda se može zadati lista filtera kao `array:string`, npr. `["PNG Images|png", "JPG Images|jpg", "GIF Images|gif"]`. Ovo je opcionalni property i ako se ne zada onda će se prikazati svi fajlovi.
+If we want to limit which types of files appear inside the file save dialog, then we can specify the filter list as `array:string`, for example `["PNG Images|png", "JPG Images|jpg", "GIF Images|gif"] `. This is an optional property and if it is not set then all files will be displayed.
 
 # INPUTS
 

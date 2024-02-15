@@ -1,12 +1,12 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Upisuje podatak zadan kroz `data` property na clipboard, koji može biti text ili image.
+Writes data specified through the `data` property to the clipboard, which can be text or image.
 
 # PROPERTIES
 
-## Data [DRAFT]
+## Data
 
-Podatak koji se upisuje na clipboard. Može biti tipa `string` ili `blob`. Ako je `blob` onda se podrazumjeva da je u pitanju image.
+Data that is written to the clipboard. It can be of type `string` or `blob`. If it is of type `blob', then it is assumed that it is an image.
 
 # INPUTS
 

@@ -1,12 +1,12 @@
-# DESCRIPTION [DRAFT]
+# DESCRIPTION
 
-Ovaj akcija se koristi u kombinaciji sa Label OUT akcijom. Sve linije koja ulaze u Label OUT završiti će kroz Label IN s istom nazivom labele unutar istog flowa (tj. Page ili User Action). Znači, nije omogućeno "skakanje" iz jednog flowa u drugi. Može postojati više Label OUT-a i samo jedan Label IN s istim nazivom labele.
+This action is used in combination with `Label OUT` action. All lines entering `Label OUT` will end up through `Label IN` with the same label name within the same flow (i.e. _Page_ or _User_ Action). So, "jumping" from one flow to another is not allowed. There can be multiple `Label OUT` and only one `Label IN` with the same label name.
 
 # PROPERTIES
 
-## Label [DRAFT]
+## Label
 
-Naziv labele koja povezuje Label IN i Label OUT akcije.
+The name of the label that connects the `Label IN` and `Label OUT` actions.
 
 # INPUTS [EMPTY]
 
