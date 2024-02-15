@@ -160,7 +160,10 @@ export class OpenProjectsManager {
     }
 
     getAbsoluteFilePath(filePath: string, relativeFilePath: string) {
-        return path.resolve(path.dirname(filePath), relativeFilePath || "");
+        return path.resolve(
+            path.dirname(filePath.replace(/(\\|\/)/g, "/")),
+            relativeFilePath?.replace(/(\\|\/)/g, "/") || ""
+        );
     }
 
     getMasterProject(project: Project): Project | undefined {
@@ -308,7 +311,6 @@ export class OpenProjectsManager {
                 baseFilePath,
                 project.settings.general.masterProject
             );
-
             try {
                 await this._openProject(
                     absoluteFilePath,
@@ -328,6 +330,12 @@ export class OpenProjectsManager {
         // load imported projects
         for (const importDirective of project.settings.general.imports) {
             const absoluteFilePath = this.getAbsoluteFilePath(
+                baseFilePath,
+                importDirective.projectFilePath
+            );
+
+            console.log(
+                absoluteFilePath,
                 baseFilePath,
                 importDirective.projectFilePath
             );
