@@ -969,19 +969,19 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1033856: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1033962: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1033998: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1034035: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1034075: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1034132: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1034191: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); },  
- 1034264: ($0) => { startToDebuggerMessage($0); },  
- 1034296: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034371: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034446: ($0) => { finishToDebuggerMessage($0); },  
- 1034479: ($0, $1) => { onArrayValueFree($0, $1); },  
- 1034509: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); }
+  1033896: ($0) => { startToDebuggerMessage($0); },  
+ 1033928: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034003: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034078: ($0) => { finishToDebuggerMessage($0); },  
+ 1034111: ($0, $1) => { onArrayValueFree($0, $1); },  
+ 1034141: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034194: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1034300: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1034336: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1034373: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1034413: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1034470: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1034529: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4667,14 +4667,13 @@ var _getSyncedBuffer = Module['_getSyncedBuffer'] = createExportWrapper('getSync
 var _isRTL = Module['_isRTL'] = createExportWrapper('isRTL');
 var _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent');
 var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent');
-var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
-var _free = Module['_free'] = createExportWrapper('free');
 var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger');
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState');
 var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter');
 var _lvglCreateContainer = Module['_lvglCreateContainer'] = createExportWrapper('lvglCreateContainer');
 var _lvglCreateLabel = Module['_lvglCreateLabel'] = createExportWrapper('lvglCreateLabel');
+var _free = Module['_free'] = createExportWrapper('free');
 var _lvglCreateButton = Module['_lvglCreateButton'] = createExportWrapper('lvglCreateButton');
 var _lvglCreatePanel = Module['_lvglCreatePanel'] = createExportWrapper('lvglCreatePanel');
 var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget');
@@ -4744,6 +4743,7 @@ var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExport
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline');
+var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();

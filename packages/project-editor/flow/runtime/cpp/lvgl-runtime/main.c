@@ -5,9 +5,6 @@
 #include <emscripten.h>
 
 #include "lvgl/lvgl.h"
-#include "lv_drivers/indev/mouse.h"
-#include "lv_drivers/indev/mousewheel.h"
-#include "lv_drivers/indev/keyboard.h"
 
 #include "src/flow.h"
 

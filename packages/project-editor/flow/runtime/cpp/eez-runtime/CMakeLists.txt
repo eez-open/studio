@@ -16,64 +16,26 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NODEJS_CATCH_EXIT=0 -s 
 # add_definitions(-DEMCC_DEBUG)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive -pedantic")
 
+add_definitions(-DEEZ_DISABLE_SCPI_PARSER)
+
 include_directories(
     ./
-    ../eez-framework/src/
-    ../eez-framework/src/eez/libs/agg
     ../eez-framework/src/eez/platform/simulator
 )
 
-set(src_files)
-set(header_files)
+# eez-framework
+add_subdirectory(../eez-framework [EXCLUDE_FROM_ALL])
 
-# ###############################################################################
-# EEZ Framework files
-file(GLOB_RECURSE src_eez
-    ../eez-framework/src/eez/*.cpp
-    ../eez-framework/src/eez/*.c
-)
-file(GLOB_RECURSE header_eez
-    ../eez-framework/src/eez/*.h
-)
-
-# exclude libscpi
-set(EXCLUDE_DIR "../eez-framework/src/eez/libs/libscpi")
-
-foreach(TMP_PATH ${src_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM src_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-foreach(TMP_PATH ${header_eez})
-    string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-
-    if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list(REMOVE_ITEM header_eez ${TMP_PATH})
-    endif()
-endforeach(TMP_PATH)
-
-list(APPEND src_files ${src_eez})
-list(APPEND header_files ${header_eez})
-
-# ###############################################################################
-
-# ###############################################################################
-file(GLOB_RECURSE src_eez_runtime
+# eez-runtime
+file(GLOB_RECURSE SOURCES
     ./*.cpp
     ./*.c
 )
-file(GLOB_RECURSE header_eez_runtime
-    ./*.h
+add_executable(eez_runtime ${SOURCES})
+
+target_link_libraries(eez_runtime
+    eez-framework
 )
-
-list(APPEND src_files ${src_eez_runtime})
-list(APPEND header_files ${header_eez_runtime})
-
-# ###############################################################################
-add_executable(eez_runtime ${src_files} ${header_files})
 
 add_custom_command(TARGET eez_runtime POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
