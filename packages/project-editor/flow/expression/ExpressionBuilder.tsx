@@ -1217,16 +1217,19 @@ const SelectItemDialog = observer(
                                 />
                             )}
                         </div>
-                        <CommandsBrowser
-                            appStore={this.instrument!.getEditor()}
-                            host={this}
-                            terminalState={expressionBuilderState}
-                            className="EezStudio_ExpressionBuilder_CommandsBrowser"
-                            style={{
-                                display: activeTab == "scpi" ? "block" : "none"
-                            }}
-                            persistId="project-editor/expression-builder/commands-browser/splitter1"
-                        />
+                        {this.instrument && (
+                            <CommandsBrowser
+                                appStore={this.instrument.getEditor()}
+                                host={this}
+                                terminalState={expressionBuilderState}
+                                className="EezStudio_ExpressionBuilder_CommandsBrowser"
+                                style={{
+                                    display:
+                                        activeTab == "scpi" ? "block" : "none"
+                                }}
+                                persistId="project-editor/expression-builder/commands-browser/splitter1"
+                            />
+                        )}
                     </div>
                 </Dialog>
             );
