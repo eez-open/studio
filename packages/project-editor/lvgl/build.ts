@@ -271,6 +271,19 @@ export class LVGLBuild extends Build {
         build.line("");
         build.line(`extern objects_t objects;`);
 
+        build.line("");
+        build.line(`enum ScreensEnum {`);
+        build.indent();
+        for (let i = 0; i < this.pages.length; i++) {
+            build.line(
+                `SCREEN_ID_${this.getScreenIdentifier(
+                    this.pages[i]
+                ).toUpperCase()} = ${i + 1},`
+            );
+        }
+        build.unindent();
+        build.line(`};`);
+
         for (const page of this.pages) {
             build.line("");
             if (page.isUsedAsUserWidget) {
