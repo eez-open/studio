@@ -1,4 +1,5 @@
-import { makeObservable, observable } from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
+import * as net from "net";
 
 import { registerActionComponents } from "project-editor/flow/component";
 import { TCP_CONNECT_ICON } from "project-editor/ui-components/icons";
@@ -19,7 +20,7 @@ const componentHeaderColor = "#cca3ba";
 
 registerActionComponents("TCP", [
     {
-        name: "SerialInit",
+        name: "TCPConnect",
         icon: TCP_CONNECT_ICON as any,
         componentHeaderColor,
         bodyPropertyName: "connection",
@@ -46,14 +47,14 @@ registerActionComponents("TCP", [
             }
         ],
         defaults: {},
-        execute: (context: IDashboardComponentContext) => {
+        execute: async (context: IDashboardComponentContext) => {
             const ipAddress = context.evalProperty<string>("ipAddress");
             if (!ipAddress || typeof ipAddress != "string") {
                 context.throwError(`invalid IP Address property`);
                 return;
             }
 
-            const port = context.evalProperty<number>("ipAddress");
+            const port = context.evalProperty<number>("port");
             if (!port || typeof port != "number") {
                 context.throwError(`invalid Port property`);
                 return;
@@ -68,12 +69,62 @@ registerActionComponents("TCP", [
             let tcpConnection = new TCPConnection(id, constructorParams);
             tcpConnections.set(id, tcpConnection);
 
-            context.assignProperty("connection", {
-                id: tcpConnection.id,
-                status: tcpConnection.status
-            });
+            context = context.startAsyncExecution();
 
-            context.propagateValueThroughSeqout();
+            try {
+                await tcpConnection.connect();
+
+                context.assignProperty("connection", {
+                    id: tcpConnection.id,
+                    status: tcpConnection.status
+                });
+
+                context.propagateValueThroughSeqout();
+            } catch (err) {
+                context.throwError(`Failed to connect ${err.code}`);
+            } finally {
+                context.endAsyncExecution();
+            }
+        }
+    },
+    {
+        name: "TCPDisconnect",
+        icon: TCP_CONNECT_ICON as any,
+        componentHeaderColor,
+        bodyPropertyName: "connection",
+        inputs: [],
+        outputs: [],
+        properties: [
+            {
+                name: "connection",
+                type: "expression",
+                valueType: "object:TCPConnection"
+            }
+        ],
+        defaults: {},
+        execute: (context: IDashboardComponentContext) => {
+            const tcpConnection = context.evalProperty("connection");
+            if (!tcpConnection) {
+                context.throwError(`invalid connection`);
+                return;
+            }
+
+            console.log(tcpConnection);
+
+            context = context.startAsyncExecution();
+
+            (async (tcpConnectionId: number) => {
+                const tcpConnection = tcpConnections.get(tcpConnectionId);
+
+                if (tcpConnection) {
+                    tcpConnection.disconnect();
+                    context.propagateValueThroughSeqout();
+                } else {
+                    context.throwError("tcp connection not found");
+                }
+
+                context.endAsyncExecution();
+            })(tcpConnection.id);
         }
     }
 ]);
@@ -83,7 +134,7 @@ registerActionComponents("TCP", [
 export const tcpConnections = new Map<number, TCPConnection>();
 let nextTCPConnectionId = 0;
 
-registerObjectVariableType("SerialConnection", {
+registerObjectVariableType("TCPConnection", {
     editConstructorParams: async (
         variable: IVariable,
         constructorParams?: TCPConnectionConstructorParams
@@ -121,6 +172,20 @@ registerObjectVariableType("SerialConnection", {
             getFieldValue: (value: TCPConnection): number => {
                 return value.constructorParams.port;
             }
+        },
+        {
+            name: "isConnected",
+            valueType: "boolean",
+            getFieldValue: (value: TCPConnection): boolean => {
+                return value.isConnected;
+            }
+        },
+        {
+            name: "id",
+            valueType: "integer",
+            getFieldValue: (value: TCPConnection): number => {
+                return value.id;
+            }
         }
     ]
 });
@@ -132,7 +197,7 @@ interface TCPConnectionConstructorParams {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TCPConnection {
+export class TCPConnection {
     constructor(
         public id: number,
         public constructorParams: TCPConnectionConstructorParams
@@ -142,11 +207,10 @@ class TCPConnection {
         });
     }
 
+    socket: net.Socket | undefined;
+
     error: string | undefined = undefined;
     isConnected: boolean = false;
-
-    connectResolve: (() => void) | undefined;
-    connectReject: ((err: any) => void) | undefined;
 
     get status() {
         return {
@@ -158,10 +222,71 @@ class TCPConnection {
     }
 
     async connect() {
-        // TODO
+        return new Promise<void>((resolve, reject) => {
+            this.socket = new net.Socket();
+
+            let promiseCompleted = false;
+
+            this.socket.on("connect", () => {
+                runInAction(() => {
+                    this.isConnected = true;
+                });
+                if (!promiseCompleted) {
+                    promiseCompleted = true;
+                    resolve();
+                }
+            });
+
+            this.socket.on("ready", () => {});
+
+            this.socket.on("error", err => {
+                this.destroy();
+                if (!promiseCompleted) {
+                    promiseCompleted = true;
+                    reject(err);
+                }
+            });
+
+            this.socket.on("close", () => {
+                this.destroy();
+            });
+
+            this.socket.on("end", () => {
+                this.destroy();
+            });
+
+            this.socket.on("timeout", () => {
+                this.destroy();
+            });
+
+            this.socket.connect({
+                host: this.constructorParams.ipAddress,
+                port: this.constructorParams.port
+            });
+        });
     }
 
-    disconnect() {}
+    disconnect() {
+        if (this.socket) {
+            this.socket.end();
+            this.destroy();
+        }
+    }
+
+    destroy() {
+        if (this.socket) {
+            this.socket.destroy();
+            this.socket.unref();
+            this.socket.removeAllListeners();
+            this.socket = undefined;
+        }
+
+        runInAction(() => {
+            this.isConnected = false;
+        });
+    }
+
+    read() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

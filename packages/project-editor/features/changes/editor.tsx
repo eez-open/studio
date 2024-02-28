@@ -824,9 +824,6 @@ export const ObjectChangesComponent = observer(
                                     "feature-row": isProject
                                 })}
                             >
-                                {icon && (
-                                    <span className="change-icon">{icon}</span>
-                                )}
                                 <span className="change-label">
                                     {label}
                                     {(propertyChange instanceof

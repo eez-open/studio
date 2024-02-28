@@ -586,7 +586,7 @@ async function showConnectDialog(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SerialConnection implements SerialConnectionCallbacks {
+export class SerialConnection implements SerialConnectionCallbacks {
     constructor(
         public id: number,
         public constructorParams: SerialConnectionConstructorParams

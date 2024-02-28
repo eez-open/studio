@@ -1,6 +1,6 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
-import type { ModbusRTUClient } from "jsmodbus";
+import type { ModbusRTUClient, ModbusTCPClient } from "jsmodbus";
 import type * as JsmodbusModule from "jsmodbus";
 
 import type {
@@ -30,14 +30,24 @@ import {
 
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 
-import { serialConnections } from "project-editor/flow/components/actions/serial";
+import {
+    serialConnections,
+    SerialConnection
+} from "project-editor/flow/components/actions/serial";
 import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
 
 import { isArray } from "eez-studio-shared/util";
+import {
+    tcpConnections,
+    TCPConnection
+} from "project-editor/flow/components/actions/tcp";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const modbusClients = new Map<number, Map<string, ModbusRTUClient>>();
+const modbusClients = new Map<
+    number,
+    Map<string, ModbusRTUClient | ModbusTCPClient>
+>();
 
 onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
     modbusClients.delete(wasmFlowRuntime.wasmModuleId);
@@ -184,7 +194,7 @@ export class ModbusActionComponent extends ActionComponent {
         execute: (context: IDashboardComponentContext) => {
             const connection = context.evalProperty("connection");
             if (!connection) {
-                context.throwError(`invalid Connection`);
+                context.throwError(`modbus invalid Connection`);
                 return;
             }
 
@@ -203,38 +213,69 @@ export class ModbusActionComponent extends ActionComponent {
             }
 
             function getModbusClient() {
-                const serialConnection = serialConnections.get(connection.id);
-                if (!serialConnection) {
-                    context.throwError(`invalid Connection`);
+                let connectionObject:
+                    | SerialConnection
+                    | TCPConnection
+                    | undefined;
+
+                connectionObject = serialConnections.get(connection.id);
+                if (!connectionObject) {
+                    connectionObject = tcpConnections.get(connection.id);
+                }
+
+                if (!connectionObject) {
+                    context.throwError(
+                        `modbus invalid Connection ${connection.id}`
+                    );
                     return undefined;
                 }
-                serialConnection.read(); // do not accumulate read data
+
+                connectionObject.read(); // do not accumulate read data
+
+                let connectionId =
+                    connectionObject instanceof SerialConnection
+                        ? "serial-" + connectionObject.connectionId
+                        : "tcp-" + connectionObject.id;
 
                 let client;
                 let runtimeModbusClients = modbusClients.get(
                     context.WasmFlowRuntime.wasmModuleId
                 );
                 if (runtimeModbusClients) {
-                    client = runtimeModbusClients.get(
-                        serialConnection.connectionId
-                    );
+                    client = runtimeModbusClients.get(connectionId);
                 }
                 if (!client) {
                     try {
-                        const { getSerialPort } =
-                            require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
-                        const serialPort = getSerialPort(
-                            serialConnection.connectionId
-                        );
+                        if (connectionObject instanceof SerialConnection) {
+                            const { getSerialPort } =
+                                require("instrument/connection/interfaces/serial-ports") as typeof SerialPortsModule;
+                            const serialPort = getSerialPort(
+                                connectionObject.connectionId
+                            );
 
-                        const { ModbusRTUClient } =
-                            require("jsmodbus") as typeof JsmodbusModule;
+                            const { ModbusRTUClient } =
+                                require("jsmodbus") as typeof JsmodbusModule;
 
-                        client = new ModbusRTUClient(
-                            serialPort,
-                            serverAddress,
-                            timeout
-                        );
+                            client = new ModbusRTUClient(
+                                serialPort,
+                                serverAddress,
+                                timeout
+                            );
+                        } else {
+                            if (!connectionObject.socket) {
+                                return undefined;
+                            }
+
+                            const { ModbusTCPClient } =
+                                require("jsmodbus") as typeof JsmodbusModule;
+
+                            client = new ModbusTCPClient(
+                                connectionObject.socket,
+                                serverAddress
+                            );
+
+                            connectionObject.socket.emit("connect", false);
+                        }
 
                         if (!runtimeModbusClients) {
                             runtimeModbusClients = new Map();
@@ -243,10 +284,8 @@ export class ModbusActionComponent extends ActionComponent {
                                 runtimeModbusClients
                             );
                         }
-                        runtimeModbusClients.set(
-                            serialConnection.connectionId,
-                            client
-                        );
+
+                        runtimeModbusClients.set(connectionId, client);
                     } catch (err) {
                         console.warn(err);
                         context.throwError(err.toString());
@@ -259,6 +298,7 @@ export class ModbusActionComponent extends ActionComponent {
 
             let modbusClient = getModbusClient();
             if (!modbusClient) {
+                context.throwError(`failed to create Modbus client`);
                 return;
             }
 
