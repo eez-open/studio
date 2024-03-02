@@ -27,9 +27,6 @@ export interface RendererToWorkerMessage {
 
     updateGlobalVariableValues?: IGlobalVariable[];
 
-    // request to worker to change some property values
-    assignProperties?: IAssignProperty[];
-
     // request to worker to evaluate some property values
     evalProperties?: IEvalProperty[];
 

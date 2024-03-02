@@ -352,8 +352,8 @@ function TextInputWidgetInput({
                         const value = event.target.value;
 
                         if (textInputWidget.data) {
-                            flowState.runtime.assignProperty(
-                                flowContext,
+                            assignProperty(
+                                flowState,
                                 textInputWidget,
                                 "data",
                                 value
@@ -656,8 +656,8 @@ const NumberInputDashboardWidgetElement = observer(
                             }
 
                             if (component.value) {
-                                flowState.runtime.assignProperty(
-                                    flowContext,
+                                assignProperty(
+                                    flowState,
                                     component,
                                     "value",
                                     value
@@ -856,6 +856,7 @@ export class CheckboxWidget extends Widget {
                 },
                 "string"
             ),
+            makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
@@ -887,12 +888,14 @@ export class CheckboxWidget extends Widget {
     });
 
     label: string;
+    enabled?: string;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            label: observable
+            label: observable,
+            enabled: observable
         });
     }
 
@@ -954,6 +957,13 @@ export class CheckboxWidget extends Widget {
             this.label
         );
 
+        let isEnabled = getBooleanValue(
+            flowContext,
+            this,
+            "enabled",
+            flowContext.flowState ? !this.enabled : true
+        );
+
         return (
             <>
                 <div
@@ -974,8 +984,8 @@ export class CheckboxWidget extends Widget {
                                 const value = event.target.checked;
 
                                 if (this.data) {
-                                    flowState.runtime.assignProperty(
-                                        flowContext,
+                                    assignProperty(
+                                        flowState,
                                         this,
                                         "data",
                                         value
@@ -997,6 +1007,7 @@ export class CheckboxWidget extends Widget {
                             }
                         }}
                         id={id}
+                        disabled={!isEnabled}
                     ></input>
                     <label className="form-check-label" htmlFor={id}>
                         {typeof label == "string" ? label : label.text}
@@ -1023,6 +1034,7 @@ export class SwitchDashboardWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: "Value"
             }),
+            makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
@@ -1045,10 +1057,14 @@ export class SwitchDashboardWidget extends Widget {
         }
     });
 
+    enabled?: string;
+
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            enabled: observable
+        });
     }
 
     getOutputs(): ComponentOutput[] {
@@ -1089,6 +1105,13 @@ export class SwitchDashboardWidget extends Widget {
         const style: React.CSSProperties = {};
         this.styleHook(style, flowContext);
 
+        let isEnabled = getBooleanValue(
+            flowContext,
+            this,
+            "enabled",
+            flowContext.flowState ? !this.enabled : true
+        );
+
         return (
             <>
                 <div
@@ -1111,8 +1134,8 @@ export class SwitchDashboardWidget extends Widget {
                                 const value = event.target.checked;
 
                                 if (this.data) {
-                                    flowState.runtime.assignProperty(
-                                        flowContext,
+                                    assignProperty(
+                                        flowState,
                                         this,
                                         "data",
                                         value
@@ -1133,6 +1156,7 @@ export class SwitchDashboardWidget extends Widget {
                                 }
                             }
                         }}
+                        disabled={!isEnabled}
                     ></input>
                 </div>
                 {super.render(flowContext, width, height)}
@@ -1147,6 +1171,7 @@ registerClass("SwitchDashboardWidget", SwitchDashboardWidget);
 
 export class DropDownListDashboardWidget extends Widget {
     options: string;
+    enabled?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1158,6 +1183,7 @@ export class DropDownListDashboardWidget extends Widget {
         properties: [
             makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("options"),
+            makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style")
         ],
 
@@ -1196,7 +1222,8 @@ export class DropDownListDashboardWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
-            options: observable
+            options: observable,
+            enabled: observable
         });
     }
 
@@ -1208,6 +1235,13 @@ export class DropDownListDashboardWidget extends Widget {
 
         let selectedIndex: number = evalProperty(flowContext, this, "data");
 
+        let isEnabled = getBooleanValue(
+            flowContext,
+            this,
+            "enabled",
+            flowContext.flowState ? !this.enabled : true
+        );
+
         return (
             <>
                 <select
@@ -1217,8 +1251,8 @@ export class DropDownListDashboardWidget extends Widget {
                         event.stopPropagation();
 
                         if (flowContext.projectStore.runtime) {
-                            flowContext.projectStore.runtime.assignProperty(
-                                flowContext,
+                            assignProperty(
+                                flowContext.flowState as FlowState,
                                 this,
                                 "data",
                                 event.target.selectedIndex
@@ -1236,6 +1270,7 @@ export class DropDownListDashboardWidget extends Widget {
                             );
                         }
                     }}
+                    disabled={!isEnabled}
                 >
                     {options
                         .filter(option => typeof option === "string")
@@ -2100,6 +2135,13 @@ const SliderDashboardWidgetElement = observer(
                 viewMax = max;
             }
 
+            let isEnabled = getBooleanValue(
+                flowContext,
+                component,
+                "enabled",
+                flowContext.flowState ? !component.enabled : true
+            );
+
             return (
                 <input
                     className={classNames(
@@ -2136,8 +2178,8 @@ const SliderDashboardWidgetElement = observer(
                                 flowContext.flowState as FlowState;
                             if (flowState) {
                                 if (component.value) {
-                                    flowState.runtime.assignProperty(
-                                        flowContext,
+                                    assignProperty(
+                                        flowState,
                                         component,
                                         "value",
                                         this.currentValue
@@ -2165,6 +2207,7 @@ const SliderDashboardWidgetElement = observer(
                             this.onChangeTimer = undefined;
                         }, 20);
                     }}
+                    disabled={!isEnabled}
                 ></input>
             );
         }
@@ -2231,6 +2274,7 @@ export class SliderDashboardWidget extends Widget {
                 },
                 "double"
             ),
+            makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style")
         ],
 
@@ -2298,6 +2342,7 @@ export class SliderDashboardWidget extends Widget {
     max: string;
     viewMin: string;
     viewMax: string;
+    enabled?: string;
 
     override makeEditable() {
         super.makeEditable();
@@ -2307,7 +2352,8 @@ export class SliderDashboardWidget extends Widget {
             min: observable,
             max: observable,
             viewMin: observable,
-            viewMax: observable
+            viewMax: observable,
+            enabled: observable
         });
     }
 
@@ -2342,3 +2388,4 @@ import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
 import "project-editor/flow/components/widgets/dashboard/terminal";
+import { assignProperty } from "project-editor/flow/runtime/worker-dashboard-component-context";

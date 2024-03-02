@@ -792,13 +792,6 @@ export abstract class RuntimeBase {
         propertyName: string
     ): any;
 
-    abstract assignProperty(
-        expressionContext: IExpressionContext,
-        component: Component,
-        propertyName: string,
-        value: any
-    ): void;
-
     cleanupFlowStatesTimeout: any;
 
     cleanupFlowStates() {

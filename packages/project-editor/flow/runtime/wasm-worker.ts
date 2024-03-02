@@ -489,49 +489,6 @@ export function createWasmWorker(
             );
         }
 
-        if (rendererToWorkerMessage.assignProperties) {
-            rendererToWorkerMessage.assignProperties.forEach(assignProperty => {
-                const {
-                    flowStateIndex,
-                    componentIndex,
-                    propertyIndex,
-                    indexes,
-                    value
-                } = assignProperty;
-
-                let iteratorsPtr = 0;
-                if (indexes) {
-                    const MAX_ITERATORS = 4;
-
-                    const arr = new Uint32Array(MAX_ITERATORS);
-                    for (let i = 0; i < MAX_ITERATORS; i++) {
-                        arr[i] =
-                            indexes.length < MAX_ITERATORS ? indexes[i] : 0;
-                    }
-                    iteratorsPtr = WasmFlowRuntime._malloc(MAX_ITERATORS * 4);
-                    WasmFlowRuntime.HEAP32.set(arr, iteratorsPtr >> 2);
-                }
-
-                const valuePtr = createWasmValue(WasmFlowRuntime, value);
-
-                if (valuePtr) {
-                    WasmFlowRuntime._assignProperty(
-                        flowStateIndex,
-                        componentIndex,
-                        propertyIndex,
-                        iteratorsPtr,
-                        valuePtr
-                    );
-
-                    WasmFlowRuntime._valueFree(valuePtr);
-                }
-
-                if (iteratorsPtr) {
-                    WasmFlowRuntime._free(iteratorsPtr);
-                }
-            });
-        }
-
         const workerToRenderMessage: WorkerToRenderMessage = {};
 
         let propertyValues: IPropertyValue[] | undefined;

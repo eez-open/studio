@@ -15,6 +15,11 @@ import {
 
 import { isArray } from "eez-studio-shared/util";
 
+import { getObjectPathAsString } from "project-editor/store";
+import type { Component } from "project-editor/flow/component";
+import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import type { FlowState } from "project-editor/flow/runtime/runtime";
+
 export class DashboardComponentContext implements IDashboardComponentContext {
     constructor(
         public WasmFlowRuntime: IWasmFlowRuntime,
@@ -443,4 +448,44 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
         this.WasmFlowRuntime._free(errorMessagePtr);
     }
+}
+
+export function assignProperty(
+    flowState: FlowState,
+    component: Component,
+    propertyName: string,
+    value: any
+) {
+    const wasmRuntime = flowState.runtime as WasmRuntime;
+
+    const flowStateIndex = wasmRuntime.flowStateToFlowIndexMap.get(flowState);
+    if (flowStateIndex == undefined) {
+        console.error("Unexpected!");
+        return;
+    }
+
+    const assetsMap = wasmRuntime.assetsMap;
+
+    const flowPath = getObjectPathAsString(flowState.flow);
+    const flowIndex = assetsMap.flowIndexes[flowPath];
+    if (flowIndex == undefined) {
+        console.error("Unexpected!");
+        return;
+    }
+
+    const componentPath = getObjectPathAsString(component);
+    const componentIndex =
+        assetsMap.flows[flowIndex].componentIndexes[componentPath];
+    if (componentIndex == undefined) {
+        console.error("Unexpected!");
+        return;
+    }
+
+    const dashboardComponentContext = new DashboardComponentContext(
+        wasmRuntime.worker.wasm,
+        flowStateIndex,
+        componentIndex
+    );
+
+    dashboardComponentContext.assignProperty(propertyName, value);
 }

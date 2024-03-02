@@ -29,7 +29,6 @@ import {
 } from "project-editor/flow//runtime/remote-runtime";
 
 import type {
-    IAssignProperty,
     IEvalProperty,
     IGlobalVariable,
     RendererToWorkerMessage
@@ -73,7 +72,6 @@ import type {
     IVariable,
     ValueType
 } from "eez-studio-types";
-import { IExpressionContext } from "project-editor/flow/expression";
 import type { Page } from "project-editor/features/page/page";
 import { createWasmWorker } from "project-editor/flow/runtime/wasm-worker";
 import { LVGLPageViewerRuntime } from "project-editor/lvgl/page-runtime";
@@ -504,8 +502,6 @@ export class WasmRuntime extends RemoteRuntime {
             pointerEvents: this.isPaused ? undefined : this.pointerEvents,
             updateGlobalVariableValues:
                 this.getUpdatedObjectGlobalVariableValues(),
-            assignProperties:
-                this.componentProperties.assignPropertiesOnNextTick,
             evalProperties: this.componentProperties.evalProperties
         };
 
@@ -515,7 +511,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelClicked = 0;
         this.pointerEvents = [];
         //this.screen = undefined;
-        this.componentProperties.assignPropertiesOnNextTick = [];
     };
 
     setCanvasContext(ctx: CanvasRenderingContext2D) {
@@ -1029,20 +1024,6 @@ export class WasmRuntime extends RemoteRuntime {
         );
     }
 
-    assignProperty(
-        expressionContext: IExpressionContext,
-        component: Component,
-        propertyName: string,
-        value: any
-    ) {
-        this.componentProperties.assignProperty(
-            expressionContext,
-            component,
-            propertyName,
-            value
-        );
-    }
-
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
@@ -1420,19 +1401,10 @@ class ComponentProperties {
                 Component,
                 {
                     componentIndex: number;
-                    assignProperties: {
-                        [propertyName: string]: {
-                            propertyIndex: number;
-                            propertyValueIndexes: {
-                                [indexesPath: string]: number;
-                            };
-                        };
-                    };
                 }
             >;
         }
     >();
-    assignPropertiesOnNextTick: IAssignProperty[] = [];
 
     constructor(public wasmRuntime: WasmRuntime) {
         makeObservable(this, {
@@ -1597,79 +1569,6 @@ class ComponentProperties {
                 });
             }
         }
-    }
-
-    assignProperty(
-        expressionContext: IExpressionContext,
-        component: Component,
-        propertyName: string,
-        value: any
-    ) {
-        const flowState = expressionContext.flowState!;
-
-        const flowStateIndex =
-            this.wasmRuntime.flowStateToFlowIndexMap.get(flowState);
-        if (flowStateIndex == undefined) {
-            console.error("Unexpected!");
-            return;
-        }
-
-        let assignFlowState = this.assignFlowStates.get(flowStateIndex);
-        if (!assignFlowState) {
-            // add new assignFlowState
-            assignFlowState = {
-                assignComponents: new Map()
-            };
-            this.assignFlowStates.set(flowStateIndex, assignFlowState);
-        }
-
-        let assignComponent = assignFlowState.assignComponents.get(component);
-        if (!assignComponent) {
-            // add new assignComponent
-            const flow = ProjectEditor.getFlow(component);
-            const flowPath = getObjectPathAsString(flow);
-            const flowIndex = this.wasmRuntime.assetsMap.flowIndexes[flowPath];
-            if (flowIndex == undefined) {
-                console.error("Unexpected!");
-                return;
-            }
-
-            const componentPath = getObjectPathAsString(component);
-            const componentIndex =
-                this.wasmRuntime.assetsMap.flows[flowIndex].componentIndexes[
-                    componentPath
-                ];
-            if (componentIndex == undefined) {
-                console.error("Unexpected!");
-                return;
-            }
-
-            assignComponent = {
-                componentIndex,
-                assignProperties: {}
-            };
-
-            assignFlowState.assignComponents.set(component, assignComponent);
-        }
-
-        // add new evalProperty
-        const propertyIndex = this.getPropertyIndex(component, propertyName);
-        if (propertyIndex == -1) {
-            console.error("Unexpected!");
-            return;
-        }
-
-        const indexes = expressionContext.dataContext.get(
-            FLOW_ITERATOR_INDEXES_VARIABLE
-        );
-
-        this.assignPropertiesOnNextTick.push({
-            flowStateIndex,
-            componentIndex: assignComponent.componentIndex,
-            propertyIndex,
-            indexes,
-            value
-        });
     }
 
     private getPropertyIndex(component: Component, propertyName: string) {
