@@ -193,10 +193,20 @@ function loadObjectInternal(
                   aClass
               ))()
             : new aClass();
+
+        //
+        object.makeEditable();
+        //
     } catch (err) {
         // TODO we need much better error recovery here
         console.error(err);
-        return new EezObject();
+
+        object = new EezObject();
+
+        //
+        object.makeEditable();
+        //
+        return object;
     }
 
     if (isLoadProject) {
