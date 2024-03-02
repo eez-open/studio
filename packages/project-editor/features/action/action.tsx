@@ -39,8 +39,8 @@ export class Action extends Flow {
     implementation?: string;
     usedIn?: string[];
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             id: observable,

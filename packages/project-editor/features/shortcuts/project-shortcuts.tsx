@@ -186,8 +186,8 @@ export class ShortcutAction extends EezObject {
         ]
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             type: observable,
@@ -259,8 +259,8 @@ export class Shortcut extends EezObject {
         ]
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -297,8 +297,8 @@ export class Shortcuts extends EezObject {
         icon: "material:playlist_play"
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             shortcuts: observable

@@ -254,6 +254,14 @@ export class TimelineKeyframe extends EezObject {
         super();
 
         makeObservable(this, {
+            controlPointsArray: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             start: observable,
             end: observable,
             left: observable,
@@ -265,8 +273,7 @@ export class TimelineKeyframe extends EezObject {
             scaleY: observable,
             rotate: observable,
             opacity: observable,
-            controlPoints: observable,
-            controlPointsArray: computed
+            controlPoints: observable
         });
     }
 

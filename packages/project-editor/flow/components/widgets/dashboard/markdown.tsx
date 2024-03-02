@@ -64,8 +64,8 @@ export class MarkdownWidget extends Widget {
 
     text: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text: observable

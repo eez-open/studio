@@ -547,8 +547,8 @@ class LineChartLine extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable,
@@ -902,8 +902,8 @@ export class LineChartWidget extends Widget {
     marker: string;
     markerStyle: Style;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             xValue: observable,
@@ -1252,8 +1252,8 @@ export class GaugeWidget extends Widget {
     color: string;
     margin: RectObject;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             title: observable,

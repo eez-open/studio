@@ -572,7 +572,7 @@ export class EezObject {
 
     objID: string;
 
-    constructor() {
+    makeEditable() {
         makeObservable(this, {
             objID: observable
         });
@@ -1013,8 +1013,8 @@ export class RectObject extends EezObject {
     bottom: number;
     left: number;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             top: observable,

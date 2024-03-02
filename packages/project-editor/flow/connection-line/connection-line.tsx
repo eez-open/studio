@@ -196,12 +196,6 @@ export class ConnectionLine extends EezObject {
         super();
 
         makeObservable(this, {
-            description: observable,
-            source: observable,
-            output: observable,
-            target: observable,
-            input: observable,
-            _active: observable,
             sourceComponent: computed,
             targetComponent: computed,
             _sourcePosition: computed,
@@ -211,6 +205,19 @@ export class ConnectionLine extends EezObject {
             targetPosition: computed,
             sourceRect: computed,
             targetRect: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            description: observable,
+            source: observable,
+            output: observable,
+            target: observable,
+            input: observable,
+            _active: observable
         });
     }
 

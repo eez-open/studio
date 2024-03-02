@@ -116,9 +116,8 @@ export class GlyphSource extends EezObject {
         ]
     };
 
-    constructor() {
-        super();
-
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             filePath: observable,
             size: observable,
@@ -240,7 +239,17 @@ export class Glyph extends EezObject {
 
     constructor() {
         super();
+        makeObservable(this, {
+            pixelArray: computed,
+            imageSize: computed,
+            font: computed,
+            editorImage: computed,
+            topLeftOffset: computed
+        });
+    }
 
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             encoding: observable,
             x: observable,
@@ -249,12 +258,7 @@ export class Glyph extends EezObject {
             height: observable,
             dx: observable,
             glyphBitmap: observable,
-            source: observable,
-            pixelArray: computed,
-            imageSize: computed,
-            font: computed,
-            editorImage: computed,
-            topLeftOffset: computed
+            source: observable
         });
     }
 
@@ -920,9 +924,8 @@ export class FontSource extends EezObject {
         ]
     };
 
-    constructor() {
-        super();
-
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             filePath: observable,
             size: observable
@@ -1000,6 +1003,14 @@ export class Font extends EezObject {
         super();
 
         makeObservable(this, {
+            glyphsMap: computed({ keepAlive: true }),
+            maxDx: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+        makeObservable(this, {
             id: observable,
             name: observable,
             description: observable,
@@ -1016,9 +1027,7 @@ export class Font extends EezObject {
             alwaysBuild: observable,
             lvglGlyphs: observable,
             lvglBinFile: observable,
-            lvglSourceFile: observable,
-            glyphsMap: computed({ keepAlive: true }),
-            maxDx: computed
+            lvglSourceFile: observable
         });
     }
 

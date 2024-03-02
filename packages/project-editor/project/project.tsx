@@ -162,8 +162,8 @@ export class BuildConfiguration extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -221,8 +221,8 @@ export class BuildFile extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             fileName: observable,
@@ -303,8 +303,8 @@ export class Build extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             configurations: observable,
@@ -403,8 +403,15 @@ export class ImportDirective extends EezObject {
         super();
 
         makeObservable(this, {
+            project: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             projectFilePath: observable,
-            project: computed,
             importAs: observable
         });
     }
@@ -499,8 +506,15 @@ export class ExtensionDirective extends EezObject {
         super();
 
         makeObservable(this, {
-            extensionName: observable,
             isInstalled: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            extensionName: observable
         });
     }
 
@@ -555,8 +569,8 @@ export class ResourceFile extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             filePath: observable
@@ -919,8 +933,8 @@ export class General extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             projectVersion: observable,
@@ -982,8 +996,8 @@ export class Settings extends EezObject {
         icon: "material:settings"
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             general: observable,
@@ -1376,13 +1390,32 @@ export class Project extends EezObject {
         super();
 
         makeObservable(this, {
+            pages: computed,
+            projectName: computed,
+            importDirective: computed,
+            masterProject: computed({ keepAlive: true }),
+            allGlobalVariables: computed({ keepAlive: true }),
+            allVisibleGlobalVariables: computed({ keepAlive: true }),
+            importAsList: computed({ keepAlive: true }),
+            colorToIndexMap: computed,
+            buildColors: computed({ keepAlive: true }),
+            projectTypeTraits: computed,
+            _objectsMap: computed,
+            missingExtensions: computed,
+            allStyles: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             _fullyLoaded: observable,
             settings: observable,
             variables: observable,
             actions: observable,
             userPages: observable,
             userWidgets: observable,
-            pages: computed,
             styles: observable,
             fonts: observable,
             texts: observable,
@@ -1395,20 +1428,9 @@ export class Project extends EezObject {
             changes: observable,
             colors: observable,
             themes: observable,
-            projectName: computed,
-            importDirective: computed,
-            masterProject: computed({ keepAlive: true }),
-            allGlobalVariables: computed({ keepAlive: true }),
-            allVisibleGlobalVariables: computed({ keepAlive: true }),
-            importAsList: computed({ keepAlive: true }),
             _themeColors: observable,
-            setThemeColor: action,
-            colorToIndexMap: computed,
-            buildColors: computed({ keepAlive: true }),
-            projectTypeTraits: computed,
-            _objectsMap: computed,
-            missingExtensions: computed,
-            allStyles: computed
+
+            setThemeColor: action
         });
     }
 

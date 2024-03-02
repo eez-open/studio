@@ -35,8 +35,8 @@ export class Readme extends EezObject {
         icon: README_ICON
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             readmeFile: observable

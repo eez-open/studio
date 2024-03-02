@@ -301,8 +301,8 @@ export class Color extends EezObject {
     id: number | undefined;
     name: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             id: observable,
@@ -536,8 +536,15 @@ export class Theme extends EezObject implements ITheme {
         super();
 
         makeObservable(this, {
-            name: observable,
             colors: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable
         });
     }
 

@@ -129,8 +129,8 @@ export class Language extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             languageID: observable
@@ -193,8 +193,8 @@ class Translation extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             languageID: observable,
@@ -349,8 +349,8 @@ export class TextResource extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             resourceID: observable,
@@ -415,8 +415,8 @@ export class Texts extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             languages: observable,

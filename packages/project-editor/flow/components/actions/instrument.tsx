@@ -283,8 +283,8 @@ export class SCPIActionComponent extends ActionComponent {
     timeout: string;
     delay: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrument: observable,
@@ -797,8 +797,8 @@ export class GetInstrumentActionComponent extends ActionComponent {
 
     instrumentId: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrumentId: observable
@@ -902,8 +902,8 @@ export class ConnectInstrumentActionComponent extends ActionComponent {
 
     instrument: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrument: observable
@@ -1020,8 +1020,8 @@ export class DisconnectInstrumentActionComponent extends ActionComponent {
 
     instrument: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrument: observable
@@ -1175,8 +1175,8 @@ export class GetInstrumentPropertiesActionComponent extends ActionComponent {
 
     instrument: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrument: observable
@@ -1682,8 +1682,8 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
     chartHorizontalScale: string;
     chartVerticalScale: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             instrument: observable,

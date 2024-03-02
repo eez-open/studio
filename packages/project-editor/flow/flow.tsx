@@ -152,15 +152,21 @@ export abstract class Flow extends EezObject {
         super();
 
         makeObservable(this, {
-            components: observable,
-            connectionLines: observable,
-            localVariables: observable,
-
             actionComponents: computed,
             startComponent: computed,
             endComponent: computed,
             inputComponents: computed,
             outputComponents: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            components: observable,
+            connectionLines: observable,
+            localVariables: observable
         });
     }
 

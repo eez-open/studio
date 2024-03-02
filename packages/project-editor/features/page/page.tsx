@@ -130,16 +130,23 @@ export class PageOrientation extends EezObject {
         super();
 
         makeObservable(this, {
+            left: computed,
+            top: computed,
+            rect: computed,
+            closePageIfTouchedOutside: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             x: observable,
             y: observable,
             width: observable,
             height: observable,
             style: observable,
-            components: observable,
-            left: computed,
-            top: computed,
-            rect: computed,
-            closePageIfTouchedOutside: computed
+            components: observable
         });
     }
 
@@ -200,6 +207,17 @@ export class Page extends Flow {
         super();
 
         makeObservable(this, {
+            dataContextOverridesObject: computed,
+            rect: computed,
+            _lvglWidgetsIncludingUserWidgets: computed({ keepAlive: true }),
+            _lvglWidgets: computed({ keepAlive: true })
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             id: observable,
             name: observable,
             description: observable,
@@ -214,13 +232,9 @@ export class Page extends Flow {
             portrait: observable,
             isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
-            dataContextOverridesObject: computed,
-            rect: computed,
             lvglLocalStyles: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
-            _lvglWidgetsIncludingUserWidgets: computed({ keepAlive: true }),
-            _lvglWidgets: computed({ keepAlive: true }),
             _refreshCounter: observable
         });
     }

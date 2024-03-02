@@ -181,8 +181,8 @@ export class TextDashboardWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable
@@ -284,8 +284,8 @@ export class RectangleDashboardWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -478,8 +478,8 @@ export class TextInputWidget extends Widget {
     placehoder: string;
     password: boolean;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             placehoder: observable,
@@ -791,8 +791,8 @@ export class NumberInputDashboardWidget extends Widget {
     step: string;
     disableDefaultTabHandling: boolean;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             value: observable,
@@ -888,8 +888,8 @@ export class CheckboxWidget extends Widget {
 
     label: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable
@@ -1045,8 +1045,8 @@ export class SwitchDashboardWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -1192,8 +1192,8 @@ export class DropDownListDashboardWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             options: observable
@@ -1328,8 +1328,8 @@ export class ProgressDashboardWidget extends Widget {
     max: string;
     orientation: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -1470,8 +1470,8 @@ export class SpinnerWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -1496,8 +1496,15 @@ export class QRCodeDashboardWidget extends Widget {
         super();
 
         makeObservable(this, {
-            errorCorrection: observable,
             errorCorrectionValue: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            errorCorrection: observable
         });
     }
 
@@ -1728,8 +1735,8 @@ export class ButtonDashboardWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             enabled: observable,
@@ -1859,8 +1866,15 @@ export class BitmapDashboardWidget extends Widget {
         super();
 
         makeObservable(this, {
-            bitmap: observable,
             bitmapObject: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            bitmap: observable
         });
     }
 
@@ -2285,8 +2299,8 @@ export class SliderDashboardWidget extends Widget {
     viewMin: string;
     viewMax: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             value: observable,

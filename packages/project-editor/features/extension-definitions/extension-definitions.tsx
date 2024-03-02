@@ -90,9 +90,8 @@ export class UseDashboardProject extends EezObject {
         }
     };
 
-    constructor() {
-        super();
-
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             projectFilePath: observable
         });
@@ -342,9 +341,8 @@ export class ExtensionDefinition extends EezObject {
         }
     };
 
-    constructor() {
-        super();
-
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             name: observable,
             description: observable,

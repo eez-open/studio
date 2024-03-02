@@ -223,8 +223,8 @@ export class ContainerWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -534,8 +534,8 @@ export class ListWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             itemWidget: observable,
@@ -739,8 +739,8 @@ export class GridWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             itemWidget: observable,
@@ -1016,8 +1016,8 @@ export class SelectWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             widgets: observable
@@ -1404,10 +1404,17 @@ export class UserWidgetWidget extends Widget {
         super();
 
         makeObservable(this, {
-            userWidgetPageName: observable,
-            context: observable,
             userWidgetPage: computed,
             isCycleDetected: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            userWidgetPageName: observable,
+            context: observable
         });
     }
 

@@ -73,8 +73,8 @@ export class ScpiParameterType extends EezObject implements IParameterType {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             type: observable,
@@ -336,8 +336,8 @@ export class ScpiParameter extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -424,8 +424,8 @@ export class ScpiResponseType extends EezObject implements IResponseType {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             type: observable,
@@ -657,8 +657,8 @@ export class ScpiResponse extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             type: observable,
@@ -691,15 +691,22 @@ export class ScpiCommand extends EezObject {
         super();
 
         makeObservable(this, {
+            shortCommand: computed,
+            longCommand: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             name: observable,
             description: observable,
             helpLink: observable,
             usedIn: observable,
             parameters: observable,
             response: observable,
-            sendsBackDataBlock: observable,
-            shortCommand: computed,
-            longCommand: computed
+            sendsBackDataBlock: observable
         });
     }
 
@@ -865,8 +872,8 @@ export class ScpiSubsystem extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -904,8 +911,8 @@ export class Scpi extends EezObject {
         icon: "material:navigate_next"
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             subsystems: observable,

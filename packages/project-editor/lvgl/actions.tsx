@@ -164,8 +164,8 @@ export class LVGLActionType extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             action: observable
@@ -202,8 +202,9 @@ export class LVGLChangeScreenActionType extends LVGLActionType {
     speed: number;
     delay: number;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             showPreviousScreen: observable,
             screen: observable,
@@ -340,8 +341,8 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
     instant: boolean;
     path: keyof typeof ANIM_PATHS;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             target: observable,
@@ -689,8 +690,9 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
     valueType: LVGLPropertyType;
     textarea: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             targetType: observable,
             target: observable,
@@ -1137,8 +1139,8 @@ export class LVGLActionComponent extends ActionComponent {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             actions: observable

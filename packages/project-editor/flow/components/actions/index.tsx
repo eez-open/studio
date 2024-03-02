@@ -243,8 +243,8 @@ export class InputActionComponent extends ActionComponent {
     name: string;
     inputType: ValueType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -330,8 +330,8 @@ export class OutputActionComponent extends ActionComponent {
     name: string;
     outputType: ValueType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -384,8 +384,8 @@ export class EvalExprActionComponent extends ActionComponent {
 
     expression: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             expression: observable
@@ -468,8 +468,8 @@ export class WatchVariableActionComponent extends ActionComponent {
 
     variable: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             variable: observable
@@ -594,8 +594,8 @@ export class EvalJSExprActionComponent extends ActionComponent {
 
     expression: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             expression: observable
@@ -765,8 +765,8 @@ class SetVariableEntry extends EezObject {
             )
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             variable: observable,
@@ -826,8 +826,8 @@ export class SetVariableActionComponent extends ActionComponent {
 
     entries: SetVariableEntry[];
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             entries: observable
@@ -998,8 +998,8 @@ class SwitchTest extends EezObject {
         defaultValue: {}
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             condition: observable,
@@ -1049,8 +1049,8 @@ export class SwitchActionComponent extends ActionComponent {
 
     tests: SwitchTest[];
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             tests: observable
@@ -1209,8 +1209,8 @@ export class CompareActionComponent extends ActionComponent {
     C: string;
     operator: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             A: observable,
@@ -1363,8 +1363,8 @@ export class IsTrueActionComponent extends ActionComponent {
 
     value: any;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             value: observable
@@ -1462,8 +1462,8 @@ export class ConstantActionComponent extends ActionComponent {
 
     value: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             value: observable
@@ -1576,14 +1576,15 @@ export class SortArrayActionComponent extends ActionComponent {
     ascending: boolean;
     ignoreCase: boolean;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             array: observable,
             structureName: observable,
             structureFieldName: observable,
-            ascending: true,
-            ignoreCase: true
+            ascending: observable,
+            ignoreCase: observable
         });
     }
 
@@ -1829,8 +1830,8 @@ export class ReadSettingActionComponent extends ActionComponent {
 
     key: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             key: observable
@@ -1938,8 +1939,8 @@ export class WriteSettingsActionComponent extends ActionComponent {
     key: string;
     value: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             key: observable,
@@ -2007,8 +2008,8 @@ export class LogActionComponent extends ActionComponent {
 
     value: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             value: observable
@@ -2118,8 +2119,8 @@ export class CallActionActionComponent extends ActionComponent {
 
     action: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             action: observable
@@ -2329,8 +2330,8 @@ export class DynamicCallActionActionComponent extends ActionComponent {
 
     action: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             action: observable
@@ -2414,8 +2415,8 @@ export class DelayActionComponent extends ActionComponent {
 
     milliseconds: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             milliseconds: observable
@@ -2480,8 +2481,8 @@ export class ErrorActionComponent extends ActionComponent {
 
     message: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             message: observable
@@ -2583,8 +2584,8 @@ export class CounterActionComponent extends ActionComponent {
 
     countValue: number;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             countValue: observable
@@ -2726,8 +2727,8 @@ export class LoopActionComponent extends ActionComponent {
     to: string;
     step: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             variable: observable,
@@ -2796,8 +2797,9 @@ export class LoopActionComponent extends ActionComponent {
 export class OnEventActionComponent extends ActionComponent {
     event: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             event: observable
         });
@@ -2928,8 +2930,8 @@ export class ShowPageActionComponent extends ActionComponent {
 
     page: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             page: observable
@@ -3044,8 +3046,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
     message: string;
     buttons: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             messageType: observable,
@@ -3172,8 +3174,8 @@ export class ShowKeyboardActionComponent extends ActionComponent {
     maxChars: string;
     password: boolean;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable,
@@ -3304,8 +3306,8 @@ export class ShowKeypadActionComponent extends ActionComponent {
     precision: string;
     unit: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable,
@@ -3383,8 +3385,8 @@ export class SelectLanguageActionComponent extends ActionComponent {
 
     language: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             language: observable
@@ -3450,8 +3452,8 @@ export class SetPageDirectionActionComponent extends ActionComponent {
 
     direction: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             direction: observable
@@ -3532,8 +3534,8 @@ export class OverrideStyleActionComponent extends ActionComponent {
     fromStyle: string;
     toStyle: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             fromStyle: observable,
@@ -3657,8 +3659,8 @@ export class AnimateActionComponent extends ActionComponent {
     to: string;
     speed: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             from: observable,
@@ -3756,8 +3758,8 @@ export class ClipboardWriteActionComponent extends ActionComponent {
 
     data: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             data: observable
@@ -3823,8 +3825,8 @@ export class NoopActionComponent extends ActionComponent {
 
     name: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable
@@ -4016,8 +4018,8 @@ export class CommentActionComponent extends ActionComponent {
 
     text: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text: observable
@@ -4092,8 +4094,8 @@ export class SyncLockActionComponent extends ActionComponent {
 
     milliseconds: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             milliseconds: observable
@@ -4157,8 +4159,8 @@ export class TestAndSetActionComponent extends ActionComponent {
 
     variable: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             variable: observable
@@ -4259,8 +4261,15 @@ export class LabelOutActionComponent extends ActionComponent {
         super();
 
         makeObservable(this, {
-            label: observable,
             labelInComponent: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            label: observable
         });
     }
 
@@ -4418,8 +4427,8 @@ export class LabelInActionComponent extends ActionComponent {
 
     label: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable

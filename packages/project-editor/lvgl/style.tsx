@@ -86,8 +86,8 @@ export class LVGLStyle extends EezObject {
     childStyles: LVGLStyle[];
     definition: LVGLStylesDefinition;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -385,10 +385,17 @@ export class LVGLStyles extends EezObject {
         super();
 
         makeObservable(this, {
-            styles: observable,
-            defaultStyles: observable,
             lvglRuntime: computed({ keepAlive: true }),
             allStyles: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            styles: observable,
+            defaultStyles: observable
         });
     }
 

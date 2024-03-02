@@ -168,17 +168,24 @@ export class Bitmap extends EezObject {
         super();
 
         makeObservable<Bitmap, "_imageElement">(this, {
+            backgroundColor: computed,
+            _imageElement: observable,
+            imageElement: computed({ keepAlive: true }),
+            bitmapData: computed({ keepAlive: true })
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable<Bitmap>(this, {
             id: observable,
             name: observable,
             description: observable,
             image: observable,
             bpp: observable,
             alwaysBuild: observable,
-            style: observable,
-            _imageElement: observable,
-            backgroundColor: computed,
-            imageElement: computed({ keepAlive: true }),
-            bitmapData: computed({ keepAlive: true })
+            style: observable
         });
     }
 

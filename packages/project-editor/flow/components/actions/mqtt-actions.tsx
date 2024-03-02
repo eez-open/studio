@@ -160,8 +160,8 @@ export class MQTTInitActionComponent extends ActionComponent {
     userName: string;
     password: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,
@@ -284,8 +284,8 @@ export class MQTTConnectActionComponent extends ActionComponent {
 
     connection: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable
@@ -349,8 +349,8 @@ export class MQTTDisconnectActionComponent extends ActionComponent {
 
     connection: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable
@@ -414,8 +414,8 @@ class EventHandler extends EezObject {
     handlerType: "flow" | "action";
     action: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             eventName: observable,
@@ -655,8 +655,8 @@ export class MQTTEventActionComponent extends ActionComponent {
     connection: string;
     eventHandlers: EventHandler[];
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,
@@ -748,8 +748,8 @@ export class MQTTSubscribeActionComponent extends ActionComponent {
     connection: string;
     topic: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,
@@ -826,8 +826,8 @@ export class MQTTUnsubscribeActionComponent extends ActionComponent {
     connection: string;
     topic: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,
@@ -913,8 +913,8 @@ export class MQTTPublishActionComponent extends ActionComponent {
     topic: string;
     payload: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,

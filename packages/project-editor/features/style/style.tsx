@@ -210,8 +210,8 @@ export class ConditionalStyle extends EezObject {
             )
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             style: observable,
@@ -914,38 +914,6 @@ export class Style extends EezObject {
         this._transientId = nextTransientId++;
 
         makeObservable(this, {
-            id: observable,
-            name: observable,
-            description: observable,
-            useStyle: observable,
-            conditionalStyles: observable,
-            childStyles: observable,
-            alwaysBuild: observable,
-            font: observable,
-            fontFamily: observable,
-            fontSize: observable,
-            fontWeight: observable,
-            fontStyle: observable,
-            alignHorizontal: observable,
-            alignVertical: observable,
-            direction: observable,
-            color: observable,
-            backgroundColor: observable,
-            backgroundImage: observable,
-            activeColor: observable,
-            activeBackgroundColor: observable,
-            focusColor: observable,
-            focusBackgroundColor: observable,
-            borderSize: observable,
-            borderRadius: observable,
-            borderColor: observable,
-            borderStyle: observable,
-            padding: observable,
-            margin: observable,
-            opacity: observable,
-            boxShadow: observable,
-            blink: observable,
-            css: observable,
             fontName: computed,
             fontObject: computed,
             fontFamilyProperty: computed,
@@ -1076,6 +1044,45 @@ export class Style extends EezObject {
             cssDeclarations: computed,
             cssPreview: computed,
             classNames: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable,
+            useStyle: observable,
+            conditionalStyles: observable,
+            childStyles: observable,
+            alwaysBuild: observable,
+            font: observable,
+            fontFamily: observable,
+            fontSize: observable,
+            fontWeight: observable,
+            fontStyle: observable,
+            alignHorizontal: observable,
+            alignVertical: observable,
+            direction: observable,
+            color: observable,
+            backgroundColor: observable,
+            backgroundImage: observable,
+            activeColor: observable,
+            activeBackgroundColor: observable,
+            focusColor: observable,
+            focusBackgroundColor: observable,
+            borderSize: observable,
+            borderRadius: observable,
+            borderColor: observable,
+            borderStyle: observable,
+            padding: observable,
+            margin: observable,
+            opacity: observable,
+            boxShadow: observable,
+            blink: observable,
+            css: observable
         });
     }
 

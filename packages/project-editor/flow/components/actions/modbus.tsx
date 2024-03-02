@@ -608,8 +608,8 @@ export class ModbusActionComponent extends ActionComponent {
     registerValues: string;
     timeout: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             connection: observable,

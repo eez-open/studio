@@ -280,8 +280,8 @@ export class DisplayDataWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             focusStyle: observable,
@@ -527,8 +527,8 @@ export class TextWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -938,8 +938,8 @@ export class MultilineTextWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -1059,8 +1059,8 @@ export class RectangleWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             ignoreLuminocity: observable,
@@ -1182,8 +1182,15 @@ export class BitmapWidget extends Widget {
         super();
 
         makeObservable(this, {
-            bitmap: observable,
             bitmapObject: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            bitmap: observable
         });
     }
 
@@ -1536,8 +1543,8 @@ export class ButtonWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text: observable,
@@ -1682,8 +1689,8 @@ export class ToggleButtonWidget extends Widget {
     text2?: string;
     checkedStyle: Style;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text1: observable,
@@ -1803,8 +1810,8 @@ export class ButtonGroupWidget extends Widget {
     selectedStyle: Style;
     selectedButton: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             selectedStyle: observable,
@@ -2095,8 +2102,8 @@ export class BarGraphWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             orientation: observable,
@@ -2424,8 +2431,8 @@ export class YTGraphWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             y1Style: observable,
@@ -2549,8 +2556,8 @@ export class UpDownWidget extends Widget {
     min: string;
     max: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             buttonsStyle: observable,
@@ -2747,8 +2754,8 @@ export class ListGraphWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             dwellData: observable,
@@ -2885,8 +2892,8 @@ export class ProgressWidget extends Widget {
     max: string;
     orientation: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -3045,8 +3052,8 @@ export class AppViewWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             page: observable
@@ -3164,8 +3171,8 @@ export class ScrollBarWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             thumbStyle: observable,
@@ -3467,8 +3474,8 @@ class LineChartLine extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             label: observable,
@@ -3685,8 +3692,8 @@ export class LineChartEmbeddedWidget extends Widget {
     yAxisStyle: Style;
     markerStyle: Style;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             xValue: observable,
@@ -4508,8 +4515,8 @@ export class GaugeEmbeddedWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -5026,8 +5033,8 @@ export class InputEmbeddedWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             inputType: observable,
@@ -5246,8 +5253,8 @@ export class RollerWidget extends Widget {
         )
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -5518,8 +5525,8 @@ export class SliderWidget extends Widget {
         )
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -5673,8 +5680,8 @@ export class DropDownListWidget extends Widget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             options: observable
@@ -5764,8 +5771,15 @@ export class QRCodeWidget extends Widget {
         super();
 
         makeObservable(this, {
-            errorCorrection: observable,
             errorCorrectionValue: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            errorCorrection: observable
         });
     }
 

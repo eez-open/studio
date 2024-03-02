@@ -56,9 +56,8 @@ export class MicroPython extends EezObject {
         icon: MICROPYTHON_ICON(24)
     };
 
-    constructor() {
-        super();
-
+    override makeEditable() {
+        super.makeEditable();
         makeObservable(this, {
             code: observable
         });

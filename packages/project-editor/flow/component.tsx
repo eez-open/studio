@@ -701,8 +701,8 @@ export class CustomInput extends EezObject implements ComponentInput {
     name: string;
     type: ValueType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -828,8 +828,8 @@ export class CustomOutput extends EezObject implements ComponentOutput {
     name: string;
     type: ValueType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -1645,15 +1645,6 @@ export class Component extends EezObject {
         super();
 
         makeObservable(this, {
-            type: observable,
-            left: observable,
-            top: observable,
-            width: observable,
-            height: observable,
-            customInputs: observable,
-            customOutputs: observable,
-            _geometry: observable,
-            catchError: observable,
             absolutePositionPoint: computed,
             absolutePosition: computed,
             inputs: computed,
@@ -1662,6 +1653,22 @@ export class Component extends EezObject {
             buildOutputs: computed({ keepAlive: true }),
             isMoveable: computed,
             rect: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            type: observable,
+            left: observable,
+            top: observable,
+            width: observable,
+            height: observable,
+            customInputs: observable,
+            customOutputs: observable,
+            _geometry: observable,
+            catchError: observable
         });
     }
 
@@ -2382,8 +2389,8 @@ export class EventHandler extends EezObject {
     handlerType: "flow" | "action";
     action: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             eventName: observable,
@@ -3023,12 +3030,19 @@ export class Widget extends Component {
         super();
 
         makeObservable(this, {
+            styleObject: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             data: observable,
             visible: observable,
             resizing: observable,
             style: observable,
             allowOutside: observable,
-            styleObject: computed,
             locked: observable,
             hiddenInEditor: observable,
             timeline: observable,
@@ -3899,8 +3913,8 @@ export class ActionComponent extends Component {
 
     description: string;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             description: observable
@@ -4149,8 +4163,8 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                     }
                 };
 
-                constructor() {
-                    super();
+                override makeEditable() {
+                    super.makeEditable();
 
                     const observables: any = {};
 
@@ -4231,8 +4245,8 @@ export function createActionComponentClass(
             execute: actionComponentDefinition.execute
         });
 
-        constructor() {
-            super();
+        override makeEditable() {
+            super.makeEditable();
 
             const observables: any = {};
 

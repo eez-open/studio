@@ -984,6 +984,18 @@ export class LVGLWidget extends Widget {
         super();
 
         makeObservable(this, {
+            allStates: computed,
+            relativePosition: computed,
+            componentWidth: computed,
+            componentHeight: computed,
+            isAccessibleFromSourceCode: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             identifier: observable,
             leftUnit: observable,
             topUnit: observable,
@@ -1002,15 +1014,10 @@ export class LVGLWidget extends Widget {
             disabledState: observable,
             disabledStateType: observable,
             states: observable,
-            allStates: computed,
             useStyle: observable,
             localStyles: observable,
             _lvglObj: observable,
-            _refreshCounter: observable,
-            relativePosition: computed,
-            componentWidth: computed,
-            componentHeight: computed,
-            isAccessibleFromSourceCode: computed
+            _refreshCounter: observable
         });
     }
 
@@ -2021,8 +2028,8 @@ export class LVGLLabelWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text: observable,
@@ -2168,8 +2175,8 @@ export class LVGLButtonWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -2255,8 +2262,8 @@ export class LVGLPanelWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -2447,10 +2454,17 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         super();
 
         makeObservable(this, {
-            userWidgetPageName: observable,
             userWidgetPage: computed,
             isCycleDetected: computed,
             userWidgetPageCopy: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            userWidgetPageName: observable
         });
     }
 
@@ -2919,8 +2933,8 @@ export class LVGLImageWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             image: observable,
@@ -3131,8 +3145,8 @@ export class LVGLSliderWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -3424,8 +3438,8 @@ export class LVGLRollerWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             options: observable,
@@ -3608,8 +3622,8 @@ export class LVGLSwitchWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -3744,8 +3758,8 @@ export class LVGLBarWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             min: observable,
@@ -3963,8 +3977,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             options: observable,
@@ -4228,8 +4242,8 @@ export class LVGLArcWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             rangeMin: observable,
@@ -4399,8 +4413,8 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -4487,8 +4501,8 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, { text: observable });
     }
@@ -4628,8 +4642,8 @@ export class LVGLTextareaWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             text: observable,
@@ -4900,8 +4914,8 @@ export class LVGLCalendarWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             todayYear: observable,
@@ -5040,8 +5054,8 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             mode: observable,
@@ -5288,8 +5302,8 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             imageReleased: observable,
@@ -5615,8 +5629,8 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             textarea: observable,
@@ -5774,8 +5788,8 @@ export class LVGLChartWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {});
     }
@@ -5920,8 +5934,8 @@ export class LVGLMeterIndicator extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             type: observable
@@ -6026,8 +6040,9 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
     value: number | string;
     valueType: LVGLPropertyType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             image: observable,
             pivotX: observable,
@@ -6204,8 +6219,9 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
     value: number | string;
     valueType: LVGLPropertyType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             width: observable,
             color: observable,
@@ -6366,8 +6382,9 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
     endValue: number | string;
     endValueType: LVGLPropertyType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             colorStart: observable,
             colorEnd: observable,
@@ -6598,8 +6615,9 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
     endValue: number | string;
     endValueType: LVGLPropertyType;
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
+
         makeObservable(this, {
             width: observable,
             color: observable,
@@ -6932,8 +6950,8 @@ class LVGLMeterScale extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             minorTickCount: observable,
@@ -7079,8 +7097,8 @@ export class LVGLMeterWidget extends LVGLWidget {
         }
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             scales: observable

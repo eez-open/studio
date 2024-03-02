@@ -98,6 +98,14 @@ export class Variable extends EezObject {
         super();
 
         makeObservable(this, {
+            fullName: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
             id: observable,
             name: observable,
             description: observable,
@@ -106,8 +114,7 @@ export class Variable extends EezObject {
             defaultValueList: observable,
             usedIn: observable,
             persistent: observable,
-            native: observable,
-            fullName: computed
+            native: observable
         });
     }
 
@@ -886,8 +893,8 @@ export class StructureField extends EezObject implements IStructureField {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -965,9 +972,16 @@ export class Structure extends EezObject implements IStructure {
         super();
 
         makeObservable(this, {
-            name: observable,
-            fields: observable,
             fieldsMap: computed({ keepAlive: true })
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            fields: observable
         });
     }
 
@@ -1047,8 +1061,8 @@ export class EnumMember extends EezObject {
         }
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             name: observable,
@@ -1120,9 +1134,16 @@ export class Enum extends EezObject {
         super();
 
         makeObservable(this, {
-            name: observable,
-            members: observable,
             membersMap: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            members: observable
         });
     }
 
@@ -1176,11 +1197,18 @@ export class ProjectVariables extends EezObject {
         super();
 
         makeObservable(this, {
-            globalVariables: observable,
-            structures: observable,
-            enums: observable,
             enumsMap: computed({ keepAlive: true }),
             structsMap: computed({ keepAlive: true })
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            globalVariables: observable,
+            structures: observable,
+            enums: observable
         });
     }
 

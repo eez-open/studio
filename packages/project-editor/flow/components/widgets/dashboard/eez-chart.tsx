@@ -121,8 +121,8 @@ class WaveformDefinition extends EezObject {
             waveformDefinition.label
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             chartData: observable,
@@ -335,8 +335,8 @@ export class EEZChartWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {}
     });
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             chartType: observable,

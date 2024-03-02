@@ -92,8 +92,8 @@ export class LVGLStylesDefinition extends EezObject {
         defaultValue: {}
     };
 
-    constructor() {
-        super();
+    override makeEditable() {
+        super.makeEditable();
 
         makeObservable(this, {
             definition: observable
