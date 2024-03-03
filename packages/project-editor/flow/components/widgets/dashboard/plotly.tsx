@@ -70,6 +70,8 @@ const LineChartElement = observer(
 
         plotly: PlotlyModule.PlotlyHTMLElement | undefined;
         plotlyEl: HTMLDivElement | undefined;
+        plotlyWidth: number;
+        plotlyHeight: number;
 
         dispose1: IReactionDisposer | undefined;
         dispose2: IReactionDisposer | undefined;
@@ -314,6 +316,8 @@ const LineChartElement = observer(
                 true
             );
             this.plotlyEl = el;
+            this.plotlyWidth = this.props.width;
+            this.plotlyHeight = this.props.height;
 
             this.dispose1 = reaction(
                 () => {
@@ -413,7 +417,12 @@ const LineChartElement = observer(
 
         async componentDidUpdate() {
             if (this.ref.current) {
-                if (!this.plotly || !this.props.flowContext.flowState) {
+                if (
+                    !this.plotly ||
+                    !this.props.flowContext.flowState ||
+                    this.props.width != this.plotlyWidth ||
+                    this.props.height != this.plotlyHeight
+                ) {
                     this.createChart(this.ref.current);
                 } else {
                     this.plotly = await newPlotOrReact(
