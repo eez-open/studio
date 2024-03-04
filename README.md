@@ -8,12 +8,12 @@ To report an issue, use the [EEZ Studio issue tracker](https://github.com/eez-op
 
 ### Links
 
-* [Web page](https://www.envox.eu/studio/studio-introduction/)
-* [Discord](https://discord.gg/q5KAeeenNG) server
-* [X (Twitter)](https://twitter.com/envox)
-* [Mastodon](https://mastodon.social/@envox)
-* [YouTube](https://www.youtube.com/c/eezopen) channel
-* [Liberapay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
+-   [Web page](https://www.envox.eu/studio/studio-introduction/)
+-   [Discord](https://discord.gg/q5KAeeenNG) server
+-   [X (Twitter)](https://twitter.com/envox)
+-   [Mastodon](https://mastodon.social/@envox)
+-   [YouTube](https://www.youtube.com/c/eezopen) channel
+-   [Liberapay](https://liberapay.com/eez-open/donate) donations <img src="https://liberapay.com/assets/liberapay/icon-v2_white-on-yellow.svg" width="16" />
 
 ## Introduction
 
@@ -21,7 +21,7 @@ EEZ Studio is a free and open source cross-platform low-code visual tool for des
 
 ### EEZ Studio _Project_
 
-![EEZ Studio Project](images/projects_intro.png)
+![EEZ Studio Project](docs/images/projects_intro.png)
 
 -   Modular visual development environment for designing TFT display screen decorations and defining user interaction (embedded GUI)
 -   Generate C++ code for embedded GUI functionality that can be directly included in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for BB3 and other STM32 target platforms or [Arduino IDE](https://www.arduino.cc/en/software) for H24005 and other Arduino compatible target platforms
@@ -32,11 +32,11 @@ EEZ Studio is a free and open source cross-platform low-code visual tool for des
 -   Drag&drop editor for creating instrument's desktop dashboard (for remote control and management)
 -   Flowchart based low-code programming for desktop dashboard
 
-![Flow](images/flow_intro.png)
+![Flow](docs/images/flow_intro.png)
 
 ### EEZ Studio _Instrument_
 
-![EEZ Studio Instrument](images/instruments_intro.png)
+![EEZ Studio Instrument](docs/images/instruments_intro.png)
 
 -   Dynamic environment where multiple instruments can be configured and easily accessed
 -   Session oriented interaction with each SCPI instrument
@@ -156,7 +156,6 @@ or
 npm run dist-mac-x64
 ```
 
-
 On Raspbian:
 
 ```
@@ -185,7 +184,7 @@ The USB TMC driver must be installed if you want to access the T&M instrument us
 
 Download and start [Zadig](http://zadig.akeo.ie/). Select your device, select libusb-win32 and press "Replace Driver" button:
 
-![Zadig](images/usbtmc_zadin_windows.png)
+![Zadig](docs/images/usbtmc_zadin_windows.png)
 
 ### Linux
 
