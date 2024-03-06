@@ -68,6 +68,7 @@ export interface Params {
     createBlankGlyphs?: boolean;
     doNotAddGlyphIfNotFound: boolean;
     getAllGlyphs?: boolean;
+    lvglVersion?: string;
     lvglInclude?: string;
 }
 

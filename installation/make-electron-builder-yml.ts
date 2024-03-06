@@ -172,9 +172,17 @@ async function getExtraResource() {
             to: "project-templates/" + file
         }));
 
+    let lvImgConv9 = (
+        await fs.promises.readdir("./resources/lv_img_conv_9")
+    ).map(file => ({
+        from: "./resources/lv_img_conv_9/" + file,
+        to: "lv_img_conv_9/" + file
+    }));
+
     return [
         ...extraResources,
         ...projectTemplates,
+        ...lvImgConv9,
         ...[
             {
                 from: "./LICENSE.txt",

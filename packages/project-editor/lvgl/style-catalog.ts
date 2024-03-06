@@ -1,3 +1,5 @@
+import { isArray } from "eez-studio-shared/util";
+
 import {
     EezObject,
     PropertyInfo,
@@ -6,7 +8,7 @@ import {
 
 import { ProjectStore } from "project-editor/store";
 
-import { isArray } from "eez-studio-shared/util";
+import { LVGLStylePropCode } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,108 +37,6 @@ export const BUILT_IN_FONTS = [
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export enum LVGLStylePropCode {
-    LV_STYLE_PROP_INV = 0,
-
-    /*Group 0*/
-    LV_STYLE_WIDTH = 1,
-    LV_STYLE_MIN_WIDTH = 2,
-    LV_STYLE_MAX_WIDTH = 3,
-    LV_STYLE_HEIGHT = 4,
-    LV_STYLE_MIN_HEIGHT = 5,
-    LV_STYLE_MAX_HEIGHT = 6,
-    LV_STYLE_X = 7,
-    LV_STYLE_Y = 8,
-    LV_STYLE_ALIGN = 9,
-    LV_STYLE_LAYOUT = 10,
-    LV_STYLE_RADIUS = 11,
-
-    /*Group 1*/
-    LV_STYLE_PAD_TOP = 16,
-    LV_STYLE_PAD_BOTTOM = 17,
-    LV_STYLE_PAD_LEFT = 18,
-    LV_STYLE_PAD_RIGHT = 19,
-    LV_STYLE_PAD_ROW = 20,
-    LV_STYLE_PAD_COLUMN = 21,
-    LV_STYLE_BASE_DIR = 22,
-    LV_STYLE_CLIP_CORNER = 23,
-
-    /*Group 2*/
-    LV_STYLE_BG_COLOR = 32,
-    LV_STYLE_BG_OPA = 33,
-    LV_STYLE_BG_GRAD_COLOR = 34,
-    LV_STYLE_BG_GRAD_DIR = 35,
-    LV_STYLE_BG_MAIN_STOP = 36,
-    LV_STYLE_BG_GRAD_STOP = 37,
-    LV_STYLE_BG_GRAD = 38,
-    LV_STYLE_BG_DITHER_MODE = 39,
-    LV_STYLE_BG_IMG_SRC = 40,
-    LV_STYLE_BG_IMG_OPA = 41,
-    LV_STYLE_BG_IMG_RECOLOR = 42,
-    LV_STYLE_BG_IMG_RECOLOR_OPA = 43,
-    LV_STYLE_BG_IMG_TILED = 44,
-
-    /*Group 3*/
-    LV_STYLE_BORDER_COLOR = 48,
-    LV_STYLE_BORDER_OPA = 49,
-    LV_STYLE_BORDER_WIDTH = 50,
-    LV_STYLE_BORDER_SIDE = 51,
-    LV_STYLE_BORDER_POST = 52,
-    LV_STYLE_OUTLINE_WIDTH = 53,
-    LV_STYLE_OUTLINE_COLOR = 54,
-    LV_STYLE_OUTLINE_OPA = 55,
-    LV_STYLE_OUTLINE_PAD = 56,
-
-    /*Group 4*/
-    LV_STYLE_SHADOW_WIDTH = 64,
-    LV_STYLE_SHADOW_OFS_X = 65,
-    LV_STYLE_SHADOW_OFS_Y = 66,
-    LV_STYLE_SHADOW_SPREAD = 67,
-    LV_STYLE_SHADOW_COLOR = 68,
-    LV_STYLE_SHADOW_OPA = 69,
-    LV_STYLE_IMG_OPA = 70,
-    LV_STYLE_IMG_RECOLOR = 71,
-    LV_STYLE_IMG_RECOLOR_OPA = 72,
-    LV_STYLE_LINE_WIDTH = 73,
-    LV_STYLE_LINE_DASH_WIDTH = 74,
-    LV_STYLE_LINE_DASH_GAP = 75,
-    LV_STYLE_LINE_ROUNDED = 76,
-    LV_STYLE_LINE_COLOR = 77,
-    LV_STYLE_LINE_OPA = 78,
-
-    /*Group 5*/
-    LV_STYLE_ARC_WIDTH = 80,
-    LV_STYLE_ARC_ROUNDED = 81,
-    LV_STYLE_ARC_COLOR = 82,
-    LV_STYLE_ARC_OPA = 83,
-    LV_STYLE_ARC_IMG_SRC = 84,
-    LV_STYLE_TEXT_COLOR = 85,
-    LV_STYLE_TEXT_OPA = 86,
-    LV_STYLE_TEXT_FONT = 87,
-    LV_STYLE_TEXT_LETTER_SPACE = 88,
-    LV_STYLE_TEXT_LINE_SPACE = 89,
-    LV_STYLE_TEXT_DECOR = 90,
-    LV_STYLE_TEXT_ALIGN = 91,
-
-    /*Group 6*/
-    LV_STYLE_OPA = 96,
-    LV_STYLE_COLOR_FILTER_DSC = 97,
-    LV_STYLE_COLOR_FILTER_OPA = 98,
-    LV_STYLE_ANIM = 99,
-    LV_STYLE_ANIM_TIME = 100,
-    LV_STYLE_ANIM_SPEED = 101,
-    LV_STYLE_TRANSITION = 102,
-    LV_STYLE_BLEND_MODE = 103,
-    LV_STYLE_TRANSFORM_WIDTH = 104,
-    LV_STYLE_TRANSFORM_HEIGHT = 105,
-    LV_STYLE_TRANSLATE_X = 106,
-    LV_STYLE_TRANSLATE_Y = 107,
-    LV_STYLE_TRANSFORM_ZOOM = 108,
-    LV_STYLE_TRANSFORM_ANGLE = 109,
-    LV_STYLE_TRANSFORM_PIVOT_X = 110,
-    LV_STYLE_TRANSFORM_PIVOT_Y = 111
-}
 
 interface LVGLStyleProp {
     code: LVGLStylePropCode;

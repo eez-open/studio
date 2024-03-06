@@ -62,6 +62,8 @@ export const LVGLPage = observer(
         }
 
         render() {
+            this.context.project.settings.general.lvglVersion;
+
             return (
                 <LVGLPageCanvasWithForwardedRef
                     ref={this.canvasRef}

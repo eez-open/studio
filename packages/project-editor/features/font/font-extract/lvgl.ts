@@ -32,7 +32,7 @@ export class ExtractFont implements IFontExtract {
 
         const symbols = this.params.symbols ?? "";
 
-        const fonts = [
+        const font = [
             {
                 source_path: this.params.absoluteFilePath,
                 source_bin,
@@ -52,16 +52,18 @@ export class ExtractFont implements IFontExtract {
         );
 
         const args = {
-            font: fonts,
+            font,
             size: this.params.size,
             bpp: this.params.bpp,
             no_compress: true,
             lcd: false,
             lcd_v: false,
             use_color_info: false,
-            format: "lvgl",
             output,
-            lv_include: this.params.lvglInclude
+            lv_include: this.params.lvglInclude,
+            no_kerning: false,
+            no_prefilter: false,
+            fast_kerning: false
         };
 
         // wait for !extractBusy

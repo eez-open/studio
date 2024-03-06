@@ -18,9 +18,9 @@ import {
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 
 import { isArray } from "eez-studio-shared/util";
+import { getLvglWasmFlowRuntimeConstructor } from "project-editor/lvgl/lvgl-versions";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
-const lvgl_flow_runtime_v8_3_constructor = require("project-editor/flow/runtime/lvgl_runtime_v8.3.js");
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -195,7 +195,7 @@ export function createWasmWorker(
     wasmModuleId: number,
     debuggerMessageSubsciptionFilter: number,
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
-    lvgl: boolean,
+    lvglVersion: string | undefined,
     displayWidth: number,
     displayHeight: number,
     getClassByName: (className: string) => any,
@@ -204,8 +204,8 @@ export function createWasmWorker(
 ) {
     let WasmFlowRuntime: IWasmFlowRuntime;
 
-    if (lvgl) {
-        WasmFlowRuntime = lvgl_flow_runtime_v8_3_constructor(
+    if (lvglVersion != undefined) {
+        WasmFlowRuntime = getLvglWasmFlowRuntimeConstructor(lvglVersion)(
             postWorkerToRenderMessage
         );
     } else {

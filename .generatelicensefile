@@ -15,10 +15,12 @@
         "./libs/licenses/Free FFT and convolution.txt",
         "./libs/licenses/lv_drivers.txt",
         "./libs/licenses/lv_img_conv.txt",
-        "./libs/licenses/LVGL.txt",
+        "./libs/licenses/LVGL_8.3.txt",
+        "./libs/licenses/LVGL_9.0.txt",
         "./libs/licenses/pdfjs.txt",
         "./libs/licenses/QR Code generator library.txt",
         "./libs/licenses/trix.txt",
-        "./libs/licenses/yarn@1.22.10.txt"
+        "./libs/licenses/yarn@1.22.10.txt",
+        "./libs/licenses/pngquant.txt"
     ]
 }

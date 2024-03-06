@@ -466,6 +466,8 @@ export const FontEditor = observer(
                     symbols: result.values.symbols,
                     createBlankGlyphs: false,
                     doNotAddGlyphIfNotFound: false,
+                    lvglVersion:
+                        this.context.project.settings.general.lvglVersion,
                     lvglInclude: this.context.project.settings.build.lvglInclude
                 });
 

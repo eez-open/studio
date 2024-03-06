@@ -132,22 +132,12 @@ import { Assets, DataBuffer } from "project-editor/build/assets";
 import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component-types";
 import { visitObjects } from "project-editor/core/search";
 import { validators } from "eez-studio-shared/validation";
+import {
+    getLvglCoordTypeShift,
+    lvglHasLabelRecolorSupport
+} from "project-editor/lvgl/lvgl-versions";
 
-////////////////////////////////////////////////////////////////////////////////
-
-const _LV_COORD_TYPE_SHIFT = 13;
-const _LV_COORD_TYPE_SPEC = 1 << _LV_COORD_TYPE_SHIFT;
-function LV_COORD_SET_SPEC(x: number) {
-    return x | _LV_COORD_TYPE_SPEC;
-}
-
-function LV_PCT(x: number) {
-    return x < 0 ? LV_COORD_SET_SPEC(1000 - x) : LV_COORD_SET_SPEC(x);
-}
-
-const LV_SIZE_CONTENT = LV_COORD_SET_SPEC(2001);
-
-////////////////////////////////////////////////////////////////////////////////
+4; ////////////////////////////////////////////////////////////////////////////////
 
 const generalGroup: IPropertyGridGroupDefinition = {
     id: "lvgl-general",
@@ -1770,36 +1760,52 @@ export class LVGLWidget extends Widget {
 
     lvglBuildTickSpecific(build: LVGLBuild): void {}
 
-    get lvglCreateLeft() {
+    getLvglCreateRect() {
+        const _LV_COORD_TYPE_SHIFT = getLvglCoordTypeShift(this);
+        const _LV_COORD_TYPE_SPEC = 1 << _LV_COORD_TYPE_SHIFT;
+        function LV_COORD_SET_SPEC(x: number) {
+            return x | _LV_COORD_TYPE_SPEC;
+        }
+
+        function LV_PCT(x: number) {
+            return x < 0 ? LV_COORD_SET_SPEC(1000 - x) : LV_COORD_SET_SPEC(x);
+        }
+
+        const LV_SIZE_CONTENT = LV_COORD_SET_SPEC(2001);
+
+        let left;
         if (this.leftUnit == "%") {
-            return LV_PCT(this.left);
+            left = LV_PCT(this.left);
+        } else {
+            left = this.left;
         }
-        return this.left;
-    }
 
-    get lvglCreateTop() {
+        let top;
         if (this.topUnit == "%") {
-            return LV_PCT(this.top);
+            top = LV_PCT(this.top);
+        } else {
+            top = this.top;
         }
-        return this.top;
-    }
 
-    get lvglCreateWidth() {
+        let width;
         if (this.widthUnit == "content") {
-            return LV_SIZE_CONTENT;
+            width = LV_SIZE_CONTENT;
         } else if (this.widthUnit == "%") {
-            return LV_PCT(this.width);
+            width = LV_PCT(this.width);
+        } else {
+            width = this.width;
         }
-        return this.width;
-    }
 
-    get lvglCreateHeight() {
+        let height;
         if (this.heightUnit == "content") {
-            return LV_SIZE_CONTENT;
+            height = LV_SIZE_CONTENT;
         } else if (this.heightUnit == "%") {
-            return LV_PCT(this.height);
+            height = LV_PCT(this.height);
+        } else {
+            height = this.height;
         }
-        return this.height;
+
+        return { left, top, width, height };
     }
 
     get lvglBuildLeft() {
@@ -1965,6 +1971,15 @@ export class LVGLLabelWidget extends LVGLWidget {
             }
         ],
 
+        beforeLoadHook: (
+            object: LVGLLabelWidget,
+            jsObject: Partial<LVGLLabelWidget>
+        ) => {
+            if (!jsObject.textType) {
+                jsObject.textType = "literal";
+            }
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -2049,14 +2064,17 @@ export class LVGLLabelWidget extends LVGLWidget {
     ): number {
         const textExpr = getExpressionPropertyData(runtime, this, "text");
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             textExpr
                 ? 0
                 : runtime.wasm.allocateUTF8(
@@ -2096,7 +2114,9 @@ export class LVGLLabelWidget extends LVGLWidget {
         }
 
         if (this.recolor) {
-            build.line(`lv_label_set_recolor(obj, true);`);
+            if (lvglHasLabelRecolorSupport(this)) {
+                build.line(`lv_label_set_recolor(obj, true);`);
+            }
         }
 
         if (this.textType == "literal") {
@@ -2185,14 +2205,16 @@ export class LVGLButtonWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         return runtime.wasm._lvglCreateButton(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
     }
 
@@ -2272,14 +2294,16 @@ export class LVGLPanelWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         return runtime.wasm._lvglCreatePanel(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
     }
 
@@ -2634,14 +2658,16 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         const widgetIndex = runtime.getWidgetIndex(this);
 
         if (!this.userWidgetPageCopy || this.isCycleDetected) {
+            const rect = this.getLvglCreateRect();
+
             return runtime.wasm._lvglCreateUserWidget(
                 parentObj,
                 widgetIndex,
 
-                this.lvglCreateLeft,
-                this.lvglCreateTop,
-                this.lvglCreateWidth,
-                this.lvglCreateHeight
+                rect.left,
+                rect.top,
+                rect.width,
+                rect.height
             );
         }
 
@@ -2666,12 +2692,14 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             };
         }
 
+        const rect = this.getLvglCreateRect();
+
         const obj = this.userWidgetPageCopy.lvglCreate(runtime, parentObj, {
             widgetIndex,
-            left: this.lvglCreateLeft,
-            top: this.lvglCreateTop,
-            width: this.lvglCreateWidth,
-            height: this.lvglCreateHeight
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height
         });
 
         runtime.lvglCreateContext = savedUserWidgetContext;
@@ -2949,14 +2977,17 @@ export class LVGLImageWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             0,
             this.pivotX,
             this.pivotY,
@@ -3177,14 +3208,17 @@ export class LVGLSliderWidget extends LVGLWidget {
                 ? getExpressionPropertyData(runtime, this, "valueLeft")
                 : undefined;
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateSlider(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             this.min,
             this.max,
             SLIDER_MODES[this.mode],
@@ -3470,14 +3504,17 @@ export class LVGLRollerWidget extends LVGLWidget {
             "selected"
         );
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateRoller(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
             selectedExpr ? 0 : (this.selected as number),
             ROLLER_MODES[this.mode]
@@ -3632,14 +3669,16 @@ export class LVGLSwitchWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
     }
 
@@ -3790,14 +3829,17 @@ export class LVGLBarWidget extends LVGLWidget {
                 ? getExpressionPropertyData(runtime, this, "valueStart")
                 : undefined;
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateBar(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             this.min,
             this.max,
             BAR_MODES[this.mode],
@@ -4008,14 +4050,17 @@ export class LVGLDropdownWidget extends LVGLWidget {
             "selected"
         );
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateDropdown(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
             selectedExpr ? 0 : (this.selected as number)
         );
@@ -4267,14 +4312,17 @@ export class LVGLArcWidget extends LVGLWidget {
     ): number {
         const valueExpr = getExpressionPropertyData(runtime, this, "value");
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateArc(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             this.rangeMin,
             this.rangeMax,
             valueExpr ? 0 : (this.value as number),
@@ -4423,14 +4471,16 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         return runtime.wasm._lvglCreateSpinner(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
     }
 
@@ -4511,14 +4561,17 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         return runtime.wasm._lvglCreateCheckbox(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             runtime.wasm.allocateUTF8(this.text)
         );
     }
@@ -4662,14 +4715,17 @@ export class LVGLTextareaWidget extends LVGLWidget {
     ): number {
         const textExpr = getExpressionPropertyData(runtime, this, "text");
 
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateTextarea(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             textExpr || !this.text
                 ? 0
                 : runtime.wasm.allocateUTF8(
@@ -4928,14 +4984,17 @@ export class LVGLCalendarWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateCalendar(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             this.todayYear,
             this.todayMonth,
             this.todayDay,
@@ -5067,14 +5126,17 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateColorwheel(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             COLORWHEEL_MODES[this.mode],
             this.fixedMode
         );
@@ -5319,14 +5381,16 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateImgbutton(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
 
         if (this.imageReleased) {
@@ -5646,14 +5710,17 @@ export class LVGLKeyboardWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateKeyboard(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
             KEYBOARD_MODES[this.mode]
         );
 
@@ -5798,14 +5865,16 @@ export class LVGLChartWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateChart(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
 
         return obj;
@@ -7109,14 +7178,16 @@ export class LVGLMeterWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rect = this.getLvglCreateRect();
+
         const obj = runtime.wasm._lvglCreateMeter(
             parentObj,
             runtime.getWidgetIndex(this),
 
-            this.lvglCreateLeft,
-            this.lvglCreateTop,
-            this.lvglCreateWidth,
-            this.lvglCreateHeight
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
         );
 
         for (

@@ -21,11 +21,11 @@ import type { Page } from "project-editor/features/page/page";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
+import { LVGLStylePropCode } from "project-editor/lvgl/lvgl-versions";
 import {
     BUILT_IN_FONTS,
     lvglPropertiesMap,
     LVGLPropertyInfo,
-    LVGLStylePropCode,
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import {
@@ -358,7 +358,9 @@ export class LVGLStylesDefinition extends EezObject {
 
                             runtime.wasm._lvglObjSetLocalStylePropColor(
                                 obj,
-                                propertyInfo.lvglStyleProp.code,
+                                runtime.getLvglStylePropCode(
+                                    propertyInfo.lvglStyleProp.code
+                                ),
                                 colorValue,
                                 selectorCode
                             );
@@ -371,7 +373,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 if (index != -1) {
                                     runtime.wasm._lvglObjSetLocalStylePropBuiltInFont(
                                         obj,
-                                        propertyInfo.lvglStyleProp.code,
+                                        runtime.getLvglStylePropCode(
+                                            propertyInfo.lvglStyleProp.code
+                                        ),
                                         index,
                                         selectorCode
                                     );
@@ -387,7 +391,10 @@ export class LVGLStylesDefinition extends EezObject {
                                         if (fontPtr) {
                                             runtime.wasm._lvglObjSetLocalStylePropPtr(
                                                 obj,
-                                                propertyInfo.lvglStyleProp.code,
+                                                runtime.getLvglStylePropCode(
+                                                    propertyInfo.lvglStyleProp
+                                                        .code
+                                                ),
                                                 fontPtr,
                                                 selectorCode
                                             );
@@ -404,7 +411,9 @@ export class LVGLStylesDefinition extends EezObject {
 
                                 runtime.wasm._lvglObjSetLocalStylePropNum(
                                     obj,
-                                    propertyInfo.lvglStyleProp.code,
+                                    runtime.getLvglStylePropCode(
+                                        propertyInfo.lvglStyleProp.code
+                                    ),
                                     numValue,
                                     selectorCode
                                 );
@@ -414,7 +423,9 @@ export class LVGLStylesDefinition extends EezObject {
 
                             runtime.wasm._lvglObjSetLocalStylePropNum(
                                 obj,
-                                propertyInfo.lvglStyleProp.code,
+                                runtime.getLvglStylePropCode(
+                                    propertyInfo.lvglStyleProp.code
+                                ),
                                 numValue,
                                 selectorCode
                             );
@@ -432,7 +443,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 if (bitmapPtr) {
                                     runtime.wasm._lvglObjSetLocalStylePropPtr(
                                         obj,
-                                        propertyInfo.lvglStyleProp.code,
+                                        runtime.getLvglStylePropCode(
+                                            propertyInfo.lvglStyleProp.code
+                                        ),
                                         bitmapPtr,
                                         selectorCode
                                     );
@@ -466,9 +479,9 @@ export class LVGLStylesDefinition extends EezObject {
 
                         if (propertyInfo.type == PropertyType.ThemedColor) {
                             build.line(
-                                `lv_obj_set_style_${
+                                `lv_obj_set_style_${build.getStylePropName(
                                     propertyInfo.name
-                                }(obj, lv_color_hex(${colorRgbToHexNumStr(
+                                )}(obj, lv_color_hex(${colorRgbToHexNumStr(
                                     this.definition[part][state][propertyName]
                                 )}), ${selectorCode});`
                             );
@@ -480,9 +493,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 const index = BUILT_IN_FONTS.indexOf(value);
                                 if (index != -1) {
                                     build.line(
-                                        `lv_obj_set_style_${
+                                        `lv_obj_set_style_${build.getStylePropName(
                                             propertyInfo.name
-                                        }(obj, &lv_font_${(
+                                        )}(obj, &lv_font_${(
                                             value as string
                                         ).toLowerCase()}, ${selectorCode});`
                                     );
@@ -493,9 +506,9 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
                                     if (font) {
                                         build.line(
-                                            `lv_obj_set_style_${
+                                            `lv_obj_set_style_${build.getStylePropName(
                                                 propertyInfo.name
-                                            }(obj, &${build.getFontVariableName(
+                                            )}(obj, &${build.getFontVariableName(
                                                 font
                                             )}, ${selectorCode});`
                                         );
@@ -510,14 +523,18 @@ export class LVGLStylesDefinition extends EezObject {
                                     : value;
 
                                 build.line(
-                                    `lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`
+                                    `lv_obj_set_style_${build.getStylePropName(
+                                        propertyInfo.name
+                                    )}(obj, ${numValue}, ${selectorCode});`
                                 );
                             }
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? "true" : "false";
 
                             build.line(
-                                `lv_obj_set_style_${propertyInfo.name}(obj, ${numValue}, ${selectorCode});`
+                                `lv_obj_set_style_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(obj, ${numValue}, ${selectorCode});`
                             );
                         } else if (
                             propertyInfo.type == PropertyType.ObjectReference &&
@@ -525,7 +542,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 "bitmaps"
                         ) {
                             build.line(
-                                `lv_obj_set_style_${propertyInfo.name}(obj, &img_${value}, ${selectorCode});`
+                                `lv_obj_set_style_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(obj, &img_${value}, ${selectorCode});`
                             );
                         }
                     }

@@ -4,16 +4,20 @@ import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Project, findAction } from "project-editor/project/project";
-import { getAncestorOfType } from "project-editor/store";
+import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { writeTextFile } from "eez-studio-shared/util-electron";
-import { getLvglBitmapSourceFile } from "project-editor/lvgl/bitmap";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
     isEnumType,
     getEnumTypeNameFromType
 } from "project-editor/features/variable/value-type";
+import { MessageType } from "project-editor/core/object";
+import {
+    getLvglBitmapSourceFile,
+    getLvglStylePropName
+} from "project-editor/lvgl/lvgl-versions";
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -44,6 +48,10 @@ export class LVGLBuild extends Build {
 
         this.enumBitmaps();
         this.buildBitmapNames();
+    }
+
+    getStylePropName(stylePropName: string) {
+        return getLvglStylePropName(this.project, stylePropName);
     }
 
     enumPages() {
@@ -752,7 +760,11 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     )
                 );
             } catch (err) {
-                console.error(err);
+                this.project._store.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    `Error genereting bitmap '${output}.c' file: ${err}`
+                );
             }
         }
     }

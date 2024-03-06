@@ -542,6 +542,8 @@ export const LVGLSelectedStyleEditor = observer(
 
         render() {
             this.selectedStyle;
+            this.context.project.settings.general.lvglVersion;
+
             return (
                 <div
                     style={{

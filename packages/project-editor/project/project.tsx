@@ -297,6 +297,7 @@ export class Build extends EezObject {
             ) {
                 ProjectEditor.rebuildLvglFonts(
                     projectStore,
+                    projectStore.project.settings.general.lvglVersion,
                     values.lvglInclude
                 );
             }
@@ -598,6 +599,7 @@ export const PROJECT_TYPE_NAMES = {
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
+    lvglVersion: string;
     scpiDocFolder?: string;
     masterProject: string;
     extensions: ExtensionDirective[];
@@ -684,6 +686,18 @@ export class General extends EezObject {
                     general.projectType != ProjectType.UNDEFINED &&
                     general.projectType != ProjectType.RESOURCE &&
                     general.projectVersion == "v3"
+            },
+            {
+                name: "lvglVersion",
+                displayName: "LVGL version",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "8.3", label: "8.3" },
+                    { id: "9.0", label: "9.0" }
+                ],
+                enumDisallowUndefined: true,
+                disabled: (general: General) =>
+                    general.projectType != ProjectType.LVGL
             },
             {
                 name: "scpiDocFolder",
@@ -908,6 +922,12 @@ export class General extends EezObject {
                 }
             }
 
+            if (jsObject.projectType == "lvgl") {
+                if (jsObject.lvglVersion == undefined) {
+                    jsObject.lvglVersion = "8.3";
+                }
+            }
+
             if (jsObject.colorFormat == undefined) {
                 if (
                     jsObject.projectType == ProjectType.FIRMWARE ||
@@ -930,6 +950,21 @@ export class General extends EezObject {
                 jsObject.displayHeight =
                     __eezProjectMigration.displayTargetHeight;
             }
+        },
+
+        updateObjectValueHook: (general: General, values: Partial<General>) => {
+            const projectStore = getProjectStore(general);
+            if (
+                projectStore.projectTypeTraits.isLVGL &&
+                values.lvglVersion != undefined &&
+                general.lvglVersion != values.lvglVersion
+            ) {
+                ProjectEditor.rebuildLvglFonts(
+                    projectStore,
+                    values.lvglVersion,
+                    projectStore.project.settings.build.lvglInclude
+                );
+            }
         }
     };
 
@@ -939,6 +974,7 @@ export class General extends EezObject {
         makeObservable(this, {
             projectVersion: observable,
             projectType: observable,
+            lvglVersion: observable,
             scpiDocFolder: observable,
             masterProject: observable,
             extensions: observable,

@@ -43,7 +43,7 @@ add_custom_command(TARGET lvgl_runtime_v9.0 POST_BUILD
 
 add_custom_command(TARGET lvgl_runtime_v9.0 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_9.0.wasm"
+    "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_v9.0.wasm"
     "${PROJECT_SOURCE_DIR}/../../..")
 
 add_custom_command(TARGET lvgl_runtime_v9.0 POST_BUILD

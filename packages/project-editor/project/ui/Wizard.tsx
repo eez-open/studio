@@ -188,7 +188,10 @@ class WizardModel {
         projectVersion: string;
         gitClone: boolean;
         gitInit: boolean;
+        lvglVersion: string;
     };
+
+    lvglVersion: string = "8.3";
 
     constructor() {
         makeObservable(this, {
@@ -214,6 +217,7 @@ class WizardModel {
             projectCreationError: observable,
             gitClone: observable,
             gitInit: observable,
+            lvglVersion: observable,
             selectedTemplateProject: computed,
             validateName: action,
             validateLocation: action,
@@ -269,6 +273,7 @@ class WizardModel {
                     this.projectVersion = options.projectVersion;
                     this.gitClone = options.gitClone;
                     this.gitInit = options.gitInit;
+                    this.lvglVersion = options.lvglVersion ?? "8.3";
                 }
             } catch (err) {
                 console.error(err);
@@ -282,7 +287,8 @@ class WizardModel {
             bb3ProjectFile: this.bb3ProjectFile,
             projectVersion: this.projectVersion,
             gitClone: this.gitClone,
-            gitInit: this.gitInit
+            gitInit: this.gitInit,
+            lvglVersion: this.lvglVersion
         };
     }
 
@@ -307,7 +313,8 @@ class WizardModel {
                     bb3ProjectFile: this.bb3ProjectFile,
                     projectVersion: this.projectVersion,
                     gitClone: this.gitClone,
-                    gitInit: this.gitInit
+                    gitInit: this.gitInit,
+                    lvglVersion: this.lvglVersion
                 })
             );
 
@@ -318,7 +325,8 @@ class WizardModel {
                 bb3ProjectFile: this.bb3ProjectFile,
                 projectVersion: this.projectVersion,
                 gitClone: this.gitClone,
-                gitInit: this.gitInit
+                gitInit: this.gitInit,
+                lvglVersion: this.lvglVersion
             };
         } else {
             window.localStorage.setItem(
@@ -340,7 +348,9 @@ class WizardModel {
                     bb3ProjectFile: this.lastOptions.bb3ProjectFile,
                     projectVersion: this.lastOptions.projectVersion,
                     gitClone: this.lastOptions.gitClone,
-                    gitInit: this.lastOptions.gitInit
+                    gitInit: this.lastOptions.gitInit,
+
+                    lvglVersion: this.lastOptions.lvglVersion
                 })
             );
         }
@@ -1551,6 +1561,13 @@ class WizardModel {
                                     `Scripts/${this.name}.res`
                                 );
                         }
+                    } else if (
+                        this.type == "LVGL" ||
+                        this.type == "LVGL with EEZ Flow"
+                    ) {
+                        console.log("LVGL", this.lvglVersion);
+                        projectTemplate.settings.general.lvglVersion =
+                            this.lvglVersion;
                     }
 
                     let projectTemplateStr = JSON.stringify(
@@ -2089,6 +2106,31 @@ const ProjectProperties = observer(
                                     </div>
                                 )}
                             </div>
+
+                            {(wizardModel.type == "LVGL" ||
+                                wizardModel.type == "LVGL with EEZ Flow") && (
+                                <div className="mb-3">
+                                    <label
+                                        className="form-label"
+                                        htmlFor="new-project-wizard-lvgl-version"
+                                    >
+                                        LVGL version
+                                    </label>
+                                    <select
+                                        id="new-project-wizard-lvgl-version"
+                                        className="form-select"
+                                        onChange={action(
+                                            event =>
+                                                (wizardModel.lvglVersion =
+                                                    event.target.value)
+                                        )}
+                                        value={wizardModel.lvglVersion}
+                                    >
+                                        <option value="8.3">8.3</option>
+                                        <option value="9.0">9.0</option>
+                                    </select>
+                                </div>
+                            )}
 
                             <div className="mb-3">
                                 <label

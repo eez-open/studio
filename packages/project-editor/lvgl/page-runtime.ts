@@ -23,14 +23,20 @@ import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { Project, findBitmap } from "project-editor/project/project";
 import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
-import type { LVGLStyle } from "./style";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 import { PageTabState } from "project-editor/features/page/PageEditor";
-
-const lvgl_flow_runtime_constructor = require("project-editor/flow/runtime/lvgl_runtime.js");
+import {
+    LVGLStylePropCode,
+    getLvglBitmapPtr,
+    getLvglStylePropCode,
+    getLvglWasmFlowRuntimeConstructor
+} from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export abstract class LVGLPageRuntime {
+    lvglVersion: string;
+
     wasm: IWasmFlowRuntime;
     isMounted: boolean = false;
 
@@ -61,7 +67,11 @@ export abstract class LVGLPageRuntime {
         flowState: 0
     };
 
-    constructor(public page: Page) {}
+    constructor(public page: Page) {
+        this.lvglVersion = getProjectStore(
+            this.page
+        ).project.settings.general.lvglVersion;
+    }
 
     abstract get isEditor(): boolean;
 
@@ -69,6 +79,10 @@ export abstract class LVGLPageRuntime {
     abstract unmount(): void;
 
     abstract getWidgetIndex(object: LVGLWidget | Page): number;
+
+    getLvglStylePropCode(code: LVGLStylePropCode): number {
+        return getLvglStylePropCode(this.page, code);
+    }
 
     getBitmapPtrByName(bitmapName: string) {
         const bitmap = findBitmap(
@@ -95,39 +109,7 @@ export abstract class LVGLPageRuntime {
 
             const bitmapData = ProjectEditor.getBitmapData(bitmap, 32);
 
-            let bitmapPtr = this.wasm._malloc(
-                4 + 4 + 4 + bitmapData.pixels.length
-            );
-
-            if (!bitmapPtr) {
-                return 0;
-            }
-
-            const LV_IMG_CF_TRUE_COLOR = 4;
-            const LV_IMG_CF_TRUE_COLOR_ALPHA = 5;
-            const LV_IMG_CF_RGB565A8 = 20;
-
-            let header =
-                ((bitmapData.bpp == 32
-                    ? LV_IMG_CF_TRUE_COLOR_ALPHA
-                    : bitmapData.bpp == 24
-                    ? LV_IMG_CF_TRUE_COLOR
-                    : LV_IMG_CF_RGB565A8) <<
-                    0) |
-                (bitmapData.width << 10) |
-                (bitmapData.height << 21);
-
-            this.wasm.HEAP32[(bitmapPtr >> 2) + 0] = header;
-
-            this.wasm.HEAP32[(bitmapPtr >> 2) + 1] = bitmapData.pixels.length;
-
-            const offset = bitmapPtr + 12;
-
-            this.wasm.HEAP32[(bitmapPtr >> 2) + 2] = offset;
-
-            for (let i = 0; i < bitmapData.pixels.length; i++) {
-                this.wasm.HEAP8[offset + i] = bitmapData.pixels[i];
-            }
+            let bitmapPtr = getLvglBitmapPtr(this.page, this.wasm, bitmapData);
 
             cachedBitmap = {
                 imageElement: bitmap.imageElement,
@@ -164,9 +146,11 @@ export abstract class LVGLPageRuntime {
                 this.wasm.HEAP8[fontMemPtr + i] = bin[i];
             }
 
-            let fontPtr = this.wasm._lvglLoadFont(
-                this.wasm.allocateUTF8("M:" + fontMemPtr)
-            );
+            const fontPathStr = this.wasm.allocateUTF8("M:" + fontMemPtr);
+
+            let fontPtr = this.wasm._lvglLoadFont(fontPathStr);
+
+            this.wasm._free(fontPathStr);
 
             this.wasm._free(fontMemPtr);
 
@@ -260,73 +244,75 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        const wasm = lvgl_flow_runtime_constructor(async () => {
-            if (this.wasm != wasm) {
-                return;
-            }
-
-            runInAction(() => {
-                this.page._lvglRuntime = this;
-                this.page._lvglObj = undefined;
-            });
-
-            this.wasm._init(
-                0,
-                0,
-                0,
-                0,
-                this.displayWidth,
-                this.displayHeight,
-                -(new Date().getTimezoneOffset() / 60) * 100
-            );
-
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
-            );
-
-            this.autorRunDispose = autorun(() => {
-                if (!this.isMounted) {
+        const wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
+            async () => {
+                if (this.wasm != wasm) {
                     return;
                 }
 
-                // set all _lvglObj to undefined
                 runInAction(() => {
-                    this.page._lvglWidgetsIncludingUserWidgets.forEach(
-                        widget => (widget._lvglObj = undefined)
-                    );
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
                 });
 
-                this.wasm._lvglClearTimeline();
+                this.wasm._init(
+                    0,
+                    0,
+                    0,
+                    0,
+                    this.displayWidth,
+                    this.displayHeight,
+                    -(new Date().getTimezoneOffset() / 60) * 100
+                );
 
-                this.freeStrings();
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
 
-                const pageObj = this.page.lvglCreate(this, 0);
-                if (!pageObj) {
-                    console.error("pageObj is undefined");
-                }
+                this.autorRunDispose = autorun(() => {
+                    if (!this.isMounted) {
+                        return;
+                    }
 
-                const editor = getProjectStore(
-                    this.page
-                ).editorsStore.getEditorByObject(this.page);
-                if (editor) {
-                    const pageTabState = editor.state as PageTabState;
-                    if (pageTabState?.timeline?.isEditorActive) {
-                        this.wasm._lvglSetTimelinePosition(
-                            pageTabState.timeline.position
+                    // set all _lvglObj to undefined
+                    runInAction(() => {
+                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                            widget => (widget._lvglObj = undefined)
                         );
-                    }
-                }
+                    });
 
-                this.wasm._lvglScreenLoad(-1, pageObj);
+                    this.wasm._lvglClearTimeline();
 
-                runInAction(() => {
-                    if (this.page._lvglObj != undefined) {
-                        this.wasm._lvglDeleteObject(this.page._lvglObj);
+                    this.freeStrings();
+
+                    const pageObj = this.page.lvglCreate(this, 0);
+                    if (!pageObj) {
+                        console.error("pageObj is undefined");
                     }
-                    this.page._lvglObj = pageObj;
+
+                    const editor = getProjectStore(
+                        this.page
+                    ).editorsStore.getEditorByObject(this.page);
+                    if (editor) {
+                        const pageTabState = editor.state as PageTabState;
+                        if (pageTabState?.timeline?.isEditorActive) {
+                            this.wasm._lvglSetTimelinePosition(
+                                pageTabState.timeline.position
+                            );
+                        }
+                    }
+
+                    this.wasm._lvglScreenLoad(-1, pageObj);
+
+                    runInAction(() => {
+                        if (this.page._lvglObj != undefined) {
+                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        }
+                        this.page._lvglObj = pageObj;
+                    });
                 });
-            });
-        });
+            }
+        );
 
         this.wasm = wasm;
         this.isMounted = true;
@@ -409,37 +395,39 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
     }
 
     mount() {
-        this.wasm = lvgl_flow_runtime_constructor(async () => {
-            runInAction(() => {
-                this.page._lvglRuntime = this;
-                this.page._lvglObj = undefined;
-            });
+        this.wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
+            async () => {
+                runInAction(() => {
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
+                });
 
-            this.wasm._init(
-                0,
-                0,
-                0,
-                0,
-                this.page.width,
-                this.page.height,
-                -(new Date().getTimezoneOffset() / 60) * 100
-            );
+                this.wasm._init(
+                    0,
+                    0,
+                    0,
+                    0,
+                    this.page.width,
+                    this.page.height,
+                    -(new Date().getTimezoneOffset() / 60) * 100
+                );
 
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
-            );
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
 
-            const pageObj = this.page.lvglCreate(this, 0);
-            this.wasm._lvglScreenLoad(-1, pageObj);
-            runInAction(() => {
-                this.page._lvglRuntime = this;
-                this.page._lvglObj = pageObj;
-            });
+                const pageObj = this.page.lvglCreate(this, 0);
+                this.wasm._lvglScreenLoad(-1, pageObj);
+                runInAction(() => {
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = pageObj;
+                });
 
-            (
-                this.projectStore.runtime as WasmRuntime
-            ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
-        });
+                (
+                    this.projectStore.runtime as WasmRuntime
+                ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
+            }
+        );
         this.isMounted = true;
     }
 
@@ -707,97 +695,100 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        const wasm = lvgl_flow_runtime_constructor(async () => {
-            if (this.wasm != wasm) {
-                return;
-            }
-
-            runInAction(() => {
-                this.page._lvglRuntime = this;
-                this.page._lvglObj = undefined;
-            });
-
-            this.wasm._init(
-                0,
-                0,
-                0,
-                0,
-                this.displayWidth,
-                this.displayHeight,
-                -(new Date().getTimezoneOffset() / 60) * 100
-            );
-
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
-            );
-
-            this.autorRunDispose = autorun(() => {
-                if (!this.isMounted) {
+        const wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
+            async () => {
+                if (this.wasm != wasm) {
                     return;
                 }
 
-                // set all _lvglObj to undefined
                 runInAction(() => {
-                    this.page._lvglWidgetsIncludingUserWidgets.forEach(
-                        widget => (widget._lvglObj = undefined)
-                    );
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
                 });
 
-                this.selectedStyle;
-                this.project._store.uiStateStore.lvglState;
+                this.wasm._init(
+                    0,
+                    0,
+                    0,
+                    0,
+                    this.displayWidth,
+                    this.displayHeight,
+                    -(new Date().getTimezoneOffset() / 60) * 100
+                );
 
-                // set all flags to HIDDEN, except selected widget
-                // also, set useStyle
-                runInAction(() => {
-                    for (const lvglWidget of this.lvglWidgetsMap.values()) {
-                        const flags = lvglWidget.flags.split("|");
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.tick
+                );
 
-                        const i = flags.indexOf("HIDDEN");
-                        if (i != -1) {
-                            flags.splice(i, 1);
-                        }
-
-                        if (
-                            this.selectedStyle &&
-                            this.canvas &&
-                            lvglWidget.type == this.selectedStyle.forWidgetType
-                        ) {
-                            lvglWidget.useStyle = this.selectedStyle.name;
-
-                            // "DEFAULT",
-                            // "CHECKED",
-                            // "PRESSED",
-                            // "CHECKED|PRESSED",
-                            // "DISABLED",
-                            // "FOCUSED"
-                            lvglWidget.states =
-                                this.project._store.uiStateStore.lvglState;
-                        } else {
-                            lvglWidget.useStyle = "";
-                            lvglWidget.states = "";
-
-                            flags.push("HIDDEN");
-                        }
-
-                        lvglWidget.flags = flags.join("|");
+                this.autorRunDispose = autorun(() => {
+                    if (!this.isMounted) {
+                        return;
                     }
-                });
 
-                const pageObj = this.page.lvglCreate(this, 0);
-                if (!pageObj) {
-                    console.error("pageObj is undefined");
-                }
+                    // set all _lvglObj to undefined
+                    runInAction(() => {
+                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                            widget => (widget._lvglObj = undefined)
+                        );
+                    });
 
-                this.wasm._lvglScreenLoad(-1, pageObj);
+                    this.selectedStyle;
+                    this.project._store.uiStateStore.lvglState;
 
-                runInAction(() => {
-                    if (this.page._lvglObj != undefined) {
-                        this.wasm._lvglDeleteObject(this.page._lvglObj);
+                    // set all flags to HIDDEN, except selected widget
+                    // also, set useStyle
+                    runInAction(() => {
+                        for (const lvglWidget of this.lvglWidgetsMap.values()) {
+                            const flags = lvglWidget.flags.split("|");
+
+                            const i = flags.indexOf("HIDDEN");
+                            if (i != -1) {
+                                flags.splice(i, 1);
+                            }
+
+                            if (
+                                this.selectedStyle &&
+                                this.canvas &&
+                                lvglWidget.type ==
+                                    this.selectedStyle.forWidgetType
+                            ) {
+                                lvglWidget.useStyle = this.selectedStyle.name;
+
+                                // "DEFAULT",
+                                // "CHECKED",
+                                // "PRESSED",
+                                // "CHECKED|PRESSED",
+                                // "DISABLED",
+                                // "FOCUSED"
+                                lvglWidget.states =
+                                    this.project._store.uiStateStore.lvglState;
+                            } else {
+                                lvglWidget.useStyle = "";
+                                lvglWidget.states = "";
+
+                                flags.push("HIDDEN");
+                            }
+
+                            lvglWidget.flags = flags.join("|");
+                        }
+                    });
+
+                    const pageObj = this.page.lvglCreate(this, 0);
+                    if (!pageObj) {
+                        console.error("pageObj is undefined");
                     }
-                    this.page._lvglObj = pageObj;
+
+                    this.wasm._lvglScreenLoad(-1, pageObj);
+
+                    runInAction(() => {
+                        if (this.page._lvglObj != undefined) {
+                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        }
+                        this.page._lvglObj = pageObj;
+                    });
                 });
-            });
-        });
+            }
+        );
 
         this.wasm = wasm;
         this.isMounted = true;

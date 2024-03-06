@@ -197,7 +197,13 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
         widgetTimeline.width = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_WIDTH).num;
         widgetTimeline.height = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_HEIGHT).num;
         widgetTimeline.opacity = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_OPA).num / 255.0f;
+
+#if LVGL_VERSION_MAJOR >= 9
+        // TODO LVGL 9.0
+        widgetTimeline.scale = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_SCALE_X).num;
+#else
         widgetTimeline.scale = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ZOOM).num;
+#endif
         widgetTimeline.rotate = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE).num;
 
         widgetTimeline.lastTimelinePosition = 0;
@@ -352,7 +358,12 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
 
     value.num = (int32_t)roundf(scale);
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_X, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_Y, value, LV_PART_MAIN);
+#else
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ZOOM, value, LV_PART_MAIN);
+#endif
 
     value.num = (int32_t)roundf(rotate);
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ANGLE, value, LV_PART_MAIN);
@@ -410,10 +421,15 @@ void flow_event_callback(lv_event_t *e) {
     flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
 }
 
+#if LVGL_VERSION_MAJOR >= 9
+#else
+#define lv_event_get_target_obj lv_event_get_target
+#endif
+
 void flow_event_textarea_text_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             const char *value = lv_textarea_get_text(ta);
@@ -425,7 +441,7 @@ void flow_event_textarea_text_changed_callback(lv_event_t *e) {
 void flow_event_checked_state_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);
@@ -437,7 +453,7 @@ void flow_event_checked_state_changed_callback(lv_event_t *e) {
 void flow_event_arc_value_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             int32_t value = lv_arc_get_value(ta);
@@ -449,7 +465,7 @@ void flow_event_arc_value_changed_callback(lv_event_t *e) {
 void flow_event_bar_value_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             int32_t value = lv_bar_get_value(ta);
@@ -461,7 +477,7 @@ void flow_event_bar_value_changed_callback(lv_event_t *e) {
 void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             int32_t value = lv_bar_get_start_value(ta);
@@ -473,7 +489,7 @@ void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
 void flow_event_dropdown_selected_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             uint16_t selected = lv_dropdown_get_selected(ta);
@@ -485,7 +501,7 @@ void flow_event_dropdown_selected_changed_callback(lv_event_t *e) {
 void flow_event_roller_selected_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             uint16_t selected = lv_roller_get_selected(ta);
@@ -497,7 +513,7 @@ void flow_event_roller_selected_changed_callback(lv_event_t *e) {
 void flow_event_slider_value_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             int32_t value = lv_slider_get_value(ta);
@@ -509,7 +525,7 @@ void flow_event_slider_value_changed_callback(lv_event_t *e) {
 void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target(e);
+        lv_obj_t *ta = lv_event_get_target_obj(e);
         if (!g_updateTask || g_updateTask->obj != ta) {
             FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
             int32_t value = lv_slider_get_left_value(ta);
@@ -520,7 +536,7 @@ void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
 
 void flow_event_checked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
-    lv_obj_t *ta = lv_event_get_target(e);
+    lv_obj_t *ta = lv_event_get_target_obj(e);
     if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {
         flow_event_callback(e);
     }
@@ -528,12 +544,16 @@ void flow_event_checked_callback(lv_event_t *e) {
 
 void flow_event_unchecked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
-    lv_obj_t *ta = lv_event_get_target(e);
+    lv_obj_t *ta = lv_event_get_target_obj(e);
     if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {
         flow_event_callback(e);
     }
 }
-
+#if LVGL_VERSION_MAJOR >= 9
+void flow_event_meter_tick_label_event_callback(lv_event_t *e) {
+    // TODO LVGL 9.0
+}
+#else
 void flow_event_meter_tick_label_event_callback(lv_event_t *e) {
     lv_obj_draw_part_dsc_t * draw_part_dsc = lv_event_get_draw_part_dsc(e);
 
@@ -553,11 +573,15 @@ void flow_event_meter_tick_label_event_callback(lv_event_t *e) {
         draw_part_dsc->text = label;
         draw_part_dsc->text_length = sizeof(label);
     }
-
 }
+#endif
 
 void flow_event_callback_delete_user_data(lv_event_t *e) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_free(e->user_data);
+#else
     lv_mem_free(e->user_data);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -653,20 +677,32 @@ void doUpdateTasks() {
                 else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
             }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_VALUE) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+#else
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Value in Meter widget");
             lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
             int32_t cur_val = indicator->start_value;
             if (new_val != cur_val) lv_meter_set_indicator_value(updateTask.obj, indicator, new_val);
+#endif
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+#else
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Start Value in Meter widget");
             lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
             int32_t cur_val = indicator->start_value;
             if (new_val != cur_val) lv_meter_set_indicator_start_value(updateTask.obj, indicator, new_val);
+#endif
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+#else
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator End Value in Meter widget");
             lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
             int32_t cur_val = indicator->end_value;
             if (new_val != cur_val) lv_meter_set_indicator_end_value(updateTask.obj, indicator, new_val);
+#endif
         }
         g_updateTask = nullptr;
     }

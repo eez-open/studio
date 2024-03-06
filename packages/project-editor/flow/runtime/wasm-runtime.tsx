@@ -244,7 +244,9 @@ export class WasmRuntime extends RemoteRuntime {
                       (1 <<
                           MessagesToDebugger.MESSAGE_TO_DEBUGGER_COMPONENT_EXECUTION_STATE_CHANGED),
             this.onWorkerMessage,
-            this.projectStore.projectTypeTraits.isLVGL,
+            this.projectStore.projectTypeTraits.isLVGL
+                ? this.projectStore.project.settings.general.lvglVersion
+                : undefined,
             this.displayWidth,
             this.displayHeight,
             (className: string) => getClassByName(this.projectStore, className),

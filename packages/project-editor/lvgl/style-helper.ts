@@ -155,7 +155,7 @@ export function getStylePropDefaultValue(
             let colorNum = runtime.wasm._lvglObjGetStylePropColor(
                 lvglObj,
                 getPartCode(part),
-                propertyInfo.lvglStyleProp.code
+                runtime.getLvglStylePropCode(propertyInfo.lvglStyleProp.code)
             );
             return colorNumToRgb(colorNum);
         } else if (
@@ -166,7 +166,9 @@ export function getStylePropDefaultValue(
                 let fontIndex = runtime.wasm._lvglObjGetStylePropBuiltInFont(
                     lvglObj,
                     getPartCode(part),
-                    propertyInfo.lvglStyleProp.code
+                    runtime.getLvglStylePropCode(
+                        propertyInfo.lvglStyleProp.code
+                    )
                 );
 
                 if (fontIndex != -1) {
@@ -175,7 +177,9 @@ export function getStylePropDefaultValue(
                     let fontAddr = runtime.wasm._lvglObjGetStylePropFontAddr(
                         lvglObj,
                         getPartCode(part),
-                        propertyInfo.lvglStyleProp.code
+                        runtime.getLvglStylePropCode(
+                            propertyInfo.lvglStyleProp.code
+                        )
                     );
                     const font = runtime.fontAddressToFont.get(fontAddr);
                     if (font) {
@@ -186,7 +190,9 @@ export function getStylePropDefaultValue(
                 let num = runtime.wasm._lvglObjGetStylePropNum(
                     lvglObj,
                     getPartCode(part),
-                    propertyInfo.lvglStyleProp.code
+                    runtime.getLvglStylePropCode(
+                        propertyInfo.lvglStyleProp.code
+                    )
                 );
                 return propertyInfo.lvglStyleProp.valueRead
                     ? propertyInfo.lvglStyleProp.valueRead(num)
@@ -196,7 +202,7 @@ export function getStylePropDefaultValue(
             let num = runtime.wasm._lvglObjGetStylePropNum(
                 lvglObj,
                 getPartCode(part),
-                propertyInfo.lvglStyleProp.code
+                runtime.getLvglStylePropCode(propertyInfo.lvglStyleProp.code)
             );
             return num ? true : false;
         }

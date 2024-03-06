@@ -53,6 +53,10 @@ import {
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import {
+    getLvglBitmapColorFormats,
+    getLvglDefaultBitmapColorFormat
+} from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -106,54 +110,6 @@ const ExportBitmapFilePropertyGridUI = observer(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export const CF_ALPHA_1_BIT = 1;
-export const CF_ALPHA_2_BIT = 2;
-export const CF_ALPHA_4_BIT = 3;
-export const CF_ALPHA_8_BIT = 4;
-
-export const CF_INDEXED_1_BIT = 41;
-export const CF_INDEXED_2_BIT = 42;
-export const CF_INDEXED_4_BIT = 43;
-export const CF_INDEXED_8_BIT = 44;
-
-export const CF_RAW = 51;
-export const CF_RAW_CHROMA = 52;
-export const CF_RAW_ALPHA = 53;
-
-export const CF_TRUE_COLOR = 24;
-export const CF_TRUE_COLOR_ALPHA = 32;
-export const CF_TRUE_COLOR_CHROMA = 33;
-
-export const CF_RGB565A8 = 16;
-
-const LVGL_COLOR_FORMATS = [
-    { id: CF_ALPHA_1_BIT, label: "ALPHA 1 BIT" },
-    { id: CF_ALPHA_2_BIT, label: "ALPHA 2 BIT" },
-    { id: CF_ALPHA_4_BIT, label: "ALPHA 4 BIT" },
-    { id: CF_ALPHA_8_BIT, label: "ALPHA 8 BIT" },
-
-    { id: CF_INDEXED_1_BIT, label: "INDEXED 1 BIT" },
-    { id: CF_INDEXED_2_BIT, label: "INDEXED 2 BIT" },
-    { id: CF_INDEXED_4_BIT, label: "INDEXED 4 BIT" },
-    { id: CF_INDEXED_8_BIT, label: "INDEXED 8 BIT" },
-
-    { id: CF_RAW, label: "RAW" },
-    { id: CF_RAW_CHROMA, label: "RAW CHROMA" },
-    { id: CF_RAW_ALPHA, label: "RAW ALPHA" },
-
-    { id: CF_TRUE_COLOR, label: "TRUE COLOR" },
-    {
-        id: CF_TRUE_COLOR_ALPHA,
-        label: "TRUE COLOR ALPHA"
-    },
-    {
-        id: CF_TRUE_COLOR_CHROMA,
-        label: "TRUE COLOR CHROMA"
-    },
-
-    { id: CF_RGB565A8, label: "RGB565A8" }
-];
 
 export class Bitmap extends EezObject {
     id: number | undefined;
@@ -223,7 +179,7 @@ export class Bitmap extends EezObject {
                 type: PropertyType.Enum,
                 enumItems: (bitmap: Bitmap) =>
                     isLVGLProject(bitmap)
-                        ? LVGL_COLOR_FORMATS
+                        ? getLvglBitmapColorFormats(bitmap)
                         : [{ id: 16 }, { id: 32 }],
                 defaultValue: 16,
                 disabled: isDashboardProject
@@ -312,7 +268,8 @@ export class Bitmap extends EezObject {
                                       name: "bpp",
                                       displayName: "Color format",
                                       type: "enum",
-                                      enumItems: LVGL_COLOR_FORMATS
+                                      enumItems:
+                                          getLvglBitmapColorFormats(parent)
                                   } as IFieldProperties
                               ]
                             : projectStore.projectTypeTraits.isDashboard
@@ -329,7 +286,7 @@ export class Bitmap extends EezObject {
                 },
                 values: {
                     bpp: projectStore.projectTypeTraits.isLVGL
-                        ? CF_TRUE_COLOR_ALPHA
+                        ? getLvglDefaultBitmapColorFormat(parent)
                         : 32
                 }
             });

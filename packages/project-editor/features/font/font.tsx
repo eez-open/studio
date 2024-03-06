@@ -1422,6 +1422,8 @@ export class Font extends EezObject {
                         symbols: result.values.symbols,
                         createBlankGlyphs: result.values.createBlankGlyphs,
                         doNotAddGlyphIfNotFound: false,
+                        lvglVersion:
+                            projectStore.project.settings.general.lvglVersion,
                         lvglInclude:
                             projectStore.project.settings.build.lvglInclude
                     });
@@ -1554,7 +1556,11 @@ export class Font extends EezObject {
         });
     }
 
-    async rebuildLvglFont(projectStore: ProjectStore, lvglInclude: string) {
+    async rebuildLvglFont(
+        projectStore: ProjectStore,
+        lvglVersion: string,
+        lvglInclude: string
+    ) {
         if (!this.embeddedFontFile) {
             return;
         }
@@ -1576,10 +1582,12 @@ export class Font extends EezObject {
             createBlankGlyphs: false,
             doNotAddGlyphIfNotFound: false,
             getAllGlyphs: true,
+            lvglVersion,
             lvglInclude
         });
 
         projectStore.updateObject(this, {
+            lvglBinFile: fontProperties.lvglBinFile,
             lvglSourceFile: fontProperties.lvglSourceFile
         });
     }
@@ -1720,10 +1728,11 @@ export function removeDuplicates(encodings: EncodingRange[], symbols: string) {
 
 export function rebuildLvglFonts(
     projectStore: ProjectStore,
+    lvglVersion: string,
     lvglInclude: string
 ) {
     projectStore.project.fonts.forEach(font => {
-        font.rebuildLvglFont(projectStore, lvglInclude);
+        font.rebuildLvglFont(projectStore, lvglVersion, lvglInclude);
     });
 }
 

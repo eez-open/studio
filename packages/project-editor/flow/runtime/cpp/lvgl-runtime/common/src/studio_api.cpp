@@ -26,7 +26,13 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_c
         free(text);
     }
     lv_label_set_long_mode(obj, long_mode);
+
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO check support for LVGL 9.0
+#else
     lv_label_set_recolor(obj, recolor);
+#endif
+
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -162,7 +168,12 @@ EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coo
 }
 
 EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_spinner_create(parentObj);
+    lv_spinner_set_anim_params(parentObj, 1000, 60);
+#else
     lv_obj_t *obj = lv_spinner_create(parentObj, 1000, 60);
+#endif
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -218,6 +229,17 @@ EM_PORT_API(lv_obj_t *) lvglCreateCalendar(lv_obj_t *parentObj, int32_t index, l
     return obj;
 }
 
+#if LVGL_VERSION_MAJOR >= 9
+// TODO LVGL 9.0
+EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int mode, bool fixed_mode) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+#else
 EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_colorwheel_mode_t mode, bool fixed_mode) {
     lv_obj_t *obj = lv_colorwheel_create(parentObj, false);
     lv_obj_set_pos(obj, x, y);
@@ -228,7 +250,19 @@ EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index,
     setObjectIndex(obj, index);
     return obj;
 }
+#endif
 
+#if LVGL_VERSION_MAJOR >= 9
+// TODO LVGL 9.0
+EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+#else
 EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_imgbtn_create(parentObj);
     lv_obj_set_pos(obj, x, y);
@@ -237,6 +271,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, 
     setObjectIndex(obj, index);
     return obj;
 }
+#endif
 
 EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_keyboard_mode_t mode) {
     lv_obj_t *obj = lv_keyboard_create(parentObj);
@@ -257,6 +292,17 @@ EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
+#if LVGL_VERSION_MAJOR >= 9
+// TODO LVGL 9.0
+EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+#else
 EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_meter_create(parentObj);
     lv_obj_set_pos(obj, x, y);
@@ -265,11 +311,15 @@ EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_c
     setObjectIndex(obj, index);
     return obj;
 }
-
+#endif
 static lv_obj_t *current_screen = 0;
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_screen_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
+#else
     lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
+#endif
     current_screen = obj;
     screenLoad_animType = 0;
     screenLoad_speed = 0;
@@ -286,7 +336,11 @@ EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
         if (!fallback_screen) {
             fallback_screen = lv_obj_create(0);
         }
+#if LVGL_VERSION_MAJOR >= 9
+        lv_screen_load(fallback_screen);
+#else
         lv_scr_load(fallback_screen);
+#endif
         current_screen = fallback_screen;
     }
     lv_obj_del(obj);
@@ -314,7 +368,11 @@ EM_PORT_API(void) lvglObjClearState(lv_obj_t *obj, lv_obj_flag_t s) {
 
 EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
     lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+#if LVGL_VERSION_MAJOR >= 9
+    return (value.color.red << 16) | (value.color.green << 8) | value.color.blue;
+#else
     return value.color.full;
+#endif
 }
 
 EM_PORT_API(int32_t) lvglObjGetStylePropNum(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
@@ -415,22 +473,38 @@ EM_PORT_API(int16_t) lvglGetObjHeight(lv_obj_t *obj) {
 }
 
 EM_PORT_API(lv_font_t *) lvglLoadFont(const char *font_file_path) {
+#if LVGL_VERSION_MAJOR >= 9
+    return lv_binfont_create(font_file_path);
+#else
     return lv_font_load(font_file_path);
+#endif
 }
 
 EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
+#if LVGL_VERSION_MAJOR >= 9
+    return lv_binfont_destroy(font);
+#else
     return lv_font_free(font);
+#endif
 }
 
 EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, void *flow_state, unsigned component_index, unsigned output_or_property_index) {
+#if LVGL_VERSION_MAJOR >= 9
+    FlowEventCallbackData *data = (FlowEventCallbackData *)lv_malloc(sizeof(FlowEventCallbackData));
+#else
     FlowEventCallbackData *data = (FlowEventCallbackData *)lv_mem_alloc(sizeof(FlowEventCallbackData));
+#endif
 
     data->flow_state = flow_state;
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
 
     if (filter == LV_EVENT_METER_TICK_LABEL_EVENT) {
+#if LVGL_VERSION_MAJOR >= 9
+        // TODO LVGL 9.0
+#else
         lv_obj_add_event_cb(obj, flow_event_meter_tick_label_event_callback, LV_EVENT_DRAW_PART_BEGIN, data);
+#endif
     } else if (filter == LV_EVENT_DROPDOWN_SELECTED_CHANGED) {
         lv_obj_add_event_cb(obj, flow_event_dropdown_selected_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_ROLLER_SELECTED_CHANGED) {
@@ -468,15 +542,31 @@ EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t
     lv_obj_update_layout(obj);
 }
 
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, int state, const void *img_src) {
+}
+#else
 EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t state, const void *img_src) {
     lv_imgbtn_set_src(obj, state, NULL, img_src, NULL);
     lv_obj_update_layout(obj);
 }
+#endif
 
 EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
     lv_keyboard_set_textarea(obj, textarea);
     lv_obj_update_layout(obj);
 }
+
+#if LVGL_VERSION_MAJOR >= 9
+// TODO LVGL 9.0
+struct lv_meter_scale_t {
+    int dummy;
+};
+struct lv_meter_indicator_t {
+    int dummy;
+};
+#endif
 
 EM_PORT_API(lv_meter_scale_t *) lvglMeterAddScale(
     lv_obj_t *obj,
@@ -484,37 +574,62 @@ EM_PORT_API(lv_meter_scale_t *) lvglMeterAddScale(
     uint16_t nthMajor, uint16_t majorTickWidth, uint16_t majorTickLength, uint32_t majorTickColor, int16_t labelGap,
     int32_t scaleMin, int32_t scaleMax, uint32_t scaleAngleRange, uint32_t scaleRotation
 ) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+    return 0;
+#else
     lv_meter_scale_t *scale = lv_meter_add_scale(obj);
     lv_meter_set_scale_ticks(obj, scale, minorTickCount, minorTickLineWidth, minorTickLength, lv_color_hex(minorTickColor));
     lv_meter_set_scale_major_ticks(obj, scale, nthMajor, majorTickWidth, majorTickLength, lv_color_hex(majorTickColor), labelGap);
     lv_meter_set_scale_range(obj, scale, scaleMin, scaleMax, scaleAngleRange, scaleRotation);
     return scale;
+#endif
 }
 
 EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorNeedleImg(lv_obj_t *obj, lv_meter_scale_t *scale, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, int32_t value) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+    return 0;
+#else
     lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, img_src, pivotX, pivotY);
     lv_meter_set_indicator_value(obj, indicator, value);
     return indicator;
+#endif
 }
 
 EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorNeedleLine(lv_obj_t *obj, lv_meter_scale_t *scale, uint16_t width, uint32_t color, int16_t radiusModifier, int32_t value) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+    return 0;
+#else
     lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, width, lv_color_hex(color), radiusModifier);
     lv_meter_set_indicator_value(obj, indicator, value);
     return indicator;
+#endif
 }
 
 EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorScaleLines(lv_obj_t *obj, lv_meter_scale_t *scale, uint32_t colorStart, uint32_t colorEnd, bool local, int16_t widthModifier, int32_t startValue, int32_t endValue) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+    return 0;
+#else
     lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(colorStart), lv_color_hex(colorEnd), local, widthModifier);
     lv_meter_set_indicator_start_value(obj, indicator, startValue);
     lv_meter_set_indicator_end_value(obj, indicator, endValue);
     return indicator;
+#endif
 }
 
 EM_PORT_API(lv_meter_indicator_t *) lvglMeterAddIndicatorArc(lv_obj_t *obj, lv_meter_scale_t *scale, uint16_t width, uint32_t color, int16_t radiusModifier, int32_t startValue, int32_t endValue) {
+#if LVGL_VERSION_MAJOR >= 9
+    // TODO LVGL 9.0
+    return 0;
+#else
     lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, width, lv_color_hex(color), radiusModifier);
     lv_meter_set_indicator_start_value(obj, indicator, startValue);
     lv_meter_set_indicator_end_value(obj, indicator, endValue);
     return indicator;
+#endif
 }
 
 EM_PORT_API(void) lvglUpdateMeterIndicatorValue(lv_obj_t *obj, lv_meter_indicator_t *indicator, void *flow_state, unsigned component_index, unsigned property_index) {
