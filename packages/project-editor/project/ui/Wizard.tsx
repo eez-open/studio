@@ -1021,7 +1021,14 @@ class WizardModel {
 
     async loadEezProject() {
         if (this.section == "templates") {
-            const relativePath = `project-templates/${this.type}.eez-project`;
+            let version;
+            if (this.type == "LVGL" || this.type == "LVGL with EEZ Flow") {
+                version = "-" + this.lvglVersion ?? "8.3";
+            } else {
+                version = "";
+            }
+
+            const relativePath = `project-templates/${this.type}${version}.eez-project`;
 
             const json = await fs.promises.readFile(
                 isDev
@@ -1565,7 +1572,6 @@ class WizardModel {
                         this.type == "LVGL" ||
                         this.type == "LVGL with EEZ Flow"
                     ) {
-                        console.log("LVGL", this.lvglVersion);
                         projectTemplate.settings.general.lvglVersion =
                             this.lvglVersion;
                     }
@@ -2015,7 +2021,12 @@ const ProjectTypeComponent = observer(
                                 "LVGL version":
                                     projectType.projectType ==
                                     PROJECT_TYPE_NAMES[ProjectType.LVGL]
-                                        ? "8.3"
+                                        ? wizardModel.section == "templates" &&
+                                          (projectType.id == "LVGL" ||
+                                              projectType.id ==
+                                                  "LVGL with EEZ Flow")
+                                            ? "8.3 | 9.0"
+                                            : "8.3"
                                         : undefined
                             }}
                         />
@@ -2107,30 +2118,32 @@ const ProjectProperties = observer(
                                 )}
                             </div>
 
-                            {(wizardModel.type == "LVGL" ||
-                                wizardModel.type == "LVGL with EEZ Flow") && (
-                                <div className="mb-3">
-                                    <label
-                                        className="form-label"
-                                        htmlFor="new-project-wizard-lvgl-version"
-                                    >
-                                        LVGL version
-                                    </label>
-                                    <select
-                                        id="new-project-wizard-lvgl-version"
-                                        className="form-select"
-                                        onChange={action(
-                                            event =>
-                                                (wizardModel.lvglVersion =
-                                                    event.target.value)
-                                        )}
-                                        value={wizardModel.lvglVersion}
-                                    >
-                                        <option value="8.3">8.3</option>
-                                        <option value="9.0">9.0</option>
-                                    </select>
-                                </div>
-                            )}
+                            {wizardModel.section == "templates" &&
+                                (wizardModel.type == "LVGL" ||
+                                    wizardModel.type ==
+                                        "LVGL with EEZ Flow") && (
+                                    <div className="mb-3">
+                                        <label
+                                            className="form-label"
+                                            htmlFor="new-project-wizard-lvgl-version"
+                                        >
+                                            LVGL version
+                                        </label>
+                                        <select
+                                            id="new-project-wizard-lvgl-version"
+                                            className="form-select"
+                                            onChange={action(
+                                                event =>
+                                                    (wizardModel.lvglVersion =
+                                                        event.target.value)
+                                            )}
+                                            value={wizardModel.lvglVersion}
+                                        >
+                                            <option value="8.3">8.3</option>
+                                            <option value="9.0">9.0</option>
+                                        </select>
+                                    </div>
+                                )}
 
                             <div className="mb-3">
                                 <label

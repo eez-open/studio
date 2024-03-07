@@ -372,14 +372,12 @@ export function getExpressionPropertyData(
     const pagePath = getObjectPathAsString(page);
     const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
     if (flowIndex == undefined) {
-        console.log(1, getProperty(widget, propertyName));
         return undefined;
     }
     const flow = runtime.wasm.assetsMap.flows[flowIndex];
     const componentPath = getObjectPathAsString(widget);
     const componentIndex = flow.componentIndexes[componentPath];
     if (componentIndex == undefined) {
-        console.log(2, getProperty(widget, propertyName));
         return undefined;
     }
 

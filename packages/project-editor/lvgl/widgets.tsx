@@ -3226,8 +3226,14 @@ export class LVGLSliderWidget extends LVGLWidget {
                 ? !valueLeftExpr
                     ? (this.valueLeft as number)
                     : 0
+                : this.valueType == "expression"
+                ? 66
                 : (this.value as number),
-            valueLeftExpr ? 0 : (this.valueLeft as number)
+            valueLeftExpr
+                ? 0
+                : this.valueLeftType == "expression"
+                ? 0
+                : (this.valueLeft as number)
         );
 
         if (valueExpr) {
