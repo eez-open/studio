@@ -1,16 +1,17 @@
 {
-  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
   "lvglStyles": {
     "objID": "a31bd004-35c5-b3fb-5c8b-78ea5c7693b8",
     "styles": [],
     "defaultStyles": {}
   },
+  "objID": "6666cd76-f969-5646-9e7b-e39d750cc7d9",
   "settings": {
     "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
     "general": {
       "objID": "fd434352-2277-c4a8-e87e-e96cfcbf2305",
       "projectVersion": "v3",
       "projectType": "lvgl",
+      "lvglVersion": "9.0",
       "extensions": [],
       "imports": [],
       "flowSupport": true,
@@ -126,6 +127,7 @@
           "style": {
             "objID": "a9bf737e-205d-4003-aae9-0ca3b6710d43",
             "useStyle": "default",
+            "conditionalStyles": [],
             "childStyles": []
           },
           "timeline": [],
