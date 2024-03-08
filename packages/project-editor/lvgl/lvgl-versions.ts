@@ -107,7 +107,26 @@ export enum LVGLStylePropCode {
     LV_STYLE_TRANSFORM_ZOOM = 108,
     LV_STYLE_TRANSFORM_ANGLE = 109,
     LV_STYLE_TRANSFORM_PIVOT_X = 110,
-    LV_STYLE_TRANSFORM_PIVOT_Y = 111
+    LV_STYLE_TRANSFORM_PIVOT_Y = 111,
+
+    /* Flex */
+    LV_STYLE_FLEX_FLOW = 112,
+    LV_STYLE_FLEX_MAIN_PLACE = 113,
+    LV_STYLE_FLEX_CROSS_PLACE = 114,
+    LV_STYLE_FLEX_TRACK_PLACE = 115,
+    LV_STYLE_FLEX_GROW = 126,
+
+    /* Grid */
+    LV_STYLE_GRID_COLUMN_ALIGN = 118,
+    LV_STYLE_GRID_ROW_ALIGN = 119,
+    LV_STYLE_GRID_ROW_DSC_ARRAY = 117,
+    LV_STYLE_GRID_COLUMN_DSC_ARRAY = 116,
+    LV_STYLE_GRID_CELL_COLUMN_POS = 123,
+    LV_STYLE_GRID_CELL_COLUMN_SPAN = 122,
+    LV_STYLE_GRID_CELL_X_ALIGN = 124,
+    LV_STYLE_GRID_CELL_ROW_POS = 121,
+    LV_STYLE_GRID_CELL_ROW_SPAN = 120,
+    LV_STYLE_GRID_CELL_Y_ALIGN = 125
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -580,26 +599,26 @@ const versions = {
                 //[LVGLStylePropCode.LV_STYLE_TRANSFORM_ROTATION]: 110,
 
                 [LVGLStylePropCode.LV_STYLE_TRANSFORM_PIVOT_X]: 111,
-                [LVGLStylePropCode.LV_STYLE_TRANSFORM_PIVOT_Y]: 112
+                [LVGLStylePropCode.LV_STYLE_TRANSFORM_PIVOT_Y]: 112,
                 //[LVGLStylePropCode.LV_STYLE_TRANSFORM_SKEW_X]: 113,
                 //[LVGLStylePropCode.LV_STYLE_TRANSFORM_SKEW_Y]: 114,
 
-                // [LVGLStylePropCode.LV_STYLE_FLEX_FLOW]: 115,
-                // [LVGLStylePropCode.LV_STYLE_FLEX_MAIN_PLACE]: 116,
-                // [LVGLStylePropCode.LV_STYLE_FLEX_CROSS_PLACE]: 117,
-                // [LVGLStylePropCode.LV_STYLE_FLEX_TRACK_PLACE]: 118,
-                // [LVGLStylePropCode.LV_STYLE_FLEX_GROW]: 119,
+                [LVGLStylePropCode.LV_STYLE_FLEX_FLOW]: 115,
+                [LVGLStylePropCode.LV_STYLE_FLEX_MAIN_PLACE]: 116,
+                [LVGLStylePropCode.LV_STYLE_FLEX_CROSS_PLACE]: 117,
+                [LVGLStylePropCode.LV_STYLE_FLEX_TRACK_PLACE]: 118,
+                [LVGLStylePropCode.LV_STYLE_FLEX_GROW]: 119,
 
-                // [LVGLStylePropCode.LV_STYLE_GRID_COLUMN_ALIGN]: 120,
-                // [LVGLStylePropCode.LV_STYLE_GRID_ROW_ALIGN]: 121,
-                // [LVGLStylePropCode.LV_STYLE_GRID_ROW_DSC_ARRAY]: 122,
-                // [LVGLStylePropCode.LV_STYLE_GRID_COLUMN_DSC_ARRAY]: 123,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_COLUMN_POS]: 124,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_COLUMN_SPAN]: 125,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_X_ALIGN]: 126,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_ROW_POS]: 127,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_ROW_SPAN]: 128,
-                // [LVGLStylePropCode.LV_STYLE_GRID_CELL_Y_ALIGN]: 129
+                [LVGLStylePropCode.LV_STYLE_GRID_COLUMN_ALIGN]: 120,
+                [LVGLStylePropCode.LV_STYLE_GRID_ROW_ALIGN]: 121,
+                [LVGLStylePropCode.LV_STYLE_GRID_ROW_DSC_ARRAY]: 122,
+                [LVGLStylePropCode.LV_STYLE_GRID_COLUMN_DSC_ARRAY]: 123,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_COLUMN_POS]: 124,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_COLUMN_SPAN]: 125,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_X_ALIGN]: 126,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_ROW_POS]: 127,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_ROW_SPAN]: 128,
+                [LVGLStylePropCode.LV_STYLE_GRID_CELL_Y_ALIGN]: 129
             };
 
             let mappedCode = map_v83_style_prop_code_to_v90[code];

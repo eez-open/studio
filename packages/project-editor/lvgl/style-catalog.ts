@@ -2,6 +2,7 @@ import { isArray } from "eez-studio-shared/util";
 
 import {
     EezObject,
+    IEezObject,
     PropertyInfo,
     PropertyType
 } from "project-editor/core/object";
@@ -9,6 +10,25 @@ import {
 import { ProjectStore } from "project-editor/store";
 
 import { LVGLStylePropCode } from "project-editor/lvgl/lvgl-versions";
+import {
+    LV_FLEX_ALIGN_CENTER,
+    LV_FLEX_ALIGN_END,
+    LV_FLEX_ALIGN_SPACE_AROUND,
+    LV_FLEX_ALIGN_SPACE_BETWEEN,
+    LV_FLEX_ALIGN_SPACE_EVENLY,
+    LV_FLEX_ALIGN_START,
+    LV_FLEX_FLOW_COLUMN,
+    LV_FLEX_FLOW_COLUMN_REVERSE,
+    LV_FLEX_FLOW_COLUMN_WRAP,
+    LV_FLEX_FLOW_COLUMN_WRAP_REVERSE,
+    LV_FLEX_FLOW_ROW,
+    LV_FLEX_FLOW_ROW_REVERSE,
+    LV_FLEX_FLOW_ROW_WRAP,
+    LV_FLEX_FLOW_ROW_WRAP_REVERSE,
+    LV_LAYOUT_FLEX,
+    LV_LAYOUT_GRID,
+    LV_LAYOUT_NONE
+} from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +93,8 @@ function makeEnumPropertyInfo(
     displayName: string,
     lvglStyleProp: LVGLStyleProp,
     enumItemToCodeOrStringArray: { [key: string]: number } | string[],
-    buildPrefix: string
+    buildPrefix: string,
+    disabled?: (object: IEezObject, propertyInfo: PropertyInfo) => boolean
 ): LVGLPropertyInfo {
     let enumItemToCode: { [key: string]: number };
     if (isArray(enumItemToCodeOrStringArray)) {
@@ -105,7 +126,8 @@ function makeEnumPropertyInfo(
             valueRead: (value: number) => codeToEnumItem[value.toString()],
             valueToNum: (value: string) => enumItemToCode[value.toString()],
             valueBuild: (value: string) => buildPrefix + value
-        })
+        }),
+        disabled
     };
 }
 
@@ -367,6 +389,133 @@ const transform_pivot_y_property_info: LVGLPropertyInfo = {
         defaultValue: "0",
         inherited: false,
         layout: false,
+        extDraw: false
+    }
+};
+
+//
+// LAYOUT
+//
+
+const layout_property_info = makeEnumPropertyInfo(
+    "layout",
+    "Layout",
+    {
+        code: LVGLStylePropCode.LV_STYLE_LAYOUT,
+        description:
+            "Set the layout if the object. The children will be repositioned and resized according to the policies set for the layout. For the possible values see the documentation of the layouts.",
+        defaultValue: "LV_FLEX_FLOW_ROW",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        NONE: LV_LAYOUT_NONE, // No layout
+        FLEX: LV_LAYOUT_FLEX // Use flex layout
+    },
+    "LV_LAYOUT_"
+);
+
+const flex_flow_property_info = makeEnumPropertyInfo(
+    "flex_flow",
+    "Flex flow",
+    {
+        code: LVGLStylePropCode.LV_STYLE_FLEX_FLOW,
+        description: "Determines a type of Flex layout used",
+        defaultValue: "LV_FLEX_FLOW_ROW",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        ROW: LV_FLEX_FLOW_ROW, // Place the children in a row without wrapping
+        COLUMN: LV_FLEX_FLOW_COLUMN, // Place the children in a column without wrapping
+        ROW_WRAP: LV_FLEX_FLOW_ROW_WRAP, // Place the children in a row with wrapping
+        ROW_REVERSE: LV_FLEX_FLOW_ROW_REVERSE, // Place the children in a column with wrapping
+        ROW_WRAP_REVERSE: LV_FLEX_FLOW_ROW_WRAP_REVERSE, // Place the children in a row without wrapping but in reversed order
+        COLUMN_WRAP: LV_FLEX_FLOW_COLUMN_WRAP, // Place the children in a column without wrapping but in reversed order
+        COLUMN_REVERSE: LV_FLEX_FLOW_COLUMN_REVERSE, // Place the children in a row with wrapping but in reversed order
+        COLUMN_WRAP_REVERSE: LV_FLEX_FLOW_COLUMN_WRAP_REVERSE // Place the children in a column with wrapping but in reversed order
+    },
+    "LV_FLEX_FLOW_"
+);
+
+const flex_main_place_property_info = makeEnumPropertyInfo(
+    "flex_main_place",
+    "Flex main place",
+    {
+        code: LVGLStylePropCode.LV_STYLE_FLEX_MAIN_PLACE,
+        description:
+            "Determines how to distribute the items in their track on the main axis.",
+        defaultValue: "LV_FLEX_ALIGN_START",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_FLEX_ALIGN_START, // means left on a horizontally and top vertically (default)
+        END: LV_FLEX_ALIGN_END, // means right on a horizontally and bottom vertically
+        CENTER: LV_FLEX_ALIGN_CENTER, // simply center
+        SPACE_EVENLY: LV_FLEX_ALIGN_SPACE_EVENLY, // items are distributed so that the spacing between any two items (and the space to the edges) is equal. Does not apply to track_cross_place.
+        SPACE_AROUND: LV_FLEX_ALIGN_SPACE_AROUND, // items are evenly distributed in the track with equal space around them. Note that visually the spaces aren't equal, since all the items have equal space on both sides. The first item will have one unit of space against the container edge, but two units of space between the next item because that next item has its own spacing that applies. Not applies to track_cross_place.
+        SPACE_BETWEEN: LV_FLEX_ALIGN_SPACE_BETWEEN // items are evenly distributed in the track: first item is on the start line, last item on the end line. Not applies to track_cross_place.
+    },
+    "LV_FLEX_ALIGN_"
+);
+
+const flex_cross_place_property_info = makeEnumPropertyInfo(
+    "flex_cross_place",
+    "Flex cross place",
+    {
+        code: LVGLStylePropCode.LV_STYLE_FLEX_CROSS_PLACE,
+        description:
+            "Determines how to distribute the items in their track on the cross axis.",
+        defaultValue: "LV_FLEX_ALIGN_START",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_FLEX_ALIGN_START, // means left on a horizontally and top vertically (default)
+        END: LV_FLEX_ALIGN_END, // means right on a horizontally and bottom vertically
+        CENTER: LV_FLEX_ALIGN_CENTER // simply center
+    },
+    "LV_FLEX_ALIGN_"
+);
+
+const flex_track_place_property_info = makeEnumPropertyInfo(
+    "flex_track_place",
+    "Flex track place",
+    {
+        code: LVGLStylePropCode.LV_STYLE_FLEX_TRACK_PLACE,
+        description: "Determines how to distribute the tracks",
+        defaultValue: "LV_FLEX_ALIGN_START",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_FLEX_ALIGN_START, // means left on a horizontally and top vertically (default)
+        END: LV_FLEX_ALIGN_END, // means right on a horizontally and bottom vertically
+        CENTER: LV_FLEX_ALIGN_CENTER, // simply center
+        SPACE_EVENLY: LV_FLEX_ALIGN_SPACE_EVENLY, // items are distributed so that the spacing between any two items (and the space to the edges) is equal. Does not apply to track_cross_place.
+        SPACE_AROUND: LV_FLEX_ALIGN_SPACE_AROUND, // items are evenly distributed in the track with equal space around them. Note that visually the spaces aren't equal, since all the items have equal space on both sides. The first item will have one unit of space against the container edge, but two units of space between the next item because that next item has its own spacing that applies. Not applies to track_cross_place.
+        SPACE_BETWEEN: LV_FLEX_ALIGN_SPACE_BETWEEN // items are evenly distributed in the track: first item is on the start line, last item on the end line. Not applies to track_cross_place.
+    },
+    "LV_FLEX_ALIGN_"
+);
+
+const flex_grow_property_info: LVGLPropertyInfo = {
+    name: "flex_grow",
+    displayName: "Flex grow",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_FLEX_GROW,
+        description:
+            "Flex grow can be used to make one or more children fill the available space on the track. When more children have grow parameters, the available space will be distributed proportionally to the grow values.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
         extDraw: false
     }
 };
@@ -1345,19 +1494,6 @@ const blend_mode_property_info = makeEnumPropertyInfo(
     ],
     "LV_BLEND_MODE_"
 );
-const layout_property_info: LVGLPropertyInfo = {
-    name: "layout",
-    type: PropertyType.Any,
-    lvglStyleProp: {
-        code: LVGLStylePropCode.LV_STYLE_LAYOUT,
-        description:
-            "Set the layout if the object. The children will be repositioned and resized according to the policies set for the layout. For the possible values see the documentation of the layouts.",
-        defaultValue: "0",
-        inherited: false,
-        layout: true,
-        extDraw: false
-    }
-};
 const base_dir_property_info = makeEnumPropertyInfo(
     "base_dir",
     "Base direction",
@@ -1405,6 +1541,19 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             transform_angle_property_info,
             transform_pivot_x_property_info,
             transform_pivot_y_property_info
+        ]
+    },
+
+    {
+        groupName: "LAYOUT",
+        groupDescription: "Properties to describe layout.",
+        properties: [
+            layout_property_info,
+            flex_flow_property_info,
+            flex_main_place_property_info,
+            flex_cross_place_property_info,
+            flex_track_place_property_info,
+            flex_grow_property_info
         ]
     },
 
@@ -1545,7 +1694,6 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             //anim_speed_property_info,
             //transition_property_info,
             blend_mode_property_info,
-            //layout_property_info,
             base_dir_property_info
         ]
     }
@@ -1565,9 +1713,7 @@ export const unusedProperties = [
     anim_property_info,
     anim_time_property_info,
     anim_speed_property_info,
-    transition_property_info,
-
-    layout_property_info
+    transition_property_info
 ];
 
 export const lvglPropertiesMap = new Map<string, LVGLPropertyInfo>();

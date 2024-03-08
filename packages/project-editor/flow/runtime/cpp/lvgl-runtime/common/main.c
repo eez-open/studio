@@ -282,6 +282,25 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     /*Initialize LittlevGL*/
     lv_init();
 
+    LV_STYLE_FLEX_GROW = lv_style_register_prop(LV_STYLE_PROP_LAYOUT_REFR);
+
+    printf("LV_STYLE_FLEX_FLOW %d\n", LV_STYLE_FLEX_FLOW);
+    printf("LV_STYLE_FLEX_MAIN_PLACE %d\n", LV_STYLE_FLEX_MAIN_PLACE);
+    printf("LV_STYLE_FLEX_CROSS_PLACE %d\n", LV_STYLE_FLEX_CROSS_PLACE);
+    printf("LV_STYLE_FLEX_TRACK_PLACE %d\n", LV_STYLE_FLEX_TRACK_PLACE);
+    printf("LV_STYLE_FLEX_GROW %d\n", LV_STYLE_FLEX_GROW);
+
+    printf("LV_STYLE_GRID_COLUMN_ALIGN %d\n", LV_STYLE_GRID_COLUMN_ALIGN);
+    printf("LV_STYLE_GRID_ROW_ALIGN %d\n", LV_STYLE_GRID_ROW_ALIGN);
+    printf("LV_STYLE_GRID_ROW_DSC_ARRAY %d\n", LV_STYLE_GRID_ROW_DSC_ARRAY);
+    printf("LV_STYLE_GRID_COLUMN_DSC_ARRAY %d\n", LV_STYLE_GRID_COLUMN_DSC_ARRAY);
+    printf("LV_STYLE_GRID_CELL_COLUMN_POS %d\n", LV_STYLE_GRID_CELL_COLUMN_POS);
+    printf("LV_STYLE_GRID_CELL_COLUMN_SPAN %d\n", LV_STYLE_GRID_CELL_COLUMN_SPAN);
+    printf("LV_STYLE_GRID_CELL_X_ALIGN %d\n", LV_STYLE_GRID_CELL_X_ALIGN);
+    printf("LV_STYLE_GRID_CELL_ROW_POS %d\n", LV_STYLE_GRID_CELL_ROW_POS);
+    printf("LV_STYLE_GRID_CELL_ROW_SPAN %d\n", LV_STYLE_GRID_CELL_ROW_SPAN);
+    printf("LV_STYLE_GRID_CELL_Y_ALIGN %d\n", LV_STYLE_GRID_CELL_Y_ALIGN);
+
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
     hal_init();
 
