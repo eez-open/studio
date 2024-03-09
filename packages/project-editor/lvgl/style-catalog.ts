@@ -26,7 +26,6 @@ import {
     LV_FLEX_FLOW_ROW_WRAP,
     LV_FLEX_FLOW_ROW_WRAP_REVERSE,
     LV_LAYOUT_FLEX,
-    LV_LAYOUT_GRID,
     LV_LAYOUT_NONE
 } from "project-editor/lvgl/lvgl-constants";
 
@@ -214,6 +213,19 @@ const max_height_property_info: LVGLPropertyInfo = {
         description:
             "Sets a maximal height. Pixel and percentage values can be used. Percentage values are relative to the height of the parent's content area.",
         defaultValue: "LV_COORD_MAX",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+const length_property_info: LVGLPropertyInfo = {
+    name: "length",
+    displayName: "Length",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_LENGTH,
+        description: "",
+        defaultValue: "0",
         inherited: false,
         layout: true,
         extDraw: false
@@ -601,6 +613,66 @@ const pad_column_property_info: LVGLPropertyInfo = {
         code: LVGLStylePropCode.LV_STYLE_PAD_COLUMN,
         description:
             "Sets the padding between the columns. Used by the layouts.",
+        defaultValue: "0",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+
+//
+// MARGIN
+//
+const margin_top_property_info: LVGLPropertyInfo = {
+    name: "margin_top",
+    displayName: "Top",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_MARGIN_TOP,
+        description:
+            "Sets the margin on the top. The object will keep this space from its siblings in layouts.",
+        defaultValue: "0",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+const margin_bottom_property_info: LVGLPropertyInfo = {
+    name: "margin_bottom",
+    displayName: "Bottom",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_MARGIN_BOTTOM,
+        description:
+            "Sets the margin on the bottom. The object will keep this space from its siblings in layouts.",
+        defaultValue: "0",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+const margin_left_property_info: LVGLPropertyInfo = {
+    name: "margin_left",
+    displayName: "Left",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_MARGIN_LEFT,
+        description:
+            "Sets the margin on the left. The object will keep this space from its siblings in layouts.",
+        defaultValue: "0",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+const margin_right_property_info: LVGLPropertyInfo = {
+    name: "margin_right",
+    displayName: "Right",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGLStylePropCode.LV_STYLE_MARGIN_RIGHT,
+        description:
+            "Sets the margin on the right. The object will keep this space from its siblings in layouts.",
         defaultValue: "0",
         inherited: false,
         layout: true,
@@ -1533,6 +1605,7 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             max_height_property_info,
             //x_property_info,
             //y_property_info,
+            length_property_info, // ONLY IN LVGL 9.0
             transform_width_property_info,
             transform_height_property_info,
             translate_x_property_info,
@@ -1568,6 +1641,18 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             pad_right_property_info,
             pad_row_property_info,
             pad_column_property_info
+        ]
+    },
+
+    {
+        groupName: "MARGIN",
+        groupDescription:
+            "Properties to describe spacing around an object. Very similar to the margin properties in HTML.",
+        properties: [
+            margin_top_property_info, // ONLY IN LVGL 9.0
+            margin_bottom_property_info, // ONLY IN LVGL 9.0
+            margin_left_property_info, // ONLY IN LVGL 9.0
+            margin_right_property_info // ONLY IN LVGL 9.0
         ]
     },
 

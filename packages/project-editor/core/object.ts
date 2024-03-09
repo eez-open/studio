@@ -351,7 +351,10 @@ export interface ClassInfo {
 
     componentPaletteGroupName?: string;
     componentPaletteLabel?: string;
-    enabledInComponentPalette?: (projectType: ProjectType) => boolean;
+    enabledInComponentPalette?: (
+        projectType: ProjectType,
+        projectStore?: ProjectStore
+    ) => boolean;
 
     hideInProperties?: boolean;
     isPropertyMenuSupported?: boolean;

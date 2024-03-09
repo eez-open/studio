@@ -24,6 +24,8 @@ export enum LVGLStylePropCode {
     LV_STYLE_LAYOUT = 10,
     LV_STYLE_RADIUS = 11,
 
+    LV_STYLE_LENGTH = 200, // ONLY IN LVGL 9.0
+
     /*Group 1*/
     LV_STYLE_PAD_TOP = 16,
     LV_STYLE_PAD_BOTTOM = 17,
@@ -33,6 +35,11 @@ export enum LVGLStylePropCode {
     LV_STYLE_PAD_COLUMN = 21,
     LV_STYLE_BASE_DIR = 22,
     LV_STYLE_CLIP_CORNER = 23,
+
+    LV_STYLE_MARGIN_TOP = 201, // ONLY IN LVGL 9.0
+    LV_STYLE_MARGIN_BOTTOM = 202, // ONLY IN LVGL 9.0
+    LV_STYLE_MARGIN_LEFT = 203, // ONLY IN LVGL 9.0
+    LV_STYLE_MARGIN_RIGHT = 204, // ONLY IN LVGL 9.0
 
     /*Group 2*/
     LV_STYLE_BG_COLOR = 32,
@@ -114,7 +121,7 @@ export enum LVGLStylePropCode {
     LV_STYLE_FLEX_MAIN_PLACE = 113,
     LV_STYLE_FLEX_CROSS_PLACE = 114,
     LV_STYLE_FLEX_TRACK_PLACE = 115,
-    LV_STYLE_FLEX_GROW = 126,
+    LV_STYLE_FLEX_GROW = 0,
 
     /* Grid */
     LV_STYLE_GRID_COLUMN_ALIGN = 118,
@@ -478,6 +485,8 @@ const versions = {
                 [LVGLStylePropCode.LV_STYLE_WIDTH]: 1,
                 [LVGLStylePropCode.LV_STYLE_HEIGHT]: 2,
 
+                [LVGLStylePropCode.LV_STYLE_LENGTH]: 3,
+
                 [LVGLStylePropCode.LV_STYLE_MIN_WIDTH]: 4,
                 [LVGLStylePropCode.LV_STYLE_MAX_WIDTH]: 5,
                 [LVGLStylePropCode.LV_STYLE_MIN_HEIGHT]: 6,
@@ -499,10 +508,10 @@ const versions = {
                 [LVGLStylePropCode.LV_STYLE_PAD_COLUMN]: 21,
                 [LVGLStylePropCode.LV_STYLE_LAYOUT]: 22,
 
-                //[LVGLStylePropCode.LV_STYLE_MARGIN_TOP]: 24,
-                //[LVGLStylePropCode.LV_STYLE_MARGIN_BOTTOM]: 25,
-                //[LVGLStylePropCode.LV_STYLE_MARGIN_LEFT]: 26,
-                //[LVGLStylePropCode.LV_STYLE_MARGIN_RIGHT]: 27,
+                [LVGLStylePropCode.LV_STYLE_MARGIN_TOP]: 24,
+                [LVGLStylePropCode.LV_STYLE_MARGIN_BOTTOM]: 25,
+                [LVGLStylePropCode.LV_STYLE_MARGIN_LEFT]: 26,
+                [LVGLStylePropCode.LV_STYLE_MARGIN_RIGHT]: 27,
 
                 /*Group 2*/
                 [LVGLStylePropCode.LV_STYLE_BG_COLOR]: 28,

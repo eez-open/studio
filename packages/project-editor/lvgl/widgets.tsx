@@ -282,6 +282,25 @@ function lvglAddObjectFlowCallback(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function checkWidgetTypeLvglVersion(
+    widget: IEezObject,
+    messages: IMessage[],
+    lvglVersion: string
+) {
+    const projectStore = getProjectStore(widget);
+    if (projectStore.project.settings.general.lvglVersion != lvglVersion) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `This widget type is not supported in LVGL ${projectStore.project.settings.general.lvglVersion}`,
+                widget
+            )
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLWidget extends Widget {
     identifier: string;
 
@@ -5039,8 +5058,10 @@ export class LVGLColorwheelWidget extends LVGLWidget {
     fixedMode: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.LVGL,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
+            projectType === ProjectType.LVGL &&
+            (!projectStore ||
+                projectStore.project.settings.general.lvglVersion == "8.3"),
 
         componentPaletteGroupName: "!1Input",
 
@@ -5116,7 +5137,10 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
-        }
+        },
+
+        check: (widget, messages) =>
+            checkWidgetTypeLvglVersion(widget, messages, "8.3")
     });
 
     override makeEditable() {
@@ -5186,8 +5210,10 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
     imageCheckedDisabled: string;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.LVGL,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
+            projectType === ProjectType.LVGL &&
+            (!projectStore ||
+                projectStore.project.settings.general.lvglVersion == "8.3"),
 
         componentPaletteGroupName: "!1Input",
 
@@ -5264,6 +5290,8 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         ),
 
         check: (widget: LVGLImgbuttonWidget, messages: IMessage[]) => {
+            checkWidgetTypeLvglVersion(widget, messages, "8.3");
+
             if (widget.imageReleased) {
                 const bitmap = findBitmap(
                     ProjectEditor.getProject(widget),
@@ -7054,8 +7082,10 @@ export class LVGLMeterWidget extends LVGLWidget {
     scales: LVGLMeterScale[];
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.LVGL,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
+            projectType === ProjectType.LVGL &&
+            (!projectStore ||
+                projectStore.project.settings.general.lvglVersion == "8.3"),
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -7169,7 +7199,10 @@ export class LVGLMeterWidget extends LVGLWidget {
                 }
             }
             return properties;
-        }
+        },
+
+        check: (widget, messages) =>
+            checkWidgetTypeLvglVersion(widget, messages, "8.3")
     });
 
     override makeEditable() {
@@ -7437,6 +7470,209 @@ export class LVGLMeterWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// LV_SCALE_MODE_
+const SCALE_MODES = {
+    HORIZONTAL_TOP: 0x00,
+    HORIZONTAL_BOTTOM: 0x01,
+    VERTICAL_LEFT: 0x02,
+    VERTICAL_RIGHT: 0x04,
+    ROUND_INNER: 0x08,
+    ROUND_OUTER: 0x10
+};
+
+export class LVGLScaleWidget extends LVGLWidget {
+    scaleMode: keyof typeof SCALE_MODES;
+    minorRange: number;
+    majorRange: number;
+    totalTickCount: number;
+    majorTickEvery: number;
+    showLabels: boolean;
+
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
+            projectType === ProjectType.LVGL &&
+            (!projectStore ||
+                projectStore.project.settings.general.lvglVersion == "9.0"),
+
+        componentPaletteGroupName: "!1Visualiser",
+
+        properties: [
+            {
+                name: "scaleMode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(SCALE_MODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "minorRange",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "majorRange",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "totalTickCount",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "majorTickEvery",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "showLabels",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 240,
+            height: 40,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true,
+            scaleMode: "HORIZONTAL_BOTTOM",
+            localStyles: {
+                definition: {
+                    ITEMS: {
+                        DEFAULT: {
+                            length: 5
+                        }
+                    },
+                    INDICATOR: {
+                        DEFAULT: {
+                            length: 10
+                        }
+                    }
+                }
+            },
+            minorRange: 10,
+            majorRange: 40,
+            totalTickCount: 31,
+            majorTickEvery: 5,
+            showLabels: true
+        },
+
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="2 2 20 18"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1"
+            >
+                <path d="M19.875 8C20.496 8 21 8.512 21 9.143v5.714c0 .631-.504 1.143-1.125 1.143H4a1 1 0 0 1-1-1V9.143C3 8.512 3.504 8 4.125 8h15.75zM9 8v2M6 8v3M12 8v3M18 8v3M15 8v2" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN", "ITEMS", "INDICATOR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        },
+
+        check: (widget, messages) =>
+            checkWidgetTypeLvglVersion(widget, messages, "9.0")
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            scaleMode: observable,
+            minorRange: observable,
+            majorRange: observable,
+            totalTickCount: observable,
+            majorTickEvery: observable,
+            showLabels: observable
+        });
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const rect = this.getLvglCreateRect();
+
+        const obj = runtime.wasm._lvglCreateScale(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
+            SCALE_MODES[this.scaleMode],
+
+            this.minorRange,
+            this.majorRange,
+            this.totalTickCount,
+            this.majorTickEvery,
+            this.showLabels
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_scale_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        build.line(`lv_scale_set_mode(obj, LV_SCALE_MODE_${this.scaleMode});`);
+        build.line(
+            `lv_scale_set_range(obj, ${this.minorRange}, ${this.majorRange});`
+        );
+        build.line(
+            `lv_scale_set_total_tick_count(obj, ${this.totalTickCount});`
+        );
+        build.line(
+            `lv_scale_set_major_tick_every(obj, ${this.majorTickEvery});`
+        );
+        build.line(
+            `lv_scale_set_label_show(obj, ${
+                this.showLabels ? "true" : "false"
+            });`
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
@@ -7450,6 +7686,7 @@ registerClass("LVGLImgbuttonWidget", LVGLImgbuttonWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
 registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
+registerClass("LVGLScaleWidget", LVGLScaleWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
 registerClass("LVGLUserWidgetWidget", LVGLUserWidgetWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);

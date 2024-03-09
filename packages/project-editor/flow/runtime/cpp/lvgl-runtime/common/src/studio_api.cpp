@@ -292,26 +292,42 @@ EM_PORT_API(lv_obj_t *) lvglCreateChart(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
+EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
 #if LVGL_VERSION_MAJOR >= 9
-// TODO LVGL 9.0
-EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
-    lv_obj_set_pos(obj, x, y);
-    lv_obj_set_size(obj, w, h);
-    lv_obj_update_layout(obj);
-    setObjectIndex(obj, index);
-    return obj;
-}
 #else
-EM_PORT_API(lv_obj_t *) lvglCreateMeter(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_meter_create(parentObj);
+#endif
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
 }
+
+#if LVGL_VERSION_MAJOR >= 9
+EM_PORT_API(lv_obj_t *) lvglCreateScale(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h,
+    lv_scale_mode_t scaleMode, int32_t minorRange, int32_t majorRange, uint32_t totalTickCount, uint32_t majorTickEvery, bool showLabels) {
+    lv_obj_t *obj = lv_scale_create(parentObj);
+#else
+EM_PORT_API(lv_obj_t *) lvglCreateScale(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h,
+    int scaleMode, int minorRange, int majorRange, int totalTickCount, int majorTickEvery, bool showLabels) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
 #endif
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+#if LVGL_VERSION_MAJOR >= 9
+    lv_scale_set_mode(obj, scaleMode);
+    lv_scale_set_range(obj, minorRange, majorRange);
+    lv_scale_set_total_tick_count(obj, totalTickCount);
+    lv_scale_set_major_tick_every(obj, majorTickEvery);
+    lv_scale_set_label_show(obj, showLabels);
+#endif
+    return obj;
+}
+
 static lv_obj_t *current_screen = 0;
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {

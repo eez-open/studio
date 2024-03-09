@@ -607,6 +607,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateKeyboard(parentObj: number, index: number, x: number, y: number, w: number, h: number, mode: number): number;
     _lvglCreateChart(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateMeter(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateScale(parentObj: number, index: number, x: number, y: number, w: number, h: number, scaleMode:number, minorRange: number, majorRange: number, totalTickCount: number, majorTickEvery: number, showLabels: boolean): number;
     _lvglScreenLoad(page_index: number, obj: number): void;
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;

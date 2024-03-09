@@ -273,6 +273,8 @@ bool initialized = false;
 static uint32_t g_prevTick;
 #endif
 
+static void dump_widgets_flags_info();
+
 EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, uint32_t timeZone) {
     is_editor = assetsSize == 0;
 
@@ -282,31 +284,14 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     /*Initialize LittlevGL*/
     lv_init();
 
-    LV_STYLE_FLEX_GROW = lv_style_register_prop(LV_STYLE_PROP_LAYOUT_REFR);
-
-    printf("LV_STYLE_FLEX_FLOW %d\n", LV_STYLE_FLEX_FLOW);
-    printf("LV_STYLE_FLEX_MAIN_PLACE %d\n", LV_STYLE_FLEX_MAIN_PLACE);
-    printf("LV_STYLE_FLEX_CROSS_PLACE %d\n", LV_STYLE_FLEX_CROSS_PLACE);
-    printf("LV_STYLE_FLEX_TRACK_PLACE %d\n", LV_STYLE_FLEX_TRACK_PLACE);
-    printf("LV_STYLE_FLEX_GROW %d\n", LV_STYLE_FLEX_GROW);
-
-    printf("LV_STYLE_GRID_COLUMN_ALIGN %d\n", LV_STYLE_GRID_COLUMN_ALIGN);
-    printf("LV_STYLE_GRID_ROW_ALIGN %d\n", LV_STYLE_GRID_ROW_ALIGN);
-    printf("LV_STYLE_GRID_ROW_DSC_ARRAY %d\n", LV_STYLE_GRID_ROW_DSC_ARRAY);
-    printf("LV_STYLE_GRID_COLUMN_DSC_ARRAY %d\n", LV_STYLE_GRID_COLUMN_DSC_ARRAY);
-    printf("LV_STYLE_GRID_CELL_COLUMN_POS %d\n", LV_STYLE_GRID_CELL_COLUMN_POS);
-    printf("LV_STYLE_GRID_CELL_COLUMN_SPAN %d\n", LV_STYLE_GRID_CELL_COLUMN_SPAN);
-    printf("LV_STYLE_GRID_CELL_X_ALIGN %d\n", LV_STYLE_GRID_CELL_X_ALIGN);
-    printf("LV_STYLE_GRID_CELL_ROW_POS %d\n", LV_STYLE_GRID_CELL_ROW_POS);
-    printf("LV_STYLE_GRID_CELL_ROW_SPAN %d\n", LV_STYLE_GRID_CELL_ROW_SPAN);
-    printf("LV_STYLE_GRID_CELL_Y_ALIGN %d\n", LV_STYLE_GRID_CELL_Y_ALIGN);
-
     /*Initialize the HAL (display, input devices, tick) for LittlevGL*/
     hal_init();
 
     lv_disp_t *dispp = lv_disp_get_default();
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
+
+    //dump_widgets_flags_info();
 
     if (!is_editor) {
         flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, timeZone);
@@ -366,4 +351,138 @@ EM_PORT_API(void) onMouseWheelEvent(double yMouseWheel, int clicked) {
     }
     mouse_wheel_delta = round(yMouseWheel);
     mouse_wheel_pressed = clicked;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+lv_obj_t *lv_spinner_create_adapt(lv_obj_t *parentObj) {
+#if LVGL_VERSION_MAJOR >= 9
+    return lv_spinner_create(parentObj);
+#else
+    return lv_spinner_create(parentObj, 1000, 60);
+#endif
+}
+
+#if LVGL_VERSION_MAJOR >= 9
+#else
+lv_obj_t *lv_colorwheel_create_adapt(lv_obj_t *parentObj) {
+    return lv_colorwheel_create(parentObj, false);
+}
+#endif
+
+typedef struct {
+    const char *name;
+    lv_obj_t *(*create)(lv_obj_t *);
+} WidgetInfo;
+
+WidgetInfo widgets[] = {
+    { "Screen", lv_obj_create },
+    { "Label", lv_label_create },
+    { "Button", lv_btn_create },
+    { "Panel", lv_obj_create },
+    { "Image", lv_img_create },
+    { "Slider", lv_slider_create },
+    { "Roller", lv_roller_create },
+    { "Switch", lv_switch_create },
+    { "Bar", lv_bar_create },
+    { "Dropdown", lv_dropdown_create },
+    { "Arc", lv_arc_create },
+    { "Spinner", lv_spinner_create_adapt },
+    { "Checkbox", lv_checkbox_create },
+    { "Textarea", lv_textarea_create },
+    { "Keyboard", lv_keyboard_create },
+    { "Chart", lv_chart_create },
+    { "Calendar", lv_calendar_create },
+#if LVGL_VERSION_MAJOR >= 9
+    { "Scale", lv_scale_create },
+#else
+    { "Colorwheel", lv_colorwheel_create_adapt },
+    { "ImageButton", lv_imgbtn_create },
+    { "Meter", lv_meter_create },
+#endif
+};
+
+typedef struct {
+    const char *name;
+    int code;
+} FlagInfo;
+
+FlagInfo flags[] = {
+    "HIDDEN", LV_OBJ_FLAG_HIDDEN,
+    "CLICKABLE", LV_OBJ_FLAG_CLICKABLE,
+    "CLICK_FOCUSABLE", LV_OBJ_FLAG_CLICK_FOCUSABLE,
+    "CHECKABLE", LV_OBJ_FLAG_CHECKABLE,
+    "SCROLLABLE", LV_OBJ_FLAG_SCROLLABLE,
+    "SCROLL_ELASTIC", LV_OBJ_FLAG_SCROLL_ELASTIC,
+    "SCROLL_MOMENTUM", LV_OBJ_FLAG_SCROLL_MOMENTUM,
+    "SCROLL_ONE", LV_OBJ_FLAG_SCROLL_ONE,
+    "SCROLL_CHAIN_HOR", LV_OBJ_FLAG_SCROLL_CHAIN_HOR,
+    "SCROLL_CHAIN_VER", LV_OBJ_FLAG_SCROLL_CHAIN_VER,
+    "SCROLL_CHAIN", LV_OBJ_FLAG_SCROLL_CHAIN,
+    "SCROLL_ON_FOCUS", LV_OBJ_FLAG_SCROLL_ON_FOCUS,
+    "SCROLL_WITH_ARROW", LV_OBJ_FLAG_SCROLL_WITH_ARROW,
+    "SNAPPABLE", LV_OBJ_FLAG_SNAPPABLE,
+    "PRESS_LOCK", LV_OBJ_FLAG_PRESS_LOCK,
+    "EVENT_BUBBLE", LV_OBJ_FLAG_EVENT_BUBBLE,
+    "GESTURE_BUBBLE", LV_OBJ_FLAG_GESTURE_BUBBLE,
+    "ADV_HITTEST", LV_OBJ_FLAG_ADV_HITTEST,
+    "IGNORE_LAYOUT", LV_OBJ_FLAG_IGNORE_LAYOUT,
+    "FLOATING", LV_OBJ_FLAG_FLOATING,
+    "OVERFLOW_VISIBLE", LV_OBJ_FLAG_OVERFLOW_VISIBLE
+};
+
+
+void dump_widget_flags_info(WidgetInfo *info, lv_obj_t *obj) {
+    char info_str[1024] = { 0 };
+
+    strcat(info_str, info->name);
+    strcat(info_str, ": ");
+
+    bool first = true;
+
+    for (size_t i = 0; i < sizeof(flags) / sizeof(FlagInfo); i++) {
+        if (lv_obj_has_flag(obj, flags[i].code)) {
+            if (first) {
+                first = false;
+            } else {
+                strcat(info_str, " | ");
+            }
+            strcat(info_str, flags[i].name);
+        }
+    }
+
+    printf("%s\n", info_str);
+}
+
+void dump_widgets_flags_info() {
+    lv_obj_t *parent_obj = 0;
+
+    for (size_t i = 0; i < sizeof(widgets) / sizeof(WidgetInfo); i++) {
+        lv_obj_t *obj = widgets[i].create(parent_obj);
+        if (!parent_obj) {
+            parent_obj = obj;
+        }
+        dump_widget_flags_info(widgets + i, obj);
+    }
+
+    lv_obj_del(parent_obj);
+}
+
+void dump_custom_styles() {
+    printf("LV_STYLE_FLEX_FLOW %d\n", LV_STYLE_FLEX_FLOW);
+    printf("LV_STYLE_FLEX_MAIN_PLACE %d\n", LV_STYLE_FLEX_MAIN_PLACE);
+    printf("LV_STYLE_FLEX_CROSS_PLACE %d\n", LV_STYLE_FLEX_CROSS_PLACE);
+    printf("LV_STYLE_FLEX_TRACK_PLACE %d\n", LV_STYLE_FLEX_TRACK_PLACE);
+    printf("LV_STYLE_FLEX_GROW %d\n", LV_STYLE_FLEX_GROW);
+
+    printf("LV_STYLE_GRID_COLUMN_ALIGN %d\n", LV_STYLE_GRID_COLUMN_ALIGN);
+    printf("LV_STYLE_GRID_ROW_ALIGN %d\n", LV_STYLE_GRID_ROW_ALIGN);
+    printf("LV_STYLE_GRID_ROW_DSC_ARRAY %d\n", LV_STYLE_GRID_ROW_DSC_ARRAY);
+    printf("LV_STYLE_GRID_COLUMN_DSC_ARRAY %d\n", LV_STYLE_GRID_COLUMN_DSC_ARRAY);
+    printf("LV_STYLE_GRID_CELL_COLUMN_POS %d\n", LV_STYLE_GRID_CELL_COLUMN_POS);
+    printf("LV_STYLE_GRID_CELL_COLUMN_SPAN %d\n", LV_STYLE_GRID_CELL_COLUMN_SPAN);
+    printf("LV_STYLE_GRID_CELL_X_ALIGN %d\n", LV_STYLE_GRID_CELL_X_ALIGN);
+    printf("LV_STYLE_GRID_CELL_ROW_POS %d\n", LV_STYLE_GRID_CELL_ROW_POS);
+    printf("LV_STYLE_GRID_CELL_ROW_SPAN %d\n", LV_STYLE_GRID_CELL_ROW_SPAN);
+    printf("LV_STYLE_GRID_CELL_Y_ALIGN %d\n", LV_STYLE_GRID_CELL_Y_ALIGN);
 }

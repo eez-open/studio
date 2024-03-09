@@ -176,7 +176,8 @@ export function getGroups(
             projectStore &&
             componentClass.objectClass.classInfo.enabledInComponentPalette &&
             !componentClass.objectClass.classInfo.enabledInComponentPalette(
-                projectStore.project.settings.general.projectType
+                projectStore.project.settings.general.projectType,
+                projectStore
             )
         ) {
             return;

@@ -4693,6 +4693,7 @@ var _lvglCreateImgbutton = Module['_lvglCreateImgbutton'] = createExportWrapper(
 var _lvglCreateKeyboard = Module['_lvglCreateKeyboard'] = createExportWrapper('lvglCreateKeyboard');
 var _lvglCreateChart = Module['_lvglCreateChart'] = createExportWrapper('lvglCreateChart');
 var _lvglCreateMeter = Module['_lvglCreateMeter'] = createExportWrapper('lvglCreateMeter');
+var _lvglCreateScale = Module['_lvglCreateScale'] = createExportWrapper('lvglCreateScale');
 var _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad');
 var _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject');
 var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag');

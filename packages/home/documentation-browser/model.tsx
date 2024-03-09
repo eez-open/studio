@@ -181,7 +181,7 @@ class Model {
     async loadModel() {
         this.dashboardProjectStore = await this.createProjectStore("dashboard");
         this.eezguiProjectStore = await this.createProjectStore("firmware");
-        this.lvglProjectStore = await this.createProjectStore("LVGL");
+        this.lvglProjectStore = await this.createProjectStore("LVGL-8.3");
 
         await this.loadComponents();
 
