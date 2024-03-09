@@ -170,7 +170,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coo
 EM_PORT_API(lv_obj_t *) lvglCreateSpinner(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
 #if LVGL_VERSION_MAJOR >= 9
     lv_obj_t *obj = lv_spinner_create(parentObj);
-    lv_spinner_set_anim_params(parentObj, 1000, 60);
+    lv_spinner_set_anim_params(obj, 1000, 60);
 #else
     lv_obj_t *obj = lv_spinner_create(parentObj, 1000, 60);
 #endif

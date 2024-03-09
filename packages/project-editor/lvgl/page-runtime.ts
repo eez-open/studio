@@ -21,7 +21,11 @@ import {
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { Project, findBitmap } from "project-editor/project/project";
+import {
+    Project,
+    ProjectType,
+    findBitmap
+} from "project-editor/project/project";
 import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import { PageTabState } from "project-editor/features/page/PageEditor";
@@ -640,13 +644,24 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     canvas: HTMLCanvasElement | null = null;
 
     constructor(public project: Project) {
+        const widgets = getClassesDerivedFrom(
+            project._store,
+            ProjectEditor.LVGLWidgetClass
+        ).filter(componentClass =>
+            componentClass.objectClass.classInfo.enabledInComponentPalette
+                ? componentClass.objectClass.classInfo.enabledInComponentPalette(
+                      ProjectType.LVGL,
+                      project._store
+                  )
+                : true
+        );
+
+        console.log(widgets);
+
         const page = createObject<Page>(
             project._store,
             {
-                components: getClassesDerivedFrom(
-                    project._store,
-                    ProjectEditor.LVGLWidgetClass
-                ).map(componentClass =>
+                components: widgets.map(componentClass =>
                     Object.assign(
                         {},
                         componentClass.objectClass.classInfo.defaultValue,
@@ -776,6 +791,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     const pageObj = this.page.lvglCreate(this, 0);
                     if (!pageObj) {
                         console.error("pageObj is undefined");
+                        return;
                     }
 
                     this.wasm._lvglScreenLoad(-1, pageObj);
