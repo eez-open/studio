@@ -7,11 +7,8 @@ import {
     reaction,
     runInAction
 } from "mobx";
-import { resolve } from "path";
-import fs from "fs";
 
 import { isDev } from "eez-studio-shared/util-electron";
-import { sourceRootDir } from "eez-studio-shared/util";
 
 import type { ITreeNode } from "eez-studio-ui/tree";
 
@@ -179,9 +176,15 @@ class Model {
     }
 
     async loadModel() {
-        this.dashboardProjectStore = await this.createProjectStore("dashboard");
-        this.eezguiProjectStore = await this.createProjectStore("firmware");
-        this.lvglProjectStore = await this.createProjectStore("LVGL-8.3");
+        this.dashboardProjectStore = await this.createProjectStore(
+            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/dashboard.eez-project"
+        );
+        this.eezguiProjectStore = await this.createProjectStore(
+            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/firmware.eez-project"
+        );
+        this.lvglProjectStore = await this.createProjectStore(
+            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL-8.3.eez-project"
+        );
 
         await this.loadComponents();
 
@@ -202,15 +205,9 @@ class Model {
         setupMarkdownWatcher();
     }
 
-    async createProjectStore(type: string) {
-        const relativePath = `project-templates/${type}.eez-project`;
-
-        const jsonStr = await fs.promises.readFile(
-            isDev
-                ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
-                : `${process.resourcesPath!}/${relativePath}`,
-            "utf8"
-        );
+    async createProjectStore(projectFileUrl: string) {
+        const result = await fetch(projectFileUrl);
+        const jsonStr = await result.json();
 
         const projectStore = await ProjectStore.create();
 

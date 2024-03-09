@@ -30,8 +30,6 @@ tools/freetype-tools/FreeType-Emscripten
 bundle-meta.json
 circular.txt
 
-!resources/project-templates/*.eez-project-ui-state
-
 packages/project-editor/flow/runtime/cpp/eez-runtime/build
 !packages/project-editor/flow/runtime/eez_runtime.js
 !packages/project-editor/flow/runtime/cpp/eez-runtime/platform/simulator/emscripten/pre.js

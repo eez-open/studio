@@ -150,27 +150,12 @@ async function getExtraResource() {
         "./installation/extra-resources/catalog.json"
     ]
         .concat(extensions)
-        .concat(["./resources/expression-grammar.pegjs"])
-        .concat(["./resources/project-templates/*"]);
+        .concat(["./resources/expression-grammar.pegjs"]);
 
     const extraResources = extraResource.map((extraResourcePath: string) => ({
         from: extraResourcePath,
         to: path.basename(extraResourcePath)
     }));
-
-    let projectTemplates = (
-        await fs.promises.readdir("./resources/project-templates")
-    )
-        .filter(
-            file =>
-                file.endsWith(".eez-project") ||
-                file.endsWith(".eez-project-ui-state") ||
-                file.endsWith(".ttf")
-        )
-        .map(file => ({
-            from: "./resources/project-templates/" + file,
-            to: "project-templates/" + file
-        }));
 
     let lvImgConv9 = (
         await fs.promises.readdir("./resources/lv_img_conv_9")
@@ -181,7 +166,6 @@ async function getExtraResource() {
 
     return [
         ...extraResources,
-        ...projectTemplates,
         ...lvImgConv9,
         ...[
             {

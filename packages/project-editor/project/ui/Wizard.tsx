@@ -1,7 +1,7 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
 import { rmdir } from "fs/promises";
-import path, { resolve } from "path";
+import path from "path";
 import React from "react";
 import ReactDOM from "react-dom";
 import { SimpleGitProgressEvent } from "simple-git";
@@ -22,10 +22,8 @@ import * as FlexLayout from "flexlayout-react";
 
 import {
     getHomePath,
-    isDev,
     readJsObjectFromFile
 } from "eez-studio-shared/util-electron";
-import { sourceRootDir } from "eez-studio-shared/util";
 import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
 
@@ -114,6 +112,7 @@ interface IProjectType {
     targetPlatformLink?: string;
     language?: string;
     resourceFiles?: string[];
+    projectFileUrl?: string | { "8.3": string; "9.0": string };
 }
 
 const SAVED_OPTIONS_VERSION = 11;
@@ -191,7 +190,7 @@ class WizardModel {
         lvglVersion: string;
     };
 
-    lvglVersion: string = "8.3";
+    lvglVersion: "8.3" | "9.0" = "8.3";
 
     constructor() {
         makeObservable(this, {
@@ -665,21 +664,29 @@ class WizardModel {
                 image: DASHBOARD_PROJECT_ICON(128),
                 projectName: "Dashboard",
                 description:
-                    "Start your new Dashboard project development here."
+                    "Start your new Dashboard project development here.",
+                projectFileUrl:
+                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/dashboard.eez-project"
             },
             {
                 id: "firmware",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
                 image: EEZ_GUI_PROJECT_ICON(128),
                 projectName: "EEZ-GUI",
-                description: "Start your new EEZ-GUI project development here."
+                description: "Start your new EEZ-GUI project development here.",
+                projectFileUrl:
+                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/firmware.eez-project"
             },
             {
                 id: "LVGL",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
                 image: LVGL_PROJECT_ICON(128),
                 projectName: "LVGL",
-                description: "Start your new LVGL project development here."
+                description: "Start your new LVGL project development here.",
+                projectFileUrl: {
+                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL-8.3.eez-project",
+                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL-9.0.eez-project"
+                }
             },
             {
                 id: "LVGL with EEZ Flow",
@@ -687,14 +694,20 @@ class WizardModel {
                 image: LVGL_WITH_FLOW_PROJECT_ICON(128),
                 projectName: "LVGL with EEZ Flow",
                 description:
-                    "Start your new LVGL with EEZ Flow project development here."
+                    "Start your new LVGL with EEZ Flow project development here.",
+                projectFileUrl: {
+                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL%20with%20EEZ%20Flow-8.3.eez-project",
+                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL%20with%20EEZ%20Flow-9.0.eez-project"
+                }
             },
             {
                 id: "IEXT",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.IEXT],
                 image: IEXT_PROJECT_ICON(128),
                 projectName: "IEXT",
-                description: "Start your new IEXT project development here."
+                description: "Start your new IEXT project development here.",
+                projectFileUrl:
+                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/IEXT.eez-project"
             }
         ].filter(projectType => this.searchFilter(projectType));
     }
@@ -707,7 +720,9 @@ class WizardModel {
                 image: APPLET_ICON(128),
                 projectName: "BB3 Applet",
                 description:
-                    "Start your new BB3 Applet project development here."
+                    "Start your new BB3 Applet project development here.",
+                projectFileUrl:
+                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/applet.eez-project"
             },
             {
                 id: "resource",
@@ -715,7 +730,9 @@ class WizardModel {
                 image: MICROPYTHON_ICON(128),
                 projectName: "BB3 MicroPython Script",
                 description:
-                    "Start your new BB3 MicroPython project development here."
+                    "Start your new BB3 MicroPython project development here.",
+                projectFileUrl:
+                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/resource.eez-project"
             }
         ].filter(projectType => this.searchFilter(projectType));
     }
@@ -1020,53 +1037,47 @@ class WizardModel {
     }
 
     async loadEezProject() {
-        if (this.section == "templates") {
-            let version;
-            if (this.type == "LVGL" || this.type == "LVGL with EEZ Flow") {
-                version = "-" + this.lvglVersion ?? "8.3";
+        return new Promise<any>((resolve, reject) => {
+            let projectFileUrl;
+
+            if (this.section == "templates") {
+                const urlDef = this.selectedProjectType?.projectFileUrl;
+                if (!urlDef) {
+                    throw "Can't load EEZ-PROJECT file: no URL specified";
+                }
+                if (typeof urlDef == "string") {
+                    projectFileUrl = urlDef;
+                } else {
+                    projectFileUrl = urlDef[this.lvglVersion];
+                }
             } else {
-                version = "";
+                projectFileUrl = this.type!;
             }
 
-            const relativePath = `project-templates/${this.type}${version}.eez-project`;
+            let req = new XMLHttpRequest();
+            req.responseType = "json";
+            req.open("GET", projectFileUrl);
 
-            const json = await fs.promises.readFile(
-                isDev
-                    ? resolve(`${sourceRootDir()}/../resources/${relativePath}`)
-                    : `${process.resourcesPath!}/${relativePath}`,
-                "utf8"
-            );
-
-            return JSON.parse(json);
-        } else {
-            return new Promise<any>((resolve, reject) => {
-                const projectFileUrl = this.type!;
-
-                let req = new XMLHttpRequest();
-                req.responseType = "json";
-                req.open("GET", projectFileUrl);
-
-                req.addEventListener("load", async () => {
-                    if (req.readyState == 4) {
-                        if (req.status != 200 || !req.response) {
-                            reject("Download failed!");
-                            return;
-                        }
-                        try {
-                            resolve(req.response);
-                        } catch (err) {
-                            reject(err);
-                        }
+            req.addEventListener("load", async () => {
+                if (req.readyState == 4) {
+                    if (req.status != 200 || !req.response) {
+                        reject("Download failed!");
+                        return;
                     }
-                });
-
-                req.addEventListener("error", error => {
-                    reject("Network error");
-                });
-
-                req.send();
+                    try {
+                        resolve(req.response);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
             });
-        }
+
+            req.addEventListener("error", error => {
+                reject("Network error");
+            });
+
+            req.send();
+        });
     }
 
     async loadResourceFile(resourceFileRelativePath: string) {
@@ -1105,7 +1116,11 @@ class WizardModel {
             return undefined;
         }
         if (this.selectedTemplateProject || this.createDirectory) {
-            return `${this.location}${path.sep}${this.name}`;
+            let location = this.location.trim();
+            if (location.endsWith("/") || location.endsWith("\\")) {
+                location = location.substring(0, location.length - 1);
+            }
+            return `${location}${path.sep}${this.name}`;
         } else {
             return this.location;
         }
@@ -1607,16 +1622,18 @@ class WizardModel {
 
                     if (this.type == "firmware") {
                         const fontFileName = "Oswald-Medium.ttf";
-                        const fontFileRelativePath = `project-templates/${fontFileName}`;
-                        const fontFileSrcPath = isDev
-                            ? resolve(
-                                  `${sourceRootDir()}/../resources/${fontFileRelativePath}`
-                              )
-                            : `${process.resourcesPath!}/${fontFileRelativePath}`;
                         const fontFileDestPath = `${this.projectFolderPath}/${fontFileName}`;
-                        await fs.promises.copyFile(
-                            fontFileSrcPath,
-                            fontFileDestPath
+
+                        const fontFileUrl =
+                            "https://github.com/eez-open/eez-project-templates/raw/master/templates/Oswald-Medium.ttf";
+
+                        const response = await fetch(fontFileUrl);
+                        const blob = await response.blob();
+                        const arrayBuffer = await blob.arrayBuffer();
+
+                        await fs.promises.writeFile(
+                            fontFileDestPath,
+                            Buffer.from(arrayBuffer)
                         );
                     }
 
@@ -2135,7 +2152,10 @@ const ProjectProperties = observer(
                                             onChange={action(
                                                 event =>
                                                     (wizardModel.lvglVersion =
-                                                        event.target.value)
+                                                        event.target.value ==
+                                                        "9.0"
+                                                            ? "9.0"
+                                                            : "8.3")
                                             )}
                                             value={wizardModel.lvglVersion}
                                         >
