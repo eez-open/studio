@@ -195,7 +195,7 @@ export function createWasmWorker(
     wasmModuleId: number,
     debuggerMessageSubsciptionFilter: number,
     postWorkerToRenderMessage: (data: WorkerToRenderMessage) => void,
-    lvglVersion: string | undefined,
+    lvglVersion: "8.3" | "9.0" | undefined,
     displayWidth: number,
     displayHeight: number,
     getClassByName: (className: string) => any,

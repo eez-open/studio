@@ -599,7 +599,7 @@ export const PROJECT_TYPE_NAMES = {
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
-    lvglVersion: string;
+    lvglVersion: "8.3" | "9.0";
     scpiDocFolder?: string;
     masterProject: string;
     extensions: ExtensionDirective[];

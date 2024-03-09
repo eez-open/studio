@@ -11,7 +11,8 @@ import { getProjectStore } from "project-editor/store";
 import {
     LVGLPropertyInfo,
     lvglProperties,
-    LVGLPropertiesGroup
+    LVGLPropertiesGroup,
+    isLvglStylePropertySupported
 } from "project-editor/lvgl/style-catalog";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { action, makeObservable, observable } from "mobx";
@@ -111,14 +112,21 @@ const LVGLStylePropertiesDialog = observer(
                     selected: false
                 });
 
-                propertyGroup.properties.forEach(property => {
-                    nodes.push({
-                        id: property.name,
-                        label: `${property.displayName}: ${property.lvglStyleProp.description}`,
-                        data: property,
-                        selected: false
+                propertyGroup.properties
+                    .filter(propertyInfo =>
+                        isLvglStylePropertySupported(
+                            this.context.project,
+                            propertyInfo
+                        )
+                    )
+                    .forEach(property => {
+                        nodes.push({
+                            id: property.name,
+                            label: `${property.displayName}: ${property.lvglStyleProp.description}`,
+                            data: property,
+                            selected: false
+                        });
                     });
-                });
             });
 
             return nodes;

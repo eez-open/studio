@@ -31,6 +31,10 @@ import type { LVGLStylesDefinition } from "project-editor/lvgl/style-definition"
 import type { LVGLParts } from "project-editor/lvgl/style-helper";
 
 import { isArray } from "eez-studio-shared/util";
+import {
+    LVGLPropertyInfo,
+    isLvglStylePropertySupported
+} from "project-editor/lvgl/style-catalog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -317,7 +321,7 @@ export class MessagesCollection {
         object: LVGLStylesDefinition,
         part: LVGLParts,
         state?: string,
-        propertyInfoArray?: PropertyInfo[]
+        propertyInfoArray?: LVGLPropertyInfo[]
     ) {
         function test(messages: Message[]) {
             for (const message of messages) {
@@ -338,12 +342,16 @@ export class MessagesCollection {
         }
 
         const keys = propertyInfoArray
-            ? propertyInfoArray.map(
-                  propertyInfo =>
-                      `definition.${part}${state ? `.${state}` : ""}${
-                          propertyInfo ? `.${propertyInfo.name}` : ""
-                      }`
-              )
+            ? propertyInfoArray
+                  .filter(propertyInfo =>
+                      isLvglStylePropertySupported(object, propertyInfo)
+                  )
+                  .map(
+                      propertyInfo =>
+                          `definition.${part}${state ? `.${state}` : ""}${
+                              propertyInfo ? `.${propertyInfo.name}` : ""
+                          }`
+                  )
             : [`definition.${part}${state ? `.${state}` : ""}`];
 
         return test(this.messages);

@@ -16,8 +16,10 @@ import { getAncestorOfType, Section } from "project-editor/store";
 import React from "react";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import {
+    isLvglStylePropertySupported,
     lvglProperties,
     LVGLPropertiesGroup,
+    LVGLPropertyInfo,
     PropertyValueHolder
 } from "project-editor/lvgl/style-catalog";
 import {
@@ -451,190 +453,202 @@ export const LVGLStylesDefinitionGroupProperties = observer(
 
             return (
                 <div className="EezStudio_LVGLStylesDefinition_GroupProperties">
-                    {propertiesGroup.properties.map(propertyInfo => {
-                        let definedValues = stylesDefinitions.map(
-                            stylesDefinition =>
-                                stylesDefinition.getPropertyValue(
-                                    propertyInfo,
-                                    part,
-                                    state
-                                )
-                        );
+                    {propertiesGroup.properties
+                        .filter(propertyInfo =>
+                            isLvglStylePropertySupported(
+                                this.context.project,
+                                propertyInfo
+                            )
+                        )
+                        .map(propertyInfo => {
+                            let definedValues = stylesDefinitions.map(
+                                stylesDefinition =>
+                                    stylesDefinition.getPropertyValue(
+                                        propertyInfo,
+                                        part,
+                                        state
+                                    )
+                            );
 
-                        let numDefined = 0;
-                        let numUndefined = 0;
-                        definedValues.forEach(definedValue => {
-                            if (definedValue !== undefined) {
-                                numDefined++;
-                            } else {
-                                numUndefined++;
-                            }
-                        });
-
-                        let checkboxState =
-                            numDefined == 0
-                                ? false
-                                : numUndefined == 0
-                                ? true
-                                : undefined;
-
-                        const values: any[] = definedValues.map(
-                            (definedValue, i) => {
-                                const object = objects[i];
-
-                                let lvglObj: number | undefined;
-
-                                if (
-                                    object instanceof
-                                    ProjectEditor.LVGLWidgetClass
-                                ) {
-                                    lvglObj = object._lvglObj;
-                                } else if (
-                                    object instanceof
-                                    ProjectEditor.LVGLStyleClass
-                                ) {
-                                    lvglObj = runtime.getLvglObj(object);
+                            let numDefined = 0;
+                            let numUndefined = 0;
+                            definedValues.forEach(definedValue => {
+                                if (definedValue !== undefined) {
+                                    numDefined++;
+                                } else {
+                                    numUndefined++;
                                 }
+                            });
 
-                                return definedValue !== undefined
-                                    ? definedValue
-                                    : getStylePropDefaultValue(
-                                          runtime,
-                                          lvglObj,
-                                          part,
-                                          propertyInfo
-                                      );
-                            }
-                        );
+                            let checkboxState =
+                                numDefined == 0
+                                    ? false
+                                    : numUndefined == 0
+                                    ? true
+                                    : undefined;
 
-                        return (
-                            <div
-                                key={propertyInfo.name}
-                                className={classNames(
-                                    "EezStudio_LVGLStylesDefinition_Property",
-                                    {
-                                        inError:
-                                            stylesDefinitions.length === 1 &&
-                                            isPropertyInError(
-                                                stylesDefinitions[0],
-                                                part,
-                                                state,
-                                                [propertyInfo]
-                                            )
+                            const values: any[] = definedValues.map(
+                                (definedValue, i) => {
+                                    const object = objects[i];
+
+                                    let lvglObj: number | undefined;
+
+                                    if (
+                                        object instanceof
+                                        ProjectEditor.LVGLWidgetClass
+                                    ) {
+                                        lvglObj = object._lvglObj;
+                                    } else if (
+                                        object instanceof
+                                        ProjectEditor.LVGLStyleClass
+                                    ) {
+                                        lvglObj = runtime.getLvglObj(object);
                                     }
-                                )}
-                            >
-                                <div className="EezStudio_LVGLStylesDefinition_Name for-check">
-                                    <label className="form-check-label">
-                                        <Checkbox
-                                            state={checkboxState}
-                                            onChange={checked => {
-                                                this.context.undoManager.setCombineCommands(
-                                                    true
-                                                );
 
-                                                if (checked) {
-                                                    stylesDefinitions.forEach(
-                                                        (
-                                                            stylesDefinition,
-                                                            i
-                                                        ) => {
-                                                            if (
-                                                                definedValues[
-                                                                    i
-                                                                ] === undefined
-                                                            ) {
+                                    return definedValue !== undefined
+                                        ? definedValue
+                                        : getStylePropDefaultValue(
+                                              runtime,
+                                              lvglObj,
+                                              part,
+                                              propertyInfo
+                                          );
+                                }
+                            );
+
+                            return (
+                                <div
+                                    key={propertyInfo.name}
+                                    className={classNames(
+                                        "EezStudio_LVGLStylesDefinition_Property",
+                                        {
+                                            inError:
+                                                stylesDefinitions.length ===
+                                                    1 &&
+                                                isPropertyInError(
+                                                    stylesDefinitions[0],
+                                                    part,
+                                                    state,
+                                                    [propertyInfo]
+                                                )
+                                        }
+                                    )}
+                                >
+                                    <div className="EezStudio_LVGLStylesDefinition_Name for-check">
+                                        <label className="form-check-label">
+                                            <Checkbox
+                                                state={checkboxState}
+                                                onChange={checked => {
+                                                    this.context.undoManager.setCombineCommands(
+                                                        true
+                                                    );
+
+                                                    if (checked) {
+                                                        stylesDefinitions.forEach(
+                                                            (
+                                                                stylesDefinition,
+                                                                i
+                                                            ) => {
+                                                                if (
+                                                                    definedValues[
+                                                                        i
+                                                                    ] ===
+                                                                    undefined
+                                                                ) {
+                                                                    this.context.updateObject(
+                                                                        stylesDefinition,
+                                                                        {
+                                                                            definition:
+                                                                                stylesDefinition.addPropertyToDefinition(
+                                                                                    propertyInfo,
+                                                                                    part,
+                                                                                    state,
+                                                                                    values[
+                                                                                        i
+                                                                                    ]
+                                                                                )
+                                                                        }
+                                                                    );
+                                                                }
+                                                            }
+                                                        );
+                                                    } else {
+                                                        stylesDefinitions.forEach(
+                                                            (
+                                                                stylesDefinition,
+                                                                i
+                                                            ) => {
                                                                 this.context.updateObject(
                                                                     stylesDefinition,
                                                                     {
                                                                         definition:
-                                                                            stylesDefinition.addPropertyToDefinition(
+                                                                            stylesDefinition.removePropertyFromDefinition(
                                                                                 propertyInfo,
                                                                                 part,
-                                                                                state,
-                                                                                values[
-                                                                                    i
-                                                                                ]
+                                                                                state
                                                                             )
                                                                     }
                                                                 );
                                                             }
-                                                        }
+                                                        );
+                                                    }
+                                                    this.context.undoManager.setCombineCommands(
+                                                        false
                                                     );
-                                                } else {
-                                                    stylesDefinitions.forEach(
-                                                        (
+                                                }}
+                                                readOnly={readOnly}
+                                            />
+                                            {" " +
+                                                (propertyInfo.displayName ||
+                                                    humanize(
+                                                        propertyInfo.name
+                                                    ))}
+                                        </label>
+                                    </div>
+                                    <div className="EezStudio_LVGLStylesDefinition_Value">
+                                        <ProjectEditor.Property
+                                            propertyInfo={propertyInfo}
+                                            objects={values.map(
+                                                value =>
+                                                    new PropertyValueHolder(
+                                                        this.context,
+                                                        propertyInfo.name,
+                                                        value
+                                                    )
+                                            )}
+                                            updateObject={(
+                                                propertyValues: Object
+                                            ) => {
+                                                let newPropertyValue = (
+                                                    propertyValues as any
+                                                )[propertyInfo.name];
+
+                                                stylesDefinitions.forEach(
+                                                    (stylesDefinition, i) => {
+                                                        this.context.updateObject(
                                                             stylesDefinition,
-                                                            i
-                                                        ) => {
-                                                            this.context.updateObject(
-                                                                stylesDefinition,
-                                                                {
-                                                                    definition:
-                                                                        stylesDefinition.removePropertyFromDefinition(
-                                                                            propertyInfo,
-                                                                            part,
-                                                                            state
-                                                                        )
-                                                                }
-                                                            );
-                                                        }
-                                                    );
-                                                }
-                                                this.context.undoManager.setCombineCommands(
-                                                    false
+                                                            {
+                                                                definition:
+                                                                    stylesDefinition.addPropertyToDefinition(
+                                                                        propertyInfo,
+                                                                        part,
+                                                                        state,
+                                                                        newPropertyValue
+                                                                    )
+                                                            }
+                                                        );
+                                                    }
                                                 );
                                             }}
-                                            readOnly={readOnly}
+                                            readOnly={
+                                                readOnly ||
+                                                checkboxState !== true
+                                            }
                                         />
-                                        {" " +
-                                            (propertyInfo.displayName ||
-                                                humanize(propertyInfo.name))}
-                                    </label>
+                                    </div>
                                 </div>
-                                <div className="EezStudio_LVGLStylesDefinition_Value">
-                                    <ProjectEditor.Property
-                                        propertyInfo={propertyInfo}
-                                        objects={values.map(
-                                            value =>
-                                                new PropertyValueHolder(
-                                                    this.context,
-                                                    propertyInfo.name,
-                                                    value
-                                                )
-                                        )}
-                                        updateObject={(
-                                            propertyValues: Object
-                                        ) => {
-                                            let newPropertyValue = (
-                                                propertyValues as any
-                                            )[propertyInfo.name];
-
-                                            stylesDefinitions.forEach(
-                                                (stylesDefinition, i) => {
-                                                    this.context.updateObject(
-                                                        stylesDefinition,
-                                                        {
-                                                            definition:
-                                                                stylesDefinition.addPropertyToDefinition(
-                                                                    propertyInfo,
-                                                                    part,
-                                                                    state,
-                                                                    newPropertyValue
-                                                                )
-                                                        }
-                                                    );
-                                                }
-                                            );
-                                        }}
-                                        readOnly={
-                                            readOnly || checkboxState !== true
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
                 </div>
             );
         }
@@ -655,6 +669,10 @@ function getNumModificationsForPropertiesGroup(
     );
 
     for (const propertyInfo of propertiesGroup.properties) {
+        if (!isLvglStylePropertySupported(objects[0], propertyInfo)) {
+            continue;
+        }
+
         let definedValues = stylesDefinitions.map(stylesDefinition =>
             stylesDefinition.getPropertyValue(propertyInfo, part, state)
         );
@@ -683,7 +701,7 @@ function isPropertyInError(
     stylesDefinition: LVGLStylesDefinition,
     part: LVGLParts,
     state?: string,
-    propertyInfoArray?: PropertyInfo[]
+    propertyInfoArray?: LVGLPropertyInfo[]
 ) {
     return ProjectEditor.getProjectStore(stylesDefinition)
         .outputSectionsStore.getSection(Section.CHECKS)

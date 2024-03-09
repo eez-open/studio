@@ -21,7 +21,7 @@ import type { Page } from "project-editor/features/page/page";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
-import { LVGLStylePropCode } from "project-editor/lvgl/lvgl-versions";
+import { LVGL_STYLE_PROP_CODES } from "project-editor/lvgl/lvgl-versions";
 import {
     BUILT_IN_FONTS,
     lvglPropertiesMap,
@@ -286,7 +286,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 }
                             } else if (
                                 propertyInfo.lvglStyleProp.code ==
-                                LVGLStylePropCode.LV_STYLE_TEXT_FONT
+                                LVGL_STYLE_PROP_CODES.LV_STYLE_TEXT_FONT
                             ) {
                                 const value =
                                     this.definition[part][state][propertyName];

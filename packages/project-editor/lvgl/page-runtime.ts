@@ -35,7 +35,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export abstract class LVGLPageRuntime {
-    lvglVersion: string;
+    lvglVersion: "8.3" | "9.0";
 
     wasm: IWasmFlowRuntime;
     isMounted: boolean = false;
@@ -81,7 +81,7 @@ export abstract class LVGLPageRuntime {
     abstract getWidgetIndex(object: LVGLWidget | Page): number;
 
     getLvglStylePropCode(code: LVGLStylePropCode): number {
-        return getLvglStylePropCode(this.page, code);
+        return getLvglStylePropCode(this.page, code) ?? 0;
     }
 
     getBitmapPtrByName(bitmapName: string) {
