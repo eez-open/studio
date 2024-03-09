@@ -1229,7 +1229,7 @@ export class DropDownListDashboardWidget extends Widget {
 
     override render(flowContext: IFlowContext, width: number, height: number) {
         let options: string[] = evalProperty(flowContext, this, "options");
-        if (options == undefined && !isArray(options)) {
+        if (options == undefined || !isArray(options)) {
             options = [];
         }
 
