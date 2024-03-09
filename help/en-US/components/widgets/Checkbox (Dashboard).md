@@ -16,6 +16,10 @@ Style used when rendering of the Widget.
 
 Label displayed next to the checkbox.
 
+## Enabled
+
+If it is true, then the checkbox is enabled, otherwise it will be disabled.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

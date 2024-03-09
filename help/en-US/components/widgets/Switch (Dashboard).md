@@ -12,6 +12,10 @@ Boolean variable in which `true` is stored when the switch is ON and `false` whe
 
 Style used when rendering of the Widget.
 
+## Enabled
+
+If it is true, then the switch is enabled, otherwise it will be disabled.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

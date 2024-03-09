@@ -16,6 +16,10 @@ Style used when rendering of the Widget.
 
 List of options.
 
+## Enabled
+
+If it is true, then the dropdown is enabled, otherwise it will be disabled.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

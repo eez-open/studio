@@ -6,7 +6,6 @@ This Widget allows us to select one value from the list by moving the knob on th
 
 ## Data [EMPTY]
 
-
 ## Default style
 
 Style used when rendering of the Widget.
@@ -34,6 +33,10 @@ The minimum value that is displayed.
 ## View max
 
 The maximum value that is displayed.
+
+## Enabled
+
+If it is true, then the slider is enabled, otherwise it will be disabled.
 
 # INPUTS [EMPTY]
 

@@ -14,7 +14,7 @@ Style to be used for rendering if the Widget is enabled.
 
 ## Enabled
 
-If it is true, then the button is enabled, otherwise it will be eisabled.
+If it is true, then the button is enabled, otherwise it will be disabled.
 
 ## Disabled style
 
