@@ -8,7 +8,10 @@ import {
     runInAction
 } from "mobx";
 
-import { isDev } from "eez-studio-shared/util-electron";
+import {
+    fetchUrlOrReadFromCache,
+    isDev
+} from "eez-studio-shared/util-electron";
 
 import type { ITreeNode } from "eez-studio-ui/tree";
 
@@ -206,8 +209,7 @@ class Model {
     }
 
     async createProjectStore(projectFileUrl: string) {
-        const result = await fetch(projectFileUrl);
-        const jsonStr = await result.json();
+        const jsonStr = await fetchUrlOrReadFromCache(projectFileUrl, "json");
 
         const projectStore = await ProjectStore.create();
 

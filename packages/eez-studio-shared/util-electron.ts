@@ -476,3 +476,17 @@ export async function getTempDirPath(options?: any) {
         );
     });
 }
+
+export async function fetchUrlOrReadFromCache(
+    url: string,
+    resultType: "json" | "buffer"
+) {
+    const response = await fetch(url, { cache: "reload" });
+    if (resultType == "json") {
+        return await response.json();
+    } else {
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+    }
+}

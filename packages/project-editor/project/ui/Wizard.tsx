@@ -21,6 +21,7 @@ import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
 import {
+    fetchUrlOrReadFromCache,
     getHomePath,
     readJsObjectFromFile
 } from "eez-studio-shared/util-electron";
@@ -1037,47 +1038,23 @@ class WizardModel {
     }
 
     async loadEezProject() {
-        return new Promise<any>((resolve, reject) => {
-            let projectFileUrl;
+        let projectFileUrl;
 
-            if (this.section == "templates") {
-                const urlDef = this.selectedProjectType?.projectFileUrl;
-                if (!urlDef) {
-                    throw "Can't load EEZ-PROJECT file: no URL specified";
-                }
-                if (typeof urlDef == "string") {
-                    projectFileUrl = urlDef;
-                } else {
-                    projectFileUrl = urlDef[this.lvglVersion];
-                }
-            } else {
-                projectFileUrl = this.type!;
+        if (this.section == "templates") {
+            const urlDef = this.selectedProjectType?.projectFileUrl;
+            if (!urlDef) {
+                throw "Can't load EEZ-PROJECT file: no URL specified";
             }
+            if (typeof urlDef == "string") {
+                projectFileUrl = urlDef;
+            } else {
+                projectFileUrl = urlDef[this.lvglVersion];
+            }
+        } else {
+            projectFileUrl = this.type!;
+        }
 
-            let req = new XMLHttpRequest();
-            req.responseType = "json";
-            req.open("GET", projectFileUrl);
-
-            req.addEventListener("load", async () => {
-                if (req.readyState == 4) {
-                    if (req.status != 200 || !req.response) {
-                        reject("Download failed!");
-                        return;
-                    }
-                    try {
-                        resolve(req.response);
-                    } catch (err) {
-                        reject(err);
-                    }
-                }
-            });
-
-            req.addEventListener("error", error => {
-                reject("Network error");
-            });
-
-            req.send();
-        });
+        return await fetchUrlOrReadFromCache(projectFileUrl, "json");
     }
 
     async loadResourceFile(resourceFileRelativePath: string) {
@@ -1627,14 +1604,12 @@ class WizardModel {
                         const fontFileUrl =
                             "https://github.com/eez-open/eez-project-templates/raw/master/templates/Oswald-Medium.ttf";
 
-                        const response = await fetch(fontFileUrl);
-                        const blob = await response.blob();
-                        const arrayBuffer = await blob.arrayBuffer();
-
-                        await fs.promises.writeFile(
-                            fontFileDestPath,
-                            Buffer.from(arrayBuffer)
+                        const buffer = await fetchUrlOrReadFromCache(
+                            fontFileUrl,
+                            "buffer"
                         );
+
+                        await fs.promises.writeFile(fontFileDestPath, buffer);
                     }
 
                     try {
