@@ -2,7 +2,10 @@ import { makeObservable, observable, runInAction } from "mobx";
 import * as net from "net";
 
 import { registerActionComponents } from "project-editor/flow/component";
-import { TCP_CONNECT_ICON } from "project-editor/ui-components/icons";
+import {
+    TCP_CONNECT_ICON,
+    TCP_DISCONNECT_ICON
+} from "project-editor/ui-components/icons";
 
 import type {
     IDashboardComponentContext,
@@ -89,7 +92,7 @@ registerActionComponents("TCP", [
     },
     {
         name: "TCPDisconnect",
-        icon: TCP_CONNECT_ICON as any,
+        icon: TCP_DISCONNECT_ICON as any,
         componentHeaderColor,
         bodyPropertyName: "connection",
         inputs: [],

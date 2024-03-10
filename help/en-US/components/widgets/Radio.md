@@ -6,6 +6,7 @@
 
 ## Data [EMPTY]
 
+
 ## Default style
 
 Style used when rendering of the Widget.
