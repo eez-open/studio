@@ -193,6 +193,7 @@ export function getName<
     } else {
         name = getAssetFullName<T>(objectOrName, "_");
     }
+    name = name.replace(/\$/g, "");
     name = name.replace(/[^a-zA-Z_0-9]/g, "_");
 
     if (namingConvention == NamingConvention.UnderscoreUpperCase) {

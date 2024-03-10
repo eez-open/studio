@@ -161,23 +161,6 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
         ]
     }),
     new SystemStructure({
-        name: RADIO_CHANGE_EVENT_STRUCT_NAME,
-        fields: [
-            {
-                name: "index",
-                type: "integer"
-            },
-            {
-                name: "indexes",
-                type: "array:integer"
-            },
-            {
-                name: "checked",
-                type: "boolean"
-            }
-        ]
-    }),
-    new SystemStructure({
         name: TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
         fields: [
             {
@@ -284,6 +267,23 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             {
                 name: "error",
                 type: "string"
+            }
+        ]
+    }),
+    new SystemStructure({
+        name: RADIO_CHANGE_EVENT_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "checked",
+                type: "boolean"
             }
         ]
     })

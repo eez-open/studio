@@ -52,7 +52,9 @@ export function underscore(string: string | undefined): string {
                 string[i - 1] <= "Z" &&
                 (i == string.length - 1 ||
                     (string[i + 1] >= "A" && string[i + 1] <= "Z") ||
-                    string[i + 1] == " ")
+                    string[i + 1] == " " ||
+                    string[i + 1] == "." ||
+                    string[i + 1] == "_")
             ) {
                 temp += string[i].toLowerCase();
                 continue;
