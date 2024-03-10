@@ -99,6 +99,7 @@ export const LVGL_FLOW_BASIC_TYPE_NAMES = [
 
 export const CLICK_EVENT_STRUCT_NAME = "$ClickEvent";
 export const CHECKBOX_CHANGE_EVENT_STRUCT_NAME = "$CheckboxChangeEvent";
+export const RADIO_CHANGE_EVENT_STRUCT_NAME = "$RadioChangeEvent";
 export const TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME = "$TextInputChangeEvent";
 export const DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME =
     "$DropDownListChangeEvent";
@@ -155,6 +156,23 @@ export const SYSTEM_STRUCTURES: IStructure[] = [
             },
             {
                 name: "value",
+                type: "boolean"
+            }
+        ]
+    }),
+    new SystemStructure({
+        name: RADIO_CHANGE_EVENT_STRUCT_NAME,
+        fields: [
+            {
+                name: "index",
+                type: "integer"
+            },
+            {
+                name: "indexes",
+                type: "array:integer"
+            },
+            {
+                name: "checked",
                 type: "boolean"
             }
         ]
@@ -1263,6 +1281,13 @@ interface CheckboxActionParamsValue {
 }
 
 export function makeCheckboxActionParamsValue(
+    flowContext: IFlowContext,
+    value: boolean
+): CheckboxActionParamsValue {
+    return { ...makeActionParamsValue(flowContext), value };
+}
+
+export function makeRadioActionParamsValue(
     flowContext: IFlowContext,
     value: boolean
 ): CheckboxActionParamsValue {

@@ -6,6 +6,7 @@ This Widget allows us to select one value from the list by moving the knob on th
 
 ## Data [EMPTY]
 
+
 ## Default style
 
 Style used when rendering of the Widget.

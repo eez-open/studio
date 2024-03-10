@@ -48,11 +48,13 @@ import type {
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
     CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
+    RADIO_CHANGE_EVENT_STRUCT_NAME,
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
     SLIDER_CHANGE_EVENT_STRUCT_NAME,
     SWITCH_CHANGE_EVENT_STRUCT_NAME,
     TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME,
-    makeCheckboxActionParamsValue as makeCheckboxChangeEventValue,
+    makeCheckboxActionParamsValue,
+    makeRadioActionParamsValue,
     makeDropDownListActionParamsValue,
     makeSliderActionParamsValue,
     makeTextInputActionParamsValue as makeTextInputChangeEventValue
@@ -64,7 +66,8 @@ import {
     ComponentOutput,
     makeExpressionProperty,
     makeStylePropertyInfo,
-    migrateStyleProperty
+    migrateStyleProperty,
+    makeAssignableExpressionProperty
 } from "project-editor/flow/component";
 
 import type { FlowState } from "project-editor/flow/runtime/runtime";
@@ -75,6 +78,7 @@ import {
 } from "project-editor/ui-components/PropertyGrid/groups";
 import {
     evalProperty,
+    getAnyValue,
     getBooleanValue,
     getTextValue
 } from "project-editor/flow/helper";
@@ -997,7 +1001,7 @@ export class CheckboxWidget extends Widget {
                                         flowContext,
                                         this,
                                         "ON_CHANGE",
-                                        makeCheckboxChangeEventValue(
+                                        makeCheckboxActionParamsValue(
                                             flowContext,
                                             value
                                         ),
@@ -1020,6 +1024,187 @@ export class CheckboxWidget extends Widget {
 }
 
 registerClass("CheckboxWidget", CheckboxWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class RadioWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Input",
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true
+            }),
+            makeExpressionProperty(
+                {
+                    name: "label",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeAssignableExpressionProperty(
+                {
+                    name: "variable",
+                    displayName: "Group variable",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "value",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            ),
+            makeDataPropertyInfo("visible"),
+            makeDataPropertyInfo("enabled"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 120,
+            height: 20
+        },
+
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 20a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8m0-18A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 5a5 5 0 0 0-5 5 5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5Z" />
+            </svg>
+        ),
+
+        execute: (context: IDashboardComponentContext) => {},
+
+        widgetEvents: {
+            ON_CHANGE: {
+                code: 1,
+                paramExpressionType: `struct:${RADIO_CHANGE_EVENT_STRUCT_NAME}`,
+                oldName: "action"
+            }
+        }
+    });
+
+    label: string;
+    variable: string;
+    value: string;
+    enabled?: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            label: observable,
+            variable: observable,
+            value: observable,
+            enabled: observable
+        });
+    }
+
+    getOutputs(): ComponentOutput[] {
+        return [...super.getOutputs()];
+    }
+
+    getClassName(flowContext: IFlowContext) {
+        return classNames("eez-widget", this.type);
+    }
+
+    override render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
+        const label = getTextValue(
+            flowContext,
+            this,
+            "label",
+            undefined,
+            this.label
+        );
+        let variable = getAnyValue(flowContext, this, "variable", true);
+        let value = getAnyValue(flowContext, this, "value", false);
+        let isEnabled = getBooleanValue(
+            flowContext,
+            this,
+            "enabled",
+            flowContext.flowState ? !this.enabled : true
+        );
+
+        console.log(label, variable, value);
+
+        let index;
+        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
+            index = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
+        } else {
+            index = 0;
+        }
+
+        let id = "CheckboxWidgetInput-" + getId(this);
+        if (index > 0) {
+            id = id + "-" + index;
+        }
+
+        const style: React.CSSProperties = {};
+        this.styleHook(style, flowContext);
+
+        return (
+            <>
+                <div
+                    className={classNames(
+                        "form-check",
+                        this.style.classNames,
+                        this.style.getConditionalClassNames(flowContext)
+                    )}
+                    style={{ opacity: style.opacity }}
+                >
+                    <input
+                        type="radio"
+                        checked={variable == value}
+                        onChange={event => {
+                            const flowState =
+                                flowContext.flowState as FlowState;
+                            if (flowState) {
+                                assignProperty(
+                                    flowState,
+                                    this,
+                                    "variable",
+                                    value
+                                );
+
+                                if (flowState.runtime) {
+                                    flowState.runtime.executeWidgetAction(
+                                        flowContext,
+                                        this,
+                                        "ON_CHANGE",
+                                        makeRadioActionParamsValue(
+                                            flowContext,
+                                            event.target.checked
+                                        ),
+                                        `struct:${RADIO_CHANGE_EVENT_STRUCT_NAME}`
+                                    );
+                                }
+                            }
+                        }}
+                        id={id}
+                        disabled={!isEnabled}
+                    ></input>
+                    <label className="form-check-label" htmlFor={id}>
+                        {typeof label == "string" ? label : label.text}
+                    </label>
+                </div>
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+}
+
+registerClass("RadioWidget", RadioWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1147,7 +1332,7 @@ export class SwitchDashboardWidget extends Widget {
                                         flowContext,
                                         this,
                                         "ON_CHANGE",
-                                        makeCheckboxChangeEventValue(
+                                        makeCheckboxActionParamsValue(
                                             flowContext,
                                             value
                                         ),
