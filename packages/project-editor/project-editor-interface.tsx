@@ -88,6 +88,7 @@ import type {
 import type { Style } from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
 import type { PropertyInfo } from "project-editor/core/object";
+import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -136,6 +137,7 @@ export interface IProjectEditor {
     getBitmapData: typeof getBitmapData;
     migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;
+    migrateLvglVersion: typeof migrateLvglVersion;
     getNavigationObject: typeof getNavigationObject;
     navigateTo: typeof navigateTo;
     selectObject: typeof selectObject;

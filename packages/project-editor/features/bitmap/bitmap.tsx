@@ -55,7 +55,7 @@ import { IFieldProperties } from "eez-studio-types";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import {
     getLvglBitmapColorFormats,
-    getLvglDefaultBitmapColorFormat
+    CF_TRUE_COLOR_ALPHA
 } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +71,6 @@ const ExportBitmapFilePropertyGridUI = observer(
             const k = bitmap.image.indexOf(",");
 
             const ext = bitmap.image.substring(i + 1, j);
-            console.log(ext);
-            console.log(bitmap.name);
 
             const result = await dialog.showSaveDialog(getCurrentWindow(), {
                 filters: [{ name: "All Files", extensions: ["*"] }],
@@ -286,7 +284,7 @@ export class Bitmap extends EezObject {
                 },
                 values: {
                     bpp: projectStore.projectTypeTraits.isLVGL
-                        ? getLvglDefaultBitmapColorFormat(parent)
+                        ? CF_TRUE_COLOR_ALPHA
                         : 32
                 }
             });
@@ -572,11 +570,7 @@ export async function createBitmap(
     }
 
     if (bpp == undefined) {
-        if (fileType == "image/jpg") {
-            bpp = 32; // 24
-        } else {
-            bpp = 32;
-        }
+        bpp = projectStore.projectTypeTraits.isLVGL ? CF_TRUE_COLOR_ALPHA : 32;
     }
 
     if (!name) {

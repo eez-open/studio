@@ -169,12 +169,20 @@ export const LVGL_STYLE_PROP_CODES: {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// Bitmap color enums for 8.3
 
 export const CF_ALPHA_1_BIT = 1;
 export const CF_ALPHA_2_BIT = 2;
 export const CF_ALPHA_4_BIT = 3;
 export const CF_ALPHA_8_BIT = 4;
+
+export const CF_L8 = 0x06;
+
+export const CF_RGB565 = 15;
+export const CF_RGB565A8 = 16;
+
+export const CF_TRUE_COLOR = 24;
+export const CF_TRUE_COLOR_ALPHA = 32;
+export const CF_TRUE_COLOR_CHROMA = 33;
 
 export const CF_INDEXED_1_BIT = 41;
 export const CF_INDEXED_2_BIT = 42;
@@ -184,40 +192,6 @@ export const CF_INDEXED_8_BIT = 44;
 export const CF_RAW = 51;
 export const CF_RAW_CHROMA = 52;
 export const CF_RAW_ALPHA = 53;
-
-export const CF_TRUE_COLOR = 24;
-export const CF_TRUE_COLOR_ALPHA = 32;
-export const CF_TRUE_COLOR_CHROMA = 33;
-
-export const CF_RGB565A8 = 16;
-
-////////////////////////////////////////////////////////////////////////////////
-// Bitmap color enums for 9.0
-
-export const LV_COLOR_FORMAT_RAW = 0x01;
-export const LV_COLOR_FORMAT_RAW_ALPHA = 0x02;
-
-/*<=1 byte (+alpha) formats*/
-export const LV_COLOR_FORMAT_L8 = 0x06;
-export const LV_COLOR_FORMAT_I1 = 0x07;
-export const LV_COLOR_FORMAT_I2 = 0x08;
-export const LV_COLOR_FORMAT_I4 = 0x09;
-export const LV_COLOR_FORMAT_I8 = 0x0a;
-export const LV_COLOR_FORMAT_A8 = 0x0e;
-
-/*2 byte (+alpha) formats*/
-export const LV_COLOR_FORMAT_RGB565 = 0x12;
-export const LV_COLOR_FORMAT_RGB565A8 = 0x14; /**< Color array followed by Alpha array*/
-
-/*3 byte (+alpha) formats*/
-export const LV_COLOR_FORMAT_RGB888 = 0x0f;
-export const LV_COLOR_FORMAT_ARGB8888 = 0x10;
-export const LV_COLOR_FORMAT_XRGB8888 = 0x11;
-
-/*Formats not supported by software renderer but kept here so GPU can use it*/
-export const LV_COLOR_FORMAT_A1 = 0x0b;
-export const LV_COLOR_FORMAT_A2 = 0x0c;
-export const LV_COLOR_FORMAT_A4 = 0x0d;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,8 +228,6 @@ const versions = {
 
             { id: CF_RGB565A8, label: "RGB565A8" }
         ],
-
-        defaultBitmapColorFormat: CF_TRUE_COLOR_ALPHA,
 
         lvglBitmapToSourceFile: async (bitmap: Bitmap, fileName: string) => {
             const { convertImage } = await import("./lv_img_conv/lib/convert");
@@ -376,29 +348,27 @@ const versions = {
         _LV_COORD_TYPE_SHIFT: 29,
 
         bitmapColorFormats: [
-            { id: LV_COLOR_FORMAT_L8, label: "L8" },
+            { id: CF_L8, label: "L8" },
 
-            { id: LV_COLOR_FORMAT_I1, label: "I1" },
-            { id: LV_COLOR_FORMAT_I2, label: "I2" },
-            { id: LV_COLOR_FORMAT_I4, label: "I4" },
-            { id: LV_COLOR_FORMAT_I8, label: "I8" },
+            { id: CF_INDEXED_1_BIT, label: "I1" },
+            { id: CF_INDEXED_2_BIT, label: "I2" },
+            { id: CF_INDEXED_4_BIT, label: "I4" },
+            { id: CF_INDEXED_8_BIT, label: "I8" },
 
-            { id: LV_COLOR_FORMAT_A1, label: "A1" },
-            { id: LV_COLOR_FORMAT_A2, label: "A2" },
-            { id: LV_COLOR_FORMAT_A4, label: "A4" },
-            { id: LV_COLOR_FORMAT_A8, label: "A8" },
+            { id: CF_ALPHA_1_BIT, label: "A1" },
+            { id: CF_ALPHA_2_BIT, label: "A2" },
+            { id: CF_ALPHA_4_BIT, label: "A4" },
+            { id: CF_ALPHA_8_BIT, label: "A8" },
 
-            { id: LV_COLOR_FORMAT_ARGB8888, label: "ARGB8888" },
-            { id: LV_COLOR_FORMAT_XRGB8888, label: "XRGB8888" },
-            { id: LV_COLOR_FORMAT_RGB565, label: "RGB565" },
-            { id: LV_COLOR_FORMAT_RGB565A8, label: "RGB565A8" },
-            { id: LV_COLOR_FORMAT_RGB888, label: "RGB888" },
+            { id: CF_TRUE_COLOR_ALPHA, label: "ARGB8888" },
+            { id: CF_TRUE_COLOR_CHROMA, label: "XRGB8888" },
+            { id: CF_RGB565, label: "RGB565" },
+            { id: CF_RGB565A8, label: "RGB565A8" },
+            { id: CF_TRUE_COLOR, label: "RGB888" },
 
-            { id: LV_COLOR_FORMAT_RAW, label: "RAW" },
-            { id: LV_COLOR_FORMAT_RAW_ALPHA, label: "RAW ALPHA" }
+            { id: CF_RAW, label: "RAW" },
+            { id: CF_RAW_ALPHA, label: "RAW ALPHA" }
         ],
-
-        defaultBitmapColorFormat: LV_COLOR_FORMAT_ARGB8888,
 
         lvglBitmapToSourceFile: async (bitmap: Bitmap, fileName: string) => {
             const lvglImageScriptPath = isDev
@@ -429,26 +399,26 @@ const versions = {
                     require("python-shell") as typeof import("python-shell");
 
                 const TO_IMAGE_MODE = {
-                    [LV_COLOR_FORMAT_L8.toString()]: "L8",
+                    [CF_L8.toString()]: "L8",
 
-                    [LV_COLOR_FORMAT_I1.toString()]: "I1",
-                    [LV_COLOR_FORMAT_I2.toString()]: "I2",
-                    [LV_COLOR_FORMAT_I4.toString()]: "I4",
-                    [LV_COLOR_FORMAT_I8.toString()]: "I8",
+                    [CF_INDEXED_1_BIT.toString()]: "I1",
+                    [CF_INDEXED_2_BIT.toString()]: "I2",
+                    [CF_INDEXED_4_BIT.toString()]: "I4",
+                    [CF_INDEXED_8_BIT.toString()]: "I8",
 
-                    [LV_COLOR_FORMAT_A1.toString()]: "A1",
-                    [LV_COLOR_FORMAT_A2.toString()]: "A2",
-                    [LV_COLOR_FORMAT_A4.toString()]: "A4",
-                    [LV_COLOR_FORMAT_A8.toString()]: "A8",
+                    [CF_ALPHA_1_BIT.toString()]: "A1",
+                    [CF_ALPHA_2_BIT.toString()]: "A2",
+                    [CF_ALPHA_4_BIT.toString()]: "A4",
+                    [CF_ALPHA_8_BIT.toString()]: "A8",
 
-                    [LV_COLOR_FORMAT_ARGB8888.toString()]: "ARGB8888",
-                    [LV_COLOR_FORMAT_XRGB8888.toString()]: "XRGB8888",
-                    [LV_COLOR_FORMAT_RGB565.toString()]: "RGB565",
-                    [LV_COLOR_FORMAT_RGB565A8.toString()]: "RGB565A8",
-                    [LV_COLOR_FORMAT_RGB888.toString()]: "RGB888",
+                    [CF_TRUE_COLOR_ALPHA.toString()]: "ARGB8888",
+                    [CF_TRUE_COLOR_CHROMA.toString()]: "XRGB8888",
+                    [CF_RGB565.toString()]: "RGB565",
+                    [CF_RGB565A8.toString()]: "RGB565A8",
+                    [CF_TRUE_COLOR.toString()]: "RGB888",
 
-                    [LV_COLOR_FORMAT_RAW.toString()]: "TRUECOLOR",
-                    [LV_COLOR_FORMAT_RAW_ALPHA.toString()]: "TRUECOLOR_ALPHA"
+                    [CF_RAW.toString()]: "TRUECOLOR",
+                    [CF_RAW_ALPHA.toString()]: "TRUECOLOR_ALPHA"
                 };
 
                 const pythonShell = new PythonShell("LVGLImage.py", {
@@ -621,10 +591,6 @@ export async function getLvglBitmapSourceFile(
     );
 
     return lvglBitmapToSourceFile(bitmap, fileName);
-}
-
-export function getLvglDefaultBitmapColorFormat(object: IEezObject) {
-    return getVersionProperty(object, "defaultBitmapColorFormat");
 }
 
 export function getLvglStylePropName(

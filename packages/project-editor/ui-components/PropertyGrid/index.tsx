@@ -106,6 +106,17 @@ export const PropertyGrid = observer(
                 }
             }
 
+            if (
+                this.objects.length == 1 &&
+                (propertyValues as any).lvglVersion != undefined
+            ) {
+                const project = ProjectEditor.getProject(this.objects[0]);
+                ProjectEditor.migrateLvglVersion(
+                    project,
+                    (propertyValues as any).lvglVersion
+                );
+            }
+
             this.objects.forEach(object => {
                 if (isValue(object)) {
                     object = getParent(object);

@@ -656,8 +656,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 : true
         );
 
-        console.log(widgets);
-
         const page = createObject<Page>(
             project._store,
             {

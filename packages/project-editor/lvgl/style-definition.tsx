@@ -339,6 +339,9 @@ export class LVGLStylesDefinition extends EezObject {
             return;
         }
 
+        const lvglVersion =
+            ProjectEditor.getProject(widget).settings.general.lvglVersion;
+
         Object.keys(this.definition).forEach(part => {
             Object.keys(this.definition[part]).forEach(state => {
                 const selectorCode = getSelectorCode(part, state);
@@ -346,7 +349,11 @@ export class LVGLStylesDefinition extends EezObject {
                     propertyName => {
                         const propertyInfo =
                             lvglPropertiesMap.get(propertyName);
-                        if (!propertyInfo) {
+                        if (
+                            !propertyInfo ||
+                            propertyInfo.lvglStyleProp.code[lvglVersion] ==
+                                undefined
+                        ) {
                             return;
                         }
 
@@ -565,3 +572,5 @@ export class LVGLStylesDefinition extends EezObject {
 }
 
 registerClass("LVGLStylesDefinition", LVGLStylesDefinition);
+
+////////////////////////////////////////////////////////////////////////////////

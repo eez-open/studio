@@ -110,6 +110,7 @@ import { ConditionalStyle, Style } from "project-editor/features/style/style";
 
 import { PropertyType } from "project-editor/core/object";
 import { evalProperty } from "project-editor/flow/helper";
+import { migrateLvglVersion } from "./lvgl/migrate";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -186,6 +187,7 @@ export async function createProjectEditor(
         getBitmapData,
         migrateProjectVersion,
         migrateProjectType,
+        migrateLvglVersion,
         getNavigationObject,
         navigateTo,
         selectObject,
