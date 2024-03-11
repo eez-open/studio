@@ -19,6 +19,7 @@ Add for each new html file:
 -   execute:
 
 ```
-node build\pubdoc --config ./config/dev.json
-node build\pubdoc --config ./config/prod.json
+cd tools/pubdoc/build
+node pubdoc --config ../config/dev.json
+node pubdoc --config ../config/prod.json
 ```

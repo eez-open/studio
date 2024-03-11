@@ -538,6 +538,26 @@
                         "sha256": "4a2def7f27b5c3ff4d16841f8e5c0fc153e0ecffccc79da77786db9b612db4a9"
                     }
                 ]
+            },
+            {
+                "category": {
+                    "name": "Serial Port",
+                    "id": 225
+                },
+                "articles": [
+                    {
+                        "content": "TCPConnect.html",
+                        "status": "publish",
+                        "id": 12624,
+                        "sha256": "df1c06f8216c2bffecba0f06babd85f4bd467afe49b98f9af8965a46abe3b353"
+                    },
+                    {
+                        "content": "TCPDisconnect.html",
+                        "status": "publish",
+                        "id": 12625,
+                        "sha256": "4851dd1f3a47a59788f6e22fa50d68c2c42f72a5e8508a2efc8c0b3f76e4f3fe"
+                    }
+                ]
             }
         ],
         "widget": [
@@ -569,7 +589,7 @@
                         "content": "Button (Dashboard).html",
                         "status": "publish",
                         "id": 12214,
-                        "sha256": "cad704be1855f0ede7d0d6c1eb6f06a275dcead81752f17a856b31495aeaaa43"
+                        "sha256": "5caa886cb9737068d78d290e95273bef8a1bae4f8da4e8aa1ae8bbd85dcde478"
                     },
                     {
                         "content": "Button (EEZ-GUI).html",
@@ -717,7 +737,7 @@
                         "content": "Checkbox (Dashboard).html",
                         "status": "publish",
                         "id": 12236,
-                        "sha256": "e53e9bd41852f4d74deaf149fae8632f448189335ba97ed4037dcbecd95ea23e"
+                        "sha256": "926c5d7534e9deab1b4574e7e69d2d4dca1e6ffd35d3b8934d1fcc7a46f51b7d"
                     },
                     {
                         "content": "Checkbox (LVGL).html",
@@ -735,7 +755,7 @@
                         "content": "Dropdown (Dashboard).html",
                         "status": "publish",
                         "id": 12239,
-                        "sha256": "ab98ba34110c718ac7f7b6b22fd38f1395193581ecff48a517e2fa241efe25c9"
+                        "sha256": "0daaa83d94cece2efa724034fda470272bcccf16e3233a8389fb202b8011fd5d"
                     },
                     {
                         "content": "Dropdown (EEZ-GUI).html",
@@ -774,6 +794,12 @@
                         "sha256": "87ba0a6975862ad6ae8ebdf77805c867bfe73ffecedad3a6d6fb8cfb604bfa64"
                     },
                     {
+                        "content": "Radio.html",
+                        "status": "publish",
+                        "id": 12629,
+                        "sha256": "1fe6f18c128bf2ae107cdfa86e61f8adee193b9e9f8563b9883d5da6612ed6e2"
+                    },
+                    {
                         "content": "Roller (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12245,
@@ -786,10 +812,16 @@
                         "sha256": "6ca2f612211df52d0eda241029c78f65134dd5dc33d2d9eff2a5404b4b4c95b9"
                     },
                     {
+                        "content": "Scale.html",
+                        "status": "publish",
+                        "id": 12630,
+                        "sha256": "18d68ded4f481f3ec57e0aa851f21ac187089ba0a2cf1ba09e5271ac0be3b69a"
+                    },
+                    {
                         "content": "Slider (Dashboard).html",
                         "status": "publish",
                         "id": 12247,
-                        "sha256": "8ae93abe78b4c47f706486841f9f91b4bc94d66879048444c84b2f705044d166"
+                        "sha256": "d8749a07b97c29f452b789d626fc981e5967e6f4a19fcbb3dcae68b2bbdbaa75"
                     },
                     {
                         "content": "Slider (EEZ-GUI).html",
@@ -807,7 +839,7 @@
                         "content": "Switch (Dashboard).html",
                         "status": "publish",
                         "id": 12250,
-                        "sha256": "c01a78374f444f71ba04d568151f29e3de4a12443d8325d75802513d95acef47"
+                        "sha256": "a1b95e9403f222f2dac90de5040af79987a0a3075de203121702346c99e73502"
                     },
                     {
                         "content": "Switch (EEZ-GUI).html",
