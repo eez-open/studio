@@ -7386,4 +7386,44 @@ button.EezStudio_Action {
     flex-direction: column;
 }
 
+.EezStudio_WorkbenchEditor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid green;
+    overflow: hidden;
+
+    .EezStudio_ViewManager {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid blue;
+
+        .EezStudio_ViewManager_HorizontalLayout {
+            position: absolute;
+            overflow: hidden;
+            border: 1px solid red;
+        }
+
+        .EezStudio_ViewManager_VerticalLayout {
+            position: absolute;
+            overflow: hidden;
+            border: 1px solid orange;
+        }
+
+        .EezStudio_ViewManager_TabLayout {
+            position: absolute;
+            overflow: hidden;
+            border: 1px solid yellow;
+        }
+
+        .EezStudio_ViewManager_ViewRef {
+            position: absolute;
+            overflow: hidden;
+            border: 1px solid cyan;
+        }
+    }
+}
+
 @import "component-doc";

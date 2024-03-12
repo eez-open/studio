@@ -41,14 +41,8 @@ app.on("ready", async function () {
             require("main/home-window") as typeof HomeWindowModule;
         bringHomeWindowToFocus();
 
-        const projectFilePath = commandLine[commandLine.length - 1];
-        const { openProject } = require("main/menu");
-        if (
-            projectFilePath.toLowerCase().endsWith(".eez-project") ||
-            projectFilePath.toLowerCase().endsWith(".eez-dashboard")
-        ) {
-            openProject(projectFilePath);
-        }
+        const { openFile } = require("main/menu");
+        openFile(commandLine[commandLine.length - 1]);
     });
 
     // start with:
@@ -96,25 +90,15 @@ app.on("quit", function () {
 app.on("will-finish-launching", async function () {
     app.on("open-file", async function (event, path) {
         event.preventDefault();
-        if (
-            path.toLowerCase().endsWith(".eez-project") ||
-            path.toLowerCase().endsWith(".eez-dashboard")
-        ) {
-            const { openProject } = await import("main/menu");
-            openProject(path);
-        }
+        const { openFile } = require("main/menu");
+        openFile(path);
     });
 });
 
 ipcMain.once("open-command-line-project", async function () {
-    const projectFilePath = process.argv[process.argv.length - 1];
-    if (
-        projectFilePath.toLowerCase().endsWith(".eez-project") ||
-        projectFilePath.toLowerCase().endsWith(".eez-dashboard")
-    ) {
-        const { openProject } = await import("main/menu");
-        openProject(projectFilePath);
-    }
+    const filePath = process.argv[process.argv.length - 1];
+    const { openFile } = require("main/menu");
+    openFile(filePath);
 });
 
 let powerSaveBlockerId: number | undefined = undefined;

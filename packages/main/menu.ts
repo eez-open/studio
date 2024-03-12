@@ -53,17 +53,28 @@ async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
                 name: "EEZ Dashboard",
                 extensions: ["eez-dashboard"]
             },
+            { name: "EEZ Workbench", extensions: ["eez-workbench"] },
             { name: "All Files", extensions: ["*"] }
         ]
     });
     const filePaths = result.filePaths;
     if (filePaths && filePaths[0]) {
-        openProject(filePaths[0], focusedWindow);
+        openFile(filePaths[0], focusedWindow);
     }
 }
 
-export function openProject(
-    projectFilePath: string,
+function openProject(projectFilePath: string, focusedWindow?: BrowserWindow) {
+    if (!focusedWindow) {
+        focusedWindow = BrowserWindow.getFocusedWindow() || undefined;
+    }
+
+    if (focusedWindow) {
+        focusedWindow.webContents.send("open-project", projectFilePath);
+    }
+}
+
+function openWorkbench(
+    workbenchFilePath: string,
     focusedWindow?: BrowserWindow
 ) {
     if (!focusedWindow) {
@@ -71,7 +82,18 @@ export function openProject(
     }
 
     if (focusedWindow) {
-        focusedWindow.webContents.send("open-project", projectFilePath);
+        focusedWindow.webContents.send("open-workbench", workbenchFilePath);
+    }
+}
+
+export function openFile(filePath: string, focusedWindow?: any) {
+    if (
+        filePath.toLowerCase().endsWith(".eez-project") ||
+        filePath.toLowerCase().endsWith(".eez-dashboard")
+    ) {
+        openProject(filePath, focusedWindow);
+    } else if (filePath.toLowerCase().endsWith(".eez-workbench")) {
+        openWorkbench(filePath, focusedWindow);
     }
 }
 
@@ -868,12 +890,7 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
 });
 
 ipcMain.on("open-file", function (event, path) {
-    if (
-        path.toLowerCase().endsWith(".eez-project") ||
-        path.toLowerCase().endsWith(".eez-dashboard")
-    ) {
-        openProject(path);
-    }
+    openFile(path);
 });
 
 ipcMain.on("new-project", function (event) {

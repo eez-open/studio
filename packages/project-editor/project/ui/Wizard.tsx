@@ -36,7 +36,7 @@ import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { Icon } from "eez-studio-ui/icon";
 
 import { homeLayoutModels } from "home/home-layout-models";
-import { openProject } from "home/open-project";
+import { openProject } from "home/tabs-store";
 
 import {
     DASHBOARD_PROJECT_ICON,

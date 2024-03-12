@@ -41,12 +41,16 @@ import type * as SettingsModule from "home/settings";
 import { Loader } from "eez-studio-ui/loader";
 
 import { ProjectStore } from "project-editor/store";
+import { WorkbenchStore } from "workbench";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
 import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
-import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
+import {
+    PROJECT_TAB_ID_PREFIX,
+    WORKBENCH_TAB_ID_PREFIX
+} from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
@@ -908,6 +912,204 @@ export class ProjectEditorTab implements IHomeTab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class WorkbenchTab implements IHomeTab {
+    constructor(public tabs: Tabs, public _filePath: string) {
+        makeObservable(this, {
+            _active: observable,
+            workbenchStore: observable,
+            error: observable,
+            makeActive: action
+        });
+    }
+
+    permanent: boolean = true;
+    _active: boolean = false;
+    loading: boolean = false;
+
+    get modified() {
+        return this.workbenchStore && this.workbenchStore.isModified;
+    }
+
+    workbenchStore: WorkbenchStore | undefined;
+
+    error: string | undefined;
+
+    closed: boolean = false;
+
+    category: HomeTabCategory = "none";
+
+    icon = "material:dashboard";
+
+    async loadWorkbench() {
+        try {
+            const workbenchStore = new WorkbenchStore();
+
+            await workbenchStore.openFile(this._filePath);
+
+            if (!this.closed) {
+                runInAction(() => {
+                    this.workbenchStore = workbenchStore;
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            runInAction(() => {
+                this.error = "Failed to load file!";
+            });
+        }
+    }
+
+    get active() {
+        return this._active;
+    }
+
+    removeListeners: (() => void) | undefined;
+
+    set active(value: boolean) {
+        if (value !== this._active) {
+            runInAction(() => (this._active = value));
+            if (this._active) {
+                this.addListeners();
+            } else {
+                if (this.removeListeners) {
+                    this.removeListeners();
+                    this.removeListeners = undefined;
+                }
+            }
+        }
+    }
+
+    async addListeners() {
+        if (!this.workbenchStore && !this.error) {
+            await this.loadWorkbench();
+        }
+
+        const workbenchStore = this.workbenchStore;
+        if (!workbenchStore) {
+            return;
+        }
+
+        if (this.removeListeners) {
+            this.removeListeners();
+            this.removeListeners = undefined;
+        }
+
+        const save = () => {
+            workbenchStore.save();
+        };
+        const saveAs = () => {
+            workbenchStore.saveAs();
+        };
+        const undo = () => {
+            workbenchStore.undo();
+        };
+        const redo = () => {
+            workbenchStore.redo();
+        };
+
+        ipcRenderer.on("save", save);
+        ipcRenderer.on("saveAs", saveAs);
+        ipcRenderer.on("undo", undo);
+        ipcRenderer.on("redo", redo);
+
+        this.removeListeners = () => {
+            ipcRenderer.removeListener("save", save);
+            ipcRenderer.removeListener("saveAs", saveAs);
+            ipcRenderer.removeListener("undo", undo);
+            ipcRenderer.removeListener("redo", redo);
+        };
+    }
+
+    get filePath() {
+        return (
+            (this.workbenchStore && this.workbenchStore.filePath) ||
+            this._filePath ||
+            ""
+        );
+    }
+
+    get id() {
+        return WORKBENCH_TAB_ID_PREFIX + this.filePath;
+    }
+
+    get title() {
+        return (this.modified ? MODIFED_MARK : "") + this.titleStr;
+    }
+
+    get titleStr() {
+        if (this.workbenchStore) {
+            return this.workbenchStore.title;
+        }
+
+        if (this.filePath) {
+            return path.basename(this.filePath, ".eez-workbench");
+        }
+
+        return "Untitled project";
+    }
+
+    get tooltipTitle() {
+        return this.filePath;
+    }
+
+    render() {
+        if (!this.workbenchStore) {
+            return (
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    {this.error ? (
+                        <div className="error">{this.error}</div>
+                    ) : (
+                        <Loader size={60} />
+                    )}
+                </div>
+            );
+        }
+
+        return this.workbenchStore.render();
+    }
+
+    makeActive(): void {
+        this.tabs.makeActive(this);
+    }
+
+    async close() {
+        if (this.workbenchStore) {
+            if (await this.workbenchStore.closeWindow()) {
+                this.tabs.removeTab(this);
+                this.workbenchStore.unmount();
+                runInAction(() => {
+                    this.workbenchStore = undefined;
+                });
+            }
+        } else {
+            this.tabs.removeTab(this);
+        }
+
+        if (this.removeListeners) {
+            this.removeListeners();
+            this.removeListeners = undefined;
+        }
+
+        this.closed = true;
+    }
+
+    async beforeAppClose() {
+        if (this.workbenchStore) {
+            return await this.workbenchStore.closeWindow();
+        }
+
+        return true;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export interface ITabDefinition {
     instance: IHomeTab;
     open: () => IHomeTab;
@@ -1125,6 +1327,12 @@ export class Tabs {
                     return;
                 }
                 tab = this.addProjectTab(filePath);
+            } else if (tabId.startsWith(WORKBENCH_TAB_ID_PREFIX)) {
+                const filePath = tabId.substr(WORKBENCH_TAB_ID_PREFIX.length);
+                if (filePath === "undefined") {
+                    return;
+                }
+                tab = this.addWorkbenchTab(filePath);
             } else {
                 const { instruments } =
                     require("instrument/instrument-object") as typeof InstrumentObjectModule;
@@ -1167,6 +1375,12 @@ export class Tabs {
 
     addProjectTab(filePath: string | undefined) {
         const tab = new ProjectEditorTab(this, filePath);
+        this.addTab(tab);
+        return tab;
+    }
+
+    addWorkbenchTab(filePath: string) {
+        const tab = new WorkbenchTab(this, filePath);
         this.addTab(tab);
         return tab;
     }
@@ -1246,6 +1460,12 @@ export class Tabs {
         );
     }
 
+    findWorkbenchTab(filePath: string) {
+        return this.tabs.find(
+            tab => tab instanceof WorkbenchTab && tab.filePath == filePath
+        );
+    }
+
     _homeSectionsVisibilityOption: HomeSectionVisibilityOption;
 
     get homeSectionsVisibilityOption() {
@@ -1302,4 +1522,32 @@ export function onSetupSkip() {
     //tabs.homeSectionsVisibilityOption = "projects";
     runInAction(() => firstTime.set(false));
     tabs.openTabById("home", true);
+}
+
+export function openProject(filePath: string) {
+    try {
+        let tab = tabs.findProjectEditorTab(filePath);
+        if (!tab) {
+            tab = tabs.addProjectTab(filePath);
+        }
+        if (tab) {
+            tab.makeActive();
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+export function openWorkbench(filePath: string) {
+    try {
+        let tab = tabs.findWorkbenchTab(filePath);
+        if (!tab) {
+            tab = tabs.addWorkbenchTab(filePath);
+        }
+        if (tab) {
+            tab.makeActive();
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }

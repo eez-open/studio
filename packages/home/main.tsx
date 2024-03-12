@@ -19,7 +19,7 @@ import { handleDragAndDrop } from "home/drag-and-drop";
 import { loadTabs, ProjectEditorTab, tabs } from "home/tabs-store";
 import { settingsController } from "home/settings";
 import { App } from "home/app";
-import { openProject } from "home/open-project";
+import { openProject, openWorkbench } from "home/tabs-store";
 
 import { LineMarkers } from "project-editor/flow/connection-line/ConnectionLineComponent";
 
@@ -95,6 +95,10 @@ ipcRenderer.on("show-about-box", async () => {
 
 ipcRenderer.on("open-project", async (sender: any, filePath: any) => {
     openProject(filePath);
+});
+
+ipcRenderer.on("open-workbench", async (sender: any, filePath: any) => {
+    openWorkbench(filePath);
 });
 
 ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {

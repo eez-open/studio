@@ -252,6 +252,12 @@ files.push(
                 name: "EEZ Dashboard",
                 role: "Editor",
                 mimeType: "application/x-eez-dashboard"
+            },
+            {
+                ext: "eez-workbench",
+                name: "EEZ Workbench",
+                role: "Editor",
+                mimeType: "application/x-eez-workbench"
             }
         ],
 
