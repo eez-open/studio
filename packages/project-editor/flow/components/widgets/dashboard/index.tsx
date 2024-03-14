@@ -2573,4 +2573,6 @@ import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
 import "project-editor/flow/components/widgets/dashboard/terminal";
+import "project-editor/flow/components/widgets/dashboard/instrument";
+
 import { assignProperty } from "project-editor/flow/runtime/worker-dashboard-component-context";

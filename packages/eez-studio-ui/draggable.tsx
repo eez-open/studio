@@ -60,7 +60,15 @@ export class Draggable {
 
         this.finishDragging(undefined, true);
 
-        if (closestBySelector(e.target, ".eez-flow-editor-capture-pointers")) {
+        const el1 = closestBySelector(
+            e.target,
+            ".eez-flow-editor-capture-pointers"
+        );
+        const el2 = closestBySelector(
+            e.target,
+            ".eez-flow-editor-not-capture-pointers"
+        );
+        if (el1 && (!el2 || el2.contains(el1))) {
             return;
         }
 

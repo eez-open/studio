@@ -53,7 +53,6 @@ async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
                 name: "EEZ Dashboard",
                 extensions: ["eez-dashboard"]
             },
-            { name: "EEZ Workbench", extensions: ["eez-workbench"] },
             { name: "All Files", extensions: ["*"] }
         ]
     });
@@ -72,28 +71,12 @@ function openProject(projectFilePath: string, focusedWindow?: BrowserWindow) {
         focusedWindow.webContents.send("open-project", projectFilePath);
     }
 }
-
-function openWorkbench(
-    workbenchFilePath: string,
-    focusedWindow?: BrowserWindow
-) {
-    if (!focusedWindow) {
-        focusedWindow = BrowserWindow.getFocusedWindow() || undefined;
-    }
-
-    if (focusedWindow) {
-        focusedWindow.webContents.send("open-workbench", workbenchFilePath);
-    }
-}
-
 export function openFile(filePath: string, focusedWindow?: any) {
     if (
         filePath.toLowerCase().endsWith(".eez-project") ||
         filePath.toLowerCase().endsWith(".eez-dashboard")
     ) {
         openProject(filePath, focusedWindow);
-    } else if (filePath.toLowerCase().endsWith(".eez-workbench")) {
-        openWorkbench(filePath, focusedWindow);
     }
 }
 

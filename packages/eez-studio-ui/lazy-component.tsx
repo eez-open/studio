@@ -2,12 +2,12 @@ import React from "react";
 import { makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
-export function makeLazyComponent<T>(
+export function makeLazyComponent<T, U>(
     load: () => Promise<T>,
-    render: (lazyData: T) => React.ReactNode
+    render: (lazyData: T, props: U) => React.ReactNode
 ) {
     return observer(
-        class SessionInfoContainer extends React.Component {
+        class SessionInfoContainer extends React.Component<U> {
             lazyData: T | undefined;
 
             constructor(props: any) {
@@ -32,7 +32,7 @@ export function makeLazyComponent<T>(
                     return null;
                 }
 
-                return render(this.lazyData);
+                return render(this.lazyData, this.props);
             }
         }
     );

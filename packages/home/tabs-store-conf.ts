@@ -1,2 +1,1 @@
 export const PROJECT_TAB_ID_PREFIX = "PROJECT_TAB_";
-export const WORKBENCH_TAB_ID_PREFIX = "WORKBENCH_TAB_";

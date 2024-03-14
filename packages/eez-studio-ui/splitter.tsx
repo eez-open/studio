@@ -471,7 +471,8 @@ export const Splitter = observer(
             const className = classNames(
                 this.props.type === "horizontal"
                     ? "EezStudio_Splitter_Horizontal"
-                    : "EezStudio_Splitter_Vertical"
+                    : "EezStudio_Splitter_Vertical",
+                "eez-flow-editor-not-capture-pointers"
             );
 
             return (

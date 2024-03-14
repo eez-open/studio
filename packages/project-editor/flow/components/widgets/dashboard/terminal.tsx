@@ -20,6 +20,7 @@ import { addCssStylesheet } from "eez-studio-shared/dom";
 import { observer } from "mobx-react";
 import { registerSystemStructure } from "project-editor/features/variable/value-type";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
+import { TERMINAL_WIDGET_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,21 +47,7 @@ export class TerminalWidget extends Widget {
             makeStylePropertyInfo("style", "Default style")
         ],
 
-        icon: (
-            <svg
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M8 9l3 3l-3 3"></path>
-                <line x1="13" y1="15" x2="16" y2="15"></line>
-                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-            </svg>
-        ),
+        icon: TERMINAL_WIDGET_ICON,
 
         execute: (context: IDashboardComponentContext) => {
             const data = context.evalProperty("data");
