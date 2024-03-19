@@ -1,0 +1,864 @@
+.EezStudio_HomeTab {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .EezStudio_HomeTab_Header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid @borderColor;
+
+        .EezStudio_HomeTab_Tabs {
+            display: flex;
+            align-items: center;
+
+            button {
+                margin-right: 10px;
+            }
+        }
+
+        .EezStudio_HomeTab_Navigation {
+            flex: 1;
+
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+
+            .EezStudio_HomeTab_NavigationItem {
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+
+                &:not(.selected) {
+                    cursor: pointer;
+                    &:hover {
+                        border-bottom: 4px solid @borderColor;
+                    }
+                }
+                text-transform: uppercase;
+                font-size: 150%;
+                margin: 0 30px;
+                padding: 0px 10px;
+                &.selected {
+                    border-bottom: 4px solid @selectionBackgroundColor;
+                }
+
+                .badge {
+                    margin-left: 10px;
+                    transform: translateY(-2px);
+                }
+
+                .EezStudio_AttentionDiv {
+                    bottom: 12px;
+                    right: -4px;
+                }
+
+                .EezStudio_AttentionContainer {
+                    width: 32px;
+                    height: 32px;
+                    .EezStudio_AttentionDiv {
+                        bottom: 2px;
+                    }
+                }
+            }
+        }
+    }
+
+    .EezStudio_HomeTab_Body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+
+        .EezStudio_HomeTab_Projects {
+            overflow: hidden;
+
+            .EezStudio_Header {
+                display: flex;
+                align-items: center;
+                width: 720px;
+                margin: 0 auto;
+
+                .EezStudio_ButtonAction {
+                    padding: 10px;
+                }
+
+                .EezStudio_SearchInput_Container {
+                    margin: 10px auto;
+                    max-width: 360px;
+                    border: 1px solid @borderColor;
+                    background-color: field;
+                    border-radius: 18px;
+                    padding: 5px 10px;
+                    font-size: 120%;
+                    /*
+                        box-shadow: 0 2px 5px 1px @borderColor;
+                        &:hover {
+                            box-shadow: 0 2px 8px 1px @borderColor;
+                        }
+                        */
+                }
+            }
+
+            .EezStudio_Body {
+                .EezStudio_ListContainer {
+                    width: 720px;
+                    margin: 0 auto;
+                    border: 1px solid @borderColor;
+                    max-height: calc(100% - 10px);
+                    height: fit-content !important;
+                    border-radius: 10px;
+
+                    .EezStudio_List {
+                        padding: 10px;
+                    }
+                }
+            }
+        }
+
+        .EezStudio_HomeTab_Projects,
+        .EezStudio_HomeTab_Instruments {
+            display: flex;
+            flex-grow: 1;
+
+            .EezStudio_ToolbarHeader {
+                background-color: transparent;
+                align-items: stretch;
+                justify-content: center;
+                padding: 10px;
+
+                h5 {
+                    margin-bottom: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+
+                div {
+                    flex-grow: 1;
+                    display: flex;
+                    justify-content: flex-end;
+
+                    button {
+                        margin-right: 10px;
+                    }
+
+                    button:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+        }
+
+        .EezStudio_HomeTab_Projects {
+            .sort-button {
+                padding: 5px;
+                background-color: field;
+            }
+
+            .EezStudio_ListContainer {
+                overflow-x: hidden;
+                overflow-y: auto;
+                max-height: inherit;
+                flex-grow: 1;
+
+                .EezStudio_ListItem {
+                    margin-bottom: 10px;
+                    position: relative;
+                    padding: 2px 2px 2px 3px;
+
+                    img {
+                        background-color: white;
+                        border-radius: 6px;
+                    }
+
+                    .EezStudio_HomeTab_ProjectItem {
+                        display: flex;
+                        flex-direction: column;
+
+                        div.first-line {
+                            font-size: 110%;
+                            overflow: hidden;
+                            white-space: nowrap;
+                            text-overflow: ellipsis;
+                        }
+
+                        div.text-secondary {
+                            color: @secondaryTextColor!important;
+                            white-space: normal;
+                            font-size: 90%;
+                        }
+                    }
+                }
+
+                .EezStudio_ListItem.EezStudio_Selected {
+                    .EezStudio_HomeTab_ProjectItem {
+                        div.text-secondary {
+                            color: @secondaryTextColorWhenSelected!important;
+                        }
+                    }
+                }
+
+                .EezStudio_ListItem:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// CREATE PROJECT AND EXAMPLES
+
+.EezStudio_HomeTab_NewProjectWizard {
+    height: 100%;
+
+    .EezStudio_Header {
+        .EezStudio_ToolbarHeader {
+            padding: 10px;
+
+            h5 {
+                margin-bottom: 0;
+            }
+
+            div {
+                flex-grow: 1;
+                height: 31px;
+            }
+        }
+    }
+
+    .EezStudio_Body {
+        height: 100%;
+    }
+}
+
+.EezStudio_NewProjectWizard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    a {
+        color: @textColor;
+    }
+    .selected {
+        a {
+            color: @selectionColor;
+        }
+    }
+
+    &.disabled {
+        pointer-events: none;
+    }
+
+    .EezStudio_NewProjectWizard_StaticField {
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        padding: 0.375rem 0.75rem;
+        background-color: @panelHeaderColor;
+        overflow: auto;
+    }
+
+    .EezStudio_SearchInput_Container {
+        flex: 0;
+        margin: 10px auto;
+        width: 360px;
+        border: 1px solid @borderColor;
+        background-color: field;
+        border-radius: 18px;
+        padding: 5px 10px;
+        font-size: 120%;
+        /*
+        box-shadow: 0 2px 5px 1px @borderColor;
+        &:hover {
+            box-shadow: 0 2px 8px 1px @borderColor;
+        }
+        */
+    }
+
+    .EezStudio_NewProjectWizard_Body {
+        flex: 1;
+        justify-content: center;
+        align-items: start;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+
+        margin-bottom: 10px;
+
+        .EezStudio_NewProjectWizard_NoProjects {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150%;
+            border: 0;
+        }
+
+        & > div {
+            margin: 0 10px;
+            box-sizing: border-box;
+            border: 1px solid @borderColor;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 100%;
+        }
+
+        .EezStudio_NewProjectWizard_Space {
+            flex: 1;
+            max-width: 240px;
+            margin: 0;
+            border: none;
+        }
+
+        .EezStudio_SimpleTree {
+            flex: 1;
+            max-width: 240px;
+
+            height: fit-content !important;
+
+            .EezStudio_TreeRow {
+                width: 100%;
+                height: 24px;
+
+                .EezStudio_TreeRowLabel,
+                .EezStudio_TreeRowLabel_Triangle {
+                    width: 100%;
+                    display: inline-flex;
+                    align-items: center;
+
+                    width: 100%;
+
+                    justify-content: space-between;
+
+                    .badge {
+                        margin-left: 5px;
+                        margin-right: 5px;
+                    }
+
+                    .EezStudio_AttentionDiv {
+                        bottom: 6px;
+                        right: -6px;
+                    }
+                }
+            }
+        }
+
+        .EezStudio_NewProjectWizard_ProjectTypes {
+            flex: 3;
+            max-width: 720px;
+
+            display: flex;
+            flex-direction: column;
+
+            .EezStudio_NewProjectWizard_ProjectType {
+                display: flex;
+                margin-bottom: 10px;
+                &:last-child {
+                    margin-bottom: 0;
+                }
+                padding: 10px;
+                border-bottom: 1px solid @borderColor;
+                &:last-child {
+                    border-bottom: none;
+                }
+
+                &.selected {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                    border-bottom: 1px solid transparent;
+                    .EezStudio_NewProjectWizard_ProjectType_Image.imageZoomEnabled {
+                        > img,
+                        & > svg {
+                            cursor: zoom-in;
+                        }
+                    }
+                }
+
+                &:hover:not(.selected) {
+                    color: @hoverColor;
+                    background-color: @hoverBackgroundColor;
+                }
+
+                .EezStudio_NewProjectWizard_ProjectType_Image {
+                    padding: 5px;
+                    color: #333;
+                    border-radius: 4px;
+                    background-color: white;
+                    margin-right: 5px;
+                    align-self: flex-start;
+
+                    > img,
+                    & > svg {
+                        /*object-fit: cover !important;*/
+                        width: 160px !important;
+                        height: 90px !important;
+                    }
+                }
+
+                .EezStudio_NewProjectWizard_ProjectType_Details {
+                    flex: 1;
+
+                    .EezStudio_NewProjectWizard_ProjectType_Details_Title {
+                        display: flex;
+                        justify-content: space-between;
+                        h6 {
+                            margin-bottom: 0;
+                        }
+                    }
+
+                    .EezStudio_NewProjectWizard_ProjectType_Details_Keywords {
+                        span.badge {
+                            margin-right: 5px;
+                            font-size: 0.8em;
+                            &:last-child {
+                                margin-right: 0;
+                            }
+                        }
+                    }
+
+                    .EezStudio_NewProjectWizard_ProjectType_Details_Description {
+                        margin-top: 10px;
+                        opacity: 75%;
+                    }
+
+                    .EezStudio_NewProjectWizard_ProjectType_Details_InfoList {
+                        margin-top: 10px;
+                        .lighter {
+                            opacity: 75%;
+                        }
+                        .bolder {
+                            font-weight: bold;
+                        }
+                    }
+                }
+            }
+        }
+
+        .EezStudio_NewProjectWizard_ProjectProperties {
+            flex: 2;
+            max-width: 480px;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            .EezStudio_NewProjectWizard_ProjectProperties_Section {
+                position: relative;
+
+                h6 {
+                    background-color: @panelHeaderColor;
+                    padding: 5px 10px;
+                    text-transform: uppercase;
+                    margin: 0;
+                }
+
+                & > div {
+                    padding: 10px;
+                }
+
+                .markdown {
+                    p {
+                        line-height: 1.2;
+                    }
+                    & > p:last-child {
+                        margin-bottom: 0;
+                    }
+                }
+            }
+        }
+    }
+
+    .EezStudio_NewProjectWizard_CreationStatus {
+        margin-top: 10px;
+    }
+
+    .EezStudio_NewProjectWizard_CreateProjectProgress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        background-color: @backgroundColor;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        .EezStudio_Loader {
+            margin: 0;
+        }
+
+        & > * {
+            margin: 20px;
+        }
+    }
+}
+
+.EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    cursor: zoom-out;
+    z-index: 1002;
+
+    .EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Backface {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        background-color: #333;
+        opacity: 80%;
+    }
+
+    .EezStudio_NewProjectWizard_ProjectType_Image_Zoomed_Image {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        > img,
+        & > svg {
+            background-color: white;
+            position: absolute;
+            width: auto !important;
+            height: auto !important;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// INSTRUMENTS
+
+.EezStudio_WorkbenchDocument {
+    margin: 10px;
+    min-height: calc(100% - 20px);
+}
+
+.EezStudio_InstrumentComponentEnclosure {
+    width: 240px;
+
+    &.selected {
+        background-color: @selectionBackgroundColor!important;
+        color: @selectionColor;
+    }
+}
+
+.EezStudio_InstrumentContent {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    & > * {
+        flex-grow: 0;
+        flex-shrink: 0;
+        overflow-wrap: anywhere;
+    }
+
+    img {
+        display: block;
+        object-fit: contain;
+        width: 100%;
+    }
+}
+
+.EezStudio_InstrumentToolbarEnclosure,
+.EezStudio_InstrumentPropertiesEnclosure,
+.EezStudio_InstrumentConnectionEnclosure {
+    padding: 8px;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// EXTENSIONS
+
+.EezStudio_ExtensionsManager {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .EezStudio_ExtensionsManager_Navigation {
+        flex: 0;
+
+        display: flex;
+        justify-content: center;
+
+        margin-bottom: 10px;
+
+        padding: 10px;
+
+        .EezStudio_ExtensionsManager_NavigationItem {
+            &:not(.selected) {
+                cursor: pointer;
+                &:hover {
+                    border-bottom: 4px solid @borderColor;
+                }
+            }
+            text-transform: uppercase;
+            font-size: 175%;
+            margin: 0 30px;
+            padding: 0px 10px;
+            &.selected {
+                border-bottom: 4px solid @selectionBackgroundColor;
+            }
+
+            .badge {
+                margin-left: 10px;
+                transform: translateY(-2px);
+            }
+
+            .EezStudio_AttentionDiv {
+                bottom: unset;
+                top: 2px;
+                right: -8px;
+            }
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        flex: 0;
+        margin: 10px auto;
+        width: 360px;
+        border: 1px solid @borderColor;
+        background-color: field;
+        border-radius: 18px;
+        padding: 5px 10px;
+        font-size: 120%;
+        /*
+        box-shadow: 0 2px 5px 1px @borderColor;
+        &:hover {
+            box-shadow: 0 2px 8px 1px @borderColor;
+        }
+        */
+    }
+
+    .EezStudio_ExtensionsManager_Body {
+        flex: 1;
+        justify-content: center;
+        align-items: start;
+        display: flex;
+        overflow: hidden;
+        position: relative;
+
+        margin-bottom: 10px;
+
+        .EezStudio_ExtensionsManager_NoExtensions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150%;
+            border: 0;
+        }
+
+        & > div {
+            margin: 0 10px;
+            box-sizing: border-box;
+            border: 1px solid @borderColor;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 100%;
+        }
+
+        .EezStudio_ExtensionsManager_SubNavigation {
+            flex: 1;
+            flex-basis: 240px;
+            max-width: 240px;
+
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            > div:nth-child(1) {
+                width: 140px;
+            }
+
+            .EezStudio_ExtensionsManager_ViewFilter {
+                display: flex;
+
+                font-size: 120%;
+
+                & > .nav {
+                    flex-grow: 0;
+                    flex-shrink: 0;
+                    padding: 4px;
+                    width: 100%;
+
+                    flex-direction: column;
+
+                    & > .nav-item {
+                        margin-bottom: 5px;
+                    }
+
+                    a {
+                        display: flex;
+                        justify-content: space-between;
+                        width: 100%;
+                        color: @textColor;
+                        padding: 4px 8px;
+                        &:hover:not(.active) {
+                            background-color: @hoverBackgroundColor;
+                        }
+                        &.active {
+                            color: @selectionColor;
+                            background-color: @selectionBackgroundColor;
+                        }
+
+                        .EezStudio_AttentionContainer {
+                            display: flex;
+                            justify-content: space-between;
+                            width: 100%;
+
+                            .EezStudio_AttentionDiv {
+                                bottom: unset;
+                                top: 2px;
+                                right: -2px;
+                            }
+                        }
+                    }
+                }
+
+                & > div {
+                    flex-grow: 1;
+                    overflow: hidden;
+                }
+            }
+
+            > div:nth-child(3) {
+                margin-top: 5px;
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                button {
+                    margin-left: 4px;
+                }
+                .dropdown {
+                    margin-right: 10px;
+                }
+            }
+
+            .badge {
+                min-width: 30px;
+            }
+        }
+
+        .EezStudio_ExtensionsManager_MasterView {
+            flex: 3;
+            max-width: 720px;
+            flex-basis: 720px;
+            height: 100%;
+
+            .EezStudio_ListItem {
+                padding: 2px 2px 2px 4px;
+
+                & > div:nth-child(2) {
+                    white-space: unset;
+                }
+            }
+        }
+
+        .EezStudio_ExtensionsManager_DetailsView {
+            flex: 3;
+            max-width: 720px;
+            min-height: 400px;
+            flex-basis: 720px;
+
+            .EezStudio_ExtensionsManager_DetailsView_Body {
+                border-top: 1px solid @borderColor;
+            }
+        }
+    }
+}
+
+.EezStudio_ExtensionsManager_SelectProjectExtensionDialog {
+    width: 100%;
+    height: 100%;
+}
+
+.EezStudio_ExtensionDetailsHeader {
+    display: flex;
+    flex-direction: row;
+    padding: 10px;
+    * {
+        user-select: auto;
+    }
+
+    pre {
+        font-family: inherit;
+        font-size: 100%;
+        white-space: pre-wrap;
+    }
+}
+
+.EezStudio_ExtensionDetailsHeaderImageContainer {
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.EezStudio_ExtensionDetailsHeaderProperties {
+    flex-grow: 1;
+    flex-shrink: 0;
+    width: 0;
+}
+
+.EezStudio_ExtensionDetailsHeaderPropertiesNameAndVersion {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// SETTINGS
+
+.EezStudio_HomeSettingsBody {
+    padding: 50px 0;
+    margin: auto;
+    max-width: 640px;
+}
+
+.EezStudio_HomeSettingsBar {
+    position: absolute;
+    bottom: 0;
+    border: none !important;
+    border-top: 1px solid @borderColor!important;
+    justify-content: flex-end;
+    padding: 6px;
+}
+
+.EezStudio_DatabaseCompactDiv {
+    margin-top: 10px;
+    border: 1px solid @borderColor;
+    padding: 5px;
+
+    &.databaseCompactIsAdvisable {
+        background-color: @warningBackgroundColor;
+        color: @warningColor;
+    }
+
+    & > div {
+        margin-bottom: 5px;
+    }
+}

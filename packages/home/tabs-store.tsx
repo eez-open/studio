@@ -23,7 +23,6 @@ import {
 import { IEditor, IHomeSection } from "eez-studio-shared/extensions/extension";
 
 import { ITab } from "eez-studio-ui/tabs";
-import { Icon } from "eez-studio-ui/icon";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -35,8 +34,6 @@ import type * as HistoryViewModule from "instrument/window/history/history-view"
 import type * as HomeTabModule from "home/home-tab";
 import type * as HistoryModule from "home/history";
 import type * as ShortcutsModule from "home/shortcuts";
-import type * as ExtensionsManagerModule from "home/extensions-manager/extensions-manager";
-import type * as SettingsModule from "home/settings";
 
 import { Loader } from "eez-studio-ui/loader";
 
@@ -44,9 +41,11 @@ import { ProjectStore } from "project-editor/store";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
-import { firstTime } from "./first-time";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
-import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
+import {
+    PROJECT_TAB_ID_PREFIX,
+    RUN_PROJECT_TAB_ID_PREFIX
+} from "home/tabs-store-conf";
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
@@ -239,134 +238,6 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     }
 }
 
-class ExtensionManagerTab implements IHomeTab {
-    constructor(public tabs: Tabs) {
-        makeObservable(this, {
-            active: observable,
-            numNewVersions: computed,
-            tooltipTitle: computed,
-            attention: computed,
-            makeActive: action
-        });
-    }
-
-    permanent: boolean = true;
-    active: boolean = false;
-    loading: boolean = false;
-    modified: boolean = false;
-
-    id = "extensions";
-    title = "Extension Manager";
-    category: HomeTabCategory = "common";
-
-    get titleStr() {
-        return this.title;
-    }
-
-    get numNewVersions() {
-        const { extensionsManagerStore } =
-            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
-        return extensionsManagerStore.newVersionsInAllSections.length;
-    }
-
-    get icon() {
-        return (
-            <Icon
-                icon="material:extension"
-                attention={this.numNewVersions > 0}
-            />
-        );
-    }
-
-    get tooltipTitle() {
-        const { extensionsManagerStore } =
-            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
-
-        let title = this.title;
-        if (this.numNewVersions > 1) {
-            title += ` (${extensionsManagerStore.newVersions.length} new versions)`;
-        } else if (this.numNewVersions === 1) {
-            title += " (1 new version)";
-        }
-
-        return title;
-    }
-
-    get attention() {
-        return this.numNewVersions > 0;
-    }
-
-    render() {
-        const { ExtensionsManager } =
-            require("home/extensions-manager/extensions-manager") as typeof ExtensionsManagerModule;
-        return <ExtensionsManager />;
-    }
-
-    makeActive(): void {
-        this.tabs.makeActive(this);
-    }
-
-    close() {
-        this.tabs.removeTab(this);
-    }
-}
-
-class SettingsTab implements IHomeTab {
-    constructor(public tabs: Tabs) {
-        makeObservable(this, {
-            active: observable,
-            attention: computed,
-            makeActive: action
-        });
-    }
-
-    permanent: boolean = true;
-    active: boolean = false;
-    loading: boolean = false;
-    modified: boolean = false;
-
-    id = "settings";
-    title = "Settings";
-    category: HomeTabCategory = "common";
-
-    get titleStr() {
-        return this.title;
-    }
-
-    get attention() {
-        const { settingsController } =
-            require("home/settings") as typeof SettingsModule;
-        return settingsController.isCompactDatabaseAdvisable;
-    }
-
-    get icon() {
-        return <Icon icon="material:settings" attention={this.attention} />;
-    }
-
-    get tooltipTitle() {
-        if (this.attention) {
-            const { COMPACT_DATABASE_MESSAGE } =
-                require("home/settings") as typeof SettingsModule;
-            return COMPACT_DATABASE_MESSAGE;
-        } else {
-            return this.title;
-        }
-    }
-
-    render() {
-        const { Settings } = require("home/settings") as typeof SettingsModule;
-        return <Settings />;
-    }
-
-    makeActive(): void {
-        this.tabs.makeActive(this);
-    }
-
-    close() {
-        this.tabs.removeTab(this);
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class HomeSectionTab implements IHomeTab {
@@ -517,7 +388,11 @@ export class InstrumentTab implements IHomeTab {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ProjectEditorTab implements IHomeTab {
-    constructor(public tabs: Tabs, public _filePath: string | undefined) {
+    constructor(
+        public tabs: Tabs,
+        public _filePath: string | undefined,
+        public runMode?: boolean
+    ) {
         makeObservable(this, {
             _active: observable,
             projectStore: observable,
@@ -554,6 +429,7 @@ export class ProjectEditorTab implements IHomeTab {
 
             await initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = await ProjectStore.create();
+            projectStore.runMode = !!this.runMode;
             projectStore.mount();
 
             if (this._filePath) {
@@ -566,7 +442,7 @@ export class ProjectEditorTab implements IHomeTab {
                 projectStore.project._fullyLoaded = true;
             });
 
-            if (!projectStore.project._isDashboardBuild) {
+            if (!projectStore.project._isDashboardBuild && !this.runMode) {
                 setTimeout(() => projectStore.startBackgroundCheck(), 0);
             } else {
                 projectStore.setRuntimeMode(false);
@@ -621,49 +497,77 @@ export class ProjectEditorTab implements IHomeTab {
         }
 
         const save = () => {
-            if (projectStore.isModified) {
+            if (!this.runMode && projectStore.isModified) {
                 projectStore.save();
             }
         };
         const saveAs = () => {
-            projectStore.saveAs();
+            if (!this.runMode) {
+                projectStore.saveAs();
+            }
         };
         const check = () => {
-            projectStore.check();
+            if (!this.runMode) {
+                projectStore.check();
+            }
         };
         const build = () => {
-            projectStore.build();
+            if (!this.runMode) {
+                projectStore.build();
+            }
         };
         const buildExtensions = () => {
-            projectStore.buildExtensions();
+            if (!this.runMode) {
+                projectStore.buildExtensions();
+            }
         };
         const buildAndInstallExtensions = () => {
-            projectStore.buildAndInstallExtensions();
+            if (!this.runMode) {
+                projectStore.buildAndInstallExtensions();
+            }
         };
         const undo = () => {
-            projectStore.undoManager.undo();
+            if (!this.runMode) {
+                projectStore.undoManager.undo();
+            }
         };
         const redo = () => {
-            projectStore.undoManager.redo();
+            if (!this.runMode) {
+                projectStore.undoManager.redo();
+            }
         };
         const cut = () => {
-            if (projectStore.navigationStore.selectedPanel)
-                projectStore.navigationStore.selectedPanel.cutSelection();
+            if (!this.runMode) {
+                if (projectStore.navigationStore.selectedPanel) {
+                    projectStore.navigationStore.selectedPanel.cutSelection();
+                }
+            }
         };
         const copy = () => {
-            if (projectStore.navigationStore.selectedPanel)
-                projectStore.navigationStore.selectedPanel.copySelection();
+            if (!this.runMode) {
+                if (projectStore.navigationStore.selectedPanel) {
+                    projectStore.navigationStore.selectedPanel.copySelection();
+                }
+            }
         };
         const paste = () => {
-            if (projectStore.navigationStore.selectedPanel)
-                projectStore.navigationStore.selectedPanel.pasteSelection();
+            if (!this.runMode) {
+                if (projectStore.navigationStore.selectedPanel) {
+                    projectStore.navigationStore.selectedPanel.pasteSelection();
+                }
+            }
         };
         const deleteSelection = () => {
-            if (projectStore.navigationStore.selectedPanel)
-                projectStore.navigationStore.selectedPanel.deleteSelection();
+            if (!this.runMode) {
+                if (projectStore.navigationStore.selectedPanel) {
+                    projectStore.navigationStore.selectedPanel.deleteSelection();
+                }
+            }
         };
         const onResetLayoutModels = () => {
-            projectStore.layoutModels.reset();
+            if (!this.runMode) {
+                projectStore.layoutModels.reset();
+            }
         };
 
         const onReloadProject = () => {
@@ -739,7 +643,9 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get id() {
-        return PROJECT_TAB_ID_PREFIX + this.filePath;
+        return this.runMode
+            ? RUN_PROJECT_TAB_ID_PREFIX + this.filePath
+            : PROJECT_TAB_ID_PREFIX + this.filePath;
     }
 
     get title() {
@@ -921,8 +827,6 @@ interface ISavedTab {
     active: boolean;
 }
 
-type HomeSectionVisibilityOption = "both" | "projects" | "instruments";
-
 export class Tabs {
     tabs: IHomeTab[] = [];
     activeTab: IHomeTab | undefined;
@@ -969,17 +873,10 @@ export class Tabs {
             }
         });
 
-        return allTabs.concat(
-            [ExtensionManagerTab, SettingsTab].map(TabClassToTabDefinition)
-        );
+        return allTabs;
     }
 
     constructor() {
-        this._homeSectionsVisibilityOption =
-            (localStorage.getItem(
-                LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION
-            ) as HomeSectionVisibilityOption) ?? "projects";
-
         makeObservable(this, {
             tabs: observable,
             activeTab: observable,
@@ -991,57 +888,54 @@ export class Tabs {
             viewDeletedHistory: observable,
             navigateToHistory: action.bound,
             navigateToDeletedHistoryItems: action.bound,
-            navigateToSessionsList: action.bound,
-            _homeSectionsVisibilityOption: observable
+            navigateToSessionsList: action.bound
         });
+
+        this.openTabById("home", true);
 
         loadPreinstalledExtension("instrument").then(async () => {
             const { instruments } = await import(
                 "instrument/instrument-object"
             );
 
-            if (!firstTime.get()) {
-                if (location.search) {
-                    const instrumentId = location.search.substring(1);
-                    if (instruments.get(instrumentId)) {
-                        this.openTabById(instrumentId, true);
-                        return;
+            if (location.search) {
+                const instrumentId = location.search.substring(1);
+                if (instruments.get(instrumentId)) {
+                    this.openTabById(instrumentId, true);
+                    return;
+                }
+            }
+
+            const tabsJSON = window.localStorage.getItem("home/tabs");
+            if (tabsJSON) {
+                const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
+
+                // make sure Home tab is at the 1st place
+                const homeTab = savedTabs.find(
+                    savedTab => savedTab.id == "home"
+                );
+                if (!homeTab) {
+                    savedTabs.splice(0, 0, {
+                        id: "home",
+                        active: false
+                    });
+                } else {
+                    const homeTabIndex = savedTabs.indexOf(homeTab);
+                    if (homeTabIndex != 0) {
+                        savedTabs.splice(homeTabIndex, 1);
+                        savedTabs.splice(0, 0, homeTab);
                     }
                 }
 
-                const tabsJSON = window.localStorage.getItem("home/tabs");
-                if (tabsJSON) {
-                    const savedTabs: ISavedTab[] = JSON.parse(tabsJSON);
-
-                    // make sure Home tab is at the 1st place
-                    const homeTab = savedTabs.find(
-                        savedTab => savedTab.id == "home"
-                    );
-                    if (!homeTab) {
-                        savedTabs.splice(0, 0, {
-                            id: "home",
-                            active: false
-                        });
-                    } else {
-                        const homeTabIndex = savedTabs.indexOf(homeTab);
-                        if (homeTabIndex != 0) {
-                            savedTabs.splice(homeTabIndex, 1);
-                            savedTabs.splice(0, 0, homeTab);
-                        }
-                    }
-
-                    for (const savedTab of savedTabs) {
-                        if (savedTab.id) {
-                            try {
-                                this.openTabById(savedTab.id, savedTab.active);
-                            } catch (err) {
-                                console.error(err);
-                            }
+                for (const savedTab of savedTabs) {
+                    if (savedTab.id) {
+                        try {
+                            this.openTabById(savedTab.id, savedTab.active);
+                        } catch (err) {
+                            console.error(err);
                         }
                     }
                 }
-            } else {
-                this.openTabById("home", true);
             }
 
             reaction(
@@ -1125,6 +1019,12 @@ export class Tabs {
                     return;
                 }
                 tab = this.addProjectTab(filePath);
+            } else if (tabId.startsWith(RUN_PROJECT_TAB_ID_PREFIX)) {
+                const filePath = tabId.substr(RUN_PROJECT_TAB_ID_PREFIX.length);
+                if (filePath === "undefined") {
+                    return;
+                }
+                tab = this.addProjectTab(filePath, true);
             } else {
                 const { instruments } =
                     require("instrument/instrument-object") as typeof InstrumentObjectModule;
@@ -1165,8 +1065,8 @@ export class Tabs {
         return tab;
     }
 
-    addProjectTab(filePath: string | undefined) {
-        const tab = new ProjectEditorTab(this, filePath);
+    addProjectTab(filePath: string | undefined, runMode?: boolean) {
+        const tab = new ProjectEditorTab(this, filePath, runMode);
         this.addTab(tab);
         return tab;
     }
@@ -1240,40 +1140,12 @@ export class Tabs {
         }
     }
 
-    findProjectEditorTab(filePath: string) {
+    findProjectEditorTab(filePath: string, runMode: boolean) {
         return this.tabs.find(
-            tab => tab instanceof ProjectEditorTab && tab.filePath == filePath
-        );
-    }
-
-    _homeSectionsVisibilityOption: HomeSectionVisibilityOption;
-
-    get homeSectionsVisibilityOption() {
-        return this._homeSectionsVisibilityOption;
-    }
-
-    set homeSectionsVisibilityOption(value: HomeSectionVisibilityOption) {
-        runInAction(() => {
-            this._homeSectionsVisibilityOption = value;
-        });
-
-        localStorage.setItem(
-            LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION,
-            this._homeSectionsVisibilityOption
-        );
-    }
-
-    get projectsVisible() {
-        return (
-            this._homeSectionsVisibilityOption == "both" ||
-            this._homeSectionsVisibilityOption == "projects"
-        );
-    }
-
-    get instrumentsVisible() {
-        return (
-            this._homeSectionsVisibilityOption == "both" ||
-            this._homeSectionsVisibilityOption == "instruments"
+            tab =>
+                tab instanceof ProjectEditorTab &&
+                tab.filePath == filePath &&
+                tab.runMode == runMode
         );
     }
 
@@ -1295,20 +1167,11 @@ export function loadTabs() {
     tabs = new Tabs();
 }
 
-export const LOCAL_STORAGE_HOME_SECTION_VISIBILITY_OPTION =
-    "homeSectionVisibilityOption";
-
-export function onSetupSkip() {
-    //tabs.homeSectionsVisibilityOption = "projects";
-    runInAction(() => firstTime.set(false));
-    tabs.openTabById("home", true);
-}
-
-export function openProject(filePath: string) {
+export function openProject(filePath: string, runMode: boolean) {
     try {
-        let tab = tabs.findProjectEditorTab(filePath);
+        let tab = tabs.findProjectEditorTab(filePath, runMode);
         if (!tab) {
-            tab = tabs.addProjectTab(filePath);
+            tab = tabs.addProjectTab(filePath, runMode);
         }
         if (tab) {
             tab.makeActive();

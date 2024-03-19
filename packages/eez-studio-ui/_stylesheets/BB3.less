@@ -1,0 +1,162 @@
+.EezStudio_OtherReleases {
+    margin-top: 10px;
+
+    a[aria-expanded="true"] .chevron-right {
+        transition: 0.3s transform ease-in-out;
+        transform: rotate(90deg);
+    }
+}
+
+.EezStudio_LatestHistoryItemSection {
+    & > div {
+        margin: 0;
+        max-width: initial;
+        overflow: auto;
+    }
+}
+
+.EezStudio_BB3_SectionHeaderContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    & > div:first-child {
+        display: flex;
+        align-items: center;
+
+        & > i {
+            font-size: 28px;
+            transform: translateY(2px);
+        }
+
+        & > h4 {
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            margin-bottom: 0;
+        }
+    }
+}
+
+.EezStudio_BB3_SectionBody {
+    & > *:first-child {
+        margin-top: 20px !important;
+    }
+}
+
+.EezStudio_BB3_StartPageContainer {
+    padding: calc(@BB3_StartPageGridGap / 2);
+
+    display: grid;
+    grid-gap: @BB3_StartPageGridGap;
+    align-items: start;
+
+    @media (min-width: 1200px) {
+        grid-template-columns: repeat(
+            2,
+            calc(100% / 2 - (2 - 1) * @BB3_StartPageGridGap / 2)
+        );
+    }
+
+    section {
+        margin-top: @BB3_StartPageGridGap;
+
+        padding: calc(@BB3_StartPageGridGap / 2);
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    .EezStudio_Toolbar {
+        background-color: transparent !important;
+    }
+}
+
+.EezStudio_BB3_ListsSectionGlobalActions {
+    & > button {
+        margin-left: 10px;
+        &:first-child {
+            margin-left: 0;
+        }
+    }
+}
+
+.EezStudio_BB3_TitleContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.EezStudio_BB3_ContentContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    & > div {
+        &:first-child {
+            flex-grow: 1;
+        }
+
+        & > button {
+            margin: 5px;
+            &:first-child {
+                margin-left: 0;
+            }
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.EezStudio_BB3_OtherReleases {
+    margin-top: 10px;
+
+    a[aria-expanded="true"] .chevron-right {
+        transition: 0.3s transform ease-in-out;
+        transform: rotate(90deg);
+    }
+}
+
+.EezStudio_BB3_TitleContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.EezStudio_BB3_ContentContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    & > div {
+        &:first-child {
+            flex-grow: 1;
+        }
+
+        & > button {
+            margin: 5px;
+            &:first-child {
+                margin-left: 0;
+            }
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.EezStudio_BB3_ScriptsContainer {
+    position: relative;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    & > .ace_editor {
+        flex-grow: 1;
+    }
+}

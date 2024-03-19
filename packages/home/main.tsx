@@ -93,9 +93,12 @@ ipcRenderer.on("show-about-box", async () => {
     showAboutBox();
 });
 
-ipcRenderer.on("open-project", async (sender: any, filePath: any) => {
-    openProject(filePath);
-});
+ipcRenderer.on(
+    "open-project",
+    async (sender: any, filePath: any, runMode: boolean) => {
+        openProject(filePath, runMode);
+    }
+);
 
 ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
     try {

@@ -58,25 +58,26 @@ async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
     });
     const filePaths = result.filePaths;
     if (filePaths && filePaths[0]) {
-        openFile(filePaths[0], focusedWindow);
+        openFile(filePaths[0], focusedWindow, false);
     }
 }
 
-function openProject(projectFilePath: string, focusedWindow?: BrowserWindow) {
-    if (!focusedWindow) {
-        focusedWindow = BrowserWindow.getFocusedWindow() || undefined;
-    }
-
-    if (focusedWindow) {
-        focusedWindow.webContents.send("open-project", projectFilePath);
-    }
-}
-export function openFile(filePath: string, focusedWindow?: any) {
+export function openFile(
+    filePath: string,
+    focusedWindow?: any,
+    runMode?: boolean
+) {
     if (
         filePath.toLowerCase().endsWith(".eez-project") ||
         filePath.toLowerCase().endsWith(".eez-dashboard")
     ) {
-        openProject(filePath, focusedWindow);
+        if (!focusedWindow) {
+            focusedWindow = BrowserWindow.getFocusedWindow() || undefined;
+        }
+
+        if (focusedWindow) {
+            focusedWindow.webContents.send("open-project", filePath, runMode);
+        }
     }
 }
 
@@ -210,7 +211,7 @@ function buildFileMenu(win: IWindow | undefined) {
                 label: mru.filePath,
                 click: function () {
                     if (fs.existsSync(mru.filePath)) {
-                        openProject(mru.filePath);
+                        openFile(mru.filePath);
                     } else {
                         // file not found, remove from mru
                         var i = settings.mru.indexOf(mru);
@@ -236,7 +237,10 @@ function buildFileMenu(win: IWindow | undefined) {
         }
     );
 
-    if (win?.activeTabType === "project") {
+    if (
+        win?.activeTabType === "project" ||
+        win?.activeTabType === "run-project"
+    ) {
         fileMenuSubmenu.push(
             {
                 type: "separator"
@@ -872,8 +876,8 @@ ipcMain.on("getReservedKeybindings", function (event: any) {
     event.returnValue = keybindings;
 });
 
-ipcMain.on("open-file", function (event, path) {
-    openFile(path);
+ipcMain.on("open-file", function (event, path, runMode) {
+    openFile(path, undefined, runMode);
 });
 
 ipcMain.on("new-project", function (event) {

@@ -1,7 +1,6 @@
-import { observable, runInAction, autorun, makeObservable } from "mobx";
+import { observable, runInAction, makeObservable } from "mobx";
 
 import {
-    isDev,
     getUserDataPath,
     fileExists,
     readJsObjectFromFile,
@@ -11,9 +10,6 @@ import {
 import * as notification from "eez-studio-ui/notification";
 
 import { IExtension } from "eez-studio-shared/extensions/extension";
-
-import { sourceRootDir } from "eez-studio-shared/util";
-import { firstTime } from "home/first-time";
 
 export const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
     "https://github.com/eez-open/studio-extensions/raw/master/build/catalog-version.json";
@@ -50,16 +46,7 @@ class ExtensionsCatalog {
             .then(catalogVersion => {
                 runInAction(() => (this.catalogVersion = catalogVersion));
 
-                if (firstTime.get()) {
-                    const dispose = autorun(() => {
-                        if (!firstTime.get()) {
-                            dispose();
-                            this.checkNewVersionOfCatalog();
-                        }
-                    });
-                } else {
-                    this.checkNewVersionOfCatalog();
-                }
+                this.checkNewVersionOfCatalog();
             })
             .catch(error =>
                 notification.error(`Failed to load catalog version (${error})`)
@@ -73,11 +60,7 @@ class ExtensionsCatalog {
     async _loadCatalog() {
         let catalogPath = this.catalogPath;
         if (!(await fileExists(catalogPath))) {
-            if (isDev) {
-                catalogPath = `${sourceRootDir()}/../resources/catalog.json`;
-            } else {
-                catalogPath = process.resourcesPath! + "/catalog.json";
-            }
+            return [];
         }
         return (await readJsObjectFromFile(catalogPath)) as IExtension[];
     }
@@ -97,19 +80,6 @@ class ExtensionsCatalog {
                 console.error(err);
             }
         }
-
-        if (!catalogVersion) {
-            if (isDev) {
-                catalogVersionPath = `${sourceRootDir()}/../resources/catalog-version.json`;
-            } else {
-                catalogVersionPath =
-                    process.resourcesPath! + "/catalog-version.json";
-            }
-        }
-
-        catalogVersion = await readJsObjectFromFile(catalogVersionPath);
-
-        catalogVersion.lastModified = new Date(catalogVersion.lastModified);
 
         return catalogVersion;
     }

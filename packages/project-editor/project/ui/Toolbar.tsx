@@ -27,7 +27,8 @@ export const Toolbar = observer(
         render() {
             return (
                 <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                    {!this.context.project._isDashboardBuild &&
+                    {!this.context.runMode &&
+                    !this.context.project._isDashboardBuild &&
                     !(
                         this.context.runtime &&
                         !this.context.runtime.isDebuggerActive
@@ -37,7 +38,8 @@ export const Toolbar = observer(
                         <div />
                     )}
 
-                    {!this.context.project._isDashboardBuild &&
+                    {!this.context.runMode &&
+                    !this.context.project._isDashboardBuild &&
                     this.context.projectTypeTraits.runtimeType !=
                         RuntimeType.NONE ? (
                         <RunEditSwitchControls />

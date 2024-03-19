@@ -1,5 +1,5 @@
 import path from "path";
-import { ipcRenderer } from "electron";
+import { clipboard, ipcRenderer } from "electron";
 import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import {
@@ -8,10 +8,12 @@ import {
     observable,
     toJS,
     runInAction,
-    makeObservable
+    makeObservable,
+    autorun
 } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
+import classNames from "classnames";
 
 import {
     VerticalHeaderWithBody,
@@ -24,7 +26,6 @@ import { Icon } from "eez-studio-ui/icon";
 
 import type { InstrumentObject } from "instrument/instrument-object";
 
-import classNames from "classnames";
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
@@ -32,15 +33,20 @@ import type { ITabDefinition } from "home/tabs-store";
 
 import { tabs } from "home/tabs-store";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
-import { settingsController } from "home/settings";
+import { Settings, settingsController } from "home/settings";
 import { IMruItem } from "main/settings";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { getProjectIcon } from "home/helper";
-import { Setup } from "./setup";
-import { firstTime } from "./first-time";
 import { homeLayoutModels } from "home/home-layout-models";
-import { NewProjectWizard } from "project-editor/project/ui/Wizard";
+import {
+    NewProjectWizard,
+    wizardModel
+} from "project-editor/project/ui/Wizard";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import {
+    ExtensionsManager,
+    extensionsManagerStore
+} from "./extensions-manager/extensions-manager";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -285,7 +291,6 @@ export const workbenchDocument = new WorkbenchDocument();
 
 export const WorkbenchToolbar = observer(
     class WorkbenchToolbar extends React.Component<{
-        onClose: () => void;
         collapseButtons: boolean;
     }> {
         render() {
@@ -331,36 +336,23 @@ export const WorkbenchToolbar = observer(
 
             return (
                 <ToolbarHeader>
-                    <h5>Instruments</h5>
-                    <div>
-                        {buttons.map((button, i) => (
-                            <ButtonAction
-                                key={button.id}
-                                text={button.label}
-                                title={button.title}
-                                className={button.className}
-                                onClick={button.onClick}
-                                style={{
-                                    marginRight:
-                                        buttons.length - 1 == i ? 20 : 10
-                                }}
-                            />
+                    {buttons.map((button, i) => (
+                        <ButtonAction
+                            key={button.id}
+                            text={button.label}
+                            title={button.title}
+                            className={button.className}
+                            onClick={button.onClick}
+                            style={{
+                                marginRight: buttons.length - 1 == i ? 20 : 10
+                            }}
+                        />
+                    ))}
+                    {tabs.allTabs
+                        .filter(tab => tab.instance.category == "instrument")
+                        .map(tab => (
+                            <TabButton key={tab.instance.id} tab={tab} />
                         ))}
-                        {tabs.allTabs
-                            .filter(
-                                tab => tab.instance.category == "instrument"
-                            )
-                            .map(tab => (
-                                <TabButton key={tab.instance.id} tab={tab} />
-                            ))}
-                        {tabs.homeSectionsVisibilityOption == "both" && (
-                            <IconAction
-                                icon="material:close"
-                                title="Hide this section"
-                                onClick={this.props.onClose}
-                            />
-                        )}
-                    </div>
                 </ToolbarHeader>
             );
         }
@@ -613,7 +605,7 @@ export const InstrumentContent = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Workbench = observer(
-    class Workbench extends React.Component<{ onClose: () => void }> {
+    class Workbench extends React.Component {
         divRef = React.createRef<HTMLDivElement>();
         resizeObserver: ResizeObserver;
         collapseButtons: boolean;
@@ -675,19 +667,14 @@ export const Workbench = observer(
                     <VerticalHeaderWithBody>
                         <Header>
                             <WorkbenchToolbar
-                                onClose={this.props.onClose}
                                 collapseButtons={this.collapseButtons}
                             />
                         </Header>
                         <Body>
-                            {firstTime.get() ? (
-                                <Setup onlyBody={false} />
-                            ) : (
-                                <FlexLayoutContainer
-                                    model={homeLayoutModels.instrumentsBody}
-                                    factory={this.factory}
-                                />
-                            )}
+                            <FlexLayoutContainer
+                                model={homeLayoutModels.instrumentsBody}
+                                factory={this.factory}
+                            />
                         </Body>
                     </VerticalHeaderWithBody>
                 </div>
@@ -699,15 +686,13 @@ export const Workbench = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const Projects = observer(
-    class Projects extends React.Component<{ onClose: () => void }> {
+    class Projects extends React.Component {
         selectedFilePath: string | undefined;
 
         searchText: string = "";
 
         sortAlphabetically: boolean = false;
 
-        divRef = React.createRef<HTMLDivElement>();
-        resizeObserver: ResizeObserver;
         collapseButtons: boolean;
 
         constructor(props: any) {
@@ -727,10 +712,6 @@ const Projects = observer(
                 onSearchChange: action.bound,
                 collapseButtons: observable
             });
-
-            this.resizeObserver = new ResizeObserver(
-                this.resizeObserverCallback
-            );
         }
 
         get mruAlpha() {
@@ -764,109 +745,81 @@ const Projects = observer(
             this.searchText = ($(event.target).val() as string).trim();
         }
 
-        componentDidMount(): void {
-            if (this.divRef.current) {
-                this.resizeObserver.observe(this.divRef.current);
-            }
-        }
+        onContextMenu = (node: IListNode<IMruItem>) => {
+            runInAction(() => (this.selectedFilePath = node.data.filePath));
 
-        componentWillUnmount() {
-            if (this.divRef.current) {
-                this.resizeObserver.unobserve(this.divRef.current);
-            }
-        }
+            const menu = new Menu();
 
-        resizeObserverCallback = action(() => {
-            if (this.divRef.current) {
-                let rect = this.divRef.current.getBoundingClientRect();
+            menu.append(
+                new MenuItem({
+                    label: "Run",
+                    click: action(() => {
+                        ipcRenderer.send("open-file", node.data.filePath, true);
+                    })
+                })
+            );
 
-                runInAction(() => {
-                    this.collapseButtons =
-                        rect.width <
-                        (tabs.homeSectionsVisibilityOption == "both"
-                            ? 340
-                            : 200);
-                });
-            }
-        });
+            menu.append(
+                new MenuItem({
+                    label: "Remove From List",
+                    click: action(() => {
+                        settingsController.removeItemFromMRU(node.data);
+                    })
+                })
+            );
+
+            menu.append(
+                new MenuItem({
+                    label: "Copy Path",
+                    click: action(() => {
+                        clipboard.writeText(node.data.filePath);
+                    })
+                })
+            );
+
+            menu.popup();
+        };
 
         render() {
             return (
-                <div className="EezStudio_HomeTab_Projects" ref={this.divRef}>
+                <div className="EezStudio_HomeTab_Projects">
                     <VerticalHeaderWithBody>
                         <Header>
-                            <ToolbarHeader>
-                                <h5>Projects</h5>
-                                <div>
-                                    {tabs.homeSectionsVisibilityOption ==
-                                        "both" && (
-                                        <ButtonAction
-                                            text={
-                                                this.collapseButtons
-                                                    ? "New"
-                                                    : "New Project"
-                                            }
-                                            title="New Project"
-                                            className="btn-success"
-                                            onClick={async () => {
-                                                const { showNewProjectWizard } =
-                                                    await import(
-                                                        "project-editor/project/ui/Wizard"
-                                                    );
-                                                showNewProjectWizard();
-                                            }}
-                                            style={{ height: 38 }}
-                                        />
-                                    )}
-                                    <ButtonAction
-                                        text={
-                                            this.collapseButtons
-                                                ? "Open"
-                                                : "Open Project"
-                                        }
-                                        title="Open Project"
-                                        className="btn-primary"
-                                        onClick={() => {
-                                            ipcRenderer.send("open-project");
-                                        }}
-                                    />
-                                    {tabs.homeSectionsVisibilityOption ==
-                                        "both" && (
-                                        <IconAction
-                                            icon="material:close"
-                                            title="Hide this section"
-                                            onClick={this.props.onClose}
-                                        />
-                                    )}
-                                </div>
-                            </ToolbarHeader>
+                            <ButtonAction
+                                text={
+                                    this.collapseButtons
+                                        ? "Open"
+                                        : "Open Project"
+                                }
+                                title="Open Project"
+                                className="btn-primary"
+                                onClick={() => {
+                                    ipcRenderer.send("open-project");
+                                }}
+                            />
+                            <SearchInput
+                                searchText={this.searchText}
+                                onClear={action(() => {
+                                    this.searchText = "";
+                                })}
+                                onChange={this.onSearchChange}
+                                onKeyDown={this.onSearchChange}
+                            />
+                            <IconAction
+                                icon={
+                                    this.sortAlphabetically
+                                        ? SORT_ALPHA_ICON
+                                        : SORT_RECENT_ICON
+                                }
+                                title={
+                                    this.sortAlphabetically
+                                        ? "Sort alphabetically"
+                                        : "Show most recent first"
+                                }
+                                onClick={this.toggleSort}
+                            />
                         </Header>
                         <Body>
-                            <div className="d-flex">
-                                <SearchInput
-                                    searchText={this.searchText}
-                                    onClear={action(() => {
-                                        this.searchText = "";
-                                    })}
-                                    onChange={this.onSearchChange}
-                                    onKeyDown={this.onSearchChange}
-                                />
-                                <div className="sort-button">
-                                    <IconAction
-                                        icon={
-                                            this.sortAlphabetically
-                                                ? SORT_ALPHA_ICON
-                                                : SORT_RECENT_ICON
-                                        }
-                                        title={
-                                            this.sortAlphabetically
-                                                ? "Sort alphabetically"
-                                                : "Show most recent first"
-                                        }
-                                        onClick={this.toggleSort}
-                                    />
-                                </div>
-                            </div>
                             <ListContainer tabIndex={0}>
                                 <List
                                     nodes={this.mru
@@ -929,18 +882,6 @@ const Projects = observer(
                                                                 mruItem.filePath
                                                             )}
                                                         </div>
-                                                        <Icon
-                                                            className="remove-icon"
-                                                            icon="material:close"
-                                                            title="Remove project from the list"
-                                                            onClick={event => {
-                                                                event.preventDefault();
-                                                                event.stopPropagation();
-                                                                settingsController.removeItemFromMRU(
-                                                                    mruItem
-                                                                );
-                                                            }}
-                                                        />
                                                     </div>
                                                 }
                                             />
@@ -958,6 +899,7 @@ const Projects = observer(
                                             node.data.filePath
                                         );
                                     }}
+                                    onContextMenu={this.onContextMenu}
                                 ></List>
                             </ListContainer>
                         </Body>
@@ -970,86 +912,222 @@ const Projects = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SAVED_OPTIONS_VERSION = 1;
+
+class HomeTabStore {
+    activeTab:
+        | "open"
+        | "create"
+        | "examples"
+        | "run"
+        | "instruments"
+        | "extensions"
+        | "settings" = "open";
+
+    constructor() {
+        this.loadOptions();
+
+        makeObservable(this, {
+            activeTab: observable
+        });
+
+        autorun(() => this.saveOptions());
+    }
+
+    loadOptions() {
+        const optionsJSON = window.localStorage.getItem("home-tab-options");
+        if (optionsJSON) {
+            try {
+                const options = JSON.parse(optionsJSON);
+                if (options.version == SAVED_OPTIONS_VERSION) {
+                    this.activeTab = options.activeTab;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+
+    saveOptions() {
+        window.localStorage.setItem(
+            "home-tab-options",
+            JSON.stringify({
+                version: SAVED_OPTIONS_VERSION,
+
+                activeTab: this.activeTab
+            })
+        );
+    }
+}
+
+export const homeTabStore = new HomeTabStore();
+
+////////////////////////////////////////////////////////////////////////////////
+
+const HOME_TAB_OPEN_ICON = (
+    <svg fill="currentColor" viewBox="0 0 256 256">
+        <path d="M245 110.64a16 16 0 0 0-13-6.64h-16V88a16 16 0 0 0-16-16h-69.33l-27.73-20.8a16.14 16.14 0 0 0-9.6-3.2H40a16 16 0 0 0-16 16v144a8 8 0 0 0 8 8h179.1a8 8 0 0 0 7.59-5.47l28.49-85.47a16.05 16.05 0 0 0-2.18-14.42ZM93.34 64l27.73 20.8a16.12 16.12 0 0 0 9.6 3.2H200v16H69.77a16 16 0 0 0-15.18 10.94L40 158.7V64Z" />
+    </svg>
+);
+
+const HOME_TAB_CREATE_ICON = (
+    <svg viewBox="0 0 24 24" fill="currentcolor">
+        <path fill="none" d="M0 0h24v24H0z" />
+        <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5v2H5v14h14v-5h2z" />
+        <path d="M21 7h-4V3h-2v4h-4v2h4v4h2V9h4z" />
+    </svg>
+);
+
+const HOME_TAB_EXAMPLES_ICON = (
+    <svg viewBox="0 0 32 32" fill="currentcolor">
+        <path d="M20 2v12l10-6-10-6z" />
+        <path d="M28 14v8H4V6h10V4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8v4H8v2h16v-2h-4v-4h8a2 2 0 0 0 2-2v-8h-2ZM18 28h-4v-4h4v4Z" />
+        <path d="M0 0h32v32H0z" fill="none" />
+    </svg>
+);
+
+const HOME_TAB_INSTRUMENTS_ICON = (
+    <svg viewBox="-50 -50 1124 1124" fill="currentcolor">
+        <path d="M128 896h896v128H0V0h128v896zm18.4-450.2 236.6-.2L443 205h81l74.4 318.6L662.6 314l81.4-.6L796.6 448l226.8-2.4.4 84H746.4l-41-104.2-60 289h-75l-89.6-333.2-32.6 148.4-301.8.2v-84z" />
+    </svg>
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const Home = observer(
     class Home extends React.Component {
-        constructor(props: {}) {
-            super(props);
-
-            makeObservable(this, {
-                selectInstrument: action.bound
-            });
-        }
-
-        selectInstrument(instrument: InstrumentObject) {
-            selectedInstrument.set(instrument.id);
-        }
-
-        get layoutModel() {
-            if (tabs.homeSectionsVisibilityOption == "both") {
-                return homeLayoutModels.projectsAndInstruments;
-            } else if (tabs.homeSectionsVisibilityOption == "projects") {
-                return homeLayoutModels.projects;
-            } else {
-                return homeLayoutModels.instruments;
-            }
-        }
-
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "Projects") {
-                return (
-                    <Projects
-                        onClose={() =>
-                            (tabs.homeSectionsVisibilityOption = "instruments")
-                        }
-                    />
-                );
-            }
-
-            if (component === "Wizard") {
-                return (
-                    <VerticalHeaderWithBody className="EezStudio_HomeTab_NewProjectWizard">
-                        <Header>
-                            <ToolbarHeader>
-                                <h5>New Project</h5>
-                                <div></div>
-                            </ToolbarHeader>
-                        </Header>
-                        <Body>
-                            <NewProjectWizard
-                                modalDialog={observable.box<any>()}
-                            />
-                        </Body>
-                    </VerticalHeaderWithBody>
-                );
-            }
-
-            if (component === "Instruments") {
-                return (
-                    <Workbench
-                        onClose={() =>
-                            (tabs.homeSectionsVisibilityOption = "projects")
-                        }
-                    />
-                );
-            }
-
-            return null;
-        };
-
         render() {
-            const showSectionButtonText =
-                tabs.homeSectionsVisibilityOption == "projects"
-                    ? "Show Instruments"
-                    : tabs.homeSectionsVisibilityOption == "instruments"
-                    ? "Show Projects"
-                    : null;
-
             return (
                 <div className="EezStudio_HomeTab">
-                    <div className="EezStudio_HomeTab_Tabs">
-                        <div className="EezStudio_HomeTab_TabsContainer">
+                    <div className="EezStudio_HomeTab_Header">
+                        <div className="EezStudio_HomeTab_Navigation">
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab == "open"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "open";
+                                })}
+                            >
+                                <Icon icon={HOME_TAB_OPEN_ICON} size={32} />{" "}
+                                Open
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab == "create"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "create";
+                                    wizardModel.switchToTemplates();
+                                })}
+                            >
+                                <Icon icon={HOME_TAB_CREATE_ICON} size={32} />{" "}
+                                Create
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab == "examples"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "examples";
+                                    wizardModel.switchToExamples();
+                                })}
+                            >
+                                <Icon icon={HOME_TAB_EXAMPLES_ICON} size={32} />{" "}
+                                Examples
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab == "run"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "run";
+                                })}
+                            >
+                                <Icon icon="material:apps" size={32} /> Run
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab ==
+                                            "instruments"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "instruments";
+                                })}
+                            >
+                                <Icon
+                                    icon={HOME_TAB_INSTRUMENTS_ICON}
+                                    size={32}
+                                />{" "}
+                                Instruments
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab ==
+                                            "extensions"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "extensions";
+                                })}
+                            >
+                                <Icon
+                                    icon={"material:extension"}
+                                    size={32}
+                                    attention={
+                                        extensionsManagerStore
+                                            .newVersionsInAllSections.length > 0
+                                    }
+                                />
+                                Extensions
+                            </div>
+                            <div
+                                className={classNames(
+                                    "EezStudio_HomeTab_NavigationItem",
+                                    {
+                                        selected:
+                                            homeTabStore.activeTab == "settings"
+                                    }
+                                )}
+                                onClick={action(() => {
+                                    homeTabStore.activeTab = "settings";
+                                })}
+                            >
+                                <Icon
+                                    icon={"material:settings"}
+                                    size={32}
+                                    attention={
+                                        settingsController.isCompactDatabaseAdvisable
+                                    }
+                                />
+                                Settings
+                            </div>
+                        </div>
+                        {/*
+                        <div className="EezStudio_HomeTab_Tabs">
                             {tabs.allTabs
                                 .filter(
                                     tab => tab.instance.category == "common"
@@ -1060,25 +1138,35 @@ export const Home = observer(
                                         tab={tab}
                                     />
                                 ))}
-                        </div>
-                        {showSectionButtonText && (
-                            <button
-                                key={"show-home-section"}
-                                className="btn btn btn-secondary"
-                                onClick={() =>
-                                    (tabs.homeSectionsVisibilityOption = "both")
-                                }
-                                title={showSectionButtonText + " Section"}
-                            >
-                                <span>{showSectionButtonText}</span>
-                            </button>
-                        )}
+                                </div>*/}
                     </div>
-                    <div className="EezStudio_HomeTab_Projects_And_Instruments">
-                        <FlexLayoutContainer
-                            model={this.layoutModel}
-                            factory={this.factory}
-                        />
+
+                    <div className="EezStudio_HomeTab_Body">
+                        {homeTabStore.activeTab == "open" && <Projects />}
+                        {homeTabStore.activeTab == "create" && (
+                            <NewProjectWizard
+                                modalDialog={observable.box<any>()}
+                            />
+                        )}
+                        {homeTabStore.activeTab == "examples" && (
+                            <NewProjectWizard
+                                modalDialog={observable.box<any>()}
+                            />
+                        )}
+                        {homeTabStore.activeTab == "run" && (
+                            <div style={{ margin: "auto" }}></div>
+                        )}
+                        {homeTabStore.activeTab == "instruments" && (
+                            <Workbench />
+                        )}
+                        {homeTabStore.activeTab == "extensions" && (
+                            <ExtensionsManager />
+                        )}
+                        {homeTabStore.activeTab == "settings" && (
+                            <div style={{ margin: "10px auto" }}>
+                                <Settings />
+                            </div>
+                        )}
                     </div>
                 </div>
             );

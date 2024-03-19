@@ -293,7 +293,11 @@ export class OpenProjectsManager {
             projectJs = fileData.toString("utf8");
         }
 
-        const project = loadProject(this.projectStore, projectJs) as Project;
+        const project = loadProject(
+            this.projectStore,
+            projectJs,
+            this.projectStore.runMode ? false : true
+        ) as Project;
 
         project._isDashboardBuild = isDashboardBuild;
 

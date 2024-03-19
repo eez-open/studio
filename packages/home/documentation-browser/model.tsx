@@ -213,7 +213,7 @@ class Model {
 
         const projectStore = await ProjectStore.create();
 
-        const project = loadProject(projectStore, jsonStr);
+        const project = loadProject(projectStore, jsonStr, false);
 
         projectStore.setProject(project, "");
 

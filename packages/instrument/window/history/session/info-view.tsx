@@ -5,6 +5,7 @@ import { confirm } from "eez-studio-ui/dialog-electron";
 import { TextAction, IconAction } from "eez-studio-ui/action";
 import { IAppStore } from "instrument/window/history/history";
 import { computed, makeObservable } from "mobx";
+import { homeTabStore } from "home/home-tab";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +61,9 @@ export const SessionInfo = observer(
                     </React.Fragment>
                 );
             } else {
+                if (homeTabStore.activeTab != "instruments") {
+                    return null;
+                }
                 body = (
                     <React.Fragment>
                         <TextAction

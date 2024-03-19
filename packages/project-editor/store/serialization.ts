@@ -49,10 +49,12 @@ export function createObject<T extends EezObject>(
 
 export function loadProject(
     projectStore: ProjectStore,
-    projectObjectOrString: any | string
+    projectObjectOrString: any | string,
+    makeEditable: boolean
 ): Project {
     currentProjectStore = projectStore;
     isLoadProject = true;
+    loadProjectMakeEditable = makeEditable;
     createNewObjectobjIDs = false;
     wireSourceChangedList = [];
 
@@ -124,6 +126,7 @@ export function objectToJson(
 let currentProjectStore: ProjectStore | undefined;
 let currentProject: Project | undefined;
 let isLoadProject: boolean;
+let loadProjectMakeEditable: boolean;
 let createNewObjectobjIDs: boolean;
 let flowsWireIDToObjID: Map<Flow, Map<string, string>> = new Map<
     Flow,
@@ -195,7 +198,9 @@ function loadObjectInternal(
             : new aClass();
 
         //
-        object.makeEditable();
+        if (!isLoadProject || loadProjectMakeEditable) {
+            object.makeEditable();
+        }
         //
     } catch (err) {
         // TODO we need much better error recovery here
@@ -204,7 +209,9 @@ function loadObjectInternal(
         object = new EezObject();
 
         //
-        object.makeEditable();
+        if (isLoadProject || loadProjectMakeEditable) {
+            object.makeEditable();
+        }
         //
         return object;
     }

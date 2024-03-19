@@ -568,6 +568,7 @@ export const MasterView = observer(
         render() {
             return (
                 <List
+                    className="EezStudio_ExtensionsManager_MasterView"
                     nodes={extensionsManagerStore.extensionNodes}
                     renderNode={node => (
                         <ExtensionInMasterView extension={node.data} />
@@ -666,7 +667,7 @@ export const ExtensionSections = observer(
             }
 
             return (
-                <div>
+                <div className="EezStudio_ExtensionsManager_DetailsView_Body">
                     <div style={{ marginTop: "10px" }}>
                         <ul className="nav nav-tabs">{navigationItems}</ul>
                     </div>
@@ -1118,11 +1119,13 @@ export const DetailsView = observer(
         render() {
             const extension = this.displayedExtension;
             if (!extension) {
-                return null;
+                return (
+                    <div className="EezStudio_ExtensionsManager_DetailsView"></div>
+                );
             }
 
             return (
-                <VerticalHeaderWithBody>
+                <VerticalHeaderWithBody className="EezStudio_ExtensionsManager_DetailsView">
                     <Header className="EezStudio_ExtensionDetailsHeader">
                         <div className="EezStudio_ExtensionDetailsHeaderImageContainer">
                             <img src={extension.image} width={256} />
@@ -1636,23 +1639,17 @@ export const ExtensionsList = observer(
 
 export const ExtensionsManager = observer(
     class ExtensionsManager extends React.Component {
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "Master") {
-                return <MasterView />;
-            }
-
-            if (component === "Details") {
-                return <DetailsView />;
-            }
-
-            return null;
-        };
-
         render() {
             return (
                 <div className="EezStudio_ExtensionsManager">
+                    <SearchInput
+                        searchText={extensionsManagerStore.searchText}
+                        onClear={action(() => {
+                            extensionsManagerStore.searchText = "";
+                        })}
+                        onChange={extensionsManagerStore.onSearchChange}
+                    />
+
                     <div className="EezStudio_ExtensionsManager_Navigation">
                         <div
                             className={classNames(
@@ -1753,31 +1750,23 @@ export const ExtensionsManager = observer(
                         </div>
                     </div>
 
-                    <SearchInput
-                        searchText={extensionsManagerStore.searchText}
-                        onClear={action(() => {
-                            extensionsManagerStore.searchText = "";
-                        })}
-                        onChange={extensionsManagerStore.onSearchChange}
-                    />
-
-                    {extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
-                        extensionsManagerStore.section,
-                        ViewFilter.ALL,
-                        extensionsManagerStore.searchText
-                    ).length > 0 ? (
-                        <>
-                            <ExtensionsManagerSubNavigation />
-
-                            <div className="EezStudio_ExtensionsManager_Body">
-                                <ExtensionsList />
+                    <div className="EezStudio_ExtensionsManager_Body">
+                        {extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
+                            extensionsManagerStore.section,
+                            ViewFilter.ALL,
+                            extensionsManagerStore.searchText
+                        ).length > 0 ? (
+                            <>
+                                <ExtensionsManagerSubNavigation />
+                                <MasterView />
+                                <DetailsView />
+                            </>
+                        ) : (
+                            <div className="EezStudio_ExtensionsManager_NoExtensions">
+                                No extension found
                             </div>
-                        </>
-                    ) : (
-                        <div className="EezStudio_ExtensionsManager_NoExtensions">
-                            No extension found
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             );
         }

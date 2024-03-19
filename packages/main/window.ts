@@ -7,7 +7,10 @@ import {
     settingsSetWindowBoundsIntoParams
 } from "main/settings";
 import { sourceRootDir } from "eez-studio-shared/util";
-import { PROJECT_TAB_ID_PREFIX } from "home/tabs-store-conf";
+import {
+    PROJECT_TAB_ID_PREFIX,
+    RUN_PROJECT_TAB_ID_PREFIX
+} from "home/tabs-store-conf";
 
 export interface IWindowSate {
     modified: boolean;
@@ -25,6 +28,7 @@ export interface IWindowParams {
 type ActiveTabType =
     | "instrument"
     | "project"
+    | "run-project"
     | "home"
     | "history"
     | "shortcutsAndGroups"
@@ -253,6 +257,8 @@ ipcMain.on("tabs-change", (event, tabs: { id: string; active: boolean }[]) => {
             if (activeTab) {
                 if (activeTab.id.startsWith(PROJECT_TAB_ID_PREFIX)) {
                     activeTabType = "project";
+                } else if (activeTab.id.startsWith(RUN_PROJECT_TAB_ID_PREFIX)) {
+                    activeTabType = "run-project";
                 } else if (Number.parseInt(activeTab.id) != undefined) {
                     activeTabType = "instrument";
                 } else {

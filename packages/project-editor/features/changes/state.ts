@@ -762,7 +762,7 @@ async function getRevisionProject(
 
     runInAction(() => {
         revisionProjectStore.setProject(
-            loadProject(revisionProjectStore, content) as Project,
+            loadProject(revisionProjectStore, content, false) as Project,
             undefined
         );
     });

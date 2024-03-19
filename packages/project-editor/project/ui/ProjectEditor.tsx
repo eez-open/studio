@@ -67,6 +67,10 @@ export const ProjectEditorView = observer(
                 return <MissingExtensions />;
             }
 
+            if (this.context.runMode && !this.context.runtime) {
+                return <div className="EezStudio_ProjectEditorWrapper" />;
+            }
+
             return (
                 <div className="EezStudio_ProjectEditorWrapper">
                     <div className="EezStudio_ProjectEditorMainContentWrapper">

@@ -18,7 +18,6 @@ import {
     autorun
 } from "mobx";
 import { observer } from "mobx-react";
-import * as FlexLayout from "flexlayout-react";
 
 import {
     fetchUrlOrReadFromCache,
@@ -32,10 +31,8 @@ import { showDialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { Icon } from "eez-studio-ui/icon";
 
-import { homeLayoutModels } from "home/home-layout-models";
 import { openProject } from "home/tabs-store";
 
 import {
@@ -1674,7 +1671,7 @@ class WizardModel {
 
                 this.saveOptions(SaveOptionsFlags.All);
 
-                openProject(projectFilePath);
+                openProject(projectFilePath, false);
 
                 runInAction(() => {
                     this.name = undefined;
@@ -1769,7 +1766,7 @@ class WizardModel {
     }
 }
 
-const wizardModel = new WizardModel();
+export const wizardModel = new WizardModel();
 
 const FoldersTree = observer(
     class FoldersTree extends React.Component {
@@ -2068,7 +2065,7 @@ const ProjectProperties = observer(
 
         render() {
             if (wizardModel.type == undefined) {
-                return null;
+                return <div></div>;
             }
 
             if (wizardModel.createProjectInProgress) {
@@ -2534,26 +2531,6 @@ export const NewProjectWizard = observer(
             wizardModel.unmount();
         }
 
-        factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component === "FoldersTree") {
-                return <FoldersTree />;
-            }
-
-            if (component === "ProjectTypesList") {
-                return <ProjectTypesList />;
-            }
-
-            if (component === "ProjectProperties") {
-                return (
-                    <ProjectProperties modalDialog={this.props.modalDialog} />
-                );
-            }
-
-            return null;
-        };
-
         render() {
             return (
                 <div
@@ -2561,50 +2538,6 @@ export const NewProjectWizard = observer(
                         disabled: wizardModel.createProjectInProgress
                     })}
                 >
-                    <div className="EezStudio_NewProjectWizard_Navigation">
-                        <div
-                            className={classNames(
-                                "EezStudio_NewProjectWizard_NavigationItem",
-                                { selected: wizardModel.section == "templates" }
-                            )}
-                            onClick={wizardModel.switchToTemplates}
-                        >
-                            <Count
-                                label="Templates"
-                                count={
-                                    wizardModel.searchText
-                                        ? wizardModel.allTemplateProjectTypes
-                                              .length
-                                        : undefined
-                                }
-                                attention={false}
-                            />
-                        </div>
-                        <div
-                            className={classNames(
-                                "EezStudio_NewProjectWizard_NavigationItem",
-                                { selected: wizardModel.section == "examples" }
-                            )}
-                            onClick={wizardModel.switchToExamples}
-                        >
-                            <Count
-                                label="Examples"
-                                count={
-                                    wizardModel.searchText
-                                        ? wizardModel.exampleProjectTypes.get(
-                                              "_allExamples"
-                                          )!.length
-                                        : undefined
-                                }
-                                attention={
-                                    wizardModel.exampleProjectTypes.get(
-                                        "_newExamples"
-                                    )!.length > 0
-                                }
-                            />
-                        </div>
-                    </div>
-
                     <SearchInput
                         searchText={wizardModel.searchText}
                         onClear={action(() => {
@@ -2615,14 +2548,14 @@ export const NewProjectWizard = observer(
 
                     <div className="EezStudio_NewProjectWizard_Body">
                         {wizardModel.folders.children.length > 0 ? (
-                            <FlexLayoutContainer
-                                model={
-                                    this.props.modalDialog.get()
-                                        ? homeLayoutModels.newProjectWizardDialog
-                                        : homeLayoutModels.newProjectWizard
-                                }
-                                factory={this.factory}
-                            />
+                            <>
+                                <div className="EezStudio_NewProjectWizard_Space"></div>
+                                <FoldersTree />
+                                <ProjectTypesList />
+                                <ProjectProperties
+                                    modalDialog={this.props.modalDialog}
+                                />
+                            </>
                         ) : (
                             <div className="EezStudio_NewProjectWizard_NoProjects">
                                 No{" "}

@@ -5,10 +5,9 @@ import { configure } from "mobx";
 
 require("@electron/remote/main").initialize();
 
-import { setup } from "setup/setup";
-
 import type * as HomeWindowModule from "main/home-window";
 import { unloadVisa } from "instrument/connection/interfaces/visa-dll";
+import { setup } from "main/setup";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;

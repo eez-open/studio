@@ -24,9 +24,7 @@ import {
     ViewFilter,
     downloadAndInstallExtension
 } from "home/extensions-manager/extensions-manager";
-import { onSetupSkip, tabs } from "./tabs-store";
-
-import { firstTime } from "./first-time";
+import { tabs } from "./tabs-store";
 
 const BB3_INSTRUMENT_EXTENSION_ID = "687b6dee-2093-4c36-afb7-cfc7ea2bf262";
 const BB3_INSTRUMENT_MANUFACTURER = "EEZ";
@@ -157,6 +155,10 @@ export async function onAddInstrument(
         await new Promise(resolve => setTimeout(resolve, 500));
 
         try {
+            console.log(
+                "downloadAndInstallExtension",
+                extensionVersions.latestVersion
+            );
             installedVersion = await downloadAndInstallExtension(
                 extensionVersions.latestVersion,
                 0,
@@ -201,10 +203,6 @@ export async function onAddInstrument(
     if (onAddCallback) {
         onAddCallback(instrumentId);
     } else {
-        runInAction(() => {
-            firstTime.set(false);
-        });
-
         setTimeout(() => {
             tabs.openTabById(instrumentId, true);
         }, 50);
@@ -218,7 +216,7 @@ function onTryAgain() {
     });
 }
 
-export const Setup = observer(({ onlyBody }: { onlyBody: boolean }) => {
+export const Setup = observer(() => {
     if (setupState.extensionInstalling) {
         const buttonsContainerClassName = classNames(
             "d-flex justify-content-between mt-3 mb-5",
@@ -275,16 +273,8 @@ export const Setup = observer(({ onlyBody }: { onlyBody: boolean }) => {
     } else {
         return (
             <div className="d-flex flex-column justify-content-center align-items-center h-100">
-                {!onlyBody && (
-                    <h3>Add Instrument{firstTime.get() ? " or Skip" : ""}</h3>
-                )}
                 <div
-                    className={classNames(
-                        "d-flex justify-content-center h-50",
-                        {
-                            "mt-3": !onlyBody
-                        }
-                    )}
+                    className={classNames("d-flex justify-content-center h-50")}
                     style={{ minHeight: 220, maxHeight: 400, width: "100%" }}
                 >
                     <List
@@ -304,32 +294,6 @@ export const Setup = observer(({ onlyBody }: { onlyBody: boolean }) => {
                         tabIndex={0}
                     />
                 </div>
-                {!onlyBody && (
-                    <div className="d-flex justify-content-between mt-3 mb-5">
-                        <button
-                            className={"btn px-3 me-4"}
-                            onClick={event => {
-                                event.preventDefault();
-                                onSetupSkip();
-                            }}
-                        >
-                            Skip
-                        </button>
-                        <button
-                            className="btn btn-lg btn-primary px-5"
-                            disabled={
-                                !setupState.selectedManufacturer ||
-                                !setupState.selectedExtensionId
-                            }
-                            onClick={async event => {
-                                event.preventDefault();
-                                onAddInstrument(undefined);
-                            }}
-                        >
-                            Add
-                        </button>
-                    </div>
-                )}
             </div>
         );
     }

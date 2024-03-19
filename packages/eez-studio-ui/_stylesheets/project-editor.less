@@ -1,0 +1,2748 @@
+.EezStudio_ProjectEditorPanelTitle {
+    margin-top: 4px;
+}
+
+.EezStudio_ProjectEditorPanelTitleText {
+    font-weight: 600;
+    color: @darkTextColor;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.EezStudio_ProjectEditors {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    > div:nth-child(1) {
+        background-color: @panelHeaderColor;
+        border-bottom: 1px solid @borderColor;
+    }
+    > div:nth-child(2) {
+        flex-grow: 1;
+        display: flex;
+    }
+}
+
+.EezStudio_ImportDirectiveCustomUIContainer {
+    & > button {
+        margin-right: 10px;
+    }
+}
+
+.EezStudio_ProjectEditorWrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+
+    .error {
+        color: @errorColor;
+    }
+
+    .warning {
+        color: orange;
+    }
+
+    .btn-toolbar > button,
+    .btn-toolbar > .btn-group {
+        margin-right: 10px;
+    }
+
+    .btn-toolbar > button:last-child,
+    .btn-toolbar > .btn-group:last-child {
+        margin-right: 0;
+    }
+
+    .btn-group > button {
+        margin-right: 2px !important;
+    }
+}
+
+.EezStudio_ProjectEditorMainContentWrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+
+    > .EezStudio_ToolbarNav {
+        min-height: 45px;
+    }
+}
+
+.EezStudio_SettingsEditor {
+    padding: 10px;
+    overflow: auto;
+
+    .EezStudio_ProjectEditor_PropertyGrid {
+        position: static;
+        overflow: visible;
+    }
+
+    .EezStudio_SettingsEditor_FeatureIcon {
+        margin-right: 5px;
+        & > svg {
+            width: 32px;
+            height: 32px;
+        }
+    }
+}
+
+.EezStudio_StyleEditorImg {
+    display: block;
+    padding: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.EezStudio_ColorItem {
+    width: calc(100% - 20px);
+
+    display: flex !important;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    & > span {
+        flex-grow: 1;
+        flex-shrink: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    & > input {
+        cursor: pointer;
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 24px;
+        height: 15px;
+        margin: 3px 5px 3px 3px;
+        border: none;
+        padding: 0;
+    }
+}
+
+.EezStudio_DebuggerPanel {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    overflow: hidden;
+
+    .EezStudio_SimpleTree {
+        height: 100%;
+        overflow: auto;
+    }
+
+    .running-flow {
+        display: inline-flex;
+        align-items: center;
+
+        .error {
+            color: @errorColor!important;
+        }
+    }
+
+    .log-item {
+        display: inline-flex;
+        align-items: center;
+
+        cursor: pointer;
+        white-space: nowrap;
+
+        small {
+            margin-right: 5px;
+        }
+
+        &.fatal,
+        &.error {
+            color: @errorColor!important;
+        }
+
+        &.warning {
+            color: orange;
+        }
+
+        &.scpi {
+            color: @debuggerPanelLogItemScpi;
+        }
+
+        &.debug {
+            color: 0xaaa;
+        }
+
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor!important;
+        }
+    }
+
+    .EezStudio_DebuggerVariablesTable {
+        * {
+            user-select: text;
+        }
+        height: 100%;
+        overflow: auto;
+        table {
+            table-layout: fixed;
+            //border-collapse: separate !important;
+
+            .colValue {
+                span {
+                    white-space: pre;
+                }
+                overflow-x: auto;
+                text-overflow: unset;
+                cursor: text;
+            }
+        }
+    }
+
+    .maximize-icon {
+        color: @textColor;
+    }
+}
+
+.EezStudio_ComponentsPalette_Enclosure {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        flex-grow: 0;
+        display: flex;
+        flex-direction: row;
+        border-bottom: 1px solid @borderColor;
+
+        .EezStudio_SearchInput {
+            flex-grow: 1;
+        }
+    }
+
+    .EezStudio_ComponentsPalette {
+        flex-grow: 1;
+        overflow: auto;
+
+        .eez-component-palette-group {
+            border: none;
+            border-radius: 0;
+
+            & > div:not(.eez-component-palette-header) {
+                padding-left: 10px;
+            }
+        }
+
+        .eez-component-palette-group:not(:last-child) {
+            margin-bottom: 0px;
+        }
+
+        .eez-component-palette-header {
+            padding: 2px 2px 2px 5px;
+            border: none;
+            background: none;
+        }
+
+        .eez-component-palette-body {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            align-items: flex-start;
+            padding: 2px;
+        }
+
+        .eez-component-palette-item {
+            margin: 2px;
+            padding: 4px;
+            cursor: grab;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 120px;
+            border-radius: 3px;
+
+            & > img,
+            & > svg {
+                flex-shrink: 0;
+                height: 20px;
+                object-fit: contain;
+                margin-right: 4px;
+            }
+
+            & > span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            &.selected {
+                background-color: @nonFocusedSelectionBackgroundColor;
+                color: @nonFocusedSelectionColor;
+            }
+        }
+
+        &:focus {
+            .eez-component-palette-item {
+                &:hover {
+                    background-color: @hoverBackgroundColor;
+                    color: @hoverColor;
+                }
+
+                &.selected {
+                    background-color: @selectionBackgroundColor;
+                    color: @selectionColor;
+                }
+
+                &.dragging {
+                    background-color: @dragSourceBackgroundColor !important;
+                    color: @dragSourceColor !important;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_Search {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_ToolbarSearch {
+        background-color: @panelHeaderColor;
+        padding: 5px 5px 5px 2px;
+
+        display: flex;
+        align-items: flex-start;
+
+        border-bottom: 1px solid @panelBorderColor;
+
+        .btn-group {
+            margin-right: 5px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+
+        .EezStudio_ToolbarSearch_Sections {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+
+            .EezStudio_ToolbarSearch_SearchSection {
+                display: flex;
+
+                & > input.search-input,
+                & > input.search-replace-input {
+                    margin-right: 5px;
+                }
+
+                & > input.search-input.empty {
+                    font-family: "Material Icons";
+                }
+            }
+
+            .EezStudio_ToolbarSearch_ReplaceSection {
+                display: flex;
+                margin-top: 4px;
+                & > input.replace-input {
+                    margin-right: 5px;
+                }
+            }
+        }
+    }
+
+    .EezStudio_Messages {
+        overflow: auto;
+    }
+}
+
+.EezStudio_ProjectEditor_References {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_ToolbarReferences {
+        background-color: @panelHeaderColor;
+        padding: 5px 5px;
+
+        display: flex;
+        justify-content: flex-end;
+
+        border-bottom: 1px solid @panelBorderColor;
+
+        .btn-group {
+            margin-right: 5px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    .EezStudio_Messages {
+        overflow: auto;
+    }
+}
+
+.EezStudio_ProjectEditor_Shortcuts {
+    height: 100%;
+}
+
+.EezStudio_ProjectEditor_ListNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+        min-height: 28px;
+    }
+
+    .EezStudio_SortControl {
+        font-weight: 600;
+        color: @darkTextColor;
+
+        width: 19px;
+
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-position-y: 2px;
+        padding-left: 20px;
+        cursor: pointer;
+
+        &.sort-asc {
+            background-image: url("../_images/col_sort_asc.png");
+        }
+
+        &.sort-desc {
+            background-image: url("../_images/col_sort_desc.png");
+        }
+
+        &.sort-none {
+            background-image: url("../_images/col_sort_enabled.png");
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    .EezStudio_Tree {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+}
+
+.EezStudio_PropertiesPanel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .header {
+        flex-shrink: 0;
+        flex-grow: 0;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 4px 11px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+.EezStudio_StylePreviewContainer {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+
+    .EezStudio_StylePreview {
+        display: flex;
+        flex-grow: 1;
+        margin-right: 10px;
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
+.EezStudio_ThemedColorInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    padding: 1px 6px;
+}
+
+.EezStudio_ThemedColorInput_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownButton {
+    border-color: @formControlBorderColor;
+    padding: 1px 6px;
+}
+
+.EezStudio_ObjectReferenceInput_DropdownContent {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    div:nth-child(1) {
+        .EezStudio_SearchInput {
+            border-bottom: 1px solid @borderColor;
+        }
+    }
+
+    div:nth-child(2) {
+        height: 240px;
+        overflow: auto;
+        ul {
+            margin: 0;
+            padding: 5px;
+
+            li {
+                list-style: none;
+                cursor: pointer;
+                &:hover {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_VariableTypeSelect {
+    font-size: 0.8rem;
+
+    padding: 0;
+    margin: 0;
+
+    border-radius: 4px;
+    overflow: hidden;
+
+    & > div {
+        height: 240px;
+        overflow: auto;
+        ul {
+            margin: 0;
+            padding: 5px;
+
+            & > div {
+                > div:nth-child(1) {
+                    margin-top: 5px;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    font-size: smaller;
+                }
+                > div:nth-child(2) {
+                    margin-left: 20px;
+                }
+            }
+
+            li {
+                list-style: none;
+                cursor: pointer;
+                &:hover {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+            }
+        }
+    }
+}
+
+.EezStudio_VariableTypeSelect_DropdownButton {
+    border-color: @formControlBorderColor;
+    padding: 1px 6px;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+.EezStudio_FlowCanvasContainer {
+    all: initial;
+
+    box-sizing: border-box;
+
+    font-family: "EEZ Studio Font" !important;
+
+    pre {
+        font-family: "EEZ Studio Font Monospace" !important;
+        font-size: 80%;
+    }
+
+    font-size: 0.8rem;
+
+    .EezStudio_ComponentEnclosure {
+        display: block;
+        position: absolute;
+
+        &.eez-action {
+            display: flex;
+            flex-direction: column;
+
+            background-color: @componentBackgroundColor;
+            border-radius: 4px;
+
+            box-shadow: @componentShadow;
+
+            overflow: hidden;
+
+            .title-enclosure {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                position: relative;
+
+                .title {
+                    flex-grow: 1;
+                    padding: 4px 0;
+                    background-color: #3fadb5;
+                    color: #333;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    white-space: nowrap;
+                    border-top-left-radius: 3px;
+                    border-top-right-radius: 3px;
+
+                    &.empty-content {
+                        border-bottom-left-radius: 3px;
+                        border-bottom-right-radius: 3px;
+                    }
+
+                    span {
+                        padding-left: 6px;
+                    }
+
+                    span:last-child {
+                        padding-right: 6px;
+                    }
+
+                    .title-image {
+                        display: flex;
+
+                        svg {
+                            vertical-align: baseline;
+                            height: 16px;
+                        }
+
+                        img {
+                            height: 16px;
+                            object-fit: contain;
+                        }
+                    }
+
+                    .title-text {
+                        flex-grow: 1;
+                        white-space: nowrap;
+                    }
+
+                    .title-info-execution {
+                        position: absolute;
+                        left: 0px;
+                        top: -22px;
+                        color: white;
+                        background-color: #999;
+                        padding: 0 0 0 2px;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 3px;
+                    }
+                }
+            }
+
+            .content {
+                display: flex;
+                flex-direction: row;
+
+                &:not(.empty) {
+                    padding: 3px 0;
+                }
+
+                .inputs,
+                .outputs {
+                    padding: 2px;
+                    font-size: 90%;
+                    flex-grow: 1;
+                }
+
+                .inputs {
+                    text-align: left;
+                }
+
+                .outputs {
+                    text-align: right;
+                }
+
+                .body {
+                    > * {
+                        user-select: text;
+                    }
+
+                    box-shadow: @componentBodyShadow;
+                    border-radius: 4px;
+
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    flex-wrap: nowrap;
+
+                    margin: 2px;
+                    border: 1px solid @borderColor;
+                    background-color: @componentBody;
+
+                    color: @textColor;
+
+                    pre {
+                        padding: 3px 5px 2px 5px;
+                        display: flex;
+                        flex-wrap: nowrap;
+                    }
+
+                    pre:not(:last-child) {
+                        border-bottom: 1px dotted @borderColor;
+                    }
+                }
+
+                pre {
+                    margin-bottom: 0;
+                }
+            }
+
+            &.LabelInActionComponent,
+            &.LabelOutActionComponent {
+                background-color: transparent;
+                border-radius: 0;
+                box-shadow: none;
+
+                > .title-enclosure {
+                    background-color: transparent;
+                    > svg {
+                        position: absolute;
+                        fill: transparent;
+                        stroke: @textColor;
+                    }
+                    > .title {
+                        background-color: transparent !important;
+                        border-radius: 0;
+                        padding-left: 0 !important;
+                        padding-right: 0 !important;
+                        height: 24px !important;
+                        background-color: transparent;
+                        text-align: center;
+                        color: @textColor;
+                    }
+                }
+            }
+
+            &.LabelInActionComponent {
+                > .title-enclosure {
+                    > .title {
+                        padding-right: 12px !important;
+                    }
+                }
+            }
+
+            &.LabelOutActionComponent {
+                > .title-enclosure {
+                    > .title {
+                        padding-left: 12px !important;
+                    }
+                }
+            }
+        }
+
+        &.eez-widget {
+            --size: 6px;
+
+            .inputs,
+            .outputs {
+                z-index: 1;
+                position: absolute;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                top: 0;
+                width: var(--width);
+                height: 100%;
+            }
+
+            .inputs {
+                left: 0;
+            }
+
+            .outputs {
+                right: 0;
+            }
+        }
+
+        &.Button,
+        &.ButtonWidget,
+        &.ButtonDashboardWidget {
+            > button {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                line-height: normal;
+                display: block;
+                > span.expression {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-family: "EEZ Studio Font Monospace";
+                    font-size: 0.875em;
+                    max-width: 100%;
+                    display: inline-block;
+                }
+            }
+        }
+
+        &.Text,
+        &.TextWidget,
+        &.TextDashboardWidget {
+            > span {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                & > span.expression {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-family: "EEZ Studio Font Monospace";
+                    font-size: 0.875em;
+                }
+            }
+        }
+
+        &.TextInputDashboardWidget,
+        &.TextInputWidget,
+        &.NumberInputDashboardWidget {
+            input {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.ProgressDashboardWidget {
+            .progress {
+                height: 100%;
+            }
+        }
+
+        &.CheckboxWidget,
+        &.CheckboxDashboardWidget {
+            & > div {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                min-height: auto;
+                display: flex;
+                align-items: center;
+                label {
+                    padding-left: 4px;
+                }
+            }
+        }
+
+        &.RadioWidget,
+        &.RadioDashboardWidget {
+            & > div {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                min-height: auto;
+                display: flex;
+                align-items: center;
+                label {
+                    padding-left: 4px;
+                }
+            }
+        }
+
+        &.DropDownListDashboardWidget {
+            select {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.SliderDashboardWidget {
+            input {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        &.SwitchDashboardWidget {
+            .form-check {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+                margin: 0;
+                input {
+                    width: 100% !important;
+                    height: 100% !important;
+                    padding: 0;
+                    margin: 0;
+                }
+            }
+        }
+
+        &.MarkdownWidget {
+            overflow: auto !important;
+        }
+
+        &.EEZChartWidget {
+            & > div {
+                width: 100%;
+                height: 100%;
+                & > .EezStudio_ChartPreview {
+                    width: 100%;
+                    height: 100%;
+                    & > .EezStudio_ChartView {
+                        width: 100%;
+                        height: 100%;
+                        padding: 0;
+                    }
+                }
+            }
+        }
+
+        &.enabled-breakpoint::before,
+        &.disabled-breakpoint::before {
+            z-index: 1;
+            content: "BREAKPOINT";
+            font-size: 80%;
+            position: absolute;
+            top: -24px;
+            padding: 0 8px;
+            border-radius: 2px;
+        }
+
+        &.enabled-breakpoint::before {
+            border: 2px solid blue;
+            background-color: blue;
+            color: white;
+        }
+
+        &.disabled-breakpoint::before {
+            border: 2px solid blue;
+        }
+
+        .EezStudio_ScpiBody {
+            padding-top: 0 !important;
+            & > div:first-child {
+                white-space: nowrap;
+                border-bottom: 1px solid @borderColor;
+            }
+        }
+    }
+
+    .eez-action {
+        .seq-connection,
+        .data-connection {
+            @d: 6px;
+
+            &.input,
+            &.output {
+                position: absolute;
+                width: 29px;
+                height: 100%;
+
+                &:before {
+                    content: "";
+                    position: absolute;
+                    display: block;
+                    top: calc(50% - @d / 2);
+                    width: @d;
+                    height: @d;
+                    //border-radius: @d / 2;
+                }
+            }
+
+            &.input {
+                &:before {
+                    left: -@d / 2;
+                }
+            }
+
+            &.output {
+                &:before {
+                    right: -@d / 2;
+                }
+            }
+        }
+
+        .seq-connection {
+            &.input.optional,
+            &.output.optional {
+                &:before {
+                    border: 1px solid @seqConnectionLineColor;
+                }
+            }
+
+            &.input:not(.optional),
+            &.output:not(.optional) {
+                &:before {
+                    background-color: @seqConnectionLineColor;
+                }
+            }
+
+            &.input {
+                left: 0;
+            }
+
+            &.output {
+                right: 0;
+            }
+        }
+
+        .data-connection {
+            &.input.optional,
+            &.output.optional {
+                &:before {
+                    border: 1px solid @connectionLineColor;
+                }
+            }
+
+            &.input:not(.optional),
+            &.output:not(.optional) {
+                &:before {
+                    background-color: @connectionLineColor;
+                }
+            }
+
+            &.input {
+                left: -2px;
+            }
+
+            &.output {
+                right: -2px;
+            }
+        }
+
+        .connection-input-label,
+        .connection-output-label {
+            &.error {
+                color: @errorColor!important;
+            }
+
+            .output {
+                width: 100%;
+            }
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            padding: 2px 5px;
+
+            white-space: nowrap;
+
+            position: relative;
+
+            color: @textColor;
+        }
+
+        .connection-input-label {
+            .input {
+                width: 100%;
+            }
+        }
+
+        .connection-output-label {
+            &.output {
+                width: 100%;
+            }
+            justify-content: flex-end;
+        }
+
+        [data-connection-output-id].error {
+            color: @errorColor;
+        }
+
+        .title-enclosure {
+            min-width: 87px;
+        }
+    }
+
+    .eez-widget {
+        [data-connection-input-id],
+        [data-connection-output-id] {
+            position: relative;
+
+            &:before {
+                content: "";
+                position: absolute;
+                top: -4px;
+                left: -6px;
+                width: 20px;
+                height: 18px;
+            }
+
+            background-color: #999;
+
+            margin-bottom: var(--size);
+
+            width: var(--size);
+            height: calc(var(--size) * 2);
+        }
+
+        [data-connection-input-id] {
+            margin-left: calc(var(--size) / -1);
+        }
+
+        [data-connection-output-id] {
+            margin-right: calc(var(--size) / -1);
+        }
+
+        [data-connection-input-id] {
+            border-bottom-left-radius: calc(var(--size) * 2 - 2px);
+            border-top-left-radius: calc(var(--size) * 2 - 2px);
+            border-bottom-right-radius: 2px;
+            border-top-right-radius: 2px;
+        }
+
+        [data-connection-output-id] {
+            border-bottom-left-radius: 2px;
+            border-top-left-radius: 2px;
+            border-bottom-right-radius: calc(var(--size) * 2 - 2px);
+            border-top-right-radius: calc(var(--size) * 2 - 2px);
+        }
+
+        [data-connection-input-id]:last-child,
+        [data-connection-output-id]:last-child {
+            margin-bottom: 0;
+        }
+
+        [data-connection-input-id].seq,
+        [data-connection-output-id].seq {
+            background-color: @seqConnectionLineColor;
+        }
+    }
+
+    .EezStudio_Plotly {
+        position: relative;
+        &:not(.interactive) * {
+            pointer-events: none !important;
+        }
+    }
+
+    .EezStudio_CommentActionComponent {
+        background-color: #fff5c2 !important;
+        border: 0 !important;
+
+        .title-enclosure {
+            overflow: hidden;
+
+            svg {
+                fill-opacity: 30%;
+            }
+        }
+
+        & > .content {
+            width: 100%;
+            height: 100%;
+            padding: 0 !important;
+        }
+
+        .EezStudio_TrixEditor {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #fff5c2;
+            color: @textColor;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+
+            .trix-button-group {
+                border: none !important;
+                margin-bottom: 5px;
+            }
+
+            .trix-button {
+                border: none !important;
+                font-size: 80%;
+            }
+
+            trix-editor {
+                border: none;
+                border-top: 1px solid #e0e0e0;
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+                min-height: 2rem;
+                color: #333;
+            }
+
+            trix-toolbar .trix-button-group:not(:first-child) {
+                margin-left: 5px;
+            }
+
+            trix-toolbar {
+                visibility: hidden;
+                position: absolute;
+                top: -55px;
+                left: 0px;
+                background-color: @panelHeaderColor;
+                border: 1px solid @borderColor;
+                padding-top: 3px;
+            }
+        }
+    }
+
+    .EezStudio_ActionComponentDescription {
+        position: absolute;
+        top: calc(100% + 4px);
+        background-color: #fff5c2 !important;
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: @componentShadow;
+        width: 100%;
+    }
+
+    &.EezStudio_FlowEditorCanvasContainer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: @backgroundColor;
+
+        cursor: default;
+
+        & > * {
+            user-select: none;
+        }
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .EezStudio_FlowEditorSelection_SelectedObject {
+            pointer-events: none;
+            border: 1px solid @selectionBackgroundColor;
+        }
+
+        .EezStudio_FlowEditorSelection_BoundingRect {
+            border: 2px solid @selectionBackgroundColor;
+            box-shadow: 2px 2px 4px rgba(128, 128, 128, 0.4);
+        }
+
+        .EezStudio_FlowEditorSelection_ResizeHandle {
+            position: absolute;
+            background-color: white;
+            border: 1px solid @selectionBackgroundColor;
+        }
+
+        .EezStudio_FlowEditorSelection_SelectedObjectsParent {
+            pointer-events: none;
+            border: 2px dotted magenta;
+        }
+
+        .connection-line-path {
+            stroke: @connectionLineColor;
+            marker-start: url(#lineStart);
+            marker-end: url(#lineEnd);
+
+            &.seq {
+                stroke: @seqConnectionLineColor;
+                marker-start: url(#seqLineStart);
+                marker-end: url(#seqLineEnd);
+            }
+
+            &.selected {
+                stroke: @selectedConnectionLineColor;
+                marker-start: url(#selectedLineStart);
+                marker-end: url(#selectedLineEnd);
+            }
+        }
+
+        .connection-line:hover .connection-line-path {
+            stroke: @selectedConnectionLineColor !important;
+            marker-start: url(#selectedLineStart) !important;
+            marker-end: url(#selectedLineEnd) !important;
+            fill: none;
+        }
+
+        [data-connection-input-id]:hover {
+            color: @selectionColor!important;
+            background-color: @selectionBackgroundColor!important;
+            opacity: 0.5;
+            cursor: crosshair;
+        }
+
+        [data-connection-output-id]:hover {
+            color: @selectionColor!important;
+            background-color: @selectionBackgroundColor!important;
+            opacity: 0.5;
+            cursor: crosshair;
+        }
+
+        .title [data-connection-output-id]:hover {
+            color: @lightSelectionColor!important;
+            background-color: @lightSelectionBackgroundColor!important;
+        }
+
+        & > div:not(.EezStudio_FlowCanvasContainer_DragAndDropActive) {
+            .EezStudio_ComponentEnclosure {
+                pointer-events: all !important;
+            }
+
+            .EezStudio_ComponentEnclosure.not-visible-in-select-widget {
+                pointer-events: none !important;
+                .EezStudio_ComponentEnclosure {
+                    pointer-events: none !important;
+                }
+            }
+        }
+
+        .EezStudio_ComponentEnclosure {
+            overflow: visible;
+
+            &.not-visible-in-select-widget {
+                opacity: 0.05;
+            }
+
+            &.eez-widget {
+                > * {
+                    cursor: default !important;
+                    pointer-events: none;
+                }
+
+                > .inputs,
+                > .outputs {
+                    pointer-events: all;
+                }
+            }
+
+            &.TerminalWidget {
+                .xterm {
+                    overflow: hidden !important;
+                    .xterm-viewport {
+                        overflow-y: auto;
+                    }
+                }
+            }
+        }
+
+        .EezStudio_FlowEditorSelection {
+            position: absolute;
+            cursor: move;
+        }
+    }
+
+    &.EezStudio_FlowViewerCanvasContainer {
+        font-size: 0.8rem;
+
+        width: 100%;
+        height: 100%;
+        background-color: @backgroundColor;
+
+        &.runMode {
+            position: relative;
+        }
+
+        & > * {
+            user-select: none;
+        }
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .EezStudio_FlowRuntimeSelection_SelectedObject {
+            border: 2px solid @selectionBackgroundColor;
+            box-shadow: 0 0 5px @selectionBackgroundColor;
+            border-radius: 6px;
+        }
+
+        .EezStudio_FlowRuntimeSelection_SelectedObject.source {
+            border: 1px dashed @selectionBackgroundColor;
+            border-radius: 6px;
+        }
+
+        .connection-line-path {
+            stroke: @connectionLineColor;
+            marker-start: url(#lineStart);
+            marker-end: url(#lineEnd);
+
+            &.seq {
+                stroke: @seqConnectionLineColor;
+                marker-start: url(#seqLineStart);
+                marker-end: url(#seqLineEnd);
+            }
+
+            &.selected {
+                stroke: @selectionBackgroundColor;
+                marker-start: url(#selectedLineStartInViewer);
+                marker-end: url(#selectedLineEndInViewer);
+                stroke-width: 1px !important;
+                stroke-dasharray: 4px 6px;
+                stroke-linecap: square !important;
+            }
+
+            &.active {
+                stroke: @activeConnectionLineColor;
+                stroke-dasharray: 10;
+                animation: dash 100000s linear infinite;
+                marker-start: url(#activeLineStart);
+                marker-end: url(#activeLineEnd);
+            }
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -12000000;
+            }
+        }
+
+        .EezStudio_ComponentEnclosure {
+            overflow: visible;
+
+            &.TerminalWidget {
+                .xterm {
+                    .xterm-viewport {
+                        overflow-y: auto;
+                    }
+                }
+            }
+
+            &.ListWidget {
+                overflow: auto;
+            }
+        }
+
+        /* Some CSS layout tricks to support page scrolling in run mode
+        when page doesn't fit in available space. */
+        &.runMode {
+            & > div {
+                overflow: auto;
+                & > .eez-canvas {
+                    & > div {
+                        position: relative !important;
+                        & > .EezStudio_Page {
+                            position: relative !important;
+                        }
+                    }
+                }
+            }
+        }
+
+        .EezStudio_FlowRuntimeSelection {
+            position: absolute;
+            * {
+                user-select: none !important;
+            }
+        }
+    }
+}
+
+.EezStudio_TextResource_Translations {
+    margin: 10px 0;
+
+    tr.inError {
+        background-color: #ffcccc;
+    }
+    tr.highlighted {
+        background-color: #ff6666;
+    }
+
+    td:first-child {
+        padding-right: 10px;
+    }
+
+    td:last-child {
+        width: 100%;
+        input {
+            width: 100%;
+        }
+    }
+}
+
+.EezStudio_ConfigurationReferencesPropertyValue {
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+}
+
+.EezStudio_ConfigurationReferencesPropertyValueConfigurations {
+    padding-left: 1.25rem;
+}
+
+.EezStudio_Messages {
+    flex-grow: 1;
+    overflow: auto;
+    height: 100%;
+    font-size: 90%;
+    .EezStudio_Icon {
+        font-size: 18px !important;
+    }
+
+    .EezStudio_Message {
+        display: inline-flex;
+
+        span.added {
+            background-color: #bbffbb;
+            color: #212529;
+        }
+
+        span.removed {
+            background-color: #ffbbbb;
+            color: #212529;
+            text-decoration: line-through;
+        }
+    }
+}
+
+.EezStudio_PanelContainer {
+    flex-grow: 1;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    .btn-toolbar input[type="text"] {
+        border: 1px solid @borderColor;
+        margin: 2px 0;
+        width: 150px;
+    }
+
+    .EezStudio_PanelHeader {
+        min-height: auto;
+        padding: 2px 4px;
+    }
+}
+
+.EezStudio_FlowRuntimeControls {
+    display: flex;
+}
+
+.EezStudio_CustomVariableStatus {
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+
+    &.clickable:not(.form-control) {
+        cursor: pointer;
+    }
+
+    padding: 5px 10px;
+
+    > :not(:last-child) {
+        margin-right: 5px;
+    }
+
+    &.clickable:hover:not(.form-control) {
+        background-color: @hoverBackgroundColor;
+        color: @hoverColor;
+    }
+
+    &.form-control {
+        padding: 0 5px;
+        margin: 0;
+    }
+
+    img,
+    svg {
+        height: 24px;
+    }
+
+    span.status {
+        border-radius: 8px;
+        width: 16px;
+        height: 16px;
+    }
+
+    span.hint {
+        opacity: 0.5;
+        font-style: italic;
+    }
+}
+
+.EezStudio_ExpressionBuilder {
+    background-color: @panelHeaderColor;
+    width: 100%;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    textarea {
+        margin-bottom: 10px;
+        font-family: "EEZ Studio Font Monospace";
+        font-size: 0.875em;
+    }
+
+    .EezStudio_ExpressionBuilder_NavContainer {
+        margin-bottom: 10px;
+
+        display: flex;
+        justify-content: space-between;
+
+        & > div {
+            display: flex;
+            align-items: center;
+            & > span {
+                margin-left: 20px;
+                margin-right: 10px;
+            }
+        }
+    }
+
+    .EezStudio_ExpressionBuilder_CommandsBrowser {
+        background-color: white;
+        border: 1px solid @borderColor;
+    }
+
+    .EezStudio_ExpressionBuilder_Panels {
+        flex: 1;
+        overflow: auto;
+
+        display: flex;
+        flex-direction: row;
+
+        .EezStudio_SimpleTree {
+            flex: 1;
+            height: 100%;
+            background-color: @backgroundColor;
+            border: 1px solid @borderColor;
+            overflow: auto;
+            margin-right: 10px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+
+    .name {
+        font-weight: bold;
+    }
+
+    .type {
+        &:before {
+            content: "<";
+        }
+        &:after {
+            content: ">";
+        }
+        margin-left: 10px;
+        font-style: italic;
+    }
+
+    .EezStudio_ExpressionBuilder_OperatorSign {
+        margin-left: 5px;
+        padding: 0px 6px;
+        background-color: @panelHeaderColor;
+        border: 1px solid @borderColor;
+        border-radius: 6px;
+    }
+}
+
+.EezStudio_TextsStatistics {
+    margin: 10px;
+}
+
+.EezStudio_PageStructure {
+    height: 100%;
+
+    .EezStudio_ToolbarHeader {
+        min-height: 28px;
+    }
+
+    .EezStudio_Tree {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .tree-row {
+        width: 100%;
+
+        &:hover {
+            .EezStudio_Toolbar {
+                padding-left: 5px;
+                position: static;
+                left: 0;
+                top: 0;
+            }
+        }
+    }
+
+    .EezStudio_WidgetTreeTrow {
+        width: 100%;
+
+        &.withIcon {
+            .EezStudio_Toolbar {
+                padding-left: 5px;
+                position: static;
+                left: 0;
+                top: 0;
+            }
+        }
+    }
+}
+
+.EezStudio_WidgetTreeTrow {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    padding: 1px 0;
+
+    &.dimmed {
+        opacity: 0.5;
+    }
+
+    & > span {
+        flex: 1;
+        display: flex;
+        align-items: center;
+
+        svg,
+        img {
+            flex-shrink: 0;
+        }
+    }
+
+    & > span > span {
+        display: block;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 0;
+        flex: 1;
+    }
+
+    .EezStudio_IconAction {
+        margin: 0;
+        padding: 0;
+        line-height: 0;
+    }
+
+    .EezStudio_IconAction {
+        .EezStudio_Icon {
+            fill: @textColor;
+        }
+    }
+
+    &:not(.withIcon) {
+        .EezStudio_Toolbar {
+            position: absolute;
+            top: 3px;
+            right: 0px;
+        }
+    }
+
+    &.withIcon {
+        span {
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+    }
+
+    .EezStudio_IconAction {
+        margin-right: 5px;
+    }
+
+    &:hover {
+        .EezStudio_IconAction {
+            visibility: visible !important;
+        }
+    }
+}
+
+.EezStudio_ActionComponents {
+    height: 100%;
+
+    .EezStudio_ToolbarHeader {
+        min-height: 28px;
+    }
+
+    .EezStudio_Tree {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .tree-row {
+        width: 100%;
+    }
+
+    .EezStudio_ActionComponentTreeTrow {
+        width: 100%;
+    }
+}
+
+.EezStudio_ActionComponentTreeTrow {
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    padding: 1px 0;
+
+    span {
+        flex: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+
+        svg,
+        img {
+            flex-shrink: 0;
+        }
+    }
+}
+
+.EezStudio_ActionGroups {
+    .EezStudio_ActionGroup {
+        margin-bottom: 10px;
+        .EezStudio_ActionGroup_Title {
+            font-size: 85%;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .EezStudio_ActionGroup_Actions {
+            padding-left: 10px;
+            display: flex;
+            flex-direction: column;
+
+            .EezStudio_ActionGroup_Actions_Group {
+                margin-bottom: 5px;
+                &:last-child {
+                    margin-bottom: 0;
+                }
+                .EezStudio_Action {
+                    margin-right: 5px;
+                    &:last-child {
+                        margin-right: 0;
+                    }
+                }
+            }
+        }
+    }
+
+    .EezStudio_IconAction {
+        color: unset;
+        fill: unset;
+    }
+}
+
+.EezStudio_AlignAndDistributeIcons {
+    .EezStudio_IconAction {
+        color: unset;
+        fill: unset;
+    }
+}
+
+.EezStudio_PageTimelineSplitter {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    .EezStudio_SplitterThumbDiv.EezStudio_Splitter_Vertical,
+    .EezStudio_SplitterThumbDiv.EezStudio_Splitter_Horizontal {
+        background-image: none;
+        border: none !important;
+    }
+}
+
+@timelineHeight: 40px;
+@timelineScrollBarSize: 20px;
+@timelineRowHeight: 20px;
+
+.EezStudio_PageTimeline_Outline {
+    margin-top: @timelineHeight;
+    margin-bottom: @timelineScrollBarSize;
+    overflow: hidden;
+    height: 100%;
+
+    .EezStudio_PageTimeline_Outline_Item {
+        height: @timelineRowHeight;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        border-top: 1px dotted @borderColor;
+        &:last-child {
+            border-bottom: 1px dotted @borderColor;
+        }
+    }
+}
+
+.EezStudio_PageTimeline_Timeline {
+    position: absolute;
+    width: calc(100% - @timelineScrollBarSize);
+    height: calc(100% - @timelineScrollBarSize);
+
+    .EezStudio_PageTimeline_Timeline_Area {
+        fill: @backgroundColor;
+    }
+
+    rect.EezStudio_PageTimeline_Needle {
+        fill: #ff8c00;
+    }
+
+    line.EezStudio_PageTimeline_Needle {
+        stroke: #ff8c00;
+    }
+
+    text.EezStudio_PageTimeline_Needle {
+        stroke: #ff8c00;
+        font-weight: lighter;
+    }
+
+    .EezStudio_PageTimeline_Needle_TextBackground {
+        fill: @backgroundColor;
+        stroke: none;
+    }
+
+    .EezStudio_PageTimeline_Tick {
+        stroke: @textColor;
+        stroke-width: 1;
+    }
+
+    .EezStudio_PageTimeline_Subtick {
+        stroke: @textColor;
+        stroke-width: 0.5;
+    }
+
+    .EezStudio_PageTimeline_TickText {
+        stroke: @textColor;
+        font-weight: lighter;
+    }
+
+    .EezStudio_PageTimeline_Row {
+        fill: @pageTimelineRowColor;
+        &.selected {
+            fill: @pageTimelineSelectedRowColor;
+        }
+    }
+
+    .EezStudio_PageTimeline_Keyframe {
+        fill: #094771;
+    }
+
+    .EezStudio_PageTimeline_Keyframe_Selection {
+        fill: none;
+        stroke: red;
+        stroke-width: 1;
+    }
+
+    .EezStudio_PageTimeline_Keyframe_Point {
+        fill: #ff8c00;
+    }
+}
+
+.EezStudio_PageTimeline_ScrollBar {
+    position: absolute;
+    overflow: hidden;
+    & > div {
+        overflow: hidden;
+    }
+}
+
+.EezStudio_PageTimeline_VerticalScrollBar {
+    top: @timelineHeight;
+    right: 0;
+    width: @timelineScrollBarSize;
+    height: calc(100% - @timelineScrollBarSize - @timelineHeight);
+    overflow-y: auto;
+    & > div {
+        width: @timelineScrollBarSize;
+    }
+}
+
+.EezStudio_PageTimeline_HorizontalScrollBar {
+    bottom: 0;
+    width: calc(100% - @timelineScrollBarSize);
+    height: @timelineScrollBarSize;
+    overflow-x: auto;
+    & > div {
+        height: @timelineScrollBarSize;
+    }
+}
+
+.EezStudio_TimelineKeyframe_PropertyUI {
+    margin-bottom: 10px;
+
+    table {
+        width: 100%;
+        margin-bottom: 10px;
+
+        td {
+            vertical-align: middle;
+
+            input[type="number"] {
+                width: 100%;
+                :not(:valid) {
+                    border: red;
+                }
+            }
+
+            select {
+                width: 100%;
+            }
+        }
+
+        td:nth-child(1) {
+            label {
+                white-space: nowrap;
+            }
+            padding-right: 5px;
+        }
+
+        .duration-heading,
+        .property-heading {
+            padding-left: 14px;
+            white-space: nowrap;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 80%;
+        }
+
+        .property-heading {
+            padding-top: 10px;
+        }
+
+        td:nth-child(1).property-heading {
+            padding-left: 0;
+        }
+    }
+}
+
+.EeezStudio_Readme_Container {
+    user-select: text !important;
+    * {
+        user-select: text !important;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+.EezStudio_ChangesNavigation {
+    padding: 0;
+
+    .EezStudio_ListItem {
+        padding: 5px;
+
+        .revision-for-compare {
+            font-weight: bold;
+        }
+
+        .revision-message {
+            font-size: 110%;
+        }
+
+        .revision-details {
+            opacity: 50%;
+        }
+    }
+
+    .EezStudio_ListItem:not(:last-child) {
+        border-bottom: 1px solid @borderColor;
+    }
+}
+
+.EezStudio_ChangesEditor {
+    .feature-row {
+        display: inline-flex;
+        align-content: center;
+
+        background: @panelHeaderColor;
+        border-radius: 4px;
+
+        padding: 2px 4px;
+
+        .change-icon {
+            margin-right: 4px;
+            svg {
+                width: 16px;
+            }
+        }
+
+        .change-label {
+            font-size: 110%;
+            user-select: text;
+        }
+    }
+
+    .change-label {
+        margin-right: 4px;
+    }
+
+    .value-added,
+    .element-added {
+        background-color: #bbffbb;
+        color: #212529;
+        margin-right: 4px;
+        user-select: text !important;
+    }
+
+    .value-removed,
+    .element-removed {
+        background-color: #ffbbbb;
+        color: #212529;
+        text-decoration: line-through;
+        margin-right: 4px;
+        user-select: text !important;
+    }
+
+    .array-shuffled {
+        background-color: #ffffbb;
+        color: #212529;
+        margin-right: 4px;
+    }
+
+    .property-change,
+    .array-element-added,
+    .array-element-removed,
+    .array-element-changed,
+    .array-element-shuffled {
+        white-space: nowrap;
+        padding: 2px 4px;
+        &:hover {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+        }
+    }
+
+    .property-change.selected {
+        .feature-row {
+            color: @textColor;
+        }
+    }
+}
+
+@keyframes pulse {
+    from {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.EezStudio_FlowCanvasContainer.EezStudio_ChangesFlowViewerCanvasContainer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: @backgroundColor;
+
+    cursor: default;
+
+    & > * {
+        user-select: none;
+    }
+
+    & > div {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .connection-line-path {
+        stroke: @connectionLineColor;
+        marker-start: url(#lineStart);
+        marker-end: url(#lineEnd);
+
+        &.seq {
+            stroke: @seqConnectionLineColor;
+            marker-start: url(#seqLineStart);
+            marker-end: url(#seqLineEnd);
+        }
+
+        &.selected {
+            animation-name: pulse;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
+    }
+
+    .connection-line:hover .connection-line-path {
+        stroke: @selectedConnectionLineColor !important;
+        marker-start: url(#selectedLineStart) !important;
+        marker-end: url(#selectedLineEnd) !important;
+        fill: none;
+    }
+
+    .EezStudio_ComponentEnclosure {
+        overflow: visible;
+        cursor: default !important;
+    }
+}
+
+.EezStudio_ChangesFlowViewer_ChangedObject {
+    &.added {
+        box-shadow: 0 0 16px green;
+        border: 2px solid green;
+    }
+
+    &.removed {
+        box-shadow: 0 0 16px red;
+        border: 2px solid red;
+    }
+
+    &.updated {
+        box-shadow: 0 0 16px #999;
+        border: 2px solid #999;
+    }
+
+    &.selected {
+        animation-name: pulse;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+    }
+}
+
+.EezStudio_ChangesFlowViewer_Title {
+    position: absolute;
+    z-index: 100;
+    pointer-events: none;
+    background-color: @panelBorderColor;
+    color: @textColor;
+    font-size: 100%;
+}
+
+.EezStudio_ChangesFlowViewer_Legend {
+    position: absolute;
+    right: 0;
+    z-index: 100;
+    pointer-events: none;
+    background-color: @panelBorderColor;
+    color: @textColor;
+
+    font-size: 80%;
+
+    display: flex;
+    align-items: center;
+
+    .bullet {
+        width: 10px;
+        height: 10px;
+        border-radius: 4px;
+        margin-left: 6px;
+        margin-right: 2px;
+        display: inline-block;
+
+        &.added {
+            background-color: green;
+        }
+
+        &.removed {
+            background-color: red;
+        }
+
+        &.updated {
+            background-color: #999;
+        }
+    }
+}
+
+.EezStudio_StylesDefinition {
+    display: flex;
+    width: 100%;
+
+    & > div {
+        border: 1px solid @panelBorderColor;
+    }
+
+    & > div:nth-child(1) {
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
+    }
+
+    & > div:nth-child(2) {
+        border-left: none;
+        border-top-right-radius: var(--bs-border-radius);
+        border-bottom-right-radius: var(--bs-border-radius);
+
+        flex: 1;
+    }
+
+    .EezStudio_SimpleTree {
+        padding: 0;
+        border: 0;
+
+        .EezStudio_TreeRow {
+            font-size: 85%;
+            display: block;
+            &.style-property-name {
+                cursor: default;
+            }
+            &.modified {
+                font-weight: bold;
+            }
+
+            .EezStudio_TreeRowLabel {
+                display: block;
+                padding: 0;
+                margin: 0;
+
+                .EezStudio_Style_PropertyLabel {
+                    display: block;
+                    padding: 2px 10px;
+                }
+            }
+
+            &:not(.EezStudio_Selected) {
+                .EezStudio_TreeRowLabel {
+                    .EezStudio_Style_PropertyLabel {
+                        &.inError {
+                            background-color: #ffaaaa;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .EezStudio_PropertyGrid {
+        font-size: 90%;
+    }
+}
+
+.EezStudio_LVGLStylesDefinition {
+    display: flex;
+    width: 100%;
+
+    & > div {
+        border: 1px solid @panelBorderColor;
+    }
+
+    & > div:nth-child(1) {
+        border-top-left-radius: var(--bs-border-radius);
+        border-bottom-left-radius: var(--bs-border-radius);
+    }
+
+    & > div:nth-child(2) {
+        border-left: none;
+        border-top-right-radius: var(--bs-border-radius);
+        border-bottom-right-radius: var(--bs-border-radius);
+
+        flex: 1;
+    }
+
+    .EezStudio_SimpleTree {
+        padding: 0;
+        border: 0;
+        .EezStudio_TreeRow {
+            font-size: 85%;
+            &.part {
+                cursor: default;
+                .EezStudio_TreeRowTriangle {
+                    cursor: pointer;
+                }
+            }
+            &.modified {
+                font-weight: bold;
+            }
+        }
+
+        .EezStudio_TreeRowEnclosure:not(:first-child) {
+            > .EezStudio_TreeRow.part {
+                padding-top: 5px;
+            }
+        }
+
+        .EezStudio_TreeRowTriangle {
+            &.EezStudio_Expanded {
+                transform: translate(1px, -1px) rotate(90deg);
+            }
+        }
+    }
+
+    .EezStudio_LVGLStylesDefinition_GroupContainer {
+        .EezStudio_LVGLStylesDefinition_GroupName {
+            width: 100%;
+            font-size: 85%;
+            text-transform: uppercase;
+            &.modified {
+                font-weight: 700;
+            }
+            display: inline-flex;
+            align-items: center;
+
+            cursor: pointer;
+            &:hover {
+                color: @hoverColor;
+                background-color: @hoverBackgroundColor;
+            }
+            &.inError {
+                background-color: #ffaaaa;
+            }
+        }
+
+        .EezStudio_LVGLStylesDefinition_GroupProperties {
+            .EezStudio_LVGLStylesDefinition_Property {
+                &.inError {
+                    background-color: #ffaaaa;
+                }
+                padding-left: 10px;
+                display: flex;
+                align-items: baseline;
+                .EezStudio_LVGLStylesDefinition_Name {
+                    font-size: 95%;
+                    min-width: 120px;
+                    .form-check-label {
+                        transform: translateY(-3px);
+                    }
+                }
+                .EezStudio_LVGLStylesDefinition_Value {
+                    input[type="color"] {
+                        width: 80px;
+                    }
+                    padding-bottom: 2px;
+                    flex: 1;
+                }
+            }
+        }
+    }
+
+    .EezStudio_LVGLStyle_PartLabel {
+        &.inError {
+            background-color: #ffaaaa;
+        }
+    }
+
+    .EezStudio_LVGLStyle_StateLabel {
+        &.inError {
+            background-color: #ffaaaa;
+        }
+    }
+}
+
+.EezStudio_LVGLGeometryProperty {
+    width: 100%;
+    display: flex;
+    & > select {
+        min-width: 95px;
+        margin-left: 2px;
+        flex: 0;
+    }
+}
+
+.EezStudio_LVGProperty {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    & > select {
+        min-width: 130px;
+        margin-left: 2px;
+        flex: 0;
+    }
+}
+
+.EezStudio_Property_BitmapPreview {
+    margin-top: 2px;
+    padding: 4px;
+    border: 1px solid @borderColor;
+    max-width: 100%;
+    max-height: 150px;
+}
+
+.EezStudio_LVGLSymbolIcon {
+    width: 24px;
+    font-size: 16px;
+}
+
+.EezStudio_SubNavigation {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    & > .nav {
+        flex-grow: 0;
+        flex-shrink: 0;
+        padding: 4px;
+        background-color: @panelHeaderColorInsideFlexLayout;
+
+        font-size: 95%;
+
+        & > .nav-item {
+            margin-right: 2px;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+
+        a {
+            color: @textColor;
+            padding: 2px 4px;
+            &:hover:not(.active) {
+                color: @hoverColor;
+                background-color: @hoverBackgroundColor;
+            }
+            &.active {
+                color: @selectionColor;
+                background-color: @selectionBackgroundColor;
+            }
+        }
+    }
+
+    & > div {
+        flex-grow: 1;
+        overflow: hidden;
+    }
+}
+
+.EezStudio_ProjectEditor_RunEditSwitchControls {
+    background-color: @panelHeaderColor;
+    z-index: 10;
+}
+
+.EezStudio_ProjectEditor_MissingExtensions {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+    overflow: auto;
+
+    & > div {
+        margin-bottom: 10px;
+    }
+
+    & > div:last-child {
+        margin-bottom: 0;
+    }
+
+    .EezStudio_ProjectEditor_MissingExtensions_Body {
+        border: var(--bs-border-width) solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius);
+        min-height: 100px;
+        max-height: 600px;
+        overflow: auto;
+        margin-bottom: 20px;
+        > div {
+            width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: var(--bs-border-width) solid var(--bs-border-color);
+            &:last-child {
+                border-bottom: none;
+            }
+
+            & > button {
+                margin-left: 5px;
+            }
+
+            & > .unknown-extension {
+                margin-left: 5px;
+                text-transform: uppercase;
+                white-space: nowrap;
+                color: @errorColor;
+            }
+        }
+    }
+
+    .EezStudio_ProjectEditor_MissingExtensions_Footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 390px;
+    }
+}
+
+.EezStudio_ProjectEditor_StylesTreeNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+        min-height: 28px;
+    }
+
+    .EezStudio_SortControl {
+        font-weight: 600;
+        color: @darkTextColor;
+
+        width: 19px;
+
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-position-y: 2px;
+        padding-left: 20px;
+        cursor: pointer;
+
+        &.sort-asc {
+            background-image: url("../_images/col_sort_asc.png");
+        }
+
+        &.sort-desc {
+            background-image: url("../_images/col_sort_desc.png");
+        }
+
+        &.sort-none {
+            background-image: url("../_images/col_sort_enabled.png");
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.EezStudio_ProjectEditor_LVGLStylesTreeNavigation {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    .EezStudio_Title {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        background-color: @panelHeaderColorInsideFlexLayout;
+        border-bottom: 1px solid @borderColor;
+        padding: 2px 4px;
+        min-height: 28px;
+    }
+
+    .EezStudio_SortControl {
+        font-weight: 600;
+        color: @darkTextColor;
+
+        width: 19px;
+
+        background-repeat: no-repeat;
+        background-position: center left;
+        background-position-y: 2px;
+        padding-left: 20px;
+        cursor: pointer;
+
+        &.sort-asc {
+            background-image: url("../_images/col_sort_asc.png");
+        }
+
+        &.sort-desc {
+            background-image: url("../_images/col_sort_desc.png");
+        }
+
+        &.sort-none {
+            background-image: url("../_images/col_sort_enabled.png");
+        }
+    }
+
+    .EezStudio_SearchInput_Container {
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    .btn-toolbar {
+        display: block;
+        flex-shrink: 0;
+        button {
+            margin-right: 4px !important;
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.EezStudio_NewFontDialog {
+    td:first-child {
+        min-width: 145px;
+    }
+}
+
+.EezStudio_LabelWithInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .label1 {
+        overflow: hidden;
+    }
+}
+
+.EezStudio_LabelWithProgress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .label1 {
+        overflow: hidden;
+    }
+    .progress1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        progress {
+            width: 60px;
+            margin-right: 5px;
+        }
+    }
+}

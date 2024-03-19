@@ -177,6 +177,7 @@ export class ProjectStore {
 
     dashboardInstrument?: InstrumentObject;
     standalone: boolean = false;
+    runMode: boolean = false;
 
     missingExtensionsResolved: boolean = false;
 
@@ -479,7 +480,7 @@ export class ProjectStore {
     }
 
     updateProjectWindowState() {
-        if (this.dashboardInstrument || this.standalone) {
+        if (this.dashboardInstrument || this.standalone || this.runMode) {
             return;
         }
 
@@ -640,7 +641,7 @@ export class ProjectStore {
             }
         }
 
-        return loadProject(this, project);
+        return loadProject(this, project, true);
     }
 
     async newProject() {

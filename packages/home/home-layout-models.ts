@@ -7,23 +7,6 @@ import {
 } from "eez-studio-ui/layout-models";
 
 export class LayoutModels extends AbstractLayoutModels {
-    static PROJECTS_TABSET: FlexLayout.IJsonTabSetNode = {
-        type: "tabset",
-        enableTabStrip: false,
-        enableDrag: false,
-        enableDrop: false,
-        enableClose: false,
-        weight: 15,
-        children: [
-            {
-                type: "tab",
-                enableClose: false,
-                name: "Projects",
-                component: "Projects"
-            }
-        ]
-    };
-
     static INSTRUMENTS_TABSET: FlexLayout.IJsonTabSetNode = {
         type: "tabset",
         enableTabStrip: false,
@@ -40,76 +23,6 @@ export class LayoutModels extends AbstractLayoutModels {
             }
         ]
     };
-
-    static NEW_PROJECT_WIZARD_TABSET: FlexLayout.IJsonTabSetNode = {
-        type: "tabset",
-        enableTabStrip: false,
-        enableDrag: false,
-        enableDrop: false,
-        enableClose: false,
-        weight: 55,
-        children: [
-            {
-                type: "tab",
-                enableClose: false,
-                name: "Wizard",
-                component: "Wizard"
-            }
-        ]
-    };
-
-    static NEW_PROJECT_WIZARD_FOLDERS_TABSET: FlexLayout.IJsonTabSetNode = {
-        type: "tabset",
-        enableTabStrip: false,
-        enableDrag: false,
-        enableDrop: false,
-        enableClose: false,
-        weight: 15,
-        children: [
-            {
-                type: "tab",
-                enableClose: false,
-                name: "FoldersTree",
-                component: "FoldersTree"
-            }
-        ]
-    };
-
-    static NEW_PROJECT_WIZARD_PROJECT_TYPES_TABSET: FlexLayout.IJsonTabSetNode =
-        {
-            type: "tabset",
-            enableTabStrip: false,
-            enableDrag: false,
-            enableDrop: false,
-            enableClose: false,
-            weight: 55,
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "ProjectTypesList",
-                    component: "ProjectTypesList"
-                }
-            ]
-        };
-
-    static NEW_PROJECT_WIZARD_PROJECT_PROPERTIES_TABSET: FlexLayout.IJsonTabSetNode =
-        {
-            type: "tabset",
-            enableTabStrip: false,
-            enableDrag: false,
-            enableDrop: false,
-            enableClose: false,
-            weight: 30,
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "ProjectProperties",
-                    component: "ProjectProperties"
-                }
-            ]
-        };
 
     static INSTRUMENTS_BODY_WORKBENCH: FlexLayout.IJsonTabSetNode = {
         type: "tabset",
@@ -316,40 +229,6 @@ export class LayoutModels extends AbstractLayoutModels {
         };
         return [
             {
-                name: "projectsAndInstruments",
-                version: 10,
-                json: {
-                    global,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            LayoutModels.PROJECTS_TABSET,
-                            LayoutModels.INSTRUMENTS_TABSET
-                        ]
-                    }
-                },
-                get: () => this.projectsAndInstruments,
-                set: action(model => (this.projectsAndInstruments = model))
-            },
-            {
-                name: "projects",
-                version: 10,
-                json: {
-                    global,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            LayoutModels.PROJECTS_TABSET,
-                            LayoutModels.NEW_PROJECT_WIZARD_TABSET
-                        ]
-                    }
-                },
-                get: () => this.projects,
-                set: action(model => (this.projects = model))
-            },
-            {
                 name: "instruments",
                 version: 10,
                 json: {
@@ -403,42 +282,6 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.instrumentProperties,
                 set: action(model => (this.instrumentProperties = model))
-            },
-            {
-                name: "newProjectWizard",
-                version: 10,
-                json: {
-                    global,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            LayoutModels.NEW_PROJECT_WIZARD_FOLDERS_TABSET,
-                            LayoutModels.NEW_PROJECT_WIZARD_PROJECT_TYPES_TABSET,
-                            LayoutModels.NEW_PROJECT_WIZARD_PROJECT_PROPERTIES_TABSET
-                        ]
-                    }
-                },
-                get: () => this.newProjectWizard,
-                set: action(model => (this.newProjectWizard = model))
-            },
-            {
-                name: "newProjectWizardDialog",
-                version: 10,
-                json: {
-                    global,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            LayoutModels.NEW_PROJECT_WIZARD_FOLDERS_TABSET,
-                            LayoutModels.NEW_PROJECT_WIZARD_PROJECT_TYPES_TABSET,
-                            LayoutModels.NEW_PROJECT_WIZARD_PROJECT_PROPERTIES_TABSET
-                        ]
-                    }
-                },
-                get: () => this.newProjectWizardDialog,
-                set: action(model => (this.newProjectWizardDialog = model))
             },
             {
                 name: "extensionManager",

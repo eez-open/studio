@@ -58,7 +58,7 @@ export const App = observer(
                                 }
                             )}
                         />
-                        {tabs.instrumentsVisible && <SessionInfoContainer />}
+                        <SessionInfoContainer />
                     </Header>
                     <Body>
                         <Tabs />
@@ -69,7 +69,7 @@ export const App = observer(
             return (
                 <>
                     {content}
-                    {tabs.instrumentsVisible && <WebSimulators />}
+                    <WebSimulators />
                 </>
             );
         }
