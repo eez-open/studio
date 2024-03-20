@@ -819,6 +819,10 @@ export class LineChartWidget extends Widget {
             if (resetInputValue !== undefined) {
                 context.clearInputValue("reset");
 
+                if (executionState.valuesMap) {
+                    executionState.valuesMap.clear();
+                }
+
                 runInAction(() => {
                     executionState!.values = [];
                 });
