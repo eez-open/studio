@@ -5,8 +5,7 @@ import {
     makeObservable,
     runInAction,
     autorun,
-    IReactionDisposer,
-    toJS
+    IReactionDisposer
 } from "mobx";
 
 import {
@@ -80,19 +79,10 @@ interface InputData {
 }
 
 class ExecutionState {
+    valuesMap: Map<number, number[]>;
     values: InputData[] = [];
     maxPoints: number = 0;
     labels: string[] = [];
-
-    operations: (
-        | {
-              cmd: "reset";
-          }
-        | {
-              cmd: "extend";
-              inputData: InputData;
-          }
-    )[] = [];
 
     constructor() {
         makeObservable(this, {
@@ -394,58 +384,13 @@ const LineChartElement = observer(
 
                     executionState.values;
 
-                    const operations = executionState.operations;
-                    executionState.operations = [];
-
-                    const indices = this.props.widget.lines.map((_, i) => i);
-                    const maxPoints = executionState.maxPoints;
-
                     (async () => {
-                        let inputDataArray: InputData[] = [];
-
-                        function extend() {
-                            if (inputDataArray.length == 0) {
-                                return;
-                            }
-
-                            const update = {
-                                x: widget.lines.map(() =>
-                                    inputDataArray.map(
-                                        inputData => inputData.xValue
-                                    )
-                                ),
-                                y: widget.lines.map((_, i) =>
-                                    inputDataArray.map(
-                                        inputData => inputData.lineValues[i]
-                                    )
-                                )
-                            };
-
-                            Plotly().extendTraces(
-                                el,
-                                update,
-                                indices,
-                                maxPoints
-                            );
-
-                            inputDataArray = [];
-                        }
-
-                        for (const operation of operations) {
-                            if (operation.cmd == "reset") {
-                                inputDataArray = [];
-                                this.plotly = await Plotly().react(
-                                    el,
-                                    this.emptyData,
-                                    this.layout,
-                                    this.config
-                                );
-                            } else {
-                                inputDataArray.push(operation.inputData);
-                            }
-                        }
-
-                        extend();
+                        this.plotly = await Plotly().react(
+                            el,
+                            this.data,
+                            this.layout,
+                            this.config
+                        );
                     })();
                 },
                 { delay: 16 }
@@ -874,8 +819,6 @@ export class LineChartWidget extends Widget {
             if (resetInputValue !== undefined) {
                 context.clearInputValue("reset");
 
-                executionState!.operations = [{ cmd: "reset" }];
-
                 runInAction(() => {
                     executionState!.values = [];
                 });
@@ -883,30 +826,33 @@ export class LineChartWidget extends Widget {
                 const maxPoints = context.evalProperty("maxPoints");
 
                 const xValue = context.evalProperty("xValue");
-                const lineValues = context.getExpressionListParam(8);
+                if (xValue != undefined) {
+                    const lineValues = context.getExpressionListParam(8);
 
-                let values = toJS(executionState.values).slice();
+                    if (!executionState.valuesMap) {
+                        executionState!.valuesMap = new Map();
+                    }
+                    executionState.valuesMap.set(xValue, lineValues);
 
-                if (values.length == maxPoints) {
-                    values.shift();
+                    let xValues = [...executionState.valuesMap.keys()];
+                    xValues.sort();
+                    while (
+                        xValues.length > 0 &&
+                        xValues.length > executionState.maxPoints
+                    ) {
+                        executionState.valuesMap.delete(xValues.shift()!);
+                    }
+
+                    let values = xValues.map(xValue => ({
+                        xValue,
+                        lineValues: executionState!.valuesMap.get(xValue)!
+                    }));
+
+                    runInAction(() => {
+                        executionState!.maxPoints = maxPoints;
+                        executionState!.values = values;
+                    });
                 }
-
-                const inputData = {
-                    xValue,
-                    lineValues
-                };
-
-                values.push(inputData);
-
-                executionState.operations.push({
-                    cmd: "extend",
-                    inputData: inputData
-                });
-
-                runInAction(() => {
-                    executionState!.maxPoints = maxPoints;
-                    executionState!.values = values;
-                });
             }
         }
     });
