@@ -1012,6 +1012,9 @@ export const Home = observer(
                                 onClick={action(() => {
                                     homeTabStore.activeTab = "open";
                                 })}
+                                title={
+                                    "Open a local project or select one from the recent list"
+                                }
                             >
                                 <Icon icon={HOME_TAB_OPEN_ICON} size={32} />{" "}
                                 Open
@@ -1028,6 +1031,7 @@ export const Home = observer(
                                     homeTabStore.activeTab = "create";
                                     wizardModel.switchToTemplates();
                                 })}
+                                title="Create a new project"
                             >
                                 <Icon icon={HOME_TAB_CREATE_ICON} size={32} />{" "}
                                 Create
@@ -1044,6 +1048,7 @@ export const Home = observer(
                                     homeTabStore.activeTab = "examples";
                                     wizardModel.switchToExamples();
                                 })}
+                                title="Example projects ready to run or edit"
                             >
                                 <Icon icon={HOME_TAB_EXAMPLES_ICON} size={32} />{" "}
                                 Examples
@@ -1059,6 +1064,7 @@ export const Home = observer(
                                 onClick={action(() => {
                                     homeTabStore.activeTab = "run";
                                 })}
+                                title="Run dashboard projects from the list of shortcuts"
                             >
                                 <Icon icon="material:apps" size={32} /> Run
                             </div>
@@ -1074,6 +1080,7 @@ export const Home = observer(
                                 onClick={action(() => {
                                     homeTabStore.activeTab = "instruments";
                                 })}
+                                title="Instruments manager"
                             >
                                 <Icon
                                     icon={HOME_TAB_INSTRUMENTS_ICON}
@@ -1093,6 +1100,7 @@ export const Home = observer(
                                 onClick={action(() => {
                                     homeTabStore.activeTab = "extensions";
                                 })}
+                                title="Extensions manager"
                             >
                                 <Icon
                                     icon={"material:extension"}
@@ -1115,6 +1123,7 @@ export const Home = observer(
                                 onClick={action(() => {
                                     homeTabStore.activeTab = "settings";
                                 })}
+                                title="Global user settings"
                             >
                                 <Icon
                                     icon={"material:settings"}

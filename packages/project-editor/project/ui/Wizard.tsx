@@ -367,11 +367,11 @@ class WizardModel {
                 })
         );
 
-        for (const templateProject of this.templateProjects) {
-            templateProject._projectType = "";
-        }
-
         runInAction(() => {
+            for (const templateProject of this.templateProjects) {
+                templateProject._projectType = "";
+            }
+
             this.templateProjects = templateProjects;
         });
 
@@ -964,7 +964,9 @@ class WizardModel {
         ) {
             this.folder = this.lastExamplesFolder;
         } else {
-            this.folder = this.folders.children[0].id;
+            if (this.folders.children.length > 0) {
+                this.folder = this.folders.children[0].id;
+            }
         }
 
         if (
@@ -2065,7 +2067,9 @@ const ProjectProperties = observer(
 
         render() {
             if (wizardModel.type == undefined) {
-                return <div></div>;
+                return (
+                    <div className="EezStudio_NewProjectWizard_ProjectProperties"></div>
+                );
             }
 
             if (wizardModel.createProjectInProgress) {

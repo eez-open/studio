@@ -59,6 +59,50 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let plotlyModule: typeof PlotlyModule;
+
+function Plotly() {
+    if (!plotlyModule) {
+        plotlyModule =
+            require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
+    }
+    return plotlyModule;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// LineChart Widget
+
+interface InputData {
+    xValue: number;
+    lineValues: number[];
+}
+
+class ExecutionState {
+    values: InputData[] = [];
+    maxPoints: number = 0;
+    labels: string[] = [];
+
+    operations: (
+        | {
+              cmd: "reset";
+          }
+        | {
+              cmd: "extend";
+              inputData: InputData;
+          }
+    )[] = [];
+
+    constructor() {
+        makeObservable(this, {
+            values: observable,
+            maxPoints: observable,
+            labels: observable
+        });
+    }
+}
+
 const LineChartElement = observer(
     class LineChartElement extends React.Component<{
         widget: LineChartWidget;
@@ -298,22 +342,23 @@ const LineChartElement = observer(
         async createChart(el: HTMLDivElement) {
             if (this.dispose1) {
                 this.dispose1();
+                this.dispose1 = undefined;
             }
 
             if (this.dispose2) {
                 this.dispose2();
+                this.dispose2 = undefined;
             }
 
             if (this.plotlyEl) {
                 Plotly().purge(this.plotlyEl);
             }
 
-            this.plotly = await newPlotOrReact(
+            this.plotly = await Plotly().newPlot(
                 el,
                 this.data,
                 this.layout,
-                this.config,
-                true
+                this.config
             );
             this.plotlyEl = el;
             this.plotlyWidth = this.props.width;
@@ -326,12 +371,11 @@ const LineChartElement = observer(
                     };
                 },
                 async params => {
-                    this.plotly = await newPlotOrReact(
+                    this.plotly = await Plotly().react(
                         el,
                         this.data,
                         params.layout,
-                        this.config,
-                        false
+                        this.config
                     );
                 }
             );
@@ -390,12 +434,11 @@ const LineChartElement = observer(
                         for (const operation of operations) {
                             if (operation.cmd == "reset") {
                                 inputDataArray = [];
-                                this.plotly = await newPlotOrReact(
+                                this.plotly = await Plotly().react(
                                     el,
                                     this.emptyData,
                                     this.layout,
-                                    this.config,
-                                    false
+                                    this.config
                                 );
                             } else {
                                 inputDataArray.push(operation.inputData);
@@ -425,12 +468,11 @@ const LineChartElement = observer(
                 ) {
                     this.createChart(this.ref.current);
                 } else {
-                    this.plotly = await newPlotOrReact(
+                    this.plotly = await Plotly().react(
                         this.ref.current,
                         this.data,
                         this.layout,
-                        this.config,
-                        false
+                        this.config
                     );
                 }
             }
@@ -443,10 +485,12 @@ const LineChartElement = observer(
 
             if (this.dispose1) {
                 this.dispose1();
+                this.dispose1 = undefined;
             }
 
             if (this.dispose2) {
                 this.dispose2();
+                this.dispose2 = undefined;
             }
         }
 
@@ -468,30 +512,6 @@ const LineChartElement = observer(
         }
     }
 );
-
-class ExecutionState {
-    values: InputData[] = [];
-    maxPoints: number = 0;
-    labels: string[] = [];
-
-    operations: (
-        | {
-              cmd: "reset";
-          }
-        | {
-              cmd: "extend";
-              inputData: InputData;
-          }
-    )[] = [];
-
-    constructor() {
-        makeObservable(this, {
-            values: observable,
-            maxPoints: observable,
-            labels: observable
-        });
-    }
-}
 
 class LineChartLine extends EezObject {
     label: string;
@@ -1005,6 +1025,9 @@ export class LineChartWidget extends Widget {
 registerClass("LineChartWidget", LineChartWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Gauge Widget
 
 const GaugeElement = observer(
     ({
@@ -1077,12 +1100,11 @@ const GaugeElement = observer(
             const el = ref.current;
             if (el) {
                 (async () => {
-                    const plotly = await newPlotOrReact(
+                    const plotly = await Plotly().newPlot(
                         el,
                         getData(),
                         getLayout(),
-                        getConfig(),
-                        true
+                        getConfig()
                     );
 
                     if (!disposed) {
@@ -1110,17 +1132,32 @@ const GaugeElement = observer(
                                 : undefined;
 
                             if (inputData != undefined) {
-                                updateGauge(
+                                Plotly().update(
                                     el,
-                                    inputData.value,
-                                    inputData.minRange,
-                                    inputData.maxRange,
-                                    widget.color
+                                    {
+                                        value: inputData.value,
+                                        gauge: {
+                                            bar: {
+                                                color: widget.color
+                                            },
+                                            axis: {
+                                                range: [
+                                                    inputData.minRange,
+                                                    inputData.maxRange
+                                                ],
+                                                color: widget.color
+                                            }
+                                        },
+                                        number: {
+                                            valueformat: "f"
+                                        }
+                                    },
+                                    {}
                                 );
                             }
                         });
                     } else {
-                        removeChart(el);
+                        Plotly().purge(el);
                     }
                 })();
             }
@@ -1130,7 +1167,7 @@ const GaugeElement = observer(
                     disposeReaction();
                 }
                 if (el) {
-                    removeChart(el);
+                    Plotly().purge(el);
                 }
                 disposed = true;
             };
@@ -1144,13 +1181,7 @@ const GaugeElement = observer(
 
         React.useEffect(() => {
             if (plotly) {
-                newPlotOrReact(
-                    plotly,
-                    getData(),
-                    getLayout(),
-                    getConfig(),
-                    false
-                );
+                Plotly().react(plotly, getData(), getLayout(), getConfig());
             }
         }, [
             plotly,
@@ -1294,186 +1325,3 @@ export class GaugeWidget extends Widget {
 }
 
 registerClass("GaugeWidget", GaugeWidget);
-
-////////////////////////////////////////////////////////////////////////////////
-
-interface InputData {
-    xValue: number;
-    lineValues: number[];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-let plotlyModule: typeof PlotlyModule;
-
-function Plotly() {
-    if (!plotlyModule) {
-        plotlyModule =
-            require("plotly.js-dist-min/plotly.min.js") as typeof PlotlyModule;
-    }
-    return plotlyModule;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Creating plotly charts is slow, so do it one at the time.
-
-const newPlotQueue: {
-    root: PlotlyModule.Root;
-    data: PlotlyModule.Data[];
-    layout?: Partial<PlotlyModule.Layout>;
-    config?: Partial<PlotlyModule.Config>;
-    resolve: (el: PlotlyModule.PlotlyHTMLElement) => void;
-    createNewPlot: boolean;
-}[] = [];
-let doNewPlotTimeoutId: any = undefined;
-
-export function newPlotOrReact(
-    root: PlotlyModule.Root,
-    data: PlotlyModule.Data[],
-    layout: Partial<PlotlyModule.Layout>,
-    config: Partial<PlotlyModule.Config>,
-    createNewPlot: boolean
-): Promise<PlotlyModule.PlotlyHTMLElement> {
-    return new Promise<PlotlyModule.PlotlyHTMLElement>(resolve => {
-        newPlotQueue.push({
-            root,
-            data,
-            layout,
-            config,
-            resolve,
-            createNewPlot
-        });
-        if (!doNewPlotTimeoutId) {
-            doNewPlotTimeoutId = setTimeout(doNewPlotOrReact);
-        }
-    });
-}
-
-async function doNewPlotOrReact() {
-    const { root, data, layout, config, resolve, createNewPlot } =
-        newPlotQueue.shift()!;
-
-    if (createNewPlot) {
-        resolve(await Plotly().newPlot(root, data, layout, config));
-    } else {
-        resolve(await Plotly().react(root, data, layout, config));
-    }
-
-    if (newPlotQueue.length > 0) {
-        setTimeout(doNewPlotOrReact);
-    } else {
-        doNewPlotTimeoutId = undefined;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Updating plotly charts is slow, so do it one at the time.
-
-interface ILineChart {
-    type: "lineChart";
-    data: {
-        x: number[][];
-        y: number[][];
-    };
-}
-
-interface IGauge {
-    type: "gauge";
-    value: number;
-    minRange: number;
-    maxRange: number;
-    color: string;
-}
-
-type IChart = ILineChart | IGauge;
-
-const charts = new Map<HTMLElement, IChart>();
-const updateQueue: HTMLElement[] = [];
-let doUpdateChartTimeoutId: any = undefined;
-
-function doUpdateChart() {
-    doUpdateChartTimeoutId = undefined;
-
-    const el = updateQueue.shift()!;
-    const chart = charts.get(el)!;
-    charts.delete(el);
-    if (chart.type === "lineChart") {
-        Plotly().extendTraces(
-            el,
-            chart.data,
-            chart.data.x.map((_, i) => i)
-        );
-    } else {
-        Plotly().update(
-            el,
-            {
-                value: chart.value,
-                gauge: {
-                    bar: {
-                        color: chart.color
-                    },
-                    axis: {
-                        range: [chart.minRange, chart.maxRange],
-                        color: chart.color
-                    }
-                },
-                number: {
-                    valueformat: "f"
-                }
-            },
-            {}
-        );
-    }
-
-    if (updateQueue.length > 0) {
-        doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-    }
-}
-
-function updateGauge(
-    el: HTMLElement,
-    value: number,
-    minRange: number,
-    maxRange: number,
-    color: string
-) {
-    let chart = charts.get(el) as IGauge | undefined;
-    if (!chart) {
-        chart = {
-            type: "gauge",
-            value,
-            minRange,
-            maxRange,
-            color
-        };
-        charts.set(el, chart);
-        updateQueue.push(el);
-
-        if (!doUpdateChartTimeoutId) {
-            doUpdateChartTimeoutId = setTimeout(doUpdateChart);
-        }
-    } else {
-        chart.value = value;
-        chart.minRange = minRange;
-        chart.maxRange = maxRange;
-        chart.color = color;
-    }
-}
-
-function removeChart(el: HTMLElement) {
-    if (charts.get(el)) {
-        charts.delete(el);
-        updateQueue.splice(updateQueue.indexOf(el), 1);
-    }
-
-    Plotly().purge(el);
-
-    if (charts.size === 0) {
-        if (doUpdateChartTimeoutId) {
-            clearTimeout(doUpdateChartTimeoutId);
-            doUpdateChartTimeoutId = undefined;
-        }
-    }
-}
