@@ -42,7 +42,7 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
 
         const id = opts.jsPanel.id;
 
-        const config = {
+        const config: any = {
             id,
             container: "#EezStudio_Content",
             theme: "primary",
@@ -64,7 +64,9 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
                 minimize: "remove",
                 smallify: "remove"
             },
-            dragit: {},
+            dragit: {
+                containment: [0, 0, 0, 0]
+            },
             resizeit: {},
             closeOnBackdrop: false,
             onclosed: opts.jsPanel.onclosed,
@@ -77,17 +79,54 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             }
         };
 
-        let dialog = jsPanel.layout.restoreId({
-            id,
-            config,
-            storagename: "jsPanels" + id
-        });
+        const layouts = jsPanel.layout.getAll("jsPanels" + id);
+        if (layouts && layouts.length == 1) {
+            const layout = layouts[0];
 
-        if (!dialog) {
-            dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
-                config
-            );
+            let left = parseFloat(layout.left);
+            let top = parseFloat(layout.top);
+            let width = parseFloat(layout.width);
+            let height = parseFloat(layout.height);
+            if (
+                !isNaN(left) &&
+                !isNaN(top) &&
+                !isNaN(width) &&
+                !isNaN(height)
+            ) {
+                if (width > window.innerWidth) {
+                    width = window.innerWidth;
+                }
+
+                if (height > window.innerHeight) {
+                    height = window.innerHeight;
+                }
+
+                if (left < 0) {
+                    left = 0;
+                } else if (left > window.innerWidth - width) {
+                    left = window.innerWidth - width;
+                }
+
+                if (top < 0) {
+                    top = 0;
+                } else if (top > window.innerHeight - height) {
+                    top = window.innerHeight - height;
+                }
+
+                config.position = {
+                    my: "left-top",
+                    at: "left-top",
+                    offsetX: left,
+                    offsetY: top
+                };
+                config.panelSize.width = layout.width;
+                config.panelSize.height = layout.height;
+            }
         }
+
+        const dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
+            config
+        );
 
         return [dialog, element, root];
     } else {

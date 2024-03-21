@@ -142,8 +142,8 @@ export const ComponentEnclosure = observer(
         flowContext: IFlowContext;
         left?: number;
         top?: number;
-        width?: number;
-        height?: number;
+        width?: number | string;
+        height?: number | string;
         visible?: boolean;
     }> {
         elRef = React.createRef<HTMLDivElement>();
@@ -172,6 +172,13 @@ export const ComponentEnclosure = observer(
         }
 
         updateComponentGeometry = () => {
+            if (
+                this.props.flowContext.editorOptions
+                    .disableUpdateComponentGeometry
+            ) {
+                return;
+            }
+
             if (this.updateComponentTimeout) {
                 clearTimeout(this.updateComponentTimeout);
                 this.updateComponentTimeout = undefined;
@@ -370,8 +377,10 @@ export const ComponentEnclosure = observer(
                     >
                         {component.render(
                             flowContext,
-                            width ?? component.width,
-                            height ?? component.height
+                            typeof width == "number" ? width : component.width,
+                            typeof height == "number"
+                                ? height
+                                : component.height
                         )}
 
                         {

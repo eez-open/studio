@@ -2746,3 +2746,24 @@
         }
     }
 }
+
+.EezStudio_ContaineWidget_DockingManagerUI {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    & > div:first-child {
+        flex: 1;
+        position: relative;
+    }
+    & > div:nth-child(2) {
+        flex: 0;
+        padding: 10px;
+        display: flex;
+        justify-content: flex-end;
+        background-color: @panelHeaderColor;
+        & > button {
+            margin-right: 10px;
+        }
+    }
+}

@@ -25,6 +25,17 @@ export const specificGroup: IPropertyGridGroupDefinition = {
         object instanceof ProjectEditor.ActionComponentClass ? 1 : 2
 };
 
+export const layoutGroup: IPropertyGridGroupDefinition = {
+    id: "layout",
+    title: "Layout",
+    position: (object: IEezObject) =>
+        object instanceof ProjectEditor.ActionComponentClass
+            ? 3
+            : object instanceof ProjectEditor.LVGLWidgetClass
+            ? 2
+            : 0
+};
+
 export const flowGroup: IPropertyGridGroupDefinition = {
     id: "flow",
     title: "Flow",

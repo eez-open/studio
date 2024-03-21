@@ -834,7 +834,11 @@ export const FlowEditor = observer(
             if (this.flowContext.viewState.selectedObjects.length > 0) {
                 const selectedObjectRects =
                     this.flowContext.viewState.selectedObjects.map(
-                        selectedObject => getObjectBoundingRect(selectedObject)
+                        selectedObject =>
+                            getObjectBoundingRect(
+                                this.flowContext.viewState,
+                                selectedObject
+                            )
                     );
 
                 let selectionBoundingRectBuilder = new BoundingRectBuilder();

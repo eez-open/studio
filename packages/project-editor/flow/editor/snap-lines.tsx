@@ -194,7 +194,7 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
                     isHiddenBySelectWidget(flowContext, node.object))
             )
         ) {
-            const rect1 = getObjectBoundingRect(node);
+            const rect1 = getObjectBoundingRect(flowContext.viewState, node);
             addLines(rect1, false);
 
             if (ADD_MARGIN_RECT) {

@@ -512,7 +512,7 @@ export class ResizeMouseHandler extends MouseHandlerWithSnapLines {
         this.savedRect = rectClone(this.object.rect);
         this.rect = rectClone(this.object.rect);
 
-        const rect = getObjectBoundingRect(this.object);
+        const rect = getObjectBoundingRect(context.viewState, this.object);
         this.xSnapOffset = rect.left - this.rect.left;
         this.ySnapOffset = rect.top - this.rect.top;
     }

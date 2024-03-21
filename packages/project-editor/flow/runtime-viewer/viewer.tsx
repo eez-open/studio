@@ -621,6 +621,7 @@ export const FlowViewer = observer(
             if (this.flowContext.viewState.selectedObjects.length > 0) {
                 const selectionBoundingRect = rectExpand(
                     getObjectBoundingRect(
+                        this.flowContext.viewState,
                         this.flowContext.viewState.targetComponent ||
                             this.flowContext.viewState.sourceComponent ||
                             this.flowContext.viewState.selectedObjects[0]

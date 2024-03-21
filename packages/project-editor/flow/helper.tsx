@@ -92,6 +92,32 @@ export function getNumberValue(
     return defaultValue;
 }
 
+export function getStringValue(
+    flowContext: IFlowContext,
+    widget: Widget,
+    propertyName: string,
+    defaultValue: string
+) {
+    let expr = (widget as any)[propertyName];
+
+    if (!expr) {
+        return defaultValue;
+    }
+
+    let value;
+    try {
+        value = evalProperty(flowContext, widget, propertyName);
+    } catch (err) {
+        // console.error(err);
+    }
+
+    if (typeof value === "string") {
+        return value;
+    }
+
+    return defaultValue;
+}
+
 export function getAnyValue(
     flowContext: IFlowContext,
     widget: Widget,

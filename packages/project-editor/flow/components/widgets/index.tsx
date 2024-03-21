@@ -1,9 +1,10 @@
 import { MenuItem } from "@electron/remote";
 
 import React from "react";
-import { observable, computed, makeObservable } from "mobx";
+import { observable, computed, makeObservable, toJS } from "mobx";
 import { observer } from "mobx-react";
 import { range } from "lodash";
+import * as FlexLayout from "flexlayout-react";
 
 import { Button } from "eez-studio-ui/button";
 
@@ -26,7 +27,8 @@ import {
     propertyNotSetMessage,
     createObject,
     getChildOfObject,
-    getAncestorOfType
+    getAncestorOfType,
+    updateObject
 } from "project-editor/store";
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
@@ -85,15 +87,25 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     generalGroup,
+    layoutGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
-import { getBooleanValue, evalProperty } from "project-editor/flow/helper";
+import {
+    getBooleanValue,
+    evalProperty,
+    getStringValue
+} from "project-editor/flow/helper";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import type { Page } from "project-editor/features/page/page";
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import { showDialog } from "eez-studio-ui/dialog";
+import { EditorFlowContext } from "project-editor/flow/editor/context";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
+import { ProjectContext } from "project-editor/project/context";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -103,12 +115,115 @@ const GRID_FLOW_COLUMN = 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DockingManagerUI = observer(
+    class DockingManagerUI extends React.Component<PropertyProps> {
+        editLayout = () => {
+            const containerWidget = this.props.objects[0] as ContainerWidget;
+            const projectStore = getProjectStore(containerWidget);
+            const page = getAncestorOfType(
+                containerWidget,
+                ProjectEditor.PageClass.classInfo
+            );
+            const editor = projectStore.editorsStore.getEditorByObject(page!);
+            if (!editor) {
+                return;
+            }
+
+            const flowContext = new EditorFlowContext();
+            flowContext.set(editor!.state as PageTabState, {
+                disableUpdateComponentGeometry: true
+            });
+
+            let disposed = false;
+
+            const onSave = () => {
+                updateObject(containerWidget, {
+                    dockingLayout: model.toJson()
+                });
+
+                onDispose();
+            };
+
+            const onDispose = () => {
+                if (!disposed) {
+                    disposed = true;
+
+                    if (modalDialog) {
+                        modalDialog.close();
+                    }
+                }
+            };
+
+            const model = containerWidget.getDockingLayoutModel(flowContext);
+
+            const [modalDialog] = showDialog(
+                <ProjectContext.Provider value={flowContext.projectStore}>
+                    <div className="EezStudio_ContaineWidget_DockingManagerUI EezStudio_FlowCanvasContainer">
+                        <FlexLayoutContainer
+                            key="flex-layout-container"
+                            model={model}
+                            factory={containerWidget.dockingLayoutFactory(
+                                flowContext,
+                                0,
+                                0
+                            )}
+                        />
+                        <div>
+                            <Button
+                                color="primary"
+                                size="medium"
+                                onClick={onSave}
+                            >
+                                Save
+                            </Button>
+                            <Button
+                                color="secondary"
+                                size="medium"
+                                onClick={onDispose}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                </ProjectContext.Provider>,
+                {
+                    jsPanel: {
+                        id: "container-widget-edit-docking-layout",
+                        title: "Edit Layout",
+                        width: 1024,
+                        height: 600,
+                        onclosed: onDispose
+                    }
+                }
+            );
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <div style={{ margin: "4px 0" }}>
+                    <Button
+                        color="primary"
+                        size="small"
+                        onClick={this.editLayout}
+                    >
+                        Edit Layout
+                    </Button>
+                </div>
+            );
+        }
+    }
+);
+
 export class ContainerWidget extends Widget {
     name?: string;
     widgets: Widget[];
     overlay?: string;
     shadow?: boolean;
-    layout: string;
+    layout: "static" | "horizontal" | "vertical" | "docking-manager";
+    dockingLayout: any;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -163,18 +278,51 @@ export class ContainerWidget extends Widget {
             {
                 name: "layout",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "static"
-                    },
-                    {
-                        id: "horizontal"
-                    },
-                    {
-                        id: "vertical"
-                    }
-                ],
-                propertyGridGroup: specificGroup
+                enumItems: (object: IEezObject) =>
+                    getProject(object).projectTypeTraits.isDashboard
+                        ? [
+                              {
+                                  id: "static"
+                              },
+                              {
+                                  id: "horizontal"
+                              },
+                              {
+                                  id: "vertical"
+                              },
+                              {
+                                  id: "docking-manager"
+                              }
+                          ]
+                        : [
+                              {
+                                  id: "static"
+                              },
+                              {
+                                  id: "horizontal"
+                              },
+                              {
+                                  id: "vertical"
+                              }
+                          ],
+                propertyGridGroup: layoutGroup
+            },
+            {
+                name: "dockingLayout",
+                type: PropertyType.Any,
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "customUI",
+                type: PropertyType.Any,
+                propertyGridGroup: layoutGroup,
+                computed: true,
+                propertyGridRowComponent: DockingManagerUI,
+                skipSearch: true,
+                hideInPropertyGrid: (widget: ContainerWidget) => {
+                    return widget.layout != "docking-manager";
+                }
             },
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "none"
@@ -200,6 +348,10 @@ export class ContainerWidget extends Widget {
         ) => {
             if (jsWidget.layout == undefined) {
                 jsWidget.layout = "static";
+            } else if (jsWidget.layout == "docking-manager") {
+                if (!getProject(widget).projectTypeTraits.isDashboard) {
+                    jsWidget.layout = "static";
+                }
             }
         },
 
@@ -231,10 +383,170 @@ export class ContainerWidget extends Widget {
             widgets: observable,
             overlay: observable,
             shadow: observable,
-            layout: observable
+            layout: observable,
+            dockingLayout: observable
         });
     }
 
+    getDockingLayoutModel(flowContext: IFlowContext) {
+        if (this.dockingLayout) {
+            const model = FlexLayout.Model.fromJson(toJS(this.dockingLayout));
+
+            let tabSetNode: FlexLayout.TabSetNode;
+            let tabSetNodeTabIndex = -1;
+            let numTabNodes = 0;
+
+            model.visitNodes((node, level) => {
+                if (node instanceof FlexLayout.TabSetNode) {
+                    if (!tabSetNode) {
+                        tabSetNode = node;
+                    }
+                } else if (node instanceof FlexLayout.TabNode) {
+                    numTabNodes++;
+
+                    const i = parseInt(node.getId().slice("child".length));
+                    if (i > tabSetNodeTabIndex) {
+                        tabSetNode = node.getParent() as FlexLayout.TabSetNode;
+                        tabSetNodeTabIndex = i;
+                    }
+                }
+            });
+
+            if (numTabNodes > this.widgets.length) {
+                for (let i = this.widgets.length; i < numTabNodes; i++) {
+                    model.doAction(FlexLayout.Actions.deleteTab(`child${i}`));
+                }
+            } else if (numTabNodes < this.widgets.length) {
+                for (let i = numTabNodes; i < this.widgets.length; i++) {
+                    const tab = model.doAction(
+                        FlexLayout.Actions.addNode(
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: `Child ${i}`,
+                                id: `child${i}`,
+                                component: `child${i}`,
+                                icon: undefined
+                            },
+                            tabSetNode!.getId(),
+                            FlexLayout.DockLocation.BOTTOM,
+                            -1,
+                            false
+                        )
+                    );
+                    tabSetNode = tab!.getParent() as FlexLayout.TabSetNode;
+                }
+            }
+
+            for (let i = 0; i < this.widgets.length; i++) {
+                const widget = this.widgets[i];
+                const title = getStringValue(
+                    flowContext,
+                    widget,
+                    "tabTitle",
+                    widget.tabTitle ? `{${widget.tabTitle}}` : `Child ${i + 1}`
+                );
+                model.doAction(
+                    FlexLayout.Actions.renameTab(`child${i}`, title)
+                );
+            }
+
+            return model;
+        }
+
+        return FlexLayout.Model.fromJson({
+            global: {
+                borderEnableAutoHide: true,
+                splitterSize: 4,
+                splitterExtra: 4,
+                legacyOverflowMenu: false,
+                tabEnableRename: false
+            },
+            borders: [
+                {
+                    type: "border",
+                    location: "top",
+                    children: []
+                },
+                {
+                    type: "border",
+                    location: "left",
+                    children: []
+                },
+                {
+                    type: "border",
+                    location: "right",
+                    children: []
+                },
+                {
+                    type: "border",
+                    location: "bottom",
+                    children: []
+                }
+            ],
+            layout: {
+                type: "row",
+                children: this.widgets.map((widget, i) => ({
+                    type: "tabset",
+                    children: [
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: `Child ${i}`,
+                            id: `child${i}`,
+                            component: `child${i}`,
+                            icon: undefined
+                        }
+                    ]
+                }))
+            }
+        });
+    }
+
+    dockingLayoutFactory = (
+        flowContext: IFlowContext,
+        containerWidth: number,
+        containerHeight: number
+    ) => {
+        return (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component) {
+                const i = parseInt(component?.slice("child".length));
+                const widget = this.widgets[i];
+                return (
+                    <ComponentEnclosure
+                        key={getId(widget)}
+                        component={widget}
+                        flowContext={flowContext}
+                        left={0}
+                        top={0}
+                        width={"100%"}
+                        height={"100%"}
+                    />
+                );
+            }
+
+            return null;
+        };
+    };
+
+    // getClassName(flowContext: IFlowContext) {
+    //     return classNames(super.getClassName(flowContext), {
+    //         "eez-flow-editor-capture-pointers": this.layout == "docking-manager"
+    //     });
+    // }
+
+    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
+        super.styleHook(style, flowContext);
+
+        if (this.overlay) {
+            if (this.shadow) {
+                style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
+            }
+            style.opacity = this.style.opacityProperty / 255;
+        }
+    }
     override render(
         flowContext: IFlowContext,
         containerWidth: number,
@@ -323,6 +635,18 @@ export class ContainerWidget extends Widget {
                     />
                 );
             });
+        } else if (this.layout == "docking-manager") {
+            children = [
+                <FlexLayoutContainer
+                    key="flex-layout-container"
+                    model={this.getDockingLayoutModel(flowContext)}
+                    factory={this.dockingLayoutFactory(
+                        flowContext,
+                        containerWidth,
+                        containerHeight
+                    )}
+                />
+            ];
         } else {
             children = (
                 <ComponentsContainerEnclosure
@@ -384,17 +708,6 @@ export class ContainerWidget extends Widget {
             );
         } else {
             return fragment;
-        }
-    }
-
-    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        super.styleHook(style, flowContext);
-
-        if (this.overlay) {
-            if (this.shadow) {
-                style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
-            }
-            style.opacity = this.style.opacityProperty / 255;
         }
     }
 

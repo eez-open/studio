@@ -213,6 +213,7 @@ export interface IViewState {
 export interface IEditorOptions {
     center?: Point;
     filterSnapLines?: (node: TreeObjectAdapter) => boolean;
+    disableUpdateComponentGeometry?: boolean;
 }
 
 export type HandleType =

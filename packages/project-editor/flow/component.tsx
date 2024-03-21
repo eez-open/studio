@@ -111,6 +111,7 @@ import {
     flowGroup,
     generalGroup,
     geometryGroup,
+    layoutGroup,
     specificGroup,
     styleGroup,
     timelineGroup
@@ -2178,6 +2179,16 @@ export class Component extends EezObject {
     }
 
     get autoSize(): AutoSize {
+        if (ProjectEditor.getProject(this).projectTypeTraits.isDashboard) {
+            const parent = getWidgetParent(this);
+            if (
+                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent.layout == "docking-manager"
+            ) {
+                return "both";
+            }
+        }
+
         return "none";
     }
 
@@ -2627,6 +2638,8 @@ export class Widget extends Component {
 
     timeline: TimelineKeyframe[];
 
+    tabTitle: string;
+
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
@@ -2690,6 +2703,30 @@ export class Widget extends Component {
                 hideInPropertyGrid: (widget: Widget) =>
                     !isTimelineEditorActive(widget)
             },
+            makeExpressionProperty(
+                {
+                    name: "tabTitle",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: layoutGroup,
+                    hideInPropertyGrid: (widget: Widget) => {
+                        const projectStore =
+                            ProjectEditor.getProjectStore(widget);
+
+                        if (projectStore.projectTypeTraits.isDashboard) {
+                            const parent = getWidgetParent(widget);
+                            if (
+                                parent instanceof
+                                    ProjectEditor.ContainerWidgetClass &&
+                                parent.layout == "docking-manager"
+                            ) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+                },
+                "string"
+            ),
             eventHandlersProperty
         ],
 
@@ -2912,50 +2949,58 @@ export class Widget extends Component {
                 !(object instanceof ProjectEditor.LVGLWidgetClass) &&
                 !object.allowOutside
             ) {
-                if (object.left < 0) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "left")
-                        )
-                    );
-                }
-
-                if (object.top < 0) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "top")
-                        )
-                    );
-                }
-
+                const parent = getWidgetParent(object);
                 if (
-                    object.left + object.width >
-                    getWidgetParent(object).width
+                    !(
+                        parent instanceof ProjectEditor.ContainerWidgetClass &&
+                        parent.layout == "docking-manager"
+                    )
                 ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "width")
-                        )
-                    );
-                }
+                    if (object.left < 0) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "left")
+                            )
+                        );
+                    }
 
-                if (
-                    object.top + object.height >
-                    getWidgetParent(object).height
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Widget is outside of its parent",
-                            getChildOfObject(object, "height")
-                        )
-                    );
+                    if (object.top < 0) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "top")
+                            )
+                        );
+                    }
+
+                    if (
+                        object.left + object.width >
+                        getWidgetParent(object).width
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "width")
+                            )
+                        );
+                    }
+
+                    if (
+                        object.top + object.height >
+                        getWidgetParent(object).height
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "height")
+                            )
+                        );
+                    }
                 }
             }
 
@@ -3030,7 +3075,8 @@ export class Widget extends Component {
         super();
 
         makeObservable(this, {
-            styleObject: computed
+            styleObject: computed,
+            tabTitle: observable
         });
     }
 

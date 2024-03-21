@@ -14,8 +14,12 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getId } from "project-editor/core/object";
 
-export function getObjectBoundingRect(objectAdapter: TreeObjectAdapter) {
+export function getObjectBoundingRect(
+    viewState: IViewState,
+    objectAdapter: TreeObjectAdapter
+) {
     const object = objectAdapter.object;
     if (object instanceof ProjectEditor.ConnectionLineClass) {
         return {
@@ -25,6 +29,27 @@ export function getObjectBoundingRect(objectAdapter: TreeObjectAdapter) {
             height: object.targetPosition.y - object.sourcePosition.y
         };
     } else if (object instanceof ProjectEditor.ComponentClass) {
+        const parent = ProjectEditor.getWidgetParent(object);
+        if (
+            parent instanceof ProjectEditor.ContainerWidgetClass &&
+            parent.layout == "docking-manager"
+        ) {
+            let dataFlowObjectId = getId(object);
+            const container = document.getElementById(viewState.containerId);
+            const el = container?.querySelector(
+                `[data-eez-flow-object-id='${dataFlowObjectId}']`
+            );
+            if (el) {
+                let rect = el.getBoundingClientRect();
+                return viewState.transform.clientToPageRect({
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                });
+            }
+        }
+
         return {
             left: object.absolutePositionPoint?.x ?? objectAdapter.rect.left,
             top: object.absolutePositionPoint?.y ?? objectAdapter.rect.top,
@@ -56,7 +81,7 @@ export function getSelectedObjectsBoundingRect(viewState: IViewState) {
         if (object.object instanceof ProjectEditor.ConnectionLineClass) {
             continue;
         }
-        const rect = getObjectBoundingRect(object);
+        const rect = getObjectBoundingRect(viewState, object);
         if (rect) {
             boundingRectBuilder.addRect(rect);
         }

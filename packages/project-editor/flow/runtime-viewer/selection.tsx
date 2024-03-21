@@ -83,7 +83,12 @@ export const Selection = observer(
         get selectedObjectRects() {
             const viewState = this.props.context.viewState;
             return this.selectedObjects
-                .map(selectedObject => getObjectBoundingRect(selectedObject))
+                .map(selectedObject =>
+                    getObjectBoundingRect(
+                        this.props.context.viewState,
+                        selectedObject
+                    )
+                )
                 .map(rect => viewState.transform.pageToOffsetRect(rect!));
         }
 
