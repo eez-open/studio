@@ -115,15 +115,18 @@ const GRID_FLOW_COLUMN = 2;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DockingManagerUI = observer(
-    class DockingManagerUI extends React.Component<PropertyProps> {
+const ContainerWidgetEditLayout = observer(
+    class ContainerWidgetEditLayout extends React.Component<PropertyProps> {
         editLayout = () => {
             const containerWidget = this.props.objects[0] as ContainerWidget;
             const projectStore = getProjectStore(containerWidget);
-            const page = getAncestorOfType(
+            const page = getAncestorOfType<Page>(
                 containerWidget,
                 ProjectEditor.PageClass.classInfo
             );
+            if (!page) {
+                return;
+            }
             const editor = projectStore.editorsStore.getEditorByObject(page!);
             if (!editor) {
                 return;
@@ -158,7 +161,7 @@ const DockingManagerUI = observer(
 
             const [modalDialog] = showDialog(
                 <ProjectContext.Provider value={flowContext.projectStore}>
-                    <div className="EezStudio_ContaineWidget_DockingManagerUI EezStudio_FlowCanvasContainer">
+                    <div className="EezStudio_ContaineWidget_EditLayout EezStudio_FlowCanvasContainer">
                         <FlexLayoutContainer
                             key="flex-layout-container"
                             model={model}
@@ -188,10 +191,10 @@ const DockingManagerUI = observer(
                 </ProjectContext.Provider>,
                 {
                     jsPanel: {
-                        id: "container-widget-edit-docking-layout",
+                        id: "container-widget-edit-layout",
                         title: "Edit Layout",
-                        width: 1024,
-                        height: 600,
+                        width: page.width,
+                        height: page.height,
                         onclosed: onDispose
                     }
                 }
@@ -311,14 +314,15 @@ export class ContainerWidget extends Widget {
                 name: "dockingLayout",
                 type: PropertyType.Any,
                 propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
             },
             {
-                name: "customUI",
+                name: "editLayout",
                 type: PropertyType.Any,
                 propertyGridGroup: layoutGroup,
                 computed: true,
-                propertyGridRowComponent: DockingManagerUI,
+                propertyGridRowComponent: ContainerWidgetEditLayout,
                 skipSearch: true,
                 hideInPropertyGrid: (widget: ContainerWidget) => {
                     return widget.layout != "docking-manager";

@@ -3024,6 +3024,14 @@ export class Widget extends Component {
             return !widget.locked;
         },
         isMoveable(widget: Widget) {
+            const parent = ProjectEditor.getWidgetParent(widget);
+            if (
+                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent.layout == "docking-manager"
+            ) {
+                return false;
+            }
+
             return !widget.locked && !getTimelineEditorState(widget);
         },
 
