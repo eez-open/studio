@@ -68,98 +68,92 @@
         display: flex;
         flex: 1;
         overflow: hidden;
+    }
+}
 
-        .EezStudio_HomeTab_Projects {
-            overflow: hidden;
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// OPEN PROJECT
 
-            .EezStudio_Header {
-                display: flex;
-                align-items: center;
-                width: 720px;
-                margin: 0 auto;
+.EezStudio_HomeTab_Projects {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 
-                .EezStudio_ButtonAction {
-                    padding: 10px;
+    .sort-button {
+        padding: 5px;
+        background-color: field;
+    }
+
+    .EezStudio_HomeTab_Projects_Header {
+        display: flex;
+        align-items: center;
+        width: 720px;
+        margin: 0 auto;
+
+        .EezStudio_SearchInput_Container {
+            margin: 10px auto;
+            max-width: 360px;
+            border: 1px solid @borderColor;
+            background-color: field;
+            border-radius: 18px;
+            padding: 5px 10px;
+            font-size: 120%;
+            /*
+                box-shadow: 0 2px 5px 1px @borderColor;
+                &:hover {
+                    box-shadow: 0 2px 8px 1px @borderColor;
                 }
+                */
+        }
+    }
 
-                .EezStudio_SearchInput_Container {
-                    margin: 10px auto;
-                    max-width: 360px;
-                    border: 1px solid @borderColor;
-                    background-color: field;
-                    border-radius: 18px;
-                    padding: 5px 10px;
-                    font-size: 120%;
-                    /*
-                        box-shadow: 0 2px 5px 1px @borderColor;
-                        &:hover {
-                            box-shadow: 0 2px 8px 1px @borderColor;
-                        }
-                        */
-                }
-            }
+    .EezStudio_HomeTab_Projects_Body {
+        flex: 1;
+        justify-content: center;
+        align-items: start;
+        display: flex;
+        overflow: hidden;
+        position: relative;
 
-            .EezStudio_Body {
-                .EezStudio_ListContainer {
-                    width: 720px;
-                    margin: 0 auto;
-                    border: 1px solid @borderColor;
-                    max-height: calc(100% - 10px);
-                    height: fit-content !important;
-                    border-radius: 10px;
+        margin-bottom: 10px;
 
-                    .EezStudio_List {
-                        padding: 10px;
-                    }
-                }
-            }
+        & > div {
+            margin: 0 10px;
+            box-sizing: border-box;
+            border: 1px solid @borderColor;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 100%;
         }
 
-        .EezStudio_HomeTab_Projects,
-        .EezStudio_HomeTab_Instruments {
-            display: flex;
-            flex-grow: 1;
+        .EezStudio_HomeTab_Projects_Space {
+            flex: 1;
+            max-width: 240px;
+            margin: 0;
+            border: none;
+        }
 
-            .EezStudio_ToolbarHeader {
-                background-color: transparent;
-                align-items: stretch;
-                justify-content: center;
+        .EezStudio_HomeTab_Projects_Actions {
+            flex: 1;
+            max-width: 240px;
+
+            border: none;
+
+            height: fit-content !important;
+        }
+
+        .EezStudio_ListContainer {
+            flex: 3;
+            max-width: 720px;
+
+            padding: 0;
+
+            .EezStudio_List {
                 padding: 10px;
-
-                h5 {
-                    margin-bottom: 0;
-                    overflow: hidden;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                }
-
-                div {
-                    flex-grow: 1;
-                    display: flex;
-                    justify-content: flex-end;
-
-                    button {
-                        margin-right: 10px;
-                    }
-
-                    button:last-child {
-                        margin-right: 0;
-                    }
-                }
-            }
-        }
-
-        .EezStudio_HomeTab_Projects {
-            .sort-button {
-                padding: 5px;
-                background-color: field;
-            }
-
-            .EezStudio_ListContainer {
-                overflow-x: hidden;
-                overflow-y: auto;
-                max-height: inherit;
-                flex-grow: 1;
 
                 .EezStudio_ListItem {
                     margin-bottom: 10px;
@@ -175,25 +169,16 @@
                         display: flex;
                         flex-direction: column;
 
-                        div.first-line {
+                        div.project-name {
                             font-size: 110%;
                             overflow: hidden;
                             white-space: nowrap;
                             text-overflow: ellipsis;
                         }
 
-                        div.text-secondary {
-                            color: @secondaryTextColor!important;
+                        div.project-folder {
                             white-space: normal;
                             font-size: 90%;
-                        }
-                    }
-                }
-
-                .EezStudio_ListItem.EezStudio_Selected {
-                    .EezStudio_HomeTab_ProjectItem {
-                        div.text-secondary {
-                            color: @secondaryTextColorWhenSelected!important;
                         }
                     }
                 }
@@ -203,34 +188,36 @@
                 }
             }
         }
+
+        .EezStudio_HomeTab_Projects_ProjectInfo {
+            flex: 2;
+            max-width: 480px;
+            min-height: 200px;
+
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            border: none;
+
+            .EezStudio_HomeTab_Projects_ProjectInfo_Actions {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                margin-left: 80px;
+
+                & > button {
+                    min-width: 160px;
+                    margin-bottom: 10px;
+                }
+            }
+        }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // CREATE PROJECT AND EXAMPLES
-
-.EezStudio_HomeTab_NewProjectWizard {
-    height: 100%;
-
-    .EezStudio_Header {
-        .EezStudio_ToolbarHeader {
-            padding: 10px;
-
-            h5 {
-                margin-bottom: 0;
-            }
-
-            div {
-                flex-grow: 1;
-                height: 31px;
-            }
-        }
-    }
-
-    .EezStudio_Body {
-        height: 100%;
-    }
-}
 
 .EezStudio_NewProjectWizard {
     flex: 1;
@@ -539,7 +526,42 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // INSTRUMENTS
+
+.EezStudio_HomeTab_Instruments {
+    display: flex;
+    flex-grow: 1;
+
+    .EezStudio_ToolbarHeader {
+        background-color: transparent;
+        align-items: stretch;
+        justify-content: center;
+        padding: 10px;
+
+        h5 {
+            margin-bottom: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        div {
+            flex-grow: 1;
+            display: flex;
+            justify-content: flex-end;
+
+            button {
+                margin-right: 10px;
+            }
+
+            button:last-child {
+                margin-right: 0;
+            }
+        }
+    }
+}
 
 .EezStudio_WorkbenchDocument {
     margin: 10px;
@@ -585,6 +607,8 @@
     padding: 8px;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // EXTENSIONS
 
@@ -831,6 +855,8 @@
     justify-content: space-between;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // SETTINGS
 

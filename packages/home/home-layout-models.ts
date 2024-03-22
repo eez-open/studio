@@ -97,19 +97,6 @@ export class LayoutModels extends AbstractLayoutModels {
         ]
     };
 
-    static INSTRUMENT_HISTORY_TABSET: FlexLayout.IJsonTabSetNode = {
-        type: "tabset",
-        weight: 40,
-        children: [
-            {
-                type: "tab",
-                enableClose: false,
-                name: "History",
-                component: "History"
-            }
-        ]
-    };
-
     static EXTENSION_MANAGER_MASTER_TABSET: FlexLayout.IJsonTabSetNode = {
         type: "tabset",
         enableTabStrip: false,
@@ -261,7 +248,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "instrumentProperties",
-                version: 15,
+                version: 16,
                 json: {
                     global,
                     borders: [],
@@ -273,8 +260,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                 children: [
                                     LayoutModels.INSTRUMENT_TOOLBAR_TABSET,
                                     LayoutModels.INSTRUMENT_PROPERTIES_TABSET,
-                                    LayoutModels.INSTRUMENT_CONNECTION_TABSET,
-                                    LayoutModels.INSTRUMENT_HISTORY_TABSET
+                                    LayoutModels.INSTRUMENT_CONNECTION_TABSET
                                 ]
                             }
                         ]

@@ -41,6 +41,7 @@ import { Header } from "eez-studio-ui/header-with-body";
 
 import dbVacuum from "db-services/vacuum";
 import { getMoment } from "eez-studio-shared/util";
+import type { IMruItem } from "main/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,10 +66,6 @@ const setIsDarkTheme = function (value: boolean) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface IMruItem {
-    filePath: string;
-    projectType: string;
-}
 const getMRU: () => IMruItem[] = function () {
     return ipcRenderer.sendSync("getMRU");
 };
@@ -408,7 +405,7 @@ export const Settings = observer(
             );
 
             return (
-                <div>
+                <div style={{ margin: "10px auto" }}>
                     <div className="EezStudio_HomeSettingsBody">
                         <PropertyList>
                             <FileInputProperty

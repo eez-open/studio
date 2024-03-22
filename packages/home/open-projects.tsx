@@ -1,0 +1,360 @@
+import path from "path";
+import { clipboard, ipcRenderer } from "electron";
+import { Menu, MenuItem } from "@electron/remote";
+import React from "react";
+import {
+    computed,
+    action,
+    observable,
+    runInAction,
+    makeObservable
+} from "mobx";
+import { observer } from "mobx-react";
+
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
+
+import { stringCompare } from "eez-studio-shared/string";
+
+import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
+import { settingsController } from "home/settings";
+import type { IMruItem } from "main/settings";
+import { SearchInput } from "eez-studio-ui/search-input";
+import { getProjectIcon } from "home/helper";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const HOME_TAB_OPEN_ICON = (
+    <svg fill="currentColor" viewBox="0 0 256 256">
+        <path d="M245 110.64a16 16 0 0 0-13-6.64h-16V88a16 16 0 0 0-16-16h-69.33l-27.73-20.8a16.14 16.14 0 0 0-9.6-3.2H40a16 16 0 0 0-16 16v144a8 8 0 0 0 8 8h179.1a8 8 0 0 0 7.59-5.47l28.49-85.47a16.05 16.05 0 0 0-2.18-14.42ZM93.34 64l27.73 20.8a16.12 16.12 0 0 0 9.6 3.2H200v16H69.77a16 16 0 0 0-15.18 10.94L40 158.7V64Z" />
+    </svg>
+);
+
+const SORT_ALPHA_ICON = (
+    <svg
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M15 10v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4"></path>
+        <path d="M19 21h-4l4 -7h-4"></path>
+        <path d="M4 15l3 3l3 -3"></path>
+        <path d="M7 6v12"></path>
+    </svg>
+);
+
+const SORT_RECENT_ICON = (
+    <svg
+        viewBox="0 0 24 24"
+        strokeWidth="2"
+        stroke="currentColor"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <line x1="4" y1="6" x2="13" y2="6"></line>
+        <line x1="4" y1="12" x2="11" y2="12"></line>
+        <line x1="4" y1="18" x2="11" y2="18"></line>
+        <polyline points="15 15 18 18 21 15"></polyline>
+        <line x1="18" y1="6" x2="18" y2="18"></line>
+    </svg>
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+class OpenProjectsStore {
+    selectedMruItem: IMruItem | undefined;
+    searchText: string = "";
+    sortAlphabetically: boolean = false;
+
+    constructor() {
+        this.sortAlphabetically =
+            localStorage.getItem("homeTabProjectsSort") == "alphabetically"
+                ? true
+                : false;
+
+        makeObservable(this, {
+            selectedMruItem: observable,
+            searchText: observable,
+            sortAlphabetically: observable,
+            mru: computed,
+            mruAlpha: computed,
+            allMruItems: computed,
+            toggleSort: action,
+            onSearchChange: action,
+            removeFromList: action
+        });
+    }
+
+    get mruAlpha() {
+        const mru = [...settingsController.mru];
+        mru.sort((mruItem1, mruItem2) => {
+            const baseName1 = path.basename(mruItem1.filePath);
+            const baseName2 = path.basename(mruItem2.filePath);
+            return stringCompare(baseName1, baseName2);
+        });
+        return mru;
+    }
+
+    get mru() {
+        return this.sortAlphabetically ? this.mruAlpha : settingsController.mru;
+    }
+
+    get allMruItems() {
+        return openProjectsStore.mru
+            .filter(
+                mruItem =>
+                    mruItem.filePath
+                        .toLowerCase()
+                        .indexOf(openProjectsStore.searchText.toLowerCase()) !=
+                    -1
+            )
+            .map(mruItem => ({
+                id: mruItem.filePath,
+                data: mruItem,
+                selected: mruItem == openProjectsStore.selectedMruItem
+            }));
+    }
+
+    toggleSort = () => {
+        this.sortAlphabetically = !this.sortAlphabetically;
+
+        localStorage.setItem(
+            "homeTabProjectsSort",
+            this.sortAlphabetically ? "alphabetically" : "most-recent"
+        );
+    };
+
+    onSearchChange = (event: any) => {
+        this.searchText = ($(event.target).val() as string).trim();
+        if (this.allMruItems.length > 0) {
+            this.selectedMruItem = this.allMruItems[0].data;
+        }
+    };
+
+    editProject = () => {
+        if (this.selectedMruItem) {
+            ipcRenderer.send("open-file", this.selectedMruItem!.filePath);
+        }
+    };
+
+    runProject = () => {
+        if (this.selectedMruItem && this.selectedMruItem.hasFlowSupport) {
+            ipcRenderer.send("open-file", this.selectedMruItem!.filePath, true);
+        }
+    };
+
+    copyProjectPath = () => {
+        if (this.selectedMruItem) {
+            clipboard.writeText(this.selectedMruItem.filePath);
+        }
+    };
+
+    removeFromList = () => {
+        if (openProjectsStore.selectedMruItem) {
+            settingsController.removeItemFromMRU(
+                openProjectsStore.selectedMruItem
+            );
+
+            openProjectsStore.selectedMruItem = undefined;
+        }
+    };
+}
+
+const openProjectsStore = new OpenProjectsStore();
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const Projects = observer(
+    class Projects extends React.Component {
+        onContextMenu = (node: IListNode<IMruItem>) => {
+            runInAction(() => (openProjectsStore.selectedMruItem = node.data));
+
+            const menu = new Menu();
+
+            menu.append(
+                new MenuItem({
+                    label: "Edit Project",
+                    click: openProjectsStore.editProject
+                })
+            );
+
+            if (node.data.hasFlowSupport) {
+                menu.append(
+                    new MenuItem({
+                        label: "Run Project",
+                        click: openProjectsStore.runProject
+                    })
+                );
+            }
+
+            menu.append(
+                new MenuItem({
+                    label: "Copy Project Path",
+                    click: openProjectsStore.copyProjectPath
+                })
+            );
+
+            menu.append(
+                new MenuItem({
+                    label: "Remove From List",
+                    click: openProjectsStore.removeFromList
+                })
+            );
+
+            menu.popup();
+        };
+
+        render() {
+            return (
+                <div className="EezStudio_HomeTab_Projects">
+                    <div className="EezStudio_HomeTab_Projects_Header">
+                        <SearchInput
+                            searchText={openProjectsStore.searchText}
+                            onClear={action(() => {
+                                openProjectsStore.searchText = "";
+                            })}
+                            onChange={openProjectsStore.onSearchChange}
+                            onKeyDown={openProjectsStore.onSearchChange}
+                        />
+                        <IconAction
+                            icon={
+                                openProjectsStore.sortAlphabetically
+                                    ? SORT_ALPHA_ICON
+                                    : SORT_RECENT_ICON
+                            }
+                            title={
+                                openProjectsStore.sortAlphabetically
+                                    ? "Sort alphabetically"
+                                    : "Show most recent first"
+                            }
+                            onClick={openProjectsStore.toggleSort}
+                        />
+                    </div>
+                    <div className="EezStudio_HomeTab_Projects_Body">
+                        <div className="EezStudio_HomeTab_Projects_Space"></div>
+                        <div className="EezStudio_HomeTab_Projects_Actions">
+                            <ButtonAction
+                                className="btn-primary"
+                                text={"Open Project"}
+                                title="Open a local EEZ Studio Project"
+                                icon={HOME_TAB_OPEN_ICON}
+                                onClick={() => {
+                                    ipcRenderer.send("open-project");
+                                }}
+                            />
+                        </div>
+                        <ListContainer tabIndex={0}>
+                            <List
+                                nodes={openProjectsStore.allMruItems}
+                                renderNode={(node: IListNode<IMruItem>) => {
+                                    let mruItem = node.data;
+
+                                    const isProject =
+                                        mruItem.filePath.endsWith(
+                                            ".eez-project"
+                                        );
+
+                                    let extension = isProject
+                                        ? ".eez-project"
+                                        : ".eez-dashboard";
+
+                                    const baseName = path.basename(
+                                        mruItem.filePath,
+                                        extension
+                                    );
+
+                                    return (
+                                        <ListItem
+                                            leftIcon={getProjectIcon(
+                                                mruItem.filePath,
+                                                mruItem.projectType,
+                                                48,
+                                                mruItem.hasFlowSupport
+                                            )}
+                                            leftIconSize={48}
+                                            label={
+                                                <div
+                                                    className="EezStudio_HomeTab_ProjectItem"
+                                                    title={mruItem.filePath}
+                                                >
+                                                    <div className="project-name">
+                                                        <span className="fw-bolder">
+                                                            {baseName}
+                                                        </span>
+                                                        <span>{extension}</span>
+                                                    </div>
+                                                    <div className="project-folder">
+                                                        {path.dirname(
+                                                            mruItem.filePath
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                    );
+                                }}
+                                selectNode={(node: IListNode<IMruItem>) => {
+                                    runInAction(
+                                        () =>
+                                            (openProjectsStore.selectedMruItem =
+                                                node.data)
+                                    );
+                                }}
+                                onContextMenu={this.onContextMenu}
+                                onDoubleClick={openProjectsStore.editProject}
+                            ></List>
+                        </ListContainer>
+                        <div className="EezStudio_HomeTab_Projects_ProjectInfo">
+                            {openProjectsStore.selectedMruItem && (
+                                <div className="EezStudio_HomeTab_Projects_ProjectInfo_Actions">
+                                    <ButtonAction
+                                        className="btn-primary"
+                                        text="Edit Project"
+                                        title="Edit Project"
+                                        icon="material:edit"
+                                        onClick={openProjectsStore.editProject}
+                                    />
+                                    {openProjectsStore.selectedMruItem
+                                        .hasFlowSupport && (
+                                        <ButtonAction
+                                            className="btn-secondary"
+                                            text="Run Project"
+                                            title="Run Project"
+                                            icon="material:play_arrow"
+                                            onClick={
+                                                openProjectsStore.runProject
+                                            }
+                                        />
+                                    )}
+                                    <ButtonAction
+                                        className="btn-secondary"
+                                        text="Copy Project Path"
+                                        title="Copy Project Path"
+                                        icon="material:content_copy"
+                                        onClick={
+                                            openProjectsStore.copyProjectPath
+                                        }
+                                    />
+                                    <ButtonAction
+                                        className="btn-danger"
+                                        text="Remove From List"
+                                        title="Remove From List"
+                                        icon="material:close"
+                                        onClick={
+                                            openProjectsStore.removeFromList
+                                        }
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    }
+);

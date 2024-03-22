@@ -113,7 +113,7 @@ interface IProjectType {
     projectFileUrl?: string | { "8.3": string; "9.0": string };
 }
 
-const SAVED_OPTIONS_VERSION = 11;
+const SAVED_OPTIONS_VERSION = 12;
 
 enum SaveOptionsFlags {
     All,
@@ -125,11 +125,31 @@ class WizardModel {
     folder: string | undefined = "_allTemplates";
     type: string | undefined = "dashboard";
 
-    lastTemplatesFolder: string | undefined = "_standard";
-    lastTemplatesType: string | undefined = "dashboard";
+    static makeTemplatesWizardModel() {
+        const wizardModel = new WizardModel();
 
-    lastExamplesFolder: string | undefined = "_allExamples";
-    lastExamplesType: string | undefined;
+        wizardModel.section = "templates";
+        wizardModel.folder = "_allTemplates";
+        wizardModel.type = "dashboard";
+
+        wizardModel.location = getHomePath("eez-projects");
+
+        return wizardModel;
+    }
+
+    static makeExamplesWizardModel() {
+        const wizardModel = new WizardModel();
+
+        wizardModel.section = "examples";
+        wizardModel.folder = "_allExamples";
+        wizardModel.type = undefined;
+
+        wizardModel.location = getHomePath(
+            "eez-projects" + path.sep + "examples"
+        );
+
+        return wizardModel;
+    }
 
     _name: string | undefined;
     get name() {
@@ -195,10 +215,6 @@ class WizardModel {
             createProjectInProgress: observable,
             section: observable,
             folder: observable,
-            lastTemplatesFolder: observable,
-            lastTemplatesType: observable,
-            lastExamplesFolder: observable,
-            lastExamplesType: observable,
             type: observable,
             _name: observable,
             nameError: observable,
@@ -226,8 +242,6 @@ class WizardModel {
             bb3ProjectTypes: computed,
             templateProjectTypes: computed,
             allTemplateProjectTypes: computed,
-            switchToTemplates: action.bound,
-            switchToExamples: action.bound,
             changeFolder: action.bound,
             changeType: action.bound,
             exampleProjectTypes: computed,
@@ -238,19 +252,22 @@ class WizardModel {
 
         this.loadOptions();
 
-        examplesCatalog.onNewCatalog = () => {
-            if (this.exampleProjectTypes.get("_newExamples")!.length > 0) {
-                runInAction(() => {
-                    this.section = "examples";
-                    this.folder = "_newExamples";
-                    this.type = this.projectTypes[0].id;
-                });
-            }
-        };
+        if (this.section == "examples") {
+            examplesCatalog.onNewCatalog = () => {
+                if (this.exampleProjectTypes.get("_newExamples")!.length > 0) {
+                    runInAction(() => {
+                        this.folder = "_newExamples";
+                        this.type = this.projectTypes[0].id;
+                    });
+                }
+            };
+        }
     }
 
     loadOptions() {
-        const optionsJSON = window.localStorage.getItem("project-wizard");
+        const optionsJSON = window.localStorage.getItem(
+            "project-wizard-" + this.section
+        );
         if (optionsJSON) {
             try {
                 const options = JSON.parse(optionsJSON);
@@ -258,10 +275,6 @@ class WizardModel {
                     this.section = options.section;
                     this.folder = options.folder;
                     this.type = options.type;
-                    this.lastTemplatesFolder = options.lastTemplatesFolder;
-                    this.lastTemplatesType = options.lastTemplatesType;
-                    this.lastExamplesFolder = options.lastExamplesFolder;
-                    this.lastExamplesType = options.lastExamplesType;
 
                     this.location = options.location;
                     this.createDirectory = options.createDirectory;
@@ -292,17 +305,13 @@ class WizardModel {
     saveOptions(flags: SaveOptionsFlags) {
         if (flags == SaveOptionsFlags.All) {
             window.localStorage.setItem(
-                "project-wizard",
+                "project-wizard-" + this.section,
                 JSON.stringify({
                     version: SAVED_OPTIONS_VERSION,
 
                     section: this.section,
                     type: this.type,
                     folder: this.folder,
-                    lastTemplatesFolder: this.lastTemplatesFolder,
-                    latsTemplatesType: this.lastTemplatesType,
-                    lastExamplesFolder: this.lastExamplesFolder,
-                    lastExamplesType: this.lastExamplesType,
 
                     location: this.location,
                     createDirectory: this.createDirectory,
@@ -334,10 +343,6 @@ class WizardModel {
                     section: this.section,
                     type: this.type,
                     folder: this.folder,
-                    lastTemplatesFolder: this.lastTemplatesFolder,
-                    latsTemplatesType: this.lastTemplatesType,
-                    lastExamplesFolder: this.lastExamplesFolder,
-                    lastExamplesType: this.lastExamplesType,
 
                     location: this.lastOptions.location,
                     createDirectory: this.lastOptions.createDirectory,
@@ -436,9 +441,13 @@ class WizardModel {
             this.searchText = "";
         });
 
-        wizardModel.fetchTemplateProjects();
+        if (this.section == "templates") {
+            this.fetchTemplateProjects();
+        }
 
-        examplesCatalog.load();
+        if (this.section == "examples") {
+            examplesCatalog.load();
+        }
 
         this.dispose1 = reaction(
             () => ({
@@ -928,98 +937,17 @@ class WizardModel {
         return false;
     }
 
-    switchToTemplates() {
-        this.section = "templates";
-
-        if (
-            this.lastTemplatesFolder != undefined &&
-            this.hasFolder(this.lastTemplatesFolder)
-        ) {
-            this.folder = this.lastTemplatesFolder;
-        } else {
-            this.folder = this.folders.children[0].id;
-        }
-
-        if (
-            this.lastTemplatesType != undefined &&
-            this.hasType(this.lastTemplatesType)
-        ) {
-            this.type = this.lastTemplatesType;
-        } else {
-            this.type =
-                this.projectTypes.length > 0
-                    ? this.projectTypes[0].id
-                    : undefined;
-        }
-
-        this.name = undefined;
-    }
-
-    switchToExamples() {
-        this.section = "examples";
-
-        if (
-            this.lastExamplesFolder != undefined &&
-            this.hasFolder(this.lastExamplesFolder)
-        ) {
-            this.folder = this.lastExamplesFolder;
-        } else {
-            if (this.folders.children.length > 0) {
-                this.folder = this.folders.children[0].id;
-            }
-        }
-
-        if (
-            this.lastExamplesType != undefined &&
-            this.hasType(this.lastExamplesType)
-        ) {
-            this.type = this.lastExamplesType;
-        } else {
-            this.type =
-                this.projectTypes.length > 0
-                    ? this.projectTypes[0].id
-                    : undefined;
-        }
-
-        this.name = undefined;
-    }
-
     changeFolder(folder: string) {
+        if (this.folder == folder) {
+            return;
+        }
+
         this.folder = folder;
 
-        if (this.section == "templates") {
-            this.lastTemplatesFolder = this.folder;
+        this.type =
+            this.projectTypes.length > 0 ? this.projectTypes[0].id : undefined;
 
-            if (
-                this.lastTemplatesType != undefined &&
-                this.hasType(this.lastTemplatesType)
-            ) {
-                this.type = this.lastTemplatesType;
-            } else {
-                this.type =
-                    this.projectTypes.length > 0
-                        ? this.projectTypes[0].id
-                        : undefined;
-            }
-
-            this.lastTemplatesType = this.type;
-        } else {
-            this.lastExamplesFolder = this.folder;
-
-            if (
-                this.lastExamplesType != undefined &&
-                this.hasType(this.lastExamplesType)
-            ) {
-                this.type = this.lastExamplesType;
-            } else {
-                this.type =
-                    this.projectTypes.length > 0
-                        ? this.projectTypes[0].id
-                        : undefined;
-            }
-
-            this.lastExamplesType = this.type;
-
+        if (this.section == "examples") {
             this.name = undefined;
         }
     }
@@ -1027,11 +955,7 @@ class WizardModel {
     changeType(type: string) {
         this.type = type;
 
-        if (this.section == "templates") {
-            this.lastTemplatesType = this.type;
-        } else {
-            this.lastExamplesType = this.type;
-
+        if (this.section == "examples") {
             this.name = undefined;
         }
     }
@@ -1731,9 +1655,9 @@ class WizardModel {
 
     get isSelectedExampleWithGitRepository() {
         return (
-            wizardModel.section == "examples" &&
-            wizardModel.selectedProjectType &&
-            wizardModel.isGitProject(wizardModel.selectedProjectType)
+            this.section == "examples" &&
+            this.selectedProjectType &&
+            this.isGitProject(this.selectedProjectType)
         );
     }
 
@@ -1768,16 +1692,17 @@ class WizardModel {
     }
 }
 
-export const wizardModel = new WizardModel();
+export const wizardModelTemplates = WizardModel.makeTemplatesWizardModel();
+export const wizardModelExamples = WizardModel.makeExamplesWizardModel();
 
 const FoldersTree = observer(
-    class FoldersTree extends React.Component {
+    class FoldersTree extends React.Component<{ wizardModel: WizardModel }> {
         render() {
             return (
                 <Tree
-                    rootNode={wizardModel.folders}
+                    rootNode={this.props.wizardModel.folders}
                     selectNode={node => {
-                        wizardModel.changeFolder(node.id);
+                        this.props.wizardModel.changeFolder(node.id);
                     }}
                     showOnlyChildren={true}
                     style={{ height: "100%", overflow: "auto" }}
@@ -1788,7 +1713,9 @@ const FoldersTree = observer(
 );
 
 const ProjectTypesList = observer(
-    class ProjectTypesList extends React.Component {
+    class ProjectTypesList extends React.Component<{
+        wizardModel: WizardModel;
+    }> {
         myRef = React.createRef<HTMLDivElement>();
 
         componentDidMount(): void {
@@ -1866,7 +1793,7 @@ const ProjectTypesList = observer(
 
                 let newFocusedItemId = $($rows[index]).attr("data-object-id");
                 if (newFocusedItemId) {
-                    wizardModel.changeType(newFocusedItemId);
+                    this.props.wizardModel.changeType(newFocusedItemId);
                     ($rows[index] as Element).scrollIntoView({
                         block: "nearest",
                         behavior: "auto"
@@ -1885,9 +1812,10 @@ const ProjectTypesList = observer(
                     tabIndex={0}
                     onKeyDown={this.onKeyDown}
                 >
-                    {wizardModel.projectTypes.map(projectType => (
+                    {this.props.wizardModel.projectTypes.map(projectType => (
                         <ProjectTypeComponent
                             key={projectType.id}
+                            wizardModel={this.props.wizardModel}
                             projectType={projectType}
                         />
                     ))}
@@ -1899,6 +1827,7 @@ const ProjectTypesList = observer(
 
 const ProjectTypeComponent = observer(
     class ProjectTypeComponent extends React.Component<{
+        wizardModel: WizardModel;
         projectType: IProjectType;
     }> {
         zoomed: boolean = false;
@@ -1912,7 +1841,7 @@ const ProjectTypeComponent = observer(
         render() {
             const { projectType } = this.props;
 
-            const selected = wizardModel.type == projectType.id;
+            const selected = this.props.wizardModel.type == projectType.id;
 
             let zoomedImage;
             if (this.zoomed) {
@@ -1931,7 +1860,7 @@ const ProjectTypeComponent = observer(
             }
 
             const imageZoomEnabled =
-                selected && wizardModel.section == "examples";
+                selected && this.props.wizardModel.section == "examples";
 
             return (
                 <div
@@ -1944,7 +1873,7 @@ const ProjectTypeComponent = observer(
                     )}
                     data-object-id={projectType.id}
                     onClick={() => {
-                        wizardModel.changeType(projectType.id);
+                        this.props.wizardModel.changeType(projectType.id);
                     }}
                 >
                     <div
@@ -2012,7 +1941,8 @@ const ProjectTypeComponent = observer(
                                 "LVGL version":
                                     projectType.projectType ==
                                     PROJECT_TYPE_NAMES[ProjectType.LVGL]
-                                        ? wizardModel.section == "templates" &&
+                                        ? this.props.wizardModel.section ==
+                                              "templates" &&
                                           (projectType.id == "LVGL" ||
                                               projectType.id ==
                                                   "LVGL with EEZ Flow")
@@ -2054,10 +1984,11 @@ function ProjectTypeInfo(props: {
 
 const ProjectProperties = observer(
     class ProjectProperties extends React.Component<{
+        wizardModel: WizardModel;
         modalDialog: IObservableValue<any>;
     }> {
         onOk = async () => {
-            const success = await wizardModel.createProject(
+            const success = await this.props.wizardModel.createProject(
                 this.props.modalDialog
             );
             if (success) {
@@ -2066,6 +1997,8 @@ const ProjectProperties = observer(
         };
 
         render() {
+            const { wizardModel } = this.props;
+
             if (wizardModel.type == undefined) {
                 return (
                     <div className="EezStudio_NewProjectWizard_ProjectProperties"></div>
@@ -2084,7 +2017,7 @@ const ProjectProperties = observer(
 
             return (
                 <div className="EezStudio_NewProjectWizard_ProjectProperties">
-                    <PlatformDescription />
+                    <PlatformDescription wizardModel={wizardModel} />
 
                     <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
                         <h6>Project Settings</h6>
@@ -2469,7 +2402,7 @@ const ProjectProperties = observer(
     }
 );
 
-function PlatformDescription() {
+function PlatformDescription({ wizardModel }: { wizardModel: WizardModel }) {
     if (!wizardModel.selectedProjectType) {
         return null;
     }
@@ -2521,6 +2454,7 @@ function PlatformDescription() {
 
 export const NewProjectWizard = observer(
     class NewProjectWizard extends React.Component<{
+        wizardModel: WizardModel;
         modalDialog: IObservableValue<any>;
     }> {
         constructor(props: any) {
@@ -2528,14 +2462,15 @@ export const NewProjectWizard = observer(
         }
 
         componentDidMount() {
-            wizardModel.mount();
+            this.props.wizardModel.mount();
         }
 
         componentWillUnmount() {
-            wizardModel.unmount();
+            this.props.wizardModel.unmount();
         }
 
         render() {
+            const { wizardModel } = this.props;
             return (
                 <div
                     className={classNames("EezStudio_NewProjectWizard", {
@@ -2554,9 +2489,10 @@ export const NewProjectWizard = observer(
                         {wizardModel.folders.children.length > 0 ? (
                             <>
                                 <div className="EezStudio_NewProjectWizard_Space"></div>
-                                <FoldersTree />
-                                <ProjectTypesList />
+                                <FoldersTree wizardModel={wizardModel} />
+                                <ProjectTypesList wizardModel={wizardModel} />
                                 <ProjectProperties
+                                    wizardModel={wizardModel}
                                     modalDialog={this.props.modalDialog}
                                 />
                             </>
@@ -2580,7 +2516,10 @@ export function showNewProjectWizard() {
     const modalDialogObservable = observable.box<any>();
 
     const [modalDialog] = showDialog(
-        <NewProjectWizard modalDialog={modalDialogObservable} />,
+        <NewProjectWizard
+            wizardModel={wizardModelTemplates}
+            modalDialog={modalDialogObservable}
+        />,
         {
             jsPanel: {
                 id: "new-project-wizard",

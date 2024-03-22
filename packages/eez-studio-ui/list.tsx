@@ -73,6 +73,7 @@ export const List = observer(
             selectNode?: (node: IListNode) => void;
             renderNode?: (node: IListNode) => React.ReactNode;
             onContextMenu?: (node: IListNode) => void;
+            onDoubleClick?: (node: IListNode) => void;
             tabIndex?: any;
             className?: string;
             style?: React.CSSProperties;
@@ -96,6 +97,13 @@ export const List = observer(
                             e.stopPropagation();
                             if (this.props.selectNode) {
                                 this.props.selectNode(node);
+                            }
+                        }}
+                        onDoubleClick={(e: any) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (this.props.onDoubleClick) {
+                                this.props.onDoubleClick(node);
                             }
                         }}
                         onContextMenu={

@@ -134,7 +134,7 @@ ipcRenderer.on("add-instrument", async (sender: any, filePath: any) => {
         "instrument/add-instrument-dialog"
     );
 
-    const { selectedInstrument } = await import("home/home-tab");
+    const { selectedInstrument } = await import("home/instruments");
 
     showAddInstrumentDialog(instrumentId => {
         setTimeout(() => {
