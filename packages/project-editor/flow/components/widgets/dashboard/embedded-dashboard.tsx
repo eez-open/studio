@@ -1,7 +1,7 @@
 import path from "path";
 import { ipcRenderer } from "electron";
 import React from "react";
-import { observable, makeObservable, autorun } from "mobx";
+import { observable, makeObservable, autorun, action } from "mobx";
 import { observer } from "mobx-react";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
@@ -75,10 +75,8 @@ const EmbeddedDashboardElement = makeLazyComponent(
 
                 const WasmRuntime = projectStore!.runtime! as WasmRuntime;
 
-                // wait unit embbedded dashboard is initialized
-                await new Promise<void>(resolve => {
-                    WasmRuntime.onInitialized = resolve;
-                });
+                const initialized = observable.box<boolean>(false);
+                WasmRuntime.onInitialized = action(() => initialized.set(true));
 
                 autorunDispose = autorun(() => {
                     for (
@@ -92,7 +90,7 @@ const EmbeddedDashboardElement = makeLazyComponent(
                             `dashboardParameters[${i}].value`
                         );
 
-                        if (WasmRuntime.worker && WasmRuntime.assetsMap) {
+                        if (initialized.get()) {
                             const WasmFlowRuntime = WasmRuntime.worker.wasm;
                             const assetsMap = WasmRuntime.assetsMap;
                             const globalVariable =
@@ -192,11 +190,15 @@ const EmbeddedDashboardElement = makeLazyComponent(
 
 const OpenEmbeddedDashboard = observer(
     class OpenEmbeddedDashboard extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
         openDashboard = () => {
-            ipcRenderer.send(
-                "open-file",
-                (this.props.objects[0] as EmbeddedDashboardWidget).dashboard
+            const widget = this.props.objects[0] as EmbeddedDashboardWidget;
+            const dashboardFilePath = this.context.getAbsoluteFilePath(
+                widget.dashboard
             );
+            ipcRenderer.send("open-file", dashboardFilePath);
         };
 
         render() {
