@@ -611,7 +611,7 @@ export const FlowViewer = observer(
                 this.ensureSelectionVisible
             );
             setTimeout(() => {
-                if (this.context.navigationStore.selectedPanel === this) {
+                if (this.context.navigationStore?.selectedPanel === this) {
                     this.context.navigationStore.setSelectedPanel(undefined);
                 }
             });
@@ -710,7 +710,7 @@ export const FlowViewer = observer(
         pasteSelection() {}
         deleteSelection() {}
         onFocus = () => {
-            this.context.navigationStore.setSelectedPanel(this);
+            this.context.navigationStore?.setSelectedPanel(this);
         };
 
         getDragComponent(event: React.DragEvent) {

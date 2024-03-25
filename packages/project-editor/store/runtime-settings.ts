@@ -44,9 +44,9 @@ export class RuntimeSettings {
         if (objectVariableType) {
             if (
                 variable.type == "object:Instrument" &&
-                this.projectStore.dashboardInstrument
+                this.projectStore.context.type == "instrument-dashobard"
             ) {
-                return this.projectStore.dashboardInstrument;
+                return this.projectStore.context.instrument;
             }
 
             const constructorParams = value;

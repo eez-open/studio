@@ -126,7 +126,7 @@ export class PageTabState extends FlowTabState {
 
     get frontFace() {
         return this.isRuntime
-            ? this.projectStore.uiStateStore.pageRuntimeFrontFace
+            ? this.projectStore.uiStateStore?.pageRuntimeFrontFace ?? true
             : this.projectStore.uiStateStore.pageEditorFrontFace;
     }
 

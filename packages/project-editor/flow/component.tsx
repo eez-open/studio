@@ -969,7 +969,7 @@ function addBreakpointMenuItems(
     const uiStateStore = projectStore.uiStateStore;
 
     if (projectStore.projectTypeTraits.hasFlowSupport) {
-        if (uiStateStore.isBreakpointAddedForComponent(component)) {
+        if (uiStateStore?.isBreakpointAddedForComponent(component)) {
             additionalMenuItems.push(
                 new MenuItem({
                     label: "Remove Breakpoint",

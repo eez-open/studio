@@ -146,12 +146,15 @@ export class WasmRuntime extends RemoteRuntime {
 
     lgvlPageRuntime: LVGLPageViewerRuntime | undefined;
 
+    onInitialized: (() => void) | undefined;
+
     ////////////////////////////////////////////////////////////////////////////////
 
     constructor(public projectStore: ProjectStore) {
         super(projectStore);
 
         makeObservable(this, {
+            worker: observable.shallow,
             displayWidth: observable,
             displayHeight: observable
         });
@@ -166,7 +169,7 @@ export class WasmRuntime extends RemoteRuntime {
     async doStartRuntime(isDebuggerActive: boolean) {
         let result;
 
-        if (this.projectStore.standalone) {
+        if (this.projectStore.context.type == "standalone") {
             try {
                 const fs = await import("fs");
                 result = JSON.parse(
@@ -266,7 +269,7 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async doStopRuntime(notifyUser: boolean) {
-        if (this.projectStore.dashboardInstrument) {
+        if (this.projectStore.context.type == "instrument-dashobard") {
             notifyUser = false;
         }
 
@@ -373,6 +376,10 @@ export class WasmRuntime extends RemoteRuntime {
 
             await this.worker.postMessage(message);
 
+            if (this.onInitialized) {
+                this.onInitialized();
+            }
+
             this.runMainLoop();
 
             if (this.lgvlPageRuntime) {
@@ -397,7 +404,7 @@ export class WasmRuntime extends RemoteRuntime {
 
                 if (
                     valueType != "object:Instrument" ||
-                    !this.projectStore.dashboardInstrument
+                    this.projectStore.context.type != "instrument-dashobard"
                 ) {
                     const objectVariableType = getObjectVariableTypeFromType(
                         this.projectStore,
@@ -566,8 +573,8 @@ export class WasmRuntime extends RemoteRuntime {
             let value =
                 variable.type == "object:Instrument" &&
                 firstDashboardInstrument &&
-                this.projectStore.dashboardInstrument
-                    ? this.projectStore.dashboardInstrument
+                this.projectStore.context.type == "instrument-dashobard"
+                    ? this.projectStore.context.instrument
                     : this.projectStore.dataContext.get(variable.fullName);
 
             if (variable.type == "object:Instrument") {
@@ -895,7 +902,8 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (
             !instrument.isConnected &&
-            instrument != this.projectStore.dashboardInstrument
+            (this.projectStore.context.type != "instrument-dashobard" ||
+                instrument != this.projectStore.context.instrument)
         ) {
             const CONNECTION_TIMEOUT = 3000;
             const startTime = Date.now();

@@ -79,9 +79,10 @@ export class DashboardProject {
             this.ProjectEditor = ProjectEditorView;
 
             await initProjectEditor(tabs, ProjectEditorTab);
-            const projectStore = await ProjectStore.create();
-
-            projectStore.dashboardInstrument = this.instrument;
+            const projectStore = await ProjectStore.create({
+                type: "instrument-dashobard",
+                instrument: this.instrument
+            });
 
             projectStore.mount();
 
@@ -199,7 +200,7 @@ export class DashboardProject {
 
         return (
             <this.ProjectContext.Provider value={this.projectStore!}>
-                <this.ProjectEditor onlyRuntime={true} />
+                <this.ProjectEditor showToolbar={false} />
             </this.ProjectContext.Provider>
         );
     }

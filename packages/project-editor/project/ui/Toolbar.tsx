@@ -27,7 +27,7 @@ export const Toolbar = observer(
         render() {
             return (
                 <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                    {!this.context.runMode &&
+                    {this.context.context.type != "run-tab" &&
                     !this.context.project._isDashboardBuild &&
                     !(
                         this.context.runtime &&
@@ -38,7 +38,7 @@ export const Toolbar = observer(
                         <div />
                     )}
 
-                    {!this.context.runMode &&
+                    {this.context.context.type != "run-tab" &&
                     !this.context.project._isDashboardBuild &&
                     this.context.projectTypeTraits.runtimeType !=
                         RuntimeType.NONE ? (

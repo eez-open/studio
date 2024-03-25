@@ -385,7 +385,7 @@ export const SelectInstrumentDialog = observer(
         }
 
         get isStandaloneDashboard() {
-            return this.context?.standalone;
+            return this.context.context.type == "standalone";
         }
 
         get selectedInstrument() {

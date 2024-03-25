@@ -296,7 +296,7 @@ export class OpenProjectsManager {
         const project = loadProject(
             this.projectStore,
             projectJs,
-            this.projectStore.runMode ? false : true
+            this.projectStore.context.type == "project-editor"
         ) as Project;
 
         project._isDashboardBuild = isDashboardBuild;

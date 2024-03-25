@@ -74,7 +74,7 @@ const ColorItem = observer(
             const project = getProjectWithThemes(this.context);
 
             let selectedTheme =
-                this.context.navigationStore.selectedThemeObject.get() as Theme;
+                this.context.navigationStore?.selectedThemeObject.get() as Theme;
 
             if (!selectedTheme) {
                 selectedTheme = project.themes[0];
@@ -576,7 +576,7 @@ function getThemedColorInProject(
     colorValue: string
 ): string | undefined {
     let selectedTheme =
-        project._store.navigationStore.selectedThemeObject.get() as Theme;
+        project._store.navigationStore?.selectedThemeObject.get() as Theme;
     if (!selectedTheme) {
         selectedTheme = project.themes[0];
     }

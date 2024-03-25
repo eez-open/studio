@@ -453,6 +453,7 @@ interface AssetsMap {
     globalVariables: {
         index: number;
         name: string;
+        type: string;
     }[];
     dashboardComponentTypeToNameMap: {
         [componentType: number]: string;

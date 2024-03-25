@@ -336,7 +336,7 @@ export const ComponentEnclosure = observer(
 
             let breakpointClass;
             if (component instanceof ProjectEditor.ComponentClass) {
-                if (uiStateStore.isBreakpointAddedForComponent(component)) {
+                if (uiStateStore?.isBreakpointAddedForComponent(component)) {
                     if (
                         uiStateStore.isBreakpointEnabledForComponent(component)
                     ) {

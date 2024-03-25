@@ -393,72 +393,7 @@ export class ContainerWidget extends Widget {
     }
 
     getDockingLayoutModel(flowContext: IFlowContext) {
-        if (this.dockingLayout) {
-            const model = FlexLayout.Model.fromJson(toJS(this.dockingLayout));
-
-            let tabSetNode: FlexLayout.TabSetNode;
-            let tabSetNodeTabIndex = -1;
-            let numTabNodes = 0;
-
-            model.visitNodes((node, level) => {
-                if (node instanceof FlexLayout.TabSetNode) {
-                    if (!tabSetNode) {
-                        tabSetNode = node;
-                    }
-                } else if (node instanceof FlexLayout.TabNode) {
-                    numTabNodes++;
-
-                    const i = parseInt(node.getId().slice("child".length));
-                    if (i > tabSetNodeTabIndex) {
-                        tabSetNode = node.getParent() as FlexLayout.TabSetNode;
-                        tabSetNodeTabIndex = i;
-                    }
-                }
-            });
-
-            if (numTabNodes > this.widgets.length) {
-                for (let i = this.widgets.length; i < numTabNodes; i++) {
-                    model.doAction(FlexLayout.Actions.deleteTab(`child${i}`));
-                }
-            } else if (numTabNodes < this.widgets.length) {
-                for (let i = numTabNodes; i < this.widgets.length; i++) {
-                    const tab = model.doAction(
-                        FlexLayout.Actions.addNode(
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: `Child ${i}`,
-                                id: `child${i}`,
-                                component: `child${i}`,
-                                icon: undefined
-                            },
-                            tabSetNode!.getId(),
-                            FlexLayout.DockLocation.BOTTOM,
-                            -1,
-                            false
-                        )
-                    );
-                    tabSetNode = tab!.getParent() as FlexLayout.TabSetNode;
-                }
-            }
-
-            for (let i = 0; i < this.widgets.length; i++) {
-                const widget = this.widgets[i];
-                const title = getStringValue(
-                    flowContext,
-                    widget,
-                    "tabTitle",
-                    widget.tabTitle ? `{${widget.tabTitle}}` : `Child ${i + 1}`
-                );
-                model.doAction(
-                    FlexLayout.Actions.renameTab(`child${i}`, title)
-                );
-            }
-
-            return model;
-        }
-
-        return FlexLayout.Model.fromJson({
+        const dockingLayout = toJS(this.dockingLayout) || {
             global: {
                 borderEnableAutoHide: true,
                 splitterSize: 4,
@@ -504,7 +439,68 @@ export class ContainerWidget extends Widget {
                     ]
                 }))
             }
+        };
+
+        const model = FlexLayout.Model.fromJson(dockingLayout);
+
+        let tabSetNode: FlexLayout.TabSetNode;
+        let tabSetNodeTabIndex = -1;
+        let numTabNodes = 0;
+
+        model.visitNodes((node, level) => {
+            if (node instanceof FlexLayout.TabSetNode) {
+                if (!tabSetNode) {
+                    tabSetNode = node;
+                }
+            } else if (node instanceof FlexLayout.TabNode) {
+                numTabNodes++;
+
+                const i = parseInt(node.getId().slice("child".length));
+                if (i > tabSetNodeTabIndex) {
+                    tabSetNode = node.getParent() as FlexLayout.TabSetNode;
+                    tabSetNodeTabIndex = i;
+                }
+            }
         });
+
+        if (numTabNodes > this.widgets.length) {
+            for (let i = this.widgets.length; i < numTabNodes; i++) {
+                model.doAction(FlexLayout.Actions.deleteTab(`child${i}`));
+            }
+        } else if (numTabNodes < this.widgets.length) {
+            for (let i = numTabNodes; i < this.widgets.length; i++) {
+                const tab = model.doAction(
+                    FlexLayout.Actions.addNode(
+                        {
+                            type: "tab",
+                            enableClose: false,
+                            name: `Child ${i}`,
+                            id: `child${i}`,
+                            component: `child${i}`,
+                            icon: undefined
+                        },
+                        tabSetNode!.getId(),
+                        FlexLayout.DockLocation.BOTTOM,
+                        -1,
+                        false
+                    )
+                );
+                tabSetNode = tab!.getParent() as FlexLayout.TabSetNode;
+            }
+        }
+
+        for (let i = 0; i < this.widgets.length; i++) {
+            const widget = this.widgets[i];
+            const title = getStringValue(
+                flowContext,
+                widget,
+                "tabTitle",
+                widget.tabTitle ? `{${widget.tabTitle}}` : `Child ${i + 1}`
+            );
+            model.doAction(FlexLayout.Actions.renameTab(`child${i}`, title));
+        }
+
+        return model;
     }
 
     dockingLayoutFactory = (

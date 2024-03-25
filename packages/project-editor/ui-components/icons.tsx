@@ -2158,7 +2158,7 @@ export const HIERARCHY_ICON = (
 );
 
 export const PROPERTIES_ICON = (
-    <svg viewBox="0 96 960 960">
+    <svg viewBox="0 96 960 960" fill="currentColor">
         <path d="M427 936V711h60v83h353v60H487v82h-60Zm-307-82v-60h247v60H120Zm187-166v-82H120v-60h187v-84h60v226h-60Zm120-82v-60h413v60H427Zm166-165V216h60v82h187v60H653v83h-60Zm-473-83v-60h413v60H120Z" />
     </svg>
 );
@@ -2199,7 +2199,7 @@ export const PAGES_ICON = (
 );
 
 export const PAGE_ICON = (
-    <svg viewBox="0 96 960 960">
+    <svg viewBox="0 96 960 960" fill="currentColor">
         <path d="M277 777h275v-60H277v60Zm0-171h406v-60H277v60Zm0-171h406v-60H277v60Zm-97 501q-24 0-42-18t-18-42V276q0-24 18-42t42-18h600q24 0 42 18t18 42v600q0 24-18 42t-42 18H180Zm0-60h600V276H180v600Zm0-600v600-600Z" />
     </svg>
 );
@@ -3227,5 +3227,60 @@ export const TERMINAL_WIDGET_ICON = (
         <path d="M8 9l3 3l-3 3"></path>
         <line x1="13" y1="15" x2="16" y2="15"></line>
         <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+    </svg>
+);
+
+export const EMBEDDED_DASHBOARD_WIDGET_ICON = (
+    <svg viewBox="0 0 560 510">
+        <g>
+            <path
+                d="M509.09 0A50.91 50.91 0 0 1 560 50.91v305.454a50.91 50.91 0 0 1-50.91 50.909H330.91v50.909h50.908v50.909H178.182v-50.91h50.909v-50.908H50.909C22.655 407.273 0 384.363 0 356.363V50.91A50.733 50.733 0 0 1 50.91 0h458.18"
+                strokeWidth="25.4545"
+                fill="#aaaaaa"
+                fillOpacity="1"
+            />
+            <path
+                d="M527.5 368.937h-495v-334h495z"
+                fill="#fefefe"
+                fillOpacity="1"
+                strokeWidth="1.23022"
+            />
+            <path
+                d="M54.633 102.161h70v70h-70zM54.592 192.49h70v70h-70zM54.93 281.458h70v70h-70z"
+                fill="#555555"
+                fillOpacity="1"
+                strokeWidth="24.7486"
+            />
+            <path
+                d="M32.5 34.937h495v46h-495v-46"
+                fill="#dddddd"
+                fillOpacity="1"
+                strokeWidth="22.4944"
+            />
+            <circle
+                cx={240.475}
+                cy={182.325}
+                r={68.5}
+                fill="#555555"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+            <circle
+                cx={414.7}
+                cy={182.325}
+                r={68.5}
+                fill="#555555"
+                fillOpacity="1"
+                stroke="#000"
+                strokeWidth="0"
+                strokeLinecap="square"
+                strokeOpacity="1"
+                paintOrder="fill markers stroke"
+            />
+        </g>
     </svg>
 );

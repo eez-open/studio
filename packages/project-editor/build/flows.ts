@@ -155,7 +155,7 @@ function buildComponent(
 
     // reserved
     dataBuffer.writeUint16(
-        assets.projectStore.uiStateStore.isBreakpointEnabledForComponent(
+        assets.projectStore.uiStateStore?.isBreakpointEnabledForComponent(
             component
         )
             ? 1
@@ -466,7 +466,8 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
             assets.map.globalVariables = assets.globalVariables.map(
                 (globalVariable, index) => ({
                     index,
-                    name: globalVariable.fullName
+                    name: globalVariable.fullName,
+                    type: globalVariable.type
                 })
             );
             dataBuffer.writeArray(

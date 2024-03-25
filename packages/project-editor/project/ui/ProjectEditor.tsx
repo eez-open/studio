@@ -50,7 +50,7 @@ import {
 
 export const ProjectEditorView = observer(
     class ProjectEditorView extends React.Component<{
-        onlyRuntime: boolean;
+        showToolbar: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -67,14 +67,17 @@ export const ProjectEditorView = observer(
                 return <MissingExtensions />;
             }
 
-            if (this.context.runMode && !this.context.runtime) {
+            if (
+                this.context.context.type != "project-editor" &&
+                !this.context.runtime
+            ) {
                 return <div className="EezStudio_ProjectEditorWrapper" />;
             }
 
             return (
                 <div className="EezStudio_ProjectEditorWrapper">
                     <div className="EezStudio_ProjectEditorMainContentWrapper">
-                        {!this.props.onlyRuntime && <Toolbar />}
+                        {this.props.showToolbar && <Toolbar />}
                         <Content />
                     </div>
                 </div>
@@ -91,8 +94,8 @@ const Content = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         componentDidMount(): void {
-            this.context.editorsStore.openInitialEditors();
-            this.context.editorsStore.refresh(true);
+            this.context.editorsStore?.openInitialEditors();
+            this.context.editorsStore?.refresh(true);
         }
 
         factory = (node: FlexLayout.TabNode) => {

@@ -211,7 +211,7 @@ class Model {
     async createProjectStore(projectFileUrl: string) {
         const jsonStr = await fetchUrlOrReadFromCache(projectFileUrl, "json");
 
-        const projectStore = await ProjectStore.create();
+        const projectStore = await ProjectStore.create({ type: "read-only" });
 
         const project = loadProject(projectStore, jsonStr, false);
 

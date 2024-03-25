@@ -250,7 +250,9 @@ export abstract class RuntimeBase {
         if (this.state == State.STARTING) {
             if (action == StateMachineAction.START_WITHOUT_DEBUGGER) {
                 this.setState(State.STARTING_WITHOUT_DEBUGGER);
-                this.projectStore.uiStateStore.pageRuntimeFrontFace = true;
+                if (this.projectStore.uiStateStore) {
+                    this.projectStore.uiStateStore.pageRuntimeFrontFace = true;
+                }
             } else if (action == StateMachineAction.START_WITH_DEBUGGER) {
                 this.setState(State.STARTING_WITH_DEBUGGER);
                 this.projectStore.uiStateStore.pageRuntimeFrontFace = false;

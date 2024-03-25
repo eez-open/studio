@@ -128,26 +128,24 @@ interface ExtensionContent {
     }[];
 }
 
+type ProjectStoreContext =
+    | { type: "read-only" }
+    | { type: "project-editor" }
+    | { type: "run-tab" }
+    | { type: "run-embedded" }
+    | { type: "instrument-dashobard"; instrument: InstrumentObject }
+    | { type: "standalone" };
+
 export class ProjectStore {
     project: Project;
 
-    undoManager = new UndoManager(this);
-    navigationStore = new NavigationStore(this);
-    layoutModels = new LayoutModels(this);
-    editorModeEditorsStore: EditorsStore = new EditorsStore(
-        this,
-        () =>
-            this.projectTypeTraits.isIEXT
-                ? this.layoutModels.rootEditorForIEXT
-                : this.layoutModels.rootEditor,
-        LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
-    );
-    runtimeModeEditorsStore = new EditorsStore(
-        this,
-        () => this.layoutModels.rootRuntime,
-        LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
-    );
-    uiStateStore = new UIStateStore(this);
+    undoManager: UndoManager;
+    navigationStore: NavigationStore;
+    layoutModels: LayoutModels;
+    editorModeEditorsStore: EditorsStore;
+    runtimeModeEditorsStore: EditorsStore;
+    uiStateStore: UIStateStore;
+
     runtimeSettings = new RuntimeSettings(this);
     outputSectionsStore = new OutputSections(this);
     typesStore = new TypesStore(this);
@@ -175,10 +173,6 @@ export class ProjectStore {
     dispose4: mobx.IReactionDisposer;
     dispose5: mobx.IReactionDisposer;
 
-    dashboardInstrument?: InstrumentObject;
-    standalone: boolean = false;
-    runMode: boolean = false;
-
     missingExtensionsResolved: boolean = false;
 
     extensionNames: string[];
@@ -195,12 +189,33 @@ export class ProjectStore {
         return this.project.projectTypeTraits;
     }
 
-    static async create() {
-        return new ProjectStore();
+    static async create(context: ProjectStoreContext) {
+        return new ProjectStore(context);
     }
 
-    constructor() {
-        this.savedRevision = this.lastRevision = Symbol();
+    constructor(public context: ProjectStoreContext) {
+        if (this.context.type == "project-editor") {
+            this.savedRevision = this.lastRevision = Symbol();
+            this.undoManager = new UndoManager(this);
+            this.navigationStore = new NavigationStore(this);
+
+            this.layoutModels = new LayoutModels(this);
+            this.editorModeEditorsStore = new EditorsStore(
+                this,
+                () =>
+                    this.projectTypeTraits.isIEXT
+                        ? this.layoutModels.rootEditorForIEXT
+                        : this.layoutModels.rootEditor,
+                LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
+            );
+            this.runtimeModeEditorsStore = new EditorsStore(
+                this,
+                () => this.layoutModels.rootRuntime,
+                LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID
+            );
+
+            this.uiStateStore = new UIStateStore(this);
+        }
 
         makeObservable<ProjectStore>(this, {
             runtime: observable,
@@ -226,25 +241,29 @@ export class ProjectStore {
     }
 
     mount() {
-        this.dispose1 = autorun(
-            () => {
-                this.updateProjectWindowState();
-            },
-            {
-                delay: 100
-            }
-        );
-
-        this.dispose2 = autorun(
-            () => {
-                if (this.filePath) {
-                    this.updateMruFilePath();
+        if (this.context.type == "project-editor") {
+            this.dispose1 = autorun(
+                () => {
+                    this.updateProjectWindowState();
+                },
+                {
+                    delay: 100
                 }
-            },
-            {
-                delay: 100
-            }
-        );
+            );
+        }
+
+        if (this.context.type == "project-editor") {
+            this.dispose2 = autorun(
+                () => {
+                    if (this.filePath) {
+                        this.updateMruFilePath();
+                    }
+                },
+                {
+                    delay: 100
+                }
+            );
+        }
     }
 
     onActivate() {
@@ -352,13 +371,17 @@ export class ProjectStore {
             }
         });
 
-        this.editorsStore.unmount();
-        this.uiStateStore.unmount();
-        this.navigationStore.unmount();
-        this.layoutModels.unmount();
+        this.editorsStore?.unmount();
+        this.uiStateStore?.unmount();
+        this.navigationStore?.unmount();
+        this.layoutModels?.unmount();
 
-        this.dispose1();
-        this.dispose2();
+        if (this.dispose1) {
+            this.dispose1();
+        }
+        if (this.dispose2) {
+            this.dispose2();
+        }
         if (this.dispose3) {
             this.dispose3();
         }
@@ -480,7 +503,7 @@ export class ProjectStore {
     }
 
     updateProjectWindowState() {
-        if (this.dashboardInstrument || this.standalone || this.runMode) {
+        if (this.context.type != "project-editor") {
             return;
         }
 
@@ -504,7 +527,10 @@ export class ProjectStore {
     }
 
     updateMruFilePath() {
-        if (this.dashboardInstrument) {
+        if (
+            this.context.type != "project-editor" &&
+            this.context.type != "run-tab"
+        ) {
             return;
         }
 
@@ -786,7 +812,7 @@ export class ProjectStore {
         }
         await this.runtimeSettings.save();
 
-        if (!this.project._isDashboardBuild) {
+        if (this.uiStateStore) {
             await this.uiStateStore.save();
         }
 
@@ -839,9 +865,14 @@ export class ProjectStore {
 
         this.dataContext = new ProjectEditor.DataContextClass(project);
 
-        this.undoManager.clear();
+        if (this.undoManager) {
+            this.undoManager.clear();
+        }
 
-        await this.uiStateStore.load();
+        if (this.uiStateStore) {
+            await this.uiStateStore.load();
+        }
+
         await this.runtimeSettings.load();
 
         runInAction(() => {
@@ -1107,7 +1138,7 @@ export class ProjectStore {
             runInAction(() => (this.runtime = undefined));
         }
 
-        this.editorsStore.refresh(true);
+        this.editorsStore?.refresh(true);
     }
 
     async setEditorMode() {
@@ -1130,7 +1161,7 @@ export class ProjectStore {
                 this.runtime = undefined;
             });
 
-            this.editorsStore.refresh(true);
+            this.editorsStore?.refresh(true);
         }
     }
 

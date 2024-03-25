@@ -428,8 +428,16 @@ export class ProjectEditorTab implements IHomeTab {
             this.ProjectEditor = ProjectEditorView;
 
             await initProjectEditor(tabs, ProjectEditorTab);
-            const projectStore = await ProjectStore.create();
-            projectStore.runMode = !!this.runMode;
+            const projectStore = await ProjectStore.create(
+                this.runMode
+                    ? {
+                          type: "run-tab"
+                      }
+                    : {
+                          type: "project-editor"
+                      }
+            );
+
             projectStore.mount();
 
             if (this._filePath) {
@@ -735,7 +743,7 @@ export class ProjectEditorTab implements IHomeTab {
 
         return (
             <this.ProjectContext.Provider value={this.projectStore}>
-                <this.ProjectEditor onlyRuntime={false} />
+                <this.ProjectEditor showToolbar={true} />
             </this.ProjectContext.Provider>
         );
     }
