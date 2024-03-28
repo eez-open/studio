@@ -574,12 +574,20 @@
             border: 1px solid @borderColor;
             border-radius: 10px;
             margin: 10px;
+            &:last-child {
+                margin-left: 0;
+            }
         }
 
         .EezStudio_Instruments {
             flex: 1;
             height: calc(100% - 20px);
             overflow: auto;
+
+            display: flex;
+            flex-wrap: wrap;
+            align-items: start;
+            align-content: flex-start;
 
             &.EezStudio_Instruments_Size_S {
                 .EezStudio_InstrumentComponentEnclosure {

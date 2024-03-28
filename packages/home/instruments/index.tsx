@@ -596,7 +596,7 @@ export const Instruments = observer(
                     <div className="EezStudio_HomeTab_Instruments_Body">
                         <div
                             className={classNames(
-                                "EezStudio_Instruments d-flex flex-wrap justify-content-center align-items-center",
+                                "EezStudio_Instruments",
                                 "EezStudio_Instruments_Size_" + this.props.size
                             )}
                         >
