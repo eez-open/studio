@@ -1,12 +1,6 @@
 import React from "react";
 import { findDOMNode } from "react-dom";
-import {
-    computed,
-    IObservableValue,
-    runInAction,
-    values,
-    makeObservable
-} from "mobx";
+import { computed, values, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
@@ -18,8 +12,11 @@ import { confirm } from "eez-studio-ui/dialog-electron";
 import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { ButtonAction } from "eez-studio-ui/action";
 
-import { InstrumentObject, store } from "instrument/instrument-object";
 import { db } from "eez-studio-shared/db-path";
+
+import { InstrumentsStore } from "home/instruments";
+
+import { InstrumentObject, store } from "instrument/instrument-object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +31,7 @@ export const deletedInstruments = deletedInstrumentCollection.objects;
 
 const DeletedInstrumentsDialog = observer(
     class DeletedInstrumentsDialog extends React.Component<{
-        selectedInstrument: IObservableValue<string | undefined>;
+        instrumentsStore: InstrumentsStore;
     }> {
         element: Element;
 
@@ -74,11 +71,8 @@ const DeletedInstrumentsDialog = observer(
                                     title="Restore"
                                     onClick={() => {
                                         instrument.restore();
-                                        runInAction(() =>
-                                            this.props.selectedInstrument.set(
-                                                instrument.id
-                                            )
-                                        );
+                                        this.props.instrumentsStore.selectedInstrumentId =
+                                            instrument.id;
                                     }}
                                     style={{ marginRight: "5px" }}
                                 />
@@ -174,9 +168,9 @@ const DeletedInstrumentsDialog = observer(
 );
 
 export function showDeletedInstrumentsDialog(
-    selectedInstrument: IObservableValue<string | undefined>
+    instrumentsStore: InstrumentsStore
 ) {
     showDialog(
-        <DeletedInstrumentsDialog selectedInstrument={selectedInstrument} />
+        <DeletedInstrumentsDialog instrumentsStore={instrumentsStore} />
     );
 }

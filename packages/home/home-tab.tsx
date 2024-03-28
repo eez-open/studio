@@ -16,7 +16,7 @@ import {
     extensionsManagerStore
 } from "./extensions-manager/extensions-manager";
 import { HOME_TAB_OPEN_ICON, Projects } from "home/open-projects";
-import { Instruments } from "home/instruments";
+import { Instruments, defaultInstrumentsStore } from "home/instruments";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -270,7 +270,11 @@ export const Home = observer(
                         )
                         */}
                         {homeTabStore.activeTab == "instruments" && (
-                            <Instruments />
+                            <Instruments
+                                instrumentsStore={defaultInstrumentsStore}
+                                showAdditionalButtons={true}
+                                size="L"
+                            />
                         )}
                         {homeTabStore.activeTab == "extensions" && (
                             <ExtensionsManager />

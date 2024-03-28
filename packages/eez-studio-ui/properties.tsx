@@ -63,12 +63,13 @@ export const StaticProperty = observer(
         {}
     > {
         render() {
+            const value =
+                (this.props.value && this.props.value.toString()) || "";
             return (
                 <PropertyEnclosure>
                     <td className="PropertyName">{this.props.name}</td>
-                    <td className="StaticPropertyValue">
-                        {(this.props.value && this.props.value.toString()) ||
-                            ""}
+                    <td className="StaticPropertyValue" title={value}>
+                        {value}
                     </td>
                 </PropertyEnclosure>
             );

@@ -26,6 +26,7 @@ import type * as ExtensionManagerModule from "home/extensions-manager/extensions
 export const InstrumentToolbar = observer(
     class InstrumentToolbar extends React.Component<{
         instrument: InstrumentObject;
+        showAdditionalButtons: boolean;
     }> {
         onOpenInTab = () => {
             this.props.instrument.openEditor("tab");
@@ -58,18 +59,22 @@ export const InstrumentToolbar = observer(
                             }
                         />
                     )}
-                    <ButtonAction
-                        text="Open in Tab"
-                        title="Open instrument in new tab"
-                        className="btn btn-secondary"
-                        onClick={this.onOpenInTab}
-                    />
-                    <ButtonAction
-                        text="Open in New Window"
-                        title="Open instrument in new window"
-                        className="btn btn-secondary"
-                        onClick={this.onOpenInWindow}
-                    />
+                    {this.props.showAdditionalButtons && (
+                        <ButtonAction
+                            text="Open in Tab"
+                            title="Open instrument in new tab"
+                            className="btn btn-secondary"
+                            onClick={this.onOpenInTab}
+                        />
+                    )}
+                    {this.props.showAdditionalButtons && (
+                        <ButtonAction
+                            text="Open in New Window"
+                            title="Open instrument in new window"
+                            className="btn btn-secondary"
+                            onClick={this.onOpenInWindow}
+                        />
+                    )}
                     <ButtonAction
                         text="Delete"
                         title="Delete instrument"
@@ -108,7 +113,7 @@ export const InstrumentConnection = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ConnectionParametersDetails = observer(
+export const ConnectionParametersDetails = observer(
     class ConnectionParametersDetails extends React.Component<{
         instrument: InstrumentObject;
     }> {
@@ -288,7 +293,7 @@ const Properties = observer(
                     />
                     <StaticProperty
                         name="IDN"
-                        value={this.props.instrument.idn || "Not found!"}
+                        value={this.props.instrument.idn || ""}
                     />
                     <BooleanProperty
                         name="Auto connect"

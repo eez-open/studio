@@ -253,7 +253,7 @@ export class TerminalComponent extends React.Component<
                             if (hasQuery) {
                                 await instrument.connection.query(command);
                             } else {
-                                instrument.connection.send(command);
+                                await instrument.connection.send(command);
                             }
                         } catch (err) {
                             notification.error(err.toString());

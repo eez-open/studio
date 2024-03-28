@@ -1,7 +1,6 @@
 /// <reference path="./globals.d.ts"/>
 import "bootstrap";
 import { ipcRenderer } from "electron";
-import { runInAction } from "mobx";
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
@@ -134,11 +133,11 @@ ipcRenderer.on("add-instrument", async (sender: any, filePath: any) => {
         "instrument/add-instrument-dialog"
     );
 
-    const { selectedInstrument } = await import("home/instruments");
+    const { defaultInstrumentsStore } = await import("home/instruments");
 
     showAddInstrumentDialog(instrumentId => {
         setTimeout(() => {
-            runInAction(() => selectedInstrument.set(instrumentId));
+            defaultInstrumentsStore.selectedInstrumentId = instrumentId;
         }, 100);
     });
 });

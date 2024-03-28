@@ -531,80 +531,194 @@
 // INSTRUMENTS
 
 .EezStudio_HomeTab_Instruments {
-    display: flex;
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 
-    .EezStudio_ToolbarHeader {
-        background-color: transparent;
-        align-items: stretch;
+    .EezStudio_HomeTab_Instruments_Header {
+        display: flex;
+
+        .EezStudio_ToolbarHeader {
+            background-color: transparent;
+            align-items: stretch;
+            justify-content: center;
+            padding: 10px;
+            padding-bottom: 0;
+            border: none;
+
+            div {
+                flex-grow: 1;
+                display: flex;
+                justify-content: flex-end;
+
+                button {
+                    margin-right: 10px;
+                }
+
+                button:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+
+    .EezStudio_HomeTab_Instruments_Body {
+        flex: 1;
         justify-content: center;
-        padding: 10px;
+        align-items: start;
+        display: flex;
+        overflow: hidden;
+        position: relative;
 
-        h5 {
-            margin-bottom: 0;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+        & > div {
+            border: 1px solid @borderColor;
+            border-radius: 10px;
+            margin: 10px;
         }
 
-        div {
-            flex-grow: 1;
+        .EezStudio_Instruments {
+            flex: 1;
+            height: calc(100% - 20px);
+            overflow: auto;
+
+            &.EezStudio_Instruments_Size_S {
+                .EezStudio_InstrumentComponentEnclosure {
+                    width: 120px;
+                    padding: 8px;
+                    margin: 8px;
+
+                    .EezStudio_InstrumentContent {
+                        img {
+                            width: 104px;
+                            height: 104px;
+                        }
+                    }
+                }
+            }
+
+            &.EezStudio_Instruments_Size_M {
+                .EezStudio_InstrumentComponentEnclosure {
+                    width: 180px;
+                    padding: 12px;
+                    margin: 12px;
+
+                    .EezStudio_InstrumentContent {
+                        img {
+                            width: 156px;
+                            height: 156px;
+                        }
+                    }
+                }
+            }
+
+            &.EezStudio_Instruments_Size_L {
+                .EezStudio_InstrumentComponentEnclosure {
+                    width: 240px;
+                    padding: 16px;
+                    margin: 16px;
+
+                    .EezStudio_InstrumentContent {
+                        img {
+                            width: 208px;
+                            height: 208px;
+                        }
+                    }
+                }
+            }
+
+            .EezStudio_InstrumentComponentEnclosure {
+                .EezStudio_InstrumentContent {
+                    width: 100%;
+                    height: 100%;
+
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+
+                    text-align: center;
+
+                    & > * {
+                        flex-grow: 0;
+                        flex-shrink: 0;
+                        overflow-wrap: anywhere;
+                    }
+
+                    img {
+                        display: block;
+                        object-fit: contain;
+                    }
+
+                    .EezStudio_InstrumentLabel {
+                        width: 100%;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                &.selected {
+                    background-color: @selectionBackgroundColor!important;
+                    color: @selectionColor;
+                }
+            }
+        }
+
+        .EezStudio_HomeTab_Instruments_SelectedInstrument_Properties {
+            flex: 0;
+            min-width: 400px;
+
             display: flex;
-            justify-content: flex-end;
+            flex-direction: column;
+            position: relative;
 
-            button {
-                margin-right: 10px;
+            height: calc(100% - 20px);
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            .EezStudio_HomeTab_Instruments_SelectedInstrument_Properties_Section {
+                position: relative;
+
+                h6 {
+                    background-color: @panelHeaderColor;
+                    padding: 5px 10px;
+                    text-transform: uppercase;
+                    margin: 0;
+                }
             }
 
-            button:last-child {
-                margin-right: 0;
+            .EezStudio_InstrumentToolbarEnclosure,
+            .EezStudio_InstrumentPropertiesEnclosure,
+            .EezStudio_InstrumentConnectionEnclosure {
+                padding: 8px;
+            }
+
+            .EezStudio_PropertyList {
+                max-width: 380px;
+
+                .PropertyName {
+                    width: 80px;
+                    font-style: italic;
+                }
+
+                .StaticPropertyValue {
+                    max-width: 290px;
+                }
             }
         }
     }
 }
 
-.EezStudio_WorkbenchDocument {
-    margin: 10px;
-    min-height: calc(100% - 20px);
-}
-
-.EezStudio_InstrumentComponentEnclosure {
-    width: 240px;
-
-    &.selected {
-        background-color: @selectionBackgroundColor!important;
-        color: @selectionColor;
-    }
-}
-
-.EezStudio_InstrumentContent {
-    width: 100%;
-    height: 100%;
-
+.EezStudio_SelectInstrumentDialog_ConnectContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin: 0 auto;
 
-    text-align: center;
-
-    & > * {
-        flex-grow: 0;
-        flex-shrink: 0;
-        overflow-wrap: anywhere;
+    & > h5 {
+        margin-bottom: 20px;
     }
-
-    img {
-        display: block;
-        object-fit: contain;
-        width: 100%;
-    }
-}
-
-.EezStudio_InstrumentToolbarEnclosure,
-.EezStudio_InstrumentPropertiesEnclosure,
-.EezStudio_InstrumentConnectionEnclosure {
-    padding: 8px;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

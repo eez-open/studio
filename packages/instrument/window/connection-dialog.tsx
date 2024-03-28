@@ -98,7 +98,8 @@ export const ConnectionProperties = observer(
                 initUsbDevices: action,
                 onVisaResourceChange: action.bound,
                 onTimeoutChange: action.bound,
-                onDelayChange: action.bound
+                onDelayChange: action.bound,
+                applyConnectionParameters: action
             });
 
             this.applyConnectionParameters(this.props.connectionParameters);
@@ -132,7 +133,16 @@ export const ConnectionProperties = observer(
         }
 
         applyConnectionParameters(connectionParameters: ConnectionParameters) {
-            this.iface = connectionParameters.type;
+            if (
+                this.props.availableConnections.indexOf(
+                    connectionParameters.type
+                ) != -1
+            ) {
+                this.iface = connectionParameters.type;
+            } else {
+                this.iface = this.props.availableConnections[0];
+            }
+
             this.ethernetAddress =
                 connectionParameters.ethernetParameters.address;
             this.ethernetPort = connectionParameters.ethernetParameters.port;
@@ -629,6 +639,7 @@ export const ConnectionProperties = observer(
             return (
                 <PropertyList>
                     <SelectProperty
+                        key="interface"
                         name="Interface"
                         value={this.iface}
                         onChange={this.onIfaceChange}

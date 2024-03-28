@@ -220,14 +220,16 @@ export class IpcConnection extends ConnectionBase {
             options = Object.assign(options || {}, {
                 queryResponseType: await this.instrument.getQueryResponseType(
                     commandName
-                )
+                ),
+                isQuery: true
             });
         } else {
             if (
                 await this.instrument.isCommandSendsBackDataBlock(commandName)
             ) {
                 options = Object.assign(options || {}, {
-                    queryResponseType: "non-standard-data-block"
+                    queryResponseType: "non-standard-data-block",
+                    isQuery: true
                 });
             }
         }
@@ -244,6 +246,15 @@ export class IpcConnection extends ConnectionBase {
             command,
             options
         });
+
+        if (options && options.isQuery) {
+            if (!this.resolveCallback) {
+                return new Promise<any>((resolve, reject) => {
+                    this.resolveCallback = resolve;
+                    this.rejectCallback = reject;
+                });
+            }
+        }
     }
 
     doUpload(

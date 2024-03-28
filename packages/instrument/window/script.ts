@@ -20,9 +20,6 @@ import {
 
 import type { InstrumentObject } from "instrument/instrument-object";
 
-import { run as runScpi } from "instrument/script-engines/scpi";
-import { run as runJavaScript } from "instrument/script-engines/javascript";
-
 import type { InstrumentAppStore } from "instrument/window/app-store";
 
 import type { IScriptHistoryItemMessage } from "instrument/window/history/items/script";
@@ -92,7 +89,7 @@ function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
                 connection.release();
             },
             command(command: string) {
-                connection.command(command);
+                return connection.command(command);
             }
         }
     };
@@ -331,6 +328,34 @@ function prepareJavaScriptModules(
             }
         }
     };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export async function runScpi(
+    code: string,
+    globalModules: { [moduleName: string]: any }
+) {
+    try {
+        await globalModules.connection.acquire();
+        await globalModules.connection.command(code);
+    } finally {
+        globalModules.connection.release();
+    }
+}
+
+export async function runJavaScript(
+    code: string,
+    globalModules: { [moduleName: string]: any }
+) {
+    const moduleNames = Object.keys(globalModules);
+    const args = moduleNames.join(", ");
+    const factoryFnCode = `return async (${args}) => {
+${code}
+}`;
+    const factoryFn = new Function(factoryFnCode);
+    const fn = factoryFn();
+    await fn(...moduleNames.map(moduleName => globalModules[moduleName]));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
