@@ -22,6 +22,7 @@ import {
     showDeletedInstrumentsDialog
 } from "home/instruments/deleted-instruments-dialog";
 import { ConnectionParameters } from "instrument/connection/interface";
+import { Loader } from "eez-studio-ui/loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -549,12 +550,16 @@ export const InstrumentContent = observer(
                         {instrument.name}
                     </div>
                     <div className="EezStudio_InstrumentConnectionState">
-                        <span
-                            style={{
-                                backgroundColor:
-                                    instrument.connectionState.color
-                            }}
-                        />
+                        {instrument.connectionState.color == "loader" ? (
+                            <Loader size={20} />
+                        ) : (
+                            <span
+                                style={{
+                                    backgroundColor:
+                                        instrument.connectionState.color
+                                }}
+                            />
+                        )}
                         <span>{instrument.connectionState.label}</span>
                         {instrument.connectionState.error && (
                             <Icon

@@ -628,7 +628,9 @@ export class InstrumentObject {
                     };
                 } else {
                     return {
-                        color: "red",
+                        color: this.connection.isTransitionState
+                            ? "loader"
+                            : "red",
                         label: "Disconnected"
                     };
                 }

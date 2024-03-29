@@ -20,6 +20,7 @@ import {
 } from "project-editor/features/variable/value-type";
 
 import type { Variable } from "project-editor/features/variable/variable";
+import { Loader } from "eez-studio-ui/loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,14 +227,17 @@ export const RenderVariableStatus = observer(
                     ) : (
                         image
                     ))}
-                {color && (
-                    <span
-                        className="status"
-                        style={{
-                            backgroundColor: color
-                        }}
-                    />
-                )}
+                {color &&
+                    (color == "loader" ? (
+                        <Loader size={20} />
+                    ) : (
+                        <span
+                            className="status"
+                            style={{
+                                backgroundColor: color
+                            }}
+                        />
+                    ))}
                 <span className="label">{label}</span>
                 <span className="hint">{hint}</span>
                 {error && (

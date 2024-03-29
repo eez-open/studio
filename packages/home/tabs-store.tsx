@@ -338,11 +338,16 @@ export class InstrumentTab implements IHomeTab {
                 className="EezStudio_InstrumentConnectionState"
                 style={{ flexGrow: 1, paddingLeft: 5 }}
             >
-                <span
-                    style={{
-                        backgroundColor: this.object.connectionState.color
-                    }}
-                />
+                {this.object.connectionState.color == "loader" ? (
+                    <Loader size={20} />
+                ) : (
+                    <span
+                        style={{
+                            backgroundColor: this.object.connectionState.color
+                        }}
+                    />
+                )}
+
                 <span>{this.object.name}</span>
             </div>
         ) : (
