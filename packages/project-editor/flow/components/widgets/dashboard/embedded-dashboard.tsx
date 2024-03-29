@@ -138,8 +138,7 @@ const EmbeddedDashboardElement = makeLazyComponent(
     ({ projectStore, loadError }, props: Props) => {
         let style: React.CSSProperties = {
             display: "flex",
-            height: "100%",
-            backgroundColor: "white"
+            height: "100%"
         };
         let content;
 

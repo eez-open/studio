@@ -55,8 +55,7 @@ const SCPITerminalElement = makeLazyComponent(
     ) => {
         let style: React.CSSProperties = {
             display: "flex",
-            height: "100%",
-            backgroundColor: "white"
+            height: "100%"
         };
         let content;
 

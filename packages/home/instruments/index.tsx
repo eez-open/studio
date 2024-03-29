@@ -28,8 +28,9 @@ import { ConnectionParameters } from "instrument/connection/interface";
 export class InstrumentsStore {
     _selectedInstrumentId: string | undefined;
     connectionParameters: ConnectionParameters | null;
+    onSelectInstrument: (() => void) | undefined;
 
-    constructor() {
+    constructor(public selectInstrument: boolean) {
         makeObservable(this, {
             _selectedInstrumentId: observable,
             selectedInstrumentId: computed,
@@ -179,7 +180,7 @@ export class InstrumentsStore {
     }
 }
 
-export const defaultInstrumentsStore = new InstrumentsStore();
+export const defaultInstrumentsStore = new InstrumentsStore(false);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,7 +281,6 @@ const TabButton = observer(function ({ tab }: { tab: ITabDefinition }) {
 const Toolbar = observer(
     class Toolbar extends React.Component<{
         instrumentsStore: InstrumentsStore;
-        showAdditionalButtons: boolean;
     }> {
         render() {
             let buttons = [
@@ -331,7 +331,7 @@ const Toolbar = observer(
                             }}
                         />
                     ))}
-                    {this.props.showAdditionalButtons &&
+                    {!this.props.instrumentsStore.selectInstrument &&
                         tabs.allTabs
                             .filter(
                                 tab => tab.instance.category == "instrument"
@@ -348,13 +348,7 @@ const Toolbar = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const InstrumentToolbarEnclosure = observer(
-    ({
-        instrumentsStore,
-        showAdditionalButtons
-    }: {
-        instrumentsStore: InstrumentsStore;
-        showAdditionalButtons: boolean;
-    }) => {
+    ({ instrumentsStore }: { instrumentsStore: InstrumentsStore }) => {
         if (!instrumentsStore.selectedInstrumentId) {
             return null;
         }
@@ -375,8 +369,8 @@ const InstrumentToolbarEnclosure = observer(
         return (
             <div className="EezStudio_InstrumentToolbarEnclosure">
                 <InstrumentToolbar
+                    instrumentsStore={instrumentsStore}
                     instrument={instrument}
-                    showAdditionalButtons={showAdditionalButtons}
                 />
             </div>
         );
@@ -450,14 +444,12 @@ const InstrumentConnectionEnclosure = observer(
 export const Properties = observer(
     class Properties extends React.Component<{
         instrumentsStore: InstrumentsStore;
-        showAdditionalButtons: boolean;
     }> {
         render() {
             return (
                 <div className="EezStudio_HomeTab_Instruments_SelectedInstrument_Properties">
                     <InstrumentToolbarEnclosure
                         instrumentsStore={this.props.instrumentsStore}
-                        showAdditionalButtons={this.props.showAdditionalButtons}
                     />
                     <InstrumentPropertiesEnclosure
                         instrumentsStore={this.props.instrumentsStore}
@@ -480,7 +472,6 @@ const InstrumentComponent = observer(
             instrument: InstrumentObject;
             isSelected: boolean;
             selectInstrument: (instrument: InstrumentObject) => void;
-            showAdditionalButtons: boolean;
         },
         {}
     > {
@@ -513,7 +504,13 @@ const InstrumentComponent = observer(
                     )}
                     onClick={() => this.props.selectInstrument(instrument)}
                     onDoubleClick={() => {
-                        if (this.props.showAdditionalButtons) {
+                        if (this.props.instrumentsStore.selectInstrument) {
+                            if (
+                                this.props.instrumentsStore.onSelectInstrument
+                            ) {
+                                this.props.instrumentsStore.onSelectInstrument();
+                            }
+                        } else {
                             this.open();
                         }
                     }}
@@ -577,7 +574,6 @@ export const InstrumentContent = observer(
 export const Instruments = observer(
     class Instruments extends React.Component<{
         instrumentsStore: InstrumentsStore;
-        showAdditionalButtons: boolean;
         size: "S" | "M" | "L";
     }> {
         render() {
@@ -586,12 +582,7 @@ export const Instruments = observer(
             return (
                 <div className="EezStudio_HomeTab_Instruments">
                     <div className="EezStudio_HomeTab_Instruments_Header">
-                        <Toolbar
-                            instrumentsStore={instrumentsStore}
-                            showAdditionalButtons={
-                                this.props.showAdditionalButtons
-                            }
-                        />
+                        <Toolbar instrumentsStore={instrumentsStore} />
                     </div>
                     <div className="EezStudio_HomeTab_Instruments_Body">
                         <div
@@ -613,18 +604,10 @@ export const Instruments = observer(
                                         (instrumentsStore.selectedInstrumentId =
                                             instrument.id)
                                     }
-                                    showAdditionalButtons={
-                                        this.props.showAdditionalButtons
-                                    }
                                 />
                             ))}
                         </div>
-                        <Properties
-                            instrumentsStore={instrumentsStore}
-                            showAdditionalButtons={
-                                this.props.showAdditionalButtons
-                            }
-                        />
+                        <Properties instrumentsStore={instrumentsStore} />
                     </div>
                 </div>
             );

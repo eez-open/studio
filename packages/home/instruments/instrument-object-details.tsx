@@ -20,13 +20,14 @@ import { ConnectionParameters } from "instrument/connection/interface";
 
 import type * as CatalogModule from "home/extensions-manager/catalog";
 import type * as ExtensionManagerModule from "home/extensions-manager/extensions-manager";
+import type { InstrumentsStore } from "home/instruments";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const InstrumentToolbar = observer(
     class InstrumentToolbar extends React.Component<{
         instrument: InstrumentObject;
-        showAdditionalButtons: boolean;
+        instrumentsStore: InstrumentsStore;
     }> {
         onOpenInTab = () => {
             this.props.instrument.openEditor("tab");
@@ -59,7 +60,7 @@ export const InstrumentToolbar = observer(
                             }
                         />
                     )}
-                    {this.props.showAdditionalButtons && (
+                    {!this.props.instrumentsStore.selectInstrument && (
                         <ButtonAction
                             text="Open in Tab"
                             title="Open instrument in new tab"
@@ -67,7 +68,7 @@ export const InstrumentToolbar = observer(
                             onClick={this.onOpenInTab}
                         />
                     )}
-                    {this.props.showAdditionalButtons && (
+                    {!this.props.instrumentsStore.selectInstrument && (
                         <ButtonAction
                             text="Open in New Window"
                             title="Open instrument in new window"

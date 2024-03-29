@@ -272,8 +272,7 @@ export const Home = observer(
                         {homeTabStore.activeTab == "instruments" && (
                             <Instruments
                                 instrumentsStore={defaultInstrumentsStore}
-                                showAdditionalButtons={true}
-                                size="L"
+                                size="M"
                             />
                         )}
                         {homeTabStore.activeTab == "extensions" && (

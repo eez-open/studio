@@ -1551,11 +1551,34 @@ export const SelectInstrumentDialog = observer(
                     );
                 }
             });
+
+            this.props.instrumentsStore.onSelectInstrument = this.onOk;
         }
 
         componentWillUnmount() {
             this.dispose();
+
+            this.props.instrumentsStore.onSelectInstrument = undefined;
         }
+
+        onOk = () => {
+            const instrument = this.props.instrumentsStore.selectedInstrument;
+
+            if (instrument) {
+                if (this.connectToInstrument) {
+                    this.props.instrumentsStore.selectedInstrumentConnect();
+                } else {
+                    if (
+                        this.props.selectAndConnect &&
+                        !instrument.isConnected
+                    ) {
+                        runInAction(() => (this.connectToInstrument = true));
+                    } else {
+                        this.props.resolve(instrument);
+                    }
+                }
+            }
+        };
 
         render() {
             const instrument = this.props.instrumentsStore.selectedInstrument;
@@ -1579,7 +1602,6 @@ export const SelectInstrumentDialog = observer(
                 content = (
                     <Instruments
                         instrumentsStore={this.props.instrumentsStore}
-                        showAdditionalButtons={false}
                         size="S"
                     />
                 );
@@ -1608,27 +1630,7 @@ export const SelectInstrumentDialog = observer(
 
                         return false;
                     }}
-                    onOk={() => {
-                        const instrument =
-                            this.props.instrumentsStore.selectedInstrument;
-
-                        if (instrument) {
-                            if (this.connectToInstrument) {
-                                this.props.instrumentsStore.selectedInstrumentConnect();
-                            } else {
-                                if (
-                                    this.props.selectAndConnect &&
-                                    !instrument.isConnected
-                                ) {
-                                    runInAction(
-                                        () => (this.connectToInstrument = true)
-                                    );
-                                } else {
-                                    this.props.resolve(instrument);
-                                }
-                            }
-                        }
-                    }}
+                    onOk={this.onOk}
                     okButtonText={
                         this.connectToInstrument && instrument
                             ? "Conect"
@@ -1673,7 +1675,7 @@ export async function showSelectInstrumentDialog(
     selectAndConnect?: boolean
 ) {
     return new Promise<InstrumentObject | undefined>(resolve => {
-        const instrumentsStore = new InstrumentsStore();
+        const instrumentsStore = new InstrumentsStore(true);
         instrumentsStore.selectedInstrumentId = instrumentId;
 
         const [modalDialog] = showDialog(
@@ -1690,7 +1692,7 @@ export async function showSelectInstrumentDialog(
             />,
             {
                 jsPanel: {
-                    id: "select-instrument-4",
+                    id: "select-instrument-5",
                     title: name ? `Select: ${name}` : "Select Instrument",
                     width: 920,
                     height: 680
