@@ -275,6 +275,7 @@ export const Projects = observer(
             return (
                 <div className="EezStudio_HomeTab_Projects">
                     <div className="EezStudio_HomeTab_Projects_Header">
+                        <div style={{ width: 28, height: 28 }}></div>
                         <SearchInput
                             searchText={openProjectsStore.searchText}
                             onClear={action(() => {

@@ -1,7 +1,14 @@
 import { ipcRenderer } from "electron";
 import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
-import { computed, observable, toJS, runInAction, makeObservable } from "mobx";
+import {
+    computed,
+    observable,
+    toJS,
+    runInAction,
+    makeObservable,
+    action
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -23,20 +30,25 @@ import {
 } from "home/instruments/deleted-instruments-dialog";
 import { ConnectionParameters } from "instrument/connection/interface";
 import { Loader } from "eez-studio-ui/loader";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InstrumentsStore {
     _selectedInstrumentId: string | undefined;
     connectionParameters: ConnectionParameters | null;
+    searchText: string;
+
     onSelectInstrument: (() => void) | undefined;
 
     constructor(public selectInstrument: boolean) {
         makeObservable(this, {
             _selectedInstrumentId: observable,
+            searchText: observable,
             selectedInstrumentId: computed,
             selectedInstrument: computed,
-            instruments: computed
+            instruments: computed,
+            onSearchChange: action.bound
         });
     }
 
@@ -55,9 +67,15 @@ export class InstrumentsStore {
     }
 
     get instruments() {
-        return Array.from(instruments.values()).sort((a, b) =>
-            stringCompare(a.name, b.name)
-        );
+        return Array.from(instruments.values())
+            .filter(
+                instrument =>
+                    (this.searchText || "").trim().length == 0 ||
+                    instrument.name
+                        .toLowerCase()
+                        .indexOf(this.searchText.trim().toLowerCase()) != -1
+            )
+            .sort((a, b) => stringCompare(a.name, b.name));
     }
 
     get selectedInstrument() {
@@ -178,6 +196,16 @@ export class InstrumentsStore {
         }
 
         connection.connect();
+    }
+
+    onSearchChange(event: any) {
+        this.searchText = ($(event.target).val() as string).trim();
+
+        if (this.instruments.length > 0) {
+            this.selectedInstrumentId = this.instruments[0].id;
+        } else {
+            this.selectedInstrumentId = undefined;
+        }
     }
 }
 
@@ -587,6 +615,22 @@ export const Instruments = observer(
             return (
                 <div className="EezStudio_HomeTab_Instruments">
                     <div className="EezStudio_HomeTab_Instruments_Header">
+                        {!this.props.instrumentsStore.selectInstrument && (
+                            <SearchInput
+                                searchText={
+                                    this.props.instrumentsStore.searchText
+                                }
+                                onClear={action(() => {
+                                    this.props.instrumentsStore.searchText = "";
+                                })}
+                                onChange={
+                                    this.props.instrumentsStore.onSearchChange
+                                }
+                                onKeyDown={
+                                    this.props.instrumentsStore.onSearchChange
+                                }
+                            />
+                        )}
                         <Toolbar instrumentsStore={instrumentsStore} />
                     </div>
                     <div className="EezStudio_HomeTab_Instruments_Body">

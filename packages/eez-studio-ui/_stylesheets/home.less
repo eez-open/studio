@@ -536,7 +536,23 @@
     flex-direction: column;
 
     .EezStudio_HomeTab_Instruments_Header {
-        display: flex;
+        .EezStudio_SearchInput_Container {
+            flex: 0;
+            margin: 10px auto;
+            margin-bottom: 0;
+            width: 360px;
+            border: 1px solid @borderColor;
+            background-color: field;
+            border-radius: 18px;
+            padding: 5px 10px;
+            font-size: 120%;
+            /*
+            box-shadow: 0 2px 5px 1px @borderColor;
+            &:hover {
+                box-shadow: 0 2px 8px 1px @borderColor;
+            }
+            */
+        }
 
         .EezStudio_ToolbarHeader {
             background-color: transparent;
