@@ -1,6 +1,7 @@
 import React from "react";
 import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
+import classNames from "classnames";
 
 import {
     HorizontalHeaderWithBody,
@@ -20,6 +21,8 @@ import { PropertyList, TextInputProperty } from "eez-studio-ui/properties";
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import type { INavigationItem } from "instrument/window/navigation";
 import type { InstrumentObject } from "instrument/instrument-object";
+import { Icon } from "eez-studio-ui/icon";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,10 +69,6 @@ export const AppBar = observer(
             return this.props.appStore.instrument;
         }
 
-        get connection() {
-            return this.instrument.connection;
-        }
-
         handleConnectClick = () => {
             this.instrument.openConnectDialog();
         };
@@ -87,6 +86,35 @@ export const AppBar = observer(
         };
 
         render() {
+            let recordHistoryButton = (
+                <button
+                    className={classNames(
+                        "EezStudio_ConnectionBar_RecordHistoryButton btn btn-sm",
+                        {
+                            "btn-dark": settingsController.isDarkTheme,
+                            "btn-light": !settingsController.isDarkTheme
+                        }
+                    )}
+                    onClick={this.instrument.toggleRecordHistory}
+                >
+                    <Icon
+                        icon={
+                            this.instrument.recordHistory
+                                ? "material:pause"
+                                : "material:play_arrow"
+                        }
+                        style={{
+                            color: this.instrument.recordHistory
+                                ? "red"
+                                : "green"
+                        }}
+                    />
+                    {this.instrument.recordHistory
+                        ? "Pause History Recording"
+                        : "Resume History Recording"}
+                </button>
+            );
+
             let connectionStatus;
             if (this.instrument.connection.isIdle) {
                 connectionStatus = (
@@ -97,18 +125,20 @@ export const AppBar = observer(
                         >
                             Connect
                         </button>
+                        {recordHistoryButton}
                     </div>
                 );
             } else if (this.instrument.connection.isConnected) {
                 connectionStatus = (
                     <div>
-                        <div>{this.connection.interfaceInfo}</div>
+                        <div>{this.instrument.connection.interfaceInfo}</div>
                         <button
                             className="btn btn-danger btn-sm"
                             onClick={this.handleDisconnectClick}
                         >
                             Disconnect
                         </button>
+                        {recordHistoryButton}
                     </div>
                 );
             } else {
@@ -123,6 +153,7 @@ export const AppBar = observer(
                         >
                             Abort
                         </button>
+                        {recordHistoryButton}
                     </div>
                 );
             }

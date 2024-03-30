@@ -16,6 +16,7 @@ import { showEditNoteDialog } from "instrument/window/note-dialog";
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { PreventDraggable } from "instrument/window/history/helper";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +54,10 @@ export const NoteHistoryItemComponent = observer(
                 >
                     <Balloon>
                         <p>
+                            <HistoryItemInstrumentInfo
+                                appStore={this.props.appStore}
+                                historyItem={this.props.historyItem}
+                            />
                             <small className="EezStudio_HistoryItemDate">
                                 {formatDateTimeLong(
                                     this.props.historyItem.date

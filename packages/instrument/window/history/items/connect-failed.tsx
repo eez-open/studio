@@ -9,6 +9,7 @@ import { getConnectionParametersInfo } from "instrument/connection/connection-re
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { PreventDraggable } from "../helper";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +48,10 @@ export const ConnectFailedHistoryItemComponent = observer(
             return (
                 <div className="EezStudio_ConnectFailedHistoryItem">
                     <p>
+                        <HistoryItemInstrumentInfo
+                            appStore={this.props.appStore}
+                            historyItem={this.props.historyItem}
+                        />
                         <small className="EezStudio_HistoryItemDate">
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>

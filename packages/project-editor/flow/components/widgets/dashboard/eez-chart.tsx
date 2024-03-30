@@ -577,7 +577,8 @@ abstract class EEZChart {
                 rulers
             }),
             data,
-            deleted: false
+            deleted: false,
+            temporary: false
         };
 
         const { Waveform } = await import("instrument/window/waveform/generic");
@@ -831,7 +832,8 @@ class MultiEEZChart extends EEZChart {
                 rulers
             }),
             data: null,
-            deleted: false
+            deleted: false,
+            temporary: false
         };
 
         const store = Object.assign({}, this.store, {
@@ -928,7 +930,8 @@ class DLOGEEZChart extends EEZChart {
                 rulers
             }),
             data,
-            deleted: false
+            deleted: false,
+            temporary: false
         };
 
         const { DlogWaveform } = await import(

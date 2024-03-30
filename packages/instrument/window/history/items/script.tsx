@@ -10,6 +10,7 @@ import { Icon } from "eez-studio-ui/icon";
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { IActivityLogEntry } from "instrument/window/history/activity-log";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +32,10 @@ export const ScriptHistoryItemComponent = observer(
                     />
                     <div>
                         <p>
+                            <HistoryItemInstrumentInfo
+                                appStore={this.props.appStore}
+                                historyItem={this.props.historyItem}
+                            />
                             <small className="EezStudio_HistoryItemDate">
                                 {formatDateTimeLong(
                                     this.props.historyItem.date

@@ -203,7 +203,8 @@ export function createStore({
     filterMessage,
     prepareWhereClause,
     orderBy,
-    getSourceDescription
+    getSourceDescription,
+    onInit
 }: {
     storeName: string;
     versionTables?: (
@@ -224,6 +225,7 @@ export function createStore({
     ) => { whereClause: string; params: any[] } | undefined;
     orderBy?: string;
     getSourceDescription?: (sid: string) => string | null;
+    onInit?: () => void;
 }) {
     function execCreateObject(object: any, options?: IStoreOperationOptions) {
         let questionMarks = map(
@@ -708,6 +710,10 @@ export function createStore({
 
         while (version < versions.length) {
             db.exec(versions[version++]);
+        }
+
+        if (onInit) {
+            onInit();
         }
 
         db.exec(`COMMIT TRANSACTION`);

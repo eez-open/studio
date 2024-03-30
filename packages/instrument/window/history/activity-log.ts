@@ -281,7 +281,11 @@ export const activityLogStore = createStore({
         // version 15
         // migrate version to versions table
         `CREATE INDEX activityLog_type ON activityLog(type);
-        UPDATE versions SET version = 15 WHERE tableName = 'activityLog';`
+        UPDATE versions SET version = 15 WHERE tableName = 'activityLog';`,
+
+        // version 16
+        `ALTER TABLE activityLog ADD COLUMN temporary BOOLEAN;
+        UPDATE versions SET version = 16 WHERE tableName = 'activityLog';`
     ],
 
     properties: {
@@ -292,7 +296,8 @@ export const activityLogStore = createStore({
         type: types.string,
         message: types.string,
         data: types.lazy(types.any),
-        deleted: types.boolean
+        deleted: types.boolean,
+        temporary: types.boolean
     },
 
     filterMessage(
@@ -388,7 +393,11 @@ export const activityLogStore = createStore({
         };
     },
 
-    orderBy: "date"
+    orderBy: "date",
+
+    onInit: () => {
+        db.exec("DELETE FROM activityLog WHERE temporary");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,7 +423,43 @@ export function log(
         activityLogEntry.message = "";
     }
 
-    return store.createObject(activityLogEntry, options);
+    if (activityLogEntry.oid) {
+        const row = db
+            .prepare(`SELECT "recordHistory" FROM "instrument" WHERE id = ?`)
+            .get(activityLogEntry.oid);
+        activityLogEntry.temporary = row
+            ? row.recordHistory
+                ? false
+                : true
+            : false;
+    } else {
+        activityLogEntry.temporary = false;
+    }
+
+    const newActivityLogEntry = store.createObject(activityLogEntry, options);
+
+    // remove temporary logs, keep LAST_N
+    const LAST_N = 50;
+    let rows: IActivityLogEntry[] = db
+        .prepare(
+            `SELECT * FROM "${store.storeName}" WHERE temporary ORDER BY date DESC`
+        )
+        .all();
+    if (rows && rows.length > LAST_N) {
+        rows.slice(LAST_N).forEach(row => {
+            store.deleteObject(
+                {
+                    oid: row.oid.toString(),
+                    id: row.id.toString()
+                },
+                {
+                    deletePermanently: true
+                }
+            );
+        });
+    }
+
+    return newActivityLogEntry;
 }
 
 export function logUpdate(

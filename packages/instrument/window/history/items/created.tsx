@@ -5,6 +5,7 @@ import { formatDateTimeLong } from "eez-studio-shared/util";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +31,10 @@ export const CreatedHistoryItemComponent = observer(
             return (
                 <div className="EezStudio_CreatedHistoryItem">
                     <p>
+                        <HistoryItemInstrumentInfo
+                            appStore={this.props.appStore}
+                            historyItem={this.props.historyItem}
+                        />
                         <small className="EezStudio_HistoryItemDate">
                             {formatDateTimeLong(this.props.historyItem.date)}
                         </small>

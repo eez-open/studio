@@ -67,6 +67,7 @@ export interface IInstrumentObjectProps {
     autoConnect: boolean;
     lastFileUploadInstructions?: IFileUploadInstructions;
     selectedShortcutGroups: string[];
+    recordHistory: boolean;
     custom?: any;
     getQueryResponseType(query: string): Promise<IResponseTypeType | undefined>;
     isCommandSendsBackDataBlock(commandName: string): Promise<boolean>;
@@ -99,6 +100,7 @@ export class InstrumentObject {
     autoConnect: boolean;
     lastFileUploadInstructions: IFileUploadInstructions | undefined;
     selectedShortcutGroups: string[];
+    recordHistory: boolean;
     custom: any;
 
     _connection: IConnection | undefined;
@@ -115,6 +117,7 @@ export class InstrumentObject {
             autoConnect: observable,
             lastFileUploadInstructions: observable,
             selectedShortcutGroups: observable,
+            recordHistory: observable,
             custom: observable,
             _extension: observable,
             extension: computed,
@@ -151,10 +154,11 @@ export class InstrumentObject {
         this.lastFileUploadInstructions = props.lastFileUploadInstructions;
 
         this.selectedShortcutGroups = props.selectedShortcutGroups;
-
         if (!this.selectedShortcutGroups) {
             this.selectedShortcutGroups = ["Default"];
         }
+
+        this.recordHistory = props.recordHistory;
 
         this.custom = props.custom || {};
 
@@ -830,6 +834,13 @@ export class InstrumentObject {
         }
     }
 
+    toggleRecordHistory = () => {
+        store.updateObject({
+            id: this.id,
+            recordHistory: !this.recordHistory
+        });
+    };
+
     restore() {
         beginTransaction("Restore instrument");
         store.undeleteObject(this);
@@ -1062,7 +1073,11 @@ export const store = createStore({
 
         // version 6
         `ALTER TABLE instrument ADD COLUMN custom TEXT;
-        UPDATE versions SET version = 6 WHERE tableName = 'instrument';`
+        UPDATE versions SET version = 6 WHERE tableName = 'instrument';`,
+
+        // version 6
+        `ALTER TABLE instrument ADD COLUMN recordHistory BOOLEAN DEFAULT TRUE;
+        UPDATE versions SET version = 7 WHERE tableName = 'instrument';`
     ],
     properties: {
         id: types.id,
@@ -1074,6 +1089,7 @@ export const store = createStore({
         autoConnect: types.boolean,
         lastFileUploadInstructions: types.object,
         selectedShortcutGroups: types.object,
+        recordHistory: types.boolean,
         custom: types.object
     },
     create(props: IInstrumentObjectProps) {

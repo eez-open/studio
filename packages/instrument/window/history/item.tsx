@@ -23,6 +23,7 @@ export interface IHistoryItem {
     message: string;
     data: string;
     deleted: boolean;
+    temporary: boolean;
     selected: boolean;
     getListItemElement(appStore: IAppStore): React.ReactNode;
     canBePartOfMultiChart: boolean;
@@ -41,6 +42,7 @@ export class HistoryItem implements IHistoryItem {
     _data: any;
     selected: boolean;
     deleted: boolean;
+    temporary: boolean;
     canBePartOfMultiChart = false;
 
     constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {

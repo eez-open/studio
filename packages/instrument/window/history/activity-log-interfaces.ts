@@ -7,4 +7,5 @@ export interface IActivityLogEntry {
     message: string;
     data: any;
     deleted: boolean;
+    temporary: boolean;
 }

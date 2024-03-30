@@ -59,6 +59,7 @@ import { HistoryItem } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { PreventDraggable } from "instrument/window/history/helper";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -583,6 +584,10 @@ export const FileHistoryItemComponent = observer(
                     />
                     <div>
                         <p>
+                            <HistoryItemInstrumentInfo
+                                appStore={this.props.appStore}
+                                historyItem={this.props.historyItem}
+                            />
                             <small className="EezStudio_HistoryItemDate">
                                 {formatDateTimeLong(
                                     this.props.historyItem.date

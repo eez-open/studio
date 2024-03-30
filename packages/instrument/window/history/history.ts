@@ -1258,6 +1258,7 @@ export class History {
     removeActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
+            console.log("removeActivityLogEntry foundItem", foundItem);
             this.items[foundItem.index].dispose();
             this.items.splice(foundItem.index, 1);
 
@@ -1270,7 +1271,10 @@ export class History {
                 foundItem.historyItem.date.getDate()
             );
             this.calendar.decrementCounter(day);
+
+            return true;
         }
+        return false;
     }
 
     displayRows(rows: any[]) {
@@ -1645,8 +1649,9 @@ export class DeletedItemsHistory extends History {
         options: IStoreOperationOptions
     ) {
         if (op === "restore") {
-            this.removeActivityLogEntry(activityLogEntry);
-            this.deletedCount--;
+            if (this.removeActivityLogEntry(activityLogEntry)) {
+                this.deletedCount--;
+            }
         }
     }
 
@@ -1656,8 +1661,9 @@ export class DeletedItemsHistory extends History {
         options: IStoreOperationOptions
     ) {
         if (options.deletePermanently) {
-            this.removeActivityLogEntry(activityLogEntry);
-            this.deletedCount--;
+            if (this.removeActivityLogEntry(activityLogEntry)) {
+                this.deletedCount--;
+            }
         } else {
             // we need all properties here since only id is guaranteed from store notification when deleting object
             activityLogEntry = this.options.store.findById(activityLogEntry.id);

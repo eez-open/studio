@@ -23,6 +23,7 @@ import { saveTableListData } from "instrument/window/lists/lists";
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { getTableListData } from "instrument/window/lists/table-data";
+import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,6 +108,10 @@ export const ListHistoryItemComponent = observer(
                     />
                     <div>
                         <p>
+                            <HistoryItemInstrumentInfo
+                                appStore={this.props.appStore}
+                                historyItem={this.props.historyItem}
+                            />
                             <small className="EezStudio_HistoryItemDate">
                                 {formatDateTimeLong(
                                     this.props.historyItem.date
