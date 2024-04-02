@@ -436,6 +436,7 @@ export class HistoryViewComponent extends React.Component<{
     appStore: IAppStore;
     persistId: string;
     simple?: boolean;
+    showSideDock?: boolean;
 }> {
     history: HistoryListComponentClass | null;
     sideDock: SideDockComponent2 | null;
@@ -624,7 +625,7 @@ export class HistoryViewComponent extends React.Component<{
             />
         );
 
-        if (this.props.simple) {
+        if (this.props.simple || !this.props.showSideDock) {
             return historyComponent;
         }
 

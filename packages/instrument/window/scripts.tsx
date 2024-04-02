@@ -521,7 +521,13 @@ export const ScriptsEditor = observer(
                     </Splitter>
 
                     {scriptsModel.terminalVisible && appStore.instrument && (
-                        <Terminal appStore={appStore} />
+                        <Terminal
+                            appStore={appStore}
+                            showConnectionStatusBar={false}
+                            showShortcuts={true}
+                            showDocumentation={true}
+                            showCalendar={true}
+                        />
                     )}
                 </Splitter>
             );

@@ -21,7 +21,7 @@ import {
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { getAnyValue } from "project-editor/flow/helper";
+import { getAnyValue, getBooleanValue } from "project-editor/flow/helper";
 import { Loader } from "eez-studio-ui/loader";
 import { TERMINAL_WIDGET_ICON } from "project-editor/ui-components/icons";
 
@@ -74,8 +74,42 @@ const SCPITerminalElement = makeLazyComponent(
                     const appStore = instrumentObject.getEditor();
                     appStore.onCreate();
 
+                    const showConnectionStatusBar = getBooleanValue(
+                        props.flowContext,
+                        props.widget,
+                        "showConnectionStatusBar",
+                        false
+                    );
+
+                    const showShortcuts = getBooleanValue(
+                        props.flowContext,
+                        props.widget,
+                        "showShortcuts",
+                        false
+                    );
+
+                    const showDocumentation = getBooleanValue(
+                        props.flowContext,
+                        props.widget,
+                        "showDocumentation",
+                        false
+                    );
+
+                    const showCalendar = getBooleanValue(
+                        props.flowContext,
+                        props.widget,
+                        "showCalendar",
+                        false
+                    );
+
                     content = (
-                        <Terminal appStore={instrumentObject.getEditor()} />
+                        <Terminal
+                            appStore={instrumentObject.getEditor()}
+                            showConnectionStatusBar={showConnectionStatusBar}
+                            showShortcuts={showShortcuts}
+                            showDocumentation={showDocumentation}
+                            showCalendar={showCalendar}
+                        />
                     );
                 } else {
                     content = showLoader.get() ? (
@@ -124,13 +158,49 @@ export class SCPITerminalWidget extends Widget {
                 },
                 "object:Instrument"
             ),
+            makeExpressionProperty(
+                {
+                    name: "showConnectionStatusBar",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "showShortcuts",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "showDocumentation",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "showCalendar",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "boolean"
+            ),
             makeStylePropertyInfo("style", "Default style")
         ],
         defaultValue: {
             left: 0,
             top: 0,
             width: 430,
-            height: 560
+            height: 560,
+            showConnectionStatusBar: "true",
+            showShortcuts: "true",
+            showDocumentation: "true",
+            showCalendar: "true"
         },
 
         icon: TERMINAL_WIDGET_ICON,
@@ -139,12 +209,20 @@ export class SCPITerminalWidget extends Widget {
     });
 
     instrument: string;
+    showConnectionStatusBar: boolean;
+    showShortcuts: boolean;
+    showDocumentation: boolean;
+    showCalendar: boolean;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            instrument: observable
+            instrument: observable,
+            showConnectionStatusBar: observable,
+            showShortcuts: observable,
+            showDocumentation: observable,
+            showCalendar: observable
         });
     }
 

@@ -119,7 +119,7 @@ export const IconAction = observer(
 
 export const ButtonAction = observer(
     class ButtonAction extends React.Component<{
-        text: string;
+        text: React.ReactNode;
         icon?: string | JSX.Element;
         iconSize?: number;
         title: string;

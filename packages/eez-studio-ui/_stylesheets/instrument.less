@@ -839,11 +839,12 @@
 
 .EezStudio_InputContainer {
     background-color: @panelHeaderColor;
-    padding: 10px;
+    padding: 8px;
     display: flex;
     flex-direction: row;
     flex-grow: 0;
     flex-shrink: 0;
+    align-items: center;
 
     div:nth-child(1) {
         flex-shrink: 0;
@@ -854,8 +855,7 @@
         padding-left: 7px;
 
         input {
-            padding-left: 5px;
-            padding-right: 5px;
+            padding: 4px 8px;
             width: 100%;
         }
     }
@@ -1639,8 +1639,14 @@
     border-top: 1px solid @borderColor;
     background-color: @panelHeaderColor;
 
+    display: flex;
+
     & > button {
         margin: 5px 5px;
+    }
+
+    .EezStudio_Keybinding_Part {
+        margin-right: 5px;
     }
 }
 
@@ -2163,7 +2169,7 @@
     padding: 1px 6px;
     background-color: #666;
     color: white;
-    border-radius: 2px;
+    border-radius: 4px;
     text-transform: capitalize;
     font-size: 90%;
 }

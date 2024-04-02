@@ -5,7 +5,8 @@ import {
     values,
     makeObservable,
     IReactionDisposer,
-    autorun
+    autorun,
+    runInAction
 } from "mobx";
 
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -39,13 +40,128 @@ import {
 import { InstrumentAppStore } from "instrument/window/app-store";
 import type * as ScriptModule from "instrument/window/script";
 import type { IExtension } from "eez-studio-shared/extensions/extension";
+import { closestBySelector } from "eez-studio-shared/dom";
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ShortcutsToolbarRegistry {
+    bindShortcutsDispose: (() => void) | undefined;
+    shortcutsToolbarMap: Map<HTMLDivElement, ShortcutsStore> = new Map();
+    activeShortcutsToolbar: HTMLDivElement | undefined;
+
+    constructor() {
+        makeObservable(this, {
+            shortcutsToolbarMap: observable,
+            activeShortcutsToolbar: observable
+        });
+
+        this.findActiveShortcutsToolbar();
+    }
+
+    findActiveShortcutsToolbar = () => {
+        let activeShortcutsToolbar: HTMLDivElement | undefined;
+
+        this.shortcutsToolbarMap.forEach((store, element) => {
+            // if shortcutsToolbar element is not visible then pass
+            const rect = element.getBoundingClientRect();
+            if (rect.width == 0 || rect.height == 0) {
+                return;
+            }
+
+            // if shortcutsToolbar element is inside flexlayout-react tab
+            const tabElement: HTMLElement = closestBySelector(
+                element,
+                ".flexlayout__tab"
+            );
+            if (tabElement) {
+                // if flexlayout tab is selected
+                const layoutPath = tabElement.getAttribute("data-layout-path");
+                if (layoutPath) {
+                    let i = layoutPath.lastIndexOf("/");
+                    if (i != -1) {
+                        let id = layoutPath.substring(0, i);
+                        let tabstripElement: HTMLElement | null =
+                            document.querySelector(
+                                `[data-layout-path="${id}/tabstrip"]`
+                            );
+                        if (
+                            tabstripElement &&
+                            tabstripElement.classList.contains(
+                                "flexlayout__tabset-selected"
+                            )
+                        ) {
+                            activeShortcutsToolbar = element;
+                        }
+                    }
+                }
+
+                // if flexlayout tab is not selected but tab contains activeElement
+                if (
+                    activeShortcutsToolbar != element &&
+                    document.activeElement &&
+                    tabElement.contains(document.activeElement)
+                ) {
+                    activeShortcutsToolbar = element;
+                }
+            } else {
+                activeShortcutsToolbar = element;
+            }
+        });
+
+        if (activeShortcutsToolbar != this.activeShortcutsToolbar) {
+            runInAction(() => {
+                this.activeShortcutsToolbar = activeShortcutsToolbar;
+            });
+
+            if (activeShortcutsToolbar) {
+                this.bindShortcutsToKeyboard(
+                    this.shortcutsToolbarMap.get(activeShortcutsToolbar)!
+                );
+            }
+        }
+
+        requestAnimationFrame(this.findActiveShortcutsToolbar);
+    };
+
+    bindShortcutsToKeyboard(shortcutsStore: ShortcutsStore) {
+        if (shortcutsToolbarRegistry.bindShortcutsDispose) {
+            shortcutsToolbarRegistry.bindShortcutsDispose();
+        }
+
+        shortcutsToolbarRegistry.bindShortcutsDispose = bindShortcuts(
+            shortcutsStore.instrumentShortcuts,
+            (shortcut: IShortcut) => {
+                if (shortcut.action.type === "micropython") {
+                    return;
+                }
+                const { executeShortcut } =
+                    require("instrument/window/script") as typeof ScriptModule;
+                if (shortcutsStore.appStore.instrument) {
+                    executeShortcut(shortcutsStore.appStore, shortcut);
+                }
+            }
+        );
+    }
+
+    registerShortcutsToolbar(
+        el: HTMLDivElement,
+        shortcutsStore: ShortcutsStore
+    ) {
+        shortcutsToolbarRegistry.shortcutsToolbarMap.set(el, shortcutsStore);
+    }
+
+    unregisterShortcutsToolbar(el: HTMLDivElement) {
+        shortcutsToolbarRegistry.shortcutsToolbarMap.delete(el);
+    }
+}
+
+export const shortcutsToolbarRegistry = new ShortcutsToolbarRegistry();
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const shortcutsOrGroups = observable.box<boolean>(true);
 
 export class ShortcutsStore {
-    bindShortcutsDispose: (() => void) | undefined;
     addShortcutsToDatabaseIfAllAreMissingDispose: IReactionDisposer | undefined;
 
     constructor(public appStore: InstrumentAppStore) {
@@ -216,39 +332,7 @@ export class ShortcutsStore {
         });
     }
 
-    onActivate() {
-        if (this.bindShortcutsDispose) {
-            return;
-        }
-
-        this.bindShortcutsDispose = bindShortcuts(
-            this.instrumentShortcuts,
-            (shortcut: IShortcut) => {
-                if (shortcut.action.type === "micropython") {
-                    return;
-                }
-                const { executeShortcut } =
-                    require("instrument/window/script") as typeof ScriptModule;
-                if (this.appStore.instrument) {
-                    executeShortcut(this.appStore, shortcut);
-                }
-            }
-        );
-    }
-
-    onDeactivate() {
-        if (this.bindShortcutsDispose) {
-            this.bindShortcutsDispose();
-            this.bindShortcutsDispose = undefined;
-        }
-    }
-
     onTerminate() {
-        if (this.bindShortcutsDispose) {
-            this.bindShortcutsDispose();
-            this.bindShortcutsDispose = undefined;
-        }
-
         if (this.addShortcutsToDatabaseIfAllAreMissingDispose) {
             this.addShortcutsToDatabaseIfAllAreMissingDispose();
         }

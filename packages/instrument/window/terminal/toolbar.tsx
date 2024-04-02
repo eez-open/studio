@@ -4,27 +4,21 @@ import { observer } from "mobx-react";
 
 import { capitalize } from "eez-studio-shared/string";
 
-import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 
 import type { IShortcut } from "shortcuts/interfaces";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
+import { shortcutsToolbarRegistry } from "instrument/window/shortcuts";
 
 export const ShortcutButton = observer(
-    class ShortcutButton extends React.Component<
-        {
-            appStore: InstrumentAppStore;
-            shortcut: IShortcut;
-            executeShortcut: () => void;
-        },
-        {}
-    > {
-        constructor(props: {
-            appStore: InstrumentAppStore;
-            shortcut: IShortcut;
-            executeShortcut: () => void;
-        }) {
+    class ShortcutButton extends React.Component<{
+        appStore: InstrumentAppStore;
+        shortcut: IShortcut;
+        executeShortcut: () => void;
+        isActive: boolean;
+    }> {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -44,10 +38,34 @@ export const ShortcutButton = observer(
         }
 
         render() {
+            let text;
+            let title;
+            if (this.keybinding) {
+                text = (
+                    <>
+                        <span
+                            className="EezStudio_Keybinding_Part"
+                            style={{
+                                color: "#333",
+                                backgroundColor: "white",
+                                opacity: this.props.isActive ? "1.0" : "0.2"
+                            }}
+                        >
+                            {this.keybinding}
+                        </span>
+                        <span>{this.props.shortcut.name}</span>
+                    </>
+                );
+                title = `${this.keybinding}: ${this.props.shortcut.name}`;
+            } else {
+                text = this.props.shortcut.name;
+                title = this.props.shortcut.name;
+            }
+
             return (
                 <ButtonAction
-                    text={this.props.shortcut.name}
-                    title={this.keybinding}
+                    text={text}
+                    title={title}
                     onClick={this.props.executeShortcut}
                     className="btn-sm "
                     style={{
@@ -69,16 +87,31 @@ export const ShortcutsToolbar = observer(
         style?: React.CSSProperties;
         executeShortcut: (shortcut: IShortcut) => void;
     }> {
-        constructor(props: {
-            appStore: InstrumentAppStore;
-            style?: React.CSSProperties;
-            executeShortcut: (shortcut: IShortcut) => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
                 shortcuts: computed
             });
+        }
+
+        divRef = React.createRef<HTMLDivElement>();
+
+        componentDidMount() {
+            if (this.divRef.current) {
+                shortcutsToolbarRegistry.registerShortcutsToolbar(
+                    this.divRef.current,
+                    this.props.appStore.shortcutsStore
+                );
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.divRef.current) {
+                shortcutsToolbarRegistry.unregisterShortcutsToolbar(
+                    this.divRef.current
+                );
+            }
         }
 
         get shortcuts() {
@@ -110,8 +143,9 @@ export const ShortcutsToolbar = observer(
             }
 
             return (
-                <Toolbar
-                    className="EezStudio_ShortcutsToolbarContainer"
+                <div
+                    ref={this.divRef}
+                    className="EezStudio_Toolbar EezStudio_ShortcutsToolbarContainer"
                     style={this.props.style}
                 >
                     {this.shortcuts.map(shortcut => (
@@ -121,6 +155,13 @@ export const ShortcutsToolbar = observer(
                             shortcut={shortcut}
                             executeShortcut={() =>
                                 this.props.executeShortcut(shortcut)
+                            }
+                            isActive={
+                                this.divRef.current ==
+                                    shortcutsToolbarRegistry.activeShortcutsToolbar &&
+                                this.divRef.current
+                                    ? true
+                                    : false
                             }
                         />
                     ))}
@@ -137,7 +178,7 @@ export const ShortcutsToolbar = observer(
                             Add missing shortcuts
                         </button>
                     )}
-                </Toolbar>
+                </div>
             );
         }
     }

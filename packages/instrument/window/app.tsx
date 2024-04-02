@@ -61,7 +61,7 @@ export const AppBar = observer(
     class AppBar extends React.Component<
         {
             appStore: InstrumentAppStore;
-            selectedItem: INavigationItem;
+            selectedItem: INavigationItem | undefined;
         },
         {}
     > {

@@ -1,5 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
+import { action, makeObservable, observable } from "mobx";
 
 import { Splitter } from "eez-studio-ui/splitter";
 import { IconAction } from "eez-studio-ui/action";
@@ -17,6 +18,7 @@ import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { parseScpi, SCPI_PART_QUERY } from "eez-studio-shared/scpi-parser";
 import { terminalState } from "./terminalState";
+import { AppBar } from "../app";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,14 +27,12 @@ const CONF_COMMANDS_HISTORY_SIZE = 1000;
 ////////////////////////////////////////////////////////////////////////////////
 
 const Input = observer(
-    class Input extends React.Component<
-        {
-            appStore: InstrumentAppStore;
-            sendCommand: () => void;
-            sendFileToInstrumentHandler: (() => void) | undefined;
-        },
-        {}
-    > {
+    class Input extends React.Component<{
+        appStore: InstrumentAppStore;
+        sendCommand: () => void;
+        sendFileToInstrumentHandler: (() => void) | undefined;
+        showDocumentation: boolean;
+    }> {
         input: HTMLInputElement;
 
         constructor(props: any) {
@@ -168,16 +168,18 @@ const Input = observer(
             return (
                 <div className="EezStudio_InputContainer">
                     <div>
-                        <IconAction
-                            icon="material:help"
-                            onClick={this.handleHelpClick}
-                            title="Show/hide commands catalog"
-                        />
+                        {this.props.showDocumentation && (
+                            <IconAction
+                                icon="material:help"
+                                onClick={this.handleHelpClick}
+                                title="Show/hide commands catalog"
+                            />
+                        )}
                     </div>
                     <div>
                         <input
                             ref={(ref: any) => (this.input = ref)}
-                            className="mousetrap"
+                            className="mousetrap form-control"
                             type="text"
                             onKeyDown={this.handleKeyDown}
                             value={terminalState.command}
@@ -205,10 +207,23 @@ const Input = observer(
     }
 );
 
-export class TerminalComponent extends React.Component<
-    { appStore: InstrumentAppStore },
-    {}
-> {
+export class TerminalComponent extends React.Component<{
+    appStore: InstrumentAppStore;
+    showConnectionStatusBar: boolean;
+    showShortcuts: boolean;
+    showDocumentation: boolean;
+    showCalendar: boolean;
+}> {
+    inFocus: boolean = false;
+
+    constructor(props: any) {
+        super(props);
+
+        makeObservable(this, {
+            inFocus: observable
+        });
+    }
+
     onSelectHistoryItemsCancel = () => {
         this.props.appStore.selectHistoryItems(undefined);
     };
@@ -226,11 +241,23 @@ export class TerminalComponent extends React.Component<
         const instrument = appStore.instrument;
 
         const terminal = (
-            <div className="EezStudio_TerminalBodyContainer">
+            <div
+                className="EezStudio_TerminalBodyContainer"
+                onFocus={action(() => {
+                    this.inFocus = true;
+                })}
+                onBlur={action(() => {
+                    this.inFocus = false;
+                })}
+            >
+                {this.props.showConnectionStatusBar && (
+                    <AppBar appStore={appStore} selectedItem={undefined} />
+                )}
                 <div className="EezStudio_TerminalBody">
                     <HistoryView
                         appStore={this.props.appStore}
                         persistId={"instrument/window/history"}
+                        showSideDock={this.props.showCalendar}
                     />
                 </div>
                 <Input
@@ -264,17 +291,20 @@ export class TerminalComponent extends React.Component<
                     sendFileToInstrumentHandler={
                         instrument.sendFileToInstrumentHandler
                     }
+                    showDocumentation={this.props.showDocumentation}
                 />
-                <ShortcutsToolbar
-                    appStore={appStore}
-                    executeShortcut={shortcut => {
-                        executeShortcut(this.props.appStore, shortcut);
-                    }}
-                />
+                {this.props.showShortcuts && (
+                    <ShortcutsToolbar
+                        appStore={appStore}
+                        executeShortcut={shortcut => {
+                            executeShortcut(this.props.appStore, shortcut);
+                        }}
+                    />
+                )}
             </div>
         );
 
-        if (!appStore.helpVisible) {
+        if (!this.props.showDocumentation || !appStore.helpVisible) {
             return terminal;
         }
 
@@ -298,7 +328,15 @@ export class TerminalComponent extends React.Component<
 export const Terminal = observer(TerminalComponent);
 
 export function render(appStore: InstrumentAppStore) {
-    return <Terminal appStore={appStore} />;
+    return (
+        <Terminal
+            appStore={appStore}
+            showConnectionStatusBar={false}
+            showShortcuts={true}
+            showDocumentation={true}
+            showCalendar={true}
+        />
+    );
 }
 
 export function renderToolbarButtons(appStore: InstrumentAppStore) {
