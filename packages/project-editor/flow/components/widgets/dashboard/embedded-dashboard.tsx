@@ -35,17 +35,21 @@ import {
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { Loader } from "eez-studio-ui/loader";
 import { Button } from "eez-studio-ui/button";
 
 import { EMBEDDED_DASHBOARD_WIDGET_ICON } from "project-editor/ui-components/icons";
-import { ProjectStore, propertyNotSetMessage } from "project-editor/store";
+import {
+    getObjectPathAsString,
+    ProjectStore,
+    propertyNotSetMessage
+} from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
 import { evalProperty, getStringValue } from "project-editor/flow/helper";
 import { createWasmValue } from "project-editor/flow/runtime/wasm-value";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { isValidUrl } from "project-editor/core/util";
+import { evalConstantExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +75,8 @@ class LoadDashboard {
     async load() {
         const projectStore = ProjectStore.create({
             type: "run-embedded",
-            parentProjectStore: this.flowContext.projectStore
+            parentProjectStore: this.flowContext.projectStore,
+            dashboardPath: getObjectPathAsString(this.widget)
         });
 
         projectStore.mount();
@@ -80,21 +85,24 @@ class LoadDashboard {
             await projectStore.openFile(this.dashboardFilePath);
 
             if (this.unmounted) {
-                projectStore.closeWindow();
+                await projectStore.closeWindow();
                 projectStore.unmount();
             } else {
-                runInAction(() => {
-                    this.projectStore = projectStore;
-                    this.loadError = undefined;
-                });
-
                 projectStore.project._fullyLoaded = true;
                 projectStore.setRuntimeMode(false);
 
-                this.updateGlobalVariablesWithDashboardParameters();
+                const WasmRuntime = projectStore!.runtime! as WasmRuntime;
+                WasmRuntime.onInitialized = async () => {
+                    runInAction(() => {
+                        this.projectStore = projectStore;
+                        this.loadError = undefined;
+                    });
+
+                    this.updateGlobalVariablesWithDashboardParameters();
+                };
             }
         } catch (err) {
-            projectStore.closeWindow();
+            await projectStore.closeWindow();
             projectStore.unmount();
 
             if (!this.unmounted) {
@@ -110,12 +118,6 @@ class LoadDashboard {
     }
 
     updateGlobalVariablesWithDashboardParameters() {
-        const WasmRuntime = this.projectStore!.runtime! as WasmRuntime;
-
-        const initialized = observable.box<boolean>(false);
-
-        WasmRuntime.onInitialized = action(() => initialized.set(true));
-
         this.autorunDispose = autorun(() => {
             for (let i = 0; i < this.widget.dashboardParameters.length; i++) {
                 const value = evalProperty(
@@ -124,44 +126,43 @@ class LoadDashboard {
                     `dashboardParameters[${i}].value`
                 );
 
-                if (initialized.get()) {
-                    const WasmFlowRuntime = WasmRuntime.worker.wasm;
-                    const assetsMap = WasmRuntime.assetsMap;
-                    const globalVariable = assetsMap.globalVariables.find(
-                        globalVariable =>
-                            globalVariable.name ==
-                            this.widget.dashboardParameters[i].name
+                const WasmRuntime = this.projectStore!.runtime! as WasmRuntime;
+                const WasmFlowRuntime = WasmRuntime.worker.wasm;
+                const assetsMap = WasmRuntime.assetsMap;
+                const globalVariable = assetsMap.globalVariables.find(
+                    globalVariable =>
+                        globalVariable.name ==
+                        this.widget.dashboardParameters[i].name
+                );
+                if (globalVariable != undefined) {
+                    const valuePtr = createWasmValue(
+                        WasmFlowRuntime,
+                        value,
+                        parseInt(assetsMap.typeIndexes[globalVariable.type])
                     );
-                    if (globalVariable != undefined) {
-                        const valuePtr = createWasmValue(
-                            WasmFlowRuntime,
-                            value,
-                            parseInt(assetsMap.typeIndexes[globalVariable.type])
-                        );
-                        WasmFlowRuntime._setGlobalVariable(
-                            globalVariable.index,
-                            valuePtr
-                        );
-                        WasmFlowRuntime._valueFree(valuePtr);
-                    } else {
-                        // TODO
-                        console.error(
-                            "Invalid dashboard parameter",
-                            this.widget.dashboardParameters[i].name
-                        );
-                    }
+                    WasmFlowRuntime._setGlobalVariable(
+                        globalVariable.index,
+                        valuePtr
+                    );
+                    WasmFlowRuntime._valueFree(valuePtr);
+                } else {
+                    // TODO
+                    console.error(
+                        "Invalid dashboard parameter",
+                        this.widget.dashboardParameters[i].name
+                    );
                 }
             }
         });
     }
 
-    unmount() {
+    async unmount() {
         if (this.autorunDispose) {
             this.autorunDispose();
         }
 
         if (this.projectStore) {
-            this.projectStore.closeWindow();
+            await this.projectStore.closeWindow();
             this.projectStore.unmount();
             this.projectStore = undefined;
         }
@@ -244,7 +245,9 @@ const EmbeddedDashboardElement = observer(
                     this.loadDashboard.load();
                 }
             } else {
-                this.error = "Dashboard not specified";
+                if (!this.props.flowContext.projectStore.runtime) {
+                    this.error = "Dashboard not specified";
+                }
             }
         }
 
@@ -289,7 +292,7 @@ const EmbeddedDashboardElement = observer(
                         </ProjectContext.Provider>
                     );
                 } else {
-                    content = <Loader />;
+                    content = null;
                     style.alignItems = "center";
                     style.justifyContent = "center";
                 }
@@ -322,18 +325,47 @@ const OpenEmbeddedDashboard = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        openDashboard = () => {
+        get dashboardFilePath() {
             const widget = this.props.objects[0] as EmbeddedDashboardWidget;
-            const dashboardFilePath = this.context.getAbsoluteFilePath(
+
+            if (!widget.dashboard) {
+                return undefined;
+            }
+
+            const filePath = evalConstantExpression(
+                this.context.project,
                 widget.dashboard
-            );
-            ipcRenderer.send("open-file", dashboardFilePath);
+            ).value;
+
+            if (!filePath) {
+                return undefined;
+            }
+
+            const absoluteFilePath = this.context.getAbsoluteFilePath(filePath);
+
+            if (isValidUrl(absoluteFilePath)) {
+                return undefined;
+            }
+
+            return absoluteFilePath;
+        }
+
+        openDashboard = () => {
+            const dashboardFilePath = this.dashboardFilePath;
+            if (dashboardFilePath) {
+                ipcRenderer.send("open-file", dashboardFilePath);
+            }
         };
 
         render() {
             if (this.props.objects.length > 1) {
                 return null;
             }
+
+            if (!this.dashboardFilePath) {
+                return null;
+            }
+
             return (
                 <div style={{ margin: "4px 0" }}>
                     <Button

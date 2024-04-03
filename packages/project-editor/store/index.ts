@@ -133,7 +133,11 @@ type ProjectStoreContext =
     | { type: "read-only" }
     | { type: "project-editor" }
     | { type: "run-tab" }
-    | { type: "run-embedded"; parentProjectStore: ProjectStore }
+    | {
+          type: "run-embedded";
+          parentProjectStore: ProjectStore;
+          dashboardPath: string;
+      }
     | { type: "instrument-dashobard"; instrument: InstrumentObject }
     | { type: "standalone" };
 
@@ -565,13 +569,21 @@ export class ProjectStore {
         if (!relativeFilePath) {
             relativeFilePath = "";
         }
+
         const filePath = this.getProjectFilePath(project ?? this.project);
-        return filePath
-            ? path.resolve(
-                  path.dirname(filePath),
-                  relativeFilePath.replace(/(\\|\/)/g, path.sep)
-              )
-            : relativeFilePath;
+
+        if (!filePath) {
+            return relativeFilePath;
+        }
+
+        if (isValidUrl(filePath) || isValidUrl(relativeFilePath)) {
+            return relativeFilePath;
+        }
+
+        return path.resolve(
+            path.dirname(filePath),
+            relativeFilePath.replace(/(\\|\/)/g, path.sep)
+        );
     }
 
     getFolderPathRelativeToProjectPath(absoluteFolderPath: string) {

@@ -14,6 +14,9 @@ export class RuntimeSettings {
         __persistentVariables?: {
             [variableName: string]: any;
         };
+        __embeddedDashboards?: {
+            [dashboardPath: string]: any;
+        };
         [key: string]: any;
     } = {};
     modified = false;
@@ -122,47 +125,85 @@ export class RuntimeSettings {
     }
 
     async load() {
-        const filePath = this.getSettingsFilePath();
-        if (!filePath) {
-            return;
-        }
-
-        try {
-            const data = await fs.promises.readFile(filePath, "utf8");
-            runInAction(() => {
-                try {
-                    this.settings = JSON.parse(data);
-                } catch (err) {
-                    console.error(err);
-                    this.settings = {};
+        if (this.projectStore.context.type == "run-embedded") {
+            const embeddedDashboards =
+                this.projectStore.context.parentProjectStore.runtimeSettings
+                    .settings.__embeddedDashboards;
+            if (embeddedDashboards) {
+                const settings =
+                    embeddedDashboards[this.projectStore.context.dashboardPath];
+                if (settings) {
+                    runInAction(() => {
+                        this.settings = settings;
+                    });
                 }
-            });
-        } catch (err) {}
+            }
+        } else {
+            const filePath = this.getSettingsFilePath();
+            if (!filePath) {
+                return;
+            }
+
+            try {
+                const data = await fs.promises.readFile(filePath, "utf8");
+
+                runInAction(() => {
+                    try {
+                        this.settings = JSON.parse(data);
+                    } catch (err) {
+                        this.settings = {};
+                    }
+                });
+            } catch (err) {}
+        }
     }
 
     async save() {
         if (this.projectStore.context.type == "run-embedded") {
-            // TODO
-            return;
-        }
+            if (!this.modified) {
+                return;
+            }
 
-        if (!this.modified) {
-            return;
-        }
+            const dashboardPath = this.projectStore.context.dashboardPath;
+            const dashboardSettings = toJS(this.settings);
 
-        const filePath = this.getSettingsFilePath();
-        if (!filePath) {
-            return;
-        }
+            if (
+                this.projectStore.context.parentProjectStore.runtimeSettings
+                    .settings.__embeddedDashboards
+            ) {
+                this.projectStore.context.parentProjectStore.runtimeSettings.settings.__embeddedDashboards[
+                    dashboardPath
+                ] = dashboardSettings;
+            } else {
+                this.projectStore.context.parentProjectStore.runtimeSettings.settings.__embeddedDashboards =
+                    {
+                        [dashboardPath]: dashboardSettings
+                    };
+            }
 
-        try {
-            await fs.promises.writeFile(
-                filePath,
-                JSON.stringify(toJS(this.settings), undefined, "  "),
-                "utf8"
-            );
-        } catch (err) {
-            notification.error("Failed to save runtime settings: " + err);
+            this.projectStore.context.parentProjectStore.runtimeSettings.modified =
+                true;
+
+            await this.projectStore.context.parentProjectStore.runtimeSettings.save();
+        } else {
+            if (!this.modified) {
+                return;
+            }
+
+            const filePath = this.getSettingsFilePath();
+            if (!filePath) {
+                return;
+            }
+
+            try {
+                await fs.promises.writeFile(
+                    filePath,
+                    JSON.stringify(toJS(this.settings), undefined, "  "),
+                    "utf8"
+                );
+            } catch (err) {
+                notification.error("Failed to save runtime settings: " + err);
+            }
         }
     }
 
