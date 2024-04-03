@@ -99,6 +99,7 @@ import {
 } from "project-editor/features/variable/value-type";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import { isValidUrl } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,7 +133,7 @@ type ProjectStoreContext =
     | { type: "read-only" }
     | { type: "project-editor" }
     | { type: "run-tab" }
-    | { type: "run-embedded" }
+    | { type: "run-embedded"; parentProjectStore: ProjectStore }
     | { type: "instrument-dashobard"; instrument: InstrumentObject }
     | { type: "standalone" };
 
@@ -189,7 +190,7 @@ export class ProjectStore {
         return this.project.projectTypeTraits;
     }
 
-    static async create(context: ProjectStoreContext) {
+    static create(context: ProjectStoreContext) {
         return new ProjectStore(context);
     }
 
@@ -362,7 +363,7 @@ export class ProjectStore {
     }
 
     unmount() {
-        this.project.settings.general.imports.forEach(importDirective => {
+        this.project?.settings.general.imports.forEach(importDirective => {
             if (
                 importDirective.project &&
                 importDirective.project._store != this
@@ -543,6 +544,9 @@ export class ProjectStore {
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {
+        if (isValidUrl(absoluteFilePath)) {
+            return absoluteFilePath;
+        }
         return path.relative(
             path.dirname(this.filePath || ""),
             absoluteFilePath

@@ -1,12 +1,17 @@
 import path from "path";
 import { ipcRenderer } from "electron";
 import React from "react";
-import { observable, makeObservable, autorun, action } from "mobx";
+import {
+    observable,
+    makeObservable,
+    autorun,
+    action,
+    IReactionDisposer,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
-
-import { makeLazyComponent } from "eez-studio-ui/lazy-component";
 
 import {
     registerClass,
@@ -37,150 +42,275 @@ import { EMBEDDED_DASHBOARD_WIDGET_ICON } from "project-editor/ui-components/ico
 import { ProjectStore, propertyNotSetMessage } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
-import { evalProperty } from "project-editor/flow/helper";
+import { evalProperty, getStringValue } from "project-editor/flow/helper";
 import { createWasmValue } from "project-editor/flow/runtime/wasm-value";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import { isValidUrl } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface Props {
-    widget: EmbeddedDashboardWidget;
-    flowContext: IFlowContext;
-    width: number;
-    height: number;
-}
+class LoadDashboard {
+    projectStore: ProjectStore | undefined;
+    loadError: string | undefined;
 
-const EmbeddedDashboardElement = makeLazyComponent(
-    async (props: Props) => {
-        let projectStore: ProjectStore | undefined;
+    autorunDispose: IReactionDisposer | undefined;
+    unmounted: boolean = false;
 
-        let loadError;
-        let autorunDispose;
+    constructor(
+        public flowContext: IFlowContext,
+        public widget: EmbeddedDashboardWidget,
+        public dashboardFilePath: string
+    ) {
+        makeObservable(this, {
+            projectStore: observable,
+            loadError: observable,
+            unmount: action
+        });
+    }
 
-        if (props.flowContext.flowState && props.widget.dashboard) {
-            const parentProjectStore = props.flowContext.projectStore;
+    async load() {
+        const projectStore = ProjectStore.create({
+            type: "run-embedded",
+            parentProjectStore: this.flowContext.projectStore
+        });
 
-            const dashboardFilePath = parentProjectStore.getAbsoluteFilePath(
-                props.widget.dashboard
-            );
+        projectStore.mount();
 
-            try {
-                projectStore = await ProjectStore.create({
-                    type: "run-embedded"
+        try {
+            await projectStore.openFile(this.dashboardFilePath);
+
+            if (this.unmounted) {
+                projectStore.closeWindow();
+                projectStore.unmount();
+            } else {
+                runInAction(() => {
+                    this.projectStore = projectStore;
+                    this.loadError = undefined;
                 });
-                projectStore.mount();
-                await projectStore.openFile(dashboardFilePath);
+
                 projectStore.project._fullyLoaded = true;
                 projectStore.setRuntimeMode(false);
 
-                const WasmRuntime = projectStore!.runtime! as WasmRuntime;
+                this.updateGlobalVariablesWithDashboardParameters();
+            }
+        } catch (err) {
+            projectStore.closeWindow();
+            projectStore.unmount();
 
-                const initialized = observable.box<boolean>(false);
-                WasmRuntime.onInitialized = action(() => initialized.set(true));
-
-                autorunDispose = autorun(() => {
-                    for (
-                        let i = 0;
-                        i < props.widget.dashboardParameters.length;
-                        i++
-                    ) {
-                        const value = evalProperty(
-                            props.flowContext,
-                            props.widget,
-                            `dashboardParameters[${i}].value`
-                        );
-
-                        if (initialized.get()) {
-                            const WasmFlowRuntime = WasmRuntime.worker.wasm;
-                            const assetsMap = WasmRuntime.assetsMap;
-                            const globalVariable =
-                                assetsMap.globalVariables.find(
-                                    globalVariable =>
-                                        globalVariable.name ==
-                                        props.widget.dashboardParameters[i].name
-                                );
-                            if (globalVariable != undefined) {
-                                const valuePtr = createWasmValue(
-                                    WasmFlowRuntime,
-                                    value,
-                                    parseInt(
-                                        assetsMap.typeIndexes[
-                                            globalVariable.type
-                                        ]
-                                    )
-                                );
-                                WasmFlowRuntime._setGlobalVariable(
-                                    globalVariable.index,
-                                    valuePtr
-                                );
-                                WasmFlowRuntime._valueFree(valuePtr);
-                            } else {
-                                // TODO
-                                console.error(
-                                    "Invalid dashboard parameter",
-                                    props.widget.dashboardParameters[i].name
-                                );
-                            }
-                        }
-                    }
-                });
-            } catch (err) {
-                loadError = err.toString();
+            if (!this.unmounted) {
+                let loadError = err.toString();
                 let i = loadError.indexOf("ENOENT:");
                 if (i != -1) {
-                    loadError = `Failed to load: ${dashboardFilePath}`;
+                    loadError = `Failed to load: ${this.dashboardFilePath}`;
                 }
+
+                runInAction(() => (this.loadError = loadError));
+            }
+        }
+    }
+
+    updateGlobalVariablesWithDashboardParameters() {
+        const WasmRuntime = this.projectStore!.runtime! as WasmRuntime;
+
+        const initialized = observable.box<boolean>(false);
+
+        WasmRuntime.onInitialized = action(() => initialized.set(true));
+
+        this.autorunDispose = autorun(() => {
+            for (let i = 0; i < this.widget.dashboardParameters.length; i++) {
+                const value = evalProperty(
+                    this.flowContext,
+                    this.widget,
+                    `dashboardParameters[${i}].value`
+                );
+
+                if (initialized.get()) {
+                    const WasmFlowRuntime = WasmRuntime.worker.wasm;
+                    const assetsMap = WasmRuntime.assetsMap;
+                    const globalVariable = assetsMap.globalVariables.find(
+                        globalVariable =>
+                            globalVariable.name ==
+                            this.widget.dashboardParameters[i].name
+                    );
+                    if (globalVariable != undefined) {
+                        const valuePtr = createWasmValue(
+                            WasmFlowRuntime,
+                            value,
+                            parseInt(assetsMap.typeIndexes[globalVariable.type])
+                        );
+                        WasmFlowRuntime._setGlobalVariable(
+                            globalVariable.index,
+                            valuePtr
+                        );
+                        WasmFlowRuntime._valueFree(valuePtr);
+                    } else {
+                        // TODO
+                        console.error(
+                            "Invalid dashboard parameter",
+                            this.widget.dashboardParameters[i].name
+                        );
+                    }
+                }
+            }
+        });
+    }
+
+    unmount() {
+        if (this.autorunDispose) {
+            this.autorunDispose();
+        }
+
+        if (this.projectStore) {
+            this.projectStore.closeWindow();
+            this.projectStore.unmount();
+            this.projectStore = undefined;
+        }
+
+        this.unmounted = true;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const EmbeddedDashboardElement = observer(
+    class EmbeddedDashboardElement extends React.Component<{
+        widget: EmbeddedDashboardWidget;
+        flowContext: IFlowContext;
+        width: number;
+        height: number;
+    }> {
+        loadDashboard: LoadDashboard | undefined;
+        error: string | undefined;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                loadDashboard: observable,
+                error: observable,
+                doLoadDashboard: action
+            });
+        }
+
+        doLoadDashboard() {
+            if (!this.props.flowContext.flowState) {
+                if (this.loadDashboard) {
+                    this.loadDashboard.unmount();
+                    this.loadDashboard = undefined;
+                }
+                return;
+            }
+
+            const dashboardFilePath = this.props.widget.getDashboard(
+                this.props.flowContext
+            );
+
+            if (this.loadDashboard) {
+                if (this.loadDashboard.dashboardFilePath == dashboardFilePath) {
+                    return;
+                }
+                this.loadDashboard.unmount();
+                this.loadDashboard = undefined;
+            }
+
+            if (dashboardFilePath) {
+                const parentProjectStore = this.props.flowContext.projectStore;
+
+                const isCycleDetected = (
+                    parentProjectStore: ProjectStore
+                ): boolean => {
+                    if (dashboardFilePath == parentProjectStore.filePath) {
+                        return true;
+                    }
+
+                    if (parentProjectStore.context.type == "run-embedded") {
+                        return isCycleDetected(
+                            parentProjectStore.context.parentProjectStore
+                        );
+                    }
+
+                    return false;
+                };
+
+                if (isCycleDetected(parentProjectStore)) {
+                    this.error = "Cycle detected in Embedded Dashboard widget";
+                } else {
+                    this.error = undefined;
+                    this.loadDashboard = new LoadDashboard(
+                        this.props.flowContext,
+                        this.props.widget,
+                        dashboardFilePath
+                    );
+                    this.loadDashboard.load();
+                }
+            } else {
+                this.error = "Dashboard not specified";
             }
         }
 
-        return { projectStore, loadError, autorunDispose };
-    },
-    ({ projectStore, loadError }, props: Props) => {
-        let style: React.CSSProperties = {
-            display: "flex",
-            height: "100%"
-        };
-        let content;
+        componentDidMount() {
+            this.doLoadDashboard();
+        }
 
-        if (props.flowContext.projectStore.runtime) {
-            if (projectStore) {
-                if (loadError) {
-                    content = loadError;
+        componentDidUpdate() {
+            this.doLoadDashboard();
+        }
+
+        componentWillUnmount(): void {
+            if (this.loadDashboard) {
+                this.loadDashboard.unmount();
+            }
+        }
+
+        render() {
+            let style: React.CSSProperties = {
+                display: "flex",
+                height: "100%"
+            };
+            let content;
+
+            if (this.props.flowContext.projectStore.runtime) {
+                this.props.widget.getDashboard(this.props.flowContext);
+
+                if (this.error) {
+                    content = this.error;
                     style.alignItems = "center";
                     style.justifyContent = "center";
-                } else {
+                } else if (this.loadDashboard?.loadError) {
+                    content = this.loadDashboard.loadError;
+                    style.alignItems = "center";
+                    style.justifyContent = "center";
+                } else if (this.loadDashboard?.projectStore) {
                     content = (
-                        <ProjectContext.Provider value={projectStore}>
+                        <ProjectContext.Provider
+                            value={this.loadDashboard.projectStore}
+                        >
                             <ProjectEditorView showToolbar={false} />
                         </ProjectContext.Provider>
                     );
+                } else {
+                    content = <Loader />;
+                    style.alignItems = "center";
+                    style.justifyContent = "center";
                 }
             } else {
-                content = <Loader />;
+                content = (
+                    <>
+                        <p>Embedded dashboard:</p>
+                        <pre className="EezStudio_EmbeddedDashboardWidget_Pre">
+                            {this.props.widget.getDashboardInfo(
+                                this.props.flowContext
+                            )}
+                        </pre>
+                    </>
+                );
+                style.flexDirection = "column";
                 style.alignItems = "center";
                 style.justifyContent = "center";
+                style.overflow = "hidden";
             }
-        } else {
-            content = (
-                <>
-                    <p>Embedded dashboard:</p>
-                    <pre>
-                        {props.widget.dashboard
-                            ? path.basename(props.widget.dashboard)
-                            : "<not specified>"}
-                    </pre>
-                </>
-            );
-            style.flexDirection = "column";
-            style.alignItems = "center";
-            style.justifyContent = "center";
-        }
 
-        return <div style={style}>{content}</div>;
-    },
-    (lazyData?) => {
-        if (lazyData?.autorunDispose) {
-            lazyData?.autorunDispose();
+            return <div style={style}>{content}</div>;
         }
     }
 );
@@ -267,14 +397,14 @@ export class EmbeddedDashboardWidget extends Widget {
             makeDataPropertyInfo("data", {
                 hideInPropertyGrid: true
             }),
-            {
-                name: "dashboard",
-                type: PropertyType.RelativeFile,
-                fileFilters: [
-                    { name: "EEZ Project", extensions: ["eez-project"] }
-                ],
-                propertyGridGroup: specificGroup
-            },
+            makeExpressionProperty(
+                {
+                    name: "dashboard",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
             {
                 name: "openDashboard",
                 type: PropertyType.Any,
@@ -347,6 +477,34 @@ export class EmbeddedDashboardWidget extends Widget {
             dashboard: observable,
             dashboardParameters: observable
         });
+    }
+
+    getDashboard(flowContext: IFlowContext) {
+        const dashboard = getStringValue(flowContext, this, "dashboard", "");
+        if (!dashboard) {
+            return undefined;
+        }
+
+        if (isValidUrl(dashboard)) {
+            return dashboard;
+        }
+
+        if (path.isAbsolute(dashboard)) {
+            return dashboard;
+        }
+
+        return flowContext.projectStore.getAbsoluteFilePath(dashboard);
+    }
+
+    getDashboardInfo(flowContext: IFlowContext) {
+        const dashboard = this.getDashboard(flowContext);
+        if (dashboard) {
+            if (isValidUrl(dashboard)) {
+                return dashboard;
+            }
+            return path.basename(dashboard);
+        }
+        return "<not specified>";
     }
 
     override render(

@@ -68,6 +68,12 @@ class ShortcutsToolbarRegistry {
                 return;
             }
 
+            // if there is only one ShortcutsToolbar visible then make it active
+            if (this.shortcutsToolbarMap.size == 1) {
+                activeShortcutsToolbar = element;
+                return;
+            }
+
             // if shortcutsToolbar element is inside flexlayout-react tab
             const tabElement: HTMLElement = closestBySelector(
                 element,

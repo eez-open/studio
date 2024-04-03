@@ -17,6 +17,7 @@ import { ImportDirective, Project } from "project-editor/project/project";
 import { loadProject } from "project-editor/store/serialization";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Style } from "project-editor/features/style/style";
+import { isValidUrl } from "project-editor/core/util";
 
 type ProjectReference =
     | {
@@ -149,7 +150,7 @@ export class OpenProjectsManager {
         );
 
         return this.mapPathToOpenProject.get(
-            absoluteFilePath.replace(/(\\|\/)/g, "/")
+            normalizeFilePath(absoluteFilePath)
         )?.project;
     }
 
@@ -160,9 +161,13 @@ export class OpenProjectsManager {
     }
 
     getAbsoluteFilePath(filePath: string, relativeFilePath: string) {
+        if (isValidUrl(filePath) || isValidUrl(relativeFilePath)) {
+            return relativeFilePath;
+        }
+
         return path.resolve(
-            path.dirname(filePath.replace(/(\\|\/)/g, "/")),
-            relativeFilePath?.replace(/(\\|\/)/g, "/") || ""
+            path.dirname(normalizeFilePath(filePath)),
+            normalizeFilePath(relativeFilePath) || ""
         );
     }
 
@@ -225,7 +230,7 @@ export class OpenProjectsManager {
         params: ProjectReference,
         map: Map<string, OpenProject>
     ) {
-        absoluteFilePath = absoluteFilePath.replace(/(\\|\/)/g, "/");
+        absoluteFilePath = normalizeFilePath(absoluteFilePath);
 
         let openProject = map.get(absoluteFilePath);
 
@@ -252,7 +257,7 @@ export class OpenProjectsManager {
         }
 
         const newOpenProject = {
-            filePath: absoluteFilePath.replace(/(\\|\/)/g, "/"),
+            filePath: absoluteFilePath,
             project,
             dirty: false,
             watcher,
@@ -276,10 +281,24 @@ export class OpenProjectsManager {
         console.log("loadProject", filePath);
 
         let fileData: Buffer;
-        try {
-            fileData = await fs.promises.readFile(filePath);
-        } catch (err) {
-            throw new Error(`File read error: ${err.toString()}`);
+
+        if (isValidUrl(filePath)) {
+            // fetch project file from URL
+            try {
+                const response = await fetch(filePath);
+                const blob = await response.blob();
+                const arrayBuffer = await blob.arrayBuffer();
+                fileData = Buffer.from(arrayBuffer);
+            } catch (err) {
+                throw new Error(`URL fetch error: ${err.toString()}`);
+            }
+        } else {
+            // read project file
+            try {
+                fileData = await fs.promises.readFile(filePath);
+            } catch (err) {
+                throw new Error(`File read error: ${err.toString()}`);
+            }
         }
 
         const isDashboardBuild = filePath.endsWith(".eez-dashboard");
@@ -414,4 +433,16 @@ export class OpenProjectsManager {
             }
         }
     }
+}
+
+function normalizeFilePath(filePath: string) {
+    if (!filePath) {
+        return filePath;
+    }
+
+    if (isValidUrl(filePath)) {
+        return filePath;
+    }
+
+    return filePath.replace(/(\\|\/)/g, "/");
 }

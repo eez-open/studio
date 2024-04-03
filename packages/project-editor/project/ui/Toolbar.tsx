@@ -10,12 +10,14 @@ import {
     getObjectIcon,
     objectToString
 } from "project-editor/store";
-import { GlobalVariableStatuses } from "project-editor/features/variable/global-variable-status";
+import { RenderVariableStatus } from "project-editor/features/variable/global-variable-status";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { RUN_ICON } from "project-editor/ui-components/icons";
 import { getEditorComponent } from "./EditorComponentFactory";
 import { getId } from "project-editor/core/object";
+import type { IObjectVariableValue } from "eez-studio-types";
+import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,34 +26,96 @@ export const Toolbar = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        get globalVariableStatuses() {
+            let globalVariablesStatus: React.ReactNode[] = [];
+
+            for (const variable of this.context.project.allGlobalVariables) {
+                const objectVariableType = getObjectVariableTypeFromType(
+                    this.context,
+                    variable.type
+                );
+                if (objectVariableType) {
+                    const objectVariableValue:
+                        | IObjectVariableValue
+                        | undefined = this.context.dataContext.get(
+                        variable.fullName
+                    );
+
+                    globalVariablesStatus.push(
+                        <RenderVariableStatus
+                            key={variable.fullName}
+                            variable={variable}
+                            value={objectVariableValue}
+                            onClick={async () => {
+                                if (objectVariableType.editConstructorParams) {
+                                    const constructorParams =
+                                        await objectVariableType.editConstructorParams(
+                                            variable,
+                                            objectVariableValue?.constructorParams ||
+                                                objectVariableValue,
+                                            true
+                                        );
+                                    if (constructorParams !== undefined) {
+                                        this.context.runtime!.setObjectVariableValue(
+                                            variable.fullName,
+                                            objectVariableType.createValue(
+                                                constructorParams,
+                                                true
+                                            )
+                                        );
+                                    }
+                                }
+                            }}
+                        />
+                    );
+                }
+            }
+
+            return globalVariablesStatus;
+        }
+
         render() {
+            const showEditorButtons =
+                this.context.context.type != "run-tab" &&
+                !this.context.project._isDashboardBuild &&
+                !(
+                    this.context.runtime &&
+                    !this.context.runtime.isDebuggerActive
+                );
+
+            const showRunEditSwitchControls =
+                this.context.context.type != "run-tab" &&
+                !this.context.project._isDashboardBuild &&
+                this.context.projectTypeTraits.runtimeType != RuntimeType.NONE;
+
+            const globalVariablesStatuses = this.context.runtime
+                ? this.globalVariableStatuses
+                : [];
+
+            if (
+                !showEditorButtons &&
+                !showRunEditSwitchControls &&
+                globalVariablesStatuses.length == 0
+            ) {
+                return null;
+            }
+
             return (
                 <nav className="navbar justify-content-between EezStudio_ToolbarNav">
-                    {this.context.context.type != "run-tab" &&
-                    !this.context.project._isDashboardBuild &&
-                    !(
-                        this.context.runtime &&
-                        !this.context.runtime.isDebuggerActive
-                    ) ? (
-                        <EditorButtons />
-                    ) : (
-                        <div />
-                    )}
+                    {showEditorButtons ? <EditorButtons /> : <div />}
 
-                    {this.context.context.type != "run-tab" &&
-                    !this.context.project._isDashboardBuild &&
-                    this.context.projectTypeTraits.runtimeType !=
-                        RuntimeType.NONE ? (
+                    {showRunEditSwitchControls ? (
                         <RunEditSwitchControls />
                     ) : (
                         <div />
                     )}
 
-                    {this.context.runtime ? (
-                        <GlobalVariableStatuses />
-                    ) : (
-                        <div style={{ width: 0, justifyContent: "flex-end" }} />
-                    )}
+                    <div
+                        className="EezStudio_FlowRuntimeControls"
+                        style={{ width: 0, justifyContent: "flex-end" }}
+                    >
+                        {globalVariablesStatuses}
+                    </div>
                 </nav>
             );
         }

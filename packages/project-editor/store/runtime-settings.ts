@@ -141,6 +141,11 @@ export class RuntimeSettings {
     }
 
     async save() {
+        if (this.projectStore.context.type == "run-embedded") {
+            // TODO
+            return;
+        }
+
         if (!this.modified) {
             return;
         }

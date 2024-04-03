@@ -433,7 +433,7 @@ export class ProjectEditorTab implements IHomeTab {
             this.ProjectEditor = ProjectEditorView;
 
             await initProjectEditor(tabs, ProjectEditorTab);
-            const projectStore = await ProjectStore.create(
+            const projectStore = ProjectStore.create(
                 this.runMode
                     ? {
                           type: "run-tab"

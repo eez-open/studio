@@ -129,7 +129,7 @@ class OpenProjectsStore {
                     );
 
                     await initProjectEditor(tabs, ProjectEditorTab);
-                    const projectStore = await ProjectStore.create({
+                    const projectStore = ProjectStore.create({
                         type: "read-only"
                     });
                     const project = loadProject(projectStore, jsonStr, false);

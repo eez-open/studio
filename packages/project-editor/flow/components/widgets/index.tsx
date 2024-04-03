@@ -294,7 +294,8 @@ export class ContainerWidget extends Widget {
                                   id: "vertical"
                               },
                               {
-                                  id: "docking-manager"
+                                  id: "docking-manager",
+                                  label: "Docking Manager"
                               }
                           ]
                         : [

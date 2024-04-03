@@ -589,6 +589,7 @@ export class WasmRuntime extends RemoteRuntime {
                 if (value == null) {
                     if (
                         variable.persistent &&
+                        this.projectStore.context.type != "run-embedded" &&
                         objectVariableType.editConstructorParams
                     ) {
                         const constructorParams =

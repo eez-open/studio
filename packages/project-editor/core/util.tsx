@@ -1,5 +1,6 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
+import { URL } from "url";
 
 import { IDialogOptions, showDialog } from "eez-studio-ui/dialog";
 import {
@@ -114,4 +115,13 @@ export function onAfterPaste(
             classInfo.onAfterPaste(object, fromObjects[i]);
         }
     });
+}
+
+export function isValidUrl(s: string) {
+    try {
+        const url = new URL(s);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch (err) {
+        return false;
+    }
 }
