@@ -1361,11 +1361,28 @@ button.EezStudio_Action {
     .EezStudio_Icon {
         color: @selectionColor!important;
     }
+
+    .flexlayout__tab_button_trailing:not(:hover) {
+        path:nth-child(2) {
+            stroke: @selectionColor;
+            fill: none;
+        }
+    }
 }
 
 .flexlayout__tab {
     background-color: @backgroundColor;
     color: @textColor;
+}
+
+.flexlayout__tab_button_content {
+    font-family: var(--bs-font-sans-serif) !important;
+    font-size: 14px !important;
+}
+
+.flexlayout__tab_button_leading .EezStudio_Icon {
+    color: @textColor;
+    opacity: 0.9;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1384,11 +1401,6 @@ button.EezStudio_Action {
     -webkit-transition: none;
     transition: none;
     display: none;
-}
-
-.flexlayout__tab_button_leading .EezStudio_Icon {
-    color: @textColor;
-    opacity: 0.9;
 }
 
 @import "home";

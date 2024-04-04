@@ -23,9 +23,6 @@ export class FlexLayoutContainer extends React.Component<{
                 model={this.props.model}
                 factory={this.props.factory}
                 realtimeResize={true}
-                font={{
-                    size: "small"
-                }}
                 onRenderTab={this.props.onRenderTab}
                 iconFactory={this.props.iconFactory}
                 onAuxMouseClick={this.props.onAuxMouseClick}

@@ -28,7 +28,8 @@ import {
     createObject,
     getChildOfObject,
     getAncestorOfType,
-    updateObject
+    updateObject,
+    getObjectPathAsString
 } from "project-editor/store";
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
@@ -143,6 +144,11 @@ const ContainerWidgetEditLayout = observer(
                 updateObject(containerWidget, {
                     dockingLayout: model.toJson()
                 });
+
+                projectStore.runtimeSettings.writeDockingManagerContainerLayout(
+                    getObjectPathAsString(containerWidget),
+                    undefined
+                );
 
                 onDispose();
             };
@@ -394,53 +400,62 @@ export class ContainerWidget extends Widget {
     }
 
     getDockingLayoutModel(flowContext: IFlowContext) {
-        const dockingLayout = toJS(this.dockingLayout) || {
-            global: {
-                borderEnableAutoHide: true,
-                splitterSize: 4,
-                splitterExtra: 4,
-                legacyOverflowMenu: false,
-                tabEnableRename: false
-            },
-            borders: [
-                {
-                    type: "border",
-                    location: "top",
-                    children: []
+        let savedDockingLayout;
+        if (flowContext.flowState) {
+            savedDockingLayout =
+                flowContext.projectStore.runtimeSettings.readDockingManagerContainerLayout(
+                    getObjectPathAsString(this)
+                );
+        }
+
+        const dockingLayout = savedDockingLayout ||
+            toJS(this.dockingLayout) || {
+                global: {
+                    borderEnableAutoHide: true,
+                    splitterSize: 4,
+                    splitterExtra: 4,
+                    legacyOverflowMenu: false,
+                    tabEnableRename: false
                 },
-                {
-                    type: "border",
-                    location: "left",
-                    children: []
-                },
-                {
-                    type: "border",
-                    location: "right",
-                    children: []
-                },
-                {
-                    type: "border",
-                    location: "bottom",
-                    children: []
+                borders: [
+                    {
+                        type: "border",
+                        location: "top",
+                        children: []
+                    },
+                    {
+                        type: "border",
+                        location: "left",
+                        children: []
+                    },
+                    {
+                        type: "border",
+                        location: "right",
+                        children: []
+                    },
+                    {
+                        type: "border",
+                        location: "bottom",
+                        children: []
+                    }
+                ],
+                layout: {
+                    type: "row",
+                    children: this.widgets.map((widget, i) => ({
+                        type: "tabset",
+                        children: [
+                            {
+                                type: "tab",
+                                enableClose: false,
+                                name: `Child ${i}`,
+                                id: `child${i}`,
+                                component: `child${i}`,
+                                icon: undefined
+                            }
+                        ]
+                    }))
                 }
-            ],
-            layout: {
-                type: "row",
-                children: this.widgets.map((widget, i) => ({
-                    type: "tabset",
-                    children: [
-                        {
-                            type: "tab",
-                            enableClose: false,
-                            name: `Child ${i}`,
-                            id: `child${i}`,
-                            component: `child${i}`,
-                            icon: undefined
-                        }
-                    ]
-                }))
-            }
-        };
+            };
 
         const model = FlexLayout.Model.fromJson(dockingLayout);
 
@@ -548,6 +563,7 @@ export class ContainerWidget extends Widget {
             style.opacity = this.style.opacityProperty / 255;
         }
     }
+
     override render(
         flowContext: IFlowContext,
         containerWidth: number,
@@ -646,6 +662,14 @@ export class ContainerWidget extends Widget {
                         containerWidth,
                         containerHeight
                     )}
+                    onModelChange={model => {
+                        if (flowContext.flowState) {
+                            flowContext.projectStore.runtimeSettings.writeDockingManagerContainerLayout(
+                                getObjectPathAsString(this),
+                                model.toJson()
+                            );
+                        }
+                    }}
                 />
             ];
         } else {

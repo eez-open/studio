@@ -15,10 +15,6 @@ import type { ProjectStore } from "project-editor/store";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LayoutModels extends AbstractLayoutModels {
-    static FONT = {
-        size: "small"
-    };
-
     static GLOBAL_OPTIONS = {
         borderEnableAutoHide: true,
         splitterSize: 4,

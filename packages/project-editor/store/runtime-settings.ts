@@ -1,5 +1,5 @@
 import fs from "fs";
-import { makeObservable, observable, toJS, runInAction } from "mobx";
+import { makeObservable, observable, toJS, runInAction, action } from "mobx";
 
 import * as notification from "eez-studio-ui/notification";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -17,13 +17,19 @@ export class RuntimeSettings {
         __embeddedDashboards?: {
             [dashboardPath: string]: any;
         };
+        __dockingManagerContainerLayouts?: {
+            [containerPath: string]: any;
+        };
         [key: string]: any;
     } = {};
     modified = false;
 
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
-            settings: observable
+            settings: observable,
+            setVariableValue: action,
+            writeSettings: action,
+            writeDockingManagerContainerLayout: action
         });
     }
 
@@ -63,13 +69,10 @@ export class RuntimeSettings {
     }
 
     setVariableValue(variable: IVariable, value: any) {
-        runInAction(() => {
-            if (!this.settings.__persistentVariables) {
-                this.settings.__persistentVariables = {};
-            }
-            this.settings.__persistentVariables[variable.fullName] =
-                toJS(value);
-        });
+        if (!this.settings.__persistentVariables) {
+            this.settings.__persistentVariables = {};
+        }
+        this.settings.__persistentVariables[variable.fullName] = toJS(value);
         this.modified = true;
     }
 
@@ -213,6 +216,25 @@ export class RuntimeSettings {
 
     writeSettings(key: string, value: any) {
         this.settings[key] = value;
+        this.modified = true;
+    }
+
+    readDockingManagerContainerLayout(containerPath: string) {
+        if (!this.settings.__dockingManagerContainerLayouts) {
+            return undefined;
+        }
+        return this.settings.__dockingManagerContainerLayouts[containerPath];
+    }
+
+    writeDockingManagerContainerLayout(containerPath: string, layout: any) {
+        if (this.settings.__dockingManagerContainerLayouts) {
+            this.settings.__dockingManagerContainerLayouts[containerPath] =
+                layout;
+        } else {
+            this.settings.__dockingManagerContainerLayouts = {
+                [containerPath]: layout
+            };
+        }
         this.modified = true;
     }
 }
