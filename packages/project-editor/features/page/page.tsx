@@ -16,7 +16,6 @@ import {
     MessageType,
     PropertyInfo,
     getProperty,
-    LVGL_FLAG_CODES,
     IMessage
 } from "project-editor/core/object";
 import {
@@ -72,6 +71,7 @@ import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { getCode } from "project-editor/lvgl/widget-common";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { getLvglFlagCodes } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -977,7 +977,7 @@ export class Page extends Flow {
         if (!customWidget) {
             runtime.wasm._lvglObjClearFlag(
                 obj,
-                getCode(["SCROLLABLE"], LVGL_FLAG_CODES)
+                getCode(["SCROLLABLE"], getLvglFlagCodes(this))
             );
         }
 

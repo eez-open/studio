@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { getTempDirPath, isDev } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 
-import type { IEezObject } from "project-editor/core/object";
+import { LVGL_FLAG_CODES, type IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap, BitmapData } from "project-editor/features/bitmap/bitmap";
 import type { IWasmFlowRuntime } from "eez-studio-types";
@@ -195,6 +195,32 @@ export const CF_RAW_ALPHA = 53;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LVGL_FLAG_CODES_90 = {
+    HIDDEN: 1 << 0, // Make the object hidden. (Like it wasn't there at all)
+    CLICKABLE: 1 << 1, // Make the object clickable by the input devices
+    CLICK_FOCUSABLE: 1 << 2, // Add focused state to the object when clicked
+    CHECKABLE: 1 << 3, // Toggle checked state when the object is clicked
+    SCROLLABLE: 1 << 4, // Make the object scrollable
+    SCROLL_ELASTIC: 1 << 5, // Allow scrolling inside but with slower speed
+    SCROLL_MOMENTUM: 1 << 6, // Make the object scroll further when "thrown"
+    SCROLL_ONE: 1 << 7, // Allow scrolling only one snappable children
+    SCROLL_CHAIN_HOR: 1 << 8, // Allow propagating the horizontal scroll to a parent
+    SCROLL_CHAIN_VER: 1 << 9, // Allow propagating the vertical scroll to a parent
+    SCROLL_CHAIN: (1 << 8) | (1 << 9),
+    SCROLL_ON_FOCUS: 1 << 10, // Automatically scroll object to make it visible when focused
+    SCROLL_WITH_ARROW: 1 << 11, // Allow scrolling the focused object with arrow keys
+    SNAPPABLE: 1 << 12, // If scroll snap is enabled on the parent it can snap to this object
+    PRESS_LOCK: 1 << 13, // Keep the object pressed even if the press slid from the object
+    EVENT_BUBBLE: 1 << 14, // Propagate the events to the parent too
+    GESTURE_BUBBLE: 1 << 15, // Propagate the gestures to the parent
+    ADV_HITTEST: 1 << 16, // Allow performing more accurate hit (click) test. E.g. consider rounded corners.
+    IGNORE_LAYOUT: 1 << 17, // Make the object position-able by the layouts
+    FLOATING: 1 << 18, // Do not scroll the object when the parent scrolls and ignore layout
+    OVERFLOW_VISIBLE: 1 << 20 // Do not clip the children's content to the parent's boundary*/
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 const versions = {
     "8.3": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v8.3.js",
@@ -340,7 +366,11 @@ const versions = {
             return bitmapPtr;
         },
 
-        hasLabelRecolorSupport: true
+        hasLabelRecolorSupport: true,
+
+        getLvglFlagCodes: () => {
+            return LVGL_FLAG_CODES;
+        }
     },
     "9.0": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v9.0.js",
@@ -525,7 +555,11 @@ const versions = {
             return bitmapPtr;
         },
 
-        hasLabelRecolorSupport: false
+        hasLabelRecolorSupport: false,
+
+        getLvglFlagCodes: () => {
+            return LVGL_FLAG_CODES_90;
+        }
     }
 };
 
@@ -621,4 +655,8 @@ export function getLvglBitmapPtr(
 
 export function lvglHasLabelRecolorSupport(object: IEezObject) {
     return getVersionProperty(object, "hasLabelRecolorSupport");
+}
+
+export function getLvglFlagCodes(object: IEezObject) {
+    return getVersionProperty(object, "getLvglFlagCodes")();
 }

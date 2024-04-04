@@ -134,6 +134,7 @@ import { visitObjects } from "project-editor/core/search";
 import { validators } from "eez-studio-shared/validation";
 import {
     getLvglCoordTypeShift,
+    getLvglFlagCodes,
     lvglHasLabelRecolorSupport
 } from "project-editor/lvgl/lvgl-versions";
 
@@ -1301,13 +1302,13 @@ export class LVGLWidget extends Widget {
             if (added.length > 0) {
                 runtime.wasm._lvglObjAddFlag(
                     obj,
-                    getCode(added, LVGL_FLAG_CODES)
+                    getCode(added, getLvglFlagCodes(this))
                 );
             }
             if (cleared.length > 0) {
                 runtime.wasm._lvglObjClearFlag(
                     obj,
-                    getCode(cleared, LVGL_FLAG_CODES)
+                    getCode(cleared, getLvglFlagCodes(this))
                 );
             }
 
@@ -1342,7 +1343,7 @@ export class LVGLWidget extends Widget {
             if (this.hiddenInEditor && runtime.isEditor) {
                 runtime.wasm._lvglObjAddFlag(
                     obj,
-                    getCode(["HIDDEN"], LVGL_FLAG_CODES)
+                    getCode(["HIDDEN"], getLvglFlagCodes(this))
                 );
             }
         }
@@ -2054,7 +2055,8 @@ export class LVGLLabelWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -2206,7 +2208,8 @@ export class LVGLButtonWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -2295,7 +2298,8 @@ export class LVGLPanelWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -2446,7 +2450,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -2972,7 +2977,8 @@ export class LVGLImageWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -3187,7 +3193,8 @@ export class LVGLSliderWidget extends LVGLWidget {
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
                 "SNAPPABLE",
-                "SCROLL_ON_FOCUS"
+                "SCROLL_ON_FOCUS",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
@@ -3489,7 +3496,8 @@ export class LVGLRollerWidget extends LVGLWidget {
                 "FLOATING",
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
-                "SNAPPABLE"
+                "SNAPPABLE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
@@ -3676,7 +3684,8 @@ export class LVGLSwitchWidget extends LVGLWidget {
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
                 "SNAPPABLE",
-                "SCROLL_ON_FOCUS"
+                "SCROLL_ON_FOCUS",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
@@ -3815,7 +3824,8 @@ export class LVGLBarWidget extends LVGLWidget {
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
                 "SNAPPABLE",
-                "SCROLL_ON_FOCUS"
+                "SCROLL_ON_FOCUS",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
@@ -4036,7 +4046,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "FLOATING",
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
-                "SNAPPABLE"
+                "SNAPPABLE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
@@ -4304,7 +4315,8 @@ export class LVGLArcWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
@@ -4479,7 +4491,8 @@ export class LVGLSpinnerWidget extends LVGLWidget {
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
                 "SNAPPABLE",
-                "SCROLL_CHAIN"
+                "SCROLL_CHAIN",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN",
             states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
@@ -4568,7 +4581,8 @@ export class LVGLCheckboxWidget extends LVGLWidget {
                 "EVENT_BUBBLE",
                 "GESTURE_BUBBLE",
                 "SNAPPABLE",
-                "SCROLL_ON_FOCUS"
+                "SCROLL_ON_FOCUS",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
@@ -4712,7 +4726,8 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -4987,7 +5002,8 @@ export class LVGLCalendarWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -5132,7 +5148,8 @@ export class LVGLColorwheelWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -5390,7 +5407,8 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -5719,7 +5737,8 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -5881,7 +5900,8 @@ export class LVGLChartWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -7143,7 +7163,8 @@ export class LVGLMeterWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
@@ -7597,7 +7618,8 @@ export class LVGLScaleWidget extends LVGLWidget {
                 "SCROLL_MOMENTUM",
                 "SCROLL_ON_FOCUS",
                 "SCROLL_CHAIN",
-                "SCROLL_ONE"
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
             ],
             defaultFlags:
                 "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
