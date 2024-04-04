@@ -839,7 +839,7 @@ export class LineChartWidget extends Widget {
                     executionState.valuesMap.set(xValue, lineValues);
 
                     let xValues = [...executionState.valuesMap.keys()];
-                    xValues.sort();
+                    xValues.sort((a, b) => a - b);
                     while (
                         xValues.length > 0 &&
                         xValues.length > executionState.maxPoints
