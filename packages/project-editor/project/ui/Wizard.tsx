@@ -53,6 +53,7 @@ import {
     PROJECT_TYPE_NAMES,
     ProjectType
 } from "project-editor/project/project";
+import { ButtonAction } from "eez-studio-ui/action";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -1146,7 +1147,10 @@ class WizardModel {
         });
     }
 
-    createProject = async (modalDialog: IObservableValue<any>) => {
+    createProject = async (
+        modalDialog: IObservableValue<any>,
+        runMode: boolean
+    ) => {
         if (this.createProjectInProgress) {
             return false;
         }
@@ -1597,7 +1601,7 @@ class WizardModel {
 
                 this.saveOptions(SaveOptionsFlags.All);
 
-                openProject(projectFilePath, false);
+                openProject(projectFilePath, runMode);
 
                 runInAction(() => {
                     this.name = undefined;
@@ -1987,9 +1991,20 @@ const ProjectProperties = observer(
         wizardModel: WizardModel;
         modalDialog: IObservableValue<any>;
     }> {
-        onOk = async () => {
+        onCreateProject = async () => {
             const success = await this.props.wizardModel.createProject(
-                this.props.modalDialog
+                this.props.modalDialog,
+                false
+            );
+            if (success) {
+                this.props.modalDialog.get()?.close();
+            }
+        };
+
+        onRunProject = async () => {
+            const success = await this.props.wizardModel.createProject(
+                this.props.modalDialog,
+                true
             );
             if (success) {
                 this.props.modalDialog.get()?.close();
@@ -2373,15 +2388,43 @@ const ProjectProperties = observer(
                                 )}
 
                             <div className="d-flex justify-content-end">
-                                <button
-                                    className="btn btn-success"
-                                    onClick={this.onOk}
-                                    disabled={
-                                        wizardModel.createProjectInProgress
-                                    }
-                                >
-                                    Create Project
-                                </button>
+                                {wizardModel.section == "templates" ? (
+                                    <button
+                                        className="btn btn-lg btn-success"
+                                        onClick={this.onCreateProject}
+                                        disabled={
+                                            wizardModel.createProjectInProgress
+                                        }
+                                    >
+                                        Create Project
+                                    </button>
+                                ) : (
+                                    <>
+                                        <ButtonAction
+                                            className="btn-primary"
+                                            text="Edit Project"
+                                            title="Edit Project"
+                                            icon="material:edit"
+                                            onClick={this.onCreateProject}
+                                            enabled={
+                                                !wizardModel.createProjectInProgress
+                                            }
+                                        />
+                                        <ButtonAction
+                                            className="btn-secondary"
+                                            text="Run Project"
+                                            title="Run Project"
+                                            icon="material:play_arrow"
+                                            onClick={this.onRunProject}
+                                            enabled={
+                                                !wizardModel.createProjectInProgress
+                                            }
+                                            style={{
+                                                marginLeft: 10
+                                            }}
+                                        />
+                                    </>
+                                )}
                             </div>
 
                             {wizardModel.projectCreationError && (
