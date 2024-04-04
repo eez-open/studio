@@ -218,7 +218,24 @@ class ExpressionBuilderState implements ITerminalState {
             command = command.substring(0, command.length - 1);
         }
 
-        this.searchText = command;
+        // remove everything between { and }
+        let searchText = "";
+        let inside = false;
+        for (let i = 0; i < command.length; i++) {
+            if (inside) {
+                if (command[i] == "}") {
+                    inside = false;
+                }
+            } else {
+                if (command[i] == "{") {
+                    inside = true;
+                } else {
+                    searchText += command[i];
+                }
+            }
+        }
+
+        this.searchText = searchText;
     }
 }
 
