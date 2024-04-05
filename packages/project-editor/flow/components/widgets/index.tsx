@@ -418,6 +418,7 @@ export class ContainerWidget extends Widget {
                     tabEnableRename: false
                 },
                 borders: [
+                    /*
                     {
                         type: "border",
                         location: "top",
@@ -438,6 +439,7 @@ export class ContainerWidget extends Widget {
                         location: "bottom",
                         children: []
                     }
+                    */
                 ],
                 layout: {
                     type: "row",

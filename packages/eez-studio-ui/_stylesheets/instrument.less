@@ -803,7 +803,7 @@
 }
 
 .EezStudio_CommandSyntaxes {
-    & > div:not(first-child) {
+    & > div:not(:first-child) {
         border-top: 1px solid @borderColor;
     }
 }
@@ -822,6 +822,12 @@
             }
         }
     }
+
+    .EezStudio_List {
+        .EezStudio_ListItem {
+            white-space: nowrap;
+        }
+    }
 }
 
 .EezStudio_CommandsBrowserSyntax {
@@ -830,10 +836,15 @@
 
 .EezStudio_CommandsBrowserHelp {
     flex-grow: 1;
-    display: flex;
+    overflow: hidden;
     iframe {
-        border: 0;
-        flex-grow: 1;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: calc(100% - 1px);
+        height: calc(100% - 1px);
+        overflow: hidden;
+        border: none;
     }
 }
 

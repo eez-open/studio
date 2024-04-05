@@ -17,8 +17,8 @@ import {
 import { ShortcutsToolbar } from "instrument/window/terminal/toolbar";
 import { CommandsBrowser } from "instrument/window/terminal/commands-browser";
 import { parseScpi, SCPI_PART_QUERY } from "eez-studio-shared/scpi-parser";
-import { terminalState } from "./terminalState";
-import { AppBar } from "../app";
+import { AppBar } from "instrument/window/app";
+import { TerminalState } from "instrument/window/terminal/terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +32,7 @@ const Input = observer(
         sendCommand: () => void;
         sendFileToInstrumentHandler: (() => void) | undefined;
         showDocumentation: boolean;
+        terminalState: TerminalState;
     }> {
         input: HTMLInputElement;
 
@@ -67,7 +68,7 @@ const Input = observer(
         componentDidUpdate() {
             if (this.moveCursorToTheEnd) {
                 this.input.selectionStart = this.input.selectionEnd =
-                    terminalState.command.length;
+                    this.props.terminalState.command.length;
                 this.moveCursorToTheEnd = false;
             }
         }
@@ -77,12 +78,12 @@ const Input = observer(
         }
 
         handleChange(event: any) {
-            terminalState.command = event.target.value;
+            this.props.terminalState.command = event.target.value;
         }
 
         sendCommand() {
-            if (terminalState.command) {
-                this.commandsHistory.push(terminalState.command);
+            if (this.props.terminalState.command) {
+                this.commandsHistory.push(this.props.terminalState.command);
                 if (this.commandsHistory.length > CONF_COMMANDS_HISTORY_SIZE) {
                     this.commandsHistory.splice(0, 1);
                 }
@@ -151,11 +152,12 @@ const Input = observer(
                 this.sendCommand();
             } else if (event.key === "ArrowUp") {
                 event.preventDefault();
-                terminalState.command = this.findPreviousCommand() || "";
+                this.props.terminalState.command =
+                    this.findPreviousCommand() || "";
                 this.moveCursorToTheEnd = true;
             } else if (event.key === "ArrowDown") {
                 event.preventDefault();
-                terminalState.command = this.findNextCommand() || "";
+                this.props.terminalState.command = this.findNextCommand() || "";
                 this.moveCursorToTheEnd = true;
             }
         }
@@ -182,7 +184,7 @@ const Input = observer(
                             className="mousetrap form-control"
                             type="text"
                             onKeyDown={this.handleKeyDown}
-                            value={terminalState.command}
+                            value={this.props.terminalState.command}
                             onChange={this.handleChange}
                             disabled={
                                 !this.props.appStore.instrument.connection
@@ -211,10 +213,12 @@ export class TerminalComponent extends React.Component<{
     appStore: InstrumentAppStore;
     showConnectionStatusBar: boolean;
     showShortcuts: boolean;
-    showDocumentation: boolean;
-    showCalendar: boolean;
+    showHelp: boolean;
+    showSideBar: boolean;
 }> {
     inFocus: boolean = false;
+
+    terminalState: TerminalState;
 
     constructor(props: any) {
         super(props);
@@ -222,6 +226,8 @@ export class TerminalComponent extends React.Component<{
         makeObservable(this, {
             inFocus: observable
         });
+
+        this.terminalState = new TerminalState(this.props.appStore.instrument);
     }
 
     onSelectHistoryItemsCancel = () => {
@@ -257,7 +263,7 @@ export class TerminalComponent extends React.Component<{
                     <HistoryView
                         appStore={this.props.appStore}
                         persistId={"instrument/window/history"}
-                        showSideDock={this.props.showCalendar}
+                        showSideBar={this.props.showSideBar}
                     />
                 </div>
                 <Input
@@ -268,14 +274,16 @@ export class TerminalComponent extends React.Component<{
 
                             let hasQuery = false;
                             try {
-                                const parts = parseScpi(terminalState.command);
+                                const parts = parseScpi(
+                                    this.terminalState.command
+                                );
                                 hasQuery = !!parts.find(
                                     part => part.tag == SCPI_PART_QUERY
                                 );
                             } catch (err) {}
 
-                            const command = terminalState.command;
-                            terminalState.command = "";
+                            const command = this.terminalState.command;
+                            this.terminalState.command = "";
 
                             if (hasQuery) {
                                 await instrument.connection.query(command);
@@ -291,7 +299,8 @@ export class TerminalComponent extends React.Component<{
                     sendFileToInstrumentHandler={
                         instrument.sendFileToInstrumentHandler
                     }
-                    showDocumentation={this.props.showDocumentation}
+                    showDocumentation={this.props.showHelp}
+                    terminalState={this.terminalState}
                 />
                 {this.props.showShortcuts && (
                     <ShortcutsToolbar
@@ -304,7 +313,7 @@ export class TerminalComponent extends React.Component<{
             </div>
         );
 
-        if (!this.props.showDocumentation || !appStore.helpVisible) {
+        if (!this.props.showHelp || !appStore.helpVisible) {
             return terminal;
         }
 
@@ -317,8 +326,8 @@ export class TerminalComponent extends React.Component<{
                 {terminal}
                 <CommandsBrowser
                     appStore={this.props.appStore}
-                    host={terminalState}
-                    terminalState={terminalState}
+                    host={this.terminalState}
+                    terminalState={this.terminalState}
                 />
             </Splitter>
         );
@@ -333,8 +342,8 @@ export function render(appStore: InstrumentAppStore) {
             appStore={appStore}
             showConnectionStatusBar={false}
             showShortcuts={true}
-            showDocumentation={true}
-            showCalendar={true}
+            showHelp={true}
+            showSideBar={true}
         />
     );
 }

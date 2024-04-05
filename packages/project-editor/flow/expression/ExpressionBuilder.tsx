@@ -23,7 +23,11 @@ import {
     PropertyInfo
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getAncestorOfType, getProjectStore } from "project-editor/store";
+import {
+    getAncestorOfType,
+    getProjectStore,
+    ProjectStore
+} from "project-editor/store";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import type { Component } from "project-editor/flow/component";
 import {
@@ -53,7 +57,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 import type * as InstrumentObjectModule from "instrument/instrument-object";
 import type * as CommandsBrowserModule from "instrument/window/terminal/commands-browser";
 
-import type { ITerminalState } from "instrument/window/terminal/terminalState";
+import { TerminalState } from "instrument/window/terminal/terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -114,19 +118,22 @@ export async function expressionBuilder(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class ExpressionBuilderState implements ITerminalState {
-    _command: string = "";
-    _linkCommandInputWithDocumentationBrowser: boolean;
-    searchText: string;
-
+class ExpressionBuilderState extends TerminalState {
     activeTab: "scpi" | "expression" = "scpi";
+    _instrumentId: string | undefined;
 
-    constructor() {
-        this._linkCommandInputWithDocumentationBrowser = !(
-            localStorage.getItem(
-                "expression-builder/linkCommandInputWithDocumentationBrowser"
-            ) === "false" || false
-        );
+    reactionDispose: any;
+    autorunDispose: any;
+
+    constructor(
+        public projectStore: ProjectStore,
+        public props: {
+            object: IEezObject;
+            propertyInfo: PropertyInfo;
+        },
+        instrument: InstrumentObject | undefined
+    ) {
+        super(instrument);
 
         this.activeTab =
             (window.localStorage.getItem(
@@ -136,110 +143,76 @@ class ExpressionBuilderState implements ITerminalState {
                 : "expression";
 
         makeObservable(this, {
-            _command: observable,
-            _linkCommandInputWithDocumentationBrowser: observable,
-            searchText: observable,
             activeTab: observable,
-            setSearchText: action
+            _instrumentId: observable,
+            instrumentId: computed
         });
 
-        reaction(
-            () => this._linkCommandInputWithDocumentationBrowser,
-            value => {
-                localStorage.setItem(
-                    "expression-builder/linkCommandInputWithDocumentationBrowser",
-                    value ? "true" : "false"
-                );
-            }
-        );
-
-        reaction(
+        this.reactionDispose = reaction(
             () => this.activeTab,
             value => {
                 localStorage.setItem("expression-builder/activeTab", value);
             }
         );
-    }
 
-    get command() {
-        return this._command;
-    }
+        this.autorunDispose = autorun(() => {
+            let instrument: InstrumentObject | undefined;
 
-    set command(command: string) {
-        runInAction(() => {
-            this._command = command;
-
-            if (this.linkCommandInputWithDocumentationBrowser) {
-                this.setSearchText();
+            if (this.instrumentId) {
+                const { instruments } =
+                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
+                instrument = instruments.get(this.instrumentId);
+            } else {
+                instrument = undefined;
             }
+
+            runInAction(() => {
+                this.instrument = instrument;
+            });
         });
     }
 
-    get linkCommandInputWithDocumentationBrowser() {
-        return this._linkCommandInputWithDocumentationBrowser;
-    }
+    unmount() {
+        if (this.reactionDispose) {
+            this.reactionDispose();
+            this.reactionDispose = undefined;
+        }
 
-    set linkCommandInputWithDocumentationBrowser(value: boolean) {
-        this._linkCommandInputWithDocumentationBrowser = value;
-        if (this.linkCommandInputWithDocumentationBrowser) {
-            this.setSearchText();
+        if (this.autorunDispose) {
+            this.autorunDispose();
+            this.autorunDispose = undefined;
         }
     }
 
-    setSearchText() {
-        let command = this.command.trim();
+    get instrumentId(): string | undefined {
+        let instrumentId = this._instrumentId;
 
-        // skip optional assignment
-        if (command.startsWith("{")) {
-            const i = command.indexOf("}", 1);
-            if (i == -1) {
-                this.searchText = "";
-                return;
-            }
-            command = command.substring(i + 1).trim();
-        } else {
-            let i = command.indexOf("=", 1);
-
-            if (i != -1) {
-                if (parseIdentifier(command.substring(0, i).trim())) {
-                    command = command.substring(i).trim();
-                }
-            }
-        }
-        if (command.startsWith("=")) {
-            command = command.substring(1);
-        }
-        if (command.startsWith("?")) {
-            command = command.substring(1);
-        }
-
-        command = command.trim().split(" ")[0];
-        if (command.endsWith("?")) {
-            command = command.substring(0, command.length - 1);
-        }
-
-        // remove everything between { and }
-        let searchText = "";
-        let inside = false;
-        for (let i = 0; i < command.length; i++) {
-            if (inside) {
-                if (command[i] == "}") {
-                    inside = false;
-                }
-            } else {
-                if (command[i] == "{") {
-                    inside = true;
-                } else {
-                    searchText += command[i];
-                }
+        if (!instrumentId) {
+            if (this.props.propertyInfo.getInstrumentId) {
+                instrumentId = this.props.propertyInfo.getInstrumentId(
+                    this.props.object
+                );
             }
         }
 
-        this.searchText = searchText;
+        if (!instrumentId) {
+            instrumentId =
+                this.projectStore.uiStateStore.expressionBuilderInstrumentId;
+        }
+
+        if (!instrumentId) {
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
+            const instrumentsArray = [...instruments.values()];
+            if (instrumentsArray.length > 0) {
+                instrumentId = [...instruments.values()][0].id;
+            }
+        }
+
+        return instrumentId;
     }
 }
-
-const expressionBuilderState = new ExpressionBuilderState();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -266,14 +239,24 @@ const SelectItemDialog = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        ref = React.createRef<HTMLDivElement>();
+
         textarea: HTMLTextAreaElement;
         value: string;
         selection: string | undefined;
 
-        _instrumentId: string | undefined;
+        expressionBuilderState: ExpressionBuilderState;
+
+        autorunDispose: any;
 
         constructor(props: any) {
             super(props);
+
+            this.expressionBuilderState = new ExpressionBuilderState(
+                this.context,
+                this.props,
+                undefined
+            );
 
             this.value =
                 getProperty(
@@ -284,7 +267,6 @@ const SelectItemDialog = observer(
             makeObservable(this, {
                 value: observable,
                 selection: observable,
-                _instrumentId: observable,
                 component: computed,
                 flow: computed,
                 componentInputs: computed,
@@ -294,9 +276,7 @@ const SelectItemDialog = observer(
                 rootNodeSystemVariables: computed,
                 rootNodeOperations: computed,
                 rootNodeFunctions: computed,
-                rootNodeTextResources: computed,
-                instrumentId: computed,
-                instrument: computed
+                rootNodeTextResources: computed
             });
 
             autorun(() => {
@@ -305,11 +285,13 @@ const SelectItemDialog = observer(
         }
 
         updateCommand() {
-            const start = this.textarea?.selectionStart ?? 0;
-            const end = this.textarea?.selectionEnd ?? start;
+            if (this.expressionBuilderState) {
+                const start = this.textarea?.selectionStart ?? 0;
+                const end = this.textarea?.selectionEnd ?? start;
 
-            let line = getLine(this.value, start, end) ?? "";
-            expressionBuilderState.command = line;
+                let line = getLine(this.value, start, end) ?? "";
+                this.expressionBuilderState.command = line;
+            }
         }
 
         componentDidMount() {
@@ -343,6 +325,26 @@ const SelectItemDialog = observer(
                     ? undefined
                     : textInputSelection.direction
             );
+
+            this.autorunDispose = autorun(() => {
+                if (this.expressionBuilderState.searchText) {
+                    const i = this.expressionBuilderState.selectedNodeIndex;
+
+                    if (this.ref.current) {
+                        const listItemElement = this.ref.current.querySelector(
+                            `.EezStudio_ExpressionBuilder_CommandsBrowser .EezStudio_List .EezStudio_ListItem:nth-child(${
+                                i + 1
+                            })`
+                        );
+                        if (listItemElement) {
+                            listItemElement.scrollIntoView({
+                                behavior: "auto",
+                                block: "nearest"
+                            });
+                        }
+                    }
+                }
+            });
         }
 
         componentWillUnmount() {
@@ -350,6 +352,10 @@ const SelectItemDialog = observer(
                 "project-editor/expression-builder/textarea/height",
                 this.textarea.style.height
             );
+
+            this.expressionBuilderState.unmount();
+
+            this.autorunDispose();
         }
 
         onOkEnabled = () => {
@@ -920,44 +926,6 @@ const SelectItemDialog = observer(
             });
         }
 
-        get instrumentId(): string | undefined {
-            let instrumentId = this._instrumentId;
-
-            if (!instrumentId) {
-                if (this.props.propertyInfo.getInstrumentId) {
-                    instrumentId = this.props.propertyInfo.getInstrumentId(
-                        this.props.object
-                    );
-                }
-            }
-
-            if (!instrumentId) {
-                instrumentId =
-                    this.context.uiStateStore.expressionBuilderInstrumentId;
-            }
-
-            if (!instrumentId) {
-                const { instruments } =
-                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
-
-                const instrumentsArray = [...instruments.values()];
-                if (instrumentsArray.length > 0) {
-                    instrumentId = [...instruments.values()][0].id;
-                }
-            }
-
-            return instrumentId;
-        }
-
-        get instrument(): InstrumentObject | undefined {
-            if (!this.instrumentId) {
-                return undefined;
-            }
-            const { instruments } =
-                require("instrument/instrument-object") as typeof InstrumentObjectModule;
-            return instruments.get(this.instrumentId);
-        }
-
         selectNode = action((node?: ITreeNode<string>) => {
             this.selection = node && node.data;
         });
@@ -1087,11 +1055,11 @@ const SelectItemDialog = observer(
             if (
                 this.props.propertyInfo.flowProperty == "scpi-template-literal"
             ) {
-                activeTab = expressionBuilderState.activeTab;
+                activeTab = this.expressionBuilderState.activeTab;
 
                 let instrumentsSelector;
 
-                if (expressionBuilderState.activeTab == "scpi") {
+                if (this.expressionBuilderState.activeTab == "scpi") {
                     const { instruments } =
                         require("instrument/instrument-object") as typeof InstrumentObjectModule;
 
@@ -1100,11 +1068,12 @@ const SelectItemDialog = observer(
                             <span>Instrument</span>
                             <select
                                 className="form-select"
-                                value={this.instrumentId}
+                                value={this.expressionBuilderState.instrumentId}
                                 onChange={action(event => {
-                                    this._instrumentId = event.target.value;
+                                    this.expressionBuilderState._instrumentId =
+                                        event.target.value;
                                     this.context.uiStateStore.expressionBuilderInstrumentId =
-                                        this._instrumentId;
+                                        this.expressionBuilderState._instrumentId;
                                 })}
                             >
                                 {[...instruments.values()].map(instrument => (
@@ -1132,7 +1101,7 @@ const SelectItemDialog = observer(
                                     href="#"
                                     onClick={action(
                                         () =>
-                                            (expressionBuilderState.activeTab =
+                                            (this.expressionBuilderState.activeTab =
                                                 "scpi")
                                     )}
                                 >
@@ -1147,7 +1116,7 @@ const SelectItemDialog = observer(
                                     href="#"
                                     onClick={action(
                                         () =>
-                                            (expressionBuilderState.activeTab =
+                                            (this.expressionBuilderState.activeTab =
                                                 "expression")
                                     )}
                                 >
@@ -1173,7 +1142,19 @@ const SelectItemDialog = observer(
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
                 >
-                    <div className="EezStudio_ExpressionBuilder">
+                    <div
+                        ref={this.ref}
+                        className="EezStudio_ExpressionBuilder"
+                        onKeyDown={e => {
+                            if (e.key == "F3") {
+                                if (e.shiftKey) {
+                                    this.expressionBuilderState.selectPreviousNode();
+                                } else {
+                                    this.expressionBuilderState.selectNextNode();
+                                }
+                            }
+                        }}
+                    >
                         <textarea
                             ref={(ref: any) => (this.textarea = ref)}
                             className="form-control pre"
@@ -1234,19 +1215,23 @@ const SelectItemDialog = observer(
                                 />
                             )}
                         </div>
-                        {this.instrument && (
-                            <CommandsBrowser
-                                appStore={this.instrument.getEditor()}
-                                host={this}
-                                terminalState={expressionBuilderState}
-                                className="EezStudio_ExpressionBuilder_CommandsBrowser"
-                                style={{
-                                    display:
-                                        activeTab == "scpi" ? "block" : "none"
-                                }}
-                                persistId="project-editor/expression-builder/commands-browser/splitter1"
-                            />
-                        )}
+                        <div
+                            className="EezStudio_ExpressionBuilder_Panels"
+                            style={{
+                                display: activeTab == "scpi" ? "flex" : "none",
+                                overflow: "hidden"
+                            }}
+                        >
+                            {this.expressionBuilderState.instrument && (
+                                <CommandsBrowser
+                                    appStore={this.expressionBuilderState.instrument.getEditor()}
+                                    host={this}
+                                    terminalState={this.expressionBuilderState}
+                                    className="EezStudio_ExpressionBuilder_CommandsBrowser"
+                                    persistId="project-editor/expression-builder/commands-browser/splitter1"
+                                />
+                            )}
+                        </div>
                     </div>
                 </Dialog>
             );
@@ -1261,6 +1246,10 @@ function isEndOfLine(str: string, pos: number) {
 }
 
 function getStartOfLine(str: string, pos: number) {
+    if (str[pos] == "\n") {
+        pos--;
+    }
+
     for (let i = pos; i >= 0; i--) {
         if (str[i] == "\n") {
             return i + 1;

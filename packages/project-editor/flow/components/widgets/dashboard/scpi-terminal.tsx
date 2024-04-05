@@ -88,17 +88,17 @@ const SCPITerminalElement = makeLazyComponent(
                         false
                     );
 
-                    const showDocumentation = getBooleanValue(
+                    const showHelp = getBooleanValue(
                         props.flowContext,
                         props.widget,
-                        "showDocumentation",
+                        "showHelp",
                         false
                     );
 
-                    const showCalendar = getBooleanValue(
+                    const showSideBar = getBooleanValue(
                         props.flowContext,
                         props.widget,
-                        "showCalendar",
+                        "showSideBar",
                         false
                     );
 
@@ -107,8 +107,8 @@ const SCPITerminalElement = makeLazyComponent(
                             appStore={instrumentObject.getEditor()}
                             showConnectionStatusBar={showConnectionStatusBar}
                             showShortcuts={showShortcuts}
-                            showDocumentation={showDocumentation}
-                            showCalendar={showCalendar}
+                            showHelp={showHelp}
+                            showSideBar={showSideBar}
                         />
                     );
                 } else {
@@ -148,7 +148,8 @@ export class SCPITerminalWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
             }),
             makeExpressionProperty(
                 {
@@ -176,7 +177,7 @@ export class SCPITerminalWidget extends Widget {
             ),
             makeExpressionProperty(
                 {
-                    name: "showDocumentation",
+                    name: "showHelp",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
@@ -184,13 +185,16 @@ export class SCPITerminalWidget extends Widget {
             ),
             makeExpressionProperty(
                 {
-                    name: "showCalendar",
+                    name: "showSideBar",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
                 "boolean"
             ),
-            makeStylePropertyInfo("style", "Default style")
+            makeStylePropertyInfo("style", "Default style", {
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
+            })
         ],
         defaultValue: {
             left: 0,
@@ -199,8 +203,8 @@ export class SCPITerminalWidget extends Widget {
             height: 560,
             showConnectionStatusBar: "true",
             showShortcuts: "true",
-            showDocumentation: "true",
-            showCalendar: "true"
+            showHelp: "true",
+            showSideBar: "true"
         },
 
         icon: TERMINAL_WIDGET_ICON,
@@ -211,8 +215,8 @@ export class SCPITerminalWidget extends Widget {
     instrument: string;
     showConnectionStatusBar: boolean;
     showShortcuts: boolean;
-    showDocumentation: boolean;
-    showCalendar: boolean;
+    showHelp: boolean;
+    showSideBar: boolean;
 
     override makeEditable() {
         super.makeEditable();
@@ -221,8 +225,8 @@ export class SCPITerminalWidget extends Widget {
             instrument: observable,
             showConnectionStatusBar: observable,
             showShortcuts: observable,
-            showDocumentation: observable,
-            showCalendar: observable
+            showHelp: observable,
+            showSideBar: observable
         });
     }
 

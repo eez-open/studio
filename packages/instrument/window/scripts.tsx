@@ -525,8 +525,8 @@ export const ScriptsEditor = observer(
                             appStore={appStore}
                             showConnectionStatusBar={false}
                             showShortcuts={true}
-                            showDocumentation={true}
-                            showCalendar={true}
+                            showHelp={true}
+                            showSideBar={true}
                         />
                     )}
                 </Splitter>

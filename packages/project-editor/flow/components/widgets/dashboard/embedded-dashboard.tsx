@@ -427,7 +427,8 @@ export class EmbeddedDashboardWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
             }),
             makeExpressionProperty(
                 {
@@ -458,7 +459,10 @@ export class EmbeddedDashboardWidget extends Widget {
                 defaultValue: [],
                 hasExpressionProperties: true
             },
-            makeStylePropertyInfo("style", "Default style")
+            makeStylePropertyInfo("style", "Default style", {
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
+            })
         ],
 
         getAdditionalFlowProperties: (widget: EmbeddedDashboardWidget) => {

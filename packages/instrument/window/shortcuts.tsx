@@ -119,6 +119,10 @@ class ShortcutsToolbarRegistry {
                 this.activeShortcutsToolbar = activeShortcutsToolbar;
             });
 
+            if (shortcutsToolbarRegistry.bindShortcutsDispose) {
+                shortcutsToolbarRegistry.bindShortcutsDispose();
+            }
+
             if (activeShortcutsToolbar) {
                 this.bindShortcutsToKeyboard(
                     this.shortcutsToolbarMap.get(activeShortcutsToolbar)!
@@ -130,10 +134,6 @@ class ShortcutsToolbarRegistry {
     };
 
     bindShortcutsToKeyboard(shortcutsStore: ShortcutsStore) {
-        if (shortcutsToolbarRegistry.bindShortcutsDispose) {
-            shortcutsToolbarRegistry.bindShortcutsDispose();
-        }
-
         shortcutsToolbarRegistry.bindShortcutsDispose = bindShortcuts(
             shortcutsStore.instrumentShortcuts,
             (shortcut: IShortcut) => {

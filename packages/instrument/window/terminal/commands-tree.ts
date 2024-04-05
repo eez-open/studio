@@ -44,7 +44,7 @@ export class CommandsTree {
     selected: boolean = false;
     expanded: boolean = true;
     children: ICommandNode[] = [];
-    enums: IEnum[];
+    enums: IEnum[] = [];
 
     _findCommandCache = new Map<string, ICommandSyntax | IQuerySyntax>();
 
@@ -90,6 +90,8 @@ export class CommandsTree {
                 this.children = this.transform(commandsToTree(commands).nodes);
             });
         } catch (err) {
+            this.enums = [];
+            this.children = [];
             console.error(err);
         }
     }

@@ -30,10 +30,14 @@ Check when we want to hide "Widget is outside of its parent" warning message(s).
 
 ## Keyframe editor [EMPTY]
 
+## Tab title
+
+If this widget is a child of a container with layout set to `Docking Manager`, use this property to set the title of the tab that contains this widget.
+
 ## Event handlers
 
 List of event handler definitions. During execution, the widget can generate certain events (e.g. the `CLICKED` event is generated when the touchscreen is pressed and released within the Widget) and through this list we can specify the method of event processing. We must define these properties for each event handler:
 
-- `Event` – Event that is processed, e.g. `CLICKED`.
-- `Handler type` – There are two options: `Flow` or `Action`. If `Flow` is selected, a flow output will be added through which the event is processed, and if `Action` is selected, then it is necessary to specify which User action will be performed during event processing.
-- `Action` - If the `Handler type` is set to `Action`, then here we need to enter the name of the User action that will be performed during the processing of the selected event.
+-   `Event` – Event that is processed, e.g. `CLICKED`.
+-   `Handler type` – There are two options: `Flow` or `Action`. If `Flow` is selected, a flow output will be added through which the event is processed, and if `Action` is selected, then it is necessary to specify which User action will be performed during event processing.
+-   `Action` - If the `Handler type` is set to `Action`, then here we need to enter the name of the User action that will be performed during the processing of the selected event.

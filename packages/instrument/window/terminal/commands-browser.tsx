@@ -1,12 +1,5 @@
 import React from "react";
-import {
-    observable,
-    action,
-    computed,
-    makeObservable,
-    reaction,
-    IReactionDisposer
-} from "mobx";
+import { observable, action, makeObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -16,7 +9,7 @@ import {
     filterNumber
 } from "eez-studio-shared/validation";
 
-import { IListNode, List } from "eez-studio-ui/list";
+import { List } from "eez-studio-ui/list";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Splitter } from "eez-studio-ui/splitter";
 import {
@@ -32,12 +25,11 @@ import { IParameter, compareMnemonic } from "instrument/scpi";
 import {
     ICommandSyntax,
     IQuerySyntax,
-    makeItShort,
-    matchCommand
+    makeItShort
 } from "instrument/commands-tree";
 
 import type { InstrumentAppStore } from "instrument/window/app-store";
-import type { ITerminalState } from "instrument/window/terminal/terminalState";
+import type { TerminalState } from "instrument/window/terminal/terminalState";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -388,7 +380,7 @@ export const CommandSyntax = observer(
 export const CommandsBrowser = observer(
     class CommandsBrowser extends React.Component<{
         appStore: InstrumentAppStore;
-        terminalState: ITerminalState;
+        terminalState: TerminalState;
         host: {
             command: string;
         };
@@ -396,112 +388,36 @@ export const CommandsBrowser = observer(
         style?: React.CSSProperties;
         persistId?: string;
     }> {
-        selectedNode: ICommandNode;
-        dispose: IReactionDisposer;
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                selectedNode: observable,
-                foundNodes: computed,
-                selectNode: action.bound,
-                onSearchChange: action.bound
-            });
-        }
-
-        get foundNodes(): IListNode[] {
-            let foundNodes: (IListNode & {
-                commandNode: ICommandNode;
-            })[] = [];
-
-            let searchText = this.props.terminalState.searchText.toLowerCase();
-            let selectedNode = this.selectedNode;
-
-            function visitCommandNode(node: ICommandNode) {
-                let command = matchCommand(node.commandSyntax, searchText);
-
-                if (!command) {
-                    command = matchCommand(node.querySyntax, searchText);
-                }
-
-                if (command) {
-                    foundNodes.push({
-                        id: command,
-                        label: command,
-                        data: undefined,
-                        selected: node === selectedNode,
-                        commandNode: node
-                    });
-                }
-
-                node.children.forEach(visitCommandNode);
-            }
-
-            visitCommandNode(this.props.appStore.commandsTree);
-
-            return foundNodes;
-        }
-
-        componentDidMount(): void {
-            this.dispose = reaction(
-                () => this.props.terminalState.searchText,
-                () => {
-                    if (this.foundNodes.length > 0) {
-                        this.selectNode(this.foundNodes[0]);
-                    }
-                }
-            );
-        }
-
-        componentWillUnmount(): void {
-            this.dispose();
-        }
-
-        selectNode(node: ITreeNode | IListNode) {
-            let commandNode: ICommandNode;
-
-            if ((node as any).commandNode) {
-                commandNode = (node as any).commandNode;
-            } else {
-                commandNode = node as ICommandNode;
-            }
-
-            if (this.selectedNode) {
-                this.selectedNode.selected = false;
-            }
-
-            this.selectedNode = commandNode;
-
-            if (this.selectedNode) {
-                this.selectedNode.selected = true;
-            }
-        }
-
         copyCommand = (command: ICommandSyntax, commandParameters: string) => {
             this.props.host.command = makeItShort(command) + commandParameters;
         };
 
-        onSearchChange(event: any) {
-            this.props.terminalState.searchText = $(
-                event.target
-            ).val() as string;
-        }
+        onSearchChange = (event: any) => {
+            const searchText = $(event.target).val() as string;
+
+            if (searchText != this.props.terminalState.searchText) {
+                runInAction(() => {
+                    this.props.terminalState.searchText = searchText;
+                });
+
+                this.props.terminalState.selectFirstNode();
+            }
+        };
 
         render() {
+            const { commandsTree, selectedNode, selectNode, foundNodes } =
+                this.props.terminalState;
+
             let leftSideBody;
             if (this.props.terminalState.searchText) {
                 leftSideBody = (
-                    <List
-                        nodes={this.foundNodes}
-                        selectNode={this.selectNode}
-                    />
+                    <List nodes={foundNodes} selectNode={selectNode} />
                 );
             } else {
                 leftSideBody = (
                     <Tree
-                        rootNode={this.props.appStore.commandsTree}
-                        selectNode={this.selectNode}
+                        rootNode={commandsTree}
+                        selectNode={selectNode}
                         showOnlyChildren={true}
                     />
                 );
@@ -509,20 +425,20 @@ export const CommandsBrowser = observer(
 
             let syntax;
             let help;
-            if (this.selectedNode) {
+            if (selectedNode) {
                 syntax = (
                     <div className="EezStudio_CommandSyntaxes">
-                        {this.selectedNode.commandSyntax && (
+                        {selectedNode.commandSyntax && (
                             <CommandSyntax
                                 appStore={this.props.appStore}
-                                commandSyntax={this.selectedNode.commandSyntax}
+                                commandSyntax={selectedNode.commandSyntax}
                                 copyCommand={this.copyCommand}
                             />
                         )}
-                        {this.selectedNode.querySyntax && (
+                        {selectedNode.querySyntax && (
                             <CommandSyntax
                                 appStore={this.props.appStore}
-                                commandSyntax={this.selectedNode.querySyntax}
+                                commandSyntax={selectedNode.querySyntax}
                                 copyCommand={this.copyCommand}
                             />
                         )}
@@ -530,10 +446,9 @@ export const CommandsBrowser = observer(
                 );
 
                 let helpLink =
-                    (this.selectedNode.commandSyntax &&
-                        this.selectedNode.commandSyntax.url) ||
-                    (this.selectedNode.querySyntax &&
-                        this.selectedNode.querySyntax.url);
+                    (selectedNode.commandSyntax &&
+                        selectedNode.commandSyntax.url) ||
+                    (selectedNode.querySyntax && selectedNode.querySyntax.url);
                 help = helpLink && <iframe src={helpLink} />;
             }
 
