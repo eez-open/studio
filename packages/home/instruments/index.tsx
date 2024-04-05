@@ -99,78 +99,70 @@ export class InstrumentsStore {
         commitTransaction();
     }
 
-    createContextMenu(instruments: InstrumentObject[]): Electron.Menu {
+    createContextMenu(instrument: InstrumentObject) {
         const menu = new Menu();
 
-        if (instruments.length === 1) {
-            const instrument = instruments[0];
+        if (instrument.isUnknownExtension) {
+            if (menu.items.length > 0) {
+                menu.append(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
 
-            if (instrument.isUnknownExtension) {
-                if (menu.items.length > 0) {
-                    menu.append(
-                        new MenuItem({
-                            type: "separator"
-                        })
-                    );
+            menu.append(
+                new MenuItem({
+                    label: "Install Extension",
+                    click: () => {
+                        const { installExtension } =
+                            require("home/instruments/instrument-object-details") as typeof import("home/instruments/instrument-object-details");
+                        installExtension(instrument);
+                    }
+                })
+            );
+        }
+
+        if (menu.items.length > 0) {
+            menu.append(
+                new MenuItem({
+                    type: "separator"
+                })
+            );
+        }
+
+        menu.append(
+            new MenuItem({
+                label: "Open in Tab",
+                click: () => {
+                    instrument.openEditor("tab");
                 }
+            })
+        );
 
-                menu.append(
-                    new MenuItem({
-                        label: "Install Extension",
-                        click: () => {
-                            const { installExtension } =
-                                require("home/instruments/instrument-object-details") as typeof import("home/instruments/instrument-object-details");
-                            installExtension(instrument);
-                        }
-                    })
-                );
-            }
+        menu.append(
+            new MenuItem({
+                label: "Open in New Window",
+                click: () => {
+                    instrument.openEditor("window");
+                }
+            })
+        );
 
-            if (menu.items.length > 0) {
-                menu.append(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
-            }
+        menu.append(
+            new MenuItem({
+                type: "separator"
+            })
+        );
 
-            menu.append(
-                new MenuItem({
-                    label: "Open in Tab",
-                    click: () => {
-                        instrument.openEditor("tab");
-                    }
-                })
-            );
-
-            menu.append(
-                new MenuItem({
-                    label: "Open in New Window",
-                    click: () => {
-                        instrument.openEditor("window");
-                    }
-                })
-            );
-        }
-
-        if (instruments.length > 0) {
-            if (menu.items.length > 0) {
-                menu.append(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
-            }
-
-            menu.append(
-                new MenuItem({
-                    label: "Delete",
-                    click: () => {
-                        this.deleteInstruments(instruments);
-                    }
-                })
-            );
-        }
+        menu.append(
+            new MenuItem({
+                label: "Delete",
+                click: () => {
+                    this.deleteInstruments([instrument]);
+                }
+            })
+        );
 
         return menu;
     }
@@ -543,15 +535,18 @@ const InstrumentComponent = observer(
                             this.open();
                         }
                     }}
-                    onContextMenu={() => {
+                    onContextMenu={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
                         this.props.instrumentsStore.selectedInstrumentId =
                             instrument.id;
 
                         const contextMenu =
-                            this.props.instrumentsStore.createContextMenu([
+                            this.props.instrumentsStore.createContextMenu(
                                 instrument
-                            ]);
-                        contextMenu.popup({});
+                            );
+                        contextMenu.popup();
                     }}
                 >
                     <InstrumentContent instrument={instrument} />

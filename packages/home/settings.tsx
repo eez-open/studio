@@ -405,147 +405,136 @@ export const Settings = observer(
             );
 
             return (
-                <div style={{ margin: "10px auto" }}>
-                    <div className="EezStudio_HomeSettingsBody">
-                        <PropertyList>
-                            <FileInputProperty
-                                name="Database location"
-                                value={settingsController.databasePath}
-                                onChange={
-                                    settingsController.onDatabasePathChange
-                                }
-                            />
-                            <tr>
-                                <td />
-                                <td>
-                                    <div className="btn-toolbar">
-                                        <div className="btn-group me-2">
-                                            <button
-                                                type="button"
-                                                className="btn btn-secondary btn-sm"
-                                                onClick={
-                                                    settingsController.createNewDatabase
-                                                }
-                                            >
-                                                Create New Database
-                                            </button>
+                <div className="EezStudio_HomeSettingsBody">
+                    <PropertyList>
+                        <FileInputProperty
+                            name="Database location"
+                            value={settingsController.databasePath}
+                            onChange={settingsController.onDatabasePathChange}
+                        />
+                        <tr>
+                            <td />
+                            <td>
+                                <div className="btn-toolbar">
+                                    <div className="btn-group me-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={
+                                                settingsController.createNewDatabase
+                                            }
+                                        >
+                                            Create New Database
+                                        </button>
+                                    </div>
+                                    <div className="btn-group me-2">
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-sm"
+                                            onClick={
+                                                settingsController.showDatabasePathInFolder
+                                            }
+                                        >
+                                            Show in Folder
+                                        </button>
+                                    </div>
+                                </div>
+                                {settingsController.databasePath ===
+                                    settingsController.activeDatabasePath && (
+                                    <div
+                                        className={databaseCompactDivClassName}
+                                    >
+                                        <div>
+                                            Database size is{" "}
+                                            {formatBytes(
+                                                settingsController.databaseSize
+                                            )}
+                                            .
                                         </div>
+                                        <div>
+                                            Database compacted{" "}
+                                            {getMoment()(
+                                                settingsController.timeOfLastDatabaseCompactOperation
+                                            ).fromNow()}
+                                            .
+                                        </div>
+                                        {settingsController.isCompactDatabaseAdvisable && (
+                                            <div>
+                                                {COMPACT_DATABASE_MESSAGE}
+                                            </div>
+                                        )}
                                         <div className="btn-group me-2">
                                             <button
                                                 type="button"
                                                 className="btn btn-secondary btn-sm"
                                                 onClick={
-                                                    settingsController.showDatabasePathInFolder
+                                                    settingsController.compactDatabase
                                                 }
                                             >
-                                                Show in Folder
+                                                Compact Database
                                             </button>
                                         </div>
                                     </div>
-                                    {settingsController.databasePath ===
-                                        settingsController.activeDatabasePath && (
-                                        <div
-                                            className={
-                                                databaseCompactDivClassName
-                                            }
-                                        >
-                                            <div>
-                                                Database size is{" "}
-                                                {formatBytes(
-                                                    settingsController.databaseSize
-                                                )}
-                                                .
-                                            </div>
-                                            <div>
-                                                Database compacted{" "}
-                                                {getMoment()(
-                                                    settingsController.timeOfLastDatabaseCompactOperation
-                                                ).fromNow()}
-                                                .
-                                            </div>
-                                            {settingsController.isCompactDatabaseAdvisable && (
-                                                <div>
-                                                    {COMPACT_DATABASE_MESSAGE}
-                                                </div>
-                                            )}
-                                            <div className="btn-group me-2">
-                                                <button
-                                                    type="button"
-                                                    className="btn btn-secondary btn-sm"
-                                                    onClick={
-                                                        settingsController.compactDatabase
-                                                    }
-                                                >
-                                                    Compact Database
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                            <SelectProperty
-                                name="Locale"
-                                value={settingsController.locale}
-                                onChange={settingsController.onLocaleChange}
-                            >
-                                {Object.keys(LOCALES)
-                                    .slice()
-                                    .sort((a, b) =>
-                                        stringCompare(
-                                            (LOCALES as any)[a],
-                                            (LOCALES as any)[b]
-                                        )
+                                )}
+                            </td>
+                        </tr>
+                        <SelectProperty
+                            name="Locale"
+                            value={settingsController.locale}
+                            onChange={settingsController.onLocaleChange}
+                        >
+                            {Object.keys(LOCALES)
+                                .slice()
+                                .sort((a, b) =>
+                                    stringCompare(
+                                        (LOCALES as any)[a],
+                                        (LOCALES as any)[b]
                                     )
-                                    .map(locale => (
-                                        <option key={locale} value={locale}>
-                                            {(LOCALES as any)[locale]}
-                                        </option>
-                                    ))}
-                            </SelectProperty>
-                            <SelectProperty
-                                name="Date format"
-                                value={settingsController.dateFormat}
-                                onChange={
-                                    settingsController.onDateFormatChanged
-                                }
-                            >
-                                {DATE_FORMATS.map(dateFormat => (
-                                    <option
-                                        key={dateFormat.format}
-                                        value={dateFormat.format}
-                                    >
-                                        {getMoment()(new Date())
-                                            .locale(settingsController.locale)
-                                            .format(dateFormat.format)}
+                                )
+                                .map(locale => (
+                                    <option key={locale} value={locale}>
+                                        {(LOCALES as any)[locale]}
                                     </option>
                                 ))}
-                            </SelectProperty>
-                            <SelectProperty
-                                name="Time format"
-                                value={settingsController.timeFormat}
-                                onChange={
-                                    settingsController.onTimeFormatChanged
-                                }
-                            >
-                                {TIME_FORMATS.map(timeFormat => (
-                                    <option
-                                        key={timeFormat.format}
-                                        value={timeFormat.format}
-                                    >
-                                        {getMoment()(new Date())
-                                            .locale(settingsController.locale)
-                                            .format(timeFormat.format)}
-                                    </option>
-                                ))}
-                            </SelectProperty>
-                            <BooleanProperty
-                                name={`Dark theme`}
-                                value={settingsController.isDarkTheme}
-                                onChange={settingsController.switchTheme}
-                            />
-                        </PropertyList>
-                    </div>
-
+                        </SelectProperty>
+                        <SelectProperty
+                            name="Date format"
+                            value={settingsController.dateFormat}
+                            onChange={settingsController.onDateFormatChanged}
+                        >
+                            {DATE_FORMATS.map(dateFormat => (
+                                <option
+                                    key={dateFormat.format}
+                                    value={dateFormat.format}
+                                >
+                                    {getMoment()(new Date())
+                                        .locale(settingsController.locale)
+                                        .format(dateFormat.format)}
+                                </option>
+                            ))}
+                        </SelectProperty>
+                        <SelectProperty
+                            name="Time format"
+                            value={settingsController.timeFormat}
+                            onChange={settingsController.onTimeFormatChanged}
+                        >
+                            {TIME_FORMATS.map(timeFormat => (
+                                <option
+                                    key={timeFormat.format}
+                                    value={timeFormat.format}
+                                >
+                                    {getMoment()(new Date())
+                                        .locale(settingsController.locale)
+                                        .format(timeFormat.format)}
+                                </option>
+                            ))}
+                        </SelectProperty>
+                        <BooleanProperty
+                            name={`Dark theme`}
+                            value={settingsController.isDarkTheme}
+                            onChange={settingsController.switchTheme}
+                        />
+                    </PropertyList>
                     {settingsController.restartRequired && (
                         <Header className="EezStudio_HomeSettingsBar EezStudio_PanelHeader">
                             <div className="btn-group me-2">
