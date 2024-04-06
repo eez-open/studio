@@ -148,6 +148,7 @@ export const HistorySection = observer(
                     appStore={this.appStore}
                     persistId={"home/history"}
                     simple={this.props.simple}
+                    showSideBar={true}
                 />
             );
 

@@ -436,18 +436,14 @@ export class HistoryViewComponent extends React.Component<{
     appStore: IAppStore;
     persistId: string;
     simple?: boolean;
-    showSideBar?: boolean;
+    showSideBar: boolean;
 }> {
     history: HistoryListComponentClass | null;
     sideDock: SideDockComponent2 | null;
 
     searchText: string = "";
 
-    constructor(props: {
-        appStore: IAppStore;
-        persistId: string;
-        simple?: boolean;
-    }) {
+    constructor(props: any) {
         super(props);
 
         makeObservable(this, {

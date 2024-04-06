@@ -456,6 +456,7 @@ export const DetailsView = observer(
                             <HistoryView
                                 appStore={notebooksHomeSectionStore.appStore!}
                                 persistId={"notebook/items"}
+                                showSideBar={true}
                             />
                         </Body>
                     </VerticalHeaderWithBody>
