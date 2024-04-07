@@ -4523,7 +4523,18 @@ export class LVGLSpinnerWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj, 1000, 60);`);
+        const SPIN_TIME = 1000;
+        const ARC_LENGTH = 60;
+        if (build.project.settings.general.lvglVersion == "9.0") {
+            build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj);`);
+            build.line(
+                `lv_spinner_set_anim_params(obj, ${SPIN_TIME}, ${ARC_LENGTH});`
+            );
+        } else {
+            build.line(
+                `lv_obj_t *obj = lv_spinner_create(parent_obj, ${SPIN_TIME}, ${ARC_LENGTH});`
+            );
+        }
     }
 }
 
