@@ -492,6 +492,9 @@ const Content = observer(
                             onAuxMouseClick={this.onAuxMouseClick}
                             onContextMenu={this.onContextMenu}
                             onModelChange={this.onModelChange}
+                            font={{
+                                size: "small"
+                            }}
                         />
                     </div>
                 </div>

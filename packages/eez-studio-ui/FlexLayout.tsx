@@ -16,6 +16,7 @@ export class FlexLayoutContainer extends React.Component<{
         model: FlexLayout.Model,
         action: FlexLayout.Action
     ) => void;
+    font?: FlexLayout.IFontValues;
 }> {
     render() {
         return (
@@ -28,6 +29,7 @@ export class FlexLayoutContainer extends React.Component<{
                 onAuxMouseClick={this.props.onAuxMouseClick}
                 onContextMenu={this.props.onContextMenu}
                 onModelChange={this.props.onModelChange}
+                font={this.props.font}
             />
         );
     }
