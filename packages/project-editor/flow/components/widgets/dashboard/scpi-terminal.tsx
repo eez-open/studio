@@ -144,7 +144,7 @@ export class SCPITerminalWidget extends Widget {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
 
-        componentPaletteGroupName: "Instrument",
+        componentPaletteGroupName: "!1Instrument",
 
         properties: [
             makeDataPropertyInfo("data", {

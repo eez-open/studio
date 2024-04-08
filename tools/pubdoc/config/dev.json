@@ -589,7 +589,7 @@
                         "content": "Button (Dashboard).html",
                         "status": "publish",
                         "id": 12214,
-                        "sha256": "5caa886cb9737068d78d290e95273bef8a1bae4f8da4e8aa1ae8bbd85dcde478"
+                        "sha256": "109f32e3facc5f0abef4e1cf41d16ac756fe1a9e5f1ac2bb42b1fd6e469398d3"
                     },
                     {
                         "content": "Button (EEZ-GUI).html",
@@ -686,6 +686,12 @@
                         "status": "publish",
                         "id": 12080,
                         "sha256": "fa3651a6e9a3523fcd55d56d2d050cbf1e76a4a6c0f7562090d09e57adbface8"
+                    },
+                    {
+                        "content": "Embedded Dashboard.html",
+                        "status": "publish",
+                        "id": 12595,
+                        "sha256": "39c697fa65beb585adb43e81822198533503d5f6396f07a6213dd66ab3d774c5"
                     }
                 ]
             },
@@ -737,7 +743,7 @@
                         "content": "Checkbox (Dashboard).html",
                         "status": "publish",
                         "id": 12236,
-                        "sha256": "926c5d7534e9deab1b4574e7e69d2d4dca1e6ffd35d3b8934d1fcc7a46f51b7d"
+                        "sha256": "281d97412de45ed63f0e0982dc895d384302e66052f80e94a5ce4310df7d8569"
                     },
                     {
                         "content": "Checkbox (LVGL).html",
@@ -755,7 +761,7 @@
                         "content": "Dropdown (Dashboard).html",
                         "status": "publish",
                         "id": 12239,
-                        "sha256": "0daaa83d94cece2efa724034fda470272bcccf16e3233a8389fb202b8011fd5d"
+                        "sha256": "b804ad7d5a829bef5ca8536c63da7d065a18c9bd33a4a9c5bf6353205e540846"
                     },
                     {
                         "content": "Dropdown (EEZ-GUI).html",
@@ -791,13 +797,13 @@
                         "content": "NumberInput.html",
                         "status": "publish",
                         "id": 12575,
-                        "sha256": "87ba0a6975862ad6ae8ebdf77805c867bfe73ffecedad3a6d6fb8cfb604bfa64"
+                        "sha256": "df5de96de2ede079af6d8a3632f979aa7fa4dbd47e31dc091e0eba381a94a222"
                     },
                     {
                         "content": "Radio.html",
                         "status": "publish",
                         "id": 12582,
-                        "sha256": "1fe6f18c128bf2ae107cdfa86e61f8adee193b9e9f8563b9883d5da6612ed6e2"
+                        "sha256": "fa8f6fd8b23c0d771fa1fbefcdb7c0d9c24599010f7959c73a8868c929524119"
                     },
                     {
                         "content": "Roller (EEZ-GUI).html",
@@ -815,13 +821,13 @@
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12583,
-                        "sha256": "18d68ded4f481f3ec57e0aa851f21ac187089ba0a2cf1ba09e5271ac0be3b69a"
+                        "sha256": "2b7c2cef1abc256381c492bc34e1de0c54a0b419c37f40824e1fe220603dee5c"
                     },
                     {
                         "content": "Slider (Dashboard).html",
                         "status": "publish",
                         "id": 12247,
-                        "sha256": "d8749a07b97c29f452b789d626fc981e5967e6f4a19fcbb3dcae68b2bbdbaa75"
+                        "sha256": "46a847bfffe4b14c0a1bee70df7b9dbaf1b212b6c191bff46410c9f9932ddb3d"
                     },
                     {
                         "content": "Slider (EEZ-GUI).html",
@@ -839,7 +845,7 @@
                         "content": "Switch (Dashboard).html",
                         "status": "publish",
                         "id": 12250,
-                        "sha256": "a1b95e9403f222f2dac90de5040af79987a0a3075de203121702346c99e73502"
+                        "sha256": "089b41a48e88c7aa688643e3f9d668ad298f4f0b4b7acef79c3287a9179820f5"
                     },
                     {
                         "content": "Switch (EEZ-GUI).html",
@@ -863,7 +869,7 @@
                         "content": "TextInput.html",
                         "status": "publish",
                         "id": 12254,
-                        "sha256": "b66e97a16ba814413fb0efba12ba91a207ad9ab1001e54d4616f1a047820cb9f"
+                        "sha256": "0c650937ae4224b0c4ee2ea516ee7d8af8ec9d49f0d0e4aee88cfce9600814a7"
                     },
                     {
                         "content": "UpDown.html",
@@ -919,7 +925,7 @@
                         "content": "LineChart (Dashboard).html",
                         "status": "publish",
                         "id": 12262,
-                        "sha256": "2c86bdd063268ea04fbb2649908773f4f54410a164c104b0a6101b37daeaff7e"
+                        "sha256": "01f69cff2d11e59df4a24ef15b959b54b563f45307aabe0168d4aa2d5e73b039"
                     },
                     {
                         "content": "LineChart (EEZ-GUI).html",
@@ -968,6 +974,20 @@
                         "status": "publish",
                         "id": 12120,
                         "sha256": "2048e7a8b950b64c37512863f5e7bed5859768086a9efcf42c999c3de091b250"
+                    }
+                ]
+            },
+            {
+                "category": {
+                    "name": "Instrument",
+                    "id": 226
+                },
+                "articles": [
+                    {
+                        "content": "SCPITerminal.html",
+                        "status": "publish",
+                        "id": 12605,
+                        "sha256": "e6f2b5ff97e6f990bdefa9c55b2ff2bc59de619c0a9e9282c1464bddf666033b"
                     }
                 ]
             }
@@ -1243,6 +1263,12 @@
             "id": 12060,
             "source_url": "https://dev.envox.eu/wp-content/uploads/d2857120016585b501c10aafdb47a6e35c1903ac26fdb20e671118bc2c682cae-widget_resizing-1.png",
             "sha256": "d2857120016585b501c10aafdb47a6e35c1903ac26fdb20e671118bc2c682cae"
+        },
+        {
+            "fileName": "scpi_terminal.png",
+            "id": 12593,
+            "source_url": "https://dev.envox.eu/wp-content/uploads/7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517-scpi_terminal.png",
+            "sha256": "7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517"
         }
     ]
 }
