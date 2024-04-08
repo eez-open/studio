@@ -1,7 +1,7 @@
 import { MenuItem } from "@electron/remote";
 
 import React from "react";
-import { observable, computed, makeObservable, toJS } from "mobx";
+import { observable, computed, makeObservable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { range } from "lodash";
 import * as FlexLayout from "flexlayout-react";
@@ -172,9 +172,7 @@ const ContainerWidgetEditLayout = observer(
                             key="flex-layout-container"
                             model={model}
                             factory={containerWidget.dockingLayoutFactory(
-                                flowContext,
-                                0,
-                                0
+                                flowContext
                             )}
                         />
                         <div>
@@ -221,6 +219,78 @@ const ContainerWidgetEditLayout = observer(
                         Edit Layout
                     </Button>
                 </div>
+            );
+        }
+    }
+);
+
+const DockingLayoutTabComponentEnclosure = observer(
+    class DockingLayoutTabComponentEnclosure extends React.Component<{
+        flowContext: IFlowContext;
+        widget: Widget;
+    }> {
+        width: number = 0;
+        height: number = 0;
+
+        el: HTMLElement | null = null;
+        requestAnimationFrameId: any;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                width: observable,
+                height: observable
+            });
+        }
+
+        updateSize = () => {
+            if (!this.el) {
+                let dataFlowObjectId = getId(this.props.widget);
+                const container = document.getElementById(
+                    this.props.flowContext.viewState.containerId
+                );
+                const el = container?.querySelector(
+                    `[data-eez-flow-object-id='${dataFlowObjectId}']`
+                );
+                if (el) {
+                    this.el = el.parentElement;
+                }
+            }
+
+            if (this.el) {
+                const rect = this.el.getBoundingClientRect();
+                if (rect.width != this.width || rect.height != this.height) {
+                    runInAction(() => {
+                        this.width = rect.width;
+                        this.height = rect.height;
+                    });
+                }
+            }
+
+            this.requestAnimationFrameId = requestAnimationFrame(
+                this.updateSize
+            );
+        };
+
+        componentDidMount() {
+            this.updateSize();
+        }
+
+        componentWillUnmount() {
+            cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+
+        render() {
+            return (
+                <ComponentEnclosure
+                    component={this.props.widget}
+                    flowContext={this.props.flowContext}
+                    left={0}
+                    top={0}
+                    width={this.width}
+                    height={this.height}
+                />
             );
         }
     }
@@ -521,26 +591,18 @@ export class ContainerWidget extends Widget {
         return model;
     }
 
-    dockingLayoutFactory = (
-        flowContext: IFlowContext,
-        containerWidth: number,
-        containerHeight: number
-    ) => {
+    dockingLayoutFactory = (flowContext: IFlowContext) => {
         return (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
             if (component) {
                 const i = parseInt(component?.slice("child".length));
                 const widget = this.widgets[i];
+
                 return (
-                    <ComponentEnclosure
-                        key={getId(widget)}
-                        component={widget}
+                    <DockingLayoutTabComponentEnclosure
+                        widget={widget}
                         flowContext={flowContext}
-                        left={0}
-                        top={0}
-                        width={"100%"}
-                        height={"100%"}
                     />
                 );
             }
@@ -659,11 +721,7 @@ export class ContainerWidget extends Widget {
                 <FlexLayoutContainer
                     key="flex-layout-container"
                     model={this.getDockingLayoutModel(flowContext)}
-                    factory={this.dockingLayoutFactory(
-                        flowContext,
-                        containerWidth,
-                        containerHeight
-                    )}
+                    factory={this.dockingLayoutFactory(flowContext)}
                     onModelChange={model => {
                         if (flowContext.flowState) {
                             flowContext.projectStore.runtimeSettings.writeDockingManagerContainerLayout(
