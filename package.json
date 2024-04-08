@@ -91,7 +91,6 @@
         "animate.css": "3.5.2",
         "electron": "^28.1.0",
         "electron-builder": "24.9.1",
-        "electron-notarize": "^1.2.2",
         "electron-rebuild": "^3.2.9",
         "globby": "^11.1.0",
         "gulp": "^4.0.2",
@@ -112,6 +111,7 @@
         "wpapi": "^1.2.2"
     },
     "dependencies": {
+        "@electron/notarize": "^2.3.0",
         "@electron/remote": "^2.1.1",
         "@emotion/css": "^11.7.1",
         "@emotion/react": "^11.11.0",
