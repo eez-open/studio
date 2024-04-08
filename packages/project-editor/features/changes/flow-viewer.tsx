@@ -802,6 +802,10 @@ class ViewState implements IViewState {
         });
     }
 
+    get projectStore() {
+        return this.flowContext.projectStore;
+    }
+
     get document() {
         return this.flowContext.document;
     }

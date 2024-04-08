@@ -314,8 +314,12 @@ export class MouseHandlerWithSnapLines extends MouseHandler {
 
     render(context: IFlowContext) {
         const rect = getSelectedObjectsBoundingRect(context.viewState);
-        rect.left += context.viewState.dxMouseDrag ?? 0;
-        rect.top += context.viewState.dyMouseDrag ?? 0;
+        const dxMouseDrag = context.viewState.dxMouseDrag;
+        const dyMouseDrag = context.viewState.dyMouseDrag;
+        if (!context.projectStore.projectTypeTraits.isDashboard) {
+            rect.left += dxMouseDrag ?? 0;
+            rect.top += dyMouseDrag ?? 0;
+        }
         return this.snapLines.render(context, rect);
     }
 }
@@ -407,11 +411,13 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             );
         }
 
-        this.selectionNode.style.transform = `translate(${Math.round(
-            viewState.dxMouseDrag * context.viewState.transform.scale
-        )}px, ${Math.round(
-            viewState.dyMouseDrag * context.viewState.transform.scale
-        )}px)`;
+        if (!context.projectStore.projectTypeTraits.isDashboard) {
+            this.selectionNode.style.transform = `translate(${Math.round(
+                viewState.dxMouseDrag * context.viewState.transform.scale
+            )}px, ${Math.round(
+                viewState.dyMouseDrag * context.viewState.transform.scale
+            )}px)`;
+        }
 
         this.changed = false;
 
@@ -460,8 +466,10 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             }
         }
 
-        if (this.selectionNode) {
-            this.selectionNode.style.transform = ``;
+        if (!context.projectStore.projectTypeTraits.isDashboard) {
+            if (this.selectionNode) {
+                this.selectionNode.style.transform = ``;
+            }
         }
 
         context.viewState.dxMouseDrag = undefined;

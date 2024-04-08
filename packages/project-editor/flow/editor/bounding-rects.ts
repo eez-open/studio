@@ -29,11 +29,7 @@ export function getObjectBoundingRect(
             height: object.targetPosition.y - object.sourcePosition.y
         };
     } else if (object instanceof ProjectEditor.ComponentClass) {
-        const parent = ProjectEditor.getWidgetParent(object);
-        if (
-            parent instanceof ProjectEditor.ContainerWidgetClass &&
-            parent.layout == "docking-manager"
-        ) {
+        if (viewState.projectStore.projectTypeTraits.isDashboard) {
             let dataFlowObjectId = getId(object);
             const container = document.getElementById(viewState.containerId);
             const el = container?.querySelector(
@@ -41,12 +37,7 @@ export function getObjectBoundingRect(
             );
             if (el) {
                 let rect = el.getBoundingClientRect();
-                return viewState.transform.clientToPageRect({
-                    left: rect.left,
-                    top: rect.top,
-                    width: rect.width,
-                    height: rect.height
-                });
+                return viewState.transform.clientToPageRect(rect);
             }
         }
 

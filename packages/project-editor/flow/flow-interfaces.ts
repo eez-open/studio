@@ -174,6 +174,8 @@ export interface ObjectIdUnderPointer {
 }
 
 export interface IViewState {
+    projectStore: ProjectStore;
+
     containerId: string;
 
     transform: Transform;
