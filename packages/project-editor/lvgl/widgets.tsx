@@ -166,9 +166,12 @@ export const statesGroup: IPropertyGridGroupDefinition = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function changes<T>(defaults: T[], arr: T[]) {
+function changes<T extends string>(defaults: T[], arr: T[]) {
     const added: T[] = [];
     const cleared: T[] = [];
+
+    defaults = defaults.filter(x => x.trim() != "");
+    arr = arr.filter(x => x.trim() != "");
 
     for (const x of arr) {
         if (defaults.indexOf(x) == -1) {
@@ -1193,7 +1196,10 @@ export class LVGLWidget extends Widget {
     }
 
     get allFlags() {
-        const flags = this.flags.split("|") as (keyof typeof LVGL_FLAG_CODES)[];
+        const flags =
+            this.flags.trim() != ""
+                ? (this.flags.split("|") as (keyof typeof LVGL_FLAG_CODES)[])
+                : [];
 
         LVGL_REACTIVE_FLAGS.forEach(flag => {
             const propName = flag.toLowerCase() + "Flag";
@@ -1295,8 +1301,14 @@ export class LVGLWidget extends Widget {
         // add/clear flags
         {
             const { added, cleared } = changes(
-                (lvglClassInfoProperties.defaultFlags ?? "").split("|"),
-                this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
+                lvglClassInfoProperties.defaultFlags.trim() != ""
+                    ? lvglClassInfoProperties.defaultFlags.split("|")
+                    : [],
+                this.allFlags.trim() != ""
+                    ? (this.allFlags.split(
+                          "|"
+                      ) as (keyof typeof LVGL_FLAG_CODES)[])
+                    : []
             );
 
             if (added.length > 0) {
@@ -1351,8 +1363,15 @@ export class LVGLWidget extends Widget {
         // add/clear states
         {
             const { added, cleared } = changes(
-                (lvglClassInfoProperties.defaultStates ?? "").split("|"),
-                this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
+                lvglClassInfoProperties.defaultStates &&
+                    lvglClassInfoProperties.defaultStates.trim() != ""
+                    ? lvglClassInfoProperties.defaultStates.split("|")
+                    : [],
+                this.allStates.trim() != ""
+                    ? (this.allStates.split(
+                          "|"
+                      ) as (keyof typeof LVGL_STATE_CODES)[])
+                    : []
             );
 
             if (added.length > 0) {
@@ -1514,9 +1533,16 @@ export class LVGLWidget extends Widget {
 
         // add/clear flags
         {
+            console.log("allFlags", this.allFlags);
             const { added, cleared } = changes(
-                (lvglClassInfoProperties.defaultFlags ?? "").split("|"),
-                this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]
+                lvglClassInfoProperties.defaultFlags.trim() != ""
+                    ? lvglClassInfoProperties.defaultFlags.split("|")
+                    : [],
+                this.allFlags.trim() != ""
+                    ? (this.allFlags.split(
+                          "|"
+                      ) as (keyof typeof LVGL_FLAG_CODES)[])
+                    : []
             );
 
             if (added.length > 0) {
@@ -1539,8 +1565,15 @@ export class LVGLWidget extends Widget {
         // add/clear states
         {
             const { added, cleared } = changes(
-                (lvglClassInfoProperties.defaultStates ?? "").split("|"),
-                this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]
+                lvglClassInfoProperties.defaultStates &&
+                    lvglClassInfoProperties.defaultStates.trim() != ""
+                    ? lvglClassInfoProperties.defaultStates.split("|")
+                    : [],
+                this.allStates.trim() != ""
+                    ? (this.allStates.split(
+                          "|"
+                      ) as (keyof typeof LVGL_STATE_CODES)[])
+                    : []
             );
 
             if (added.length > 0) {

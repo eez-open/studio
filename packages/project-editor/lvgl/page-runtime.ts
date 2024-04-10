@@ -752,7 +752,10 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     // also, set useStyle
                     runInAction(() => {
                         for (const lvglWidget of this.lvglWidgetsMap.values()) {
-                            const flags = lvglWidget.flags.split("|");
+                            const flags =
+                                lvglWidget.flags.trim() != ""
+                                    ? lvglWidget.flags.split("|")
+                                    : [];
 
                             const i = flags.indexOf("HIDDEN");
                             if (i != -1) {

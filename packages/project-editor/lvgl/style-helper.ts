@@ -87,11 +87,14 @@ export function getStateBuildCode(state: string) {
 export function getSelectorCode(partStr: string, statesStr: string) {
     const partCode = getPartCode(partStr);
 
-    const statesCode = statesStr
-        .split("|")
-        .reduce((previousCode: number, currentStateStr: string) => {
-            return previousCode | getStateCode(currentStateStr);
-        }, 0);
+    const statesCode =
+        statesStr.trim() != ""
+            ? statesStr
+                  .split("|")
+                  .reduce((previousCode: number, currentStateStr: string) => {
+                      return previousCode | getStateCode(currentStateStr);
+                  }, 0)
+            : 0;
 
     return partCode | statesCode;
 }
@@ -99,10 +102,13 @@ export function getSelectorCode(partStr: string, statesStr: string) {
 export function getSelectorBuildCode(partStr: string, statesStr: string) {
     const partCode = getPartBuildCode(partStr);
 
-    const statesCode = statesStr
-        .split("|")
-        .map(state => getStateBuildCode(state))
-        .join(" | ");
+    const statesCode =
+        statesStr.trim() != ""
+            ? statesStr
+                  .split("|")
+                  .map(state => getStateBuildCode(state))
+                  .join(" | ")
+            : "0";
 
     return `${partCode} | ${statesCode}`;
 }

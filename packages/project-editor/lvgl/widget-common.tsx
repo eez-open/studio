@@ -131,9 +131,12 @@ export const LVGLWidgetFlagsProperty = observer(
                                                     return;
                                                 }
 
-                                                const flagsArr = (
-                                                    widget.flags || ""
-                                                ).split("|");
+                                                const flagsArr =
+                                                    widget.flags.trim() != ""
+                                                        ? widget.flags.split(
+                                                              "|"
+                                                          )
+                                                        : [];
                                                 if (
                                                     flagsArr.indexOf(
                                                         flagName
@@ -275,9 +278,12 @@ export const LVGLWidgetStatesProperty = observer(
                                                     return;
                                                 }
 
-                                                const statesArr = (
-                                                    widget.states || ""
-                                                ).split("|");
+                                                const statesArr =
+                                                    widget.states.trim() != ""
+                                                        ? widget.states.split(
+                                                              "|"
+                                                          )
+                                                        : [];
                                                 if (
                                                     statesArr.indexOf(
                                                         stateName
