@@ -1533,7 +1533,6 @@ export class LVGLWidget extends Widget {
 
         // add/clear flags
         {
-            console.log("allFlags", this.allFlags);
             const { added, cleared } = changes(
                 lvglClassInfoProperties.defaultFlags.trim() != ""
                     ? lvglClassInfoProperties.defaultFlags.split("|")
