@@ -184,8 +184,18 @@ export class LVGLBuild extends Build {
             : `tick_screen_${this.getScreenIdentifier(page)}`;
     }
 
-    getImageVariableName(bitmap: Bitmap) {
-        return "img_" + this.bitmapNames.get(bitmap.objID)!;
+    getImageVariableName(bitmap: Bitmap | string) {
+        const IMAGE_PREFIX = "img_";
+
+        if (typeof bitmap == "string") {
+            return getName(
+                IMAGE_PREFIX,
+                bitmap,
+                NamingConvention.UnderscoreLowerCase
+            );
+        } else {
+            return IMAGE_PREFIX + this.bitmapNames.get(bitmap.objID)!;
+        }
     }
 
     getActionFunctionName(actionName: string) {
