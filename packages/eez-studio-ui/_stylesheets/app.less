@@ -573,6 +573,8 @@ button.EezStudio_Action {
         &.empty {
             font-family: "Material Icons";
         }
+        color: var(--bs-body-color);
+        background-color: var(--bs-body-bg);
     }
 
     .EezStudio_SearchInput_Clear {
@@ -1355,17 +1357,29 @@ button.EezStudio_Action {
     background-color: @panelHeaderColorInsideFlexLayout;
 }
 
-.flexlayout__tabset-selected .flexlayout__tab_button--selected {
-    background-color: @selectionBackgroundColor;
-    color: @selectionColor;
-    .EezStudio_Icon {
-        color: @selectionColor!important;
-    }
+.flexlayout__tabset {
+    background-color: var(--color-tabset-background);
 
-    .flexlayout__tab_button_trailing:not(:hover) {
-        path:nth-child(2) {
-            stroke: @selectionColor;
-            fill: none;
+    .flexlayout__tab_button--selected {
+        background-color: @panelHeaderColorInsideFlexLayout;
+    }
+}
+
+.flexlayout__tabset-selected {
+    background-image: none;
+
+    .flexlayout__tab_button--selected {
+        background-color: @selectionBackgroundColor;
+        color: @selectionColor;
+        .EezStudio_Icon {
+            color: @selectionColor!important;
+        }
+
+        .flexlayout__tab_button_trailing:not(:hover) {
+            path:nth-child(2) {
+                stroke: @selectionColor;
+                fill: none;
+            }
         }
     }
 }

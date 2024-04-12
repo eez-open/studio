@@ -241,7 +241,7 @@ export const ArrayProperty = observer(
                 propertyInfo.arrayItemOrientation == "vertical" ? true : false;
 
             const toolbar = (
-                <div className="d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
+                <div className="rounded d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
                     <PropertyName {...this.props} />
                     <Toolbar>
                         <IconAction
@@ -399,8 +399,10 @@ export const ArrayProperty = observer(
                 <>
                     <div
                         className={classNames(
-                            "shadow-sm rounded EezStudio_ArrayProperty",
-                            { "vertical-orientation": isVerticalOrientation }
+                            "rounded EezStudio_ArrayProperty",
+                            {
+                                "vertical-orientation": isVerticalOrientation
+                            }
                         )}
                     >
                         {toolbar}

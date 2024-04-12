@@ -1040,7 +1040,15 @@
         > .accordion {
             position: relative;
 
+            .accordion-item {
+                border: none;
+                padding: 0 0 2px 0;
+                background-color: transparent;
+            }
+
             .accordion-header {
+                border-top: 1px solid @borderColor;
+
                 display: flex;
                 align-items: baseline;
 
@@ -1048,7 +1056,6 @@
                     padding: 0.5rem 0.625rem;
                     font-size: 0.8rem;
                     display: flex;
-                    align-items: flex-start;
                     .element-index {
                         padding-right: 5px;
                     }
@@ -1078,9 +1085,8 @@
 }
 
 .EezStudio_ArrayPropertyToolbar {
-    border-bottom: 1px solid @borderColor;
     background-color: @panelHeaderColor;
-    padding: 0 5px;
+    padding: 3px 8px;
 }
 
 .EezStudio_EmbeddedPropertyGrid {
