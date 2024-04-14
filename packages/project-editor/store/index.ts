@@ -607,7 +607,7 @@ export class ProjectStore {
             this.project.settings.build.configurations.find(
                 configuration =>
                     configuration.name ==
-                    this.uiStateStore.selectedBuildConfiguration
+                    this.uiStateStore?.selectedBuildConfiguration
             );
         if (!configuration) {
             if (this.project.settings.build.configurations.length > 0) {

@@ -23,6 +23,7 @@ export interface IWindowSate {
 export interface IWindowParams {
     url: string;
     hideOnClose?: boolean;
+    showHidden?: boolean;
 }
 
 type ActiveTabType =
@@ -73,70 +74,83 @@ export function createWindow(params: IWindowParams) {
         show: false
     };
 
-    settingsSetWindowBoundsIntoParams(params.url, windowContructorParams);
+    const showHidden = params.showHidden === true;
 
-    windowContructorParams.icon = getIcon();
+    if (!showHidden) {
+        settingsSetWindowBoundsIntoParams(params.url, windowContructorParams);
+
+        windowContructorParams.icon = getIcon();
+    }
 
     let browserWindow = new BrowserWindow(windowContructorParams);
+
     require("@electron/remote/main").enable(browserWindow.webContents);
 
-    runInAction(() =>
-        windows.push({
-            url: params.url,
-            browserWindow,
-            readyToClose: false,
-            state: {
-                modified: false,
-                undo: null,
-                redo: null,
-                isDebuggerActive: false,
-                hasExtensionDefinitions: false
-            },
-            focused: false,
-            activeTabType: undefined
-        })
-    );
-    let window = windows[windows.length - 1];
+    let window: IWindow | undefined;
 
-    settingsRegisterWindow(params.url, browserWindow);
+    if (!showHidden) {
+        runInAction(() =>
+            windows.push({
+                url: params.url,
+                browserWindow,
+                readyToClose: false,
+                state: {
+                    modified: false,
+                    undo: null,
+                    redo: null,
+                    isDebuggerActive: false,
+                    hasExtensionDefinitions: false
+                },
+                focused: false,
+                activeTabType: undefined
+            })
+        );
+        window = windows[windows.length - 1];
+
+        settingsRegisterWindow(params.url, browserWindow);
+    }
 
     browserWindow.loadURL(windowUrl);
 
-    browserWindow.show();
+    if (!showHidden) {
+        browserWindow.show();
 
-    browserWindow.on("close", function (event: any) {
-        if (isCrashed(browserWindow)) {
-            app.exit();
-            return;
-        }
+        browserWindow.on("close", function (event: any) {
+            if (isCrashed(browserWindow)) {
+                app.exit();
+                return;
+            }
 
-        if (params.hideOnClose && windows.length > 1 && !forceQuit) {
-            browserWindow.hide();
-            event.preventDefault();
-            return;
-        }
-
-        if (!window.readyToClose) {
-            try {
-                browserWindow.webContents.send("beforeClose");
+            if (params.hideOnClose && windows.length > 1 && !forceQuit) {
+                browserWindow.hide();
                 event.preventDefault();
-            } catch (err) {}
-        }
-    });
+                return;
+            }
 
-    browserWindow.on("closed", function () {
-        action(() =>
-            windows.splice(
-                windows.findIndex(win => win.browserWindow === browserWindow),
-                1
-            )
-        )();
+            if (!window?.readyToClose) {
+                try {
+                    browserWindow.webContents.send("beforeClose");
+                    event.preventDefault();
+                } catch (err) {}
+            }
+        });
 
-        // if no visible window left, app can quit
-        if (!windows.find(window => window.browserWindow.isVisible())) {
-            app.quit();
-        }
-    });
+        browserWindow.on("closed", function () {
+            action(() =>
+                windows.splice(
+                    windows.findIndex(
+                        win => win.browserWindow === browserWindow
+                    ),
+                    1
+                )
+            )();
+
+            // if no visible window left, app can quit
+            if (!windows.find(window => window.browserWindow.isVisible())) {
+                app.quit();
+            }
+        });
+    }
 
     return browserWindow;
 }

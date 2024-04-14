@@ -1,6 +1,12 @@
 import "./fix-path";
 
-import { app, session, ipcMain, powerSaveBlocker } from "electron";
+import {
+    app,
+    session,
+    ipcMain,
+    powerSaveBlocker,
+    BrowserWindow
+} from "electron";
 import { configure } from "mobx";
 
 require("@electron/remote/main").initialize();
@@ -8,6 +14,7 @@ require("@electron/remote/main").initialize();
 import type * as HomeWindowModule from "main/home-window";
 import { unloadVisa } from "instrument/connection/interfaces/visa-dll";
 import { setup } from "main/setup";
+import { HOME_WINDOW_URL } from "main/home-window";
 
 // disable security warnings inside dev console
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = true as any;
@@ -22,17 +29,27 @@ contextMenu({
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let setupFinished: boolean = false;
-
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 
 // app.allowRendererProcessReuse = false;
 
+let homeWindow: BrowserWindow;
+
 app.on("ready", async function () {
-    var gotTheLock = app.requestSingleInstanceLock();
-    if (!gotTheLock) {
-        app.quit();
-        return;
+    let buildProjectFilePath;
+    const buildProjectArgIndex = process.argv.indexOf("--build-project");
+    if (buildProjectArgIndex != -1) {
+        if (buildProjectArgIndex + 1 < process.argv.length) {
+            buildProjectFilePath = process.argv[buildProjectArgIndex + 1];
+        }
+    }
+
+    if (!buildProjectFilePath) {
+        var gotTheLock = app.requestSingleInstanceLock();
+        if (!gotTheLock) {
+            app.quit();
+            return;
+        }
     }
 
     app.on("second-instance", function (event, commandLine, workingDirectory) {
@@ -68,18 +85,21 @@ app.on("ready", async function () {
     require("eez-studio-shared/service");
 
     const { openHomeWindow } = await import("main/home-window");
-    openHomeWindow();
+    if (buildProjectFilePath) {
+        homeWindow = openHomeWindow({
+            url: HOME_WINDOW_URL + "?build-project=1",
+            showHidden: true
+        });
+    } else {
+        homeWindow = openHomeWindow();
+    }
 
     await import("main/menu");
-
-    setupFinished = true;
 });
 
 // Quit when all windows are closed.
 app.on("window-all-closed", function () {
-    if (setupFinished) {
-        app.quit();
-    }
+    app.quit();
 });
 
 app.on("quit", function () {
@@ -95,9 +115,25 @@ app.on("will-finish-launching", async function () {
 });
 
 ipcMain.once("open-command-line-project", async function () {
-    const filePath = process.argv[process.argv.length - 1];
-    const { openFile } = require("main/menu");
-    openFile(filePath);
+    const buildProjectArgIndex = process.argv.indexOf("--build-project");
+    if (buildProjectArgIndex == -1) {
+        const filePath = process.argv[process.argv.length - 1];
+        const { openFile } = require("main/menu");
+        openFile(filePath);
+    } else {
+        if (buildProjectArgIndex + 1 < process.argv.length) {
+            const buildProjectFilePath = process.argv[buildProjectArgIndex + 1];
+            homeWindow.webContents.send("build-project", buildProjectFilePath);
+        }
+    }
+});
+
+ipcMain.on("on-build-project-message", function (event, message) {
+    if (message) {
+        console.log(message);
+    } else {
+        app.quit();
+    }
 });
 
 let powerSaveBlockerId: number | undefined = undefined;

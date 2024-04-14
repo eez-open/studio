@@ -11,6 +11,7 @@ import { ConnectionErrorCode } from "instrument/connection/ConnectionErrorCode";
 import vcon from "instrument/connection/interfaces/visa-constants";
 
 import {
+    loadVisa,
     defaultSession,
     defaultSessionStatus,
     vhListResources,
@@ -24,6 +25,7 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 ipcMain.on("get-visa-resources", function (event, includeNetworkResources) {
+    loadVisa();
     if (defaultSessionStatus == 0) {
         try {
             const resources = vhListResources(
@@ -67,6 +69,7 @@ export class VisaInterface implements CommunicationInterface {
     constructor(private host: CommunicationInterfaceHost) {}
 
     connect() {
+        loadVisa();
         if (defaultSessionStatus != 0) {
             this.host.setError(
                 ConnectionErrorCode.UNKNOWN,

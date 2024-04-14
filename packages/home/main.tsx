@@ -25,6 +25,7 @@ import { LineMarkers } from "project-editor/flow/connection-line/ConnectionLineC
 import "home/settings";
 import { extensionsCatalog } from "./extensions-manager/catalog";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
+import { buildProject } from "home/build-project";
 
 configure({ enforceActions: "observed", useProxies: "always" });
 
@@ -99,6 +100,13 @@ ipcRenderer.on(
     }
 );
 
+ipcRenderer.on(
+    "build-project",
+    async (sender: any, filePath: any, runMode: boolean) => {
+        buildProject(filePath);
+    }
+);
+
 ipcRenderer.on("load-debug-info", async (sender: any, filePath: any) => {
     try {
         let tab = tabs.activeTab;
@@ -156,6 +164,9 @@ const Main = observer(
 );
 
 async function main() {
+    const params = new URLSearchParams(location.search);
+    const buildProject = params.get("build-project") === "1";
+
     let nodeModuleFolders: string[];
     try {
         nodeModuleFolders = await getNodeModuleFolders();
@@ -168,17 +179,19 @@ async function main() {
 
     extensionsCatalog.load();
 
-    loadTabs();
+    if (!buildProject) {
+        loadTabs();
 
-    const root = createRoot(document.getElementById("EezStudio_Content")!);
-    root.render(
-        <Main>
-            <App />
-            <LineMarkers />
-        </Main>
-    );
+        const root = createRoot(document.getElementById("EezStudio_Content")!);
+        root.render(
+            <Main>
+                <App />
+                <LineMarkers />
+            </Main>
+        );
 
-    handleDragAndDrop();
+        handleDragAndDrop();
+    }
 
     ipcRenderer.send("open-command-line-project");
 }

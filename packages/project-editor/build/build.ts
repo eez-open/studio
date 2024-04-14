@@ -52,7 +52,7 @@ function showCheckResult(projectStore: ProjectStore) {
         checkResultMassage = `${outputSection.numErrors} errors`;
     }
 
-    checkResultMassage += " and ";
+    checkResultMassage += " and";
 
     if (outputSection.numWarnings == 0) {
         checkResultMassage += " no warning";
