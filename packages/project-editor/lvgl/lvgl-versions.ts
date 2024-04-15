@@ -370,7 +370,9 @@ const versions = {
 
         getLvglFlagCodes: () => {
             return LVGL_FLAG_CODES;
-        }
+        },
+
+        defaultFontBpp: 8
     },
     "9.0": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v9.0.js",
@@ -559,7 +561,9 @@ const versions = {
 
         getLvglFlagCodes: () => {
             return LVGL_FLAG_CODES_90;
-        }
+        },
+
+        defaultFontBpp: 4
     }
 };
 
@@ -659,4 +663,8 @@ export function lvglHasLabelRecolorSupport(object: IEezObject) {
 
 export function getLvglFlagCodes(object: IEezObject) {
     return getVersionProperty(object, "getLvglFlagCodes")();
+}
+
+export function getLvglDefaultFontBpp(object: IEezObject) {
+    return getVersionProperty(object, "defaultFontBpp");
 }

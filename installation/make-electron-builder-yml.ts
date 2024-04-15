@@ -26,7 +26,7 @@ async function getExtraResource() {
         ...lvImgConv9,
         ...[
             {
-                from: "./LICENSE.txt",
+                from: "./LICENSE.TXT",
                 to: "."
             },
             {

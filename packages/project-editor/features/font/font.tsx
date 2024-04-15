@@ -67,6 +67,7 @@ import {
 } from "project-editor/features/font/utils";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { getLvglDefaultFontBpp } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -976,6 +977,116 @@ const ExportFontFilePropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ChangeBitsPerPixel = observer(
+    class ChangeBitsPerPixel extends React.Component<PropertyProps> {
+        onModify = async () => {
+            const font = this.props.objects[0] as Font;
+            const projectStore = ProjectEditor.getProjectStore(font);
+
+            const result = await showGenericDialog(projectStore, {
+                dialogDefinition: {
+                    title: "Change bits per pixel",
+                    fields: [
+                        {
+                            name: "bpp",
+                            displayName: "Bits per pixel",
+                            type: "enum",
+                            enumItems: [1, 2, 4, 8]
+                        }
+                    ]
+                },
+                values: {
+                    bpp: font.bpp
+                }
+            });
+
+            try {
+                let relativeFilePath = font.source!.filePath;
+                let absoluteFilePath =
+                    projectStore.getAbsoluteFilePath(relativeFilePath);
+
+                const encodingsBeforeDeduplication = getEncodings(
+                    font.lvglRanges
+                )!;
+
+                const { encodings, symbols } = removeDuplicates(
+                    encodingsBeforeDeduplication,
+                    font.lvglSymbols
+                );
+
+                const fontProperties = await extractFont({
+                    name: font.name,
+                    absoluteFilePath,
+                    embeddedFontFile: font.embeddedFontFile,
+                    relativeFilePath,
+                    renderingEngine: "LVGL",
+                    bpp: result.values.bpp,
+                    size: font.source!.size!,
+                    threshold: 128,
+                    createGlyphs: true,
+                    encodings,
+                    symbols,
+                    createBlankGlyphs: false,
+                    doNotAddGlyphIfNotFound: false,
+                    lvglVersion:
+                        projectStore.project.settings.general.lvglVersion,
+                    lvglInclude: projectStore.project.settings.build.lvglInclude
+                });
+
+                projectStore.updateObject(font, {
+                    bpp: result.values.bpp,
+                    lvglBinFile: fontProperties.lvglBinFile,
+                    lvglSourceFile: fontProperties.lvglSourceFile,
+                    lvglGlyphs: {
+                        encodings,
+                        symbols
+                    }
+                });
+
+                font.loadLvglGlyphs(projectStore);
+            } catch (err) {
+                let errorMessage;
+                if (err) {
+                    if (err.message) {
+                        errorMessage = err.message;
+                    } else {
+                        errorMessage = err.toString();
+                    }
+                }
+
+                if (errorMessage) {
+                    notification.error(
+                        `Failed to change bits per pixel in "${Font.name}" font: ${errorMessage}!`
+                    );
+                } else {
+                    notification.error(
+                        `Failed to change bits per pixel in "${Font.name}" font!`
+                    );
+                }
+            }
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <div style={{ marginTop: 10, marginBottom: 10 }}>
+                    <Button
+                        color="primary"
+                        size="small"
+                        onClick={this.onModify}
+                    >
+                        Change bits per pixel
+                    </Button>
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Font extends EezObject {
     id: number | undefined;
     name: string;
@@ -1079,11 +1190,22 @@ export class Font extends EezObject {
             },
             {
                 name: "bpp",
+                displayName: "Bits per pixel",
                 type: PropertyType.Enum,
-                enumItems: [{ id: 1 }, { id: 8 }],
+                enumItems: [{ id: 1 }, { id: 2 }, { id: 4 }, { id: 8 }],
                 defaultValue: 1,
                 readOnlyInPropertyGrid: true,
-                disabled: isNotV1Project
+                enumDisallowUndefined: true,
+                disabled: object =>
+                    isNotV1Project(object) && !isLVGLProject(object)
+            },
+            {
+                name: "changeBitsPerPixel",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: ChangeBitsPerPixel,
+                skipSearch: true,
+                disabled: object => !isLVGLProject(object)
             },
             {
                 name: "threshold",
@@ -1276,7 +1398,7 @@ export class Font extends EezObject {
                         },
                         values: {
                             size: 14,
-                            bpp: 8,
+                            bpp: getLvglDefaultFontBpp(parent),
                             ranges: "32-127",
                             symbols: ""
                         }
