@@ -4,7 +4,8 @@ import {
     computed,
     observable,
     runInAction,
-    makeObservable
+    makeObservable,
+    IObservableValue
 } from "mobx";
 import { observer } from "mobx-react";
 import { map } from "lodash";
@@ -56,7 +57,10 @@ export interface IFieldProperties {
         | "button"
         | typeof FieldComponent;
     unit?: keyof typeof UNITS;
-    enumItems?: EnumItems | ((values: any) => EnumItems);
+    enumItems?:
+        | EnumItems
+        | ((values: any) => EnumItems)
+        | IObservableValue<EnumItems>;
     defaultValue?: number | string | boolean;
     visible?: (values: any) => boolean;
     options?: any;
@@ -67,6 +71,7 @@ export interface IFieldProperties {
     maxValue?: number;
     formText?: string;
     checkboxStyleSwitch?: boolean;
+    inputGroupButton?: React.ReactNode;
 }
 
 export interface IFieldComponentProps {
@@ -82,6 +87,20 @@ export class FieldComponent extends React.Component<
     IFieldComponentProps,
     any
 > {}
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getEnumItems(fieldProperties: IFieldProperties, fieldValues: any) {
+    if (typeof fieldProperties.enumItems === "function") {
+        return fieldProperties.enumItems(fieldValues);
+    }
+
+    if (Array.isArray(fieldProperties.enumItems)) {
+        return fieldProperties.enumItems;
+    }
+
+    return fieldProperties.enumItems!.get();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -237,12 +256,10 @@ export const GenericDialog = observer(
                         this.fieldValues[fieldProperties.name]
                     );
                 } else if (fieldProperties.type === "enum") {
-                    let enumItems;
-                    if (typeof fieldProperties.enumItems === "function") {
-                        enumItems = fieldProperties.enumItems(this.fieldValues);
-                    } else {
-                        enumItems = fieldProperties.enumItems!;
-                    }
+                    let enumItems = getEnumItems(
+                        fieldProperties,
+                        this.fieldValues
+                    );
 
                     let enumItem;
                     const value = this.fieldValues[fieldProperties.name];
@@ -454,17 +471,10 @@ export const GenericDialog = observer(
                             } else if (fieldProperties.type === "radio") {
                                 Field = RadioGroupProperty;
 
-                                let enumItems;
-                                if (
-                                    typeof fieldProperties.enumItems ===
-                                    "function"
-                                ) {
-                                    enumItems = fieldProperties.enumItems(
-                                        this.fieldValues
-                                    );
-                                } else {
-                                    enumItems = fieldProperties.enumItems!;
-                                }
+                                let enumItems = getEnumItems(
+                                    fieldProperties,
+                                    this.fieldValues
+                                );
 
                                 children = enumItems.map(enumItem => {
                                     const id =
@@ -526,17 +536,10 @@ export const GenericDialog = observer(
                             } else if (fieldProperties.type === "enum") {
                                 Field = SelectProperty;
 
-                                let enumItems;
-                                if (
-                                    typeof fieldProperties.enumItems ===
-                                    "function"
-                                ) {
-                                    enumItems = fieldProperties.enumItems(
-                                        this.fieldValues
-                                    );
-                                } else {
-                                    enumItems = fieldProperties.enumItems!;
-                                }
+                                let enumItems = getEnumItems(
+                                    fieldProperties,
+                                    this.fieldValues
+                                );
 
                                 children = enumItems.map(enumItem => {
                                     const id =
@@ -612,6 +615,9 @@ export const GenericDialog = observer(
                                         max={max}
                                         checkboxStyleSwitch={
                                             checkboxStyleSwitch
+                                        }
+                                        inputGroupButton={
+                                            fieldProperties.inputGroupButton
                                         }
                                     >
                                         {children}

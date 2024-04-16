@@ -1,7 +1,9 @@
+import React from "react";
 import { action, observable, runInAction, makeObservable, toJS } from "mobx";
 import { Stream } from "stream";
 
 import {
+    EnumItems,
     GenericDialogResult,
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
@@ -504,16 +506,26 @@ async function showConnectDialog(
     values: SerialConnectionConstructorParams | undefined
 ) {
     try {
-        const { getSerialPorts } = await import(
-            "instrument/connection/interfaces/serial-ports"
-        );
-        const serialPorts = (await getSerialPorts()).map(port => ({
-            id: port.path,
-            label:
-                port.path +
-                (port.manufacturer ? " - " + port.manufacturer : "") +
-                (port.productId ? " - " + port.productId : "")
-        }));
+        let serialPorts = observable.box<EnumItems>([]);
+
+        const onRefreshSerialPortPaths = async () => {
+            const { getSerialPorts } = await import(
+                "instrument/connection/interfaces/serial-ports"
+            );
+            const temp = (await getSerialPorts()).map(port => ({
+                id: port.path,
+                label:
+                    port.path +
+                    (port.manufacturer ? " - " + port.manufacturer : "") +
+                    (port.productId ? " - " + port.productId : "")
+            }));
+
+            runInAction(() => {
+                serialPorts.set(temp);
+            });
+        };
+
+        await onRefreshSerialPortPaths();
 
         const result = await showGenericDialog({
             dialogDefinition: {
@@ -524,6 +536,18 @@ async function showConnectDialog(
                         name: "port",
                         type: "enum",
                         enumItems: serialPorts,
+                        inputGroupButton: (
+                            <button
+                                className="btn btn-secondary"
+                                title="Refresh list of available serial ports"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    onRefreshSerialPortPaths();
+                                }}
+                            >
+                                Refresh
+                            </button>
+                        ),
                         validators: [validators.required]
                     },
                     {
