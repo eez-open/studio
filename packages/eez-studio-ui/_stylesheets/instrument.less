@@ -892,6 +892,12 @@
     flex-direction: column;
 }
 
+.EezStudio_HistoryListComponent_JumpToPresent_Button {
+    position: absolute;
+    bottom: 15px;
+    right: 30px;
+}
+
 .EezStudio_MenuNavigationContainer {
     flex-grow: 1;
     display: flex;
@@ -2147,11 +2153,18 @@
             }
 
             > tr.selected {
+                color: @selectionColor;
                 background-color: @selectionBackgroundColor;
+
+                td {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
 
                 td.dateColumn,
                 td.contentColumn .plain-text {
                     color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
                 }
             }
         }

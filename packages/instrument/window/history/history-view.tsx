@@ -440,6 +440,7 @@ export class HistoryViewComponent extends React.Component<{
 }> {
     history: HistoryListComponentClass | null;
     sideDock: SideDockComponent2 | null;
+    jumpToPresentCondition = observable.box<boolean>(false);
 
     searchText: string = "";
 
@@ -533,6 +534,7 @@ export class HistoryViewComponent extends React.Component<{
 
     renderHistoryComponentWithTools(historyComponent: JSX.Element) {
         const appStore = this.props.appStore;
+
         return (
             <div className="EezStudio_HistoryContainer">
                 {appStore.selectHistoryItemsSpecification && (
@@ -605,6 +607,18 @@ export class HistoryViewComponent extends React.Component<{
                     tabIndex={0}
                 >
                     {historyComponent}
+                    {this.props.appStore.history &&
+                        (this.props.appStore.history.navigator.hasNewer ||
+                            this.jumpToPresentCondition.get()) && (
+                            <button
+                                className="EezStudio_HistoryListComponent_JumpToPresent_Button btn btn-sm btn-secondary"
+                                onClick={() => {
+                                    this.props.appStore.history.calendar.update();
+                                }}
+                            >
+                                Jump To Present
+                            </button>
+                        )}
                 </div>
             </div>
         );
@@ -618,6 +632,7 @@ export class HistoryViewComponent extends React.Component<{
                 ref={ref => (this.history = ref)}
                 appStore={appStore}
                 history={appStore.history}
+                jumpToPresentCondition={this.jumpToPresentCondition}
             />
         );
 
@@ -633,6 +648,7 @@ export class HistoryViewComponent extends React.Component<{
                 searchText={this.searchText}
                 onClear={action(() => {
                     this.searchText = "";
+                    this.props.appStore.history.search.search(this.searchText);
                 })}
                 onChange={this.onSearchChange}
             />

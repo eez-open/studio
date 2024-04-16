@@ -1,5 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
+import classNames from "classnames";
+
+import { settingsController } from "home/settings";
 
 export const Section = observer(
     ({
@@ -13,7 +16,9 @@ export const Section = observer(
     }) => {
         return (
             <section
-                className="shadow-sm rounded bg-light bg-gradient"
+                className={classNames("shadow-sm bg-light rounded", {
+                    "bg-gradient": !settingsController.isDarkTheme
+                })}
                 style={{ overflow: "auto" }}
             >
                 <header className="EezStudio_BB3_SectionHeaderContainer">

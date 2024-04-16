@@ -1,7 +1,7 @@
 import { Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import { findDOMNode } from "react-dom";
-import { action, makeObservable } from "mobx";
+import { IObservableValue, action, makeObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -298,14 +298,13 @@ class LoadMoreButton extends React.Component<{
     }
 }
 
-///
+////////////////////////////////////////////////////////////////////////////////
 
-interface HistoryListComponentProps {
+export class HistoryListComponentClass extends React.Component<{
     appStore: IAppStore;
     history: History;
-}
-
-export class HistoryListComponentClass extends React.Component<HistoryListComponentProps> {
+    jumpToPresentCondition: IObservableValue<boolean>;
+}> {
     animationFrameRequestId: any;
     div: Element;
 
@@ -321,7 +320,7 @@ export class HistoryListComponentClass extends React.Component<HistoryListCompon
     findCenterItemTimeut: any;
     lastItemInTheCenterId: string | undefined;
 
-    constructor(props: HistoryListComponentProps) {
+    constructor(props: any) {
         super(props);
 
         makeObservable(this, {
@@ -403,6 +402,16 @@ export class HistoryListComponentClass extends React.Component<HistoryListCompon
                     this.div.scrollTop = scrollTop;
                 }
             }
+        }
+
+        const jumpToPresentCondition =
+            this.div.scrollHeight -
+                (this.div.scrollTop + this.div.clientHeight) >
+            this.div.clientHeight;
+        if (jumpToPresentCondition != this.props.jumpToPresentCondition.get()) {
+            runInAction(() =>
+                this.props.jumpToPresentCondition.set(jumpToPresentCondition)
+            );
         }
 
         // automatically load more content

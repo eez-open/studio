@@ -109,6 +109,7 @@ export const DeletedHistoryItemsView = observer(
     }> {
         history: HistoryListComponentClass | null;
         searchText: string = "";
+        jumpToPresentCondition = observable.box(false);
 
         constructor(props: any) {
             super(props);
@@ -170,6 +171,7 @@ export const DeletedHistoryItemsView = observer(
                     appStore={this.props.appStore}
                     ref={ref => (this.history = ref)}
                     history={this.props.appStore.deletedItemsHistory}
+                    jumpToPresentCondition={this.jumpToPresentCondition}
                 />
             );
 
