@@ -7492,12 +7492,13 @@ export class LVGLMeterWidget extends LVGLWidget {
                 build.line(
                     `if (draw_part_dsc->type != LV_METER_DRAW_PART_TICK) return;`
                 );
-                build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
 
                 build.line(`const char *temp;`);
                 if (
                     build.assets.projectStore.projectTypeTraits.hasFlowSupport
                 ) {
+                    build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
+
                     const componentIndex = build.assets.getComponentIndex(this);
                     const propertyIndex =
                         build.assets.getComponentPropertyIndex(
