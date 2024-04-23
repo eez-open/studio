@@ -6108,6 +6108,10 @@ export class LVGLMeterIndicator extends EezObject {
         });
     }
 
+    getIsAccessibleFromSourceCode() {
+        return false;
+    }
+
     lvglCreateObj(
         runtime: LVGLPageRuntime,
         obj: number,
@@ -6297,6 +6301,10 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         }
     });
 
+    override getIsAccessibleFromSourceCode() {
+        return this.valueType == "expression";
+    }
+
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         obj: number,
@@ -6463,6 +6471,10 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             }
         }
     });
+
+    override getIsAccessibleFromSourceCode() {
+        return this.valueType == "expression";
+    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -6664,6 +6676,13 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             }
         }
     });
+
+    override getIsAccessibleFromSourceCode() {
+        return (
+            this.startValueType == "expression" ||
+            this.endValueType == "expression"
+        );
+    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -6887,6 +6906,13 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             }
         }
     });
+
+    override getIsAccessibleFromSourceCode() {
+        return (
+            this.startValueType == "expression" ||
+            this.endValueType == "expression"
+        );
+    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -7139,6 +7165,14 @@ class LVGLMeterScale extends EezObject {
             scaleRotation: observable
         });
     }
+
+    getIsAccessibleFromSourceCode() {
+        return this.indicators.find(indicator =>
+            indicator.getIsAccessibleFromSourceCode()
+        )
+            ? true
+            : false;
+    }
 }
 
 export class LVGLMeterWidget extends LVGLWidget {
@@ -7275,6 +7309,16 @@ export class LVGLMeterWidget extends LVGLWidget {
         makeObservable(this, {
             scales: observable
         });
+    }
+
+    override getIsAccessibleFromSourceCode() {
+        if (super.getIsAccessibleFromSourceCode()) {
+            return true;
+        }
+
+        return this.scales.find(scale => scale.getIsAccessibleFromSourceCode())
+            ? true
+            : false;
     }
 
     override lvglCreateObj(
@@ -7497,7 +7541,9 @@ export class LVGLMeterWidget extends LVGLWidget {
                 if (
                     build.assets.projectStore.projectTypeTraits.hasFlowSupport
                 ) {
-                    build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
+                    build.line(
+                        `g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`
+                    );
 
                     const componentIndex = build.assets.getComponentIndex(this);
                     const propertyIndex =
