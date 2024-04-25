@@ -20,6 +20,7 @@ import styleFeature from "project-editor/features/style/style";
 import fontFeature from "project-editor/features/font/font";
 import bitmapFeature from "project-editor/features/bitmap/bitmap";
 import scpiFeature from "project-editor/features/scpi/scpi";
+import instrumentCommandsFeature from "project-editor/features/instrument-commands/instrument-commands";
 import shortcutsFeature from "project-editor/features/shortcuts/project-shortcuts";
 import microPythonFeature from "project-editor/features/micropython/micropython";
 import textsFeature from "project-editor/features/texts";
@@ -71,6 +72,7 @@ let features: ProjectEditorFeature[] = [
     textsFeature,
     extensionDefinitionsFeature,
     scpiFeature,
+    instrumentCommandsFeature,
     shortcutsFeature,
     microPythonFeature,
     diffFeature,

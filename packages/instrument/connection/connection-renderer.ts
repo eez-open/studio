@@ -42,13 +42,18 @@ export class IpcConnection extends ConnectionBase {
         reject: (reason?: any) => void;
     }[] = [];
 
+    isPlotterEnabled: boolean = false;
+
+    _onReadCallback: ((data: string | undefined) => void) | undefined;
+
     constructor(instrument: IInstrumentObjectProps) {
         super(instrument);
 
         makeObservable(this, {
             state: observable,
             errorCode: observable,
-            error: observable
+            error: observable,
+            isPlotterEnabled: observable
         });
 
         watch(
@@ -59,6 +64,7 @@ export class IpcConnection extends ConnectionBase {
                     this.state = connectionStatus.state;
                     this.errorCode = connectionStatus.errorCode;
                     this.error = connectionStatus.error;
+                    this.isPlotterEnabled = connectionStatus.isPlotterEnabled;
                 });
 
                 if (connectionStatus.state != ConnectionState.CONNECTED) {
@@ -177,6 +183,35 @@ export class IpcConnection extends ConnectionBase {
                 }
             }
         );
+
+        ipcRenderer.on(
+            "instrument/connection/on-data",
+            (
+                event: any,
+                args: {
+                    instrumentId: string;
+                    data: string | undefined;
+                }
+            ) => {
+                const ipcConnection = IpcConnection.ipcConnections.get(
+                    args.instrumentId
+                );
+
+                if (ipcConnection) {
+                    if (ipcConnection._onReadCallback) {
+                        ipcConnection._onReadCallback(args.data);
+                        if (args.data == undefined) {
+                            ipcConnection._onReadCallback = undefined;
+                        }
+                    }
+                } else {
+                    console.error(
+                        "Unknown instrument ID for the query result:",
+                        args.instrumentId
+                    );
+                }
+            }
+        );
     }
 
     dismissError() {
@@ -272,8 +307,8 @@ export class IpcConnection extends ConnectionBase {
         });
     }
 
-    async isLongOperationInProgress() {
-        ipcRenderer.send("instrument/connection/abort-long-operation", {
+    enablePlotter() {
+        ipcRenderer.send("instrument/connection/enable-plotter", {
             instrumentId: this.instrument.id
         });
     }
@@ -378,6 +413,27 @@ export class IpcConnection extends ConnectionBase {
 
         this.rejectCallback = undefined;
         this.resolveCallback = undefined;
+    }
+
+    onRead(callback: (data: string | undefined) => void) {
+        if (this._onReadCallback) {
+            this._onReadCallback(undefined);
+        }
+
+        this._onReadCallback = callback;
+
+        ipcRenderer.send("instrument/connection/on-read-callback", {
+            instrumentId: this.instrument.id,
+            callbackWindowId: getCurrentWindow().id
+        });
+    }
+
+    offRead(callback: (data: string | undefined) => void) {
+        this._onReadCallback = undefined;
+
+        ipcRenderer.send("instrument/connection/off-read-callback", {
+            instrumentId: this.instrument.id
+        });
     }
 
     release() {

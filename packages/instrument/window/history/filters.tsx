@@ -89,7 +89,10 @@ export class Filters {
         }
 
         if (this.charts) {
-            if (activityLogEntry.type === "instrument/chart") {
+            if (
+                activityLogEntry.type === "instrument/chart" ||
+                activityLogEntry.type === "instrument/plotter"
+            ) {
                 return true;
             }
         }
@@ -153,6 +156,7 @@ export class Filters {
 
         if (this.charts) {
             types.push("instrument/chart");
+            types.push("instrument/plotter");
         }
 
         if (this.lists) {
@@ -251,7 +255,10 @@ export class FilterStats {
             this.uploadedFiles += amount;
         } else if (type === "instrument/file-attachment") {
             this.attachedFiles += amount;
-        } else if (type === "instrument/chart") {
+        } else if (
+            type === "instrument/chart" ||
+            type === "instrument/plotter"
+        ) {
             this.charts += amount;
         } else if (type === "instrument/list") {
             this.lists += amount;

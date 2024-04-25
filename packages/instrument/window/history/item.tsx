@@ -85,8 +85,12 @@ export class HistoryItem implements IHistoryItem {
         if (this._data !== undefined) {
             return this._data;
         }
-        this._data = loadData(this.store, this.id);
+        this.loadData();
         return this._data;
+    }
+
+    loadData() {
+        this._data = loadData(this.store, this.id);
     }
 
     get info(): string | JSX.Element {

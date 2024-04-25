@@ -1381,6 +1381,10 @@ export class ProjectStore {
     reloadProject() {
         ProjectEditor.homeTabs?.reloadProject(this);
     }
+
+    get isScpiInstrument() {
+        return this.project.scpi != undefined;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

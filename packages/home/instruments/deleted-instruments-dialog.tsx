@@ -47,7 +47,7 @@ const DeletedInstrumentsDialog = observer(
                     .get(instrument.id);
                 creationDate = new Date(Number(result.date));
             } catch (err) {
-                console.error(err);
+                // console.error(err);
                 creationDate = null;
             }
 

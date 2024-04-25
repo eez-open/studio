@@ -84,6 +84,7 @@ const ProjectFeature = observer(
                             "extensionDefinitions"
                         ) {
                             values["scpi"] = undefined;
+                            values["instrumentCommands"] = undefined;
                             values["shortcuts"] = undefined;
                         }
 
@@ -116,6 +117,16 @@ const ProjectFeature = observer(
                         this.props.projectFeature.key == "extensionDefinitions"
                     ) {
                         mandatory = true;
+                    } else if (this.props.projectFeature.key == "scpi") {
+                        mandatory =
+                            this.context.project.settings.general
+                                .commandsProtocol == "SCPI";
+                    } else if (
+                        this.props.projectFeature.key == "instrumentCommands"
+                    ) {
+                        mandatory =
+                            this.context.project.settings.general
+                                .commandsProtocol == "PROPRIETARY";
                     }
                 }
 
@@ -359,10 +370,25 @@ export const SettingsContent = observer(
                             );
                         }
 
-                        if (
-                            extension.key == "scpi" ||
-                            extension.key == "shortcuts"
-                        ) {
+                        if (extension.key == "scpi") {
+                            return (
+                                this.context.project.settings.general
+                                    .commandsProtocol == "SCPI" &&
+                                this.context.project.extensionDefinitions !=
+                                    undefined
+                            );
+                        }
+
+                        if (extension.key == "instrumentCommands") {
+                            return (
+                                this.context.project.settings.general
+                                    .commandsProtocol == "PROPRIETARY" &&
+                                this.context.project.extensionDefinitions !=
+                                    undefined
+                            );
+                        }
+
+                        if (extension.key == "shortcuts") {
                             return (
                                 this.context.project.extensionDefinitions !=
                                 undefined
@@ -383,6 +409,7 @@ export const SettingsContent = observer(
                                 extension.key == "micropython" ||
                                 extension.key == "extensionDefinitions" ||
                                 extension.key == "scpi" ||
+                                extension.key == "instrumentCommands" ||
                                 extension.key == "shortcuts"
                             ) {
                                 return false;

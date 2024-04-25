@@ -20,6 +20,7 @@ import type * as AnswerHistoryItemModule from "instrument/window/history/items/a
 import type * as NoteHistoryItemModule from "instrument/window/history/items/note";
 import type * as FileHistoryItemModule from "instrument/window/history/items/file";
 import type * as ListHistoryItemModule from "instrument/window/history/items/list";
+import type * as PlotterHistoryItemModule from "instrument/window/history/items/plotter";
 import type * as ScriptHistoryItemModule from "instrument/window/history/items/script";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +137,12 @@ export function createHistoryItem(
         const { MultiWaveform } =
             require("instrument/window/waveform/multi") as typeof MultiWaveformModule;
         return new MultiWaveform(store, activityLogEntry);
+    }
+
+    if (activityLogEntry.type === "instrument/plotter") {
+        const { PlotterHistoryItem } =
+            require("instrument/window/history/items/plotter") as typeof PlotterHistoryItemModule;
+        return new PlotterHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/script") {

@@ -192,6 +192,36 @@ const Input = observer(
                             }
                         />
                     </div>
+                    {this.props.appStore.instrument.commandsProtocol !=
+                        "SCPI" && (
+                        <div style={{ paddingLeft: 8 }}>
+                            <select
+                                className="form-select form-control-sm"
+                                value={
+                                    this.props.appStore.instrument
+                                        .commandLineEnding
+                                }
+                                onChange={(
+                                    event: React.ChangeEvent<HTMLSelectElement>
+                                ) => {
+                                    this.props.appStore.instrument.setCommandLineEnding(
+                                        event.currentTarget.value as any
+                                    );
+                                }}
+                            >
+                                <option value="no-line-ending">
+                                    No line ending
+                                </option>
+                                <option value="newline">Newline</option>
+                                <option value="carriage-return">
+                                    Carriage return
+                                </option>
+                                <option value="both-nl-and-cr">
+                                    Both NL &amp; CR
+                                </option>
+                            </select>
+                        </div>
+                    )}
                     <div>
                         <IconAction
                             icon="material:play_arrow"
@@ -246,6 +276,53 @@ export class TerminalComponent extends React.Component<{
         const { appStore } = this.props;
         const instrument = appStore.instrument;
 
+        const input = (
+            <Input
+                appStore={appStore}
+                sendCommand={async () => {
+                    try {
+                        await instrument.connection.acquire(true);
+
+                        let hasQuery = false;
+                        try {
+                            const parts = parseScpi(this.terminalState.command);
+                            hasQuery = !!parts.find(
+                                part => part.tag == SCPI_PART_QUERY
+                            );
+                        } catch (err) {}
+
+                        const command = this.terminalState.command;
+                        this.terminalState.command = "";
+
+                        if (hasQuery) {
+                            await instrument.connection.query(command);
+                        } else {
+                            await instrument.connection.send(command);
+                        }
+                    } catch (err) {
+                        notification.error(err.toString());
+                    } finally {
+                        instrument.connection.release();
+                    }
+                }}
+                sendFileToInstrumentHandler={
+                    instrument.sendFileToInstrumentHandler
+                }
+                showDocumentation={this.props.showHelp}
+                terminalState={this.terminalState}
+            />
+        );
+
+        let history = (
+            <div className="EezStudio_TerminalBody">
+                <HistoryView
+                    appStore={this.props.appStore}
+                    persistId={"instrument/window/history"}
+                    showSideBar={this.props.showSideBar}
+                />
+            </div>
+        );
+
         const terminal = (
             <div
                 className="EezStudio_TerminalBodyContainer"
@@ -259,49 +336,11 @@ export class TerminalComponent extends React.Component<{
                 {this.props.showConnectionStatusBar && (
                     <AppBar appStore={appStore} selectedItem={undefined} />
                 )}
-                <div className="EezStudio_TerminalBody">
-                    <HistoryView
-                        appStore={this.props.appStore}
-                        persistId={"instrument/window/history"}
-                        showSideBar={this.props.showSideBar}
-                    />
-                </div>
-                <Input
-                    appStore={appStore}
-                    sendCommand={async () => {
-                        try {
-                            await instrument.connection.acquire(true);
 
-                            let hasQuery = false;
-                            try {
-                                const parts = parseScpi(
-                                    this.terminalState.command
-                                );
-                                hasQuery = !!parts.find(
-                                    part => part.tag == SCPI_PART_QUERY
-                                );
-                            } catch (err) {}
+                {history}
 
-                            const command = this.terminalState.command;
-                            this.terminalState.command = "";
+                {input}
 
-                            if (hasQuery) {
-                                await instrument.connection.query(command);
-                            } else {
-                                await instrument.connection.send(command);
-                            }
-                        } catch (err) {
-                            notification.error(err.toString());
-                        } finally {
-                            instrument.connection.release();
-                        }
-                    }}
-                    sendFileToInstrumentHandler={
-                        instrument.sendFileToInstrumentHandler
-                    }
-                    showDocumentation={this.props.showHelp}
-                    terminalState={this.terminalState}
-                />
                 {this.props.showShortcuts && (
                     <ShortcutsToolbar
                         appStore={appStore}

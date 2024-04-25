@@ -14,7 +14,11 @@ import {
     writeJsObjectToFile
 } from "eez-studio-shared/util-electron";
 
-import type { IExtension } from "eez-studio-shared/extensions/extension";
+import type {
+    CommandLineEnding,
+    CommandsProtocolType,
+    IExtension
+} from "eez-studio-shared/extensions/extension";
 import { getExtensionFolderPath } from "eez-studio-shared/extensions/extension-folder";
 
 import type { IInstrumentExtensionProperties } from "instrument/instrument-extension";
@@ -44,7 +48,11 @@ export type NumericSuffix = "optional" | "mandatory" | "none";
 ////////////////////////////////////////////////////////////////////////////////
 
 async function findIdfFile(extensionFolderPath: string) {
-    if (!fs.lstatSync(extensionFolderPath).isDirectory()) {
+    try {
+        if (!fs.lstatSync(extensionFolderPath).isDirectory()) {
+            return undefined;
+        }
+    } catch (err) {
         return undefined;
     }
 
@@ -444,22 +452,44 @@ async function readPackageJson(packageJsonFilePath: string) {
 
 export async function loadInstrumentExtension(extensionFolderPath: string) {
     try {
-        let idfFilePath = await findIdfFile(extensionFolderPath);
-        if (!idfFilePath) {
-            return undefined;
-        }
-
         if (isRenderer()) {
-            let idfXmlAsString = await readTextFile(idfFilePath);
-            let idf = parseXmlString(idfXmlAsString);
-            let ScpiConfiguration = $(idf).find(">ScpiConfigurations");
-            if (ScpiConfiguration.length && ScpiConfiguration.attr("guid")) {
-                let id = ScpiConfiguration.attr("guid")!;
+            // JSON
+            let packageJson;
 
-                let name = ScpiConfiguration.attr("name") || "Unknown name";
-                let version =
-                    ScpiConfiguration.attr("firmwareVersion") ||
-                    "Unknown version";
+            let packageJsonFilePath = extensionFolderPath + "/package.json";
+            if (await fileExists(packageJsonFilePath)) {
+                packageJson = await readPackageJson(packageJsonFilePath);
+            }
+
+            // IDF (SCPI)
+            let ScpiConfiguration: JQuery<HTMLElement> | undefined;
+            let idfFilePath = await findIdfFile(extensionFolderPath);
+            if (idfFilePath) {
+                let idfXmlAsString = await readTextFile(idfFilePath);
+                let idf = parseXmlString(idfXmlAsString);
+                ScpiConfiguration = $(idf).find(">ScpiConfigurations");
+            } else {
+                ScpiConfiguration = undefined;
+            }
+
+            if (
+                packageJson ||
+                (ScpiConfiguration &&
+                    ScpiConfiguration.length &&
+                    ScpiConfiguration.attr("guid"))
+            ) {
+                let id = ScpiConfiguration
+                    ? ScpiConfiguration.attr("guid")!
+                    : packageJson.id;
+
+                let name = ScpiConfiguration
+                    ? ScpiConfiguration.attr("name") || "Unknown name"
+                    : packageJson.name;
+
+                let version = ScpiConfiguration
+                    ? ScpiConfiguration.attr("firmwareVersion") ||
+                      "Unknown version"
+                    : packageJson.version;
 
                 let properties: IInstrumentExtensionProperties;
                 let isEditable: boolean;
@@ -467,11 +497,7 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 let sha256: string | undefined;
                 let moreDescription: string | undefined;
 
-                let packageJsonFilePath = extensionFolderPath + "/package.json";
-                if (await fileExists(packageJsonFilePath)) {
-                    const packageJson = await readPackageJson(
-                        packageJsonFilePath
-                    );
+                if (packageJson) {
                     version = packageJson.version;
                     properties = packageJson["eez-studio"];
                     isEditable = await fileExists(
@@ -505,20 +531,60 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                     )) ||
                         (await fileExists(extensionFolderPath + "/image.png")));
 
+                const description = ScpiConfiguration
+                    ? ScpiConfiguration.attr("description") ||
+                      "Unknown description."
+                    : packageJson.description;
+
+                const author = ScpiConfiguration
+                    ? ScpiConfiguration.attr("author") || "Unknown author"
+                    : packageJson.author;
+
+                const shortName = ScpiConfiguration
+                    ? ScpiConfiguration.attr("shortName") || ""
+                    : packageJson.name;
+
+                const revisionNumber = ScpiConfiguration
+                    ? ScpiConfiguration.attr("revisionNumber") || ""
+                    : "";
+
+                const supportedModels = ScpiConfiguration
+                    ? ScpiConfiguration.attr("supportedModels") || ""
+                    : "";
+
+                const revisionComments = ScpiConfiguration
+                    ? ScpiConfiguration.attr("revisionComments") || ""
+                    : "";
+
+                const commandsProtocol: CommandsProtocolType = ScpiConfiguration
+                    ? "SCPI"
+                    : "PROPRIETARY";
+
+                let commandLineEnding: CommandLineEnding;
+                const temp = properties.properties?.commandLineEnding;
+                if (
+                    temp == "no-line-ending" ||
+                    temp == "newline" ||
+                    temp == "carriage-return" ||
+                    temp == "both-nl-and-cr"
+                ) {
+                    commandLineEnding = temp;
+                } else {
+                    commandLineEnding = ScpiConfiguration
+                        ? "newline"
+                        : "no-line-ending";
+                }
+
                 const extension: IExtension = observable(
                     {
                         id,
                         preInstalled: false,
                         extensionType: "iext",
                         name,
-                        description:
-                            ScpiConfiguration.attr("description") ||
-                            "Unknown description.",
+                        description,
                         moreDescription,
                         version,
-                        author:
-                            ScpiConfiguration.attr("author") ||
-                            "Unknown author",
+                        author,
                         image: "",
                         renderPropertiesComponent: () => {
                             const { renderPropertiesComponent } =
@@ -530,13 +596,13 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                         isEditable,
                         isDirty,
 
-                        shortName: ScpiConfiguration.attr("shortName") || "",
-                        revisionNumber:
-                            ScpiConfiguration.attr("revisionNumber") || "",
-                        supportedModels:
-                            ScpiConfiguration.attr("supportedModels") || "",
-                        revisionComments:
-                            ScpiConfiguration.attr("revisionComments") || ""
+                        shortName,
+                        revisionNumber,
+                        supportedModels,
+                        revisionComments,
+
+                        commandsProtocol,
+                        commandLineEnding
                     },
                     {
                         properties: observable.shallow
@@ -571,7 +637,9 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 version: "",
                 author: "",
                 image: "",
-                properties: packageJSON["eez-studio"]
+                properties: packageJSON["eez-studio"],
+                commandsProtocol: "SCPI",
+                commandLineEnding: "newline"
             };
 
             return extension;

@@ -284,7 +284,7 @@ registerActionComponents("Serial Port", [
         outputs: [
             {
                 name: "data",
-                type: "string",
+                type: "stream",
                 isSequenceOutput: false,
                 isOptionalOutput: false
             }
@@ -369,9 +369,15 @@ registerActionComponents("Serial Port", [
                     serialConnections.get(serialConnectionId);
                 if (serialConnection) {
                     if (data) {
-                        serialConnection.write(data.toString());
+                        try {
+                            serialConnection.write(data.toString());
+                            context.propagateValueThroughSeqout();
+                        } catch (err) {
+                            context.throwError(err.toString());
+                        }
+                    } else {
+                        context.propagateValueThroughSeqout();
                     }
-                    context.propagateValueThroughSeqout();
                 } else {
                     context.throwError("serial connection not found");
                 }

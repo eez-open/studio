@@ -28,6 +28,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { fileExistsSync } from "eez-studio-shared/util-electron";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { isNotScpiProject } from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -177,7 +178,8 @@ export class ExtensionDefinition extends EezObject {
                 name: "idn",
                 displayName: "IDN",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "properties",
@@ -188,35 +190,43 @@ export class ExtensionDefinition extends EezObject {
                 name: "idfName",
                 displayName: "IDF name",
                 type: PropertyType.String,
-                defaultValue: undefined
+                disabled: isNotScpiProject
             },
             {
                 name: "idfShortName",
                 displayName: "IDF short name",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "idfFirmwareVersion",
                 displayName: "IDF firmware version",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "idfGuid",
-                displayName: "IDF GUID",
-                type: PropertyType.GUID,
-                defaultValue: undefined
+                displayName: object =>
+                    isNotScpiProject(object) ? "GUID" : "IDF GUID",
+                type: PropertyType.GUID
             },
             {
                 name: "idfRevisionNumber",
-                displayName: "IDF revision number (extension version)",
+                displayName: object =>
+                    isNotScpiProject(object)
+                        ? "Extension version"
+                        : "IDF revision number (extension version)",
                 type: PropertyType.String,
                 defaultValue: undefined
             },
             {
                 name: "idfDescription",
-                displayName: "IDF description",
+                displayName: object =>
+                    isNotScpiProject(object)
+                        ? "Description"
+                        : "IDF description",
                 type: PropertyType.String,
                 defaultValue: undefined
             },
@@ -224,17 +234,20 @@ export class ExtensionDefinition extends EezObject {
                 name: "idfSupportedModels",
                 displayName: "IDF supported models",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "idfRevisionComments",
                 displayName: "IDF revision comments",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "idfAuthor",
-                displayName: "IDF author",
+                displayName: object =>
+                    isNotScpiProject(object) ? "Author" : "IDF author",
                 type: PropertyType.String,
                 defaultValue: undefined
             },
@@ -242,7 +255,8 @@ export class ExtensionDefinition extends EezObject {
                 name: "sdlFriendlyName",
                 displayName: "SDL friendly name",
                 type: PropertyType.String,
-                defaultValue: undefined
+                defaultValue: undefined,
+                disabled: isNotScpiProject
             },
             {
                 name: "useDashboardProjects",
@@ -289,11 +303,13 @@ export class ExtensionDefinition extends EezObject {
         hideInProperties: true,
         icon: "material:extension",
         check: (object: ExtensionDefinition, messages: IMessage[]) => {
+            const projectStore = getProjectStore(object);
+
             if (!object.extensionName) {
                 messages.push(propertyNotSetMessage(object, "extensionName"));
             }
 
-            if (!object.idn) {
+            if (projectStore.isScpiInstrument && !object.idn) {
                 messages.push(propertyNotSetMessage(object, "idn"));
             }
 
@@ -307,15 +323,13 @@ export class ExtensionDefinition extends EezObject {
                 );
             }
 
-            if (!object.idfName) {
+            if (projectStore.isScpiInstrument && !object.idfName) {
                 messages.push(propertyNotSetMessage(object, "idfName"));
             }
 
-            if (!object.idfShortName) {
+            if (projectStore.isScpiInstrument && !object.idfShortName) {
                 messages.push(propertyNotSetMessage(object, "idfShortName"));
             }
-
-            const projectStore = getProjectStore(object);
 
             let extensionDefinitions =
                 projectStore.project.extensionDefinitions;

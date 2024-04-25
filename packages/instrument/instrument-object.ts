@@ -17,7 +17,11 @@ import {
     beginTransaction,
     commitTransaction
 } from "eez-studio-shared/store";
-import { IExtension } from "eez-studio-shared/extensions/extension";
+import {
+    CommandLineEnding,
+    CommandsProtocolType,
+    IExtension
+} from "eez-studio-shared/extensions/extension";
 import {
     loadExtensionById,
     extensions
@@ -69,6 +73,8 @@ export interface IInstrumentObjectProps {
     selectedShortcutGroups: string[];
     recordHistory: boolean;
     custom?: any;
+    commandsProtocol?: CommandsProtocolType; // in the future we will also support Modbus
+    commandLineEnding?: CommandLineEnding;
     getQueryResponseType(query: string): Promise<IResponseTypeType | undefined>;
     isCommandSendsBackDataBlock(commandName: string): Promise<boolean>;
     defaultConnectionParameters: ConnectionParameters;
@@ -87,7 +93,9 @@ const UNKNOWN_INSTRUMENT_EXTENSION: IExtension = {
     version: "no version",
     author: "no author",
     image: "../eez-studio-ui/_images/object-implementation-not-found.svg",
-    properties: {}
+    properties: {},
+    commandsProtocol: "SCPI",
+    commandLineEnding: "no-line-ending"
 };
 
 export class InstrumentObject {
@@ -102,6 +110,8 @@ export class InstrumentObject {
     selectedShortcutGroups: string[];
     recordHistory: boolean;
     custom: any;
+    commandsProtocol: CommandsProtocolType;
+    commandLineEnding: CommandLineEnding;
 
     _connection: IConnection | undefined;
     _commandsTree: CommandsTree | undefined;
@@ -119,6 +129,8 @@ export class InstrumentObject {
             selectedShortcutGroups: observable,
             recordHistory: observable,
             custom: observable,
+            commandsProtocol: observable,
+            commandLineEnding: observable,
             _extension: observable,
             extension: computed,
             properties: computed,
@@ -137,6 +149,7 @@ export class InstrumentObject {
             setConnectionParameters: action,
             setLastFileUploadInstructions: action,
             setAutoConnect: action,
+            setCommandLineEnding: action,
             sendFileToInstrumentHandler: computed,
             setCustomProperty: action,
             isBB3: computed
@@ -161,6 +174,12 @@ export class InstrumentObject {
         this.recordHistory = props.recordHistory;
 
         this.custom = props.custom || {};
+
+        this.commandsProtocol = props.commandsProtocol || "SCPI";
+
+        this.commandLineEnding =
+            props.commandLineEnding ||
+            (this.commandsProtocol == "SCPI" ? "newline" : "no-line-ending");
 
         if (!isRenderer()) {
             this.initConnection();
@@ -810,6 +829,19 @@ export class InstrumentObject {
         }
     }
 
+    setCommandLineEnding(commandLineEnding: CommandLineEnding) {
+        if (commandLineEnding !== this.commandLineEnding) {
+            this.commandLineEnding = commandLineEnding;
+
+            beginTransaction("Change instrument command line ending");
+            store.updateObject({
+                id: this.id,
+                commandLineEnding
+            });
+            commitTransaction();
+        }
+    }
+
     addShortcutGroupToInstrument(groupName: string) {
         if (this.selectedShortcutGroups.indexOf(groupName) === -1) {
             let selectedShortcutGroups = this.selectedShortcutGroups.concat([
@@ -1075,9 +1107,17 @@ export const store = createStore({
         `ALTER TABLE instrument ADD COLUMN custom TEXT;
         UPDATE versions SET version = 6 WHERE tableName = 'instrument';`,
 
-        // version 6
+        // version 7
         `ALTER TABLE instrument ADD COLUMN recordHistory BOOLEAN DEFAULT TRUE;
-        UPDATE versions SET version = 7 WHERE tableName = 'instrument';`
+        UPDATE versions SET version = 7 WHERE tableName = 'instrument';`,
+
+        // version 8
+        `ALTER TABLE instrument ADD COLUMN commandsProtocol TEXT DEFAULT 'SCPI';
+        UPDATE versions SET version = 8 WHERE tableName = 'instrument';`,
+
+        // version 9
+        `ALTER TABLE instrument ADD COLUMN commandLineEnding TEXT DEFAULT 'no-line-ending';
+        UPDATE versions SET version = 9 WHERE tableName = 'instrument';`
     ],
     properties: {
         id: types.id,
@@ -1090,7 +1130,9 @@ export const store = createStore({
         lastFileUploadInstructions: types.object,
         selectedShortcutGroups: types.object,
         recordHistory: types.boolean,
-        custom: types.object
+        custom: types.object,
+        commandsProtocol: types.string,
+        commandLineEnding: types.string
     },
     create(props: IInstrumentObjectProps) {
         return new InstrumentObject(props);
@@ -1108,7 +1150,10 @@ export const instruments = instrumentCollection.objects;
 export function createInstrument(extension: IExtension): string {
     return instrumentStore.createObject({
         instrumentExtensionId: extension.id,
-        autoConnect: false
+        autoConnect: false,
+        recordHistory: true,
+        commandsProtocol: extension.commandsProtocol,
+        commandLineEnding: extension.commandLineEnding
     });
 }
 

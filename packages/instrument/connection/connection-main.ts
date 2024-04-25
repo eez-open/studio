@@ -7,7 +7,11 @@ import {
     makeObservable
 } from "mobx";
 
-import { activityLogStore, log } from "instrument/window/history/activity-log";
+import {
+    activityLogStore,
+    log,
+    logUpdate
+} from "instrument/window/history/activity-log";
 import {
     registerSource,
     unregisterSource,
@@ -40,13 +44,23 @@ import {
     ISendOptions,
     LongOperation
 } from "instrument/connection/connection-base";
+import { Plotter } from "instrument/connection/plotter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const CONF_HOUSEKEEPING_INTERVAL = 100;
 const CONF_IDN_EXPECTED_TIMEOUT = 2000;
-const CONF_COMBINE_IF_BELOW_MS = 250;
+const CONF_SCPI_COMBINE_IF_BELOW_MS = 250;
 const CONF_ACQUIRE_TIMEOUT = 3000;
+
+const COMMAND_LINE_ENDING = {
+    "no-line-ending": "",
+    newline: "\n",
+    "carriage-return": "\r",
+    "both-nl-and-cr": "\r\n"
+};
+
+const MAX_ANSWER_LOG_ENTRY_MESSAGE_LENGTH = 100 * 1024;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -115,13 +129,19 @@ export class Connection
 
     sendTimeoutId: any;
 
+    lastAnswerActivityLogId: any;
+    lastAnswerActivityLogMessage: string;
+
+    _onReadCallback: ((data: string | undefined) => void) | undefined;
+
     constructor(public instrument: InstrumentObject) {
         super(instrument);
 
         makeObservable(this, {
             _state: observable,
             _errorCode: observable,
-            _error: observable
+            _error: observable,
+            longOperation: observable
         });
 
         this.notifySource = {
@@ -155,7 +175,8 @@ export class Connection
         let connectionStatus: ConnectionStatus = {
             state: this.state,
             errorCode: this.errorCode,
-            error: this.error
+            error: this.error,
+            isPlotterEnabled: this.isPlotterEnabled
         };
         sendMessage(this.notifySource, connectionStatus, targetId);
     }
@@ -217,7 +238,11 @@ export class Connection
         this.wasConnected = true;
         this.connectedStartTime = new Date().getTime();
 
-        this.sendIdn();
+        if (this.instrument.commandsProtocol == "SCPI") {
+            this.sendIdn();
+        } else {
+            this.state = ConnectionState.CONNECTED;
+        }
 
         this.housekeepingIntervalId = setInterval(
             this.housekeeping,
@@ -238,22 +263,54 @@ export class Connection
                     undoable: false
                 }
             );
+
+            this.lastAnswerActivityLogId = undefined;
+            this.lastAnswerActivityLogMessage = "";
         }
     }
 
     logAnswer(data: string) {
         if (this.traceEnabled && data.trim().length > 0) {
-            log(
-                activityLogStore,
-                {
-                    oid: this.instrument.id,
-                    type: "instrument/answer",
-                    message: data
-                },
-                {
-                    undoable: false
+            if (this.lastAnswerActivityLogId != undefined) {
+                this.lastAnswerActivityLogMessage += data;
+
+                logUpdate(
+                    activityLogStore,
+                    {
+                        id: this.lastAnswerActivityLogId,
+                        oid: this.instrument.id,
+                        message: this.lastAnswerActivityLogMessage
+                    },
+                    {
+                        undoable: false
+                    }
+                );
+
+                if (
+                    this.lastAnswerActivityLogMessage.length >
+                    MAX_ANSWER_LOG_ENTRY_MESSAGE_LENGTH
+                ) {
+                    this.lastAnswerActivityLogId = undefined;
+                    this.lastAnswerActivityLogMessage = "";
                 }
-            );
+            } else {
+                const id = log(
+                    activityLogStore,
+                    {
+                        oid: this.instrument.id,
+                        type: "instrument/answer",
+                        message: data
+                    },
+                    {
+                        undoable: false
+                    }
+                );
+
+                if (this.instrument.commandsProtocol != "SCPI") {
+                    this.lastAnswerActivityLogId = id;
+                    this.lastAnswerActivityLogMessage = data;
+                }
+            }
         }
     }
 
@@ -298,7 +355,9 @@ export class Connection
             if (this.longOperation.isQuery && this.longOperation.logEntry) {
                 this.sendValue({ logEntry: this.longOperation.logEntry });
             }
-            this.longOperation = undefined;
+            runInAction(() => {
+                this.longOperation = undefined;
+            });
         }
     }
 
@@ -342,7 +401,9 @@ export class Connection
     flushData() {
         if (this.longOperation) {
             this.longOperation.abort();
-            this.longOperation = undefined;
+            runInAction(() => {
+                this.longOperation = undefined;
+            });
         }
 
         if (this.dataTimeoutId) {
@@ -395,6 +456,10 @@ export class Connection
     };
 
     onData(data: string, endIndicatorReceived?: boolean | undefined) {
+        if (this._onReadCallback) {
+            this._onReadCallback(data);
+        }
+
         if (this.dataTimeoutId) {
             clearTimeout(this.dataTimeoutId);
         }
@@ -402,15 +467,18 @@ export class Connection
         if (this.longOperation) {
             this.longOperation.onData(data);
         } else if (
+            this.instrument.commandsProtocol == "SCPI" &&
             this.data === undefined &&
             (data.startsWith("#") ||
                 this.expectedResponseType === "non-standard-data-block")
         ) {
-            this.longOperation = new FileDownload(
-                this,
-                data,
-                this.expectedResponseType === "non-standard-data-block"
-            );
+            runInAction(() => {
+                this.longOperation = new FileDownload(
+                    this,
+                    data,
+                    this.expectedResponseType === "non-standard-data-block"
+                );
+            });
         }
 
         this.expectedResponseType = undefined;
@@ -438,7 +506,7 @@ export class Connection
                 this.onDataLineReceived(this.data);
                 this.data = undefined;
             }
-        } else {
+        } else if (this.instrument.commandsProtocol == "SCPI") {
             let index = this.data.indexOf("\n");
 
             if (index == -1) {
@@ -459,9 +527,16 @@ export class Connection
         }
 
         if (this.data !== undefined) {
-            this.dataTimeoutId = setTimeout(() => {
-                this.flushData();
-            }, CONF_COMBINE_IF_BELOW_MS);
+            if (this.instrument.commandsProtocol == "SCPI") {
+                this.dataTimeoutId = setTimeout(() => {
+                    this.flushData();
+                }, CONF_SCPI_COMBINE_IF_BELOW_MS);
+            } else {
+                if (this.state == ConnectionState.CONNECTED) {
+                    this.logAnswer(this.data);
+                }
+                this.data = undefined;
+            }
         }
     }
 
@@ -486,17 +561,21 @@ export class Connection
     }
 
     send(command: string, options?: ISendOptions): void {
-        if (!options || !options.longOperation) {
-            if (this.longOperation) {
-                if (
-                    this.longOperation instanceof FileDownload ||
-                    this.longOperation instanceof FileUpload
-                ) {
-                    this.logAnswer("**ERROR: file transfer in progress\n");
-                } else {
-                    this.logAnswer("**ERROR: another operation in progress\n");
+        if (this.instrument.commandsProtocol == "SCPI") {
+            if (!options || !options.longOperation) {
+                if (this.longOperation) {
+                    if (
+                        this.longOperation instanceof FileDownload ||
+                        this.longOperation instanceof FileUpload
+                    ) {
+                        this.logAnswer("**ERROR: file transfer in progress\n");
+                    } else {
+                        this.logAnswer(
+                            "**ERROR: another operation in progress\n"
+                        );
+                    }
+                    return;
                 }
-                return;
             }
         }
 
@@ -523,10 +602,20 @@ export class Connection
                 ? options.delay
                 : this.connectionParameters.delay ?? 0;
 
-        this.sendQueue.push({
-            command: command + "\n",
-            delay
-        });
+        if (this.instrument.commandsProtocol == "SCPI") {
+            this.sendQueue.push({
+                command: command + "\n",
+                delay
+            });
+        } else {
+            this.sendQueue.push({
+                command:
+                    command +
+                    (COMMAND_LINE_ENDING[this.instrument.commandLineEnding] ||
+                        ""),
+                delay
+            });
+        }
 
         this.dumpSendQueue();
 
@@ -577,10 +666,14 @@ export class Connection
         this.flushData();
     }
 
-    startLongOperation(createLongOperation: () => LongOperation) {
+    startLongOperation(
+        createLongOperation: () => LongOperation,
+        checkState: boolean = true
+    ) {
         if (
-            this.state !== ConnectionState.CONNECTED ||
-            !this.communicationInterface
+            checkState &&
+            (this.state !== ConnectionState.CONNECTED ||
+                !this.communicationInterface)
         ) {
             this.logAnswer("not connected");
             return;
@@ -598,7 +691,9 @@ export class Connection
             return;
         }
 
-        this.longOperation = createLongOperation();
+        runInAction(() => {
+            this.longOperation = createLongOperation();
+        });
     }
 
     doUpload(
@@ -615,9 +710,29 @@ export class Connection
         }
     }
 
+    enablePlotter() {
+        try {
+            this.startLongOperation(() => new Plotter(this), false);
+        } catch (err) {
+            this.logAnswer(`**ERROR: ${err}\n`);
+        }
+    }
+
+    get isPlotterEnabled() {
+        return this.longOperation && this.longOperation instanceof Plotter
+            ? true
+            : false;
+    }
+
     abortLongOperation() {
         if (this.longOperation) {
             this.longOperation.abort();
+
+            if (this.longOperation.isDone()) {
+                let dataSurplus = this.longOperation.dataSurplus;
+                this.longOperationDone();
+                this.data = dataSurplus;
+            }
         }
     }
 
@@ -650,8 +765,14 @@ export class Connection
     disconnected() {
         this.communicationInterface = undefined;
         this.state = ConnectionState.IDLE;
+        this.lastAnswerActivityLogId = undefined;
 
         this.sendQueue = [];
+
+        if (this._onReadCallback) {
+            this._onReadCallback(undefined);
+            this._onReadCallback = undefined;
+        }
 
         if (this.sendTimeoutId) {
             clearTimeout(this.sendTimeoutId);
@@ -773,6 +894,14 @@ export class Connection
                 acquireTask.traceEnabled
             );
         }
+    }
+
+    onRead(callback: (data: string | undefined) => void) {
+        this._onReadCallback = callback;
+    }
+
+    offRead(callback: (data: string | undefined) => void) {
+        this._onReadCallback = undefined;
     }
 
     // no need to implement these in main process connection
@@ -914,6 +1043,21 @@ export function setupIpcServer() {
     );
 
     ipcMain.on(
+        "instrument/connection/enable-plotter",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.enablePlotter();
+            }
+        }
+    );
+
+    ipcMain.on(
         "instrument/connection/abort-long-operation",
         function (
             event: any,
@@ -993,6 +1137,51 @@ export function setupIpcServer() {
                 connection.doRelease();
             }
             event.returnValue = true;
+        }
+    );
+
+    ipcMain.on(
+        "instrument/connection/on-read-callback",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                callbackWindowId: number;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.onRead(data => {
+                    let browserWindow =
+                        require("electron").BrowserWindow.fromId(
+                            arg.callbackWindowId
+                        )!;
+                    if (browserWindow) {
+                        browserWindow.webContents.send(
+                            "instrument/connection/on-data",
+                            {
+                                instrumentId: arg.instrumentId,
+                                data
+                            }
+                        );
+                    }
+                });
+            }
+        }
+    );
+
+    ipcMain.on(
+        "instrument/connection/off-read-callback",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+            }
+        ) {
+            let connection = connections.get(arg.instrumentId);
+            if (connection) {
+                connection.offRead(() => {});
+            }
         }
     );
 }

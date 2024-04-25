@@ -45,6 +45,7 @@ import {
 } from "instrument/connection/file-type";
 import { Loader } from "eez-studio-ui/loader";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
+import { PLOTTER_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,38 +232,51 @@ export const HistoryTools = observer(
         };
 
         addChart = () => {
-            this.props.appStore.selectHistoryItems({
-                historyItemType: "chart",
-                message: "Select two or more waveform data items",
-                okButtonText: "Add Chart",
-                okButtonTitle: "Add chart",
-                loading: true,
-                onOk: () => {
-                    const multiWaveformDefinition = {
-                        waveformLinks: keys(
-                            this.props.appStore.selectedHistoryItems
-                        ).map(id => ({
-                            id
-                        }))
-                    };
+            if (this.props.appStore.instrument.commandsProtocol == "SCPI") {
+                this.props.appStore.selectHistoryItems({
+                    historyItemType: "chart",
+                    message: "Select two or more waveform data items",
+                    okButtonText: "Add Chart",
+                    okButtonTitle: "Add chart",
+                    loading: true,
+                    onOk: () => {
+                        const multiWaveformDefinition = {
+                            waveformLinks: keys(
+                                this.props.appStore.selectedHistoryItems
+                            ).map(id => ({
+                                id
+                            }))
+                        };
 
-                    this.props.appStore.selectHistoryItems(undefined);
+                        this.props.appStore.selectHistoryItems(undefined);
 
-                    beginTransaction("Add chart");
-                    log(
-                        this.props.appStore.history.options.store,
-                        {
-                            oid: this.props.appStore.history.oid,
-                            type: "instrument/chart",
-                            message: JSON.stringify(multiWaveformDefinition)
-                        },
-                        {
-                            undoable: true
-                        }
-                    );
-                    commitTransaction();
+                        beginTransaction("Add chart");
+                        log(
+                            this.props.appStore.history.options.store,
+                            {
+                                oid: this.props.appStore.history.oid,
+                                type: "instrument/chart",
+                                message: JSON.stringify(multiWaveformDefinition)
+                            },
+                            {
+                                undoable: true
+                            }
+                        );
+                        commitTransaction();
+                    }
+                });
+            }
+        };
+
+        togglePlotter = () => {
+            const connection = this.props.appStore.instrument.connection;
+            if (connection.enablePlotter) {
+                if (connection.isPlotterEnabled) {
+                    connection.abortLongOperation();
+                } else {
+                    connection.enablePlotter();
                 }
-            });
+            }
         };
 
         generateChart = () => {
@@ -320,20 +334,14 @@ export const HistoryTools = observer(
                     <IconAction
                         key="addNote"
                         icon="material:comment"
-                        title="Add note"
+                        title="Add Note"
                         onClick={this.addNote}
                     />,
                     <IconAction
                         key="addFile"
                         icon="material:attach_file"
-                        title="Attach file"
+                        title="Attach File"
                         onClick={this.attachFile}
-                    />,
-                    <IconAction
-                        key="addChart"
-                        icon="material:insert_chart"
-                        title="Add chart"
-                        onClick={this.addChart}
                     /> /*,
                 <IconAction
                     key="generateChart"
@@ -342,6 +350,30 @@ export const HistoryTools = observer(
                     onClick={this.generateChart}
                 />*/
                 );
+
+                if (this.props.appStore.instrument.commandsProtocol == "SCPI") {
+                    tools.push(
+                        <IconAction
+                            key="addChart"
+                            icon="material:insert_chart"
+                            title="Add Chart"
+                            onClick={this.addChart}
+                        />
+                    );
+                } else {
+                    tools.push(
+                        <IconAction
+                            key="addChart"
+                            icon={PLOTTER_ICON}
+                            title="Show/Hide Plotter"
+                            onClick={this.togglePlotter}
+                            selected={
+                                this.props.appStore.instrument.connection
+                                    .isPlotterEnabled
+                            }
+                        />
+                    );
+                }
 
                 // add tools from extensions
                 const numToolsBefore = tools.length;
@@ -640,7 +672,7 @@ export class HistoryViewComponent extends React.Component<{
             return historyComponent;
         }
 
-        const historyComponentWithTools =
+        let historyComponentWithTools =
             this.renderHistoryComponentWithTools(historyComponent);
 
         let input = (

@@ -123,6 +123,13 @@ export interface IMeasureTask extends IInput {
     resultUnit?: keyof typeof UNITS;
 }
 
+export type CommandsProtocolType = "SCPI" | "PROPRIETARY";
+export type CommandLineEnding =
+    | "no-line-ending"
+    | "newline"
+    | "carriage-return"
+    | "both-nl-and-cr";
+
 export interface IExtensionDescription {
     id: string;
     name: string;
@@ -139,6 +146,8 @@ export interface IExtensionDescription {
     revisionNumber?: string;
     supportedModels?: string;
     revisionComments?: string;
+    commandsProtocol: CommandsProtocolType;
+    commandLineEnding: CommandLineEnding;
 }
 
 export interface IExtensionHost {

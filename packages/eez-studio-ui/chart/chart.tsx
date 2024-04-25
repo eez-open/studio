@@ -192,7 +192,7 @@ export interface ILineController {
 }
 
 export interface IWaveform {
-    format: any;
+    format: WaveformFormat;
     values: any;
     offset: number;
     scale: number;

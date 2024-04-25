@@ -132,9 +132,17 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
                 idfFilePath = projectStore.getAbsoluteFilePath(idfFileName);
             }
 
-            const scpi = projectStore.project.scpi;
-            const subsystems = objectToJS(scpi.subsystems);
-            const enums = objectToJS(scpi.enums);
+            const isScpiInstrument = projectStore.isScpiInstrument;
+            let scpiSubsystems;
+            let scpiEnums;
+            if (isScpiInstrument) {
+                const scpi = projectStore.project.scpi;
+                scpiSubsystems = objectToJS(scpi.subsystems);
+                scpiEnums = objectToJS(scpi.enums);
+            } else {
+                scpiSubsystems = [];
+                scpiEnums = [];
+            }
 
             const { buildInstrumentExtension } = await import(
                 "instrument/export"
@@ -143,14 +151,17 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
             await buildInstrumentExtension(
                 instrumentIdf,
 
-                subsystems,
+                scpiSubsystems,
 
-                enums,
+                scpiEnums,
 
                 idfFilePath,
 
-                instrumentIdf.image &&
-                    projectStore.getAbsoluteFilePath(instrumentIdf.image),
+                instrumentIdf.image
+                    ? instrumentIdf.image.startsWith("data:image")
+                        ? instrumentIdf.image
+                        : projectStore.getAbsoluteFilePath(instrumentIdf.image)
+                    : undefined,
 
                 projectStore.project.settings.general.scpiDocFolder &&
                     projectStore.getAbsoluteFilePath(
@@ -159,7 +170,9 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
 
                 projectStore.getAbsoluteFilePath("."),
 
-                properties
+                properties,
+
+                projectStore.isScpiInstrument
             );
 
             extensionFilePaths.push(idfFilePath);

@@ -1,6 +1,6 @@
 import { observable, action } from "mobx";
-const EventEmitter = require("events");
-const fs = require("fs");
+import { EventEmitter } from "events";
+import fs from "fs";
 
 import { delay } from "eez-studio-shared/util";
 import {
@@ -194,6 +194,19 @@ export async function loadExtensions(nodeModuleFolders: string[]) {
     let installedExtensionFolders: string[];
     try {
         installedExtensionFolders = await readFolder(extensionsFolderPath);
+
+        installedExtensionFolders = installedExtensionFolders.filter(
+            extensionFolderPath => {
+                if (fs.lstatSync(extensionFolderPath).isFile()) {
+                    return false;
+                }
+                const basename = path.basename(extensionFolderPath);
+                if (basename == "node_modules" || basename == "cache") {
+                    return false;
+                }
+                return true;
+            }
+        );
     } catch (err) {
         console.info(
             `Extensions folder "${extensionsFolderPath}" doesn't exists.`

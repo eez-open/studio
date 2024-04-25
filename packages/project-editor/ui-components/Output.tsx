@@ -25,7 +25,7 @@ import { Message, Section } from "project-editor/store/output-sections";
 import { findAllOccurrences } from "project-editor/core/search";
 import { EezValueObject } from "project-editor/store";
 
-const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 100;
+const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, makeObservable, runInAction, autorun } from "mobx";
+import { Stream } from "stream";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
@@ -65,6 +66,10 @@ import { Instruments, InstrumentsStore } from "home/instruments";
 import { observer } from "mobx-react";
 import { AlertDanger } from "eez-studio-ui/alert";
 import { Loader } from "eez-studio-ui/loader";
+import {
+    offWasmFlowRuntimeTerminate,
+    onWasmFlowRuntimeTerminate
+} from "project-editor/flow/runtime/wasm-worker";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -753,6 +758,285 @@ registerClass(
     "DisconnectInstrumentActionComponent",
     DisconnectInstrumentActionComponent
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class InstrumentRead extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            )
+        ],
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+                <path d="m30 16-7-7-1.414 1.414L26.172 15H9v2h17.172l-4.586 4.586L23 23l7-7z" />
+                <path d="M14 28C7.383 28 2 22.617 2 16S7.383 4 14 4c2.335 0 4.599.671 6.546 1.941l-1.092 1.676A9.96 9.96 0 0 0 14 6C8.486 6 4 10.486 4 16s4.486 10 10 10a9.96 9.96 0 0 0 5.454-1.617l1.092 1.676A11.953 11.953 0 0 1 14 28Z" />
+                <path d="M0 0h32v32H0z" fill="none" />
+            </svg>
+        ),
+        componentHeaderColor: "#FDD0A2",
+        componentPaletteGroupName: "Instrument",
+        execute: (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
+            const instrumentObject = instruments.get(instrument.id);
+
+            if (!instrumentObject) {
+                context.throwError(`Instrument not found`);
+                return;
+            }
+
+            context = context.startAsyncExecution();
+
+            const readableStream = new Stream.Readable();
+            readableStream._read = () => {};
+
+            context.propagateValue("data", readableStream);
+
+            const connection = instrumentObject.connection;
+
+            const onReadCallback = (data: string | undefined) => {
+                if (data) {
+                    readableStream.push(data);
+                } else {
+                    readableStream.destroy();
+                    context.endAsyncExecution();
+                }
+            };
+
+            connection.onRead(onReadCallback);
+
+            const onTerminateCallback = () => {
+                offWasmFlowRuntimeTerminate(onTerminateCallback);
+
+                connection.offRead(onReadCallback);
+            };
+
+            onWasmFlowRuntimeTerminate(onTerminateCallback);
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    instrument: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            instrument: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            {
+                name: "data",
+                type: "stream" as ValueType,
+                isSequenceOutput: false,
+                isOptionalOutput: false
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.instrument) {
+            return null;
+        }
+
+        if (this.customInputs.find(input => input.name == this.instrument)) {
+            return null;
+        }
+
+        return (
+            <div className="body EezStudio_ScpiBody">
+                <pre>{this.instrument}</pre>
+            </div>
+        );
+    }
+}
+
+registerClass("InstrumentRead", InstrumentRead);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class InstrumentWrite extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "instrument",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "object:Instrument"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "data",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        icon: (
+            <svg viewBox="0 0  32 32">
+                <path d="M18 28c-3.593 0-6.967-1.59-9.257-4.363l1.542-1.274A9.975 9.975 0 0 0 18 26c5.514 0 10-4.486 10-10S23.514 6 18 6a9.975 9.975 0 0 0-7.715 3.637L8.743 8.363A11.969 11.969 0 0 1 18 4c6.617 0 12 5.383 12 12s-5.383 12-12 12Z" />
+                <path d="m23 16-7-7-1.414 1.414L19.172 15H2v2h17.172l-4.586 4.586L16 23l7-7z" />
+                <path d="M0 0h32v32H0z" fill="none" />
+            </svg>
+        ),
+        componentHeaderColor: "#FDD0A2",
+        componentPaletteGroupName: "Instrument",
+        execute: async (context: IDashboardComponentContext) => {
+            interface InstrumentVariableTypeConstructorParams {
+                id: string;
+            }
+
+            const instrument =
+                context.evalProperty<InstrumentVariableTypeConstructorParams>(
+                    "instrument"
+                );
+
+            if (instrument == undefined || typeof instrument.id != "string") {
+                context.throwError(`Invalid instrument property`);
+                return;
+            }
+
+            const { instruments } =
+                require("instrument/instrument-object") as typeof InstrumentObjectModule;
+
+            const instrumentObject = instruments.get(instrument.id);
+
+            if (!instrumentObject) {
+                context.throwError(`Instrument not found`);
+                return;
+            }
+
+            const data = context.evalProperty<string>("data");
+            if (typeof data != "string") {
+                context.throwError(`Data is not a string`);
+                return;
+            }
+
+            context.startAsyncExecution();
+
+            const connection = instrumentObject.connection;
+
+            try {
+                await connection.acquire(false);
+
+                try {
+                    await connection.command(data);
+                    context.endAsyncExecution();
+                } finally {
+                    connection.release();
+                }
+            } catch (err) {
+                context.endAsyncExecution();
+                context.throwError(err.toString());
+            }
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    instrument: string;
+    data: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            instrument: observable,
+            data: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: false
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.instrument) {
+            return null;
+        }
+
+        if (this.customInputs.find(input => input.name == this.instrument)) {
+            return null;
+        }
+
+        return (
+            <div className="body EezStudio_ScpiBody">
+                <pre>{this.instrument}</pre>
+                <pre>{this.data}</pre>
+            </div>
+        );
+    }
+}
+
+registerClass("InstrumentWrite", InstrumentWrite);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -52,6 +52,7 @@ import { CONF_ITEMS_BLOCK_SIZE } from "./CONF_ITEMS_BLOCK_SIZE";
 import { IUnit } from "eez-studio-shared/units";
 import type { BaseList } from "instrument/window/lists/store-renderer";
 import { unwatch } from "eez-studio-shared/notify";
+import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,8 +102,10 @@ export interface IScrapbookStore {
 export interface IInstrumentObject {
     id: string;
     connection: {
-        abortLongOperation(): void;
         isConnected: boolean;
+        enablePlotter?: () => void;
+        isPlotterEnabled: boolean;
+        abortLongOperation(): void;
     };
     listsProperty?: any;
     sendFileToInstrumentHandler?: () => void;
@@ -121,6 +124,7 @@ export interface IInstrumentObject {
     listsDwellDigitsProperty: number;
     listsVoltageDigitsProperty: number;
     listsCurrentDigitsProperty: number;
+    commandsProtocol: CommandsProtocolType;
 }
 
 interface IUndoManager {
@@ -1258,7 +1262,6 @@ export class History {
     removeActivityLogEntry(activityLogEntry: IActivityLogEntry) {
         const foundItem = this.findHistoryItemById(activityLogEntry.id);
         if (foundItem) {
-            console.log("removeActivityLogEntry foundItem", foundItem);
             this.items[foundItem.index].dispose();
             this.items.splice(foundItem.index, 1);
 

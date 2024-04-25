@@ -261,8 +261,10 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
             },
             () => {
                 if (this.propagate) {
-                    context.propagateValue("done", null);
-                    this.context.setComponentExecutionState(undefined);
+                    if (!this.isDone) {
+                        context.propagateValue("done", null);
+                        this.context.setComponentExecutionState(undefined);
+                    }
                     this.propagate = false;
                 }
                 this.isDone = true;
@@ -289,6 +291,7 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
     stop() {
         this.context.propagateValue("done", null);
         this.context.setComponentExecutionState(undefined);
+        this.isDone = true;
     }
 }
 

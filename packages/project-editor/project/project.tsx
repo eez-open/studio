@@ -44,6 +44,7 @@ import {
 import type { Action } from "project-editor/features/action/action";
 import type { ProjectVariables } from "project-editor/features/variable/variable";
 import type { Scpi } from "project-editor/features/scpi/scpi";
+import type { InstrumentCommands } from "project-editor/features/instrument-commands/instrument-commands";
 import type { Shortcuts } from "project-editor/features/shortcuts/project-shortcuts";
 import type { ExtensionDefinition } from "project-editor/features/extension-definitions/extension-definitions";
 import type { MicroPython } from "project-editor/features/micropython/micropython";
@@ -76,6 +77,7 @@ import { showSelectProjectExtensionDialog } from "home/extensions-manager/select
 export { ProjectType } from "project-editor/core/object";
 
 import { isArray } from "eez-studio-shared/util";
+import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
@@ -599,6 +601,7 @@ export const PROJECT_TYPE_NAMES = {
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
+    commandsProtocol: CommandsProtocolType;
     lvglVersion: "8.3" | "9.0";
     scpiDocFolder?: string;
     masterProject: string;
@@ -686,6 +689,19 @@ export class General extends EezObject {
                     general.projectType != ProjectType.UNDEFINED &&
                     general.projectType != ProjectType.RESOURCE &&
                     general.projectVersion == "v3"
+            },
+            {
+                name: "commandsProtocol",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "SCPI", label: "SCPI" },
+                    { id: "PROPRIETARY", label: "PROPRIETARY" }
+                ],
+                enumDisallowUndefined: true,
+                readOnlyInPropertyGrid: true,
+                disabled: (general: General) =>
+                    general.projectType != ProjectType.IEXT &&
+                    general.projectType != ProjectType.FIRMWARE
             },
             {
                 name: "lvglVersion",
@@ -950,6 +966,15 @@ export class General extends EezObject {
                 jsObject.displayHeight =
                     __eezProjectMigration.displayTargetHeight;
             }
+
+            if (
+                jsObject.projectType == ProjectType.IEXT ||
+                jsObject.projectType == ProjectType.FIRMWARE
+            ) {
+                if (jsObject.commandsProtocol == undefined) {
+                    jsObject.commandsProtocol = "SCPI";
+                }
+            }
         },
 
         updateObjectValueHook: (general: General, values: Partial<General>) => {
@@ -988,7 +1013,8 @@ export class General extends EezObject {
             keywords: observable,
             targetPlatform: observable,
             targetPlatformLink: observable,
-            resourceFiles: observable
+            resourceFiles: observable,
+            commandsProtocol: observable
         });
     }
 }
@@ -1339,6 +1365,7 @@ function getProjectClassInfo() {
                             projectFeature.key == "micropython" ||
                             projectFeature.key == "extensionDefinitions" ||
                             projectFeature.key == "scpi" ||
+                            projectFeature.key == "instrumentCommands" ||
                             projectFeature.key == "shortcuts"
                         ) {
                             return true;
@@ -1412,6 +1439,7 @@ export class Project extends EezObject {
     readme: Readme;
     bitmaps: Bitmap[];
     scpi: Scpi;
+    instrumentCommands: InstrumentCommands;
     shortcuts: Shortcuts;
     micropython: MicroPython;
     extensionDefinitions: ExtensionDefinition[];
@@ -1458,6 +1486,7 @@ export class Project extends EezObject {
             readme: observable,
             bitmaps: observable,
             scpi: observable,
+            instrumentCommands: observable,
             shortcuts: observable,
             micropython: observable,
             extensionDefinitions: observable,
@@ -1679,7 +1708,9 @@ export class Project extends EezObject {
         }
 
         if (flowSupport == undefined) {
-            flowSupport = this.projectTypeTraits.hasFlowSupport;
+            flowSupport =
+                this.projectTypeTraits.hasFlowSupport &&
+                !this.projectTypeTraits.isIEXT;
         }
 
         enableTabOnBorder(
@@ -1687,7 +1718,7 @@ export class Project extends EezObject {
             LayoutModels.STYLES_TAB_ID,
             LayoutModels.STYLES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            !this.projectTypeTraits.isIEXT
+            this.styles != undefined
         );
 
         enableTabOnBorder(
@@ -1711,7 +1742,7 @@ export class Project extends EezObject {
             LayoutModels.THEMES_TAB_ID,
             LayoutModels.THEMES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            !this.projectTypeTraits.isLVGL && !this.projectTypeTraits.isIEXT
+            !this.projectTypeTraits.isLVGL
         );
 
         enableTabOnBorder(
@@ -1729,6 +1760,28 @@ export class Project extends EezObject {
             FlexLayout.DockLocation.LEFT,
             this.scpi != undefined
         );
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditorForIEXT,
+            LayoutModels.SCPI_TAB_ID,
+            LayoutModels.SCPI_TAB,
+            FlexLayout.DockLocation.LEFT,
+            this.scpi != undefined
+        );
+
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.INSTRUMENT_COMMANDS_TAB_ID,
+            LayoutModels.INSTRUMENT_COMMANDS_TAB,
+            FlexLayout.DockLocation.LEFT,
+            this.instrumentCommands != undefined
+        );
+        enableTabOnBorder(
+            this._store.layoutModels.rootEditorForIEXT,
+            LayoutModels.INSTRUMENT_COMMANDS_TAB_ID,
+            LayoutModels.INSTRUMENT_COMMANDS_TAB,
+            FlexLayout.DockLocation.LEFT,
+            this.instrumentCommands != undefined
+        );
 
         enableTabOnBorder(
             this._store.layoutModels.rootEditor,
@@ -1745,7 +1798,6 @@ export class Project extends EezObject {
             FlexLayout.DockLocation.LEFT,
             this.changes != undefined
         );
-
         enableTabOnBorder(
             this._store.layoutModels.rootEditorForIEXT,
             LayoutModels.CHANGES_TAB_ID,

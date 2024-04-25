@@ -357,7 +357,8 @@ class AppStore implements IAppStore {
             abortLongOperation() {
                 // @todo
             },
-            isConnected: false
+            isConnected: false,
+            isPlotterEnabled: false
         },
         listsMinDwellProperty: 0,
         listsMaxDwellProperty: 0,
@@ -366,7 +367,8 @@ class AppStore implements IAppStore {
         listsMaxPointsProperty: 0,
         listsCurrentDigitsProperty: 0,
         listsDwellDigitsProperty: 0,
-        listsVoltageDigitsProperty: 0
+        listsVoltageDigitsProperty: 0,
+        commandsProtocol: "SCPI"
     };
     instrumentLists = [];
 

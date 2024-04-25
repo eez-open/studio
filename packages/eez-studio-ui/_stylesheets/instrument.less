@@ -341,6 +341,9 @@
     max-width: calc(100% - 40px);
     pre {
         user-select: text;
+        max-height: 800px;
+        overflow-y: auto;
+        padding-right: 10px;
     }
 }
 
@@ -490,6 +493,19 @@
     max-width: 100%;
     pre {
         user-select: text;
+    }
+}
+
+.EezStudio_PlotterHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
+    background-color: @plotterHistoryItemBackgroundColor;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+
+    table {
+        color: #212529 !important;
     }
 }
 

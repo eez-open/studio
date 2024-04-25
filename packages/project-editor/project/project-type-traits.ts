@@ -337,6 +337,16 @@ export function isNotLVGLProject(object: IEezObject) {
     return !project.projectTypeTraits.isLVGL;
 }
 
+export function isIEXTProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return project.projectTypeTraits.isIEXT;
+}
+
+export function isNotScpiProject(object: IEezObject) {
+    const projectStore = ProjectEditor.getProjectStore(object);
+    return !projectStore.isScpiInstrument;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createProjectTypeTraits(project: Project) {

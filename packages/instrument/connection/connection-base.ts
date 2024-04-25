@@ -22,6 +22,7 @@ export interface ConnectionStatus {
     state: ConnectionState;
     errorCode: ConnectionErrorCode;
     error: string | undefined;
+    isPlotterEnabled: boolean;
 }
 
 export interface ISendOptions {
@@ -73,6 +74,8 @@ export abstract class ConnectionBase {
         onSuccess?: () => void,
         onError?: (error: any) => void
     ): void;
+    abstract enablePlotter(): void;
+    abstract get isPlotterEnabled(): boolean;
     abstract abortLongOperation(): void;
 
     abstract doAcquire(
@@ -94,6 +97,9 @@ export abstract class ConnectionBase {
         onError?: (error: any) => void
     ): void;
     abstract release(): void;
+
+    abstract onRead(callback: (data: string | undefined) => void): void;
+    abstract offRead(callback: (data: string | undefined) => void): void;
 }
 
 export type IConnection = ConnectionBase;

@@ -18,6 +18,7 @@ import {
     getSdlResponseType
 } from "instrument/scpi";
 import { readTextFile } from "eez-studio-shared/util-electron";
+import { CommandLineEnding } from "eez-studio-shared/extensions/extension";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,6 +75,7 @@ export interface IInstrumentProperties {
             path: string;
         }[];
     };
+    commandLineEnding?: CommandLineEnding;
 }
 
 export interface IdfProperties {
@@ -130,7 +132,7 @@ async function buildPackageJson(idf: IdfProperties, properties: any) {
             id: idf.idfGuid,
             name: idf.extensionName,
             description: idf.idfDescription,
-            displayName: idf.idfName,
+            displayName: idf.idfName || idf.extensionName,
             version: idf.idfRevisionNumber,
             author: idf.idfAuthor,
             "eez-studio": properties
@@ -466,7 +468,8 @@ export async function buildInstrumentExtension(
     imageFilePath: string | undefined,
     scpiHelpFolderPath: string | undefined,
     projectFilePath: string,
-    properties: any
+    properties: any,
+    isScpiInstrument: boolean
 ) {
     const archiver = await import("archiver");
 
@@ -504,18 +507,31 @@ export async function buildInstrumentExtension(
         const packageJson = await buildPackageJson(idf, properties);
         archive.append(packageJson, { name: "package.json" });
 
-        const idfStr = buildIdf(idf);
-        archive.append(xmlFormatter(idfStr), { name: extensionName + ".idf" });
-
-        const sdl = buildSdl(idf, enums, subsystems);
-        archive.append(xmlFormatter(sdl), { name: extensionName + ".sdl" });
-
-        if (imageFilePath) {
-            archive.file(imageFilePath, { name: "image.png" });
+        if (isScpiInstrument) {
+            const idfStr = buildIdf(idf);
+            archive.append(xmlFormatter(idfStr), {
+                name: extensionName + ".idf"
+            });
         }
 
-        if (scpiHelpFolderPath) {
-            console.log(MODULE_DOCS_FOLDER);
+        if (isScpiInstrument) {
+            const sdl = buildSdl(idf, enums, subsystems);
+            archive.append(xmlFormatter(sdl), { name: extensionName + ".sdl" });
+        }
+
+        if (imageFilePath) {
+            if (imageFilePath.startsWith("data:image")) {
+                let i = imageFilePath.indexOf(",");
+                archive.append(
+                    Buffer.from(imageFilePath.slice(i + 1), "base64"),
+                    { name: "image.png" }
+                );
+            } else {
+                archive.file(imageFilePath, { name: "image.png" });
+            }
+        }
+
+        if (isScpiInstrument && scpiHelpFolderPath) {
             archive.glob(
                 "**/*",
                 {

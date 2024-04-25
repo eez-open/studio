@@ -54,6 +54,7 @@ import {
     ProjectType
 } from "project-editor/project/project";
 import { ButtonAction } from "eez-studio-ui/action";
+import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -111,7 +112,10 @@ interface IProjectType {
     targetPlatformLink?: string;
     language?: string;
     resourceFiles?: string[];
-    projectFileUrl?: string | { "8.3": string; "9.0": string };
+    projectFileUrl?:
+        | string
+        | { "8.3": string; "9.0": string }
+        | { SCPI: string; PROPRIETARY: string };
 }
 
 const SAVED_OPTIONS_VERSION = 12;
@@ -207,9 +211,12 @@ class WizardModel {
         gitClone: boolean;
         gitInit: boolean;
         lvglVersion: string;
+        commandsProtocol: string;
     };
 
     lvglVersion: "8.3" | "9.0" = "8.3";
+
+    commandsProtocol: CommandsProtocolType;
 
     constructor() {
         makeObservable(this, {
@@ -232,6 +239,7 @@ class WizardModel {
             gitClone: observable,
             gitInit: observable,
             lvglVersion: observable,
+            commandsProtocol: observable,
             selectedTemplateProject: computed,
             validateName: action,
             validateLocation: action,
@@ -285,6 +293,7 @@ class WizardModel {
                     this.gitClone = options.gitClone;
                     this.gitInit = options.gitInit;
                     this.lvglVersion = options.lvglVersion ?? "8.3";
+                    this.commandsProtocol = options.commandsProtocol ?? "SCPI";
                 }
             } catch (err) {
                 console.error(err);
@@ -299,7 +308,8 @@ class WizardModel {
             projectVersion: this.projectVersion,
             gitClone: this.gitClone,
             gitInit: this.gitInit,
-            lvglVersion: this.lvglVersion
+            lvglVersion: this.lvglVersion,
+            commandsProtocol: this.commandsProtocol
         };
     }
 
@@ -321,7 +331,8 @@ class WizardModel {
                     projectVersion: this.projectVersion,
                     gitClone: this.gitClone,
                     gitInit: this.gitInit,
-                    lvglVersion: this.lvglVersion
+                    lvglVersion: this.lvglVersion,
+                    commandsProtocol: this.commandsProtocol
                 })
             );
 
@@ -333,7 +344,8 @@ class WizardModel {
                 projectVersion: this.projectVersion,
                 gitClone: this.gitClone,
                 gitInit: this.gitInit,
-                lvglVersion: this.lvglVersion
+                lvglVersion: this.lvglVersion,
+                commandsProtocol: this.commandsProtocol
             };
         } else {
             window.localStorage.setItem(
@@ -353,7 +365,9 @@ class WizardModel {
                     gitClone: this.lastOptions.gitClone,
                     gitInit: this.lastOptions.gitInit,
 
-                    lvglVersion: this.lastOptions.lvglVersion
+                    lvglVersion: this.lastOptions.lvglVersion,
+
+                    commandsProtocol: this.lastOptions.commandsProtocol
                 })
             );
         }
@@ -714,8 +728,11 @@ class WizardModel {
                 image: IEXT_PROJECT_ICON(128),
                 projectName: "IEXT",
                 description: "Start your new IEXT project development here.",
-                projectFileUrl:
-                    "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/IEXT.eez-project"
+                projectFileUrl: {
+                    SCPI: "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/IEXT.eez-project",
+                    PROPRIETARY:
+                        "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/IEXT - PROPRIETARY.eez-project"
+                }
             }
         ].filter(projectType => this.searchFilter(projectType));
     }
@@ -969,10 +986,15 @@ class WizardModel {
             if (!urlDef) {
                 throw "Can't load EEZ-PROJECT file: no URL specified";
             }
+
             if (typeof urlDef == "string") {
                 projectFileUrl = urlDef;
             } else {
-                projectFileUrl = urlDef[this.lvglVersion];
+                if ("SCPI" in urlDef) {
+                    projectFileUrl = urlDef[this.commandsProtocol];
+                } else {
+                    projectFileUrl = urlDef[this.lvglVersion];
+                }
             }
         } else {
             projectFileUrl = this.type!;
@@ -1493,6 +1515,9 @@ class WizardModel {
                     ) {
                         projectTemplate.settings.general.lvglVersion =
                             this.lvglVersion;
+                    } else if (this.type == "IEXT") {
+                        projectTemplate.settings.general.commandsProtocol =
+                            this.commandsProtocol;
                     }
 
                     let projectTemplateStr = JSON.stringify(
@@ -2085,6 +2110,36 @@ const ProjectProperties = observer(
                                         >
                                             <option value="8.3">8.3</option>
                                             <option value="9.0">9.0</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                            {wizardModel.section == "templates" &&
+                                wizardModel.type == "IEXT" && (
+                                    <div className="mb-3">
+                                        <label
+                                            className="form-label"
+                                            htmlFor="new-project-wizard-commands-protocol"
+                                        >
+                                            Commands protocol
+                                        </label>
+                                        <select
+                                            id="new-project-wizard-commands-protocol"
+                                            className="form-select"
+                                            onChange={action(
+                                                event =>
+                                                    (wizardModel.commandsProtocol =
+                                                        event.target.value ==
+                                                        "PROPRIETARY"
+                                                            ? "PROPRIETARY"
+                                                            : "SCPI")
+                                            )}
+                                            value={wizardModel.commandsProtocol}
+                                        >
+                                            <option value="SCPI">SCPI</option>
+                                            <option value="PROPRIETARY">
+                                                PROPRIETARY
+                                            </option>
                                         </select>
                                     </div>
                                 )}

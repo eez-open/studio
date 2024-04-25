@@ -1053,7 +1053,7 @@ const EEZChartElement = observer(
             };
         }
 
-        get eezChart() {
+        get eezChart(): EEZChart {
             const { widget, flowContext } = this.props;
 
             if (widget.chartType === "single") {

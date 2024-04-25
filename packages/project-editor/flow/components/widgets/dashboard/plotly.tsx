@@ -79,16 +79,18 @@ interface InputData {
 }
 
 class ExecutionState {
+    updated: number = 0;
     valuesMap: Map<number, number[]>;
     values: InputData[] = [];
     maxPoints: number = 0;
     labels: string[] = [];
+    visible: boolean[] = [];
+
+    debounceTimerId: any;
 
     constructor() {
         makeObservable(this, {
-            values: observable,
-            maxPoints: observable,
-            labels: observable
+            updated: observable
         });
     }
 }
@@ -97,8 +99,6 @@ const LineChartElement = observer(
     class LineChartElement extends React.Component<{
         widget: LineChartWidget;
         flowContext: IFlowContext;
-        width: number;
-        height: number;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -110,6 +110,18 @@ const LineChartElement = observer(
         dispose1: IReactionDisposer | undefined;
         dispose2: IReactionDisposer | undefined;
 
+        clientWidth = 0;
+        clientHeight = 0;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                clientWidth: observable,
+                clientHeight: observable
+            });
+        }
+
         get data(): PlotlyModule.Data[] {
             const { widget, flowContext } = this.props;
 
@@ -118,45 +130,64 @@ const LineChartElement = observer(
                     widget
                 );
 
-            return widget.lines.map((line, i) => {
-                let name;
+            if (!executionState) {
+                return widget.lines.map((line, i) => {
+                    let name: string;
 
-                if (executionState) {
-                    name = executionState.labels[i];
-                } else {
                     try {
                         name = evalConstantExpression(
                             flowContext.projectStore.project,
                             line.label
                         ).value;
                     } catch (err) {
-                        name = undefined;
+                        name = "";
                     }
-                }
 
-                return {
-                    x: executionState
-                        ? executionState.values.map(
-                              inputValue => inputValue.xValue
-                          )
-                        : flowContext.flowState
-                        ? []
-                        : [1, 2, 3, 4],
-                    y: executionState
-                        ? executionState.values.map(
-                              inputValue => inputValue.lineValues[i]
-                          )
-                        : flowContext.flowState
-                        ? []
-                        : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
-                    type: "scatter",
-                    name,
-                    showlegend: widget.showLegend,
-                    line: {
-                        color: line.color
+                    return {
+                        x: flowContext.flowState ? [] : [1, 2, 3, 4],
+                        y: flowContext.flowState
+                            ? []
+                            : [i + 1, (i + 1) * 2, (i + 1) * 3, (i + 1) * 4],
+                        type: "scatter",
+                        name,
+                        showlegend: widget.showLegend,
+                        line: {
+                            color: line.color
+                        }
+                    };
+                });
+            }
+
+            const data: (PlotlyModule.Data | undefined)[] = widget.lines.map(
+                (line, i) => {
+                    let name: string;
+
+                    if (!executionState.visible[i]) {
+                        return undefined;
                     }
-                };
-            });
+
+                    name = executionState.labels[i];
+
+                    return {
+                        x: executionState.values.map(
+                            inputValue => inputValue.xValue
+                        ),
+                        y: executionState.values.map(
+                            inputValue => inputValue.lineValues[i]
+                        ),
+                        type: "scatter",
+                        name,
+                        showlegend: widget.showLegend,
+                        line: {
+                            color: line.color
+                        }
+                    };
+                }
+            );
+
+            return data.filter(
+                line => line != undefined
+            ) as PlotlyModule.Data[];
         }
 
         get emptyData(): PlotlyModule.Data[] {
@@ -167,7 +198,15 @@ const LineChartElement = observer(
                     widget
                 );
 
-            return widget.lines.map((line, i) => {
+            const lines = widget.lines.filter((line, i) => {
+                if (executionState) {
+                    return executionState.visible[i];
+                } else {
+                    return true;
+                }
+            });
+
+            return lines.map((line, i) => {
                 let name;
 
                 if (executionState) {
@@ -351,8 +390,8 @@ const LineChartElement = observer(
                 this.config
             );
             this.plotlyEl = el;
-            this.plotlyWidth = this.props.width;
-            this.plotlyHeight = this.props.height;
+            this.plotlyWidth = this.clientWidth;
+            this.plotlyHeight = this.clientHeight;
 
             this.dispose1 = reaction(
                 () => {
@@ -370,46 +409,66 @@ const LineChartElement = observer(
                 }
             );
 
-            this.dispose2 = autorun(
-                () => {
-                    const { widget, flowContext } = this.props;
+            this.dispose2 = autorun(() => {
+                const { widget, flowContext } = this.props;
 
-                    const executionState =
-                        flowContext.flowState?.getComponentExecutionState<ExecutionState>(
-                            widget
-                        );
-                    if (!executionState) {
-                        return;
+                const executionState =
+                    flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                        widget
+                    );
+                if (!executionState) {
+                    return;
+                }
+
+                executionState.updated;
+
+                (async () => {
+                    this.plotly = await Plotly().react(
+                        el,
+                        this.data,
+                        this.layout,
+                        this.config
+                    );
+                })();
+            });
+        }
+
+        updateClientSize() {
+            if (this.ref.current) {
+                const parentElement = this.ref.current.parentElement;
+                if (parentElement) {
+                    const clientWidth = parentElement.clientWidth;
+                    const clientHeight = parentElement.clientHeight;
+                    if (
+                        clientWidth != this.clientWidth ||
+                        clientHeight != this.clientHeight
+                    ) {
+                        runInAction(() => {
+                            this.clientWidth = clientWidth;
+                            this.clientHeight = clientHeight;
+                        });
                     }
-
-                    executionState.values;
-
-                    (async () => {
-                        this.plotly = await Plotly().react(
-                            el,
-                            this.data,
-                            this.layout,
-                            this.config
-                        );
-                    })();
-                },
-                { delay: 16 }
-            );
+                }
+            }
         }
 
         componentDidMount() {
             if (this.ref.current) {
+                this.updateClientSize();
+
                 this.createChart(this.ref.current);
             }
         }
 
         async componentDidUpdate() {
             if (this.ref.current) {
+                this.updateClientSize();
+
                 if (
                     !this.plotly ||
                     !this.props.flowContext.flowState ||
-                    this.props.width != this.plotlyWidth ||
-                    this.props.height != this.plotlyHeight
+                    this.clientWidth != this.plotlyWidth ||
+                    this.clientHeight != this.plotlyHeight
                 ) {
                     this.createChart(this.ref.current);
                 } else {
@@ -440,14 +499,14 @@ const LineChartElement = observer(
         }
 
         render() {
-            const { width, height, flowContext } = this.props;
+            const { flowContext } = this.props;
 
             return (
                 <div
                     ref={this.ref}
                     style={{
-                        width,
-                        height
+                        width: this.clientWidth,
+                        height: this.clientHeight
                     }}
                     className={classNames("EezStudio_Plotly", {
                         interactive: !!flowContext.projectStore.runtime
@@ -462,8 +521,10 @@ class LineChartLine extends EezObject {
     label: string;
     color: string;
     value: string;
+    visible: string;
 
     static classInfo: ClassInfo = {
+        listLabel: (object: LineChartLine) => object.label,
         properties: [
             makeExpressionProperty(
                 {
@@ -483,8 +544,20 @@ class LineChartLine extends EezObject {
                     type: PropertyType.MultilineText
                 },
                 "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "visible",
+                    type: PropertyType.MultilineText
+                },
+                "boolean"
             )
         ],
+        beforeLoadHook: (object: LineChartLine, jsObject: any) => {
+            if (jsObject.visible == undefined) {
+                jsObject.visible = "true";
+            }
+        },
         check: (lineChartTrace: LineChartLine, messages: IMessage[]) => {
             try {
                 checkExpression(
@@ -515,6 +588,21 @@ class LineChartLine extends EezObject {
                     )
                 );
             }
+
+            try {
+                checkExpression(
+                    getParent(getParent(lineChartTrace)!)! as LineChartWidget,
+                    lineChartTrace.visible
+                );
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid expression: ${err}`,
+                        getChildOfObject(lineChartTrace, "visible")
+                    )
+                );
+            }
         },
         defaultValue: {
             color: "#333333"
@@ -527,7 +615,8 @@ class LineChartLine extends EezObject {
         makeObservable(this, {
             label: observable,
             color: observable,
-            value: observable
+            value: observable,
+            visible: observable
         });
     }
 }
@@ -556,6 +645,7 @@ export class LineChartWidget extends Widget {
                 name: "lines",
                 type: PropertyType.Array,
                 typeClass: LineChartLine,
+                arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
@@ -804,6 +894,8 @@ export class LineChartWidget extends Widget {
 
             const labels = context.getExpressionListParam(0);
 
+            const visible = context.getExpressionListParam(16);
+
             let executionState =
                 context.getComponentExecutionState<ExecutionState>();
 
@@ -812,9 +904,8 @@ export class LineChartWidget extends Widget {
                 context.setComponentExecutionState(executionState);
             }
 
-            runInAction(() => {
-                executionState!.labels = labels;
-            });
+            executionState!.labels = labels;
+            executionState!.visible = visible;
 
             if (resetInputValue !== undefined) {
                 context.clearInputValue("reset");
@@ -823,11 +914,9 @@ export class LineChartWidget extends Widget {
                     executionState.valuesMap.clear();
                 }
 
-                runInAction(() => {
-                    executionState!.values = [];
-                });
+                executionState!.values = [];
             } else {
-                const maxPoints = context.evalProperty("maxPoints");
+                let maxPoints = context.evalProperty("maxPoints");
 
                 const xValue = context.evalProperty("xValue");
                 if (xValue != undefined) {
@@ -840,10 +929,7 @@ export class LineChartWidget extends Widget {
 
                     let xValues = [...executionState.valuesMap.keys()];
                     xValues.sort((a, b) => a - b);
-                    while (
-                        xValues.length > 0 &&
-                        xValues.length > executionState.maxPoints
-                    ) {
+                    while (xValues.length > 0 && xValues.length > maxPoints) {
                         executionState.valuesMap.delete(xValues.shift()!);
                     }
 
@@ -852,12 +938,19 @@ export class LineChartWidget extends Widget {
                         lineValues: executionState!.valuesMap.get(xValue)!
                     }));
 
-                    runInAction(() => {
-                        executionState!.maxPoints = maxPoints;
-                        executionState!.values = values;
-                    });
+                    executionState!.maxPoints = maxPoints;
+                    executionState!.values = values;
                 }
             }
+
+            if (executionState.debounceTimerId) {
+                clearTimeout(executionState.debounceTimerId);
+            }
+            executionState.debounceTimerId = setTimeout(() => {
+                runInAction(() => {
+                    executionState!.updated++;
+                });
+            }, 16);
         }
     });
 
@@ -926,12 +1019,7 @@ export class LineChartWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <LineChartElement
-                    widget={this}
-                    flowContext={flowContext}
-                    width={width}
-                    height={height}
-                />
+                <LineChartElement widget={this} flowContext={flowContext} />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -964,6 +1052,22 @@ export class LineChartWidget extends Widget {
                     MessageType.ERROR,
                     err,
                     getChildOfObject(this, "value")
+                );
+
+                dataBuffer.writeUint16NonAligned(makeEndInstruction());
+            }
+        });
+
+        dataBuffer.writeArray(this.lines, line => {
+            try {
+                // as property
+                buildExpression(assets, dataBuffer, this, line.visible);
+            } catch (err) {
+                assets.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    err,
+                    getChildOfObject(this, "visible")
                 );
 
                 dataBuffer.writeUint16NonAligned(makeEndInstruction());

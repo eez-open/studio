@@ -423,17 +423,21 @@ export function log(
         activityLogEntry.message = "";
     }
 
-    if (activityLogEntry.oid) {
-        const row = db
-            .prepare(`SELECT "recordHistory" FROM "instrument" WHERE id = ?`)
-            .get(activityLogEntry.oid);
-        activityLogEntry.temporary = row
-            ? row.recordHistory
-                ? false
-                : true
-            : false;
-    } else {
-        activityLogEntry.temporary = false;
+    if (activityLogEntry.temporary == undefined) {
+        if (activityLogEntry.oid) {
+            const row = db
+                .prepare(
+                    `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
+                )
+                .get(activityLogEntry.oid);
+            activityLogEntry.temporary = row
+                ? row.recordHistory
+                    ? false
+                    : true
+                : false;
+        } else {
+            activityLogEntry.temporary = false;
+        }
     }
 
     const newActivityLogEntry = store.createObject(activityLogEntry, options);

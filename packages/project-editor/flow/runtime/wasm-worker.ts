@@ -610,6 +610,15 @@ export function onWasmFlowRuntimeTerminate(
     wasmFlowRuntimeTerminateCallbacks.push(callback);
 }
 
+export function offWasmFlowRuntimeTerminate(
+    callback: WasmFlowRuntimeTerminateCallback
+) {
+    const i = wasmFlowRuntimeTerminateCallbacks.indexOf(callback);
+    if (i != -1) {
+        wasmFlowRuntimeTerminateCallbacks.splice(i, 1);
+    }
+}
+
 function fireTerminateEvent(WasmFlowRuntime: IWasmFlowRuntime) {
     for (const callback of wasmFlowRuntimeTerminateCallbacks) {
         callback(WasmFlowRuntime);

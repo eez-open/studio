@@ -53,6 +53,7 @@ export class LayoutModels extends AbstractLayoutModels {
     static THEMES_TAB_ID = "themes";
     static TEXTS_TAB_ID = "texts";
     static SCPI_TAB_ID = "scpi";
+    static INSTRUMENT_COMMANDS_TAB_ID = "instrument-commands";
     static EXTENSION_DEFINITIONS_TAB_ID = "iext";
     static CHANGES_TAB_ID = "changes";
     static MICRO_PYTHON_TAB_ID = "micro-python";
@@ -134,6 +135,15 @@ export class LayoutModels extends AbstractLayoutModels {
         name: "SCPI",
         id: LayoutModels.SCPI_TAB_ID,
         component: "scpi",
+        icon: "material:navigate_next"
+    };
+
+    static INSTRUMENT_COMMANDS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Instrument Commands",
+        id: LayoutModels.INSTRUMENT_COMMANDS_TAB_ID,
+        component: "instrument-commands",
         icon: "material:navigate_next"
     };
 
@@ -272,6 +282,7 @@ export class LayoutModels extends AbstractLayoutModels {
             children: [
                 LayoutModels.TEXTS_TAB,
                 LayoutModels.SCPI_TAB,
+                LayoutModels.INSTRUMENT_COMMANDS_TAB,
                 LayoutModels.EXTENSION_DEFINITIONS_TAB,
                 LayoutModels.CHANGES_TAB
             ]
@@ -471,6 +482,14 @@ export class LayoutModels extends AbstractLayoutModels {
                                         weight: 5,
                                         enableClose: false,
                                         children: [LayoutModels.SCPI_TAB]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 5,
+                                        enableClose: false,
+                                        children: [
+                                            LayoutModels.INSTRUMENT_COMMANDS_TAB
+                                        ]
                                     }
                                 ]
                             },
