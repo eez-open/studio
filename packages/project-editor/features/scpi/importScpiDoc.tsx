@@ -634,7 +634,7 @@ class FindChanges {
     getCommandsFromScpiDoc() {
         return new Promise<Subsystem[]>((resolve, reject) => {
             if (
-                this.projectStore.project.settings.general.scpiDocFolder ===
+                this.projectStore.project.settings.general.commandsDocFolder ===
                 undefined
             ) {
                 reject("SCPI help folder is not defined");
@@ -642,7 +642,7 @@ class FindChanges {
             }
 
             let scpiHelpFolderPath = this.projectStore.getAbsoluteFilePath(
-                this.projectStore.project.settings.general.scpiDocFolder
+                this.projectStore.project.settings.general.commandsDocFolder
             );
 
             fs.exists(scpiHelpFolderPath, (exists: boolean) => {

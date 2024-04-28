@@ -1,4 +1,8 @@
-export type IActionType = "scpi-commands" | "javascript" | "micropython";
+export type IActionType =
+    | "scpi-commands"
+    | "commands"
+    | "javascript"
+    | "micropython";
 
 export interface IAction {
     type: IActionType;
@@ -37,6 +41,7 @@ export interface IShortcutsStore {
         codeErrorColumnNumber?: number,
         hideCodeEditor?: boolean
     ): void;
+    isScpiInstrument: boolean;
 }
 
 export interface IGroup {

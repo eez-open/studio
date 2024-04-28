@@ -142,6 +142,15 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
             } else {
                 scpiSubsystems = [];
                 scpiEnums = [];
+                if (projectStore.project.instrumentCommands) {
+                    instrumentIdf.instrumentCommands =
+                        projectStore.project.instrumentCommands.commands.map(
+                            command => ({
+                                command: command.command,
+                                helpLink: command.helpLink
+                            })
+                        );
+                }
             }
 
             const { buildInstrumentExtension } = await import(
@@ -163,9 +172,9 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
                         : projectStore.getAbsoluteFilePath(instrumentIdf.image)
                     : undefined,
 
-                projectStore.project.settings.general.scpiDocFolder &&
+                projectStore.project.settings.general.commandsDocFolder &&
                     projectStore.getAbsoluteFilePath(
-                        projectStore.project.settings.general.scpiDocFolder
+                        projectStore.project.settings.general.commandsDocFolder
                     ),
 
                 projectStore.getAbsoluteFilePath("."),

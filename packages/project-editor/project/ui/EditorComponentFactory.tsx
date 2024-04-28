@@ -18,6 +18,7 @@ import {
     PageTabState
 } from "project-editor/features/page/PageEditor";
 import { ScpiHelpPreview } from "project-editor/features/scpi/ScpiNavigation";
+import { InstrumentCommandHelpPreview } from "project-editor/features/instrument-commands/InstrumentCommandsNavigation";
 import { ShortcutsEditor } from "project-editor/features/shortcuts/project-shortcuts";
 import { SettingsEditor } from "./SettingsNavigation";
 import { Page } from "project-editor/features/page/page";
@@ -64,6 +65,14 @@ export function getEditorComponent(
             object: project.scpi,
             subObject: object,
             EditorComponent: ScpiHelpPreview
+        };
+    }
+
+    if (isAncestor(object, project.instrumentCommands)) {
+        return {
+            object: project.instrumentCommands,
+            subObject: object,
+            EditorComponent: InstrumentCommandHelpPreview
         };
     }
 

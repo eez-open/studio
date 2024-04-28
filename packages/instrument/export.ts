@@ -95,6 +95,10 @@ export interface IdfProperties {
     sdlFriendlyName: string;
     //properties: IInstrumentProperties;
     useDashboardProjects: string[];
+    instrumentCommands?: {
+        command: string;
+        helpLink: string | undefined;
+    }[];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +130,8 @@ async function buildPackageJson(idf: IdfProperties, properties: any) {
             icon: json.settings.general.icon
         });
     }
+
+    properties.instrumentCommands = idf.instrumentCommands;
 
     return JSON.stringify(
         {
@@ -466,7 +472,7 @@ export async function buildInstrumentExtension(
     enums: IEnum[],
     moduleFilePath: string,
     imageFilePath: string | undefined,
-    scpiHelpFolderPath: string | undefined,
+    commandsDocFolderPath: string | undefined,
     projectFilePath: string,
     properties: any,
     isScpiInstrument: boolean
@@ -531,11 +537,11 @@ export async function buildInstrumentExtension(
             }
         }
 
-        if (isScpiInstrument && scpiHelpFolderPath) {
+        if (commandsDocFolderPath) {
             archive.glob(
                 "**/*",
                 {
-                    cwd: scpiHelpFolderPath,
+                    cwd: commandsDocFolderPath,
                     ignore: [".*"]
                 },
                 {

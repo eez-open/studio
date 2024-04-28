@@ -290,7 +290,10 @@ export const ShortcutDialog = observer(
         }
 
         get codeEditorMode() {
-            if (this.shortcut.action!.type === "scpi-commands") {
+            if (
+                this.shortcut.action!.type === "scpi-commands" ||
+                this.shortcut.action!.type === "commands"
+            ) {
                 return "scpi";
             } else {
                 return "javascript";
@@ -387,16 +390,24 @@ export const ShortcutDialog = observer(
 
                         {!this.isExtensionShortcut && (
                             <SelectProperty
-                                name={"Action type"}
+                                name="Action type"
                                 value={this.shortcut.action!.type}
                                 onChange={action(
                                     (value: IActionType) =>
                                         (this.shortcut.action!.type = value)
                                 )}
                             >
-                                <option value="scpi-commands">SCPI</option>
+                                {this.props.shortcutsStore.isScpiInstrument ? (
+                                    <option value="scpi-commands">SCPI</option>
+                                ) : (
+                                    <option value="commands">Commands</option>
+                                )}
                                 <option value="javascript">JavaScript</option>
-                                <option value="micropython">MicroPython</option>
+                                {this.props.shortcutsStore.isScpiInstrument && (
+                                    <option value="micropython">
+                                        MicroPython
+                                    </option>
+                                )}
                             </SelectProperty>
                         )}
                         {this.isExtensionShortcut && (
@@ -406,6 +417,9 @@ export const ShortcutDialog = observer(
                                     this.shortcut.action!.type ===
                                     "scpi-commands"
                                         ? "SCPI"
+                                        : this.shortcut.action!.type ===
+                                          "commands"
+                                        ? "Commands"
                                         : this.shortcut.action!.type ===
                                           "javascript"
                                         ? "JavaScript"

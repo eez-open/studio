@@ -41,7 +41,7 @@ export class RuntimeSettings {
         }
 
         let value = persistentVariables[variable.fullName];
-        if (!value) {
+        if (value == undefined) {
             return undefined;
         }
 

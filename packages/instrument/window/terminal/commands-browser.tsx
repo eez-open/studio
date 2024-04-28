@@ -47,7 +47,10 @@ function insertScpiCommandIntoCode(
 
     let text;
 
-    if (scriptsModel.selectedScript.action.type === "scpi-commands") {
+    if (
+        scriptsModel.selectedScript.action.type === "scpi-commands" ||
+        scriptsModel.selectedScript.action.type === "commands"
+    ) {
         text = scpiCommand;
     } else if (scriptsModel.selectedScript.action.type === "javascript") {
         text = `connection.command("${scpiCommand}");`;
@@ -72,7 +75,10 @@ function insertScpiQueryIntoCode(
 
     let text;
 
-    if (scriptsModel.selectedScript.action.type === "scpi-commands") {
+    if (
+        scriptsModel.selectedScript.action.type === "scpi-commands" ||
+        scriptsModel.selectedScript.action.type === "commands"
+    ) {
         text = scpiQuery;
     } else if (scriptsModel.selectedScript.action.type === "javascript") {
         text = `var <name> = await connection.query("${scpiQuery}");`;

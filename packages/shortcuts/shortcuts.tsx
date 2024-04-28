@@ -96,7 +96,9 @@ export const ShortcutsToolbarButtons = observer(
                 {
                     name: "",
                     action: {
-                        type: "scpi-commands",
+                        type: this.props.shortcutsStore.isScpiInstrument
+                            ? "scpi-commands"
+                            : "commands",
                         data: ""
                     },
                     keybinding: "",
@@ -361,6 +363,8 @@ class ShortcutRow implements IRow {
     get action() {
         return this.shortcut.action.type === "scpi-commands"
             ? "SCPI"
+            : this.shortcut.action.type === "commands"
+            ? "Commands"
             : this.shortcut.action.type === "javascript"
             ? "JavaScript"
             : "MicroPython";

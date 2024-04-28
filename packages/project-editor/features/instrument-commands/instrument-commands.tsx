@@ -19,17 +19,15 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class InstrumentCommand extends EezObject {
-    name: string;
+    command: string;
     description?: string;
     helpLink?: string;
-    command: string;
 
     static classInfo: ClassInfo = {
         properties: [
             {
-                name: "name",
-                type: PropertyType.String,
-                unique: true
+                name: "command",
+                type: PropertyType.String
             },
             {
                 name: "description",
@@ -38,19 +36,16 @@ export class InstrumentCommand extends EezObject {
             {
                 name: "helpLink",
                 type: PropertyType.String
-            },
-            {
-                name: "command",
-                type: PropertyType.String
             }
         ],
+        label: (object: InstrumentCommand) => object.command,
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Instrument Command",
                     fields: [
                         {
-                            name: "name",
+                            name: "command",
                             type: "string",
                             validators: [
                                 validators.required,
@@ -63,7 +58,7 @@ export class InstrumentCommand extends EezObject {
             });
 
             const scpiSubsystemProperties: Partial<InstrumentCommand> = {
-                name: result.values.name
+                command: result.values.command
             };
 
             const project = ProjectEditor.getProject(parent);
@@ -82,7 +77,6 @@ export class InstrumentCommand extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
-            name: observable,
             description: observable,
             helpLink: observable,
             command: observable

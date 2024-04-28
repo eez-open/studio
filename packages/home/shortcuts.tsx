@@ -49,6 +49,8 @@ export const allShortcuts = computed(() => {
 });
 
 class ShortcutsStore {
+    isScpiInstrument = true;
+
     constructor() {
         makeObservable(this, {
             shortcuts: computed

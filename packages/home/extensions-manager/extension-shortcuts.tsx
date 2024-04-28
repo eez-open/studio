@@ -10,10 +10,9 @@ import { IExtension } from "eez-studio-shared/extensions/extension";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ExtensionShortcuts = observer(
-    class ExtensionShortcuts extends React.Component<
-        { extension: IExtension },
-        {}
-    > {
+    class ExtensionShortcuts extends React.Component<{
+        extension: IExtension;
+    }> {
         constructor(props: { extension: IExtension }) {
             super(props);
 
@@ -29,7 +28,9 @@ export const ExtensionShortcuts = observer(
                 shortcutsMap.set(shortcut.id, shortcut)
             );
             return {
-                shortcuts: observable.map(shortcutsMap)
+                shortcuts: observable.map(shortcutsMap),
+                isScpiInstrument:
+                    this.props.extension.commandsProtocol == "SCPI"
             };
         }
 

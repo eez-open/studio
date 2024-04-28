@@ -170,20 +170,32 @@ export class ScriptsModel implements IModel {
                     {
                         name: "type",
                         type: "enum",
-                        enumItems: [
-                            {
-                                id: "scpi-commands",
-                                label: "SCPI"
-                            },
-                            {
-                                id: "javascript",
-                                label: "JavaScript"
-                            },
-                            {
-                                id: "micropython",
-                                label: "MicroPython"
-                            }
-                        ],
+                        enumItems:
+                            this.appStore.instrument.commandsProtocol == "SCPI"
+                                ? [
+                                      {
+                                          id: "scpi-commands",
+                                          label: "SCPI"
+                                      },
+                                      {
+                                          id: "javascript",
+                                          label: "JavaScript"
+                                      },
+                                      {
+                                          id: "micropython",
+                                          label: "MicroPython"
+                                      }
+                                  ]
+                                : [
+                                      {
+                                          id: "commands",
+                                          label: "Commands"
+                                      },
+                                      {
+                                          id: "javascript",
+                                          label: "JavaScript"
+                                      }
+                                  ],
                         validators: [validators.required]
                     }
                 ]
@@ -191,7 +203,10 @@ export class ScriptsModel implements IModel {
 
             values: {
                 name: "",
-                type: "scpi-commands"
+                type:
+                    this.appStore.instrument.commandsProtocol == "SCPI"
+                        ? "scpi-commands"
+                        : "commands"
             }
         })
             .then(result => {
@@ -296,7 +311,8 @@ export class ScriptViewComponent extends React.Component<
                     }}
                     mode={
                         scriptsModel.selectedScript.action.type ===
-                        "scpi-commands"
+                            "scpi-commands" ||
+                        scriptsModel.selectedScript.action.type === "commands"
                             ? "scpi"
                             : scriptsModel.selectedScript.action.type ===
                               "javascript"
@@ -329,6 +345,8 @@ export const ScriptView = observer(ScriptViewComponent);
 function getScriptIcon(script: IShortcut) {
     if (script.action.type === "scpi-commands") {
         return <Icon icon="../instrument/_images/scpi.png" />;
+    } else if (script.action.type === "commands") {
+        return <Icon icon="../instrument/_images/commands.png" />;
     } else if (script.action.type === "javascript") {
         return <Icon icon="../instrument/_images/javascript.png" />;
     } else {
@@ -565,6 +583,7 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                 scriptsModel.selectedScript &&
                 appStore.instrument.connection.isConnected &&
                 (scriptsModel.selectedScript.action.type === "scpi-commands" ||
+                    scriptsModel.selectedScript.action.type === "commands" ||
                     scriptsModel.selectedScript.action.type ===
                         "javascript") && (
                     <ButtonAction

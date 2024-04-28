@@ -603,7 +603,7 @@ export class General extends EezObject {
     projectType: ProjectType;
     commandsProtocol: CommandsProtocolType;
     lvglVersion: "8.3" | "9.0";
-    scpiDocFolder?: string;
+    commandsDocFolder?: string;
     masterProject: string;
     extensions: ExtensionDirective[];
     imports: ImportDirective[];
@@ -716,10 +716,16 @@ export class General extends EezObject {
                     general.projectType != ProjectType.LVGL
             },
             {
-                name: "scpiDocFolder",
-                displayName: "SCPI documentation folder",
+                name: "commandsDocFolder",
+                displayName: (object: General) =>
+                    getProject(object).scpi
+                        ? "SCPI documentation folder"
+                        : "Commands documentation folder",
                 type: PropertyType.RelativeFolder,
-                disabled: (object: IEezObject) => !getProject(object).scpi
+                disabled: (object: IEezObject) => {
+                    const project = getProject(object);
+                    return !project.scpi && !project.instrumentCommands;
+                }
             },
             {
                 name: "masterProject",
@@ -967,6 +973,10 @@ export class General extends EezObject {
                     __eezProjectMigration.displayTargetHeight;
             }
 
+            if (jsObject.commandsDocFolder == undefined) {
+                jsObject.commandsDocFolder = jsObject.scpiDocFolder;
+            }
+
             if (
                 jsObject.projectType == ProjectType.IEXT ||
                 jsObject.projectType == ProjectType.FIRMWARE
@@ -1000,7 +1010,7 @@ export class General extends EezObject {
             projectVersion: observable,
             projectType: observable,
             lvglVersion: observable,
-            scpiDocFolder: observable,
+            commandsDocFolder: observable,
             masterProject: observable,
             extensions: observable,
             imports: observable,
@@ -1026,7 +1036,6 @@ registerClass("General", General);
 export class Settings extends EezObject {
     general: General;
     build: Build;
-    scpiHelpFolder?: string;
 
     static classInfo: ClassInfo = {
         label: () => "Settings",
@@ -1063,8 +1072,7 @@ export class Settings extends EezObject {
 
         makeObservable(this, {
             general: observable,
-            build: observable,
-            scpiHelpFolder: observable
+            build: observable
         });
     }
 }

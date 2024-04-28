@@ -199,6 +199,10 @@ export class ShortcutsStore {
         });
     }
 
+    get isScpiInstrument() {
+        return this.appStore.instrument.commandsProtocol == "SCPI";
+    }
+
     instrumentShortcuts = computed(() => {
         let shortcutsMap = new Map<string, IShortcut>();
 

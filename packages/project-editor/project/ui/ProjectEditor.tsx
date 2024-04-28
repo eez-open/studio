@@ -37,6 +37,7 @@ import { FontsTab } from "project-editor/features/font/FontsNavigation";
 import { BitmapsTab } from "project-editor/features/bitmap/BitmapsNavigation";
 import { TextsTab } from "project-editor/features/texts/navigation";
 import { ScpiTab } from "project-editor/features/scpi/ScpiNavigation";
+import { InstrumentCommandsList } from "project-editor/features/instrument-commands/InstrumentCommandsNavigation";
 import { ExtensionDefinitionsTab } from "project-editor/features/extension-definitions/extension-definitions";
 import { ChangesTab } from "project-editor/features/changes/navigation";
 import { SearchPanel } from "project-editor/project/ui/SearchPanel";
@@ -171,6 +172,10 @@ const Content = observer(
 
             if (component === "scpi") {
                 return <ScpiTab />;
+            }
+
+            if (component === "instrument-commands") {
+                return <InstrumentCommandsList />;
             }
 
             if (component === "extension-definitions") {

@@ -141,7 +141,9 @@ export const ShortcutsEditor = observer(
                             />
                         </ProjectContext.Provider>
                     );
-                }
+                },
+
+                isScpiInstrument: this.context.isScpiInstrument
             };
         }
 

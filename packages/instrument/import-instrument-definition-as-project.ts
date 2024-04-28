@@ -135,7 +135,7 @@ export async function importInstrumentDefinitionAsProject(
 
         const project = projectStore.getNewProject();
 
-        project.settings.general.scpiDocFolder = extensionName;
+        project.settings.general.commandsDocFolder = extensionName;
         project.settings.build.destinationFolder = ".";
 
         (project as any).extensionDefinitions = createExtensionDefinitions(

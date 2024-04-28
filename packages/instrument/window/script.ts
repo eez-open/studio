@@ -97,6 +97,43 @@ function prepareScpiModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class CommandsSession {
+    constructor(shortcut: IShortcut) {}
+
+    set _scriptDone(value: boolean) {}
+
+    set scriptError(value: string) {
+        notification.error(value);
+    }
+
+    _stop() {}
+}
+
+function prepareCommandsModules(
+    appStore: InstrumentAppStore,
+    shortcut: IShortcut
+) {
+    const connection = appStore.instrument.connection;
+
+    return {
+        session: new CommandsSession(shortcut),
+
+        connection: {
+            async acquire() {
+                await connection.acquire(true);
+            },
+            release() {
+                connection.release();
+            },
+            command(command: string) {
+                return connection.command(command);
+            }
+        }
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class JavaScriptSession {
     scriptLogId: string | undefined;
     scriptMessage: IScriptHistoryItemMessage;
@@ -108,6 +145,8 @@ class JavaScriptSession {
             type:
                 shortcut.action.type === "scpi-commands"
                     ? "SCPI"
+                    : shortcut.action.type === "commands"
+                    ? "Command"
                     : shortcut.action.type === "javascript"
                     ? "JavaScript"
                     : "MicroPython",
@@ -344,6 +383,27 @@ export async function runScpi(
     }
 }
 
+export async function runCommands(
+    code: string,
+    globalModules: { [moduleName: string]: any }
+) {
+    try {
+        await globalModules.connection.acquire();
+
+        const lines = code.split("\n").map(line => line.trim());
+        let pause = false;
+        for (const line of lines) {
+            if (pause) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            await globalModules.connection.command(line);
+            pause = true;
+        }
+    } finally {
+        globalModules.connection.release();
+    }
+}
+
 export async function runJavaScript(
     code: string,
     globalModules: { [moduleName: string]: any }
@@ -363,6 +423,8 @@ ${code}
 function prepareModules(appStore: InstrumentAppStore, shortcut: IShortcut) {
     if (shortcut.action.type === "scpi-commands") {
         return prepareScpiModules(appStore, shortcut);
+    } else if (shortcut.action.type === "commands") {
+        return prepareCommandsModules(appStore, shortcut);
     } else {
         return prepareJavaScriptModules(appStore, shortcut);
     }
@@ -377,6 +439,8 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
 
     if (shortcut.action.type === "scpi-commands") {
         run = runScpi;
+    } else if (shortcut.action.type === "commands") {
+        run = runCommands;
     } else {
         run = runJavaScript;
     }

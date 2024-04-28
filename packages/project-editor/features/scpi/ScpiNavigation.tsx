@@ -77,7 +77,7 @@ export const SubsystemsList = observer(
 
         render() {
             let additionalButtons;
-            if (this.context.project.settings.general.scpiDocFolder) {
+            if (this.context.project.settings.general.commandsDocFolder) {
                 additionalButtons = [
                     <IconAction
                         key="refresh"
@@ -170,10 +170,10 @@ export const ScpiHelpPreview = observer(
             if (
                 object &&
                 object.helpLink &&
-                this.context.project.settings.general.scpiDocFolder
+                this.context.project.settings.general.commandsDocFolder
             ) {
                 let scpiHelpFolderPath = this.context.getAbsoluteFilePath(
-                    this.context.project.settings.general.scpiDocFolder
+                    this.context.project.settings.general.commandsDocFolder
                 );
 
                 let src;

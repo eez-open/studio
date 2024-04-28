@@ -71,6 +71,7 @@ export class TerminalState {
     }
 
     get commandsTree() {
+        console.log("get commands tree");
         const commandsTree = new CommandsTree();
         if (this.instrument) {
             commandsTree.load(this.instrument.instrumentExtensionId);

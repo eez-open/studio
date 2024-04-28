@@ -655,6 +655,7 @@ export async function loadCommandsFromExtensionFolder(
     extensionFolderPath: string
 ) {
     try {
+        // load scpi commands
         let idfFilePath = await findIdfFile(extensionFolderPath);
         if (!idfFilePath) {
             throw "IDF file not found";
@@ -679,7 +680,38 @@ export async function loadCommandsFromExtensionFolder(
 
         throw "SDL file not found";
     } catch (err) {
-        throw err;
+        try {
+            // load proprietary commands
+            const jsonStr = await readTextFile(
+                extensionFolderPath + "/package.json"
+            );
+            const json = JSON.parse(jsonStr);
+            const instrumentCommands: {
+                command: string;
+                helpLink?: string;
+            }[] = json["eez-studio"].instrumentCommands;
+            return {
+                commands: instrumentCommands.map(
+                    instrumentCommand =>
+                        ({
+                            name: instrumentCommand.command,
+                            helpLink: localPathToFileUrl(
+                                extensionFolderPath +
+                                    "/docs/" +
+                                    instrumentCommand.helpLink
+                            ),
+                            parameters: [],
+                            response: {
+                                type: ["any" as IResponseTypeType]
+                            },
+                            sendsBackDataBlock: false
+                        } as unknown as ICommand)
+                ),
+                enums: []
+            };
+        } catch (err) {
+            throw err;
+        }
     }
 }
 
