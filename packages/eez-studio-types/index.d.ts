@@ -11,6 +11,7 @@ export type BasicType =
     | "date"
     | "blob"
     | "stream"
+    | "widget"
     | "any";
 
 export type OtherBasicType =
@@ -504,6 +505,10 @@ export interface IWasmFlowRuntime {
 
     readSettings: (key: string) => any;
     writeSettings: (key: string, value: any) => any;
+    getWidgetHandle: (flowStateIndex: number, componentIndex: number) => number;
+    getWidgetHandleInfo: (widgetHandle: number) => {
+        flowStateIndex: number, componentIndex: number
+    } | undefined;
 
     // eez framework API
     _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, timeZone: number): void;
@@ -680,6 +685,8 @@ export interface IWasmFlowRuntime {
 
 export interface IDashboardComponentContext {
     WasmFlowRuntime: IWasmFlowRuntime;
+
+    flowStateIndex: number;
 
     getFlowIndex: () => number;
     getComponentIndex: () => number;

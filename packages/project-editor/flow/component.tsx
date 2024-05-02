@@ -50,6 +50,7 @@ import {
 } from "project-editor/store";
 import {
     isLVGLProject,
+    isNotDashboardProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
 import { objectToJS } from "project-editor/store";
@@ -105,7 +106,8 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IActionComponentDefinition,
-    IComponentProperty
+    IComponentProperty,
+    IDashboardComponentContext
 } from "eez-studio-types";
 import {
     flowGroup,
@@ -2640,6 +2642,8 @@ export class Widget extends Component {
 
     tabTitle: string;
 
+    outputWidgetHandle: boolean;
+
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
@@ -2727,7 +2731,14 @@ export class Widget extends Component {
                 },
                 "string"
             ),
-            eventHandlersProperty
+            eventHandlersProperty,
+            {
+                name: "outputWidgetHandle",
+                type: PropertyType.Boolean,
+                propertyGridGroup: flowGroup,
+                disabled: isNotDashboardProject,
+                checkboxStyleSwitch: true
+            }
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
@@ -3014,6 +3025,16 @@ export class Widget extends Component {
                 );
             }
         },
+
+        updateObjectValueHook: (object: Widget, values: any) => {
+            if (values.outputWidgetHandle !== undefined) {
+                if (!values.outputWidgetHandle && object.outputWidgetHandle) {
+                    const flow = ProjectEditor.getFlow(object);
+                    flow.deleteConnectionLinesFromOutput(object, "@widget");
+                }
+            }
+        },
+
         showSelectedObjectsParent: () => {
             return true;
         },
@@ -3070,6 +3091,18 @@ export class Widget extends Component {
             return additionalProperties;
         },
 
+        execute: (context: IDashboardComponentContext) => {
+            if (context.getOutputType("@widget")) {
+                context.propagateValue(
+                    "@widget",
+                    context.WasmFlowRuntime.getWidgetHandle(
+                        context.flowStateIndex,
+                        context.getComponentIndex()
+                    )
+                );
+            }
+        },
+
         widgetEvents: {
             CLICKED: {
                 code: 1,
@@ -3100,7 +3133,8 @@ export class Widget extends Component {
             locked: observable,
             hiddenInEditor: observable,
             timeline: observable,
-            eventHandlers: observable
+            eventHandlers: observable,
+            outputWidgetHandle: observable
         });
     }
 
@@ -3113,8 +3147,20 @@ export class Widget extends Component {
     }
 
     getOutputs(): ComponentOutput[] {
+        const outputs = super.getOutputs();
+
+        if (this.outputWidgetHandle) {
+            outputs.push({
+                name: "@widget",
+                displayName: "@Widget",
+                type: "widget",
+                isOptionalOutput: false,
+                isSequenceOutput: false
+            });
+        }
+
         return [
-            ...super.getOutputs(),
+            ...outputs,
             ...this.eventHandlers
                 .filter(eventHandler => eventHandler.handlerType == "flow")
                 .map(eventHandler => ({

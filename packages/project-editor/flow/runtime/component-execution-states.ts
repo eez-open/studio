@@ -24,7 +24,10 @@ export function registerDashboardState<T>(
     executionStates.dasboardStateToWasmState.set(dashboardState, wasmState);
 }
 
-export function getDashboardState<T>(wasmModuleId: number, wasmState: number) {
+export function getDashboardState<T>(
+    wasmModuleId: number,
+    wasmState: number
+): T | undefined {
     let executionStates = wasmModuleExecutionStates.get(wasmModuleId);
     if (!executionStates) {
         return undefined;

@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, runInAction } from "mobx";
 
 import { formatDuration } from "eez-studio-shared/util";
 import type { IStore } from "eez-studio-shared/store";
@@ -27,6 +27,7 @@ export interface IHistoryItem {
     selected: boolean;
     getListItemElement(appStore: IAppStore): React.ReactNode;
     canBePartOfMultiChart: boolean;
+    setData(data: any): void;
     dispose(): void;
 }
 
@@ -40,6 +41,7 @@ export class HistoryItem implements IHistoryItem {
     type: string;
     message: string;
     _data: any;
+    _dataUpdated: number = 0;
     selected: boolean;
     deleted: boolean;
     temporary: boolean;
@@ -48,7 +50,8 @@ export class HistoryItem implements IHistoryItem {
     constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {
         makeObservable(this, {
             message: observable,
-            selected: observable
+            selected: observable,
+            _dataUpdated: observable
         });
 
         this.id = activityLogEntry.id;
@@ -82,6 +85,7 @@ export class HistoryItem implements IHistoryItem {
     }
 
     get data() {
+        this._dataUpdated;
         if (this._data !== undefined) {
             return this._data;
         }
@@ -89,8 +93,15 @@ export class HistoryItem implements IHistoryItem {
         return this._data;
     }
 
+    setData(data: any) {
+        this._data = data;
+
+        runInAction(() => this._dataUpdated++);
+    }
+
     loadData() {
         this._data = loadData(this.store, this.id);
+        runInAction(() => this._dataUpdated++);
     }
 
     get info(): string | JSX.Element {

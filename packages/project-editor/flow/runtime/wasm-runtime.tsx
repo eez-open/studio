@@ -258,7 +258,9 @@ export class WasmRuntime extends RemoteRuntime {
             },
             (key: string, value: any) => {
                 this.projectStore.runtimeSettings.writeSettings(key, value);
-            }
+            },
+            this.getWidgetHandle,
+            this.getWidgetHandleInfo
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
@@ -1186,6 +1188,25 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.worker.wasm._valueFree(valuePtr);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+
+    widgetHandles: {
+        flowStateIndex: number;
+        componentIndex: number;
+    }[] = [];
+
+    getWidgetHandle = (flowStateIndex: number, componentIndex: number) => {
+        this.widgetHandles.push({
+            flowStateIndex,
+            componentIndex
+        });
+        return this.widgetHandles.length;
+    };
+
+    getWidgetHandleInfo = (widgetHandle: number) => {
+        return this.widgetHandles[widgetHandle - 1];
+    };
 
     ////////////////////////////////////////////////////////////////////////////////
 

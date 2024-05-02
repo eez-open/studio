@@ -70,6 +70,8 @@ import {
     offWasmFlowRuntimeTerminate,
     onWasmFlowRuntimeTerminate
 } from "project-editor/flow/runtime/wasm-worker";
+import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
+import type { PlotlyLineChartExecutionState } from "../widgets/dashboard/plotly";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1180,6 +1182,10 @@ registerClass(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class AddToInstrumentHistoryActionComponent extends ActionComponent {
+    static ITEM_TYPE_NONE = 0;
+    static ITEM_TYPE_EEZ_CHART = 1;
+    static ITEM_TYPE_PLOTLY = 2;
+
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
             makeExpressionProperty(
@@ -1195,7 +1201,12 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 type: PropertyType.Enum,
                 enumItems: [
                     {
-                        id: "chart"
+                        id: "chart",
+                        label: "EEZ-Chart"
+                    },
+                    {
+                        id: "plotly",
+                        label: "Plotly"
                     }
                 ],
                 propertyGridGroup: specificGroup
@@ -1409,6 +1420,19 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     }
                 },
                 "double"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "plotlyWidget",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    disabled: (
+                        component: AddToInstrumentHistoryActionComponent
+                    ) => {
+                        return component.itemType != "plotly";
+                    }
+                },
+                "widget"
             )
         ],
         defaultValue: {},
@@ -1439,170 +1463,237 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 return;
             }
 
-            const chartDescription =
-                context.evalProperty<string>("chartDescription");
-            if (chartDescription == undefined) {
-                context.throwError(`Invalid Chart description property`);
-                return;
-            }
+            const itemType = context.getUint8Param(0);
 
-            const chartData = context.evalProperty<Uint8Array>("chartData");
-            if (chartData == undefined) {
-                context.throwError(`Invalid Chart data property`);
-                return;
-            }
+            let message;
+            let chartData;
+            let historyItemType;
 
-            const chartSamplingRate =
-                context.evalProperty<number>("chartSamplingRate");
-            if (chartSamplingRate == undefined) {
-                context.throwError(`Invalid Chart sampling rate property`);
-                return;
-            }
+            if (
+                itemType ==
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_EEZ_CHART
+            ) {
+                const chartDescription =
+                    context.evalProperty<string>("chartDescription");
+                if (chartDescription == undefined) {
+                    context.throwError(`Invalid Chart description property`);
+                    return;
+                }
 
-            const chartOffset = context.evalProperty<number>("chartOffset");
-            if (chartOffset == undefined) {
-                context.throwError(`Invalid Chart offet property`);
-                return;
-            }
+                const chartData = context.evalProperty<Uint8Array>("chartData");
+                if (chartData == undefined) {
+                    context.throwError(`Invalid Chart data property`);
+                    return;
+                }
 
-            const chartScale = context.evalProperty<number>("chartScale");
-            if (chartScale == undefined) {
-                context.throwError(`Invalid Chart scale property`);
-                return;
-            }
+                const chartSamplingRate =
+                    context.evalProperty<number>("chartSamplingRate");
+                if (chartSamplingRate == undefined) {
+                    context.throwError(`Invalid Chart sampling rate property`);
+                    return;
+                }
 
-            const chartFormatStr = context.evalProperty<string>("chartFormat");
-            if (chartFormatStr == undefined) {
-                context.throwError(`Invalid Chart format property`);
-                return;
-            }
+                const chartOffset = context.evalProperty<number>("chartOffset");
+                if (chartOffset == undefined) {
+                    context.throwError(`Invalid Chart offet property`);
+                    return;
+                }
 
-            const { WaveformFormat } =
-                require("eez-studio-ui/chart/WaveformFormat") as typeof WaveformFormatModule;
+                const chartScale = context.evalProperty<number>("chartScale");
+                if (chartScale == undefined) {
+                    context.throwError(`Invalid Chart scale property`);
+                    return;
+                }
 
-            let chartFormat =
-                chartFormatStr == "float"
-                    ? WaveformFormat.FLOATS_32BIT
-                    : chartFormatStr == "double"
-                    ? WaveformFormat.FLOATS_64BIT
-                    : chartFormatStr == "rigol-byte"
-                    ? WaveformFormat.RIGOL_BYTE
-                    : chartFormatStr == "rigol-word"
-                    ? WaveformFormat.RIGOL_WORD
-                    : chartFormatStr == "csv"
-                    ? WaveformFormat.CSV_STRING
-                    : WaveformFormat.JS_NUMBERS;
+                const chartFormatStr =
+                    context.evalProperty<string>("chartFormat");
+                if (chartFormatStr == undefined) {
+                    context.throwError(`Invalid Chart format property`);
+                    return;
+                }
 
-            const chartUnit = context.evalProperty<string>("chartUnit");
-            if (chartUnit == undefined) {
-                context.throwError(`Invalid Chart unit property`);
-                return;
-            }
+                const { WaveformFormat } =
+                    require("eez-studio-ui/chart/WaveformFormat") as typeof WaveformFormatModule;
 
-            const chartColor = context.evalProperty<string>("chartColor");
-            if (chartColor == undefined) {
-                context.throwError(`Invalid Chart color property`);
-                return;
-            }
+                let chartFormat =
+                    chartFormatStr == "float"
+                        ? WaveformFormat.FLOATS_32BIT
+                        : chartFormatStr == "double"
+                        ? WaveformFormat.FLOATS_64BIT
+                        : chartFormatStr == "rigol-byte"
+                        ? WaveformFormat.RIGOL_BYTE
+                        : chartFormatStr == "rigol-word"
+                        ? WaveformFormat.RIGOL_WORD
+                        : chartFormatStr == "csv"
+                        ? WaveformFormat.CSV_STRING
+                        : WaveformFormat.JS_NUMBERS;
 
-            const chartColorInverse =
-                context.evalProperty<string>("chartColorInverse");
-            if (chartColorInverse == undefined) {
-                context.throwError(`Invalid Chart color inverse property`);
-                return;
-            }
+                const chartUnit = context.evalProperty<string>("chartUnit");
+                if (chartUnit == undefined) {
+                    context.throwError(`Invalid Chart unit property`);
+                    return;
+                }
 
-            const chartLabel = context.evalProperty<string>("chartLabel");
-            if (chartLabel == undefined) {
-                context.throwError(`Invalid Chart label property`);
-                return;
-            }
+                const chartColor = context.evalProperty<string>("chartColor");
+                if (chartColor == undefined) {
+                    context.throwError(`Invalid Chart color property`);
+                    return;
+                }
 
-            const chartMajorSubdivisionHorizontal =
-                context.evalProperty<number>("chartMajorSubdivisionHorizontal");
-            if (chartMajorSubdivisionHorizontal == undefined) {
-                context.throwError(
-                    `Invalid Chart major subdivision horizontal property`
+                const chartColorInverse =
+                    context.evalProperty<string>("chartColorInverse");
+                if (chartColorInverse == undefined) {
+                    context.throwError(`Invalid Chart color inverse property`);
+                    return;
+                }
+
+                const chartLabel = context.evalProperty<string>("chartLabel");
+                if (chartLabel == undefined) {
+                    context.throwError(`Invalid Chart label property`);
+                    return;
+                }
+
+                const chartMajorSubdivisionHorizontal =
+                    context.evalProperty<number>(
+                        "chartMajorSubdivisionHorizontal"
+                    );
+                if (chartMajorSubdivisionHorizontal == undefined) {
+                    context.throwError(
+                        `Invalid Chart major subdivision horizontal property`
+                    );
+                    return;
+                }
+
+                const chartMajorSubdivisionVertical =
+                    context.evalProperty<number>(
+                        "chartMajorSubdivisionVertical"
+                    );
+                if (chartMajorSubdivisionVertical == undefined) {
+                    context.throwError(
+                        `Invalid Chart major subdivision vertical property`
+                    );
+                    return;
+                }
+
+                const chartMinorSubdivisionHorizontal =
+                    context.evalProperty<number>(
+                        "chartMinorSubdivisionHorizontal"
+                    );
+                if (chartMinorSubdivisionHorizontal == undefined) {
+                    context.throwError(
+                        `Invalid Chart minor subdivision horizontal property`
+                    );
+                    return;
+                }
+
+                const chartMinorSubdivisionVertical =
+                    context.evalProperty<number>(
+                        "chartMinorSubdivisionVertical"
+                    );
+                if (chartMinorSubdivisionVertical == undefined) {
+                    context.throwError(
+                        `Invalid Chart minor subdivision vertical property`
+                    );
+                    return;
+                }
+
+                const chartHorizontalScale = context.evalProperty<number>(
+                    "chartHorizontalScale"
                 );
-                return;
-            }
+                if (chartHorizontalScale == undefined) {
+                    context.throwError(
+                        `Invalid Chart horizontal scale property`
+                    );
+                    return;
+                }
 
-            const chartMajorSubdivisionVertical = context.evalProperty<number>(
-                "chartMajorSubdivisionVertical"
-            );
-            if (chartMajorSubdivisionVertical == undefined) {
-                context.throwError(
-                    `Invalid Chart major subdivision vertical property`
-                );
-                return;
-            }
+                const chartVerticalScale =
+                    context.evalProperty<number>("chartVerticalScale");
+                if (chartVerticalScale == undefined) {
+                    context.throwError(`Invalid Chart vertical scale property`);
+                    return;
+                }
 
-            const chartMinorSubdivisionHorizontal =
-                context.evalProperty<number>("chartMinorSubdivisionHorizontal");
-            if (chartMinorSubdivisionHorizontal == undefined) {
-                context.throwError(
-                    `Invalid Chart minor subdivision horizontal property`
-                );
-                return;
-            }
-
-            const chartMinorSubdivisionVertical = context.evalProperty<number>(
-                "chartMinorSubdivisionVertical"
-            );
-            if (chartMinorSubdivisionVertical == undefined) {
-                context.throwError(
-                    `Invalid Chart minor subdivision vertical property`
-                );
-                return;
-            }
-
-            const chartHorizontalScale = context.evalProperty<number>(
-                "chartHorizontalScale"
-            );
-            if (chartHorizontalScale == undefined) {
-                context.throwError(`Invalid Chart horizontal scale property`);
-                return;
-            }
-
-            const chartVerticalScale =
-                context.evalProperty<number>("chartVerticalScale");
-            if (chartVerticalScale == undefined) {
-                context.throwError(`Invalid Chart vertical scale property`);
-                return;
-            }
-
-            const message: any = {
-                state: "success",
-                fileType: { mime: "application/eez-raw" },
-                description: chartDescription,
-                waveformDefinition: {
-                    samplingRate: chartSamplingRate,
-                    format: chartFormat,
-                    unitName: chartUnit.toLowerCase(),
-                    color: chartColor,
-                    colorInverse: chartColorInverse,
-                    label: chartLabel,
-                    offset: chartOffset,
-                    scale: chartScale
-                },
-                viewOptions: {
-                    axesLines: {
-                        type: "fixed",
-                        majorSubdivision: {
-                            horizontal: chartMajorSubdivisionHorizontal,
-                            vertical: chartMajorSubdivisionVertical
-                        },
-                        minorSubdivision: {
-                            horizontal: chartMinorSubdivisionHorizontal,
-                            vertical: chartMinorSubdivisionVertical
+                const message: any = {
+                    state: "success",
+                    fileType: { mime: "application/eez-raw" },
+                    description: chartDescription,
+                    waveformDefinition: {
+                        samplingRate: chartSamplingRate,
+                        format: chartFormat,
+                        unitName: chartUnit.toLowerCase(),
+                        color: chartColor,
+                        colorInverse: chartColorInverse,
+                        label: chartLabel,
+                        offset: chartOffset,
+                        scale: chartScale
+                    },
+                    viewOptions: {
+                        axesLines: {
+                            type: "fixed",
+                            majorSubdivision: {
+                                horizontal: chartMajorSubdivisionHorizontal,
+                                vertical: chartMajorSubdivisionVertical
+                            },
+                            minorSubdivision: {
+                                horizontal: chartMinorSubdivisionHorizontal,
+                                vertical: chartMinorSubdivisionVertical
+                            }
                         }
-                    }
-                },
-                horizontalScale: chartHorizontalScale,
-                verticalScale: chartVerticalScale
-            };
+                    },
+                    horizontalScale: chartHorizontalScale,
+                    verticalScale: chartVerticalScale
+                };
 
-            message.dataLength = chartData.length;
+                message.dataLength = chartData.length;
+
+                historyItemType = "instrument/file-download";
+            } else if (
+                itemType ==
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
+            ) {
+                const plotlyWidget =
+                    context.evalProperty<number>("plotlyWidget");
+                if (plotlyWidget == undefined) {
+                    context.throwError(`Invalid Plotly widget property`);
+                    return;
+                }
+
+                const widgetInfo =
+                    context.WasmFlowRuntime.getWidgetHandleInfo(plotlyWidget);
+
+                if (!widgetInfo) {
+                    context.throwError(`Invalid Plotly widget handle`);
+                    return;
+                }
+
+                const plotlyWidgetContext = new DashboardComponentContext(
+                    context.WasmFlowRuntime,
+                    widgetInfo.flowStateIndex,
+                    widgetInfo.componentIndex
+                );
+
+                const executionState =
+                    plotlyWidgetContext.getComponentExecutionState<PlotlyLineChartExecutionState>();
+
+                if (!executionState || !executionState.getPlotlyData) {
+                    context.throwError(`Invalid Plotly widget execution state`);
+                    return;
+                }
+
+                message = executionState.getPlotlyData();
+
+                if (message.layout.width == undefined) {
+                    message.layout.width = 1200;
+                    message.layout.height = 800;
+                }
+
+                chartData = undefined;
+                historyItemType = "instrument/plotly";
+            } else {
+                context.throwError("Invalid item type");
+                return;
+            }
 
             const { activityLogStore, log } =
                 require("instrument/window/history/activity-log") as typeof ActivityLogModule;
@@ -1611,9 +1702,10 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 activityLogStore,
                 {
                     oid: instrument.id,
-                    type: "instrument/file-download",
+                    type: historyItemType,
                     message: JSON.stringify(message),
-                    data: chartData
+                    data: chartData,
+                    temporary: false
                 },
                 {
                     undoable: false
@@ -1646,6 +1738,8 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
     chartHorizontalScale: string;
     chartVerticalScale: string;
 
+    plotlyWidget: string;
+
     override makeEditable() {
         super.makeEditable();
 
@@ -1669,7 +1763,9 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             chartMinorSubdivisionHorizontal: observable,
             chartMinorSubdivisionVertical: observable,
             chartHorizontalScale: observable,
-            chartVerticalScale: observable
+            chartVerticalScale: observable,
+
+            plotlyWidget: observable
         });
     }
 
@@ -1701,6 +1797,22 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             },
             ...super.getOutputs()
         ];
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        if (this.itemType == "chart") {
+            dataBuffer.writeUint8(
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_EEZ_CHART
+            );
+        } else if (this.itemType == "plotly") {
+            dataBuffer.writeUint8(
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
+            );
+        } else {
+            dataBuffer.writeUint8(
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_NONE
+            );
+        }
     }
 }
 

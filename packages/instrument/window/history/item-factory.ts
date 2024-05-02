@@ -21,6 +21,7 @@ import type * as NoteHistoryItemModule from "instrument/window/history/items/not
 import type * as FileHistoryItemModule from "instrument/window/history/items/file";
 import type * as ListHistoryItemModule from "instrument/window/history/items/list";
 import type * as PlotterHistoryItemModule from "instrument/window/history/items/plotter";
+import type * as PlotlyHistoryItemModule from "instrument/window/history/items/plotly";
 import type * as ScriptHistoryItemModule from "instrument/window/history/items/script";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +144,12 @@ export function createHistoryItem(
         const { PlotterHistoryItem } =
             require("instrument/window/history/items/plotter") as typeof PlotterHistoryItemModule;
         return new PlotterHistoryItem(store, activityLogEntry);
+    }
+
+    if (activityLogEntry.type === "instrument/plotly") {
+        const { PlotlyHistoryItem } =
+            require("instrument/window/history/items/plotly") as typeof PlotlyHistoryItemModule;
+        return new PlotlyHistoryItem(store, activityLogEntry);
     }
 
     if (activityLogEntry.type === "instrument/script") {

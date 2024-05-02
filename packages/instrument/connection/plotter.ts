@@ -2,6 +2,7 @@ import {
     IActivityLogEntry,
     activityLogStore,
     log,
+    logDelete,
     logUpdate
 } from "instrument/window/history/activity-log";
 import { LongOperation } from "instrument/connection/connection-base";
@@ -9,7 +10,7 @@ import { LongOperation } from "instrument/connection/connection-base";
 import type { Connection } from "instrument/connection/connection-main";
 import { db } from "eez-studio-shared/db-path";
 
-const UPDATE_LOG_DEBOUNCE = 10;
+const UPDATE_LOG_DEBOUNCE = 100;
 
 export class Plotter implements LongOperation {
     logId: string;
@@ -23,10 +24,6 @@ export class Plotter implements LongOperation {
     dataStr: string = "";
 
     variableNames: string[] = [];
-    data: {
-        x: number;
-        y: number[];
-    }[] = [];
     totalNumPoints: number = 0;
     numPoints: number = 0;
 
@@ -48,8 +45,7 @@ export class Plotter implements LongOperation {
     }
 
     abort() {
-        this.updateTemporary();
-
+        this.updateLog(true);
         this._isDone = true;
     }
 
@@ -82,7 +78,7 @@ export class Plotter implements LongOperation {
                 continue;
             }
 
-            const variables = this.parseLine(line, x);
+            const variables = this.parseLine(line);
 
             if (variables.length > 0) {
                 const variableNames = variables.map(variable => variable.name);
@@ -105,20 +101,11 @@ export class Plotter implements LongOperation {
                     // variable names changed, create a new log item
 
                     // flush all remaining data
-                    if (updated) {
-                        if (this.updateLogTime) {
-                            clearTimeout(this.updateLogTime);
-                            this.updateLogTime = undefined;
-                        }
-                        this.updateLog();
-                        updated = false;
-                        this.updateTemporary();
-                    }
+                    this.updateLog(true);
 
                     this.createLog();
 
                     this.variableNames = variableNames;
-                    this.data = [];
                     this.totalNumPoints = 0;
                     this.numPoints = 0;
                     this.dataBuffer = Buffer.alloc(
@@ -138,11 +125,11 @@ export class Plotter implements LongOperation {
                 let offset =
                     8 * this.numPoints * (1 + this.variableNames.length);
 
-                this.dataBuffer.writeDoubleBE(x, offset);
+                this.dataBuffer.writeDoubleLE(x, offset);
                 offset += 8;
 
                 for (let varIdx = 0; varIdx < variables.length; varIdx++) {
-                    this.dataBuffer.writeDoubleBE(
+                    this.dataBuffer.writeDoubleLE(
                         variables[varIdx].value,
                         offset
                     );
@@ -157,8 +144,7 @@ export class Plotter implements LongOperation {
 
         if (updated && !this.updateLogTime) {
             this.updateLogTime = setTimeout(() => {
-                this.updateLogTime = undefined;
-                this.updateLog();
+                this.updateLog(false);
             }, UPDATE_LOG_DEBOUNCE);
         }
     }
@@ -183,7 +169,7 @@ export class Plotter implements LongOperation {
         });
     }
 
-    parseLine(line: string, x: number) {
+    parseLine(line: string) {
         let parts = line.split(",");
         if (parts.length == 1) {
             parts = line.split("\t");
@@ -243,12 +229,46 @@ export class Plotter implements LongOperation {
         return this.lastRate;
     }
 
-    updateLog() {
+    updateLog(finalize: boolean) {
+        if (this.updateLogTime) {
+            clearTimeout(this.updateLogTime);
+            this.updateLogTime = undefined;
+        }
+
+        if (finalize && this.variableNames.length == 0) {
+            logDelete(activityLogStore, this.logEntry, {
+                deletePermanently: true,
+                undoable: false
+            });
+            return;
+        }
+
         this.logEntry.message = JSON.stringify({
+            state: finalize ? "success" : "live",
+            fileType: {
+                ext: "dlog",
+                mime: "application/eez-dlog",
+                comment: "This is comment"
+            },
+            dataLength: this.numPoints * 8 * (1 + this.variableNames.length),
+
             variableNames: this.variableNames,
-            numPoints: this.totalNumPoints,
+            numPoints: this.numPoints,
+            totalNumPoints: this.totalNumPoints,
             rate: this.rate
         });
+
+        let temporary = false;
+        if (finalize && this.connection.instrument.id) {
+            const row = db
+                .prepare(
+                    `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
+                )
+                .get(this.connection.instrument.id);
+            if (!row.recordHistory) {
+                temporary = true;
+            }
+        }
 
         logUpdate(
             activityLogStore,
@@ -259,35 +279,13 @@ export class Plotter implements LongOperation {
                 data: this.dataBuffer.slice(
                     0,
                     8 * this.numPoints * (1 + this.variableNames.length)
-                )
+                ),
+                temporary
             },
             {
                 undoable: false
             }
         );
-    }
-
-    updateTemporary() {
-        if (this.connection.instrument.id) {
-            const row = db
-                .prepare(
-                    `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
-                )
-                .get(this.connection.instrument.id);
-            if (!row.recordHistory) {
-                logUpdate(
-                    activityLogStore,
-                    {
-                        id: this.logId,
-                        oid: this.connection.instrument.id,
-                        temporary: true
-                    },
-                    {
-                        undoable: false
-                    }
-                );
-            }
-        }
     }
 }
 

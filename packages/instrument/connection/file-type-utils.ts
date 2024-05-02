@@ -1,9 +1,6 @@
 import type * as I10nModule from "eez-studio-shared/i10n";
-import { UNITS } from "eez-studio-shared/units";
-import {
-    decodeDlog,
-    Unit as DlogUnit
-} from "instrument/window/waveform/dlog-file";
+import { IUnit, UNITS } from "eez-studio-shared/units";
+import { Unit as DlogUnit, IDlog } from "instrument/window/waveform/dlog-file";
 
 export function dlogUnitToStudioUnit(unit: DlogUnit) {
     if (unit === DlogUnit.UNIT_VOLT) {
@@ -21,8 +18,7 @@ export function dlogUnitToStudioUnit(unit: DlogUnit) {
     }
 }
 
-export function convertDlogToCsv(data: Uint8Array) {
-    const dlog = decodeDlog(data, dlogUnitToStudioUnit);
+export function convertDlogToCsv(dlog: IDlog<IUnit>) {
     if (!dlog) {
         return undefined;
     }

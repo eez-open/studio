@@ -60,6 +60,7 @@ import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
 import { PreventDraggable } from "instrument/window/history/helper";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
+import { PLOTTER_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -379,6 +380,8 @@ export const FileHistoryItemComponent = observer(
                 return "Sending file ...";
             } else if (this.props.historyItem.direction === "download") {
                 return "Receiving file ...";
+            } else if (this.props.historyItem.direction === "plotter") {
+                return "Waiting for data ...";
             } else {
                 return "Attaching file ...";
             }
@@ -455,46 +458,51 @@ export const FileHistoryItemComponent = observer(
                         this.props.appStore
                     );
 
-                    actions = (
-                        <Toolbar>
-                            <IconAction
-                                icon="material:save"
-                                title="Save file"
-                                onClick={this.onSave}
-                            />
-                            {this.props.historyItem.convertToCsv && (
-                                <IconAction
-                                    icon="material:save"
-                                    title="Save as CSV file"
-                                    onClick={this.onSaveAsCsv}
-                                    overlayText={"CSV"}
-                                    enabled={!this.onSaveAsCsvInProgress}
-                                />
-                            )}
-                            {(this.props.historyItem.isImage ||
-                                this.props.historyItem.isText) && (
-                                <IconAction
-                                    icon="material:content_copy"
-                                    title="Copy to clipboard"
-                                    onClick={this.onCopy}
-                                />
-                            )}
-                            {!this.props.historyItem.note && (
-                                <IconAction
-                                    icon="material:comment"
-                                    title="Add note"
-                                    onClick={this.onAddNote}
-                                />
-                            )}
-                        </Toolbar>
-                    );
+                    if (this.props.historyItem.state !== "live") {
+                        actions = (
+                            <Toolbar>
+                                {this.props.historyItem.direction !=
+                                    "plotter" && (
+                                    <IconAction
+                                        icon="material:save"
+                                        title="Save file"
+                                        onClick={this.onSave}
+                                    />
+                                )}
+                                {this.props.historyItem.convertToCsv && (
+                                    <IconAction
+                                        icon="material:save"
+                                        title="Save as CSV file"
+                                        onClick={this.onSaveAsCsv}
+                                        overlayText={"CSV"}
+                                        enabled={!this.onSaveAsCsvInProgress}
+                                    />
+                                )}
+                                {(this.props.historyItem.isImage ||
+                                    this.props.historyItem.isText) && (
+                                    <IconAction
+                                        icon="material:content_copy"
+                                        title="Copy to clipboard"
+                                        onClick={this.onCopy}
+                                    />
+                                )}
+                                {!this.props.historyItem.note && (
+                                    <IconAction
+                                        icon="material:comment"
+                                        title="Add note"
+                                        onClick={this.onAddNote}
+                                    />
+                                )}
+                            </Toolbar>
+                        );
+                    }
                 }
 
                 let note;
                 if (this.props.historyItem.note) {
                     note = (
                         <div
-                            className="EezStudio_HistoryItem_File_Note"
+                            className="EezStudio_HistoryItem_Note"
                             onDoubleClick={this.onEditNote}
                         >
                             <Balloon>
@@ -550,9 +558,10 @@ export const FileHistoryItemComponent = observer(
                                 </div>
                             )}
                             <div className="mb-1">
-                                {this.props.historyItem
-                                    .fileTypeAsDisplayString +
-                                    ", " +
+                                {(this.props.historyItem.fileTypeAsDisplayString
+                                    ? this.props.historyItem
+                                          .fileTypeAsDisplayString + ", "
+                                    : "") +
                                     formatBytes(
                                         this.props.historyItem.fileLength
                                     )}
@@ -578,6 +587,8 @@ export const FileHistoryItemComponent = observer(
                                 : this.props.historyItem.direction ===
                                   "download"
                                 ? "material:file_download"
+                                : this.props.historyItem.direction === "plotter"
+                                ? PLOTTER_ICON
                                 : "material:attach_file"
                         }
                         size={48}
@@ -651,9 +662,11 @@ export class FileHistoryItem extends HistoryItem {
 
         return (
             <React.Fragment>
-                <div className="plain-text">
-                    {this.fileTypeAsDisplayString + " file"}
-                </div>
+                {this.fileTypeAsDisplayString && (
+                    <div className="plain-text">
+                        {this.fileTypeAsDisplayString + " file"}
+                    </div>
+                )}
                 {note}
             </React.Fragment>
         );
@@ -734,6 +747,10 @@ export class FileHistoryItem extends HistoryItem {
             return this.fileType;
         }
 
+        if (this.direction === "plotter") {
+            return undefined;
+        }
+
         return this.fileType.mime;
     }
 
@@ -804,6 +821,9 @@ export class FileHistoryItem extends HistoryItem {
         if (this.type === "instrument/file-upload") {
             return "upload";
         }
+        if (this.type === "instrument/plotter") {
+            return "plotter";
+        }
         return "attachment";
     }
 
@@ -812,7 +832,11 @@ export class FileHistoryItem extends HistoryItem {
     }
 
     get transferSucceeded() {
-        return this.state === "success" || this.state === "upload-finish";
+        return (
+            this.state === "success" ||
+            this.state === "upload-finish" ||
+            this.state == "live"
+        );
     }
 
     get expectedDataLength() {

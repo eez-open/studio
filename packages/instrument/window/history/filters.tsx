@@ -91,7 +91,8 @@ export class Filters {
         if (this.charts) {
             if (
                 activityLogEntry.type === "instrument/chart" ||
-                activityLogEntry.type === "instrument/plotter"
+                activityLogEntry.type === "instrument/plotter" ||
+                activityLogEntry.type === "instrument/plotly"
             ) {
                 return true;
             }
@@ -157,6 +158,7 @@ export class Filters {
         if (this.charts) {
             types.push("instrument/chart");
             types.push("instrument/plotter");
+            types.push("instrument/plotly");
         }
 
         if (this.lists) {
@@ -257,7 +259,8 @@ export class FilterStats {
             this.attachedFiles += amount;
         } else if (
             type === "instrument/chart" ||
-            type === "instrument/plotter"
+            type === "instrument/plotter" ||
+            type === "instrument/plotly"
         ) {
             this.charts += amount;
         } else if (type === "instrument/list") {

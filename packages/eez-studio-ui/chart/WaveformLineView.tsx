@@ -16,6 +16,8 @@ interface IWaveformLineController extends ILineController {
 interface WaveformLineViewProperties {
     waveformLineController: IWaveformLineController;
     label?: string;
+    color?: string;
+    colorInverse?: string;
 }
 
 export const WaveformLineView = observer(
@@ -62,8 +64,9 @@ export const WaveformLineView = observer(
                 yFromValue: yAxisController.from,
                 yToValue: yAxisController.to,
                 strokeColor: globalViewOptions.blackBackground
-                    ? yAxisController.axisModel.color
-                    : yAxisController.axisModel.colorInverse,
+                    ? this.props.color ?? yAxisController.axisModel.color
+                    : this.props.colorInverse ??
+                      yAxisController.axisModel.colorInverse,
                 label:
                     yAxisController.chartController!.lineControllers.length >
                         1 && chartsController.mode !== "preview"

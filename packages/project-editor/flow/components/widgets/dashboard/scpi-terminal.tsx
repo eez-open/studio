@@ -1,8 +1,6 @@
 import React from "react";
 import { observable, makeObservable, action } from "mobx";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
-
 import { makeLazyComponent } from "eez-studio-ui/lazy-component";
 
 import {
@@ -207,9 +205,7 @@ export class SCPITerminalWidget extends Widget {
             showSideBar: "true"
         },
 
-        icon: TERMINAL_WIDGET_ICON,
-
-        execute: (context: IDashboardComponentContext) => {}
+        icon: TERMINAL_WIDGET_ICON
     });
 
     instrument: string;

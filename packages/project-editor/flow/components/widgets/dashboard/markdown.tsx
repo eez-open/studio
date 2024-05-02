@@ -1,7 +1,5 @@
 import React from "react";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
-
 import {
     registerClass,
     makeDerivedClassInfo,
@@ -57,9 +55,7 @@ export class MarkdownWidget extends Widget {
                 <path d="M7 15v-6l2 2l2 -2v6" />
                 <path d="M14 13l2 2l2 -2m-2 2v-6" />
             </svg>
-        ),
-
-        execute: (context: IDashboardComponentContext) => {}
+        )
     });
 
     text: string;

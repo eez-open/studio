@@ -1425,6 +1425,10 @@ export class History {
                 this.items[foundItem.index] = updatedHistoryItem;
             }
         }
+
+        if (activityLogEntry.data !== undefined) {
+            foundItem.historyItem.setData(activityLogEntry.data);
+        }
     }
 
     onDeleteActivityLogEntry(
@@ -1562,6 +1566,8 @@ export class History {
             return "Sending file ...";
         } else if (historyItem.direction === "download") {
             return "Receiving file ...";
+        } else if (historyItem.direction === "plotter") {
+            return "Waiting for data ...";
         } else {
             return "Attaching file ...";
         }

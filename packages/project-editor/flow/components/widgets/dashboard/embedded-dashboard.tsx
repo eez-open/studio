@@ -11,8 +11,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
-
 import {
     registerClass,
     makeDerivedClassInfo,
@@ -498,9 +496,7 @@ export class EmbeddedDashboardWidget extends Widget {
             if (!widget.dashboard) {
                 messages.push(propertyNotSetMessage(widget, "dashboard"));
             }
-        },
-
-        execute: (context: IDashboardComponentContext) => {}
+        }
     });
 
     dashboard: string;

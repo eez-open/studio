@@ -25,7 +25,6 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IStore } from "eez-studio-shared/store";
 import type { IActivityLogEntry } from "instrument/window/history/activity-log";
 import type { IAppStore } from "instrument/window/history/history";
-import type { IDashboardComponentContext } from "eez-studio-types";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { evalProperty } from "project-editor/flow/helper";
 
@@ -330,9 +329,7 @@ export class EEZChartWidget extends Widget {
             }
 
             return properties;
-        },
-
-        execute: (context: IDashboardComponentContext) => {}
+        }
     });
 
     override makeEditable() {

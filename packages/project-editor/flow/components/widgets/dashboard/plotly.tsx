@@ -78,7 +78,7 @@ interface InputData {
     lineValues: number[];
 }
 
-class ExecutionState {
+export class PlotlyLineChartExecutionState {
     updated: number = 0;
     valuesMap: Map<number, number[]>;
     values: InputData[] = [];
@@ -87,6 +87,12 @@ class ExecutionState {
     visible: boolean[] = [];
 
     debounceTimerId: any;
+
+    getPlotlyData?: () => {
+        data: any;
+        layout: any;
+        config: any;
+    };
 
     constructor() {
         makeObservable(this, {
@@ -126,7 +132,7 @@ const LineChartElement = observer(
             const { widget, flowContext } = this.props;
 
             const executionState =
-                flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
                     widget
                 );
 
@@ -194,7 +200,7 @@ const LineChartElement = observer(
             const { widget, flowContext } = this.props;
 
             const executionState =
-                flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
                     widget
                 );
 
@@ -393,6 +399,20 @@ const LineChartElement = observer(
             this.plotlyWidth = this.clientWidth;
             this.plotlyHeight = this.clientHeight;
 
+            const executionState =
+                this.props.flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
+                    this.props.widget
+                );
+            if (executionState) {
+                executionState.getPlotlyData = () => {
+                    return {
+                        data: this.data,
+                        layout: this.layout,
+                        config: this.config
+                    };
+                };
+            }
+
             this.dispose1 = reaction(
                 () => {
                     return {
@@ -413,7 +433,7 @@ const LineChartElement = observer(
                 const { widget, flowContext } = this.props;
 
                 const executionState =
-                    flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                    flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
                         widget
                     );
                 if (!executionState) {
@@ -890,6 +910,8 @@ export class LineChartWidget extends Widget {
         showTreeCollapseIcon: "never",
 
         execute: (context: IDashboardComponentContext) => {
+            Widget.classInfo.execute!(context);
+
             const resetInputValue = context.getInputValue("reset");
 
             const labels = context.getExpressionListParam(0);
@@ -897,10 +919,10 @@ export class LineChartWidget extends Widget {
             const visible = context.getExpressionListParam(16);
 
             let executionState =
-                context.getComponentExecutionState<ExecutionState>();
+                context.getComponentExecutionState<PlotlyLineChartExecutionState>();
 
             if (!executionState) {
-                executionState = new ExecutionState();
+                executionState = new PlotlyLineChartExecutionState();
                 context.setComponentExecutionState(executionState);
             }
 
@@ -1335,9 +1357,7 @@ export class GaugeWidget extends Widget {
             if (typeof jsObject.maxRange == "number") {
                 jsObject.maxRange = jsObject.maxRange.toString();
             }
-        },
-
-        execute: (context: IDashboardComponentContext) => {}
+        }
     });
 
     title: string;

@@ -1,3 +1,4 @@
+import { IUnit, TIME_UNIT, UNKNOWN_UNIT } from "eez-studio-shared/units";
 import { DataType } from "eez-studio-ui/chart/DataType";
 
 export enum Unit {
@@ -104,6 +105,8 @@ export interface IDlogYAxis<UnitType> {
     channelIndex: number;
     transformOffset: number;
     transformScale: number;
+    color?: string;
+    colorInverse?: string;
 }
 
 interface DlogBookmark {
@@ -612,3 +615,43 @@ export function decodeDlog<UnitType>(
         getValue
     };
 }
+
+export const EMPTY_DLOG: IDlog<IUnit> = {
+    version: 1,
+    xAxis: {
+        unit: TIME_UNIT,
+        step: 1,
+        scaleType: ScaleType.LINEAR,
+        range: {
+            min: 0,
+            max: 1
+        },
+        label: ""
+    },
+    yAxis: {
+        dataType: DataType.DATA_TYPE_FLOAT,
+        dlogUnit: Unit.UNIT_UNKNOWN,
+        unit: UNKNOWN_UNIT,
+        range: {
+            min: 0,
+            max: 1
+        },
+        label: "",
+        channelIndex: -1,
+        transformOffset: 0,
+        transformScale: 1.0
+    },
+    yAxisScaleType: ScaleType.LINEAR,
+    yAxes: [],
+    dataOffset: 0,
+    bookmarks: [],
+    dataContainsSampleValidityBit: false,
+    columnDataIndexes: [0],
+    columnBitMask: [0],
+    numBytesPerRow: 1,
+    length: 0,
+    startTime: undefined,
+    duration: 0,
+    hasJitterColumn: false,
+    getValue: (rowIndex: number, columnIndex: number) => 0
+};

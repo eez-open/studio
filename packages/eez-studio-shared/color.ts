@@ -75,3 +75,11 @@ export function isDark(color: string) {
 export function isValid(color: string) {
     return tinycolor(color).isValid();
 }
+
+export function darken(color: string) {
+    return tinycolor(color).darken().toRgb();
+}
+
+export function lighten(color: string) {
+    return tinycolor(color).lighten().toRgbString();
+}

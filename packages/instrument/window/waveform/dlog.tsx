@@ -8,13 +8,13 @@ import {
     makeObservable,
     IReactionDisposer
 } from "mobx";
+import classNames from "classnames";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
 import { capitalize } from "eez-studio-shared/string";
 import {
     TIME_UNIT,
     FREQUENCY_UNIT,
-    UNKNOWN_UNIT,
     UNITS,
     IUnit
 } from "eez-studio-shared/units";
@@ -71,11 +71,11 @@ import {
 } from "instrument/window/waveform/toolbar";
 
 import {
-    Unit,
     IDlog,
     IDlogYAxis,
     decodeDlog,
-    ScaleType
+    ScaleType,
+    EMPTY_DLOG
 } from "instrument/window/waveform/dlog-file";
 import {
     convertDlogToCsv,
@@ -83,6 +83,7 @@ import {
 } from "instrument/connection/file-type-utils";
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 import type { IAppStore } from "instrument/window/history/history";
+import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -90,7 +91,8 @@ class DlogWaveformAxisModel implements IAxisModel {
     constructor(
         public yAxis: IDlogYAxis<IUnit>,
         public semiLogarithmic?: { a: number; b: number },
-        private yAxes?: IDlogYAxis<IUnit>[]
+        private yAxes?: IDlogYAxis<IUnit>[],
+        private chartsController?: ChartsController
     ) {
         makeObservable(this, {
             dynamic: observable,
@@ -184,12 +186,52 @@ class DlogWaveformAxisModel implements IAxisModel {
         return getLabel(this.yAxis);
     }
 
+    get labelReactNode(): React.ReactNode | undefined {
+        if (!this.yAxes || !this.chartsController) {
+            return undefined;
+        }
+
+        return (
+            <div
+                className="EezStudio_Chart_Title"
+                style={{
+                    left: this.chartsController.chartLeft,
+                    top: this.chartsController.chartTop,
+                    backgroundColor: globalViewOptions.blackBackground
+                        ? "rgba(64, 64, 64, 0.8)"
+                        : "rgba(255, 255, 255, 0.8)",
+                    borderColor: globalViewOptions.blackBackground
+                        ? "#999"
+                        : "#ccc",
+                    fontWeight: "bold"
+                }}
+            >
+                {this.yAxes.map((yAxis, i) => (
+                    <div
+                        key={i}
+                        style={{
+                            color: globalViewOptions.blackBackground
+                                ? yAxis.color
+                                : yAxis.colorInverse
+                        }}
+                    >
+                        {yAxis.label}
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
     get color() {
-        return this.yAxis.unit.color;
+        return this.yAxes && this.yAxes.length > 1
+            ? "#fff"
+            : this.yAxis.color ?? this.yAxis.unit.color;
     }
 
     get colorInverse() {
-        return this.yAxis.unit.colorInverse;
+        return this.yAxes && this.yAxes.length > 1
+            ? "#333"
+            : this.yAxis.colorInverse ?? this.yAxis.unit.colorInverse;
     }
 }
 
@@ -352,6 +394,8 @@ class DlogWaveformLineController extends LineController {
                 key={this.id}
                 waveformLineController={this}
                 label={this.channel.axisModel.label}
+                color={this.channel.yAxis.color}
+                colorInverse={this.channel.yAxis.colorInverse}
             />
         );
     }
@@ -442,7 +486,6 @@ export class DlogWaveform extends FileHistoryItem {
             viewOptions => {
                 const message = JSON.parse(this.message);
                 if (!objectEqual(message.viewOptions, viewOptions)) {
-                    console.log(this);
                     logUpdate(
                         this.store,
                         {
@@ -546,45 +589,8 @@ export class DlogWaveform extends FileHistoryItem {
 
     get dlog(): IDlog<IUnit> {
         return (
-            (this.values && decodeDlog(this.values, dlogUnitToStudioUnit)) || {
-                version: 1,
-                xAxis: {
-                    unit: TIME_UNIT,
-                    step: 1,
-                    scaleType: ScaleType.LINEAR,
-                    range: {
-                        min: 0,
-                        max: 1
-                    },
-                    label: ""
-                },
-                yAxis: {
-                    dataType: DataType.DATA_TYPE_FLOAT,
-                    dlogUnit: Unit.UNIT_UNKNOWN,
-                    unit: UNKNOWN_UNIT,
-                    range: {
-                        min: 0,
-                        max: 1
-                    },
-                    label: "",
-                    channelIndex: -1,
-                    transformOffset: 0,
-                    transformScale: 1.0
-                },
-                yAxisScaleType: ScaleType.LINEAR,
-                yAxes: [],
-                dataOffset: 0,
-                bookmarks: [],
-                dataContainsSampleValidityBit: false,
-                columnDataIndexes: [0],
-                columnBitMask: [0],
-                numBytesPerRow: 1,
-                length: 0,
-                startTime: undefined,
-                duration: 0,
-                hasJitterColumn: false,
-                getValue: (rowIndex: number, columnIndex: number) => 0
-            }
+            (this.values && decodeDlog(this.values, dlogUnitToStudioUnit)) ||
+            EMPTY_DLOG
         );
     }
 
@@ -760,7 +766,8 @@ export class DlogWaveform extends FileHistoryItem {
                           b: -(1 - yAxis.range!.min)
                       }
                     : undefined,
-                channelsGroup.channels.map(channel => channel.yAxis)
+                channelsGroup.channels.map(channel => channel.yAxis),
+                chartsController
             )
         );
 
@@ -807,6 +814,7 @@ export class DlogWaveform extends FileHistoryItem {
         mode: ChartMode
     ): ChartsController {
         if (
+            this.direction != "plotter" &&
             this.chartsController &&
             this.chartsController.mode === mode &&
             this.chartsController.chartControllers &&
@@ -825,6 +833,10 @@ export class DlogWaveform extends FileHistoryItem {
             mode,
             this.xAxisModel
         );
+        chartsController.chartViewWidth = this.chartsController?.chartViewWidth;
+        chartsController.chartViewHeight =
+            this.chartsController?.chartViewHeight;
+
         this.chartsController = chartsController;
 
         this.xAxisModel.chartsController = chartsController;
@@ -872,13 +884,23 @@ export class DlogWaveform extends FileHistoryItem {
     }
 
     getPreviewElement(appStore: IAppStore) {
-        return <ChartPreview appStore={appStore} data={this} />;
+        return (
+            <ChartPreview
+                appStore={appStore}
+                data={this}
+                className={classNames({
+                    EezStudio_ChartView_Plotter: this.direction === "plotter"
+                })}
+            />
+        );
     }
 
-    isZoomable = false;
+    get isZoomable() {
+        return this.state != "live";
+    }
 
     convertToCsv = async () => {
-        return convertDlogToCsv(this.data);
+        return convertDlogToCsv(this.dlog);
     };
 
     override dispose() {

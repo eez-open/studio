@@ -50,6 +50,8 @@ export class TerminalWidget extends Widget {
         icon: TERMINAL_WIDGET_ICON,
 
         execute: (context: IDashboardComponentContext) => {
+            Widget.classInfo.execute!(context);
+
             const data = context.evalProperty("data");
 
             if (typeof data === "string" && data.length > 0) {

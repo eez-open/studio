@@ -214,7 +214,9 @@
 }
 
 .EezStudio_UnzoomedPreviewBody {
-    cursor: zoom-in;
+    &.EezStudio_ChartPreview_Zoomable {
+        cursor: zoom-in;
+    }
 
     &.EezStudio_ImagePreview {
         img {
@@ -240,7 +242,9 @@
         background-color: white;
         padding: 8px;
 
-        cursor: zoom-in;
+        &.EezStudio_ChartPreview_Zoomable {
+            cursor: zoom-in;
+        }
 
         svg {
             pointer-events: none;
@@ -248,7 +252,9 @@
 
         .EezStudio_ChartView {
             position: static;
+
             width: 640px;
+
             /*
             svg {
                 height: 200px;
@@ -256,6 +262,13 @@
             */
             svg.EezStudio_Chart_XAxis {
                 height: 24px;
+            }
+        }
+
+        &.EezStudio_ChartView_Plotter {
+            .EezStudio_ChartView {
+                width: 900px;
+                height: 600px;
             }
         }
 
@@ -425,33 +438,29 @@
         margin-top: 5px;
     }
 
-    .EezStudio_HistoryItem_File_Note {
-        position: relative;
-        margin: auto;
-        overflow: visible;
-        border-radius: 0;
-        padding: 0;
-        margin-top: 10px;
-        min-width: 240px;
-
-        .EezStudio_Toolbar {
-            position: absolute;
-            display: none;
-            top: 5px;
-            right: 5px;
-        }
-
-        &:hover .EezStudio_Toolbar {
-            display: block;
-        }
-    }
-
-    .EezStudio_HistoryItem_File_NoNote {
-        margin-bottom: 10px;
-    }
-
     .EezStudio_HistoryItemText * {
         user-select: auto;
+    }
+}
+
+.EezStudio_HistoryItem_Note {
+    position: relative;
+    margin: auto;
+    overflow: visible;
+    border-radius: 0;
+    padding: 0;
+    margin-top: 10px;
+    min-width: 240px;
+
+    .EezStudio_Toolbar {
+        position: absolute;
+        display: none;
+        top: 5px;
+        right: 5px;
+    }
+
+    &:hover .EezStudio_Toolbar {
+        display: block;
     }
 }
 
@@ -496,7 +505,8 @@
     }
 }
 
-.EezStudio_PlotterHistoryItem {
+.EezStudio_PlotterHistoryItem,
+.EezStudio_PlotlyHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
     background-color: @plotterHistoryItemBackgroundColor;
@@ -608,7 +618,7 @@
             padding: 0;
         }
 
-        .EezStudio_HistoryItem_File_Note {
+        .EezStudio_HistoryItem_Note {
             min-width: auto;
         }
 
@@ -619,15 +629,23 @@
         .EezStudio_ChartContainer {
             pointer-events: none;
         }
-    }
 
-    &.thumbs {
         .EezStudio_ItemPreview > img,
-        .EezStudio_ChartView_Preview {
-            width: var(--historyItemThumbnailSize);
+        .EezStudio_ChartView_Preview,
+        .EezStudio_ChartView_Plotter {
+            width: var(--historyItemThumbnailSize) !important;
         }
-        .EezStudio_ChartView_Preview {
-            height: var(--historyItemThumbnailSize);
+
+        .EezStudio_ChartView_Preview,
+        .EezStudio_ChartView_Plotter {
+            height: var(--historyItemThumbnailSize) !important;
+        }
+
+        .js-plotly-plot {
+            height: var(--historyItemThumbnailSize) !important;
+            width: var(--historyItemThumbnailSize) !important;
+            overflow: hidden;
+            pointer-events: none !important;
         }
     }
 }

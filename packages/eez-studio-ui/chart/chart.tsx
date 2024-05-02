@@ -139,6 +139,8 @@ export interface IAxisModel {
     defaultSubdivisionScale: number | undefined;
 
     label: string;
+    labelReactNode?: React.ReactNode | undefined;
+
     color: string;
     colorInverse: string;
 
@@ -2255,38 +2257,42 @@ export const ChartView = observer(
             let chartTitle;
             if (isNonEmpty) {
                 chartXAxisTitle = chartController.xAxisController.axisModel
-                    .label && (
-                    <div
-                        className="EezStudio_Chart_Title"
-                        style={{
-                            color: color,
-                            right: `calc(100% - ${chartsController.chartRight}px)`,
-                            bottom: `calc(100% - ${chartsController.chartBottom}px)`,
-                            borderColor: color
-                        }}
-                    >
-                        {chartController.xAxisController.axisModel.label}
-                    </div>
-                );
+                    .labelReactNode
+                    ? chartController.xAxisController.axisModel.labelReactNode
+                    : chartController.xAxisController.axisModel.label && (
+                          <div
+                              className="EezStudio_Chart_Title"
+                              style={{
+                                  color: color,
+                                  right: `calc(100% - ${chartsController.chartRight}px)`,
+                                  bottom: `calc(100% - ${chartsController.chartBottom}px)`,
+                                  borderColor: color
+                              }}
+                          >
+                              {chartController.xAxisController.axisModel.label}
+                          </div>
+                      );
 
                 color = globalViewOptions.blackBackground
                     ? chartController.yAxisController.axisModel.color
                     : chartController.yAxisController.axisModel.colorInverse;
 
                 chartTitle = chartController.yAxisController.axisModel
-                    .label && (
-                    <div
-                        className="EezStudio_Chart_Title"
-                        style={{
-                            color: color,
-                            left: chartsController.chartLeft,
-                            top: chartsController.chartTop,
-                            borderColor: color
-                        }}
-                    >
-                        {chartController.yAxisController.axisModel.label}
-                    </div>
-                );
+                    .labelReactNode
+                    ? chartController.yAxisController.axisModel.labelReactNode
+                    : chartController.yAxisController.axisModel.label && (
+                          <div
+                              className="EezStudio_Chart_Title"
+                              style={{
+                                  color: color,
+                                  left: chartsController.chartLeft,
+                                  top: chartsController.chartTop,
+                                  borderColor: color
+                              }}
+                          >
+                              {chartController.yAxisController.axisModel.label}
+                          </div>
+                      );
 
                 if (chartController.yAxisControllerOnRightSide) {
                     const color = globalViewOptions.blackBackground
@@ -2295,7 +2301,11 @@ export const ChartView = observer(
                         : chartController.yAxisControllerOnRightSide.axisModel
                               .colorInverse;
 
-                    chartTitle = (
+                    chartTitle = chartController.yAxisControllerOnRightSide
+                        .axisModel.labelReactNode ? (
+                        chartController.yAxisControllerOnRightSide.axisModel
+                            .labelReactNode
+                    ) : (
                         <React.Fragment>
                             {chartTitle}
                             <div

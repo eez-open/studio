@@ -22,7 +22,8 @@ import {
     FLOW_VALUE_TYPE_NULL,
     FLOW_VALUE_TYPE_STRING_ASSET,
     FLOW_VALUE_TYPE_UINT32,
-    FLOW_VALUE_TYPE_UNDEFINED
+    FLOW_VALUE_TYPE_UNDEFINED,
+    FLOW_VALUE_TYPE_WIDGET
 } from "project-editor/build/value-types";
 import { Project } from "project-editor/project/project";
 import { isArray } from "eez-studio-shared/util";
@@ -50,6 +51,8 @@ export function getValueType(valueType: ValueType) {
         return FLOW_VALUE_TYPE_STRING_ASSET;
     } else if (valueType == "date") {
         return FLOW_VALUE_TYPE_DATE;
+    } else if (valueType == "widget") {
+        return FLOW_VALUE_TYPE_WIDGET;
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {

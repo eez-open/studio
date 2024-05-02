@@ -39,6 +39,7 @@ interface ChartPreviewProps {
     children?: React.ReactNode;
     appStore: IAppStore;
     data: ChartData;
+    className?: string;
 }
 
 export const ChartPreview = observer(
@@ -56,7 +57,9 @@ export const ChartPreview = observer(
         }
 
         toggleZoom() {
-            this.zoom = !this.zoom;
+            if (this.props.data.isZoomable) {
+                this.zoom = !this.zoom;
+            }
         }
 
         get chartsController() {
@@ -69,10 +72,15 @@ export const ChartPreview = observer(
         }
 
         render() {
-            const className = classNames("EezStudio_ChartPreview", {
-                EezStudio_ChartPreview_BlackBackground:
-                    globalViewOptions.blackBackground
-            });
+            const className = classNames(
+                "EezStudio_ChartPreview",
+                {
+                    EezStudio_ChartPreview_BlackBackground:
+                        globalViewOptions.blackBackground,
+                    EezStudio_ChartPreview_Zoomable: this.props.data.isZoomable
+                },
+                this.props.className
+            );
 
             let toolbarWhenZoomed;
             if (this.zoom || this.props.data.isZoomable) {

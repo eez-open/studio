@@ -167,6 +167,8 @@ export function initValuesAccesor(
                         transformScale * readInt24BE(values, rowOffset);
                 } else if (dataType == DataType.DATA_TYPE_FLOAT) {
                     value = readFloat(values, rowOffset);
+                } else if (dataType == DataType.DATA_TYPE_DOUBLE) {
+                    value = readDouble(values, rowOffset);
                 } else {
                     console.error("Unknown data type", dataType);
                     value = NaN;

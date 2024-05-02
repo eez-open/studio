@@ -8,7 +8,8 @@ export type FileStateState =
     | "success"
     | "abort"
     | "timeout"
-    | "error";
+    | "error"
+    | "live";
 
 export interface FileState {
     state: FileStateState;

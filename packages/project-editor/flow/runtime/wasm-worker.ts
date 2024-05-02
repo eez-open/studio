@@ -200,7 +200,14 @@ export function createWasmWorker(
     displayHeight: number,
     getClassByName: (className: string) => any,
     readSettings: (key: string) => any,
-    writeSettings: (key: string, value: any) => any
+    writeSettings: (key: string, value: any) => any,
+    getWidgetHandle: (flowStateIndex: number, componentIndex: number) => number,
+    getWidgetHandleInfo: (widgetHandle: number) =>
+        | {
+              flowStateIndex: number;
+              componentIndex: number;
+          }
+        | undefined
 ) {
     let WasmFlowRuntime: IWasmFlowRuntime;
 
@@ -219,6 +226,8 @@ export function createWasmWorker(
     WasmFlowRuntime.getClassByName = getClassByName;
     WasmFlowRuntime.readSettings = readSettings;
     WasmFlowRuntime.writeSettings = writeSettings;
+    WasmFlowRuntime.getWidgetHandle = getWidgetHandle;
+    WasmFlowRuntime.getWidgetHandleInfo = getWidgetHandleInfo;
 
     wasmFlowRuntimes.set(wasmModuleId, WasmFlowRuntime);
 

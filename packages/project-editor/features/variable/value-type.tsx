@@ -63,6 +63,7 @@ export const BASIC_TYPE_NAMES = [
     "date",
     "blob",
     "stream",
+    "widget",
     "any"
 ];
 
