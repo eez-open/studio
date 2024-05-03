@@ -49,6 +49,7 @@ import {
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
+import { homeTabStore } from "home/home-tab";
 
 const MODIFED_MARK = "\u002A ";
 
@@ -1020,30 +1021,39 @@ export class Tabs {
     }
 
     openTabById(tabId: string, makeActive: boolean) {
-        let tab = this.findTab(tabId);
+        let tab;
 
-        if (!tab) {
-            const tabDefinition = this.findTabDefinition(tabId);
-            if (tabDefinition) {
-                tab = tabDefinition.open();
-            } else if (tabId.startsWith(PROJECT_TAB_ID_PREFIX)) {
-                const filePath = tabId.substr(PROJECT_TAB_ID_PREFIX.length);
-                if (filePath === "undefined") {
-                    return;
-                }
-                tab = this.addProjectTab(filePath);
-            } else if (tabId.startsWith(RUN_PROJECT_TAB_ID_PREFIX)) {
-                const filePath = tabId.substr(RUN_PROJECT_TAB_ID_PREFIX.length);
-                if (filePath === "undefined") {
-                    return;
-                }
-                tab = this.addProjectTab(filePath, true);
-            } else {
-                const { instruments } =
-                    require("instrument/instrument-object") as typeof InstrumentObjectModule;
-                const instrument = instruments.get(tabId);
-                if (instrument) {
-                    tab = this.addInstrumentTab(instrument);
+        if (tabId == "extensions" || tabId == "settings") {
+            runInAction(() => (homeTabStore.activeTab = tabId));
+            tab = this.findTab("home");
+        } else {
+            tab = this.findTab(tabId);
+
+            if (!tab) {
+                const tabDefinition = this.findTabDefinition(tabId);
+                if (tabDefinition) {
+                    tab = tabDefinition.open();
+                } else if (tabId.startsWith(PROJECT_TAB_ID_PREFIX)) {
+                    const filePath = tabId.substr(PROJECT_TAB_ID_PREFIX.length);
+                    if (filePath === "undefined") {
+                        return;
+                    }
+                    tab = this.addProjectTab(filePath);
+                } else if (tabId.startsWith(RUN_PROJECT_TAB_ID_PREFIX)) {
+                    const filePath = tabId.substr(
+                        RUN_PROJECT_TAB_ID_PREFIX.length
+                    );
+                    if (filePath === "undefined") {
+                        return;
+                    }
+                    tab = this.addProjectTab(filePath, true);
+                } else {
+                    const { instruments } =
+                        require("instrument/instrument-object") as typeof InstrumentObjectModule;
+                    const instrument = instruments.get(tabId);
+                    if (instrument) {
+                        tab = this.addInstrumentTab(instrument);
+                    }
                 }
             }
         }
