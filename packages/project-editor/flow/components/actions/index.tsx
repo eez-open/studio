@@ -663,10 +663,8 @@ export class EvalJSExprActionComponent extends ActionComponent {
         parse(expression).forEach((valueExpression, i) => {
             const name = `_val${i}`;
             valueExpressions.push(valueExpression);
-            expression = expression.replace(
-                `{${valueExpression}}`,
-                `values.${name}`
-            );
+            let regex = new RegExp(`{${valueExpression}}`, "g");
+            expression = expression.replace(regex, `values.${name}`);
         });
 
         return { expression, valueExpressions };
