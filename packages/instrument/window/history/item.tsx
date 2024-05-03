@@ -25,7 +25,10 @@ export interface IHistoryItem {
     deleted: boolean;
     temporary: boolean;
     selected: boolean;
-    getListItemElement(appStore: IAppStore): React.ReactNode;
+    getListItemElement(
+        appStore: IAppStore,
+        viewType: "chat" | "thumbs"
+    ): React.ReactNode;
     canBePartOfMultiChart: boolean;
     setData(data: any): void;
     dispose(): void;
@@ -131,7 +134,10 @@ export class HistoryItem implements IHistoryItem {
         return <div className="plain-text">{text}</div>;
     }
 
-    getListItemElement(appStore: IAppStore): React.ReactNode {
+    getListItemElement(
+        appStore: IAppStore,
+        viewType: "chat" | "thumbs"
+    ): React.ReactNode {
         return null;
     }
 

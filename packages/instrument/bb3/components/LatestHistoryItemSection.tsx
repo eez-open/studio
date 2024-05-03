@@ -24,7 +24,8 @@ export const LatestHistoryItemSection = observer(
                     id={this.props.bb3Instrument.latestHistoryItem!.id}
                 >
                     {this.props.bb3Instrument.latestHistoryItem!.getListItemElement(
-                        this.props.bb3Instrument.appStore
+                        this.props.bb3Instrument.appStore,
+                        "chat"
                     )}
                 </ErrorBoundary>
             );

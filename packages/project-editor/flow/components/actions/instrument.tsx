@@ -1683,11 +1683,6 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
 
                 message = executionState.getPlotlyData();
 
-                if (message.layout.width == undefined) {
-                    message.layout.width = 1200;
-                    message.layout.height = 800;
-                }
-
                 chartData = undefined;
                 historyItemType = "instrument/plotly";
             } else {

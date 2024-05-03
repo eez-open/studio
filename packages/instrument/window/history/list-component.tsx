@@ -81,7 +81,8 @@ export const HistoryItems = observer(
         render() {
             return this.props.historyItems.map(historyItem => {
                 let element = historyItem.getListItemElement(
-                    this.props.appStore
+                    this.props.appStore,
+                    this.props.viewType
                 );
 
                 let showCheckbox = false;

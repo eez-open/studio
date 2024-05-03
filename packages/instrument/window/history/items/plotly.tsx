@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
@@ -33,6 +33,9 @@ import { PreventDraggable } from "instrument/window/history/helper";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { PLOTTER_ICON } from "project-editor/ui-components/icons";
 
+import { HistoryItemPreview } from "instrument/window/history/item-preview";
+import { getScrapbookStore } from "../scrapbook";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 interface IPlotlyHistoryItemMessage {
@@ -49,9 +52,26 @@ export const PlotterHistoryItemComponent = observer(
     class PlotterHistoryItemComponent extends React.Component<{
         appStore: IAppStore;
         historyItem: PlotlyHistoryItem;
+        viewType: "chat" | "thumbs";
     }> {
         chartDivRef = React.createRef<HTMLDivElement>();
         plotlyInitialized = false;
+
+        zoom: boolean = false;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                zoom: observable,
+                data: computed,
+                layout: computed
+            });
+        }
+
+        toggleZoom = () => {
+            runInAction(() => (this.zoom = !this.zoom));
+        };
 
         onAddNote = () => {
             showAddNoteDialog(note => {
@@ -77,6 +97,43 @@ export const PlotterHistoryItemComponent = observer(
             commitTransaction();
         };
 
+        get data() {
+            if (this.props.viewType != "thumbs") {
+                return this.props.historyItem.plotlyMessage.data;
+            }
+
+            const data = this.props.historyItem.plotlyMessage.data.slice();
+
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].showlegend == true) {
+                    data[i] = Object.assign({}, data[i], { showlegend: false });
+                }
+            }
+
+            return data;
+        }
+
+        get layout() {
+            const layout = Object.assign(
+                {},
+                this.props.historyItem.plotlyMessage.layout
+            );
+            if (this.zoom) {
+                layout.width = undefined;
+                layout.height = undefined;
+            } else {
+                if (this.props.viewType == "thumbs") {
+                    const theScrapbook = getScrapbookStore();
+                    layout.width = theScrapbook.thumbnailSize;
+                    layout.height = theScrapbook.thumbnailSize;
+                } else {
+                    layout.width = 900;
+                    layout.height = 540;
+                }
+            }
+            return layout;
+        }
+
         updateChart() {
             if (this.chartDivRef.current) {
                 if (!this.plotlyInitialized) {
@@ -87,8 +144,8 @@ export const PlotterHistoryItemComponent = observer(
 
                     Plotly.newPlot(
                         this.chartDivRef.current!,
-                        this.props.historyItem.plotlyMessage.data,
-                        this.props.historyItem.plotlyMessage.layout,
+                        this.data,
+                        this.layout,
                         this.props.historyItem.plotlyMessage.config
                     );
                 } else {
@@ -97,8 +154,8 @@ export const PlotterHistoryItemComponent = observer(
 
                     Plotly.react(
                         this.chartDivRef.current!,
-                        this.props.historyItem.plotlyMessage.data,
-                        this.props.historyItem.plotlyMessage.layout,
+                        this.data,
+                        this.layout,
                         this.props.historyItem.plotlyMessage.config
                     );
                 }
@@ -118,6 +175,9 @@ export const PlotterHistoryItemComponent = observer(
         componentWillUnmount() {}
 
         render() {
+            this.layout;
+            this.data;
+
             const actions = (
                 <Toolbar>
                     {!this.props.historyItem.plotlyMessage.note && (
@@ -180,7 +240,16 @@ export const PlotterHistoryItemComponent = observer(
                         {this.props.historyItem.getSourceDescriptionElement(
                             this.props.appStore
                         )}
-                        <div ref={this.chartDivRef}></div>
+
+                        <HistoryItemPreview
+                            className="EezStudio_PlotlyPreview"
+                            zoom={this.zoom}
+                            toggleZoom={this.toggleZoom}
+                            enableUnzoomWithEsc={true}
+                        >
+                            <div ref={this.chartDivRef}></div>
+                        </HistoryItemPreview>
+
                         {actions}
                         {note}
                     </div>
@@ -225,11 +294,15 @@ export class PlotlyHistoryItem extends HistoryItem {
         );
     }
 
-    getListItemElement(appStore: IAppStore): React.ReactNode {
+    getListItemElement(
+        appStore: IAppStore,
+        viewType: "chat" | "thumbs"
+    ): React.ReactNode {
         return (
             <PlotterHistoryItemComponent
                 appStore={appStore}
                 historyItem={this}
+                viewType={viewType}
             />
         );
     }
