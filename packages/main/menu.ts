@@ -612,7 +612,7 @@ function buildViewMenu(win: IWindow | undefined) {
             }
         },
         {
-            label: "Extension Manager",
+            label: "Extensions",
             click: function (item, focusedWindow) {
                 if (focusedWindow) {
                     focusedWindow.webContents.send("openTab", "extensions");

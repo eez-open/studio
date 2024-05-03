@@ -342,13 +342,15 @@ const LineChartElement = observer(
                     visible: widget.showXAxis,
                     showgrid: widget.showGrid,
                     zeroline: widget.showZeroLines,
-                    range: xRange
+                    range: xRange,
+                    ticksuffix: widget.xAxisTickSuffix
                 },
                 yaxis: {
                     visible: widget.showYAxis,
                     showgrid: widget.showGrid,
                     zeroline: widget.showZeroLines,
-                    range: yRange
+                    range: yRange,
+                    ticksuffix: widget.yAxisTickSuffix
                 },
                 shapes,
                 margin: {
@@ -693,16 +695,6 @@ export class LineChartWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             {
-                name: "showXAxis",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "showYAxis",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
-            },
-            {
                 name: "showGrid",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup
@@ -710,6 +702,17 @@ export class LineChartWidget extends Widget {
             {
                 name: "showZeroLines",
                 type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "showXAxis",
+                displayName: "Show X axis",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "xAxisTickSuffix",
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
             {
@@ -747,6 +750,17 @@ export class LineChartWidget extends Widget {
                 },
                 "double"
             ),
+            {
+                name: "showYAxis",
+                displayName: "Show Y axis",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "yAxisTickSuffix",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            },
             {
                 name: "yAxisRangeOption",
                 type: PropertyType.Enum,
@@ -981,13 +995,15 @@ export class LineChartWidget extends Widget {
     title: string;
     displayModebar: "hover" | "always" | "never";
     showLegend: boolean;
-    showXAxis: boolean;
-    showYAxis: boolean;
     showGrid: boolean;
     showZeroLines: boolean;
+    showXAxis: boolean;
+    xAxisTickSuffix: string;
     xAxisRangeOption: "floating" | "fixed";
     xAxisRangeFrom: number;
     xAxisRangeTo: number;
+    showYAxis: boolean;
+    yAxisTickSuffix: string;
     yAxisRangeOption: "floating" | "fixed";
     yAxisRangeFrom: number;
     yAxisRangeTo: number;
@@ -1009,9 +1025,11 @@ export class LineChartWidget extends Widget {
             showYAxis: observable,
             showGrid: observable,
             showZeroLines: observable,
+            xAxisTickSuffix: observable,
             xAxisRangeOption: observable,
             xAxisRangeFrom: observable,
             xAxisRangeTo: observable,
+            yAxisTickSuffix: observable,
             yAxisRangeOption: observable,
             yAxisRangeFrom: observable,
             yAxisRangeTo: observable,

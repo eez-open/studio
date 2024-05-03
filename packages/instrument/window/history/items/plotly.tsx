@@ -98,7 +98,7 @@ export const PlotterHistoryItemComponent = observer(
         };
 
         get data() {
-            if (this.props.viewType != "thumbs") {
+            if (this.props.viewType != "thumbs" || this.zoom) {
                 return this.props.historyItem.plotlyMessage.data;
             }
 

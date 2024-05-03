@@ -211,6 +211,10 @@
             }
         }
     }
+
+    > .js-plotly-plot {
+        overflow: hidden;
+    }
 }
 
 .EezStudio_UnzoomedPreviewBody {
@@ -219,6 +223,7 @@
     }
 
     &.EezStudio_ImagePreview {
+        cursor: zoom-in;
         img {
             background-color: black;
             width: 480px;
@@ -226,6 +231,7 @@
     }
 
     &.EezStudio_PdfPreview {
+        cursor: pointer;
         & > img {
             pointer-events: none;
             width: 240px;
@@ -287,6 +293,8 @@
         * {
             pointer-events: none !important;
         }
+
+        overflow: hidden;
     }
 }
 

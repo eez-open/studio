@@ -72,7 +72,9 @@ const ZoomedPreview = observer(
                             />
                         </Toolbar>
                     </Header>
-                    <Body>{this.props.children}</Body>
+                    <Body className="EezStudio_ZoomedPreviewBody">
+                        {this.props.children}
+                    </Body>
                 </VerticalHeaderWithBody>,
                 this.el
             );
