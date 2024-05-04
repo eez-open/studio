@@ -376,7 +376,17 @@ const LineChartElement = observer(
             };
         }
 
+        createChartState: "idle" | "create" | "cancel" | "stop" = "idle";
+
         async createChart(el: HTMLDivElement) {
+            if (this.createChartState != "idle") {
+                if (this.createChartState == "create") {
+                    this.createChartState = "cancel";
+                }
+                return;
+            }
+            this.createChartState = "create";
+
             if (this.dispose1) {
                 this.dispose1();
                 this.dispose1 = undefined;
@@ -397,6 +407,17 @@ const LineChartElement = observer(
                 this.layout,
                 this.config
             );
+
+            if (this.createChartState != "create") {
+                if (this.createChartState == "cancel") {
+                    this.createChartState = "idle";
+                    this.createChart(el);
+                }
+                return;
+            }
+
+            this.createChartState = "idle";
+
             this.plotlyEl = el;
             this.plotlyWidth = this.clientWidth;
             this.plotlyHeight = this.clientHeight;
@@ -422,37 +443,47 @@ const LineChartElement = observer(
                     };
                 },
                 async params => {
-                    this.plotly = await Plotly().react(
-                        el,
-                        this.data,
-                        params.layout,
-                        this.config
-                    );
+                    try {
+                        this.plotly = await Plotly().react(
+                            el,
+                            this.data,
+                            params.layout,
+                            this.config
+                        );
+                    } catch (err) {}
+                },
+                {
+                    delay: 16
                 }
             );
 
-            this.dispose2 = autorun(() => {
-                const { widget, flowContext } = this.props;
+            this.dispose2 = autorun(
+                () => {
+                    const { widget, flowContext } = this.props;
 
-                const executionState =
-                    flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
-                        widget
-                    );
-                if (!executionState) {
-                    return;
+                    const executionState =
+                        flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
+                            widget
+                        );
+                    if (!executionState) {
+                        return;
+                    }
+
+                    executionState.updated;
+
+                    (async () => {
+                        this.plotly = await Plotly().react(
+                            el,
+                            this.data,
+                            this.layout,
+                            this.config
+                        );
+                    })();
+                },
+                {
+                    delay: 16
                 }
-
-                executionState.updated;
-
-                (async () => {
-                    this.plotly = await Plotly().react(
-                        el,
-                        this.data,
-                        this.layout,
-                        this.config
-                    );
-                })();
-            });
+            );
         }
 
         updateClientSize() {
@@ -505,6 +536,8 @@ const LineChartElement = observer(
         }
 
         componentWillUnmount(): void {
+            this.createChartState = "stop";
+
             if (this.plotlyEl) {
                 Plotly().purge(this.plotlyEl);
             }
