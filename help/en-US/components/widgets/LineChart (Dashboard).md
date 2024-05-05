@@ -17,7 +17,6 @@ At the beginning of the chart there is not a single point on the lines. In order
 
 ## Data [EMPTY]
 
-
 ## Default style
 
 Style used when rendering of the Widget.
@@ -46,14 +45,6 @@ When the mode bar with buttons will be displayed in the top right corner of the 
 
 It should be set if we want to display the legend.
 
-## Show xaxis
-
-It should be set if we want to display the X-axis.
-
-## Show yaxis
-
-It should be set if we want to display the Y-axis.
-
 ## Show grid
 
 It should be set if we want to display the grid.
@@ -61,6 +52,14 @@ It should be set if we want to display the grid.
 ## Show zero lines
 
 It should be set if we want to display zero lines.
+
+## Show X axis
+
+It should be set if we want to display the X-axis.
+
+## X axis tick suffix
+
+If specified, this string value will be appended to the x axis values. Use this to set the unit of X Axis values.
 
 ## X axis range option
 
@@ -76,6 +75,14 @@ If `Fixed` is selected for `X axis range option`, then the lower limit of the X-
 ## X axis range to
 
 If `Fixed` is selected for `X axis range option`, then the upper limit of the X-axis range is set with this item.
+
+## Show Y axis
+
+It should be set if we want to display the Y-axis.
+
+## Y axis tick suffix
+
+If specified, this string value will be appended to the Y axis values. Use this to set the unit of Y Axis values.
 
 ## Y axis range option
 
