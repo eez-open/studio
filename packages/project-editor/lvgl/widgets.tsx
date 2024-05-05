@@ -1730,7 +1730,7 @@ export class LVGLWidget extends Widget {
                 );
             } else {
                 build.line(
-                    `bool cur_val = ${build.getVariableGetterFunctionName(
+                    `bool new_val = ${build.getVariableGetterFunctionName(
                         this.hiddenFlag as string
                     )}();`
                 );
@@ -1775,7 +1775,7 @@ export class LVGLWidget extends Widget {
                 );
             } else {
                 build.line(
-                    `bool cur_val = ${build.getVariableGetterFunctionName(
+                    `bool new_val = ${build.getVariableGetterFunctionName(
                         this.clickableFlag as string
                     )}();`
                 );
