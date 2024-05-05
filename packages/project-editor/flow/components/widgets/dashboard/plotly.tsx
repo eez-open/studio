@@ -116,6 +116,7 @@ const LineChartElement = observer(
         dispose1: IReactionDisposer | undefined;
         dispose2: IReactionDisposer | undefined;
 
+        updateClientSizeTimeoutId: any;
         clientWidth = 0;
         clientHeight = 0;
 
@@ -360,7 +361,9 @@ const LineChartElement = observer(
                     l: widget.margin.left
                 },
                 plot_bgcolor: bgcolor,
-                paper_bgcolor: bgcolor
+                paper_bgcolor: bgcolor,
+                width: this.clientWidth,
+                height: this.clientHeight
             };
         }
 
@@ -450,7 +453,9 @@ const LineChartElement = observer(
                             params.layout,
                             this.config
                         );
-                    } catch (err) {}
+                    } catch (err) {
+                        console.error(err);
+                    }
                 },
                 {
                     delay: 16
@@ -486,12 +491,20 @@ const LineChartElement = observer(
             );
         }
 
-        updateClientSize() {
+        updateClientSize = () => {
             if (this.ref.current) {
                 const parentElement = this.ref.current.parentElement;
                 if (parentElement) {
                     const clientWidth = parentElement.clientWidth;
                     const clientHeight = parentElement.clientHeight;
+
+                    if (clientWidth == 0 && clientHeight == 0) {
+                        this.updateClientSizeTimeoutId = setTimeout(() => {
+                            this.updateClientSizeTimeoutId = undefined;
+                            this.updateClientSize();
+                        }, 16);
+                    }
+
                     if (
                         clientWidth != this.clientWidth ||
                         clientHeight != this.clientHeight
@@ -503,7 +516,7 @@ const LineChartElement = observer(
                     }
                 }
             }
-        }
+        };
 
         componentDidMount() {
             if (this.ref.current) {
@@ -536,6 +549,11 @@ const LineChartElement = observer(
         }
 
         componentWillUnmount(): void {
+            if (this.updateClientSizeTimeoutId) {
+                clearTimeout(this.updateClientSizeTimeoutId);
+                this.updateClientSizeTimeoutId = undefined;
+            }
+
             this.createChartState = "stop";
 
             if (this.plotlyEl) {

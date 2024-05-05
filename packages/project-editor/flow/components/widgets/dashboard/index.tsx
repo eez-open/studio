@@ -935,7 +935,7 @@ export class CheckboxWidget extends Widget {
             index = 0;
         }
 
-        let id = "CheckboxWidgetInput-" + getId(this);
+        let id = "c-" + guid();
         if (index > 0) {
             id = id + "-" + index;
         }
@@ -2549,3 +2549,4 @@ import "project-editor/flow/components/widgets/dashboard/scpi-terminal";
 import "project-editor/flow/components/widgets/dashboard/embedded-dashboard";
 
 import { assignProperty } from "project-editor/flow/runtime/worker-dashboard-component-context";
+import { guid } from "eez-studio-shared/guid";

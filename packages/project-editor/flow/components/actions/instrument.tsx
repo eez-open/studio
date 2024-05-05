@@ -814,6 +814,11 @@ export class InstrumentRead extends ActionComponent {
             const readableStream = new Stream.Readable();
             readableStream._read = () => {};
 
+            readableStream.on("close", () => {
+                context.endAsyncExecution();
+                connection.offRead(onReadCallback);
+            });
+
             context.propagateValue("data", readableStream);
 
             const connection = instrumentObject.connection;
@@ -823,7 +828,6 @@ export class InstrumentRead extends ActionComponent {
                     readableStream.push(data);
                 } else {
                     readableStream.destroy();
-                    context.endAsyncExecution();
                 }
             };
 
@@ -831,7 +835,6 @@ export class InstrumentRead extends ActionComponent {
 
             const onTerminateCallback = () => {
                 offWasmFlowRuntimeTerminate(onTerminateCallback);
-
                 connection.offRead(onReadCallback);
             };
 

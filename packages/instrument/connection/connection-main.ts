@@ -458,6 +458,7 @@ export class Connection
     onData(data: string, endIndicatorReceived?: boolean | undefined) {
         if (this._onReadCallback) {
             this._onReadCallback(data);
+            return;
         }
 
         if (this.dataTimeoutId) {

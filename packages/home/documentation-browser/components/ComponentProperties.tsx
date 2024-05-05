@@ -219,6 +219,11 @@ export function getPropertyGroups(
                 remove("Absolute position");
                 remove("Resizing");
                 remove("Visible");
+                remove("Output widget handle");
+            }
+
+            if (componentInfo.isEezGuiComponent) {
+                remove("Output widget handle");
             }
 
             if (
