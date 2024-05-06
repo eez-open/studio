@@ -101,7 +101,8 @@ import {
     getExpressionPropertyData,
     LV_EVENT_METER_TICK_LABEL_EVENT,
     LVGL_EVENTS,
-    getExpressionPropertyInitalValue
+    getExpressionPropertyInitalValue,
+    unescapeText
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -2137,7 +2138,7 @@ export class LVGLLabelWidget extends LVGLWidget {
                                 this,
                                 "text"
                             )
-                          : this.text
+                          : unescapeText(this.text)
                   ),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0
@@ -3580,7 +3581,9 @@ export class LVGLRollerWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
+            runtime.wasm.allocateUTF8(
+                optionsExpr ? "" : unescapeText(this.options)
+            ),
             selectedExpr ? 0 : (this.selected as number),
             ROLLER_MODES[this.mode]
         );
@@ -4129,7 +4132,9 @@ export class LVGLDropdownWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            runtime.wasm.allocateUTF8(optionsExpr ? "" : this.options),
+            runtime.wasm.allocateUTF8(
+                optionsExpr ? "" : unescapeText(this.options)
+            ),
             selectedExpr ? 0 : (this.selected as number)
         );
 
@@ -4654,7 +4659,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            runtime.wasm.allocateUTF8(this.text)
+            runtime.wasm.allocateUTF8(unescapeText(this.text))
         );
     }
 
@@ -4814,9 +4819,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 : runtime.wasm.allocateUTF8(
                       this.textType == "expression"
                           ? `{${this.text}}`
-                          : this.text
+                          : unescapeText(this.text)
                   ),
-            !this.placeholder ? 0 : runtime.wasm.allocateUTF8(this.placeholder),
+            !this.placeholder
+                ? 0
+                : runtime.wasm.allocateUTF8(unescapeText(this.placeholder)),
             this.oneLineMode,
             this.passwordMode,
             (!runtime.isEditor || this.textType != "expression") &&

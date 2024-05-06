@@ -140,6 +140,10 @@ export const validators = {
         return function (object: any, ruleName: string) {
             const value = object[ruleName];
 
+            if (!value) {
+                return null;
+            }
+
             let invalidCharFound: string | undefined;
             for (const char of chars) {
                 if (value.indexOf(char) !== -1) {

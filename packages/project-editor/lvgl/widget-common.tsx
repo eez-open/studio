@@ -417,3 +417,23 @@ export function getExpressionPropertyInitalValue(
         return "";
     }
 }
+
+export function unescapeText(str: string) {
+    let result = "";
+
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] == "\\" && i + 5 < str.length && str[i + 1] == "u") {
+            result += String.fromCharCode(
+                parseInt(str.substring(i + 2, i + 6), 16)
+            );
+            i += 5;
+            continue;
+        }
+
+        result += str[i];
+    }
+
+    console.log(`|${str}|${result}|`);
+
+    return result;
+}
