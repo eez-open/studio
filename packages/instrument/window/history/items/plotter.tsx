@@ -140,8 +140,8 @@ export const PlotterHistoryItemComponent = observer(
 
         get chartLayout() {
             return {
-                width: 1200,
-                height: 800
+                width: 900,
+                height: 540
             };
         }
 
@@ -348,9 +348,6 @@ class PlotterHistoryItemWithEezChart extends DlogWaveform {
                 if (max == undefined || y > max) max = y;
             }
 
-            min = -100;
-            max = 100;
-
             if (minTotal == undefined || (min != undefined && min < minTotal)) {
                 minTotal = min;
             }
@@ -374,6 +371,19 @@ class PlotterHistoryItemWithEezChart extends DlogWaveform {
                 color: lighten(COLORS[yIndex % COLORS.length]),
                 colorInverse: COLORS[yIndex % COLORS.length]
             };
+        });
+
+        // set the same range for all y axis
+        minTotal = minTotal ?? 0;
+        maxTotal = maxTotal ?? 0;
+        const d = maxTotal - minTotal;
+        const overhead = 0 / 100; // no overhead
+        const range = {
+            min: minTotal - overhead * d,
+            max: maxTotal + overhead * d
+        };
+        yAxes.forEach(yAxis => {
+            yAxis.range = range;
         });
 
         let startTime = readDouble(0);

@@ -102,7 +102,8 @@ import {
     LV_EVENT_METER_TICK_LABEL_EVENT,
     LVGL_EVENTS,
     getExpressionPropertyInitalValue,
-    unescapeText
+    unescapeText,
+    checkProperty
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -2064,9 +2065,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         ),
 
         check: (widget: LVGLLabelWidget, messages: IMessage[]) => {
-            if (!widget.text) {
-                messages.push(propertyNotSetMessage(widget, "text"));
-            }
+            checkProperty(widget, "text", messages);
         },
 
         lvgl: {
