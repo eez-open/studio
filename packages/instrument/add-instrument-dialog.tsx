@@ -116,9 +116,12 @@ function renderManufacturer(node: IListNode) {
 
 function getExtensionName(extension: IExtension) {
     const manufacturer = getManufacturer(extension);
-    const name = extension.displayName || extension.name;
+    let name = extension.displayName || extension.name;
     if (name.startsWith(manufacturer)) {
-        return name.substr(manufacturer.length).trim();
+        const nameWithoutManufacturer = name.substr(manufacturer.length).trim();
+        if (nameWithoutManufacturer != "") {
+            name = nameWithoutManufacturer;
+        }
     }
     return name;
 }
