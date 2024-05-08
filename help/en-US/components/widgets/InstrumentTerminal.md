@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-This widget allows interaction with the instrument based on the SCPI specification. It consists of several parts, some of them can be hidden with associated properties.
+This widget allows interaction with the instrument. It consists of several parts, some of them can be hidden with associated properties.
 
 ![alt text](../images/scpi_terminal.png)
 
@@ -20,7 +20,7 @@ Show/Hide shortctus panel.
 
 ## Show help
 
-Show/Hide SCPI commands help panel.
+Show/Hide commands help panel.
 
 ## Show side bar
 
