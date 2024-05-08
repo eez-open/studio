@@ -449,7 +449,7 @@ export const DetailsView = observer(
             } else {
                 return (
                     <VerticalHeaderWithBody>
-                        <ToolbarHeader>
+                        <ToolbarHeader className="EezStudio_InstrumentTools">
                             <HistoryTools
                                 appStore={notebooksHomeSectionStore.appStore!}
                             />

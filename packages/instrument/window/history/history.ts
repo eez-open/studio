@@ -1,3 +1,4 @@
+import { ipcRenderer } from "electron";
 import {
     observable,
     computed,
@@ -26,7 +27,8 @@ import {
     activityLogStore,
     IActivityLogFilterSpecification,
     logDelete,
-    logUndelete
+    logUndelete,
+    logUpdate
 } from "instrument/window/history/activity-log";
 
 import { Filters, FilterStats } from "instrument/window/history/filters";
@@ -841,10 +843,24 @@ class HistorySelection {
     constructor(public history: History) {
         makeObservable(this, {
             _items: observable,
+            canConvertToChart: computed,
+            canStorePermanently: computed,
             canDelete: computed,
             items: computed,
             selectItems: action
         });
+    }
+
+    get canConvertToChart() {
+        const items = this.items.filter(
+            item => item.type == "instrument/answer"
+        );
+        return items.length > 0;
+    }
+
+    get canStorePermanently() {
+        const items = this.items.filter(item => item.temporary);
+        return items.length > 0;
     }
 
     get canDelete() {
@@ -924,6 +940,8 @@ export class History {
             onCreateActivityLogEntry: action,
             onUpdateActivityLogEntry: action,
             onDeleteActivityLogEntry: action,
+            convertToChart: action.bound,
+            storeSelectedHistoryItemsPermanently: action.bound,
             deleteSelectedHistoryItems: action.bound,
             itemInTheCenterOfTheView: observable,
             setItemInTheCenterOfTheView: action,
@@ -1429,6 +1447,12 @@ export class History {
         if (activityLogEntry.data !== undefined) {
             foundItem.historyItem.setData(activityLogEntry.data);
         }
+
+        if (activityLogEntry.temporary != undefined) {
+            runInAction(() => {
+                foundItem.historyItem.temporary = activityLogEntry.temporary;
+            });
+        }
     }
 
     onDeleteActivityLogEntry(
@@ -1445,37 +1469,83 @@ export class History {
         this.removeActivityLogEntry(activityLogEntry);
     }
 
-    deleteSelectedHistoryItems() {
-        if (this.selection.items.length > 0) {
-            beginTransaction("Delete history items");
+    convertToChart() {
+        const items = this.selection.items.filter(
+            item => item.type == "instrument/answer"
+        );
 
-            this.selection.items.forEach(historyItem =>
-                logDelete(
-                    this.options.store,
-                    {
-                        oid: historyItem.oid,
-                        id: historyItem.id
-                    },
-                    {
-                        undoable: true
-                    }
-                )
-            );
-
-            commitTransaction();
-
-            this.selection.selectItems([]);
-
-            setTimeout(() => {
-                if (this.items.length < CONF_ITEMS_BLOCK_SIZE) {
-                    if (this.navigator.hasOlder) {
-                        this.navigator.loadOlder();
-                    } else {
-                        this.navigator.loadNewer();
-                    }
-                }
-            }, 100);
+        if (items.length == 0) {
+            return;
         }
+
+        ipcRenderer.send("instrument/connection/create-plotter", {
+            instrumentId: this.appStore.instrument.id,
+            answerIds: items.map(item => item.id)
+        });
+
+        this.selection.selectItems([]);
+    }
+
+    storeSelectedHistoryItemsPermanently() {
+        const items = this.selection.items.filter(item => item.temporary);
+        if (items.length == 0) {
+            return;
+        }
+
+        beginTransaction("Store history items permanently");
+
+        items.forEach(historyItem => {
+            logUpdate(
+                this.options.store,
+                {
+                    oid: historyItem.oid,
+                    id: historyItem.id,
+                    temporary: false
+                },
+                {
+                    undoable: true
+                }
+            );
+        });
+
+        commitTransaction();
+
+        this.selection.selectItems([]);
+    }
+
+    deleteSelectedHistoryItems() {
+        if (this.selection.items.length == 0) {
+            return;
+        }
+
+        beginTransaction("Delete history items");
+
+        this.selection.items.forEach(historyItem =>
+            logDelete(
+                this.options.store,
+                {
+                    oid: historyItem.oid,
+                    id: historyItem.id
+                },
+                {
+                    undoable: true
+                }
+            )
+        );
+
+        commitTransaction();
+
+        this.selection.selectItems([]);
+
+        setTimeout(() => {
+            if (this.items.length < CONF_ITEMS_BLOCK_SIZE) {
+                if (this.navigator.hasOlder) {
+                    this.navigator.loadOlder();
+                } else {
+                    this.navigator.loadNewer();
+                }
+            }
+        }, 100);
     }
 
     /// Return all the history items between fromItem and toItem.

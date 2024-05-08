@@ -695,7 +695,7 @@ export class General extends EezObject {
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "SCPI", label: "SCPI" },
-                    { id: "PROPRIETARY", label: "PROPRIETARY" }
+                    { id: "PROPRIETARY", label: "Proprietary" }
                 ],
                 enumDisallowUndefined: true,
                 readOnlyInPropertyGrid: true,

@@ -413,7 +413,9 @@ export function log(
     activityLogEntry: Partial<IActivityLogEntry>,
     options: IStoreOperationOptions
 ) {
-    activityLogEntry.date = new Date();
+    if (activityLogEntry.date == undefined) {
+        activityLogEntry.date = new Date();
+    }
 
     if (store === activityLogStore) {
         activityLogEntry.sid = activeSession.id;

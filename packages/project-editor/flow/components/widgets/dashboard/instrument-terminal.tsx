@@ -25,7 +25,7 @@ import { TERMINAL_WIDGET_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SCPITerminalElement = makeLazyComponent(
+const InstrumentTerminalElement = makeLazyComponent(
     async () => {
         const { instruments } = await import("instrument/instrument-object");
         const { Terminal } = await import(
@@ -45,7 +45,7 @@ const SCPITerminalElement = makeLazyComponent(
     (
         { instruments, Terminal, showLoader },
         props: {
-            widget: SCPITerminalWidget;
+            widget: InstrumentTerminalWidget;
             flowContext: IFlowContext;
             width: number;
             height: number;
@@ -124,7 +124,7 @@ const SCPITerminalElement = makeLazyComponent(
         } else {
             content = (
                 <>
-                    <p>SCPI Terminal for:</p>
+                    <p>Terminal for:</p>
                     <pre>{props.widget.instrument}</pre>
                 </>
             );
@@ -137,7 +137,7 @@ const SCPITerminalElement = makeLazyComponent(
     }
 );
 
-export class SCPITerminalWidget extends Widget {
+export class InstrumentTerminalWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
@@ -233,7 +233,7 @@ export class SCPITerminalWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <SCPITerminalElement
+                <InstrumentTerminalElement
                     widget={this}
                     flowContext={flowContext}
                     width={width}
@@ -247,4 +247,4 @@ export class SCPITerminalWidget extends Widget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerClass("SCPITerminalWidget", SCPITerminalWidget);
+registerClass("InstrumentTerminalWidget", InstrumentTerminalWidget);

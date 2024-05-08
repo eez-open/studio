@@ -444,8 +444,6 @@ export function unescapeText(str: string) {
         result += str[i];
     }
 
-    console.log(`|${str}|${result}|`);
-
     return result;
 }
 

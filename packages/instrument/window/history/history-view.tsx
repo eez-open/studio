@@ -45,7 +45,10 @@ import {
 } from "instrument/connection/file-type";
 import { Loader } from "eez-studio-ui/loader";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
-import { PLOTTER_ICON } from "project-editor/ui-components/icons";
+import {
+    CONVERT_TO_CHART,
+    PLOTTER_ICON
+} from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -342,13 +345,7 @@ export const HistoryTools = observer(
                         icon="material:attach_file"
                         title="Attach File"
                         onClick={this.attachFile}
-                    /> /*,
-                <IconAction
-                    key="generateChart"
-                    icon="material:wb_auto"
-                    title="Generate chart"
-                    onClick={this.generateChart}
-                />*/
+                    />
                 );
 
                 if (this.props.appStore.instrument.commandsProtocol == "SCPI") {
@@ -373,10 +370,20 @@ export const HistoryTools = observer(
                             }
                         />
                     );
+
+                    if (appStore.history.selection.canConvertToChart) {
+                        tools.push(
+                            <IconAction
+                                key="convertToChart"
+                                icon={CONVERT_TO_CHART}
+                                title="Create chart from selected items"
+                                onClick={appStore.history.convertToChart}
+                            />
+                        );
+                    }
                 }
 
                 // add tools from extensions
-                const numToolsBefore = tools.length;
                 extensions.forEach(extension => {
                     if (extension.activityLogTools) {
                         extension.activityLogTools.forEach(activityLogTool => {
@@ -406,19 +413,25 @@ export const HistoryTools = observer(
                                 }
                             }
                             if (tool) {
-                                if (numToolsBefore === tools.length) {
-                                    tools.push(
-                                        <div
-                                            key={`separator_${numToolsBefore}`}
-                                            style={{ width: 10 }}
-                                        />
-                                    );
-                                }
                                 tools.push(tool);
                             }
                         });
                     }
                 });
+
+                if (appStore.history.selection.canStorePermanently) {
+                    tools.push(
+                        <IconAction
+                            key="Save"
+                            icon="material:save"
+                            title="Store selected history items permanently"
+                            onClick={
+                                appStore.history
+                                    .storeSelectedHistoryItemsPermanently
+                            }
+                        />
+                    );
+                }
 
                 if (appStore.history.selection.canDelete) {
                     tools.push(
@@ -426,7 +439,6 @@ export const HistoryTools = observer(
                             key="delete"
                             icon="material:delete"
                             title="Delete selected history items"
-                            style={{ marginLeft: 10 }}
                             onClick={
                                 appStore.history.deleteSelectedHistoryItems
                             }
@@ -435,11 +447,6 @@ export const HistoryTools = observer(
                 }
 
                 if (appStore.deletedItemsHistory.deletedCount > 0) {
-                    const style =
-                        appStore.history.selection.items.length === 0
-                            ? { marginLeft: 20 }
-                            : undefined;
-
                     tools.push(
                         <ButtonAction
                             key="deletedItems"
@@ -451,7 +458,7 @@ export const HistoryTools = observer(
                                     .navigateToDeletedHistoryItems
                             }
                             className="btn-secondary btn-sm"
-                            style={style}
+                            style={{ marginLeft: 20 }}
                         />
                     );
                 }

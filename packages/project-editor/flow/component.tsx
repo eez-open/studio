@@ -368,6 +368,9 @@ function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     ) {
         jsObject.type = "UserWidgetWidget";
     }
+    if (jsObject.type == "SCPITerminalWidget") {
+        jsObject.type = "InstrumentTerminalWidget";
+    }
     return getClassFromType(projectStore, jsObject.type);
 }
 

@@ -713,7 +713,10 @@ export class Connection
 
     enablePlotter() {
         try {
-            this.startLongOperation(() => new Plotter(this), false);
+            this.startLongOperation(
+                () => new Plotter(this, this.instrument),
+                false
+            );
         } catch (err) {
             this.logAnswer(`**ERROR: ${err}\n`);
         }
@@ -1055,6 +1058,19 @@ export function setupIpcServer() {
             if (connection) {
                 connection.enablePlotter();
             }
+        }
+    );
+
+    ipcMain.on(
+        "instrument/connection/create-plotter",
+        function (
+            event: any,
+            arg: {
+                instrumentId: string;
+                answerIds: string[];
+            }
+        ) {
+            Plotter.createPlotter(arg.instrumentId, arg.answerIds);
         }
     );
 

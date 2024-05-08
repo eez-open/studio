@@ -54,7 +54,8 @@ export class HistoryItem implements IHistoryItem {
         makeObservable(this, {
             message: observable,
             selected: observable,
-            _dataUpdated: observable
+            _dataUpdated: observable,
+            temporary: observable
         });
 
         this.id = activityLogEntry.id;
@@ -70,6 +71,7 @@ export class HistoryItem implements IHistoryItem {
         this.message = activityLogEntry.message;
         this._data = activityLogEntry.data;
         this.deleted = activityLogEntry.deleted;
+        this.temporary = activityLogEntry.temporary;
     }
 
     deleteLog() {

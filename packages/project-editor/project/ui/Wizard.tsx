@@ -2138,7 +2138,7 @@ const ProjectProperties = observer(
                                         >
                                             <option value="SCPI">SCPI</option>
                                             <option value="PROPRIETARY">
-                                                PROPRIETARY
+                                                Proprietary
                                             </option>
                                         </select>
                                     </div>

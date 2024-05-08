@@ -217,7 +217,9 @@ export const AppBar = observer(
 
                     <div>{sendFile}</div>
 
-                    <Toolbar>{toolbarButtons}</Toolbar>
+                    <Toolbar className="EezStudio_InstrumentTools">
+                        {toolbarButtons}
+                    </Toolbar>
                 </Header>
             );
         }

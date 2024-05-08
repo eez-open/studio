@@ -160,7 +160,10 @@ export const HistorySection = observer(
 
             return (
                 <VerticalHeaderWithBody>
-                    <ToolbarHeader style={{ padding: 5 }}>
+                    <ToolbarHeader
+                        className="EezStudio_InstrumentTools"
+                        style={{ padding: 5 }}
+                    >
                         <HistoryTools appStore={this.appStore} />
                     </ToolbarHeader>
                     <Body>{historyView}</Body>

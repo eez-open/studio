@@ -7,8 +7,18 @@ import {
 } from "instrument/window/history/activity-log";
 import { LongOperation } from "instrument/connection/connection-base";
 
-import type { Connection } from "instrument/connection/connection-main";
 import { db } from "eez-studio-shared/db-path";
+
+import type { Connection } from "instrument/connection/connection-main";
+import {
+    instruments,
+    type InstrumentObject
+} from "instrument/instrument-object";
+import {
+    beginTransaction,
+    commitTransaction,
+    undo
+} from "eez-studio-shared/store";
 
 const UPDATE_LOG_DEBOUNCE = 100;
 
@@ -33,15 +43,70 @@ export class Plotter implements LongOperation {
 
     skipFirst: boolean = true;
 
-    constructor(protected connection: Connection) {
-        // TODO do not create log entry until some data is received, or create
-        // log entry that will print "Waiting for data ..." and timeout after 10 seconds
-        // If number of variables changed than close current log entry and create a new one.
-        // If Studio is reloaded than latest log entry should survive, even if recording is paused.
-        // So, the last log entry should be permanent and only make id temporary
-        // when closed (if recording is paused).
+    constructor(
+        protected connection: Connection | undefined,
+        protected instrument: InstrumentObject,
+        protected startTime?: Date
+    ) {
+        if (this.connection) {
+            this.createLog();
+        }
+    }
 
-        this.createLog();
+    static createPlotter(instrumentId: string, answerIds: string[]) {
+        let result: { message: string; date: Date }[] = db
+            .prepare(
+                `SELECT message, date FROM ${
+                    activityLogStore.storeName
+                } WHERE id IN(${answerIds.join(",")}) ORDER BY date ASC`
+            )
+            .all();
+
+        if (result.length == 0) {
+            return;
+        }
+
+        let dataStr = "";
+        for (const row of result) {
+            dataStr += row.message;
+        }
+
+        dataStr = dataStr.trim();
+
+        if (dataStr == "") {
+            return;
+        }
+
+        const startTime = new Date(Number(result[0].date));
+
+        beginTransaction("Create chart");
+
+        const instrument = instruments.get(instrumentId);
+        if (!instrument) {
+            return;
+        }
+
+        const plotter = new Plotter(undefined, instrument, startTime);
+        plotter.onData(dataStr);
+
+        if (plotter.logId) {
+            for (const answerId of answerIds) {
+                logDelete(
+                    activityLogStore,
+                    {
+                        oid: instrument.id,
+                        id: answerId
+                    },
+                    {
+                        undoable: true
+                    }
+                );
+            }
+            commitTransaction();
+        } else {
+            commitTransaction();
+            undo();
+        }
     }
 
     abort() {
@@ -56,7 +121,8 @@ export class Plotter implements LongOperation {
 
         this.dataStr += dataStr;
 
-        let x = Date.now();
+        let x =
+            this.startTime != undefined ? this.startTime.getTime() : Date.now();
 
         let updated = false;
         while (true) {
@@ -78,7 +144,7 @@ export class Plotter implements LongOperation {
                 continue;
             }
 
-            const variables = this.parseLine(line);
+            const variables = plotterParseLine(line);
 
             if (variables.length > 0) {
                 const variableNames = variables.map(variable => variable.name);
@@ -103,7 +169,9 @@ export class Plotter implements LongOperation {
                     // flush all remaining data
                     this.updateLog(true);
 
-                    this.createLog();
+                    if (this.connection) {
+                        this.createLog();
+                    }
 
                     this.variableNames = variableNames;
                     this.totalNumPoints = 0;
@@ -143,9 +211,13 @@ export class Plotter implements LongOperation {
         }
 
         if (updated && !this.updateLogTime) {
-            this.updateLogTime = setTimeout(() => {
-                this.updateLog(false);
-            }, UPDATE_LOG_DEBOUNCE);
+            if (this.connection) {
+                this.updateLogTime = setTimeout(() => {
+                    this.updateLog(false);
+                }, UPDATE_LOG_DEBOUNCE);
+            } else {
+                this.updateLog(true);
+            }
         }
     }
 
@@ -154,54 +226,22 @@ export class Plotter implements LongOperation {
     }
 
     createLog() {
-        this.connection.lastAnswerActivityLogId = undefined;
-        this.connection.lastAnswerActivityLogMessage = "";
+        if (this.connection) {
+            this.connection.lastAnswerActivityLogId = undefined;
+            this.connection.lastAnswerActivityLogMessage = "";
+        }
 
         this.logEntry = {
-            oid: this.connection.instrument.id,
+            oid: this.instrument.id,
             type: "instrument/plotter",
             message: JSON.stringify({}),
+            date: this.startTime,
             temporary: false
         };
 
         this.logId = log(activityLogStore, this.logEntry, {
-            undoable: false
+            undoable: !this.connection
         });
-    }
-
-    parseLine(line: string) {
-        let parts = line.split(",");
-        if (parts.length == 1) {
-            parts = line.split("\t");
-        }
-
-        const variables: {
-            name: string;
-            value: number;
-        }[] = [];
-
-        parts.forEach((part, i) => {
-            let name;
-            let valueStr;
-
-            const nameValue = part.split(":");
-            if (nameValue.length == 2) {
-                name = nameValue[0];
-                valueStr = nameValue[1];
-            } else {
-                name = `Value ${i + 1}`;
-                valueStr = nameValue[0];
-            }
-
-            let value = parseFloat(valueStr);
-            if (isNaN(value)) {
-                return;
-            }
-
-            variables.push({ name, value });
-        });
-
-        return variables;
     }
 
     lastTime: number | undefined;
@@ -236,19 +276,20 @@ export class Plotter implements LongOperation {
         }
 
         if (finalize && this.variableNames.length == 0) {
-            logDelete(activityLogStore, this.logEntry, {
-                deletePermanently: true,
-                undoable: false
-            });
+            if (this.connection) {
+                logDelete(activityLogStore, this.logEntry, {
+                    deletePermanently: true,
+                    undoable: !this.connection
+                });
+            }
             return;
         }
 
-        this.logEntry.message = JSON.stringify({
+        const message = JSON.stringify({
             state: finalize ? "success" : "live",
             fileType: {
                 ext: "dlog",
-                mime: "application/eez-dlog",
-                comment: "This is comment"
+                mime: "application/eez-dlog"
             },
             dataLength: this.numPoints * 8 * (1 + this.variableNames.length),
 
@@ -258,35 +299,89 @@ export class Plotter implements LongOperation {
             rate: this.rate
         });
 
-        let temporary = false;
-        if (finalize && this.connection.instrument.id) {
-            const row = db
-                .prepare(
-                    `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
-                )
-                .get(this.connection.instrument.id);
-            if (!row.recordHistory) {
-                temporary = true;
+        const data = this.dataBuffer.slice(
+            0,
+            8 * this.numPoints * (1 + this.variableNames.length)
+        );
+
+        if (this.connection) {
+            this.logEntry.message = message;
+
+            let temporary = false;
+            if (finalize && this.instrument.id) {
+                const row = db
+                    .prepare(
+                        `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
+                    )
+                    .get(this.instrument.id);
+                if (!row.recordHistory) {
+                    temporary = true;
+                }
             }
+
+            logUpdate(
+                activityLogStore,
+                {
+                    id: this.logId,
+                    oid: this.instrument.id,
+                    message: this.logEntry.message,
+                    data,
+                    temporary
+                },
+                {
+                    undoable: false
+                }
+            );
+        } else {
+            this.logEntry = {
+                oid: this.instrument.id,
+                type: "instrument/plotter",
+                message,
+                data,
+                date: this.startTime,
+                temporary: false
+            };
+
+            this.logId = log(activityLogStore, this.logEntry, {
+                undoable: true
+            });
+        }
+    }
+}
+
+export function plotterParseLine(line: string) {
+    let parts = line.split(",");
+    if (parts.length == 1) {
+        parts = line.split("\t");
+    }
+
+    const variables: {
+        name: string;
+        value: number;
+    }[] = [];
+
+    parts.forEach((part, i) => {
+        let name;
+        let valueStr;
+
+        const nameValue = part.split(":");
+        if (nameValue.length == 2) {
+            name = nameValue[0];
+            valueStr = nameValue[1];
+        } else {
+            name = `Value ${i + 1}`;
+            valueStr = nameValue[0];
         }
 
-        logUpdate(
-            activityLogStore,
-            {
-                id: this.logId,
-                oid: this.connection.instrument.id,
-                message: this.logEntry.message,
-                data: this.dataBuffer.slice(
-                    0,
-                    8 * this.numPoints * (1 + this.variableNames.length)
-                ),
-                temporary
-            },
-            {
-                undoable: false
-            }
-        );
-    }
+        let value = parseFloat(valueStr);
+        if (isNaN(value)) {
+            return;
+        }
+
+        variables.push({ name, value });
+    });
+
+    return variables;
 }
 
 function compareStringArray(arr1: string[], arr2: string[]) {
