@@ -3516,7 +3516,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN"],
+            parts: ["MAIN", "SELECTED"],
             flags: [
                 "HIDDEN",
                 "CLICKABLE",
