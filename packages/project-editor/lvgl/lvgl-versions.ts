@@ -505,6 +505,22 @@ const versions = {
         getLvglStylePropName: (stylePropName: string) => {
             if (stylePropName == "bg_img_src") {
                 return "bg_image_src";
+            } else if (stylePropName == "bg_img_opa") {
+                return "bg_image_opa";
+            } else if (stylePropName == "bg_img_recolor") {
+                return "bg_image_recolor";
+            } else if (stylePropName == "bg_img_recolor_opa") {
+                return "bg_image_recolor_opa";
+            } else if (stylePropName == "bg_img_tiled") {
+                return "bg_image_tiled";
+            } else if (stylePropName == "img_opa") {
+                return "image_opa";
+            } else if (stylePropName == "img_recolor") {
+                return "image_recolor";
+            } else if (stylePropName == "img_recolor_opa") {
+                return "image_recolor_opa";
+            } else if (stylePropName == "arc_img_src") {
+                return "arc_image_src";
             }
             return stylePropName;
         },
