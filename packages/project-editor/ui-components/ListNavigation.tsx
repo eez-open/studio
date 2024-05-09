@@ -309,6 +309,11 @@ export const ListNavigation = observer(
                 this.listAdapter.deleteSelection();
             }
         }
+        selectAll() {
+            this.listAdapter.selectItems(
+                this.listAdapter.allRows.map(row => row.item)
+            );
+        }
         onFocus() {
             const navigationStore = this.context.navigationStore;
             if (isPartOfNavigation(this.props.navigationObject)) {

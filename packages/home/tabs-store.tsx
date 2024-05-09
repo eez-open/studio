@@ -578,6 +578,14 @@ export class ProjectEditorTab implements IHomeTab {
                 }
             }
         };
+        const selectAll = () => {
+            if (
+                projectStore.navigationStore.selectedPanel &&
+                projectStore.navigationStore.selectedPanel.selectAll
+            ) {
+                projectStore.navigationStore.selectedPanel.selectAll();
+            }
+        };
         const onResetLayoutModels = () => {
             if (!this.runMode) {
                 projectStore.layoutModels.reset();
@@ -609,6 +617,7 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("copy", copy);
         ipcRenderer.on("paste", paste);
         ipcRenderer.on("delete", deleteSelection);
+        ipcRenderer.on("select-all", selectAll);
 
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
 
@@ -632,6 +641,7 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("copy", copy);
             ipcRenderer.removeListener("paste", paste);
             ipcRenderer.removeListener("delete", deleteSelection);
+            ipcRenderer.removeListener("select-all", selectAll);
 
             ipcRenderer.removeListener(
                 "resetLayoutModels",

@@ -605,12 +605,19 @@ export class TreeObjectAdapter {
             return undefined;
         })();
 
-        if (editable && selectedObject && canAdd(selectedObject)) {
+        let parentObject: IEezObject | undefined;
+        if (selectedObject) {
+            parentObject = getParent(selectedObject);
+        } else {
+            parentObject = this.object;
+        }
+
+        if (editable && parentObject && canAdd(parentObject)) {
             menuItems.push(
                 new MenuItem({
                     label: "Add",
                     click: async () => {
-                        const aNewObject = await addItem(selectedObject!);
+                        const aNewObject = await addItem(parentObject!);
                         if (aNewObject) {
                             ProjectEditor.navigateTo(aNewObject);
                         }

@@ -19,6 +19,7 @@ export interface IPanel {
     copySelection(): void;
     pasteSelection(): void;
     deleteSelection(): void;
+    selectAll?(): void;
 }
 
 export class NavigationStore {

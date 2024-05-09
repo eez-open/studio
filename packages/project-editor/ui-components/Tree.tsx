@@ -783,10 +783,6 @@ export const Tree = observer(
                 if (!this.props.treeAdapter.isSelected(item)) {
                     this.props.treeAdapter.selectItem(item);
                 }
-
-                setTimeout(() => {
-                    this.props.treeAdapter.showSelectionContextMenu();
-                });
             }
         };
 
@@ -825,10 +821,11 @@ export const Tree = observer(
             this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
         };
 
-        onContextMenu(event: React.MouseEvent) {
+        onContextMenu = (event: React.MouseEvent) => {
             event.preventDefault();
             event.stopPropagation();
-        }
+            this.props.treeAdapter.showSelectionContextMenu();
+        };
 
         render() {
             const { treeAdapter, tabIndex, onFocus, onEditItem, renderItem } =

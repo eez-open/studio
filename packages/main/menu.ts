@@ -542,8 +542,13 @@ function buildEditMenu(win: IWindow | undefined) {
             },
             {
                 label: "Select All",
-                accelerator: "CmdOrCtrl+A",
-                role: "selectAll"
+                accelerator: isMacOs() ? "CmdOrCtrl+A" : undefined,
+                role: isMacOs() ? "selectAll" : undefined,
+                click: function (item, focusedWindow) {
+                    if (focusedWindow) {
+                        focusedWindow.webContents.send("select-all");
+                    }
+                }
             }
         ]
     };
