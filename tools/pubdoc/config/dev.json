@@ -15,145 +15,145 @@
                         "content": "Start.html",
                         "status": "publish",
                         "id": 10057,
-                        "sha256": "3421101b7b3dc16de83ece5ee6451e5c9e28349f93145252831143dbda17a481"
+                        "sha256": "39c5dc94efc6111aeb900a392bd11ab374b0feba0e9bda2ae51002e5ed2db014"
                     },
                     {
                         "content": "End.html",
                         "status": "publish",
                         "id": 10058,
-                        "sha256": "92749cea73f79b97b63d4c3892fb134d21cdf4116de19ea2e5822a83041143ac"
+                        "sha256": "dcbc5acaa2c02649a7099a04319d9b315a4a56c3988e39a9b26aba68ac4f114d"
                     },
                     {
                         "content": "Input.html",
                         "status": "publish",
                         "id": 10059,
-                        "sha256": "b41758a4d8381d9592860b16aae2422877d60df93fb6bf5bcaf35d4c5b32caa0"
+                        "sha256": "7dd2424e5cf352bcf422380fe494e4e678ec98c4e3fcdaaa05a0db86b9c68d5c"
                     },
                     {
                         "content": "Output.html",
                         "status": "publish",
                         "id": 10060,
-                        "sha256": "e3455586c488f99489e8090a448a84692006a81789ca5071222ccc8187306dfc"
+                        "sha256": "682e13eb98924e3d9f66f3401d624e9cc2672a4625b1b9154e0ad265983f81b0"
                     },
                     {
                         "content": "Evaluate.html",
                         "status": "publish",
                         "id": 10061,
-                        "sha256": "d81dc77b9f370d964e8d6e1da49d5fdb9ee54beeededbaca12f2dc66eed496dd"
+                        "sha256": "c8cbff8f4e4ec4d7219e62f1468e349ea2d5385f829c06de82ce53306a955949"
                     },
                     {
                         "content": "Watch.html",
                         "status": "publish",
                         "id": 10062,
-                        "sha256": "8821162b3e947c5d74da53fe542905ce899a2afa7326f262e5b4eb487777ea86"
+                        "sha256": "75b1581baeb52189bac60784a0ec856f9255af08c68b3e1551a7699b54d04d55"
                     },
                     {
                         "content": "SetVariable.html",
                         "status": "publish",
                         "id": 10063,
-                        "sha256": "3340e9693b285ca5aca4b1db9eb668a221ed7e0f99381b6b009f94b42918b308"
+                        "sha256": "0f5f2aa36478dce1b789a36e1b85acb3fd4ff58c1c0eced5fcf1fbe884c73e19"
                     },
                     {
                         "content": "SwitchCase.html",
                         "status": "publish",
                         "id": 10064,
-                        "sha256": "ceb73aa741f86c7d9c85c1ad9eb853b244992fdec9a8fefe926b46b243e860af"
+                        "sha256": "649b84f4f9feed53b32db16bb0a0c08db38ed9362394d0058cccc307efff75d7"
                     },
                     {
                         "content": "Compare.html",
                         "status": "publish",
                         "id": 10065,
-                        "sha256": "bd06db996227791ae2b6158b09db3ff3e7d4c885df7692d224474039e21647cd"
+                        "sha256": "7d0e18fd014dd1f0f6c7700e4178e86f556753ec5e321aafd3a67824277f3793"
                     },
                     {
                         "content": "IsTrue.html",
                         "status": "publish",
                         "id": 10066,
-                        "sha256": "6f9c1070508304be6de9bad8e9b87861653c9a250a7cdd503e907e804e947846"
+                        "sha256": "15e8daf5f6b54fd9da30dd6967e80a0e7685cd3fa5b24d0adc95902da9c2ac2c"
                     },
                     {
                         "content": "TestAndSet.html",
                         "status": "publish",
                         "id": 10067,
-                        "sha256": "fe3fbd6d06f64e7500baf37a5faf9ca24f15812c5c5b2793a899a1901ce637b5"
+                        "sha256": "f048fec92fd41366c04618ef737b00fbe133a4b219bc146423e8eb5409dad17a"
                     },
                     {
                         "content": "Delay.html",
                         "status": "publish",
                         "id": 10068,
-                        "sha256": "7cc5138035c63488ab872ee72b9b846f9dda7e2a63fef993d39622233544ca9a"
+                        "sha256": "b9a6c617cf5b536d248dd2a11b68525250c0390aabbcbbf7c7190063b95d20cd"
                     },
                     {
                         "content": "Loop.html",
                         "status": "publish",
                         "id": 10069,
-                        "sha256": "94c78283c7fdc1913ca8d028ce3bea26bd4d87aa189ea8f3a15919d94de2ee9d"
+                        "sha256": "9148f1ef6c065549a25862179a375105ac6f6b4661ca1cb43bada074ebad2516"
                     },
                     {
                         "content": "Label IN.html",
                         "status": "publish",
                         "id": 12569,
-                        "sha256": "99260252b2dbd51eaef80691999459742a26e1694795e9cafa461618dbb1ef8c"
+                        "sha256": "a2ec858c3e715414967fd95fcbb2c77e55943c1ccff4e6e5237daddba80a5d55"
                     },
                     {
                         "content": "Label OUT.html",
                         "status": "publish",
                         "id": 12570,
-                        "sha256": "32b58d978bb710f8ab04b0566bbe2b272944c3c6ace843b01b75ed63c452c1c2"
+                        "sha256": "f0d4399054d4ebe6f54bcba010a7f8ffc15924088f5678eeeb053266fc530d79"
                     },
                     {
                         "content": "Counter.html",
                         "status": "publish",
                         "id": 10070,
-                        "sha256": "5b7837b9f5963886365bc11de453759b113df1619efbff2619771c71ffda9a5e"
+                        "sha256": "694570191e11abbc38fc05577372c0de3fc582ab6b87eb8f9dd6344b296862e8"
                     },
                     {
                         "content": "Constant.html",
                         "status": "publish",
                         "id": 10071,
-                        "sha256": "86568ad378ea93824ec6cf72be90d9dd36c29e4a1a78e19158521d6538bc8af2"
+                        "sha256": "388671f0304109be37e3bda5f1d0291076c15d08c271499b8d171691461b8361"
                     },
                     {
                         "content": "DateNow.html",
                         "status": "publish",
                         "id": 10072,
-                        "sha256": "53171d5522898368063046f046d912cbdb6082283ef92f31249555f92e47f205"
+                        "sha256": "aee721c531ead8d188ef9d6b5b5aa5c19fdee90e74493af07888a3094cd2ebc4"
                     },
                     {
                         "content": "SortArray.html",
                         "status": "publish",
                         "id": 10073,
-                        "sha256": "f42d0b28fe4f2b463cb2593ebca65c48227a919a6e46a80c83936dee19459496"
+                        "sha256": "d0c0fa661552f5a086b5c434d250cb9f8f4ed1d6cb17da06003a2891da280a03"
                     },
                     {
                         "content": "Log.html",
                         "status": "publish",
                         "id": 10074,
-                        "sha256": "edb303e505f016aa9e658395b14b18731abcb2e8671bc1caf962a6f9c69a0383"
+                        "sha256": "de31225da7f1831d87a6b1d6d5861b41f114bb92a5bb32e4a3a7732d053a9355"
                     },
                     {
                         "content": "Error.html",
                         "status": "publish",
                         "id": 10075,
-                        "sha256": "9ff257504e6240fd629bc9cf535ebff8207878aca98959482a222f3fc79edb7d"
+                        "sha256": "a79ad912aa7cf0718181a693d9a5f3051c0a72cc9fd166f62f49c6238b76c606"
                     },
                     {
                         "content": "CatchError.html",
                         "status": "publish",
                         "id": 10076,
-                        "sha256": "5f80c10c339bfe910d1462e414d96b5648a051ae0e26e006dc4890e3b890252a"
+                        "sha256": "6d6a061d5e20f46e747365b1614bdc4af323c950acb2a6234ac7059b44a8e4d6"
                     },
                     {
                         "content": "NoOp.html",
                         "status": "publish",
                         "id": 10077,
-                        "sha256": "fa6d77fc9a4627d9b8ccb77b11b00fa7ae6576e032a3f5fc26ffe170fef48e88"
+                        "sha256": "209994434de39a52ddf1e2e66e2fc017e3ef3b751fca0b5320f04df2ee34bd9a"
                     },
                     {
                         "content": "Comment.html",
                         "status": "publish",
                         "id": 10078,
-                        "sha256": "64d22ccb453f83b42fc233c5de7a0e5a08f15eada9a08f6def2dcb89102ce44e"
+                        "sha256": "faa72070f235f1b47d216a584eb91e57664b4be3cc96c95b11d14642ff18a7ba"
                     }
                 ]
             },
@@ -167,61 +167,61 @@
                         "content": "Animate.html",
                         "status": "publish",
                         "id": 10079,
-                        "sha256": "c781b46ef669d1065d156866d99779a605bda23d8b501a49083da4c55722a958"
+                        "sha256": "aa70851f1a45e2101c868dba32cdbcd7d884311226795cadb8492db165178a70"
                     },
                     {
                         "content": "ClipboardWrite.html",
                         "status": "publish",
                         "id": 12571,
-                        "sha256": "3b1e4861652dca3a2469c6522fc1294bc54bc598ebad8abf8bc740994e8f24f2"
+                        "sha256": "fa80289ca210f6ace7388f67efd673d2c24c579e3bdabc79b93d84a4f2f54d11"
                     },
                     {
                         "content": "OnEvent.html",
                         "status": "publish",
                         "id": 10080,
-                        "sha256": "7a5dc8cd3403cefd9112366515b3fa01424a14fed28f6fcb4c18726207126ab4"
+                        "sha256": "0ec1fb1874e8d5d7ae04531711c53f87af451b176683fc7cdab348ee8ec3a3dd"
                     },
                     {
                         "content": "OverrideStyle.html",
                         "status": "publish",
                         "id": 10081,
-                        "sha256": "65be3e1bd2979962be7301fe1754799d4f827259367d7ca48c2a4a1bfc9316db"
+                        "sha256": "a84b7fed8cb8143be460ab14132f7fe174c7092fe5828091d82b6cb9d39533f4"
                     },
                     {
                         "content": "SelectLanguage.html",
                         "status": "publish",
                         "id": 10082,
-                        "sha256": "6b8e565abc9cbd9e1a3cc82f35bad5bea213799d314ccd60a55dcc73be807264"
+                        "sha256": "8d390f8f333a828eda4d5bf1f88ce1ae81f2830b4a75f4f4450acdde217b8d10"
                     },
                     {
                         "content": "SetPageDirection.html",
                         "status": "publish",
                         "id": 10083,
-                        "sha256": "344cb704780c66f37ca74d531a7e510444ea3d1f5662946c7b7e93ab61c4b5ab"
+                        "sha256": "f27fd60b1c87889bf8b71f3861e69d773b57f2d1c87ecc6f52fe889cf1e239a3"
                     },
                     {
                         "content": "ShowKeyboard.html",
                         "status": "publish",
                         "id": 10084,
-                        "sha256": "3cb943a532f536b368065210a50a8c95049845fca682cde87e7bc278d9099acb"
+                        "sha256": "2f96c5d77124a05df65ae7aeeecfa12917e9739d3ad665d8da0b182a0b357e81"
                     },
                     {
                         "content": "ShowKeypad.html",
                         "status": "publish",
                         "id": 10085,
-                        "sha256": "b2ca12b430376349fbf0b77656eeb9605c6e0c7b279ab721bf3ebbb3a27576ef"
+                        "sha256": "08f2e9f4341507bd21d3ed63380a6202c9fe7de5f2a511d412e498af9227416b"
                     },
                     {
                         "content": "ShowMessageBox.html",
                         "status": "publish",
                         "id": 10086,
-                        "sha256": "850fefb8ca66cddcf91ba1a00b64204dfe2dd8360d18fa829e971a5041cbcb26"
+                        "sha256": "4b2caeb1b201f4081adead71f2886690d99cfcd986e20dc7e8611c0e3e6b0e8c"
                     },
                     {
                         "content": "ShowPage.html",
                         "status": "publish",
                         "id": 10087,
-                        "sha256": "333858aa13ba2aad5d644099ab205bd42231e88e35ae82f07c4911be0461ac22"
+                        "sha256": "eb47f177db2c2bc78529b694a543388950493464bfd6b5a6c650a787564dad6a"
                     }
                 ]
             },
@@ -235,43 +235,43 @@
                         "content": "MQTTConnect.html",
                         "status": "publish",
                         "id": 10088,
-                        "sha256": "ced532341ba2a642098544ad47586bf59c79addd2d71d4fa6ea908cf837c40a0"
+                        "sha256": "c46efb912f72b74346e04b83aabc75aab6d992fe0f10dac57555f192a1d300b7"
                     },
                     {
                         "content": "MQTTDisconnect.html",
                         "status": "publish",
                         "id": 10089,
-                        "sha256": "28f550cccb926b4a1b66ed216919110cd8af25afc978917e8e6cf8a9c026235c"
+                        "sha256": "490ccf136e3fc5448fc35977d89d607d3065676033da1619b88a424332942175"
                     },
                     {
                         "content": "MQTTEvent.html",
                         "status": "publish",
                         "id": 10090,
-                        "sha256": "3c07330c9e8f481ea594ec7441653f935840ceec204eb1488cba32a2fa2e0a78"
+                        "sha256": "b1966605de9e92b771417e031cfa7843ad5eef358ed567153cc48f11cd8f3251"
                     },
                     {
                         "content": "MQTTInit.html",
                         "status": "publish",
                         "id": 10091,
-                        "sha256": "275aef3fd52b6b6c34d31940cc0c18324fa90a1cfd8cb0807dcb0b3e156727ac"
+                        "sha256": "170d6634ff122c32a319fabf4f5b29cd3d5c3b45232bd70b2aafc46fe1d39533"
                     },
                     {
                         "content": "MQTTPublish.html",
                         "status": "publish",
                         "id": 10092,
-                        "sha256": "bb839e52c186af7221f5d74e77779d84291071295383d6c318761926e175961a"
+                        "sha256": "9bd05eb4c481f969fc6d9c94825b36d1ac1c823448438023ab70e5d85049befe"
                     },
                     {
                         "content": "MQTTSubscribe.html",
                         "status": "publish",
                         "id": 10093,
-                        "sha256": "b65349003289f77172ab38dad42c24b772e92a0348a7b96d2c49bc9c7e5bfb45"
+                        "sha256": "37c5417e7f84f8a9fbfb5184419a5692fa92785127e36be588a118a039c72e6a"
                     },
                     {
                         "content": "MQTTUnsubscribe.html",
                         "status": "publish",
                         "id": 10094,
-                        "sha256": "c8d30b65e41724e2c855832e3115240ac494ca777eb873797d5ac8eed1370429"
+                        "sha256": "baf75a3bd696fae4e5be6cdb5d174eca363ac178768d4d4a85020bd3ac6754af"
                     }
                 ]
             },
@@ -285,7 +285,7 @@
                         "content": "LVGL.html",
                         "status": "publish",
                         "id": 10095,
-                        "sha256": "7f6a21c66048e001a3669c422f8060da9f97a4739baad26d2597e8ab08beab96"
+                        "sha256": "bcadc10c5d5b1b16000c692206f5585fc26f5a84b725f0113ed60a4f085e8c3f"
                     }
                 ]
             },
@@ -299,73 +299,79 @@
                         "content": "CollectStream.html",
                         "status": "publish",
                         "id": 10096,
-                        "sha256": "672407a8ebe3ab0093806a2c82e4528782ed96c27bd903933ff4ffa08184971e"
+                        "sha256": "5d130d2cb1fc5e257422817d416b52234f96399750e33aff2c636ca9c390bcc9"
+                    },
+                    {
+                        "content": "CloseStream.html",
+                        "status": "publish",
+                        "id": 12649,
+                        "sha256": "7977a823fb44ca086e58044739f95ea8b05ece697fde16a8ed91b3f0a1bc545a"
                     },
                     {
                         "content": "CSVParse.html",
                         "status": "publish",
                         "id": 10097,
-                        "sha256": "00849e7e5f02b01648b2b17c8dbb330e30f4f50ddf0920a6c38ce4f218c3fb55"
+                        "sha256": "69c8bfb1751f6b8d9f3359b8690aa96c63707158646a8fe7f85337e8aa7bce6d"
                     },
                     {
                         "content": "CSVStringify.html",
                         "status": "publish",
                         "id": 10098,
-                        "sha256": "82ca19971076620c90132833d4c90e19ad1a73e905e8edacfa61a3e9ae179c00"
+                        "sha256": "8c2889dea837b03623d3db631d7c1ecf9c130c3c5d4a8f2cbc03e8c9b5eda4da"
                     },
                     {
                         "content": "DynamicCallAction.html",
                         "status": "publish",
                         "id": 10099,
-                        "sha256": "b869c1e8ba1de3ca8a6fdfefbe8b63cd9ff9931f9f94580c01231a847d247048"
+                        "sha256": "03b48bfe2fc433953744c2b72c2a96ac7e39c28472ccb46a1209492cbcb8367e"
                     },
                     {
                         "content": "Eval JS.html",
                         "status": "publish",
                         "id": 10100,
-                        "sha256": "0a4c829309300e63be145f5d44e2f52160b49d3f4f172f46bbe633b55f243190"
+                        "sha256": "5b8e564c2a8d58e65593358e3fb196d43dccac1d97cddd88fa06cdb737cd857f"
                     },
                     {
                         "content": "ExecuteCommand.html",
                         "status": "publish",
                         "id": 10101,
-                        "sha256": "e6e0ee99a72e9733c0b5bbf5258f9aa7cc7e19450eea2d237a2ffb83afa6072c"
+                        "sha256": "ca385bec747bd7c6de17a310214469622ceb1469308c18a57c6dae909438c304"
                     },
                     {
                         "content": "HTTP.html",
                         "status": "publish",
                         "id": 10102,
-                        "sha256": "a2610b7641fed995a5a62a4919df76b0fd8bb6161cd92b941f8e7f97a2650bfe"
+                        "sha256": "cf7e0cc57842769f4de649362d140017637125d9c296a19362fff1c2832cf4ea"
                     },
                     {
                         "content": "JSONParse.html",
                         "status": "publish",
                         "id": 10103,
-                        "sha256": "6902e9a0a7d2e0cb2b2cafbad5e0e665aacd34ec4cf817ea6441c0d7b280c087"
+                        "sha256": "f606da95d9271a15528bb6fb3e6b3a2fd7f9969878242d2c7bace59e23956072"
                     },
                     {
                         "content": "JSONStringify.html",
                         "status": "publish",
                         "id": 10104,
-                        "sha256": "63454086cd3bf87dc375e60be353d08980dddb057b38856286df3dc515788fc8"
+                        "sha256": "da367b57afcb90097dbc0a1dcf5827bb5b6a45a7a725208417227292bb57ff14"
                     },
                     {
                         "content": "ReadSetting.html",
                         "status": "publish",
                         "id": 10105,
-                        "sha256": "29de3d64d522dc2de25bc612138d0df53feef9f9855a822f3f9e4da866ce67ed"
+                        "sha256": "a3c1a63ee3f460dbb27a971bd471d80266514944873601058fe2d25e619bdf42"
                     },
                     {
                         "content": "Regexp.html",
                         "status": "publish",
                         "id": 10106,
-                        "sha256": "c275cb56e6509dfd2c679ad6d9eaed414137ced464fa33a7a5c95f5dd752ac22"
+                        "sha256": "c2553d4207210a58228bc4bc23d7f05d21f0975ea7827ae39a989ca136c9c6ee"
                     },
                     {
                         "content": "WriteSetting.html",
                         "status": "publish",
                         "id": 10107,
-                        "sha256": "eeceeae9066df0dc60cf8103c3232f761afa41b7009608c62229bac49da2fcee"
+                        "sha256": "e55d60b2b2b6645a17f5b7fb68fabd969d6454ba9844ebdfa2efb1c84230535e"
                     }
                 ]
             },
@@ -379,37 +385,37 @@
                         "content": "FileAppend.html",
                         "status": "publish",
                         "id": 10108,
-                        "sha256": "2181f1f9f5b6e743cef95039816a0214b6a33db1b15834131ee254c3ed08531b"
+                        "sha256": "d41c9861b01e079c1a2d3569a0c827bff7f5167f291b4e1a482e82d4db5e601c"
                     },
                     {
                         "content": "FileOpenDialog.html",
                         "status": "publish",
                         "id": 10109,
-                        "sha256": "3cd0b97e58ba6f02e9fd4da948beb185a23641bf9a7a826df5be562af397aa75"
+                        "sha256": "02376455eb4c2dad265c552c28771cc247a38d5d2cbc04aeef09556ba257faf3"
                     },
                     {
                         "content": "FileRead.html",
                         "status": "publish",
                         "id": 10110,
-                        "sha256": "059628015acf31726f85796c45683e8d6631b5d64ca236971bfc48701fcd01c8"
+                        "sha256": "2e7fbbfe79e73974f7755850c0f23929f370ba5509c6b98339948fd8d58d2d2d"
                     },
                     {
                         "content": "FileSaveDialog.html",
                         "status": "publish",
                         "id": 10111,
-                        "sha256": "b864a373e0f6a300c0416484dc2c05a07d7e14cd99664ea8db72421e74fb1233"
+                        "sha256": "8d347eceae26b53201bff2172b5871ade4721d2490dee660d9d5d99778012b5a"
                     },
                     {
                         "content": "FileWrite.html",
                         "status": "publish",
                         "id": 10112,
-                        "sha256": "206549ced3ed876ea562280dacb756ed82c7a6bc816bea40e48c27d437756bcc"
+                        "sha256": "04467bb9c65e46ba84517d4ff5469518920f43bdba884ed24b42bd4da726116c"
                     },
                     {
                         "content": "ShowFileInFolder.html",
                         "status": "publish",
                         "id": 10113,
-                        "sha256": "d4f76df32e1a93ea2c5cb6e08d0182f98e82580ea1d92cc19ae4edb768bfe777"
+                        "sha256": "926b5d7b04ed9f805c328e3c095e93241aac3c746adb81a342679658332aa319"
                     }
                 ]
             },
@@ -423,49 +429,61 @@
                         "content": "AddToInstrumentHistory.html",
                         "status": "publish",
                         "id": 10114,
-                        "sha256": "2864a17668bc2b0e6550da66e29ea50c03a94b8e2b84887dd2fc1c9d90135a0a"
+                        "sha256": "5de5b0424fb665cd5b0156486e329ff1ac359cc0f1068e2a52bcd1fb9231f2cb"
                     },
                     {
                         "content": "ConnectInstrument.html",
                         "status": "publish",
                         "id": 10115,
-                        "sha256": "4c9363ee9b3f771ddbb059b690512548c17b9dfe1b41d1533dc7c1c85131489b"
+                        "sha256": "6d47752a854769b2091ac36b7afb49e165b2ea49bedb590b5b2a4707888c152e"
                     },
                     {
                         "content": "DisconnectInstrument.html",
                         "status": "publish",
                         "id": 10116,
-                        "sha256": "15227925cc02c5d99ff59f59c7559a6cff80ba765d0803e869ee3d5faf13d08f"
+                        "sha256": "0aefcdede0ca9c590df6a195965a8581e16501091b0304fc9e19ed34419c526e"
                     },
                     {
                         "content": "GetInstrument.html",
                         "status": "publish",
                         "id": 10117,
-                        "sha256": "461d4a37169a63b24e8266c818a53df8f6787913216128a788299b43e450d0e3"
+                        "sha256": "44a1391b87ccaa79a13a6a485cae385d03590736be6468f221f49d3767f8a14b"
                     },
                     {
                         "content": "GetInstrumentProperties.html",
                         "status": "publish",
                         "id": 10118,
-                        "sha256": "c76d8cc0fb9c0d0e12c409331ef353cd48ecdf43730e5d65a930f97d7a56cb68"
+                        "sha256": "a861b4311994fbed823d2a5fd9458bfd3de902325af7ccb80ddd2b7358764137"
                     },
                     {
                         "content": "Modbus.html",
                         "status": "publish",
                         "id": 12574,
-                        "sha256": "5c39dfd1cc1534e6b35f570c453502b8e952e80a6c4bb7d93c14be139f29789e"
+                        "sha256": "013a47a4f04867c91521ff627efc28fa0e4df43cfb72cda8850817f58d3eaf14"
                     },
                     {
                         "content": "SCPI.html",
                         "status": "publish",
                         "id": 10119,
-                        "sha256": "972d7653c4642f6ee15ed70093792d013aa347b0b4271e9f8d3d8c7a2eb77fd6"
+                        "sha256": "67b4189459928263f3d1ed6d6b78cd8b67e17db79853ad3e5deedc6d06d8fa0d"
                     },
                     {
                         "content": "SelectInstrument.html",
                         "status": "publish",
                         "id": 10120,
-                        "sha256": "4a77e1ddd85f7d21713f33c8008c91264f349668533b74dfe900a704a7b28236"
+                        "sha256": "3fce96486b92da6f6b44e2864e266c0ba6fae0bdf35e3296fd1493b229bba47a"
+                    },
+                    {
+                        "content": "InstrumentRead.html",
+                        "status": "publish",
+                        "id": 12675,
+                        "sha256": "91e9e75102e3b252fe2067d11d76d7f7da44f44083cc5e5949508853b6c84c73"
+                    },
+                    {
+                        "content": "InstrumentWrite.html",
+                        "status": "publish",
+                        "id": 12676,
+                        "sha256": "bb5349d72c947846b0f694c8385cf62c4374488ac854fa28a947643a3207fb2b"
                     }
                 ]
             },
@@ -479,19 +497,19 @@
                         "content": "PythonEnd.html",
                         "status": "publish",
                         "id": 10121,
-                        "sha256": "88586f2022a6d00fc3b4f1db590f44190f11b866ce5d09fbe7057b2ba84502e3"
+                        "sha256": "4b5953f95a83b19412dcb55df23c8a6f28798a0e05530199586539f29eadd4ee"
                     },
                     {
                         "content": "PythonRun.html",
                         "status": "publish",
                         "id": 10122,
-                        "sha256": "a9b992ffe096d8fd48b1657fef8adad958d3101b1492c108323a3dd6c55acd9c"
+                        "sha256": "d62bf2046623be0bb3de873083bcb42565e936501b8690d6f39defbfcd3ea873"
                     },
                     {
                         "content": "PythonSendMessage.html",
                         "status": "publish",
                         "id": 10123,
-                        "sha256": "b3be4a2ac641dd8498bc3df885fdd07ddd9713be07e9f76de54105082efbbf9d"
+                        "sha256": "4b9609ceabb9827d8d95c7757acd49e48dd5fd6827015611764e3ec8f7815ca9"
                     }
                 ]
             },
@@ -505,37 +523,37 @@
                         "content": "SerialConnect.html",
                         "status": "publish",
                         "id": 10124,
-                        "sha256": "95b827a89ae247d8770b6de754fc5577142a1f829943aad7c22f2c173438d1f7"
+                        "sha256": "cc32643b4e23768048df02c136f471b7678dd87a24bf85420365788f0911b2ac"
                     },
                     {
                         "content": "SerialDisconnect.html",
                         "status": "publish",
                         "id": 10125,
-                        "sha256": "c168587a5ca540bd13e6c99a32fc967bb28c8545f8d21d33c876deda703b5ad3"
+                        "sha256": "fe1de0174a78c52810680a0a12f32e653bd2cf15cb2e1e7d0e3d22ab31c8d253"
                     },
                     {
                         "content": "SerialInit.html",
                         "status": "publish",
                         "id": 10126,
-                        "sha256": "9fd4275cc189043e917d6992a551ec3fcd16e41fee0e36b758a4a656c5af161c"
+                        "sha256": "3ed8def2e2e07959874a753334dc151abd3afa1f21326597b343ddf4fabaf0ab"
                     },
                     {
                         "content": "SerialListPorts.html",
                         "status": "publish",
                         "id": 10127,
-                        "sha256": "4fc579952aa366c173bf266ea92d68ca114be195c8d7c362b81cd06c5ade3428"
+                        "sha256": "3a4fe94ac7fa3857fd3e1ad5edc8ea3ce0471037ed760b887cb307cd0f6d4cd2"
                     },
                     {
                         "content": "SerialRead.html",
                         "status": "publish",
                         "id": 10128,
-                        "sha256": "cfc40fbd439ad2eac31e7f0413ed79bc7666282fcbdf255ebdb9bc74f3b635d6"
+                        "sha256": "3047e706ca0aec9de2f1077d423aff24687a9a94d4d9e87746f26320c6192d80"
                     },
                     {
                         "content": "SerialWrite.html",
                         "status": "publish",
                         "id": 10129,
-                        "sha256": "4a2def7f27b5c3ff4d16841f8e5c0fc153e0ecffccc79da77786db9b612db4a9"
+                        "sha256": "efe0597d202e295101e35cd43d4ca412846ccaae8c5e51ef9fa5ffdd7d1ced96"
                     }
                 ]
             },
@@ -549,13 +567,13 @@
                         "content": "TCPConnect.html",
                         "status": "publish",
                         "id": 12580,
-                        "sha256": "df1c06f8216c2bffecba0f06babd85f4bd467afe49b98f9af8965a46abe3b353"
+                        "sha256": "1a35cb227e9c68510bed611e3e37df467be01683f569eed5fb79fb91a3abce5d"
                     },
                     {
                         "content": "TCPDisconnect.html",
                         "status": "publish",
                         "id": 12581,
-                        "sha256": "4851dd1f3a47a59788f6e22fa50d68c2c42f72a5e8508a2efc8c0b3f76e4f3fe"
+                        "sha256": "fe5812ef71e40e3d73412424a0a36af37179216233ecebcd7059e878e3a28e64"
                     }
                 ]
             }
@@ -589,7 +607,7 @@
                         "content": "Button (Dashboard).html",
                         "status": "publish",
                         "id": 12214,
-                        "sha256": "109f32e3facc5f0abef4e1cf41d16ac756fe1a9e5f1ac2bb42b1fd6e469398d3"
+                        "sha256": "ba7cbce836b866cef432c78994827632440cf0987c1841d818b98fdb37e2d007"
                     },
                     {
                         "content": "Button (EEZ-GUI).html",
@@ -691,7 +709,7 @@
                         "content": "Embedded Dashboard.html",
                         "status": "publish",
                         "id": 12595,
-                        "sha256": "39c697fa65beb585adb43e81822198533503d5f6396f07a6213dd66ab3d774c5"
+                        "sha256": "f869c73e05ae46384274b84d491bb300a4891650a8f689149fdad141635b6b5c"
                     }
                 ]
             },
@@ -743,7 +761,7 @@
                         "content": "Checkbox (Dashboard).html",
                         "status": "publish",
                         "id": 12236,
-                        "sha256": "281d97412de45ed63f0e0982dc895d384302e66052f80e94a5ce4310df7d8569"
+                        "sha256": "93172a2db04e79f968ba2672478923e1ca115114ee3bfb7ed5d31e0e0ccb6195"
                     },
                     {
                         "content": "Checkbox (LVGL).html",
@@ -761,7 +779,7 @@
                         "content": "Dropdown (Dashboard).html",
                         "status": "publish",
                         "id": 12239,
-                        "sha256": "b804ad7d5a829bef5ca8536c63da7d065a18c9bd33a4a9c5bf6353205e540846"
+                        "sha256": "c71c15c2aeef9bd5ed89dcacc7bf1ac2bd3d6b485f2b00a15a2ec2a0c53f03fd"
                     },
                     {
                         "content": "Dropdown (EEZ-GUI).html",
@@ -797,13 +815,13 @@
                         "content": "NumberInput.html",
                         "status": "publish",
                         "id": 12575,
-                        "sha256": "df5de96de2ede079af6d8a3632f979aa7fa4dbd47e31dc091e0eba381a94a222"
+                        "sha256": "d0c1383247f78ba9c0e65608f48c5c1d0b7390ad346fc11ce3d0d90dcf352be3"
                     },
                     {
                         "content": "Radio.html",
                         "status": "publish",
                         "id": 12582,
-                        "sha256": "fa8f6fd8b23c0d771fa1fbefcdb7c0d9c24599010f7959c73a8868c929524119"
+                        "sha256": "b57e3d6a5c00d82ec227e029bd8ec2d4cf7500e1af090015cdd040261e12ba3e"
                     },
                     {
                         "content": "Roller (EEZ-GUI).html",
@@ -821,13 +839,13 @@
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12583,
-                        "sha256": "2b7c2cef1abc256381c492bc34e1de0c54a0b419c37f40824e1fe220603dee5c"
+                        "sha256": "2ef918765aca928113718ab7f0f10b3926a638ebe9fe7f47a796202a857726d9"
                     },
                     {
                         "content": "Slider (Dashboard).html",
                         "status": "publish",
                         "id": 12247,
-                        "sha256": "46a847bfffe4b14c0a1bee70df7b9dbaf1b212b6c191bff46410c9f9932ddb3d"
+                        "sha256": "cafbcc038df8967286fdff7745b80b9aaf58a90984244537529c3bfd75c27c0b"
                     },
                     {
                         "content": "Slider (EEZ-GUI).html",
@@ -845,7 +863,7 @@
                         "content": "Switch (Dashboard).html",
                         "status": "publish",
                         "id": 12250,
-                        "sha256": "089b41a48e88c7aa688643e3f9d668ad298f4f0b4b7acef79c3287a9179820f5"
+                        "sha256": "f240a97bfa136742387cfd8a20d6c200fcbe18af03ce64ea470e2853ef01d08f"
                     },
                     {
                         "content": "Switch (EEZ-GUI).html",
@@ -869,7 +887,7 @@
                         "content": "TextInput.html",
                         "status": "publish",
                         "id": 12254,
-                        "sha256": "0c650937ae4224b0c4ee2ea516ee7d8af8ec9d49f0d0e4aee88cfce9600814a7"
+                        "sha256": "8639f645b48681590e4839c07dd43cfb13347390658aa8b8ed0204385be700cf"
                     },
                     {
                         "content": "UpDown.html",
@@ -925,7 +943,7 @@
                         "content": "LineChart (Dashboard).html",
                         "status": "publish",
                         "id": 12262,
-                        "sha256": "01f69cff2d11e59df4a24ef15b959b54b563f45307aabe0168d4aa2d5e73b039"
+                        "sha256": "84195051e27f54caa1074252f9af7661e618aa40807f6b30ff373188c99ec21b"
                     },
                     {
                         "content": "LineChart (EEZ-GUI).html",
@@ -984,10 +1002,10 @@
                 },
                 "articles": [
                     {
-                        "content": "SCPITerminal.html",
+                        "content": "InstrumentTerminal.html",
                         "status": "publish",
                         "id": 12605,
-                        "sha256": "e6f2b5ff97e6f990bdefa9c55b2ff2bc59de619c0a9e9282c1464bddf666033b"
+                        "sha256": "7a21d2c1d0d1b67cd72278c22883078872fda9f53f52ee5d30b57fe4e3a86e85"
                     }
                 ]
             }
