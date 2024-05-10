@@ -1386,11 +1386,7 @@ const ExtensionsManagerSubNavigation = observer(
         };
 
         updateCatalog = async () => {
-            if (!(await extensionsCatalog.checkNewVersionOfCatalog())) {
-                notification.info(
-                    "There is currently no new version of catalog available."
-                );
-            }
+            await extensionsCatalog.checkNewVersionOfCatalog(true);
         };
 
         updateAll = async () => {

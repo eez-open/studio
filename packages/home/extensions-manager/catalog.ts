@@ -76,6 +76,9 @@ class ExtensionsCatalog {
         if (await fileExists(catalogVersionPath)) {
             try {
                 catalogVersion = await readJsObjectFromFile(catalogVersionPath);
+                catalogVersion.lastModified = new Date(
+                    catalogVersion.lastModified
+                );
             } catch (err) {
                 console.error(err);
             }
@@ -84,9 +87,11 @@ class ExtensionsCatalog {
         return catalogVersion;
     }
 
-    async checkNewVersionOfCatalog() {
+    async checkNewVersionOfCatalog(forceDownload: boolean = false) {
         try {
             const catalogVersion = await this.downloadCatalogVersion();
+
+            console.log(catalogVersion, this.catalogVersion);
 
             if (
                 !this.catalogVersion ||
@@ -96,6 +101,10 @@ class ExtensionsCatalog {
                 this.downloadCatalog();
             } else {
                 // no new version
+                if (forceDownload) {
+                    this.downloadCatalog();
+                    return true;
+                }
                 return false;
             }
         } catch (error) {

@@ -1,3 +1,5 @@
+import { ipcRenderer } from "electron";
+
 import { dialog } from "@electron/remote";
 import React from "react";
 import { observable, action, keys, makeObservable } from "mobx";
@@ -758,3 +760,7 @@ export function showSessionsList(navigationStore: INavigationStore) {
     // try again
     setTimeout(() => showSessionsList(navigationStore), 0);
 }
+
+ipcRenderer.on("create-plotter-no-data", () => {
+    notification.info("No data found that can be converted into a graph.");
+});

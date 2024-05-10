@@ -18,7 +18,10 @@ import {
     sendMessage
 } from "eez-studio-shared/notify";
 
-import type { InstrumentObject } from "instrument/instrument-object";
+import {
+    instruments,
+    type InstrumentObject
+} from "instrument/instrument-object";
 import { EthernetInterface } from "instrument/connection/interfaces/ethernet";
 import { SerialInterface } from "instrument/connection/interfaces/serial";
 import { UsbTmcInterface } from "instrument/connection/interfaces/usbtmc";
@@ -1064,13 +1067,15 @@ export function setupIpcServer() {
     ipcMain.on(
         "instrument/connection/create-plotter",
         function (
-            event: any,
+            event: Electron.IpcMainEvent,
             arg: {
                 instrumentId: string;
                 answerIds: string[];
             }
         ) {
-            Plotter.createPlotter(arg.instrumentId, arg.answerIds);
+            if (!Plotter.createPlotter(arg.instrumentId, arg.answerIds)) {
+                event.sender.send("create-plotter-no-data");
+            }
         }
     );
 
@@ -1209,4 +1214,14 @@ export function createMainProcessConnection(instrument: InstrumentObject) {
     const connection = new Connection(instrument);
     runInAction(() => connections.set(instrument.id.toString(), connection));
     return connection;
+}
+
+export function closeConnections() {
+    instruments.forEach(instrument => {
+        if (instrument.connection.isConnected) {
+            instrument.connection.disconnect();
+        } else {
+            instrument.connection.abortLongOperation();
+        }
+    });
 }

@@ -103,9 +103,11 @@ export class Plotter implements LongOperation {
                 );
             }
             commitTransaction();
+            return true;
         } else {
             commitTransaction();
             undo();
+            return false;
         }
     }
 

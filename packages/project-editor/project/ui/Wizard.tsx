@@ -1934,7 +1934,7 @@ const ProjectTypeComponent = observer(
                                             event.preventDefault();
                                             openLink(projectType.repository!);
                                         }}
-                                        title="Project Github Repository"
+                                        title="Project Git Repository"
                                     >
                                         INFO
                                     </a>
@@ -2465,19 +2465,22 @@ const ProjectProperties = observer(
                                                 !wizardModel.createProjectInProgress
                                             }
                                         />
-                                        <ButtonAction
-                                            className="btn-secondary"
-                                            text="Run Project"
-                                            title="Run Project"
-                                            icon="material:play_arrow"
-                                            onClick={this.onRunProject}
-                                            enabled={
-                                                !wizardModel.createProjectInProgress
-                                            }
-                                            style={{
-                                                marginLeft: 10
-                                            }}
-                                        />
+                                        {wizardModel.selectedProjectType
+                                            ?.projectType != "IEXT" && (
+                                            <ButtonAction
+                                                className="btn-secondary"
+                                                text="Run Project"
+                                                title="Run Project"
+                                                icon="material:play_arrow"
+                                                onClick={this.onRunProject}
+                                                enabled={
+                                                    !wizardModel.createProjectInProgress
+                                                }
+                                                style={{
+                                                    marginLeft: 10
+                                                }}
+                                            />
+                                        )}
                                     </>
                                 )}
                             </div>

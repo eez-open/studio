@@ -103,6 +103,11 @@ app.on("window-all-closed", function () {
 });
 
 app.on("quit", function () {
+    const { closeConnections } =
+        require("instrument/connection/connection-main") as typeof import("instrument/connection/connection-main");
+
+    closeConnections();
+
     unloadVisa();
 });
 

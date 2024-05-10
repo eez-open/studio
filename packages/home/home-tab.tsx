@@ -15,8 +15,9 @@ import {
     ExtensionsManager,
     extensionsManagerStore
 } from "./extensions-manager/extensions-manager";
-import { HOME_TAB_OPEN_ICON, Projects } from "home/open-projects";
+import { Projects } from "home/open-projects";
 import { Instruments, defaultInstrumentsStore } from "home/instruments";
+import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
