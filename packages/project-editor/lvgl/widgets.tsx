@@ -6363,7 +6363,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
     override lvglBuild(build: LVGLBuild) {
         build.line(
             `lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, ${
-                this.image ? `&img_${this.image}` : 0
+                this.image ? `&${build.getImageVariableName(this.image)}` : 0
             }, ${this.pivotX}, ${this.pivotY});`
         );
 
