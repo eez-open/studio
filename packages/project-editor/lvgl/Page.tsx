@@ -9,6 +9,7 @@ import {
     LVGLPageEditorRuntime,
     LVGLPageRuntime
 } from "project-editor/lvgl/page-runtime";
+import { settingsController } from "home/settings";
 
 export const LVGLPage = observer(
     class LVGLPage extends React.Component<{
@@ -86,17 +87,34 @@ interface LVGLPageCanvasProps {
 const LVGLPageCanvas = observer(
     class LVGLPageCanvas extends React.Component<LVGLPageCanvasProps> {
         render() {
+            const style: React.CSSProperties = {
+                imageRendering:
+                    this.props.flowContext.viewState.transform.scale > 2
+                        ? "pixelated"
+                        : "auto"
+            };
+
+            if (
+                this.props.flowContext.projectStore.project.settings.general
+                    .circularDisplay
+            ) {
+                style.borderRadius = Math.min(
+                    this.props.width,
+                    this.props.height
+                );
+
+                style.border = `1px solid ${
+                    settingsController.isDarkTheme ? "#444" : "#eee"
+                }`;
+                style.transform = "translate(-1px, -1px)";
+            }
+
             return (
                 <canvas
                     ref={this.props.forwardedRef}
                     width={this.props.width}
                     height={this.props.height}
-                    style={{
-                        imageRendering:
-                            this.props.flowContext.viewState.transform.scale > 2
-                                ? "pixelated"
-                                : "auto"
-                    }}
+                    style={style}
                 ></canvas>
             );
         }

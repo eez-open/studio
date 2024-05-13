@@ -610,6 +610,7 @@ export class General extends EezObject {
     flowSupport: boolean;
     displayWidth: number;
     displayHeight: number;
+    circularDisplay: boolean;
     colorFormat: string;
     //css: string;
 
@@ -788,6 +789,12 @@ export class General extends EezObject {
                 disabled: (general: General) =>
                     !ProjectEditor.getProject(general).projectTypeTraits
                         .hasDisplaySizeProperty
+            },
+            {
+                name: "circularDisplay",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: isNotLVGLProject
             },
             {
                 name: "colorFormat",
@@ -1017,6 +1024,7 @@ export class General extends EezObject {
             flowSupport: observable,
             displayWidth: observable,
             displayHeight: observable,
+            circularDisplay: observable,
             colorFormat: observable,
             description: observable,
             image: observable,

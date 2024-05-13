@@ -1364,11 +1364,22 @@ export const WasmCanvas = observer(
 
         render() {
             const wasmRuntime = this.context.runtime as WasmRuntime;
+
             return (
                 <canvas
                     ref={this.canvasRef}
                     width={wasmRuntime.displayWidth}
                     height={wasmRuntime.displayHeight}
+                    style={
+                        this.context.project.settings.general.circularDisplay
+                            ? {
+                                  borderRadius: Math.min(
+                                      wasmRuntime.displayWidth,
+                                      wasmRuntime.displayWidth
+                                  )
+                              }
+                            : undefined
+                    }
                 />
             );
         }

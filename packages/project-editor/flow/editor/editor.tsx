@@ -151,15 +151,17 @@ function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
 
     return (
         <Svg flowContext={flowContext}>
-            {pageFlowRect && (
-                <rect
-                    x={pageFlowRect.left}
-                    y={pageFlowRect.top}
-                    width={pageFlowRect.width}
-                    height={pageFlowRect.height}
-                    style={centerLineStyle}
-                />
-            )}
+            {pageFlowRect &&
+                !flowContext.projectStore.project.settings.general
+                    .circularDisplay && (
+                    <rect
+                        x={pageFlowRect.left}
+                        y={pageFlowRect.top}
+                        width={pageFlowRect.width}
+                        height={pageFlowRect.height}
+                        style={centerLineStyle}
+                    />
+                )}
             <line
                 x1={pageRect.left}
                 y1={center.y}
