@@ -1734,7 +1734,7 @@ export class Project extends EezObject {
             LayoutModels.STYLES_TAB_ID,
             LayoutModels.STYLES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            this.styles != undefined
+            this.styles != undefined || this.lvglStyles != undefined
         );
 
         enableTabOnBorder(
