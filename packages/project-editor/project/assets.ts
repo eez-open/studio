@@ -188,10 +188,10 @@ export function getName<
     namingConvention: NamingConvention
 ) {
     let name;
-    if (typeof objectOrName == "string") {
-        name = objectOrName;
-    } else {
+    if (typeof objectOrName == "object") {
         name = getAssetFullName<T>(objectOrName, "_");
+    } else {
+        name = objectOrName.toString();
     }
     name = name.replace(/\$/g, "");
     name = name.replace(/[^a-zA-Z_0-9]/g, "_");

@@ -158,6 +158,7 @@ import {
     wireSourceChanged
 } from "project-editor/store/serialization";
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
+import { findVariable } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2093,40 +2094,38 @@ export class Component extends EezObject {
 
             const projectStore = getProjectStore(component);
 
-            if (projectStore.projectTypeTraits.hasFlowSupport) {
-                // check properties
-                for (const propertyInfo of getClassInfo(component).properties) {
-                    if (
-                        propertyInfo.type == PropertyType.Array &&
-                        propertyInfo.hasExpressionProperties
-                    ) {
-                        if (isPropertyHidden(component, propertyInfo)) {
-                            continue;
-                        }
-
-                        const value = getProperty(component, propertyInfo.name);
-
-                        for (const object of value) {
-                            for (const propertyInfo2 of propertyInfo.typeClass!
-                                .classInfo.properties) {
-                                checkProperty(
-                                    projectStore,
-                                    component,
-                                    messages,
-                                    object,
-                                    propertyInfo2
-                                );
-                            }
-                        }
-                    } else {
-                        checkProperty(
-                            projectStore,
-                            component,
-                            messages,
-                            component,
-                            propertyInfo
-                        );
+            // check properties
+            for (const propertyInfo of getClassInfo(component).properties) {
+                if (
+                    propertyInfo.type == PropertyType.Array &&
+                    propertyInfo.hasExpressionProperties
+                ) {
+                    if (isPropertyHidden(component, propertyInfo)) {
+                        continue;
                     }
+
+                    const value = getProperty(component, propertyInfo.name);
+
+                    for (const object of value) {
+                        for (const propertyInfo2 of propertyInfo.typeClass!
+                            .classInfo.properties) {
+                            checkProperty(
+                                projectStore,
+                                component,
+                                messages,
+                                object,
+                                propertyInfo2
+                            );
+                        }
+                    }
+                } else {
+                    checkProperty(
+                        projectStore,
+                        component,
+                        messages,
+                        component,
+                        propertyInfo
+                    );
                 }
             }
         },
@@ -4530,20 +4529,32 @@ function checkProperty(
 
         const value = getProperty(object, propertyInfo.name);
         if (value != undefined && value !== "") {
-            try {
-                if (propertyInfo.expressionIsConstant === true) {
-                    evalConstantExpression(projectStore.project, value);
-                } else {
-                    checkExpression(component, value);
+            if (projectStore.projectTypeTraits.hasFlowSupport) {
+                try {
+                    if (propertyInfo.expressionIsConstant === true) {
+                        evalConstantExpression(projectStore.project, value);
+                    } else {
+                        checkExpression(component, value);
+                    }
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(object, propertyInfo.name)
+                        )
+                    );
                 }
-            } catch (err) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Invalid expression: ${err}`,
-                        getChildOfObject(object, propertyInfo.name)
-                    )
-                );
+            } else {
+                if (!findVariable(projectStore.project, value)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Variable "${value}" not found`,
+                            getChildOfObject(component, propertyInfo.name)
+                        )
+                    );
+                }
             }
         } else if (
             !isPropertyOptional(object, propertyInfo) &&
@@ -4559,16 +4570,28 @@ function checkProperty(
 
         const value = getProperty(object, propertyInfo.name);
         if (value != undefined && value !== "") {
-            try {
-                checkAssignableExpression(component, value);
-            } catch (err) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Invalid assignable expression: ${err}`,
-                        getChildOfObject(object, propertyInfo.name)
-                    )
-                );
+            if (projectStore.projectTypeTraits.hasFlowSupport) {
+                try {
+                    checkAssignableExpression(component, value);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid assignable expression: ${err}`,
+                            getChildOfObject(object, propertyInfo.name)
+                        )
+                    );
+                }
+            } else {
+                if (!findVariable(projectStore.project, value)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Variable "${value}" not found`,
+                            getChildOfObject(component, propertyInfo.name)
+                        )
+                    );
+                }
             }
         } else if (
             !isPropertyOptional(object, propertyInfo) &&
