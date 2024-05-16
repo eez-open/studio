@@ -369,7 +369,7 @@ export class LVGLPlayAnimationActionType extends LVGLActionType {
                         )
                         .map(lvglIdentifier => ({
                             id: lvglIdentifier.identifier,
-                            label: lvglIdentifier.identifier
+                            label: lvglIdentifier.displayName
                         }));
                 }
             },

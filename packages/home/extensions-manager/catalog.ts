@@ -91,8 +91,6 @@ class ExtensionsCatalog {
         try {
             const catalogVersion = await this.downloadCatalogVersion();
 
-            console.log(catalogVersion, this.catalogVersion);
-
             if (
                 !this.catalogVersion ||
                 catalogVersion.lastModified > this.catalogVersion.lastModified

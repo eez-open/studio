@@ -8,17 +8,10 @@ import {
     LVGL_REACTIVE_FLAGS,
     LVGL_REACTIVE_STATES,
     LVGL_STATE_CODES,
-    MessageType,
     PropertyProps
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    getAncestorOfType,
-    getChildOfObject,
-    getObjectPathAsString,
-    Message,
-    propertyNotSetMessage
-} from "project-editor/store";
+import { getAncestorOfType, getObjectPathAsString } from "project-editor/store";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
@@ -27,12 +20,8 @@ import {
     LVGLPageEditorRuntime,
     type LVGLPageRuntime
 } from "project-editor/lvgl/page-runtime";
-import type { IMessage, WidgetEvents } from "project-editor/core/object";
-import {
-    checkExpression,
-    evalConstantExpression
-} from "project-editor/flow/expression";
-import { findVariable } from "project-editor/project/assets";
+import type { WidgetEvents } from "project-editor/core/object";
+import { evalConstantExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -445,40 +434,4 @@ export function unescapeText(str: string) {
     }
 
     return result;
-}
-
-export function checkProperty(
-    widget: LVGLWidget,
-    propertyName: string,
-    messages: IMessage[]
-) {
-    const propertyValue = (widget as any)[propertyName];
-    if (!propertyValue) {
-        messages.push(propertyNotSetMessage(widget, propertyName));
-    } else if ((widget as any)[propertyName + "Type"] == "expression") {
-        const project = ProjectEditor.getProject(widget);
-        if (project.projectTypeTraits.hasFlowSupport) {
-            try {
-                checkExpression(widget, propertyValue);
-            } catch (err) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Invalid expression: ${err}`,
-                        getChildOfObject(widget, propertyName)
-                    )
-                );
-            }
-        } else {
-            if (!findVariable(project, propertyValue)) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Variable "${propertyValue}" not found`,
-                        getChildOfObject(widget, propertyName)
-                    )
-                );
-            }
-        }
-    }
 }

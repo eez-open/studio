@@ -102,8 +102,7 @@ import {
     LV_EVENT_METER_TICK_LABEL_EVENT,
     LVGL_EVENTS,
     getExpressionPropertyInitalValue,
-    unescapeText,
-    checkProperty
+    unescapeText
 } from "project-editor/lvgl/widget-common";
 import {
     expressionPropertyBuildEventHandlerSpecific,
@@ -356,38 +355,6 @@ export class LVGLWidget extends Widget {
                 name: "identifier",
                 displayName: "Name",
                 type: PropertyType.String,
-                unique: (
-                    widget: IEezObject,
-                    parent: IEezObject,
-                    propertyInfo?: PropertyInfo
-                ) => {
-                    const oldIdentifier = propertyInfo
-                        ? getProperty(widget, propertyInfo.name)
-                        : undefined;
-
-                    return (object: any, ruleName: string) => {
-                        const newIdentifer = object[ruleName];
-                        if (
-                            oldIdentifier != undefined &&
-                            newIdentifer == oldIdentifier
-                        ) {
-                            return null;
-                        }
-
-                        if (
-                            ProjectEditor.getProjectStore(
-                                parent
-                            ).lvglIdentifiers.getIdentifierByName(
-                                ProjectEditor.getFlow(widget),
-                                newIdentifer
-                            ) == undefined
-                        ) {
-                            return null;
-                        }
-
-                        return "Not an unique name";
-                    };
-                },
                 isOptional: true,
                 propertyGridGroup: generalGroup
             },
@@ -2063,10 +2030,6 @@ export class LVGLLabelWidget extends LVGLWidget {
                 <path d="M3 19V8.5a3.5 3.5 0 0 1 7 0V19m-7-6h7m11-1v7" />
             </svg>
         ),
-
-        check: (widget: LVGLLabelWidget, messages: IMessage[]) => {
-            checkProperty(widget, "text", messages);
-        },
 
         lvgl: {
             parts: ["MAIN"],

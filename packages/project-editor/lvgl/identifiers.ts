@@ -16,6 +16,7 @@ import { NamingConvention, getName } from "project-editor/build/helper";
 const GENERATED_NAME_PREFIX = "obj";
 
 interface LVGLIdentifier {
+    displayName: string;
     identifier: string;
     index: number;
 
@@ -111,6 +112,7 @@ export class LVGLIdentifiers {
                 .filter(widget => widget.isAccessibleFromSourceCode)
                 .forEach(widget => {
                     identifiers.set(widget, {
+                        displayName: widget.identifier,
                         identifier: widget.identifier
                             ? getName(
                                   "",
@@ -151,7 +153,10 @@ export class LVGLIdentifiers {
                 map.forEach(identifier => {
                     identifier.identifier = prefix + identifier.identifier;
 
-                    if (flatMap.get(identifier.identifier)) {
+                    const foundIdentifier = flatMap.get(identifier.identifier);
+
+                    if (foundIdentifier) {
+                        foundIdentifier.duplicate = true;
                         identifier.duplicate = true;
                     } else {
                         flatMap.set(identifier.identifier, identifier);
@@ -207,6 +212,7 @@ export class LVGLIdentifiers {
         for (const page of this.pages) {
             if (!page.isUsedAsUserWidget) {
                 globalMap.set(page, {
+                    displayName: page.name,
                     identifier: getName(
                         "",
                         page.name,
@@ -309,7 +315,15 @@ export class LVGLIdentifiers {
         return this.identifiersMap.get(flow)!.get(object)!;
     }
 
-    getIdentifierByName(flow: Flow, name: string): LVGLIdentifier | undefined {
+    getIdentifierByName(
+        flow: Flow,
+        displayName: string
+    ): LVGLIdentifier | undefined {
+        const name = getName(
+            "",
+            displayName,
+            NamingConvention.UnderscoreLowerCase
+        );
         let identifiers = this.identifiersMap.get(flow);
 
         if (!identifiers) {
