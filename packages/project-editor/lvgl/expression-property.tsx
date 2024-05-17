@@ -17,7 +17,11 @@ import { getClassInfo } from "project-editor/store";
 import { findBitmap } from "project-editor/project/project";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
-import type { LVGLLabelWidget, LVGLWidget } from "project-editor/lvgl/widgets";
+import {
+    LVGLRollerWidget,
+    type LVGLLabelWidget,
+    type LVGLWidget
+} from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import { ValueType } from "eez-studio-types";
@@ -285,7 +289,13 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
 
             build.line(`const char *cur_val = ${getFunc}(${objectAccessor});`);
 
-            build.line("if (strcmp(new_val, cur_val) != 0) {");
+            if (widget instanceof LVGLRollerWidget) {
+                build.line(
+                    `if (compareRollerOptions((lv_roller_t *)${objectAccessor}, new_val, cur_val, LV_ROLLER_MODE_${widget.mode}) != 0) {`
+                );
+            } else {
+                build.line("if (strcmp(new_val, cur_val) != 0) {");
+            }
             build.indent();
             build.line(`tick_value_change_obj = ${objectAccessor};`);
             build.line(
