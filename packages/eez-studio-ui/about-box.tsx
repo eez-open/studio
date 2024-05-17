@@ -11,7 +11,7 @@ import { isArray } from "eez-studio-shared/util";
 const STUDIO_RELEASES_URL =
     "https://api.github.com/repos/eez-open/studio/releases";
 const STUDIO_SPECIFIC_RELEASE_URL =
-    "https://github.com/eez-open/studio/releases/tag/";
+    "https://github.com/eez-open/studio/releases/tag/v";
 const STUDIO_HOME_PAGE_URL =
     "https://www.envox.hr/eez/studio/studio-introduction.html";
 const STUDIO_GITHUB_PAGE_URL = "https://github.com/eez-open/studio";
@@ -106,7 +106,13 @@ const AboutBox = observer(
                 this.checkingForUpdates = true;
             });
 
-            const latestVersion = await getLatestVersion();
+            let latestVersion = await getLatestVersion();
+            if (
+                latestVersion.startsWith("v") ||
+                latestVersion.startsWith("V")
+            ) {
+                latestVersion = latestVersion.slice(1);
+            }
 
             runInAction(() => {
                 this.checkingForUpdates = false;
