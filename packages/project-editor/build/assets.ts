@@ -936,7 +936,7 @@ export class Assets {
     }
 
     getConstantIndex(value: any, valueType: ValueType) {
-        let index = this.constantsMap.get(`${valueType}:value`);
+        let index = this.constantsMap.get(value);
         if (index == undefined) {
             index = this.constants.length;
             this.constants.push({
