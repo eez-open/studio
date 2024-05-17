@@ -39,7 +39,8 @@ import {
     propertyNotSetMessage,
     objectToClipboardData,
     clipboardDataToObject,
-    ProjectStore
+    ProjectStore,
+    updateObject
 } from "project-editor/store";
 
 import {
@@ -2338,18 +2339,32 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
             (this.props.objects[0] as LVGLUserWidgetWidget).open();
         };
 
+        fitSize = () => {
+            (this.props.objects[0] as LVGLUserWidgetWidget).fitSize();
+        };
+
         render() {
             if (this.props.objects.length > 1) {
                 return null;
             }
             return (
-                <Button
-                    color="primary"
-                    size="small"
-                    onClick={this.showUserWidgetPage}
-                >
-                    Show User Widget
-                </Button>
+                <div style={{ marginTop: 5, marginBottom: 5 }}>
+                    <Button
+                        color="primary"
+                        size="small"
+                        onClick={this.showUserWidgetPage}
+                    >
+                        Show User Widget
+                    </Button>
+                    <Button
+                        color="secondary"
+                        size="small"
+                        onClick={this.fitSize}
+                        style={{ marginLeft: 10 }}
+                    >
+                        Fit to User Widget Size
+                    </Button>
+                </div>
             );
         }
     }
@@ -2609,6 +2624,15 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 false,
                 false
             );
+        }
+    }
+
+    fitSize() {
+        if (this.userWidgetPage) {
+            updateObject(this, {
+                width: this.userWidgetPage.rect.width,
+                height: this.userWidgetPage.rect.height
+            });
         }
     }
 
