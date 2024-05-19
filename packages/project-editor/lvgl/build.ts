@@ -305,16 +305,29 @@ export class LVGLBuild extends Build {
         for (const page of this.pages) {
             build.line("");
             if (page.isUsedAsUserWidget) {
-                build.line(
-                    `void ${this.getScreenCreateFunctionName(
-                        page
-                    )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);`
-                );
-                build.line(
-                    `void ${this.getScreenTickFunctionName(
-                        page
-                    )}(void *flowState, int startWidgetIndex);`
-                );
+                if (build.project.projectTypeTraits.hasFlowSupport) {
+                    build.line(
+                        `void ${this.getScreenCreateFunctionName(
+                            page
+                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);`
+                    );
+                    build.line(
+                        `void ${this.getScreenTickFunctionName(
+                            page
+                        )}(void *flowState, int startWidgetIndex);`
+                    );
+                } else {
+                    build.line(
+                        `void ${this.getScreenCreateFunctionName(
+                            page
+                        )}(lv_obj_t *parent_obj, int startWidgetIndex);`
+                    );
+                    build.line(
+                        `void ${this.getScreenTickFunctionName(
+                            page
+                        )}(int startWidgetIndex);`
+                    );
+                }
             } else {
                 build.line(`void ${this.getScreenCreateFunctionName(page)}();`);
                 build.line(`void ${this.getScreenTickFunctionName(page)}();`);
@@ -427,11 +440,19 @@ export class LVGLBuild extends Build {
 
         for (const page of this.pages) {
             if (page.isUsedAsUserWidget) {
-                build.line(
-                    `void ${this.getScreenCreateFunctionName(
-                        page
-                    )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex) {`
-                );
+                if (build.project.projectTypeTraits.hasFlowSupport) {
+                    build.line(
+                        `void ${this.getScreenCreateFunctionName(
+                            page
+                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex) {`
+                    );
+                } else {
+                    build.line(
+                        `void ${this.getScreenCreateFunctionName(
+                            page
+                        )}(lv_obj_t *parent_obj, int startWidgetIndex) {`
+                    );
+                }
             } else {
                 build.line(
                     `void ${this.getScreenCreateFunctionName(page)}() {`
@@ -444,11 +465,19 @@ export class LVGLBuild extends Build {
             build.line("");
 
             if (page.isUsedAsUserWidget) {
-                build.line(
-                    `void ${this.getScreenTickFunctionName(
-                        page
-                    )}(void *flowState, int startWidgetIndex) {`
-                );
+                if (build.project.projectTypeTraits.hasFlowSupport) {
+                    build.line(
+                        `void ${this.getScreenTickFunctionName(
+                            page
+                        )}(void *flowState, int startWidgetIndex) {`
+                    );
+                } else {
+                    build.line(
+                        `void ${this.getScreenTickFunctionName(
+                            page
+                        )}(int startWidgetIndex) {`
+                    );
+                }
             } else {
                 build.line(`void ${this.getScreenTickFunctionName(page)}() {`);
             }

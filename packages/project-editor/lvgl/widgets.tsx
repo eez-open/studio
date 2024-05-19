@@ -2796,11 +2796,19 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
             }
 
-            build.line(
-                `${build.getScreenCreateFunctionName(
-                    userWidgetPage
-                )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
-            );
+            if (build.project.projectTypeTraits.hasFlowSupport) {
+                build.line(
+                    `${build.getScreenCreateFunctionName(
+                        userWidgetPage
+                    )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                );
+            } else {
+                build.line(
+                    `${build.getScreenCreateFunctionName(
+                        userWidgetPage
+                    )}(obj, ${startWidgetIndex});`
+                );
+            }
         }
     }
 
@@ -2825,11 +2833,19 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
             }
 
-            build.line(
-                `${build.getScreenTickFunctionName(
-                    userWidgetPage
-                )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
-            );
+            if (build.project.projectTypeTraits.hasFlowSupport) {
+                build.line(
+                    `${build.getScreenTickFunctionName(
+                        userWidgetPage
+                    )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                );
+            } else {
+                build.line(
+                    `${build.getScreenTickFunctionName(
+                        userWidgetPage
+                    )}(${startWidgetIndex});`
+                );
+            }
         }
     }
 

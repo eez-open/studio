@@ -221,7 +221,7 @@ static void hal_init() {
 #endif
 
     if (!is_editor) {
-        // mourse init
+        // mouse init
 #if LVGL_VERSION_MAJOR >= 9
         lv_indev_t * indev1 = lv_indev_create();
         lv_indev_set_type(indev1, LV_INDEV_TYPE_POINTER);
