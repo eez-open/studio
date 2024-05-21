@@ -651,11 +651,15 @@ export function getClassesDerivedFrom(
             className,
             objectClass
         ] of projectStore.importedActionComponentClasses) {
-            derivedClasses.push({
-                id: className,
-                name: className,
-                objectClass
-            });
+            if (
+                isProperSubclassOf(objectClass.classInfo, parentClass.classInfo)
+            ) {
+                derivedClasses.push({
+                    id: className,
+                    name: className,
+                    objectClass
+                });
+            }
         }
     }
 

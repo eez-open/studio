@@ -2544,6 +2544,7 @@ registerClass("SliderDashboardWidget", SliderDashboardWidget);
 import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
+import "project-editor/flow/components/widgets/dashboard/tabulator";
 import "project-editor/flow/components/widgets/dashboard/terminal";
 import "project-editor/flow/components/widgets/dashboard/instrument-terminal";
 import "project-editor/flow/components/widgets/dashboard/embedded-dashboard";

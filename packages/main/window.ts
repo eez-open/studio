@@ -1,4 +1,6 @@
-import { BrowserWindow, ipcMain, app } from "electron";
+import fs from "fs";
+
+import { BrowserWindow, ipcMain, app, dialog, shell } from "electron";
 import { action, observable, runInAction } from "mobx";
 
 import { getIcon } from "main/util";
@@ -24,6 +26,7 @@ export interface IWindowParams {
     url: string;
     hideOnClose?: boolean;
     showHidden?: boolean;
+    utilityWindow?: boolean;
 }
 
 type ActiveTabType =
@@ -89,25 +92,27 @@ export function createWindow(params: IWindowParams) {
     let window: IWindow | undefined;
 
     if (!showHidden) {
-        runInAction(() =>
-            windows.push({
-                url: params.url,
-                browserWindow,
-                readyToClose: false,
-                state: {
-                    modified: false,
-                    undo: null,
-                    redo: null,
-                    isDebuggerActive: false,
-                    hasExtensionDefinitions: false
-                },
-                focused: false,
-                activeTabType: undefined
-            })
-        );
-        window = windows[windows.length - 1];
+        if (!params.utilityWindow) {
+            runInAction(() =>
+                windows.push({
+                    url: params.url,
+                    browserWindow,
+                    readyToClose: false,
+                    state: {
+                        modified: false,
+                        undo: null,
+                        redo: null,
+                        isDebuggerActive: false,
+                        hasExtensionDefinitions: false
+                    },
+                    focused: false,
+                    activeTabType: undefined
+                })
+            );
+            window = windows[windows.length - 1];
 
-        settingsRegisterWindow(params.url, browserWindow);
+            settingsRegisterWindow(params.url, browserWindow);
+        }
     }
 
     browserWindow.loadURL(windowUrl);
@@ -115,41 +120,43 @@ export function createWindow(params: IWindowParams) {
     if (!showHidden) {
         browserWindow.show();
 
-        browserWindow.on("close", function (event: any) {
-            if (isCrashed(browserWindow)) {
-                app.exit();
-                return;
-            }
+        if (!params.utilityWindow) {
+            browserWindow.on("close", function (event: any) {
+                if (isCrashed(browserWindow)) {
+                    app.exit();
+                    return;
+                }
 
-            if (params.hideOnClose && windows.length > 1 && !forceQuit) {
-                browserWindow.hide();
-                event.preventDefault();
-                return;
-            }
-
-            if (!window?.readyToClose) {
-                try {
-                    browserWindow.webContents.send("beforeClose");
+                if (params.hideOnClose && windows.length > 1 && !forceQuit) {
+                    browserWindow.hide();
                     event.preventDefault();
-                } catch (err) {}
-            }
-        });
+                    return;
+                }
 
-        browserWindow.on("closed", function () {
-            action(() =>
-                windows.splice(
-                    windows.findIndex(
-                        win => win.browserWindow === browserWindow
-                    ),
-                    1
-                )
-            )();
+                if (!window?.readyToClose) {
+                    try {
+                        browserWindow.webContents.send("beforeClose");
+                        event.preventDefault();
+                    } catch (err) {}
+                }
+            });
 
-            // if no visible window left, app can quit
-            if (!windows.find(window => window.browserWindow.isVisible())) {
-                app.quit();
-            }
-        });
+            browserWindow.on("closed", function () {
+                action(() =>
+                    windows.splice(
+                        windows.findIndex(
+                            win => win.browserWindow === browserWindow
+                        ),
+                        1
+                    )
+                )();
+
+                // if no visible window left, app can quit
+                if (!windows.find(window => window.browserWindow.isVisible())) {
+                    app.quit();
+                }
+            });
+        }
     }
 
     return browserWindow;
@@ -283,4 +290,63 @@ ipcMain.on("tabs-change", (event, tabs: { id: string; active: boolean }[]) => {
             window.activeTabType = activeTabType;
         });
     }
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+ipcMain.on("printPDF", (event: any, content: any) => {
+    const senderWindow = BrowserWindow.getFocusedWindow();
+    if (!senderWindow) {
+        return;
+    }
+
+    let printWindow: BrowserWindow;
+
+    printWindow = createWindow({
+        url: "home/print.html",
+        showHidden: true
+        //utilityWindow: true
+    });
+
+    printWindow.on("ready-to-show", () => {
+        printWindow.webContents.send("printPDF", content);
+    });
+
+    ipcMain.once("readyToPrintPDF", async event => {
+        const showSaveDialogPromise = dialog.showSaveDialog(senderWindow, {
+            filters: [{ name: "PDF files", extensions: ["pdf"] }]
+        });
+
+        let data;
+        try {
+            // Use default printing options
+            data = await printWindow.webContents.printToPDF({});
+        } catch (err) {
+            await dialog.showMessageBox(senderWindow, {
+                title: "Print to PDF - EEZ Studio",
+                message: err.toString()
+            });
+        } finally {
+            printWindow.close();
+        }
+
+        if (!data) {
+            return;
+        }
+
+        const result = await showSaveDialogPromise;
+
+        let filePath = result.filePath;
+        if (filePath) {
+            try {
+                await fs.promises.writeFile(filePath, data);
+                shell.openPath(filePath);
+            } catch (err) {
+                await dialog.showMessageBox(senderWindow, {
+                    title: "Print to PDF - EEZ Studio",
+                    message: err.toString()
+                });
+            }
+        }
+    });
 });

@@ -2079,6 +2079,24 @@ export const GAUGE_ICON = (
     </svg>
 );
 
+export const TABULATOR_ICON = (
+    <svg viewBox="0 0 16 16">
+        <path
+            fill="currentcolor"
+            d="M0 1v15h16V1zm5 14H1v-2h4zm0-3H1v-2h4zm0-3H1V7h4zm0-3H1V4h4zm5 9H6v-2h4zm0-3H6v-2h4zm0-3H6V7h4zm0-3H6V4h4zm5 9h-4v-2h4zm0-3h-4v-2h4zm0-3h-4V7h4zm0-3h-4V4h4z"
+        />
+    </svg>
+);
+
+export const PRINT_TO_PDF_ICON = (
+    <svg viewBox="0 0 15 15" fill="none">
+        <path
+            d="M3.5 12.5h-2a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-2m-8-6v-5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v5m-8 4h8v4h-8z"
+            stroke="currentcolor"
+        />
+    </svg>
+);
+
 export const RUN_ICON = (
     <svg
         xmlns="http://www.w3.org/2000/svg"

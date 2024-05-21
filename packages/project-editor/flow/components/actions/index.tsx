@@ -116,7 +116,8 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     CLIPBOARD_WRITE_ICON,
     LANGUAGE_ICON,
-    LOG_ICON
+    LOG_ICON,
+    PRINT_TO_PDF_ICON
 } from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
 import { LeftArrow, RightArrow } from "project-editor/ui-components/icons";
@@ -126,6 +127,7 @@ import {
     FLOW_EVENT_CLOSE_PAGE,
     FLOW_EVENT_KEYDOWN
 } from "project-editor/flow/runtime/flow-events";
+import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 
 const NOT_NAMED_LABEL = "";
 
@@ -3736,7 +3738,6 @@ export class ClipboardWriteActionComponent extends ActionComponent {
                     data instanceof Uint8Array
                 )
             ) {
-                console.log(data);
                 context.throwError(`Invalid data property`);
                 return;
             }
@@ -4491,6 +4492,93 @@ export class LabelInActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class PrintToPDFActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "widget",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "widget"
+            )
+        ],
+        icon: PRINT_TO_PDF_ICON,
+        componentHeaderColor: "#DEB887",
+        execute: (context: IDashboardComponentContext) => {
+            const widget = context.evalProperty<number>("widget");
+            if (widget == undefined) {
+                context.throwError(`Invalid Widget property`);
+                return;
+            }
+
+            const widgetInfo =
+                context.WasmFlowRuntime.getWidgetHandleInfo(widget);
+
+            if (!widgetInfo) {
+                context.throwError(`Invalid Widget handle`);
+                return;
+            }
+
+            const widgetContext = new DashboardComponentContext(
+                context.WasmFlowRuntime,
+                widgetInfo.flowStateIndex,
+                widgetInfo.componentIndex
+            );
+
+            const executionState =
+                widgetContext.getComponentExecutionState<any>();
+
+            if (!executionState || !executionState.printWidget) {
+                context.throwError(`Widget doesn't support printing`);
+                return;
+            }
+
+            executionState.printWidget();
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    widget: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            widget: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("StartActionComponent", StartActionComponent);
 registerClass("EndActionComponent", EndActionComponent);
 registerClass("InputActionComponent", InputActionComponent);
@@ -4553,3 +4641,5 @@ registerClass("LabelInActionComponent", LabelInActionComponent);
 
 registerClass("NoopActionComponent", NoopActionComponent);
 registerClass("CommentActionComponent", CommentActionComponent);
+
+registerClass("PrintToPDFActionComponent", PrintToPDFActionComponent);
