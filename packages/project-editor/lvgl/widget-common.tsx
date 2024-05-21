@@ -409,7 +409,7 @@ export function getExpressionPropertyInitalValue(
                 expr
             );
             if (result) {
-                return result.value;
+                return result.value.toString();
             }
         } catch (e) {}
         return `{${expr}}`;
