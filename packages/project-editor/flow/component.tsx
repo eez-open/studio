@@ -1575,7 +1575,9 @@ const CenterWidgetUI = observer(
 
             const left = Math.round((parentRect.width - rect.width) / 2);
 
-            Widget.classInfo.setRect!(this.widget, {
+            const classInfo = getClassInfo(this.widget);
+
+            classInfo.setRect!(this.widget, {
                 left
             });
         };
@@ -1586,7 +1588,9 @@ const CenterWidgetUI = observer(
 
             const top = Math.round((parentRect.height - rect.height) / 2);
 
-            Widget.classInfo.setRect!(this.widget, {
+            const classInfo = getClassInfo(this.widget);
+
+            classInfo.setRect!(this.widget, {
                 top
             });
         };
