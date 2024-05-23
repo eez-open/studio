@@ -253,7 +253,7 @@ const SelectItemDialog = observer(
             super(props);
 
             this.expressionBuilderState = new ExpressionBuilderState(
-                this.context,
+                getProjectStore(this.props.object),
                 this.props,
                 undefined
             );
@@ -859,22 +859,31 @@ const SelectItemDialog = observer(
                 children.push({
                     id: "built-in-functions",
                     label: "Built-in Functions",
-                    children: map(builtInFunctions, (func, functionName) => {
-                        const data = `${functionName}(${func.args
-                            .map(
-                                arg =>
-                                    `${EXPR_MARK_START}${arg}${EXPR_MARK_END}`
-                            )
-                            .join(", ")})`;
-                        return {
-                            id: functionName,
-                            label: functionName,
-                            children: [],
-                            selected: this.selection == data,
-                            expanded: false,
-                            data
-                        };
-                    }),
+                    children: Object.keys(builtInFunctions)
+                        .filter(functionName => {
+                            const func = builtInFunctions[functionName];
+                            if (func.enabled == undefined) {
+                                return true;
+                            }
+                            return func.enabled(this.context);
+                        })
+                        .map(functionName => {
+                            const func = builtInFunctions[functionName];
+                            const data = `${functionName}(${func.args
+                                .map(
+                                    arg =>
+                                        `${EXPR_MARK_START}${arg}${EXPR_MARK_END}`
+                                )
+                                .join(", ")})`;
+                            return {
+                                id: functionName,
+                                label: functionName,
+                                children: [],
+                                selected: this.selection == data,
+                                expanded: false,
+                                data
+                            };
+                        }),
                     selected: false,
                     expanded: true
                 });

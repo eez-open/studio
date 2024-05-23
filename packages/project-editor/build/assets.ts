@@ -138,6 +138,8 @@ export class Assets {
         }
     >();
 
+    jsonValues: any[] = [];
+
     constants: FlowValue[] = [];
     constantsMap = new Map<
         undefined | boolean | number | string | object,
@@ -148,6 +150,7 @@ export class Assets {
         flows: [],
         flowIndexes: {},
         actionFlowIndexes: {},
+        jsonValues: [],
         constants: [],
         globalVariables: [],
         dashboardComponentTypeToNameMap: {},
@@ -935,8 +938,22 @@ export class Assets {
         return this.getFlowIndex(action);
     }
 
+    registerJSONValue(value: any) {
+        for (let i = 0; i < this.jsonValues.length; i++) {
+            if (JSON.stringify(value) == JSON.stringify(this.jsonValues[i])) {
+                return i + 1;
+            }
+        }
+
+        this.jsonValues.push(value);
+
+        return this.jsonValues.length;
+    }
+
     getConstantIndex(value: any, valueType: ValueType) {
-        let index = this.constantsMap.get(value);
+        const key = `${valueType}:${value}`;
+
+        let index = this.constantsMap.get(key);
         if (index == undefined) {
             index = this.constants.length;
             this.constants.push({
@@ -944,7 +961,7 @@ export class Assets {
                 value,
                 valueType
             });
-            this.constantsMap.set(value, index);
+            this.constantsMap.set(key, index);
         }
         return index;
     }
@@ -1137,6 +1154,8 @@ export class Assets {
     }
 
     finalizeMap() {
+        this.map.jsonValues = this.jsonValues;
+
         this.map.constants = this.constants;
 
         this.flows.forEach(flow => {

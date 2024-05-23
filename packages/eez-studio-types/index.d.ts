@@ -12,6 +12,7 @@ export type BasicType =
     | "blob"
     | "stream"
     | "widget"
+    | "json"
     | "any";
 
 export type OtherBasicType =
@@ -450,6 +451,7 @@ interface AssetsMap {
     }[];
     flowIndexes: { [path: string]: number };
     actionFlowIndexes: { [actionName: string]: number };
+    jsonValues: any[];
     constants: any[];
     globalVariables: {
         index: number;
@@ -530,6 +532,7 @@ export interface IWasmFlowRuntime {
     _createStreamValue(value: number): number;
     _createDateValue(value: number): number;
     _createBlobValue(bufferPtr: number, bufferLen: number): number;
+    _createJsonValue(value: number): number;
 
     _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
 

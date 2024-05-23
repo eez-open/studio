@@ -206,6 +206,10 @@ function evalConstantExpressionNode(
             return translation.text;
         }
 
+        if (node.type == "JSONLiteral") {
+            return JSON.parse(node.value);
+        }
+
         if (node.type == "BinaryExpression") {
             let operator = binaryOperators[node.operator];
             if (!operator) {
@@ -264,6 +268,13 @@ function evalConstantExpressionNode(
             const builtInFunction = builtInFunctions[functionName];
             if (builtInFunction == undefined) {
                 throw `Unknown function '${functionName}'`;
+            }
+
+            if (
+                builtInFunction.enabled &&
+                !builtInFunction.enabled(project._store)
+            ) {
+                throw `Function '${functionName}' not supported`;
             }
 
             checkArity(functionName, node);
@@ -427,6 +438,13 @@ function evalExpressionWithContext(
             const builtInFunction = builtInFunctions[functionName];
             if (builtInFunction == undefined) {
                 throw `Unknown function '${functionName}'`;
+            }
+
+            if (
+                builtInFunction.enabled &&
+                !builtInFunction.enabled(expressionContext.projectStore)
+            ) {
+                throw `Function '${functionName}' not supported`;
             }
 
             checkArity(functionName, node);

@@ -369,6 +369,7 @@ export const builtInFunctions: {
             ...args: any[]
         ) => any;
         getValueType: (...args: ValueType[]) => ValueType;
+        enabled?: (projectStore: ProjectStore) => boolean;
     };
 } = {
     "System.getTick": {
@@ -1220,6 +1221,34 @@ export const builtInFunctions: {
         }
     },
 
+    "JSON.get": {
+        operationIndex: 76,
+        arity: 2,
+        args: ["json", "property"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[0][args[1]],
+        getValueType: (...args: ValueType[]) => {
+            return "json";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isDashboard
+    },
+
+    "JSON.clone": {
+        operationIndex: 77,
+        arity: 1,
+        args: ["json"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => JSON.parse(JSON.stringify(args[0])),
+        getValueType: (...args: ValueType[]) => {
+            return "json";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isDashboard
+    },
+
     "LVGL.MeterTickIndex": {
         operationIndex: 69,
         arity: 0,
@@ -1230,7 +1259,8 @@ export const builtInFunctions: {
         ) => 0,
         getValueType: (...args: ValueType[]) => {
             return "integer";
-        }
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
     }
 };
 

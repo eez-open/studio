@@ -1124,8 +1124,6 @@ export class RadioWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
-        console.log(label, variable, value);
-
         let index;
         if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
             index = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
@@ -2545,6 +2543,7 @@ import "project-editor/flow/components/widgets/dashboard/eez-chart";
 import "project-editor/flow/components/widgets/dashboard/markdown";
 import "project-editor/flow/components/widgets/dashboard/plotly";
 import "project-editor/flow/components/widgets/dashboard/tabulator";
+import "project-editor/flow/components/widgets/dashboard/data-tables";
 import "project-editor/flow/components/widgets/dashboard/terminal";
 import "project-editor/flow/components/widgets/dashboard/instrument-terminal";
 import "project-editor/flow/components/widgets/dashboard/embedded-dashboard";

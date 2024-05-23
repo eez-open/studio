@@ -1164,14 +1164,6 @@
         }
     }
 
-    .EezStudio_Tabulator {
-        &:not(.interactive) * {
-            pointer-events: none !important;
-        }
-
-        font-family: Arial, Helvetica, sans-serif !important;
-    }
-
     .EezStudio_CommentActionComponent {
         background-color: #fff5c2 !important;
         border: 0 !important;
@@ -2778,4 +2770,31 @@
 .EezStudio_EmbeddedDashboardWidget_Pre {
     text-wrap: balance;
     text-align: center;
+}
+
+.EezStudio_Tabulator {
+    &:not(.interactive) * {
+        pointer-events: none !important;
+    }
+
+    font-family: Arial, Helvetica, sans-serif !important;
+    user-select: all;
+
+    * {
+        user-select: text;
+    }
+}
+
+.EezStudio_DataTables {
+    &:not(.interactive) * {
+        pointer-events: none !important;
+    }
+
+    font-family: Arial, Helvetica, sans-serif !important;
+    background-color: white;
+    overflow: auto !important;
+
+    * {
+        user-select: text;
+    }
 }

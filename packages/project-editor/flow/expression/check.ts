@@ -123,6 +123,18 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             return;
         }
 
+        if (node.type == "JSONLiteral") {
+            const project = ProjectEditor.getProject(component);
+
+            if (!project.projectTypeTraits.isDashboard) {
+                throw `JSON literal not supported`;
+            }
+
+            JSON.parse(node.value);
+
+            return;
+        }
+
         if (node.type == "Identifier") {
             const input = component.inputs.find(
                 input => input.name == node.name
@@ -219,6 +231,14 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             const builtInFunction = builtInFunctions[functionName];
             if (builtInFunction == undefined) {
                 throw `Unknown function '${functionName}'`;
+            }
+
+            const projectStore = ProjectEditor.getProjectStore(component);
+            if (
+                builtInFunction.enabled &&
+                !builtInFunction.enabled(projectStore)
+            ) {
+                throw `Function '${functionName}' not supported`;
             }
 
             checkArity(functionName, node);

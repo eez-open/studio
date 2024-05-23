@@ -80,6 +80,42 @@ void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int c
     }, eez::flow::g_wasmModuleId, componentType, flowStateIndex, componentIndex);
 }
 
+eez::Value operationJsonGet(int json, const char *property) {
+    auto valuePtr = (eez::Value *)EM_ASM_INT({
+        return operationJsonGet($0, $1, UTF8ToString($2));
+    }, eez::flow::g_wasmModuleId, json, property);
+
+    eez::Value result = *valuePtr;
+
+    eez::ObjectAllocator<eez::Value>::deallocate(valuePtr);
+
+    return result;
+}
+
+int operationJsonSet(int json, const char *property, const eez::Value *valuePtr) {
+    return EM_ASM_INT({
+        return operationJsonSet($0, $1, UTF8ToString($2), $3);
+    }, eez::flow::g_wasmModuleId, json, property, valuePtr);
+}
+
+int operationJsonArrayLength(int json) {
+    return EM_ASM_INT({
+        return operationJsonArrayLength($0, $1);
+    }, eez::flow::g_wasmModuleId, json);
+}
+
+eez::Value operationJsonClone(int json) {
+    auto valuePtr = (eez::Value *)EM_ASM_INT({
+        return operationJsonClone($0, $1);
+    }, eez::flow::g_wasmModuleId, json);
+
+    eez::Value result = *valuePtr;
+
+    eez::ObjectAllocator<eez::Value>::deallocate(valuePtr);
+
+    return result;
+}
+
 void onArrayValueFree(eez::ArrayValue *arrayValue) {
     EM_ASM({
         onArrayValueFree($0, $1);
@@ -112,6 +148,10 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
     eez::flow::executeDashboardComponentHook = executeDashboardComponent;
+    eez::flow::operationJsonGetHook = operationJsonGet;
+    eez::flow::operationJsonSetHook = operationJsonSet;
+    eez::flow::operationJsonArrayLengthHook = operationJsonArrayLength;
+    eez::flow::operationJsonCloneHook = operationJsonClone;
     eez::flow::onArrayValueFreeHook = onArrayValueFree;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::showKeyboardHook = eez::gui::showKeyboard;

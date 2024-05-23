@@ -4531,7 +4531,12 @@ export class PrintToPDFActionComponent extends ActionComponent {
             const executionState =
                 widgetContext.getComponentExecutionState<any>();
 
-            if (!executionState || !executionState.printWidget) {
+            if (!executionState) {
+                context.throwError(`Widget not initialized`);
+                return;
+            }
+
+            if (!executionState.printWidget) {
                 context.throwError(`Widget doesn't support printing`);
                 return;
             }

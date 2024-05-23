@@ -62,6 +62,8 @@ export function findValueTypeInExpressionNode(
         }
     } else if (node.type == "TextResource") {
         node.valueType = "string";
+    } else if (node.type == "JSONLiteral") {
+        node.valueType = "json";
     } else if (node.type == "Identifier") {
         if (assignable) {
             const output = component?.outputs.find(
@@ -232,6 +234,13 @@ export function findValueTypeInExpressionNode(
             throw `Unknown function '${functionName}'`;
         }
 
+        if (
+            builtInFunction.enabled &&
+            !builtInFunction.enabled(project._store)
+        ) {
+            throw `Function '${functionName}' not supported`;
+        }
+
         checkArity(functionName, node);
 
         node.arguments.forEach(argument =>
@@ -388,6 +397,8 @@ export function findValueTypeInExpressionNode(
                     node.valueType = "any";
                 } else if (node.object.valueType == "blob") {
                     node.valueType = "integer";
+                } else if (node.object.valueType == "json") {
+                    node.valueType = "json";
                 } else {
                     const valueType = getArrayElementTypeFromType(
                         node.object.valueType
@@ -436,16 +447,21 @@ export function findValueTypeInExpressionNode(
                     }
                 }
 
-                const type = project._store.typesStore.getFieldType(
-                    node.object.valueType,
-                    node.property.name
-                );
-                if (!type) {
-                    throw `Member access ".${node.property.name}" is not allowed`;
-                }
+                if (node.object.valueType == "json") {
+                    node.valueType = "json";
+                    node.property.identifierType = "member";
+                } else {
+                    const type = project._store.typesStore.getFieldType(
+                        node.object.valueType,
+                        node.property.name
+                    );
+                    if (!type) {
+                        throw `Member access ".${node.property.name}" is not allowed`;
+                    }
 
-                node.valueType = type;
-                node.property.identifierType = "member";
+                    node.valueType = type;
+                    node.property.identifierType = "member";
+                }
             }
         }
     } else if (node.type == "ArrayExpression") {

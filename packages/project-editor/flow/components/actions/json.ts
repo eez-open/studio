@@ -26,7 +26,7 @@ registerActionComponents("Dashboard Specific", [
             customOutputs: [
                 {
                     name: "result",
-                    type: "any"
+                    type: "json"
                 }
             ],
             value: "text"
@@ -46,8 +46,7 @@ registerActionComponents("Dashboard Specific", [
             }
 
             try {
-                const result = JSON.parse(value);
-                context.propagateValue("result", result);
+                context.propagateValue("result", JSON.parse(value));
                 context.propagateValueThroughSeqout();
             } catch (err) {
                 context.throwError(err.toString());

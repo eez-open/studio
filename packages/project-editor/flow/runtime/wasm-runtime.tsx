@@ -51,10 +51,11 @@ import {
 
 import {
     ArrayValue,
-    clearStremIDs,
+    clearJSObjects,
     createJsArrayValue,
     createWasmValue,
-    getValue
+    getValue,
+    initJSObjectsMap
 } from "project-editor/flow/runtime/wasm-value";
 
 import {
@@ -229,6 +230,11 @@ export class WasmRuntime extends RemoteRuntime {
 
         // create WASM worker
         this.wasmModuleId = nextWasmModuleId++;
+
+        if (this.projectStore.projectTypeTraits.isDashboard) {
+            initJSObjectsMap(this.assetsMap, this.wasmModuleId);
+        }
+
         this.worker = createWasmWorker(
             this.wasmModuleId,
             isDebuggerActive
@@ -285,7 +291,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.destroyGlobalVariables();
 
-        clearStremIDs(this.wasmModuleId);
+        clearJSObjects(this.wasmModuleId);
 
         if (this.lgvlPageRuntime) {
             this.lgvlPageRuntime.unmount();

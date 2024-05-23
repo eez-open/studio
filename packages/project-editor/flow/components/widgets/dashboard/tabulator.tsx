@@ -77,12 +77,38 @@ const TabulatorElement = observer(
             return {
                 data: this.tableData,
                 layout: "fitColumns",
-                autoColumns: true,
+                //autoColumns: true,
                 printStyled: true,
                 printAsHtml: true,
-                printRowRange: "all"
+                printRowRange: "all",
                 //printHeader: "<h1>Example Table Header<h1>",
-                //printFooter: "<h2>Example Table Footer<h2>"
+                //printFooter: "<h2>Example Table Footer<h2>",
+                pagination: true,
+                columns: [
+                    /*{
+                        title: "ID",
+                        field: "id",
+                        sorter: "string"
+                    },*/
+                    {
+                        title: "Serial",
+                        field: "serial",
+                        sorter: "string"
+                    },
+                    { title: "Model", field: "model", sorter: "string" },
+                    {
+                        title: "Version",
+                        field: "version",
+                        sorter: "string"
+                    },
+                    { title: "Added By", field: "added_by", sorter: "string" },
+                    {
+                        title: "Created At",
+                        field: "created_at",
+                        //sorter: "date"
+                        sorter: "string"
+                    }
+                ]
             };
         }
 

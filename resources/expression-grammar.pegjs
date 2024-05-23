@@ -211,6 +211,11 @@ TextResource
       return { type: "TextResource", value: str.value, location: location() };
     }
 
+JSONLiteral
+  = ("JSON" / "json") "`" chars:((!"`" SourceCharacter)*) "`" {
+      return { type: "JSONLiteral", value: chars.map(x => x[1]).join(""), location: location() };
+    }
+
 DoubleStringCharacter
   = !('"' / "\\" / LineTerminator) SourceCharacter { return text(); }
   / "\\" sequence:EscapeSequence { return sequence; }
@@ -395,6 +400,7 @@ EOF
 
 PrimaryExpression
   = TextResource
+  / JSONLiteral
   / Identifier
   / Literal
   / ArrayLiteral

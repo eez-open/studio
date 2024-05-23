@@ -19,6 +19,7 @@ import {
     FLOW_VALUE_TYPE_DOUBLE,
     FLOW_VALUE_TYPE_FLOAT,
     FLOW_VALUE_TYPE_INT32,
+    FLOW_VALUE_TYPE_JSON,
     FLOW_VALUE_TYPE_NULL,
     FLOW_VALUE_TYPE_STRING_ASSET,
     FLOW_VALUE_TYPE_UINT32,
@@ -53,6 +54,8 @@ export function getValueType(valueType: ValueType) {
         return FLOW_VALUE_TYPE_DATE;
     } else if (valueType == "widget") {
         return FLOW_VALUE_TYPE_WIDGET;
+    } else if (valueType == "json") {
+        return FLOW_VALUE_TYPE_JSON;
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {
@@ -251,6 +254,9 @@ function buildFlowValue(
                     buildFlowValue(assets, dataBuffer, element)
                 );
             }, 8);
+            dataBuffer.writeUint32(0);
+        } else if (flowValue.type == FLOW_VALUE_TYPE_JSON) {
+            dataBuffer.writeInt32(flowValue.value);
             dataBuffer.writeUint32(0);
         } else {
             dataBuffer.writeUint64(0);

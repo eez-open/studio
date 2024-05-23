@@ -32,13 +32,15 @@ import {
     FLOW_VALUE_TYPE_DATE,
     FLOW_VALUE_TYPE_POINTER,
     FLOW_VALUE_TYPE_ERROR,
-    FLOW_VALUE_TYPE_WIDGET
+    FLOW_VALUE_TYPE_WIDGET,
+    FLOW_VALUE_TYPE_JSON
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
     Value,
     ValueWithType
 } from "eez-studio-types";
+import { observable } from "mobx";
 
 type Values = (null | boolean | number | string | ArrayValue)[];
 
@@ -257,7 +259,7 @@ export function createWasmValue(
 
     if (value instanceof Stream) {
         return WasmFlowRuntime._createStreamValue(
-            getStreamID(value, WasmFlowRuntime.wasmModuleId)
+            getJSObjectID(value, WasmFlowRuntime.wasmModuleId)
         );
     }
 
@@ -272,6 +274,13 @@ export function createWasmValue(
     }
 
     if (valueTypeIndex != undefined) {
+        const type = WasmFlowRuntime.assetsMap.types[valueTypeIndex];
+        if (type.kind == "basic" && type.valueType == "json") {
+            return WasmFlowRuntime._createJsonValue(
+                getJSObjectID(value, WasmFlowRuntime.wasmModuleId)
+            );
+        }
+
         const arrayValue = createJsArrayValue(
             valueTypeIndex,
             value,
@@ -285,7 +294,11 @@ export function createWasmValue(
         return createWasmArrayValue(WasmFlowRuntime, value);
     }
 
-    console.error("unsupported WASM value");
+    if (typeof value == "object") {
+        return WasmFlowRuntime._createJsonValue(
+            getJSObjectID(value, WasmFlowRuntime.wasmModuleId)
+        );
+    }
 
     return WasmFlowRuntime._createNullValue();
 }
@@ -395,7 +408,7 @@ export function getValue(
         };
     } else if (type == FLOW_VALUE_TYPE_STREAM) {
         return {
-            value: getStreamFromID(
+            value: getJSObjectFromID(
                 WasmFlowRuntime.HEAPU32[offset >> 2],
                 WasmFlowRuntime.wasmModuleId
             ),
@@ -422,6 +435,14 @@ export function getValue(
         return {
             value: WasmFlowRuntime.HEAPU32[offset >> 2],
             valueType: "widget"
+        };
+    } else if (type == FLOW_VALUE_TYPE_JSON) {
+        return {
+            value: getJSObjectFromID(
+                WasmFlowRuntime.HEAPU32[offset >> 2],
+                WasmFlowRuntime.wasmModuleId
+            ),
+            valueType: "json"
         };
     }
 
@@ -492,41 +513,50 @@ export function getArrayValue(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const streamsMap = new Map<
+const jsObjectsMap = new Map<
     number,
     {
-        streams: Stream[];
-        streamIDs: Map<Stream, number>;
+        jsObjects: any[];
+        jsObjectIDs: Map<any, number>;
     }
 >();
 
-function getStreamID(stream: Stream, wasmModuleId: number) {
-    let wasmModuleStreams = streamsMap.get(wasmModuleId);
-    if (!wasmModuleStreams) {
-        wasmModuleStreams = {
-            streams: [],
-            streamIDs: new Map()
-        };
-        streamsMap.set(wasmModuleId, wasmModuleStreams);
-    }
-
-    let streamID = wasmModuleStreams.streamIDs.get(stream);
-    if (streamID == undefined) {
-        streamID = wasmModuleStreams.streams.length;
-        wasmModuleStreams.streams.push(stream);
-        wasmModuleStreams.streamIDs.set(stream, streamID);
-    }
-    return streamID;
+export function initJSObjectsMap(assetsMap: AssetsMap, wasmModuleId: number) {
+    assetsMap.jsonValues.forEach(jsonValue => {
+        getJSObjectID(jsonValue, wasmModuleId);
+    });
 }
 
-function getStreamFromID(streamID: number, wasmModuleId: number) {
-    let wasmModuleStreams = streamsMap.get(wasmModuleId);
-    if (wasmModuleStreams) {
-        return wasmModuleStreams.streams[streamID];
+function getJSObjectID(jsObject: any, wasmModuleId: number) {
+    let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
+    if (!wasmModuleJSObjects) {
+        wasmModuleJSObjects = {
+            jsObjects: [],
+            jsObjectIDs: new Map()
+        };
+        jsObjectsMap.set(wasmModuleId, wasmModuleJSObjects);
+    }
+
+    let jsObjectID = wasmModuleJSObjects.jsObjectIDs.get(jsObject);
+    if (jsObjectID == undefined) {
+        jsObjectID = wasmModuleJSObjects.jsObjects.length + 1;
+
+        jsObject = observable(jsObject);
+
+        wasmModuleJSObjects.jsObjects.push(jsObject);
+        wasmModuleJSObjects.jsObjectIDs.set(jsObject, jsObjectID);
+    }
+    return jsObjectID;
+}
+
+export function getJSObjectFromID(jsObjectID: number, wasmModuleId: number) {
+    let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
+    if (wasmModuleJSObjects) {
+        return wasmModuleJSObjects.jsObjects[jsObjectID - 1];
     }
     return undefined;
 }
 
-export function clearStremIDs(wasmModuleId: number) {
-    streamsMap.delete(wasmModuleId);
+export function clearJSObjects(wasmModuleId: number) {
+    jsObjectsMap.delete(wasmModuleId);
 }

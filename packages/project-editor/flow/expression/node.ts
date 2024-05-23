@@ -36,6 +36,11 @@ export type ExpressionNode =
           value: string;
           valueType: ValueType;
       }
+    | {
+          type: "JSONLiteral";
+          value: string;
+          valueType: ValueType;
+      }
     | IdentifierExpressionNode
     | {
           type: "BinaryExpression";

@@ -22,9 +22,10 @@ export const FLOW_VALUE_TYPE_ARRAY_REF = 18;
 export const FLOW_VALUE_TYPE_BLOB_REF = 19;
 export const FLOW_VALUE_TYPE_STREAM = 20;
 export const FLOW_VALUE_TYPE_DATE = 21;
-export const FLOW_VALUE_TYPE_WIDGET = 22;
 export const FLOW_VALUE_TYPE_ERROR = 27;
-export const FLOW_VALUE_TYPE_POINTER = 34;
+export const FLOW_VALUE_TYPE_POINTER = 29;
+export const FLOW_VALUE_TYPE_WIDGET = 34;
+export const FLOW_VALUE_TYPE_JSON = 35;
 
 export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED
@@ -49,5 +50,6 @@ export const basicFlowValueTypes: ValueType[] = [
     "blob", // FLOW_VALUE_TYPE_BLOB_REF
     "stream", // FLOW_VALUE_TYPE_STREAM
     "date", // FLOW_VALUE_TYPE_DATE
-    "widget" // FLOW_VALUE_TYPE_WIDGET
+    "widget", // FLOW_VALUE_TYPE_WIDGET
+    "json" // FLOW_VALUE_TYPE_JSON
 ];

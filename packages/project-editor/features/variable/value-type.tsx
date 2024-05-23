@@ -64,6 +64,7 @@ export const BASIC_TYPE_NAMES = [
     "blob",
     "stream",
     "widget",
+    "json",
     "any"
 ];
 
@@ -382,6 +383,11 @@ export function getValueLabel(
 
     if (value instanceof Stream) {
         return "stream";
+    }
+
+    if (type == "json") {
+        console.log(value);
+        return "json";
     }
 
     return value.toString();

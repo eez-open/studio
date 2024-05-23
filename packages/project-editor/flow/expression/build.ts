@@ -169,6 +169,17 @@ function buildExpressionNode(
         ];
     }
 
+    if (node.type == "JSONLiteral") {
+        return [
+            makePushConstantInstruction(
+                assets,
+                assets.registerJSONValue(JSON.parse(node.value)),
+                node.valueType
+            ),
+            makeOperationInstruction(operationIndexes["JSON.clone"])
+        ];
+    }
+
     if (node.type == "Identifier") {
         if (assignable) {
             const outputIndex = component.buildOutputs.findIndex(
@@ -302,6 +313,13 @@ function buildExpressionNode(
         const builtInFunction = builtInFunctions[functionName];
         if (builtInFunction == undefined) {
             throw `Unknown function '${functionName}'`;
+        }
+
+        if (
+            builtInFunction.enabled &&
+            !builtInFunction.enabled(assets.projectStore)
+        ) {
+            throw `Function '${functionName}' not supported`;
         }
 
         checkArity(functionName, node);
@@ -449,6 +467,24 @@ function buildExpressionNode(
         }
 
         if (node.computed) {
+            if (node.object.valueType == "json") {
+                return [
+                    ...buildExpressionNode(
+                        assets,
+                        component,
+                        node.property,
+                        assignable
+                    ),
+                    ...buildExpressionNode(
+                        assets,
+                        component,
+                        node.object,
+                        assignable
+                    ),
+                    makeOperationInstruction(operationIndexes["JSON.get"])
+                ];
+            }
+
             return [
                 ...buildExpressionNode(
                     assets,
@@ -466,6 +502,20 @@ function buildExpressionNode(
             ];
         } else {
             const fieldName = (node.property as IdentifierExpressionNode).name;
+
+            if (node.object.valueType == "json") {
+                return [
+                    makePushConstantInstruction(assets, fieldName, "string"),
+                    ...buildExpressionNode(
+                        assets,
+                        component,
+                        node.object,
+                        assignable
+                    ),
+                    makeOperationInstruction(operationIndexes["JSON.get"])
+                ];
+            }
+
             const fieldIndex = assets.projectStore.typesStore.getFieldIndex(
                 node.object.valueType,
                 fieldName

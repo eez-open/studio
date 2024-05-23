@@ -41,6 +41,7 @@ import { ExecuteComponentLogItem } from "project-editor/flow/debugger/logs";
 import { InputActionComponent } from "project-editor/flow/components/actions";
 import { getProperty, IEezObject } from "project-editor/core/object";
 import { getDashboardState } from "project-editor/flow/runtime/component-execution-states";
+import { getJSObjectFromID } from "project-editor/flow/runtime/wasm-value";
 
 const DEBUGGER_TCP_PORT = 3333;
 
@@ -689,6 +690,15 @@ export abstract class DebuggerConnectionBase {
 
         if (str[0] == ">") {
             return `stream (id=${Number.parseInt(str.substring(1))})`;
+        }
+
+        if (str[0] == "#") {
+            const objID = Number.parseInt(str.substring(1));
+            const wasmModuleId = this.runtime.getWasmModuleId();
+            if (wasmModuleId) {
+                return getJSObjectFromID(objID, wasmModuleId);
+            }
+            return `json (id=${Number.parseInt(str.substring(1))})`;
         }
 
         function parseFloat(str: string) {

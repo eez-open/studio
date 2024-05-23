@@ -10,6 +10,12 @@
             type="text/css"
             href="../eez-studio-ui/_stylesheets/main.css"
         />
+        <link
+            id="data-tables"
+            rel="stylesheet"
+            type="text/css"
+            href="../../libs/data-tables/2.0.7/dataTables.dataTables.min.css"
+        />
     </head>
     <body>
         <script>
@@ -17,7 +23,7 @@
 
             ipcRenderer.on("printPDF", (event, content) => {
                 document.body.innerHTML = content;
-                ipcRenderer.send("readyToPrintPDF");
+                setTimeout(() => ipcRenderer.send("readyToPrintPDF"), 300);
             });
         </script>
     </body>

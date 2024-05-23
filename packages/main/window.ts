@@ -304,8 +304,8 @@ ipcMain.on("printPDF", (event: any, content: any) => {
 
     printWindow = createWindow({
         url: "home/print.html",
-        showHidden: true
-        //utilityWindow: true
+        showHidden: true,
+        utilityWindow: true
     });
 
     printWindow.on("ready-to-show", () => {
@@ -327,7 +327,7 @@ ipcMain.on("printPDF", (event: any, content: any) => {
                 message: err.toString()
             });
         } finally {
-            printWindow.close();
+            //printWindow.close();
         }
 
         if (!data) {
