@@ -120,6 +120,8 @@ const LineChartElement = observer(
         clientWidth = 0;
         clientHeight = 0;
 
+        createChartState: "idle" | "create" | "cancel" | "stop" = "idle";
+
         constructor(props: any) {
             super(props);
 
@@ -378,8 +380,6 @@ const LineChartElement = observer(
                         : false
             };
         }
-
-        createChartState: "idle" | "create" | "cancel" | "stop" = "idle";
 
         async createChart(el: HTMLDivElement) {
             if (this.createChartState != "idle") {
@@ -1175,42 +1175,55 @@ registerClass("LineChartWidget", LineChartWidget);
 // Gauge Widget
 
 const GaugeElement = observer(
-    ({
-        widget,
-        flowContext,
-        width,
-        height
-    }: {
+    class GaugeElement extends React.Component<{
         widget: GaugeWidget;
         flowContext: IFlowContext;
-        width: number;
-        height: number;
-    }) => {
-        const ref = React.useRef<HTMLDivElement>(null);
-        const [plotly, setPlotly] = React.useState<
-            PlotlyModule.PlotlyHTMLElement | undefined
-        >();
+    }> {
+        ref = React.createRef<HTMLDivElement>();
 
-        function getData(): PlotlyModule.Data[] {
+        plotly: PlotlyModule.PlotlyHTMLElement | undefined;
+        plotlyEl: HTMLDivElement | undefined;
+        plotlyWidth: number;
+        plotlyHeight: number;
+
+        dispose1: IReactionDisposer | undefined;
+        dispose2: IReactionDisposer | undefined;
+
+        updateClientSizeTimeoutId: any;
+        clientWidth = 0;
+        clientHeight = 0;
+
+        createChartState: "idle" | "create" | "cancel" | "stop" = "idle";
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                clientWidth: observable,
+                clientHeight: observable
+            });
+        }
+
+        get data(): PlotlyModule.Data[] {
             const minRange = 0;
             const maxRange = 1;
 
             return [
                 {
                     domain: { x: [0, 1], y: [0, 1] },
-                    value: flowContext.flowState
+                    value: this.props.flowContext.flowState
                         ? 0
                         : (minRange + maxRange) / 2,
-                    title: { text: widget.title },
+                    title: { text: this.props.widget.title },
                     type: "indicator",
                     mode: "gauge+number",
                     gauge: {
                         bar: {
-                            color: widget.color
+                            color: this.props.widget.color
                         },
                         axis: {
                             range: [minRange, maxRange],
-                            color: widget.color
+                            color: this.props.widget.color
                         }
                     },
                     number: {
@@ -1220,138 +1233,226 @@ const GaugeElement = observer(
             ];
         }
 
-        function getLayout(): Partial<PlotlyModule.Layout> {
+        get layout(): Partial<PlotlyModule.Layout> {
             return {
                 margin: {
-                    t: widget.margin.top,
-                    r: widget.margin.right,
-                    b: widget.margin.bottom,
-                    l: widget.margin.left
+                    t: this.props.widget.margin.top,
+                    r: this.props.widget.margin.right,
+                    b: this.props.widget.margin.bottom,
+                    l: this.props.widget.margin.left
                 }
             };
         }
 
-        function getConfig(): Partial<PlotlyModule.Config> {
+        get config(): Partial<PlotlyModule.Config> {
             return {
                 displayModeBar: false,
                 autosizable: false
             };
         }
 
-        React.useEffect(() => {
-            let disposed = false;
-            let disposeReaction: any;
+        async createChart(el: HTMLDivElement) {
+            if (this.createChartState != "idle") {
+                if (this.createChartState == "create") {
+                    this.createChartState = "cancel";
+                }
+                return;
+            }
+            this.createChartState = "create";
 
-            const el = ref.current;
-            if (el) {
-                (async () => {
-                    const plotly = await Plotly().newPlot(
-                        el,
-                        getData(),
-                        getLayout(),
-                        getConfig()
-                    );
+            if (this.dispose1) {
+                this.dispose1();
+                this.dispose1 = undefined;
+            }
 
-                    if (!disposed) {
-                        setPlotly(plotly);
+            if (this.dispose2) {
+                this.dispose2();
+                this.dispose2 = undefined;
+            }
 
-                        disposeReaction = autorun(() => {
-                            const inputData = flowContext.flowState
-                                ? {
-                                      value: evalProperty(
-                                          flowContext,
-                                          widget,
-                                          "data"
-                                      ),
-                                      minRange: evalProperty(
-                                          flowContext,
-                                          widget,
-                                          "minRange"
-                                      ),
-                                      maxRange: evalProperty(
-                                          flowContext,
-                                          widget,
-                                          "maxRange"
-                                      )
-                                  }
-                                : undefined;
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
+            }
 
-                            if (inputData != undefined) {
-                                Plotly().update(
-                                    el,
-                                    {
-                                        value: inputData.value,
-                                        gauge: {
-                                            bar: {
-                                                color: widget.color
-                                            },
-                                            axis: {
-                                                range: [
-                                                    inputData.minRange,
-                                                    inputData.maxRange
-                                                ],
-                                                color: widget.color
-                                            }
-                                        },
-                                        number: {
-                                            valueformat: "f"
-                                        }
-                                    },
-                                    {}
-                                );
-                            }
-                        });
-                    } else {
-                        Plotly().purge(el);
+            this.plotly = await Plotly().newPlot(
+                el,
+                this.data,
+                this.layout,
+                this.config
+            );
+
+            if (this.createChartState != "create") {
+                if (this.createChartState == "cancel") {
+                    this.createChartState = "idle";
+                    this.createChart(el);
+                }
+                return;
+            }
+
+            this.createChartState = "idle";
+
+            this.plotlyEl = el;
+            this.plotlyWidth = this.clientWidth;
+            this.plotlyHeight = this.clientHeight;
+
+            this.dispose1 = reaction(
+                () => {
+                    return {
+                        layout: this.layout
+                    };
+                },
+                async params => {
+                    try {
+                        this.plotly = await Plotly().react(
+                            el,
+                            this.data,
+                            params.layout,
+                            this.config
+                        );
+                    } catch (err) {
+                        console.error(err);
                     }
-                })();
-            }
-
-            return () => {
-                if (disposeReaction) {
-                    disposeReaction();
+                },
+                {
+                    delay: 16
                 }
-                if (el) {
-                    Plotly().purge(el);
+            );
+
+            this.dispose2 = autorun(
+                () => {
+                    const inputData = this.props.flowContext.flowState
+                        ? {
+                              value: evalProperty(
+                                  this.props.flowContext,
+                                  this.props.widget,
+                                  "data"
+                              ),
+                              minRange: evalProperty(
+                                  this.props.flowContext,
+                                  this.props.widget,
+                                  "minRange"
+                              ),
+                              maxRange: evalProperty(
+                                  this.props.flowContext,
+                                  this.props.widget,
+                                  "maxRange"
+                              )
+                          }
+                        : undefined;
+
+                    if (inputData != undefined) {
+                        Plotly().update(
+                            el,
+                            {
+                                value: inputData.value,
+                                gauge: {
+                                    bar: {
+                                        color: this.props.widget.color
+                                    },
+                                    axis: {
+                                        range: [
+                                            inputData.minRange,
+                                            inputData.maxRange
+                                        ],
+                                        color: this.props.widget.color
+                                    }
+                                },
+                                number: {
+                                    valueformat: "f"
+                                }
+                            },
+                            {}
+                        );
+                    }
+                },
+                {
+                    delay: 16
                 }
-                disposed = true;
-            };
-        }, [ref.current]);
+            );
+        }
 
-        React.useEffect(() => {
-            if (plotly) {
-                Plotly().Plots.resize(ref.current!);
+        updateClientSize = () => {
+            if (this.ref.current) {
+                const parentElement = this.ref.current.parentElement;
+                if (parentElement) {
+                    const clientWidth = parentElement.clientWidth;
+                    const clientHeight = parentElement.clientHeight;
+
+                    if (clientWidth == 0 && clientHeight == 0) {
+                        this.updateClientSizeTimeoutId = setTimeout(() => {
+                            this.updateClientSizeTimeoutId = undefined;
+                            this.updateClientSize();
+                        }, 16);
+                    }
+
+                    if (
+                        clientWidth != this.clientWidth ||
+                        clientHeight != this.clientHeight
+                    ) {
+                        runInAction(() => {
+                            this.clientWidth = clientWidth;
+                            this.clientHeight = clientHeight;
+                        });
+                    }
+                }
             }
-        }, [plotly, width, height]);
+        };
 
-        React.useEffect(() => {
-            if (plotly) {
-                Plotly().react(plotly, getData(), getLayout(), getConfig());
+        componentDidMount() {
+            if (this.ref.current) {
+                this.updateClientSize();
+
+                this.createChart(this.ref.current);
             }
-        }, [
-            plotly,
-            widget.title,
-            widget.color,
-            widget.minRange,
-            widget.maxRange,
-            widget.margin.top,
-            widget.margin.right,
-            widget.margin.bottom,
-            widget.margin.left
-        ]);
+        }
 
-        return (
-            <div
-                ref={ref}
-                style={{
-                    width,
-                    height
-                }}
-                className={classNames("EezStudio_Plotly", {
-                    interactive: !!flowContext.projectStore.runtime
-                })}
-            ></div>
-        );
+        componentDidUpdate() {
+            if (this.ref.current) {
+                this.updateClientSize();
+
+                this.createChart(this.ref.current);
+            }
+        }
+
+        componentWillUnmount(): void {
+            if (this.updateClientSizeTimeoutId) {
+                clearTimeout(this.updateClientSizeTimeoutId);
+                this.updateClientSizeTimeoutId = undefined;
+            }
+
+            this.createChartState = "stop";
+
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
+            }
+
+            if (this.dispose1) {
+                this.dispose1();
+                this.dispose1 = undefined;
+            }
+
+            if (this.dispose2) {
+                this.dispose2();
+                this.dispose2 = undefined;
+            }
+        }
+
+        render() {
+            const { flowContext } = this.props;
+
+            return (
+                <div
+                    ref={this.ref}
+                    style={{
+                        width: this.clientWidth,
+                        height: this.clientHeight
+                    }}
+                    className={classNames("EezStudio_Plotly", {
+                        interactive: !!flowContext.projectStore.runtime
+                    })}
+                ></div>
+            );
+        }
     }
 );
 
@@ -1455,12 +1556,7 @@ export class GaugeWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <GaugeElement
-                    widget={this}
-                    flowContext={flowContext}
-                    width={width}
-                    height={height}
-                />
+                <GaugeElement widget={this} flowContext={flowContext} />
                 {super.render(flowContext, width, height)}
             </>
         );

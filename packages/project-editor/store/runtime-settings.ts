@@ -53,7 +53,7 @@ export class RuntimeSettings {
         if (objectVariableType) {
             if (
                 variable.type == "object:Instrument" &&
-                this.projectStore.context.type == "instrument-dashobard"
+                this.projectStore.context.type == "instrument-dashboard"
             ) {
                 return this.projectStore.context.instrument;
             }

@@ -138,7 +138,7 @@ type ProjectStoreContext =
           parentProjectStore: ProjectStore;
           dashboardPath: string;
       }
-    | { type: "instrument-dashobard"; instrument: InstrumentObject }
+    | { type: "instrument-dashboard"; instrument: InstrumentObject }
     | { type: "standalone" };
 
 export class ProjectStore {

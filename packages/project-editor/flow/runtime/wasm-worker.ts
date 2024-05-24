@@ -230,7 +230,7 @@ function operationJsonClone(wasmModuleId: number, jsObjectID: number) {
     return createWasmValue(WasmFlowRuntime, value);
 }
 
-function onArrayValueFree(wasmModuleId: number, ptr: number) {
+function onObjectArrayValueFree(wasmModuleId: number, ptr: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
         return;
@@ -265,7 +265,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonSet = operationJsonSet;
 (global as any).operationJsonArrayLength = operationJsonArrayLength;
 (global as any).operationJsonClone = operationJsonClone;
-(global as any).onArrayValueFree = onArrayValueFree;
+(global as any).onObjectArrayValueFree = onObjectArrayValueFree;
 (global as any).executeScpi = executeScpi;
 (global as any).getLvglImageByName = getLvglImageByName;
 

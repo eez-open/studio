@@ -277,7 +277,7 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async doStopRuntime(notifyUser: boolean) {
-        if (this.projectStore.context.type == "instrument-dashobard") {
+        if (this.projectStore.context.type == "instrument-dashboard") {
             notifyUser = false;
         }
 
@@ -412,7 +412,7 @@ export class WasmRuntime extends RemoteRuntime {
 
                 if (
                     valueType != "object:Instrument" ||
-                    this.projectStore.context.type != "instrument-dashobard"
+                    this.projectStore.context.type != "instrument-dashboard"
                 ) {
                     const objectVariableType = getObjectVariableTypeFromType(
                         this.projectStore,
@@ -581,7 +581,7 @@ export class WasmRuntime extends RemoteRuntime {
             let value =
                 variable.type == "object:Instrument" &&
                 firstDashboardInstrument &&
-                this.projectStore.context.type == "instrument-dashobard"
+                this.projectStore.context.type == "instrument-dashboard"
                     ? this.projectStore.context.instrument
                     : this.projectStore.dataContext.get(variable.fullName);
 
@@ -911,7 +911,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (
             !instrument.isConnected &&
-            (this.projectStore.context.type != "instrument-dashobard" ||
+            (this.projectStore.context.type != "instrument-dashboard" ||
                 instrument != this.projectStore.context.instrument)
         ) {
             const CONNECTION_TIMEOUT = 3000;

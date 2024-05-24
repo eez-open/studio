@@ -969,19 +969,18 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1029248: ($0) => { startToDebuggerMessage($0); },  
- 1029280: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1029355: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1029430: ($0) => { finishToDebuggerMessage($0); },  
- 1029463: ($0, $1) => { onArrayValueFree($0, $1); },  
- 1029493: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1029546: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1029652: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1029688: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1029725: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1029765: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1029822: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1029881: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1029216: ($0) => { startToDebuggerMessage($0); },  
+ 1029248: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1029323: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1029398: ($0) => { finishToDebuggerMessage($0); },  
+ 1029431: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1029484: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1029590: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1029626: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1029663: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1029703: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1029760: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1029819: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 

@@ -747,12 +747,6 @@ void finishToDebuggerMessage() {
     }, eez::flow::g_wasmModuleId);
 }
 
-void onArrayValueFree(eez::ArrayValue *arrayValue) {
-    EM_ASM({
-        onArrayValueFree($0, $1);
-    }, eez::flow::g_wasmModuleId, arrayValue);
-}
-
 void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t delay) {
     screenLoad_animType = animType;
     screenLoad_speed = speed;
@@ -824,7 +818,6 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::startToDebuggerMessageHook = startToDebuggerMessage;
     eez::flow::writeDebuggerBufferHook = writeDebuggerBuffer;
     eez::flow::finishToDebuggerMessageHook = finishToDebuggerMessage;
-    eez::flow::onArrayValueFreeHook = onArrayValueFree;
     eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;

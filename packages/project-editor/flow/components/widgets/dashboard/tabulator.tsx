@@ -19,6 +19,7 @@ import { TABULATOR_ICON } from "project-editor/ui-components/icons";
 import { addScript } from "eez-studio-shared/dom";
 import { evalProperty } from "project-editor/flow/helper";
 import { IDashboardComponentContext } from "eez-studio-types";
+import { humanize } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +74,21 @@ const TabulatorElement = observer(
             return toJS(data);
         }
 
+        get columnNames() {
+            const tableData = this.tableData;
+
+            return tableData && tableData.length > 0
+                ? Object.keys(tableData[0])
+                : [];
+        }
+
+        get columns(): TabulatorModule.ColumnDefinition[] {
+            return this.columnNames.map(columnName => ({
+                title: humanize(columnName),
+                field: columnName
+            }));
+        }
+
         get options(): TabulatorModule.Options {
             return {
                 data: this.tableData,
@@ -84,31 +100,32 @@ const TabulatorElement = observer(
                 //printHeader: "<h1>Example Table Header<h1>",
                 //printFooter: "<h2>Example Table Footer<h2>",
                 pagination: true,
-                columns: [
-                    /*{
-                        title: "ID",
-                        field: "id",
-                        sorter: "string"
-                    },*/
-                    {
-                        title: "Serial",
-                        field: "serial",
-                        sorter: "string"
-                    },
-                    { title: "Model", field: "model", sorter: "string" },
-                    {
-                        title: "Version",
-                        field: "version",
-                        sorter: "string"
-                    },
-                    { title: "Added By", field: "added_by", sorter: "string" },
-                    {
-                        title: "Created At",
-                        field: "created_at",
-                        //sorter: "date"
-                        sorter: "string"
-                    }
-                ]
+                columns: this.columns
+                // columns: [
+                //     /*{
+                //         title: "ID",
+                //         field: "id",
+                //         sorter: "string"
+                //     },*/
+                //     {
+                //         title: "Serial",
+                //         field: "serial",
+                //         sorter: "string"
+                //     },
+                //     { title: "Model", field: "model", sorter: "string" },
+                //     {
+                //         title: "Version",
+                //         field: "version",
+                //         sorter: "string"
+                //     },
+                //     { title: "Added By", field: "added_by", sorter: "string" },
+                //     {
+                //         title: "Created At",
+                //         field: "created_at",
+                //         //sorter: "date"
+                //         sorter: "string"
+                //     }
+                // ]
             };
         }
 
