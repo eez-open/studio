@@ -13,7 +13,9 @@ import {
     getValue,
     getArrayValue,
     createWasmValue,
-    getJSObjectFromID
+    getJSObjectFromID,
+    jsObjectIncRef,
+    jsObjectDecRef
 } from "project-editor/flow/runtime/wasm-value";
 
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
@@ -230,6 +232,20 @@ function operationJsonClone(wasmModuleId: number, jsObjectID: number) {
     return createWasmValue(WasmFlowRuntime, value);
 }
 
+function dashboardObjectValueIncRef(wasmModuleId: number, jsObjectID: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        jsObjectIncRef(jsObjectID, wasmModuleId);
+    }
+}
+
+function dashboardObjectValueDecRef(wasmModuleId: number, jsObjectID: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        jsObjectDecRef(jsObjectID, wasmModuleId);
+    }
+}
+
 function onObjectArrayValueFree(wasmModuleId: number, ptr: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -265,6 +281,8 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonSet = operationJsonSet;
 (global as any).operationJsonArrayLength = operationJsonArrayLength;
 (global as any).operationJsonClone = operationJsonClone;
+(global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
+(global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
 (global as any).executeScpi = executeScpi;
 (global as any).getLvglImageByName = getLvglImageByName;

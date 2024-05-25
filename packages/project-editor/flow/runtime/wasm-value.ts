@@ -516,22 +516,34 @@ export function getArrayValue(
 const jsObjectsMap = new Map<
     number,
     {
-        jsObjects: any[];
+        nextObjectID: number;
+        jsObjects: Map<
+            number,
+            {
+                refCount: number;
+                jsObject: any;
+            }
+        >;
         jsObjectIDs: Map<any, number>;
     }
 >();
 
 export function initJSObjectsMap(assetsMap: AssetsMap, wasmModuleId: number) {
     assetsMap.jsonValues.forEach(jsonValue => {
-        getJSObjectID(jsonValue, wasmModuleId);
+        getJSObjectID(jsonValue, wasmModuleId, true);
     });
 }
 
-function getJSObjectID(jsObject: any, wasmModuleId: number) {
+function getJSObjectID(
+    jsObject: any,
+    wasmModuleId: number,
+    constant: boolean = false
+) {
     let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
     if (!wasmModuleJSObjects) {
         wasmModuleJSObjects = {
-            jsObjects: [],
+            nextObjectID: 1,
+            jsObjects: new Map(),
             jsObjectIDs: new Map()
         };
         jsObjectsMap.set(wasmModuleId, wasmModuleJSObjects);
@@ -539,11 +551,15 @@ function getJSObjectID(jsObject: any, wasmModuleId: number) {
 
     let jsObjectID = wasmModuleJSObjects.jsObjectIDs.get(jsObject);
     if (jsObjectID == undefined) {
-        jsObjectID = wasmModuleJSObjects.jsObjects.length + 1;
+        jsObjectID = wasmModuleJSObjects.nextObjectID;
+        wasmModuleJSObjects.nextObjectID++;
 
         jsObject = observable(jsObject);
 
-        wasmModuleJSObjects.jsObjects.push(jsObject);
+        wasmModuleJSObjects.jsObjects.set(jsObjectID, {
+            refCount: constant ? 1 : 0,
+            jsObject
+        });
         wasmModuleJSObjects.jsObjectIDs.set(jsObject, jsObjectID);
     }
     return jsObjectID;
@@ -552,9 +568,34 @@ function getJSObjectID(jsObject: any, wasmModuleId: number) {
 export function getJSObjectFromID(jsObjectID: number, wasmModuleId: number) {
     let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
     if (wasmModuleJSObjects) {
-        return wasmModuleJSObjects.jsObjects[jsObjectID - 1];
+        return wasmModuleJSObjects.jsObjects.get(jsObjectID)?.jsObject;
     }
     return undefined;
+}
+
+export function jsObjectIncRef(jsObjectID: number, wasmModuleId: number) {
+    let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
+    if (wasmModuleJSObjects) {
+        const item = wasmModuleJSObjects.jsObjects.get(jsObjectID);
+        if (item != undefined) {
+            item.refCount++;
+        }
+    }
+}
+
+export function jsObjectDecRef(jsObjectID: number, wasmModuleId: number) {
+    let wasmModuleJSObjects = jsObjectsMap.get(wasmModuleId);
+    if (wasmModuleJSObjects) {
+        const item = wasmModuleJSObjects.jsObjects.get(jsObjectID);
+        if (item != undefined) {
+            item.refCount--;
+
+            if (item.refCount == 0) {
+                wasmModuleJSObjects.jsObjects.delete(jsObjectID);
+                wasmModuleJSObjects.jsObjectIDs.delete(item.jsObject);
+            }
+        }
+    }
 }
 
 export function clearJSObjects(wasmModuleId: number) {
