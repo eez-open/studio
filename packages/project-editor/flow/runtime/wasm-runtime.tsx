@@ -747,14 +747,10 @@ export class WasmRuntime extends RemoteRuntime {
             const engineValuePtr = this.worker.wasm._getGlobalVariable(
                 globalVariable.globalVariableIndex
             );
+
             const engineValueWithType = getValue(
                 this.worker.wasm,
                 engineValuePtr
-            );
-
-            this.projectStore.dataContext.set(
-                globalVariable.variable.name,
-                engineValueWithType.value
             );
 
             if (globalVariable.kind == "object") {
@@ -813,8 +809,6 @@ export class WasmRuntime extends RemoteRuntime {
                     }
                 );
 
-                //console.log(oldArrayValue, newArrayValue);
-
                 if (isDifferent(oldArrayValue, newArrayValue)) {
                     // console.log(
                     //     "object global variable updated",
@@ -830,6 +824,11 @@ export class WasmRuntime extends RemoteRuntime {
 
                     globalVariable.value = newArrayValue;
                 }
+            } else {
+                this.projectStore.dataContext.set(
+                    globalVariable.variable.name,
+                    engineValueWithType.value
+                );
             }
         }
 

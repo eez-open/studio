@@ -58,7 +58,7 @@ export const Property = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        textarea: HTMLDivElement;
+        textarea: HTMLDivElement | undefined;
         input: HTMLInputElement;
         select: HTMLSelectElement;
 
@@ -66,7 +66,7 @@ export const Property = observer(
 
         changeDocumentDisposer: any;
 
-        resizeObserver: ResizeObserver;
+        resizeObserver: ResizeObserver | undefined;
 
         disposeEventHandlers: (() => void) | undefined;
 
@@ -78,10 +78,6 @@ export const Property = observer(
                 componentDidUpdate: action,
                 changeValue: action.bound
             });
-
-            this.resizeObserver = new ResizeObserver(
-                this.resizeObserverCallback
-            );
         }
 
         resizeTextArea = () => {
@@ -164,6 +160,9 @@ export const Property = observer(
 
             if (this.textarea) {
                 this.resizeTextArea();
+                this.resizeObserver = new ResizeObserver(
+                    this.resizeObserverCallback
+                );
                 this.resizeObserver.observe(this.textarea);
             }
         }
@@ -190,8 +189,8 @@ export const Property = observer(
                 this.disposeEventHandlers();
             }
 
-            if (this.textarea) {
-                this.resizeObserver.unobserve(this.textarea);
+            if (this.resizeObserver) {
+                this.resizeObserver.disconnect();
             }
         }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, observable, runInAction } from "mobx";
 import classNames from "classnames";
 
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
@@ -63,9 +63,87 @@ export const Selection = observer(
             super(props);
 
             makeObservable(this, {
+                _selectedObjectRects: observable,
                 selectedObjects: computed,
                 selectedObjectRects: computed
             });
+        }
+
+        requestAnimationFrameId: any;
+
+        _selectedObjectRects: Rect[] = [];
+
+        getRects = () => {
+            const getSelectedObjectRects = () => {
+                const viewState = this.props.context.viewState;
+                return this.selectedObjects
+                    .map(selectedObject =>
+                        getObjectBoundingRect(viewState, selectedObject)
+                    )
+                    .map(rect => viewState.transform.pageToOffsetRect(rect!));
+            };
+
+            function compareRects(r1: Rect | undefined, r2: Rect | undefined) {
+                if (!r1) {
+                    return r2 != undefined;
+                }
+
+                if (!r2) {
+                    return true;
+                }
+
+                return (
+                    r1.left != r2.left ||
+                    r1.top != r2.top ||
+                    r1.width != r2.width ||
+                    r1.height != r2.height
+                );
+            }
+
+            function compareRectArray(
+                arr1: Rect[] | undefined,
+                arr2: Rect[] | undefined
+            ) {
+                if (!arr1) {
+                    return arr2 != undefined;
+                }
+
+                if (!arr2) {
+                    return true;
+                }
+
+                if (arr1.length != arr2.length) {
+                    return true;
+                }
+
+                for (let i = 0; i < arr1.length; i++) {
+                    if (compareRects(arr1[i], arr2[i])) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            const selectedObjectRects = getSelectedObjectRects();
+
+            if (
+                compareRectArray(selectedObjectRects, this._selectedObjectRects)
+            ) {
+                runInAction(() => {
+                    this._selectedObjectRects = selectedObjectRects;
+                });
+            }
+
+            this.requestAnimationFrameId = requestAnimationFrame(this.getRects);
+        };
+
+        componentDidMount() {
+            this.getRects();
+        }
+
+        componentWillUnmount() {
+            cancelAnimationFrame(this.requestAnimationFrameId);
         }
 
         get selectedObjects() {
@@ -81,15 +159,7 @@ export const Selection = observer(
         }
 
         get selectedObjectRects() {
-            const viewState = this.props.context.viewState;
-            return this.selectedObjects
-                .map(selectedObject =>
-                    getObjectBoundingRect(
-                        this.props.context.viewState,
-                        selectedObject
-                    )
-                )
-                .map(rect => viewState.transform.pageToOffsetRect(rect!));
+            return this._selectedObjectRects;
         }
 
         render() {
