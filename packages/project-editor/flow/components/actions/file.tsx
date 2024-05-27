@@ -234,7 +234,8 @@ registerActionComponents("File", [
             {
                 name: "encoding",
                 type: "expression",
-                valueType: "string"
+                valueType: "string",
+                formText: `"ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1"`
             }
         ],
         execute: (context: IDashboardComponentContext) => {
