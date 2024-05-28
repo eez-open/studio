@@ -324,7 +324,11 @@ class StreamSnitch extends Writable {
             this._buffer += chunk.toString();
         }
 
-        while ((match = this.regex.exec(this._buffer))) {
+        for (
+            let i = 0;
+            i < 100 && (match = this.regex.exec(this._buffer));
+            i++
+        ) {
             this.onDataCallback(match);
 
             lastMatch = match;
