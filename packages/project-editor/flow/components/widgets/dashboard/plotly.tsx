@@ -977,19 +977,19 @@ export class LineChartWidget extends Widget {
         execute: (context: IDashboardComponentContext) => {
             Widget.classInfo.execute!(context);
 
+            let executionState =
+                context.getComponentExecutionState<PlotlyLineChartExecutionState>();
+            if (!executionState) {
+                executionState = new PlotlyLineChartExecutionState();
+                context.setComponentExecutionState(executionState);
+                return;
+            }
+
             const resetInputValue = context.getInputValue("reset");
 
             const labels = context.getExpressionListParam(0);
 
             const visible = context.getExpressionListParam(16);
-
-            let executionState =
-                context.getComponentExecutionState<PlotlyLineChartExecutionState>();
-
-            if (!executionState) {
-                executionState = new PlotlyLineChartExecutionState();
-                context.setComponentExecutionState(executionState);
-            }
 
             executionState!.labels = labels;
             executionState!.visible = visible;
