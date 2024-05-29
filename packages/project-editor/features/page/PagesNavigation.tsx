@@ -106,7 +106,18 @@ export const PageStructure = observer(
                 (object: IEezObject) => {
                     return object instanceof ProjectEditor.WidgetClass;
                 },
-                true
+                true,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                // Argument hideRootItem is true in case of LVGL page, ie root LVGLScreenWidget is hidden for the users.
+                this.context.projectTypeTraits.isLVGL &&
+                this.pageTabState?.page.lvglScreenWidget
+                    ? true
+                    : false
             );
         }
 

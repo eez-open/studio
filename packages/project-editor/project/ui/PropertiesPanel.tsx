@@ -10,6 +10,7 @@ import {
     isObjectExists
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component {
@@ -50,13 +51,33 @@ export const PropertiesPanel = observer(
                 title = "Multiple objects selected";
             }
 
+            // if LVGL project show properties for both Page object and Screen widget object
+            let secondObject;
+            if (
+                objects.length == 1 &&
+                objects[0] instanceof ProjectEditor.PageClass &&
+                this.context.projectTypeTraits.isLVGL
+            ) {
+                secondObject = objects[0].lvglScreenWidget;
+            }
+
             return (
                 <div className="EezStudio_PropertiesPanel">
-                    <div className="header">{title}</div>
-                    <PropertyGrid
-                        objects={objects}
-                        readOnly={!!this.context.runtime}
-                    />
+                    <div className="EezStudio_PropertiesPanel_Header">
+                        {title}
+                    </div>
+                    <div className="EezStudio_PropertiesPanel_Body">
+                        <PropertyGrid
+                            objects={objects}
+                            readOnly={!!this.context.runtime}
+                        />
+                        {secondObject && (
+                            <PropertyGrid
+                                objects={[secondObject]}
+                                readOnly={!!this.context.runtime}
+                            />
+                        )}
+                    </div>
                 </div>
             );
         }

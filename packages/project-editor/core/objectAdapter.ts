@@ -808,7 +808,8 @@ export class TreeAdapter {
         onClick?: (object: IEezObject) => void,
         onDoubleClick?: (object: IEezObject) => void,
         protected searchText?: string,
-        protected editable?: boolean
+        protected editable?: boolean,
+        protected hideRootItem?: boolean
     ) {
         this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
@@ -844,7 +845,10 @@ export class TreeAdapter {
 
         const children: ITreeRow[] = [];
 
-        function getChildren(item: TreeObjectAdapter) {
+        const getChildren = (
+            item: TreeObjectAdapter,
+            hideRootItem: boolean
+        ): TreeObjectAdapter[] => {
             let itemChildren = map(
                 item.children,
                 childItem => childItem
@@ -866,8 +870,12 @@ export class TreeAdapter {
                 );
             }
 
+            if (itemChildren.length == 1 && hideRootItem) {
+                return getChildren(itemChildren[0], false);
+            }
+
             return itemChildren;
-        }
+        };
 
         function enumChildren(childItems: TreeObjectAdapter[], level: number) {
             childItems.forEach(childItem => {
@@ -876,7 +884,7 @@ export class TreeAdapter {
                     isArray(childItem.object) &&
                     isShowOnlyChildrenInTree(childItem.object);
 
-                let childItems = getChildren(childItem);
+                let childItems = getChildren(childItem, false);
 
                 if (showOnlyChildren) {
                     enumChildren(childItems, level);
@@ -920,7 +928,7 @@ export class TreeAdapter {
             });
         }
 
-        enumChildren(getChildren(this.rootItem), 0);
+        enumChildren(getChildren(this.rootItem, this.hideRootItem ?? false), 0);
 
         return children;
     }

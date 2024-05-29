@@ -72,7 +72,10 @@ import { escapeCString } from "project-editor/build/helper";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { Page } from "project-editor/features/page/page";
+import type {
+    ICustomWidgetCreateParams,
+    Page
+} from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import {
     geometryGroup,
@@ -357,13 +360,15 @@ export class LVGLWidget extends Widget {
                 displayName: "Name",
                 type: PropertyType.String,
                 isOptional: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using Page name as identifier
             },
             {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using left from the Page
             },
             {
                 name: "leftUnit",
@@ -374,13 +379,15 @@ export class LVGLWidget extends Widget {
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                disabled: object => object instanceof LVGLScreenWidget
             },
             {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using top from the Page
             },
             {
                 name: "topUnit",
@@ -391,13 +398,15 @@ export class LVGLWidget extends Widget {
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                disabled: object => object instanceof LVGLScreenWidget
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using width from the Page
             },
             {
                 name: "widthUnit",
@@ -409,13 +418,15 @@ export class LVGLWidget extends Widget {
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                disabled: object => object instanceof LVGLScreenWidget
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using height from the Page
             },
             {
                 name: "heightUnit",
@@ -427,14 +438,16 @@ export class LVGLWidget extends Widget {
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                disabled: object => object instanceof LVGLScreenWidget
             },
             {
                 name: "absolutePosition",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                disabled: object => object instanceof LVGLScreenWidget
             },
             {
                 name: "children",
@@ -1206,8 +1219,12 @@ export class LVGLWidget extends Widget {
         ];
     }
 
-    override lvglCreate(runtime: LVGLPageRuntime, parentObj: number) {
-        const obj = this.lvglCreateObj(runtime, parentObj);
+    override lvglCreate(
+        runtime: LVGLPageRuntime,
+        parentObj: number,
+        customWidget?: ICustomWidgetCreateParams
+    ) {
+        const obj = this.lvglCreateObj(runtime, parentObj, customWidget);
 
         runInAction(() => (this._lvglObj = obj));
 
@@ -1412,7 +1429,11 @@ export class LVGLWidget extends Widget {
         return obj;
     }
 
-    lvglCreateObj(runtime: LVGLPageRuntime, parentObj: number): number {
+    lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number,
+        customWidget?: ICustomWidgetCreateParams
+    ): number {
         console.error("UNEXPECTED!");
         return 0;
     }
@@ -1478,12 +1499,22 @@ export class LVGLWidget extends Widget {
             build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
         }
 
-        build.line(
-            `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
-        );
-        build.line(
-            `lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`
-        );
+        if (this instanceof LVGLScreenWidget) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
+            build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
+            build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
+        } else {
+            build.line(
+                `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
+            );
+            build.line(
+                `lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`
+            );
+        }
 
         this.lvglBuildSpecific(build);
 
@@ -1783,6 +1814,14 @@ export class LVGLWidget extends Widget {
     lvglBuildTickSpecific(build: LVGLBuild): void {}
 
     getLvglCreateRect() {
+        if (this instanceof LVGLScreenWidget) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            return page.rect;
+        }
+
         const _LV_COORD_TYPE_SHIFT = getLvglCoordTypeShift(this);
         const _LV_COORD_TYPE_SPEC = 1 << _LV_COORD_TYPE_SHIFT;
         function LV_COORD_SET_SPEC(x: number) {
@@ -2238,6 +2277,140 @@ export class LVGLButtonWidget extends LVGLWidget {
 
     override lvglBuildObj(build: LVGLBuild) {
         build.line(`lv_obj_t *obj = lv_btn_create(parent_obj);`);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// This widget is not available from palette. It is used as a root widget for the Page/Screen.
+
+export class LVGLScreenWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) => false,
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 100,
+            height: 50,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN", "SCROLLBAR"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        },
+
+        isSelectable: (object: IEezObject) => false,
+        isMoveable: (object: IEezObject) => false
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {});
+    }
+
+    override getIsAccessibleFromSourceCode() {
+        const page = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        return !page.isUsedAsUserWidget;
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number,
+        customWidget?: ICustomWidgetCreateParams
+    ): number {
+        const rect = this.getLvglCreateRect();
+
+        let obj;
+
+        if (customWidget) {
+            obj = runtime.wasm._lvglCreateUserWidget(
+                parentObj,
+                customWidget.widgetIndex,
+                customWidget.left,
+                customWidget.top,
+                customWidget.width,
+                customWidget.height
+            );
+        } else {
+            obj = runtime.wasm._lvglCreateContainer(
+                parentObj,
+                runtime.getWidgetIndex(this),
+
+                rect.left,
+                rect.top,
+                rect.width,
+                rect.height
+            );
+
+            runtime.wasm._lvglObjClearFlag(
+                obj,
+                getCode(["SCROLLABLE"], getLvglFlagCodes(this))
+            );
+        }
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        const page = getAncestorOfType(
+            this,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+
+        if (page.isUsedAsUserWidget) {
+            build.line(`lv_obj_t *obj = lv_obj_create(parentObj);`);
+        } else {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let flowIndex = build.assets.getFlowIndex(page);
+                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
+            }
+            build.line(`lv_obj_t *obj = lv_obj_create(0);`);
+        }
     }
 }
 
@@ -5845,8 +6018,9 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 const textareaWidget = lvglIdentifier.object;
 
                 if (
-                    runtime instanceof LVGLPageViewerRuntime ||
-                    runtime instanceof LVGLNonActivePageViewerRuntime
+                    textareaWidget instanceof LVGLTextareaWidget &&
+                    (runtime instanceof LVGLPageViewerRuntime ||
+                        runtime instanceof LVGLNonActivePageViewerRuntime)
                 ) {
                     setTimeout(() => {
                         if (
@@ -7809,6 +7983,7 @@ registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
 registerClass("LVGLScaleWidget", LVGLScaleWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
+registerClass("LVGLScreenWidget", LVGLScreenWidget);
 registerClass("LVGLUserWidgetWidget", LVGLUserWidgetWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);

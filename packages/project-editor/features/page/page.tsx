@@ -29,10 +29,9 @@ import {
 } from "project-editor/store";
 import {
     isDashboardProject,
-    isLVGLProject,
-    isNotLVGLProject
+    isLVGLProject
 } from "project-editor/project/project-type-traits";
-import { findStyle } from "project-editor/project/project";
+import { Project, findStyle } from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -63,15 +62,21 @@ import { drawBackground } from "project-editor/flow/editor/eez-gui-draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
-import { getCode } from "project-editor/lvgl/widget-common";
+import { type LVGLWidget } from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
-import { getLvglFlagCodes } from "project-editor/lvgl/lvgl-versions";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export interface ICustomWidgetCreateParams {
+    widgetIndex: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -197,7 +202,6 @@ export class Page extends Flow {
 
     dataContextOverrides: string;
 
-    lvglLocalStyles: LVGLStylesDefinition;
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
 
@@ -232,7 +236,6 @@ export class Page extends Flow {
             portrait: observable,
             isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
-            lvglLocalStyles: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
             _refreshCounter: observable
@@ -359,17 +362,6 @@ export class Page extends Flow {
                 propertyGridGroup: generalGroup,
                 disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
-            },
-            {
-                name: "lvglLocalStyles",
-                displayName: "Local styles",
-                type: PropertyType.Object,
-                typeClass: LVGLStylesDefinition,
-                propertyGridGroup: styleGroup,
-                propertyGridCollapsable: true,
-                propertyGridRowComponent: LVGLStylesDefinitionProperty,
-                enumerable: false,
-                disabled: isNotLVGLProject
             }
         ],
         label: (page: Page) => {
@@ -385,7 +377,7 @@ export class Page extends Flow {
             }
             return label;
         },
-        beforeLoadHook: (page: Page, jsObject: any) => {
+        beforeLoadHook: (page: Page, jsObject: any, project: Project) => {
             // MIGRATION TO LOW RES
             if ((window as any).__eezProjectMigration) {
                 if (!jsObject.isUsedAsUserWidget) {
@@ -437,6 +429,60 @@ export class Page extends Flow {
             if (jsObject.isUsedAsCustomWidget != undefined) {
                 jsObject.isUsedAsUserWidget = jsObject.isUsedAsCustomWidget;
                 delete jsObject.isUsedAsCustomWidget;
+            }
+
+            // migrate old LVGL project so that all root widgets are childs of the single LVGLScreenWidget
+            if (
+                !jsObject.isUsedAsUserWidget &&
+                project.projectTypeTraits.isLVGL
+            ) {
+                const widgets = [];
+                const actions = [];
+
+                for (let i = 0; i < jsObject.components.length; i++) {
+                    const component = jsObject.components[i];
+                    if (
+                        component.type.startsWith("LVGL") &&
+                        component.type.endsWith("Widget")
+                    ) {
+                        widgets.push(component);
+                    } else {
+                        actions.push(component);
+                    }
+                }
+
+                // is migration required?
+                if (
+                    !(
+                        widgets.length == 1 &&
+                        widgets[0].type == "LVGLScreenWidget"
+                    )
+                ) {
+                    // do migration
+                    jsObject.components = [
+                        ...actions,
+                        {
+                            type: "LVGLScreenWidget",
+                            left: jsObject.left,
+                            top: jsObject.top,
+                            width: jsObject.width,
+                            height: jsObject.height,
+                            leftUnit: "px",
+                            topUnit: "px",
+                            widthUnit: "px",
+                            heightUnit: "px",
+                            scrollbarMode: "auto",
+                            scrollDirection: "all",
+                            hiddenFlagType: "literal",
+                            clickableFlagType: "literal",
+                            checkedStateType: "literal",
+                            disabledStateType: "literal",
+                            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+                            clickableFlag: true,
+                            children: widgets
+                        }
+                    ];
+                }
             }
         },
         isPropertyMenuSupported: true,
@@ -594,10 +640,6 @@ export class Page extends Flow {
                         )
                     );
                 }
-            }
-
-            if (projectStore.projectTypeTraits.isLVGL) {
-                page.lvglLocalStyles.check(messages);
             }
         },
         isMoveable: (object: Page) => {
@@ -945,98 +987,96 @@ export class Page extends Flow {
         dataBuffer.writeUint16(0);
     }
 
+    get lvglScreenWidget() {
+        return this.isUsedAsUserWidget
+            ? undefined
+            : (this.components.find(
+                  component => component instanceof Widget
+              ) as LVGLWidget);
+    }
+
     lvglCreate(
         runtime: LVGLPageRuntime,
         parentObj: number,
-        customWidget?: {
-            widgetIndex: number;
-            left: number;
-            top: number;
-            width: number;
-            height: number;
-        }
+        customWidget?: ICustomWidgetCreateParams
     ) {
-        const obj = customWidget
-            ? runtime.wasm._lvglCreateUserWidget(
-                  parentObj,
-                  customWidget.widgetIndex,
-                  customWidget.left,
-                  customWidget.top,
-                  customWidget.width,
-                  customWidget.height
-              )
-            : runtime.wasm._lvglCreateContainer(
-                  parentObj,
-                  runtime.getWidgetIndex(this),
-                  this.left,
-                  this.top,
-                  this.width,
-                  this.height
-              );
-
-        if (!customWidget) {
-            runtime.wasm._lvglObjClearFlag(
-                obj,
-                getCode(["SCROLLABLE"], getLvglFlagCodes(this))
+        if (this.lvglScreenWidget) {
+            const lvglObj = this.lvglScreenWidget!.lvglCreate(
+                runtime,
+                parentObj,
+                customWidget
             );
+
+            this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
+                lvglWidget.lvglPostCreate(runtime)
+            );
+
+            return lvglObj;
+        } else {
+            const obj = customWidget
+                ? runtime.wasm._lvglCreateUserWidget(
+                      parentObj,
+                      customWidget.widgetIndex,
+                      customWidget.left,
+                      customWidget.top,
+                      customWidget.width,
+                      customWidget.height
+                  )
+                : runtime.wasm._lvglCreateContainer(
+                      parentObj,
+                      runtime.getWidgetIndex(this),
+                      this.left,
+                      this.top,
+                      this.width,
+                      this.height
+                  );
+
+            this.components
+                .filter(component => component instanceof Widget)
+                .map((widget: Widget) => widget.lvglCreate(runtime, obj));
+
+            this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
+                lvglWidget.lvglPostCreate(runtime)
+            );
+
+            return obj;
         }
-
-        this.lvglLocalStyles.lvglCreate(runtime, this, obj);
-
-        this.components
-            .filter(component => component instanceof Widget)
-            .map((widget: Widget) => widget.lvglCreate(runtime, obj));
-
-        this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
-            lvglWidget.lvglPostCreate(runtime)
-        );
-
-        return obj;
     }
 
     lvglBuild(build: LVGLBuild) {
-        if (!this.isUsedAsUserWidget) {
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let flowIndex = build.assets.getFlowIndex(this);
-                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
-            }
+        if (this.lvglScreenWidget) {
+            this.lvglScreenWidget!.lvglBuild(build);
 
-            build.line(`lv_obj_t *obj = lv_obj_create(0);`);
-            build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
-
-            build.line(`lv_obj_set_pos(obj, ${this.left}, ${this.top});`);
-            build.line(`lv_obj_set_size(obj, ${this.width}, ${this.height});`);
-
-            build.line(`lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);`);
-
-            this.lvglLocalStyles.lvglBuild(build);
+            this._lvglWidgets.forEach(lvglWidget =>
+                lvglWidget.lvglPostBuild(build)
+            );
         } else {
             build.line(`lv_obj_t *obj = parent_obj;`);
-        }
 
-        build.line(`{`);
-        build.indent();
+            build.line(`{`);
+            build.indent();
 
-        build.line(`lv_obj_t *parent_obj = obj;`);
+            build.line(`lv_obj_t *parent_obj = obj;`);
 
-        for (const widget of this.components) {
-            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                build.line(`{`);
-                build.indent();
+            for (const widget of this.components) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    build.line(`{`);
+                    build.indent();
 
-                widget.lvglBuild(build);
+                    widget.lvglBuild(build);
 
-                build.unindent();
-                build.line(`}`);
+                    build.unindent();
+                    build.line(`}`);
+                }
             }
+
+            build.unindent();
+            build.line(`}`);
+
+            this._lvglWidgets.forEach(lvglWidget =>
+                lvglWidget.lvglPostBuild(build)
+            );
         }
-
-        build.unindent();
-        build.line(`}`);
-
-        this._lvglWidgets.forEach(lvglWidget =>
-            lvglWidget.lvglPostBuild(build)
-        );
     }
 
     lvglBuildTick(build: LVGLBuild) {

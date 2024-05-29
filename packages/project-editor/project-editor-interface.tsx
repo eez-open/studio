@@ -71,6 +71,7 @@ import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/Ar
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
 import type {
     LVGLWidget,
+    LVGLScreenWidget,
     LVGLPanelWidget,
     LVGLUserWidgetWidget
 } from "project-editor/lvgl/widgets";
@@ -125,6 +126,7 @@ export interface IProjectEditor {
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
     LVGLWidgetClass: typeof LVGLWidget;
+    LVGLScreenWidgetClass: typeof LVGLScreenWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
     LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;
     LVGLStyleClass: typeof LVGLStyle;

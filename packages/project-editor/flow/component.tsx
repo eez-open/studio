@@ -69,7 +69,7 @@ import {
     ResizingProperty
 } from "project-editor/flow/editor/resizing-widget-property";
 
-import type { Page } from "project-editor/features/page/page";
+import type { ICustomWidgetCreateParams, Page } from "project-editor/features/page/page";
 import {
     conditionalStylesProperty,
     Style
@@ -350,7 +350,7 @@ function getClassFromType(projectStore: ProjectStore, type: string) {
     return NotFoundComponent;
 }
 
-function getComponentClass(projectStore: ProjectStore, jsObject: any) {
+export function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     if (jsObject.type === "EvalActionComponent") {
         jsObject.type = "EvalJSExprActionComponent";
     }
@@ -3754,7 +3754,11 @@ export class Widget extends Component {
         return getTimelineRect(this, timelinePosition);
     }
 
-    lvglCreate(runtime: LVGLPageRuntime, parentObj: number) {
+    lvglCreate(
+        runtime: LVGLPageRuntime,
+        parentObj: number,
+        customWidget?: ICustomWidgetCreateParams
+    ) {
         return 0;
     }
 

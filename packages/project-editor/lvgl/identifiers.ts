@@ -2,6 +2,7 @@ import { makeObservable, computed } from "mobx";
 
 import {
     ProjectStore,
+    getAncestorOfType,
     getObjectFromStringPath,
     getObjectPathAsString
 } from "project-editor/store";
@@ -109,7 +110,17 @@ export class LVGLIdentifiers {
             identifiers: Map<LVGLWidget | Page, LVGLIdentifier>
         ) {
             page._lvglWidgets
-                .filter(widget => widget.isAccessibleFromSourceCode)
+                .filter(
+                    widget =>
+                        (page.isUsedAsUserWidget ||
+                            !(
+                                (
+                                    widget instanceof
+                                    ProjectEditor.LVGLScreenWidgetClass
+                                ) // LVGLScreenWidget is using Page name as identifier
+                            )) &&
+                        widget.isAccessibleFromSourceCode
+                )
                 .forEach(widget => {
                     identifiers.set(widget, {
                         displayName: widget.identifier,
@@ -297,6 +308,17 @@ export class LVGLIdentifiers {
     }
 
     getIdentifier(object: LVGLWidget | Page): LVGLIdentifier {
+        if (object instanceof ProjectEditor.LVGLScreenWidgetClass) {
+            // LVGLScreenWidget is using Page name as identifier
+            const page = getAncestorOfType(
+                object,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+            if (!page.isUsedAsUserWidget) {
+                object = page;
+            }
+        }
+
         let flow = ProjectEditor.getFlow(object);
         let identifiers = this.identifiersMap.get(
             ProjectEditor.getFlow(object)

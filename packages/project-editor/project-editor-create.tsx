@@ -72,6 +72,7 @@ import "project-editor/flow/components/widgets/dashboard";
 import "project-editor/flow/components/widgets/eez-gui";
 import {
     LVGLWidget,
+    LVGLScreenWidget,
     LVGLPanelWidget,
     LVGLUserWidgetWidget
 } from "project-editor/lvgl/widgets";
@@ -175,6 +176,7 @@ export async function createProjectEditor(
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
         LVGLWidgetClass: LVGLWidget,
+        LVGLScreenWidgetClass: LVGLScreenWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
         LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,
         LVGLStyleClass: LVGLStyle,
