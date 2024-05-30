@@ -299,6 +299,10 @@ export function createWasmWorker(
     getClassByName: (className: string) => any,
     readSettings: (key: string) => any,
     writeSettings: (key: string, value: any) => any,
+    hasWidgetHandle: (
+        flowStateIndex: number,
+        componentIndex: number
+    ) => boolean,
     getWidgetHandle: (flowStateIndex: number, componentIndex: number) => number,
     getWidgetHandleInfo: (widgetHandle: number) =>
         | {
@@ -324,6 +328,7 @@ export function createWasmWorker(
     WasmFlowRuntime.getClassByName = getClassByName;
     WasmFlowRuntime.readSettings = readSettings;
     WasmFlowRuntime.writeSettings = writeSettings;
+    WasmFlowRuntime.hasWidgetHandle = hasWidgetHandle;
     WasmFlowRuntime.getWidgetHandle = getWidgetHandle;
     WasmFlowRuntime.getWidgetHandleInfo = getWidgetHandleInfo;
 

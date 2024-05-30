@@ -52,7 +52,11 @@ import {
     getOutputDisplayName
 } from "project-editor/flow/helper";
 import { Icon } from "eez-studio-ui/icon";
-import { flagsGroup, statesGroup } from "project-editor/lvgl/widgets";
+import {
+    LVGLScreenWidget,
+    flagsGroup,
+    statesGroup
+} from "project-editor/lvgl/widgets";
 import {
     AppViewWidget,
     CanvasWidget,
@@ -376,7 +380,9 @@ class Model {
                 componentClass.objectClass.classInfo ==
                     CanvasWidget.classInfo ||
                 componentClass.objectClass.classInfo ==
-                    ListGraphWidget.classInfo
+                    ListGraphWidget.classInfo ||
+                componentClass.objectClass.classInfo ==
+                    LVGLScreenWidget.classInfo
             ) {
                 continue;
             }

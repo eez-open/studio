@@ -1066,6 +1066,7 @@ export function getEnumValues(variable: IVariable): any[] {
 export function isValueTypeOf(
     project: Project,
     value: any,
+    valueType: ValueType,
     type: string
 ): string | null {
     if (value == null) {
@@ -1089,6 +1090,7 @@ export function isValueTypeOf(
                 const result = isValueTypeOf(
                     project,
                     value[i],
+                    "any",
                     arrayElementType!
                 );
                 if (result) {
@@ -1115,7 +1117,12 @@ export function isValueTypeOf(
                     return `unknown field '${key}'`;
                 }
 
-                const result = isValueTypeOf(project, value[key], field.type);
+                const result = isValueTypeOf(
+                    project,
+                    value[key],
+                    "any",
+                    field.type
+                );
                 if (result) {
                     return `${result} => field '${key}' should be of type '${field.type}'`;
                 }
@@ -1154,6 +1161,10 @@ export function isValueTypeOf(
         }
 
         return null;
+    } else if (type == "json") {
+        if (valueType == type) {
+            return null;
+        }
     }
 
     return `not a ${type}`;

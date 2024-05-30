@@ -2024,7 +2024,7 @@ export const DISTRIBUTE_VERTICAL_GAPS_ICON = () => {
 };
 
 export const LeftArrow = () => (
-    <div style={{ marginTop: -2, padding: "0 8px" }}>
+    <div style={{ padding: "0 8px" }}>
         <svg
             width="16"
             height="16"

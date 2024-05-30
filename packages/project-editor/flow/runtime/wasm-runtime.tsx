@@ -265,6 +265,7 @@ export class WasmRuntime extends RemoteRuntime {
             (key: string, value: any) => {
                 this.projectStore.runtimeSettings.writeSettings(key, value);
             },
+            this.hasWidgetHandle,
             this.getWidgetHandle,
             this.getWidgetHandleInfo
         );
@@ -1200,6 +1201,16 @@ export class WasmRuntime extends RemoteRuntime {
         flowStateIndex: number;
         componentIndex: number;
     }[] = [];
+
+    hasWidgetHandle = (flowStateIndex: number, componentIndex: number) => {
+        return (
+            this.widgetHandles.find(
+                widgetHandle =>
+                    widgetHandle.flowStateIndex == flowStateIndex &&
+                    widgetHandle.componentIndex == componentIndex
+            ) != null
+        );
+    };
 
     getWidgetHandle = (flowStateIndex: number, componentIndex: number) => {
         this.widgetHandles.push({

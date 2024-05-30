@@ -250,7 +250,7 @@ export interface PropertyInfo {
 
     formText?:
         | string
-        | ((object: IEezObject | undefined) => string | undefined);
+        | ((object: IEezObject | undefined) => React.ReactNode | undefined);
 
     propertyNameAbove?: boolean;
 

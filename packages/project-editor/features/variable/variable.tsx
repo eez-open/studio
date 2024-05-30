@@ -204,12 +204,7 @@ export class Variable extends EezObject {
                 hideInPropertyGrid: (variable: Variable) =>
                     isLVGLProject(variable) ||
                     !variable.persistent ||
-                    !isObjectType(variable.type) ||
-                    !isGlobalVariable(variable) ||
-                    !getObjectVariableTypeFromType(
-                        ProjectEditor.getProjectStore(variable),
-                        variable.type
-                    )?.editConstructorParams
+                    !isGlobalVariable(variable)
             }
         ],
         listLabel: (variable: Variable) => {
@@ -344,7 +339,7 @@ export class Variable extends EezObject {
             } else {
                 if (projectStore.projectTypeTraits.hasFlowSupport) {
                     try {
-                        const { value } = evalConstantExpression(
+                        const { value, valueType } = evalConstantExpression(
                             projectStore.project,
                             variable.defaultValue
                         );
@@ -352,6 +347,7 @@ export class Variable extends EezObject {
                         const error = isValueTypeOf(
                             projectStore.project,
                             value,
+                            valueType,
                             variable.type
                         );
                         if (error) {

@@ -49,15 +49,6 @@ export class Draggable {
             return;
         }
 
-        // put in focus first parent with tabindex attribute
-        const parentWithTabindex = closestBySelector(
-            this.element,
-            "[tabindex]"
-        );
-        if (parentWithTabindex) {
-            parentWithTabindex.focus();
-        }
-
         this.finishDragging(undefined, true);
 
         const el1 = closestBySelector(
@@ -68,8 +59,18 @@ export class Draggable {
             e.target,
             ".eez-flow-editor-not-capture-pointers"
         );
+
         if (el1 && (!el2 || el2.contains(el1))) {
             return;
+        }
+
+        // put in focus first parent with tabindex attribute
+        const parentWithTabindex = closestBySelector(
+            this.element,
+            "[tabindex]"
+        );
+        if (parentWithTabindex) {
+            parentWithTabindex.focus();
         }
 
         e.preventDefault();

@@ -507,6 +507,7 @@ export interface IWasmFlowRuntime {
 
     readSettings: (key: string) => any;
     writeSettings: (key: string, value: any) => any;
+    hasWidgetHandle: (flowStateIndex: number, componentIndex: number) => boolean;
     getWidgetHandle: (flowStateIndex: number, componentIndex: number) => number;
     getWidgetHandleInfo: (widgetHandle: number) => {
         flowStateIndex: number, componentIndex: number

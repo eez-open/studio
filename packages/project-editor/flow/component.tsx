@@ -69,7 +69,10 @@ import {
     ResizingProperty
 } from "project-editor/flow/editor/resizing-widget-property";
 
-import type { ICustomWidgetCreateParams, Page } from "project-editor/features/page/page";
+import type {
+    ICustomWidgetCreateParams,
+    Page
+} from "project-editor/features/page/page";
 import {
     conditionalStylesProperty,
     Style
@@ -3099,13 +3102,20 @@ export class Widget extends Component {
 
         execute: (context: IDashboardComponentContext) => {
             if (context.getOutputType("@widget")) {
-                context.propagateValue(
-                    "@widget",
-                    context.WasmFlowRuntime.getWidgetHandle(
+                if (
+                    !context.WasmFlowRuntime.hasWidgetHandle(
                         context.flowStateIndex,
                         context.getComponentIndex()
                     )
-                );
+                ) {
+                    context.propagateValue(
+                        "@widget",
+                        context.WasmFlowRuntime.getWidgetHandle(
+                            context.flowStateIndex,
+                            context.getComponentIndex()
+                        )
+                    );
+                }
             }
         },
 
@@ -3963,7 +3973,9 @@ function renderActionComponent(
                         // body
                         body ? (
                             <div
-                                className="eez-flow-editor-capture-pointers"
+                                className={
+                                    /*"eez-flow-editor-capture-pointers"*/ undefined
+                                }
                                 style={{ width: "100%" }}
                             >
                                 {body}

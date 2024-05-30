@@ -81,10 +81,16 @@ function getVariableFlowValue(assets: Assets, variable: Variable): FlowValue {
     }
 
     try {
-        const { value } = evalConstantExpression(
+        let { value } = evalConstantExpression(
             assets.rootProject,
             variable.defaultValue
         );
+
+        if (variable.type == "json") {
+            if (value) {
+                value = assets.registerJSONValue(value);
+            }
+        }
 
         return {
             type,
