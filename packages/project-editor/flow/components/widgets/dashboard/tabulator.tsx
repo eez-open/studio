@@ -1,15 +1,23 @@
 import { ipcRenderer } from "electron";
 import React from "react";
-import { computed, makeObservable, observable, toJS } from "mobx";
+import { computed, makeObservable, observable, runInAction, toJS } from "mobx";
+import { clipboard } from "electron";
 
 import type * as TabulatorModule from "tabulator-tables";
 import type * as LuxonModule from "luxon";
+
+import * as notification from "eez-studio-ui/notification";
 
 import {
     registerClass,
     makeDerivedClassInfo,
     ProjectType,
-    PropertyType
+    PropertyType,
+    EezObject,
+    ClassInfo,
+    PropertyProps,
+    IMessage,
+    MessageType
 } from "project-editor/core/object";
 
 import {
@@ -25,6 +33,8 @@ import { TABULATOR_ICON } from "project-editor/ui-components/icons";
 import { evalProperty } from "project-editor/flow/helper";
 import { IDashboardComponentContext } from "eez-studio-types";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { Button } from "eez-studio-ui/button";
+import { Message, getChildOfObject } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,29 +130,34 @@ const TabulatorElement = observer(
         get options(): TabulatorModule.Options {
             let configuration = this.tableConfiguration;
 
-            const options = Object.assign(
-                {
-                    autoColumns: configuration ? false : true,
+            const widgetOptions = this.props.widget.tabulatorOptions;
 
-                    persistence: true,
-                    persistenceWriterFunc: (id: any, type: any, data: any) => {
+            // persistence
+            if (this.props.flowContext.flowState) {
+                widgetOptions.persistence = true;
+
+                widgetOptions.persistenceWriterFunc = (
+                    id: any,
+                    type: any,
+                    data: any
+                ) => {
+                    runInAction(() => {
                         this.persistance[type] = data;
-                    },
-                    persistenceReaderFunc: (id: any, type: any) => {
-                        return this.persistance[type];
-                    }
-                },
-                configuration,
+                    });
+                };
+
+                widgetOptions.persistenceReaderFunc = (id: any, type: any) => {
+                    return this.persistance[type];
+                };
+            }
+
+            const options: TabulatorModule.Options = Object.assign(
                 {
                     data: this.tableData
-                }
+                },
+                widgetOptions,
+                configuration
             );
-
-            // if (options.spreadsheet) {
-            //     if (Array.isArray(options.data) && options)
-            //     options.spreadsheetData = options.data;
-            //     delete options.data;
-            // }
 
             return options;
         }
@@ -292,6 +307,142 @@ const TabulatorElement = observer(
     }
 );
 
+const CopyOptionsButton = observer(
+    class CopyOptionsButton extends React.Component<PropertyProps> {
+        get tabulatorWidget() {
+            return this.props.objects[0] as TabulatorWidget;
+        }
+
+        copy = () => {
+            clipboard.writeText(
+                `json\`${JSON.stringify(
+                    this.tabulatorWidget.tabulatorOptions,
+                    undefined,
+                    2
+                )}\``
+            );
+
+            notification.info(
+                "The options are copied as a JSON literal to the clipboard"
+            );
+        };
+
+        render() {
+            return (
+                <Button
+                    color="secondary"
+                    size="small"
+                    onClick={this.copy}
+                    style={{
+                        marginTop: 10,
+                        marginBottom: 10
+                    }}
+                >
+                    Copy Options
+                </Button>
+            );
+        }
+    }
+);
+
+class TabulatorColumn extends EezObject {
+    title: string;
+    field: string;
+    formatter:
+        | "plaintext"
+        | "textarea"
+        | "html"
+        | "money"
+        | "image"
+        | "datetime"
+        | "datetimediff"
+        | "link"
+        | "tickCross"
+        | "color"
+        | "star"
+        | "traffic"
+        | "progress"
+        | "lookup"
+        | "buttonTick"
+        | "buttonCross"
+        | "rownum"
+        | "handle"
+        | "rowSelection"
+        | "responsiveCollapse";
+    advanced: string;
+
+    static classInfo: ClassInfo = {
+        listLabel: (object: TabulatorColumn) => object.field,
+        properties: [
+            {
+                name: "title",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "field",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "formatter",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "plaintext" },
+                    { id: "textarea" },
+                    { id: "html" },
+                    { id: "money" },
+                    { id: "image" },
+                    { id: "datetime" },
+                    { id: "datetimediff" },
+                    { id: "link" },
+                    { id: "tickCross" },
+                    { id: "color" },
+                    { id: "star" },
+                    { id: "traffic" },
+                    { id: "progress" },
+                    { id: "lookup" },
+                    { id: "buttonTick" },
+                    { id: "buttonCross" },
+                    { id: "rownum" },
+                    { id: "handle" },
+                    { id: "rowSelection" },
+                    { id: "responsiveCollapse" }
+                ]
+            },
+            {
+                name: "advanced",
+                type: PropertyType.JSON
+            }
+        ],
+        defaultValue: {},
+        check: (column: TabulatorColumn, messages: IMessage[]) => {
+            if (column.advanced) {
+                try {
+                    JSON.parse(column.advanced);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid JSON: ${err}`,
+                            getChildOfObject(column, "advanced")
+                        )
+                    );
+                }
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            title: observable,
+            field: observable,
+            formatter: observable,
+            advanced: observable
+        });
+    }
+}
+
 export class TabulatorWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -300,7 +451,64 @@ export class TabulatorWidget extends Widget {
         componentPaletteGroupName: "!1Visualiser",
 
         properties: [
-            makeDataPropertyInfo("data", { displayName: "Table data" }, "json"),
+            makeDataPropertyInfo("data", {}, "json"),
+            {
+                name: "layout",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "fitData"
+                    },
+                    {
+                        id: "fitColumns"
+                    },
+                    {
+                        id: "fitDataFill"
+                    },
+                    {
+                        id: "fitDataStretch"
+                    },
+                    {
+                        id: "fitDataTable"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "autoColumns",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "columns",
+                type: PropertyType.Array,
+                typeClass: TabulatorColumn,
+                arrayItemOrientation: "vertical",
+                propertyGridGroup: specificGroup,
+                defaultValue: [],
+                disabled: (widget: TabulatorWidget) => widget.autoColumns
+            },
+            {
+                name: "pagination",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "headerVisible",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "copyOptionsButton",
+                type: PropertyType.Any,
+                propertyGridGroup: specificGroup,
+                computed: true,
+                propertyGridRowComponent: CopyOptionsButton
+            },
             makeExpressionProperty(
                 {
                     name: "configuration",
@@ -308,7 +516,7 @@ export class TabulatorWidget extends Widget {
                     formText: () => (
                         <span>
                             Advanced configuration options are set via JSON
-                            values, check{" "}
+                            value, check{" "}
                             <a
                                 href="#"
                                 onClick={event => {
@@ -342,7 +550,9 @@ export class TabulatorWidget extends Widget {
             left: 0,
             top: 0,
             width: 320,
-            height: 320
+            height: 320,
+            headerVisible: true,
+            autoColumns: true
         },
 
         icon: TABULATOR_ICON,
@@ -369,6 +579,18 @@ export class TabulatorWidget extends Widget {
         }
     });
 
+    layout:
+        | "fitData"
+        | "fitColumns"
+        | "fitDataFill"
+        | "fitDataStretch"
+        | "fitDataTable"
+        | undefined;
+    autoColumns: boolean;
+    columns: TabulatorColumn[];
+    pagination: boolean;
+    headerVisible: boolean;
+
     configuration: string;
     persistance: string;
 
@@ -376,9 +598,42 @@ export class TabulatorWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
+            layout: observable,
+            autoColumns: observable,
+            columns: observable,
+            pagination: observable,
             configuration: observable,
-            persistance: observable
+            persistance: observable,
+            headerVisible: observable
         });
+    }
+
+    get tabulatorOptions() {
+        const options: TabulatorModule.Options = {
+            layout: this.layout,
+            autoColumns: this.autoColumns,
+            pagination: this.pagination,
+            headerVisible: this.headerVisible
+        };
+
+        if (!this.autoColumns) {
+            options.columns = this.columns.map(column => {
+                const options = {
+                    title: column.title,
+                    field: column.field,
+                    formatter: column.formatter
+                };
+
+                try {
+                    const advanced = JSON.parse(column.advanced);
+                    Object.assign(options, advanced);
+                } catch (err) {}
+
+                return options;
+            });
+        }
+
+        return options;
     }
 
     override render(
