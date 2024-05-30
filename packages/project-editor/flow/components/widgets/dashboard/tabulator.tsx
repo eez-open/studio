@@ -372,7 +372,7 @@ class TabulatorColumn extends EezObject {
     advanced: string;
 
     static classInfo: ClassInfo = {
-        listLabel: (object: TabulatorColumn) => object.field,
+        listLabel: (object: TabulatorColumn) => "",
         properties: [
             {
                 name: "title",

@@ -1094,37 +1094,40 @@
 
     .EezStudio_ArrayPropertyContent {
         position: relative;
-        overflow: auto;
+        border-top: 1px solid @borderColor;
+
+        padding: 10px;
+        padding-bottom: 0;
 
         .EezStudio_ArrayElementProperty_Item {
+            border: 1px solid @borderColor;
             border-radius: 4px;
 
-            &:first-child {
-                border-top: 1px solid @borderColor;
-            }
-            border-bottom: 1px solid @borderColor;
-            &:last-child {
-                border-bottom: none;
-            }
+            margin-bottom: 10px;
 
             .EezStudio_ArrayElementProperty_Header {
+                background-color: @panelHeaderColor;
+
                 border-bottom: 1px solid @borderColor;
                 padding: 5px;
-                display: flex;
-                align-items: baseline;
-
-                &.selected {
-                    color: @selectionColor;
-                    background-color: @selectionBackgroundColor;
-                }
 
                 & > :first-child {
-                    padding-right: 10px;
+                    display: flex;
+                    align-items: baseline;
+                    & > :first-child {
+                        padding-right: 10px;
+                    }
+                }
+
+                display: flex;
+                & > div:first-child {
+                    flex: 1;
                 }
             }
 
             .EezStudio_ArrayElementProperty_Body {
                 padding: 10px;
+                background-color: @backgroundColor;
             }
 
             table {
@@ -1142,7 +1145,7 @@
 
 .EezStudio_ArrayPropertyToolbar {
     background-color: @panelHeaderColor;
-    padding: 3px 8px;
+    padding: 4px 8px;
 }
 
 .EezStudio_EmbeddedPropertyGrid {

@@ -597,7 +597,7 @@ class LineChartLine extends EezObject {
     visible: string;
 
     static classInfo: ClassInfo = {
-        listLabel: (object: LineChartLine) => object.label,
+        listLabel: (object: LineChartLine) => "",
         properties: [
             makeExpressionProperty(
                 {

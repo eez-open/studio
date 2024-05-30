@@ -354,6 +354,7 @@ export class ImportDirective extends EezObject {
             }
         ],
         listLabel: (importDirective: ImportDirective, collapsed: boolean) => {
+            if (!collapsed) return "";
             if (importDirective.importAs) {
                 return `"${importDirective.projectFilePath}" As ${importDirective.importAs}`;
             }
@@ -485,6 +486,7 @@ export class ExtensionDirective extends EezObject {
             }
         ],
         listLabel: (object: ExtensionDirective, collapsed: boolean) => {
+            if (!collapsed) return "";
             return object.extensionName;
         },
         defaultValue: {},
@@ -546,6 +548,7 @@ export class ResourceFile extends EezObject {
             }
         ],
         listLabel: (resourceFile: ResourceFile, collapsed: boolean) => {
+            if (!collapsed) return "";
             return resourceFile.filePath;
         },
         defaultValue: {},

@@ -781,6 +781,7 @@ export class SetVariableActionComponent extends ActionComponent {
         properties: [
             {
                 name: "entries",
+                displayName: "Set variable entries",
                 type: PropertyType.Array,
                 typeClass: SetVariableEntry,
                 propertyGridGroup: specificGroup,

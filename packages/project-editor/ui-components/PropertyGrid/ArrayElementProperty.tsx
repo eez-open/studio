@@ -1,11 +1,5 @@
 import React from "react";
-import {
-    computed,
-    observable,
-    action,
-    makeObservable,
-    runInAction
-} from "mobx";
+import { computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -55,17 +49,12 @@ export const ArrayProperty = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        selectedObject: EezObject | undefined;
-
         constructor(props: PropertyProps) {
             super(props);
 
-            this.selectedObject = undefined;
-
             makeObservable(this, {
                 value: computed,
-                objects: computed,
-                selectedObject: observable
+                objects: computed
             });
         }
 
@@ -79,39 +68,7 @@ export const ArrayProperty = observer(
             return this.value ?? [];
         }
 
-        componentDidUpdate(prevProps: Readonly<PropertyProps>) {
-            runInAction(() => {
-                if (prevProps.objects[0] != this.props.objects[0]) {
-                    this.selectedObject =
-                        this.value && this.value.length > 0
-                            ? this.value[0]
-                            : undefined;
-                } else if (
-                    this.selectedObject &&
-                    this.value?.indexOf(this.selectedObject) == -1
-                ) {
-                    this.selectedObject = undefined;
-                }
-            });
-        }
-
-        selectObject = action(
-            (object: EezObject, select: boolean, toggle: boolean) => {
-                if (select) {
-                    if (this.selectedObject != object) {
-                        this.selectedObject = object;
-                    } else if (toggle) {
-                        this.selectedObject = undefined;
-                    }
-                } else {
-                    if (this.selectedObject == object) {
-                        this.selectedObject = undefined;
-                    }
-                }
-            }
-        );
-
-        onAdd = async (event: any) => {
+        onAdd = (event: any) => {
             event.preventDefault();
 
             this.context.undoManager.setCombineCommands(true);
@@ -130,12 +87,7 @@ export const ArrayProperty = observer(
             const typeClass = this.props.propertyInfo.typeClass!;
 
             if (typeClass.classInfo.newItem) {
-                const object = await addItem(value);
-                if (object) {
-                    runInAction(() => {
-                        this.selectedObject = object;
-                    });
-                }
+                addItem(value);
             } else {
                 if (!typeClass.classInfo.defaultValue) {
                     console.error(
@@ -151,70 +103,9 @@ export const ArrayProperty = observer(
                     this.context.addObject(value, object);
 
                     this.context.undoManager.setCombineCommands(false);
-
-                    runInAction(() => {
-                        this.selectedObject = object;
-                    });
                 }
             }
         };
-
-        onDelete = (event: any) => {
-            event.preventDefault();
-
-            if (this.selectedObject) {
-                this.context.deleteObject(this.selectedObject);
-                runInAction(() => {
-                    this.selectedObject = undefined;
-                });
-            }
-        };
-
-        onMoveUp = action((event: any) => {
-            event.preventDefault();
-
-            if (this.value && this.selectedObject) {
-                const selectedObjectIndex = this.value.indexOf(
-                    this.selectedObject
-                );
-                if (selectedObjectIndex > 0) {
-                    this.context.undoManager.setCombineCommands(true);
-
-                    const objectBefore = this.value[selectedObjectIndex - 1];
-
-                    deleteObject(this.selectedObject);
-                    this.selectedObject = insertObjectBefore(
-                        objectBefore,
-                        this.selectedObject
-                    );
-
-                    this.context.undoManager.setCombineCommands(false);
-                }
-            }
-        });
-
-        onMoveDown = action((event: any) => {
-            event.preventDefault();
-
-            if (this.value && this.selectedObject) {
-                const selectedObjectIndex = this.value.indexOf(
-                    this.selectedObject
-                );
-                if (selectedObjectIndex < this.value.length - 1) {
-                    this.context.undoManager.setCombineCommands(true);
-
-                    const objectAfter = this.value[selectedObjectIndex + 1];
-
-                    deleteObject(this.selectedObject);
-                    this.selectedObject = insertObjectAfter(
-                        objectAfter,
-                        this.selectedObject
-                    );
-
-                    this.context.undoManager.setCombineCommands(false);
-                }
-            }
-        });
 
         moveItem = action((currentIndex: number, newIndex: number) => {
             const overObject = this.objects[newIndex];
@@ -238,91 +129,14 @@ export const ArrayProperty = observer(
                 <div className="rounded d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
                     <PropertyName {...this.props} />
                     <Toolbar>
-                        <IconAction
-                            icon="material:add"
-                            iconSize={16}
-                            onClick={this.onAdd}
-                            title="Add item"
-                        />
-                        <IconAction
-                            icon="material:delete"
-                            iconSize={16}
-                            onClick={this.onDelete}
-                            title="Delete item"
-                            enabled={this.selectedObject != undefined}
-                        />
-                        <IconAction
-                            icon={
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="icon icon-tabler icon-tabler-arrow-up"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
-                                        fill="none"
-                                    ></path>
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="18" y1="11" x2="12" y2="5"></line>
-                                    <line x1="6" y1="11" x2="12" y2="5"></line>
-                                </svg>
-                            }
-                            iconSize={16}
-                            onClick={this.onMoveUp}
-                            title="Move up"
-                            enabled={
-                                this.objects.length > 1 &&
-                                this.selectedObject != undefined &&
-                                this.objects.indexOf(this.selectedObject) > 0
-                            }
-                        />
-                        <IconAction
-                            icon={
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="icon icon-tabler icon-tabler-arrow-down"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path
-                                        stroke="none"
-                                        d="M0 0h24v24H0z"
-                                        fill="none"
-                                    ></path>
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line
-                                        x1="18"
-                                        y1="13"
-                                        x2="12"
-                                        y2="19"
-                                    ></line>
-                                    <line x1="6" y1="13" x2="12" y2="19"></line>
-                                </svg>
-                            }
-                            iconSize={16}
-                            onClick={this.onMoveDown}
-                            title="Move down"
-                            enabled={
-                                this.objects.length > 1 &&
-                                this.selectedObject != undefined &&
-                                this.objects.indexOf(this.selectedObject) <
-                                    this.objects.length - 1
-                            }
-                        />
+                        {this.objects.length == 0 && (
+                            <IconAction
+                                icon="material:add"
+                                iconSize={16}
+                                onClick={this.onAdd}
+                                title="Add item"
+                            />
+                        )}
                     </Toolbar>
                 </div>
             );
@@ -332,10 +146,9 @@ export const ArrayProperty = observer(
                 content = (
                     <ArrayPropertyContent
                         objects={this.objects}
-                        selectedObject={this.selectedObject}
-                        selectObject={this.selectObject}
                         moveItem={this.moveItem}
                         readOnly={this.props.readOnly}
+                        propertyInfo={this.props.propertyInfo}
                     />
                 );
             }
@@ -360,14 +173,9 @@ export const ArrayProperty = observer(
 const ArrayPropertyContent = observer(
     class ArrayPropertyContent extends React.Component<{
         objects: EezObject[];
-        selectedObject: EezObject | undefined;
-        selectObject: (
-            object: EezObject,
-            select: boolean,
-            toggle: boolean
-        ) => void;
         moveItem: (currentIndex: number, newIndex: number) => void;
         readOnly: boolean;
+        propertyInfo: PropertyInfo;
     }> {
         render() {
             return (
@@ -378,9 +186,8 @@ const ArrayPropertyContent = observer(
                             itemIndex={itemIndex}
                             object={object}
                             readOnly={this.props.readOnly}
-                            selected={this.props.selectedObject == object}
-                            selectObject={this.props.selectObject}
                             moveItem={this.props.moveItem}
+                            propertyInfo={this.props.propertyInfo}
                         />
                     ))}
                 </div>
@@ -504,6 +311,8 @@ class ArrayPropertyItemDraggable {
             return itemElement.getBoundingClientRect();
         });
 
+        this.itemRects.forEach(rect => (rect.height += 10)); // add margin of 10px
+
         this.cloneElement = this.itemElement.cloneNode(true) as HTMLDivElement;
 
         // cloneNode doesn't clone select values
@@ -542,6 +351,7 @@ class ArrayPropertyItemDraggable {
         this.cloneElement.style.height = r2.height + "px";
         this.cloneElement.style.boxShadow =
             "0 0 0 1px rgba(63, 63, 68, 0.05), -1px 0 15px 0 rgba(34, 33, 81, 0.01), 0px 15px 15px 0 rgba(34, 33, 81, 0.25)";
+        this.cloneElement.style.margin = "0";
 
         this.cloneElement.style.transform = `translate(0px, 0px) scale(${ArrayPropertyItemDraggable.PICKED_UP_SCALE})`;
 
@@ -701,16 +511,11 @@ class ArrayPropertyItemDraggable {
 const ArrayElementProperties = observer(
     class ArrayElementProperties extends React.Component<{
         itemIndex: number;
-        object: IEezObject;
+        object: EezObject;
         readOnly: boolean;
         className?: string;
-        selected: boolean;
-        selectObject: (
-            object: IEezObject,
-            select: boolean,
-            toggle: boolean
-        ) => void;
         moveItem: (currentIndex: number, newIndex: number) => void;
+        propertyInfo: PropertyInfo;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -722,8 +527,6 @@ const ArrayElementProperties = observer(
             this.props.moveItem
         );
 
-        open = true;
-
         componentDidMount() {
             this.draggable.attach(this.refHeader.current!);
         }
@@ -734,39 +537,253 @@ const ArrayElementProperties = observer(
             this.draggable.attach(null);
         }
 
+        get objects() {
+            return getParent(this.props.object) as EezObject[];
+        }
+
+        onAdd = async (addBefore: boolean) => {
+            const typeClass = this.props.propertyInfo.typeClass!;
+
+            if (typeClass.classInfo.newItem) {
+                this.context.undoManager.setCombineCommands(true);
+
+                const object = await addItem(this.objects);
+
+                deleteObject(object);
+
+                if (addBefore) {
+                    this.context.insertObjectBefore(this.props.object, object);
+                } else {
+                    this.context.insertObjectAfter(this.props.object, object);
+                }
+
+                this.context.undoManager.setCombineCommands(false);
+            } else {
+                if (!typeClass.classInfo.defaultValue) {
+                    console.error(
+                        `Class "${typeClass.name}" is missing defaultValue`
+                    );
+                } else {
+                    this.context.undoManager.setCombineCommands(true);
+
+                    const object = createObject(
+                        this.context,
+                        typeClass.classInfo.defaultValue,
+                        typeClass
+                    );
+
+                    if (addBefore) {
+                        this.context.insertObjectBefore(
+                            this.props.object,
+                            object
+                        );
+                    } else {
+                        this.context.insertObjectAfter(
+                            this.props.object,
+                            object
+                        );
+                    }
+
+                    this.context.undoManager.setCombineCommands(false);
+                }
+            }
+        };
+
+        onAddBefore = (event: any) => {
+            event.preventDefault();
+            this.onAdd(true);
+        };
+
+        onAddAfter = (event: any) => {
+            event.preventDefault();
+            this.onAdd(false);
+        };
+
+        onDelete = (event: any) => {
+            event.preventDefault();
+
+            this.context.deleteObject(this.props.object);
+        };
+
+        onMoveUp = action((event: any) => {
+            event.preventDefault();
+
+            const objectIndex = this.objects.indexOf(this.props.object);
+            if (objectIndex > 0) {
+                this.context.undoManager.setCombineCommands(true);
+
+                const objectBefore = this.objects[objectIndex - 1];
+
+                deleteObject(this.props.object);
+
+                insertObjectBefore(objectBefore, this.props.object);
+
+                this.context.undoManager.setCombineCommands(false);
+            }
+        });
+
+        onMoveDown = action((event: any) => {
+            event.preventDefault();
+
+            const objectIndex = this.objects.indexOf(this.props.object);
+            if (objectIndex < this.objects.length - 1) {
+                this.context.undoManager.setCombineCommands(true);
+
+                const objectAfter = this.objects[objectIndex + 1];
+
+                deleteObject(this.props.object);
+
+                insertObjectAfter(objectAfter, this.props.object);
+
+                this.context.undoManager.setCombineCommands(false);
+            }
+        });
+
         render() {
             return (
                 <div
-                    className={classNames(
-                        "EezStudio_ArrayElementProperty_Item"
-                    )}
+                    className={"EezStudio_ArrayElementProperty_Item"}
                     data-item-index={this.props.itemIndex}
                 >
-                    <div
-                        className={classNames(
-                            "EezStudio_ArrayElementProperty_Header",
-                            { selected: this.props.selected }
-                        )}
-                        ref={this.refHeader}
-                        onClick={() => {
-                            this.props.selectObject(
-                                this.props.object,
-                                true,
-                                true
-                            );
-                        }}
-                    >
-                        <div className="element-index">
-                            {`#${this.props.itemIndex + 1} `}
-                        </div>
-                        {!this.open && (
-                            <div className="label">
-                                {getListLabel(
-                                    this.props.object,
-                                    !this.props.selected
-                                )}
+                    <div className="EezStudio_ArrayElementProperty_Header">
+                        <div ref={this.refHeader}>
+                            <div className="element-index">
+                                {`#${this.props.itemIndex + 1} `}
                             </div>
-                        )}
+                            <div className="label">
+                                {getListLabel(this.props.object, false)}
+                            </div>
+                        </div>
+                        <Toolbar>
+                            <IconAction
+                                icon={
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M3 5a1 1 0 0 0 1 1h16a1 1 0 1 0 0-2H4a1 1 0 0 0-1 1m9 15a1 1 0 0 0 1-1v-3h3a1 1 0 1 0 0-2h-3v-3a1 1 0 1 0-2 0v3H8a1 1 0 1 0 0 2h3v3a1 1 0 0 0 1 1"
+                                            fill="currentColor"
+                                        />
+                                    </svg>
+                                }
+                                iconSize={18}
+                                onClick={this.onAddBefore}
+                                title="Add Item Before"
+                            />
+                            <IconAction
+                                icon={
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 4a1 1 0 0 1 1 1v3h3a1 1 0 1 1 0 2h-3v3a1 1 0 1 1-2 0v-3H8a1 1 0 0 1 0-2h3V5a1 1 0 0 1 1-1M3 19a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1"
+                                            fill="currentColor"
+                                        />
+                                    </svg>
+                                }
+                                iconSize={18}
+                                onClick={this.onAddAfter}
+                                title="Add Item After"
+                            />
+
+                            <IconAction
+                                icon="material:delete"
+                                iconSize={16}
+                                onClick={this.onDelete}
+                                title="Delete Item"
+                            />
+                            <IconAction
+                                icon={
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="icon icon-tabler icon-tabler-arrow-up"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="2"
+                                        stroke="currentColor"
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        ></path>
+                                        <line
+                                            x1="12"
+                                            y1="5"
+                                            x2="12"
+                                            y2="19"
+                                        ></line>
+                                        <line
+                                            x1="18"
+                                            y1="11"
+                                            x2="12"
+                                            y2="5"
+                                        ></line>
+                                        <line
+                                            x1="6"
+                                            y1="11"
+                                            x2="12"
+                                            y2="5"
+                                        ></line>
+                                    </svg>
+                                }
+                                iconSize={16}
+                                onClick={this.onMoveUp}
+                                title="Move Up"
+                                enabled={
+                                    this.objects.length > 1 &&
+                                    this.objects.indexOf(this.props.object) > 0
+                                }
+                            />
+                            <IconAction
+                                icon={
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="icon icon-tabler icon-tabler-arrow-down"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="2"
+                                        stroke="currentColor"
+                                        fill="none"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path
+                                            stroke="none"
+                                            d="M0 0h24v24H0z"
+                                            fill="none"
+                                        ></path>
+                                        <line
+                                            x1="12"
+                                            y1="5"
+                                            x2="12"
+                                            y2="19"
+                                        ></line>
+                                        <line
+                                            x1="18"
+                                            y1="13"
+                                            x2="12"
+                                            y2="19"
+                                        ></line>
+                                        <line
+                                            x1="6"
+                                            y1="13"
+                                            x2="12"
+                                            y2="19"
+                                        ></line>
+                                    </svg>
+                                }
+                                iconSize={16}
+                                onClick={this.onMoveDown}
+                                title="Move Down"
+                                enabled={
+                                    this.objects.length > 1 &&
+                                    this.objects.indexOf(this.props.object) <
+                                        this.objects.length - 1
+                                }
+                            />
+                        </Toolbar>
                     </div>
                     <div className="EezStudio_ArrayElementProperty_Body">
                         <table>
