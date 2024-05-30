@@ -196,6 +196,8 @@ const ArrayPropertyContent = observer(
     }
 );
 
+////////////////////////////////////////////////////////////////////////////////
+
 class ArrayPropertyItemDraggable {
     static MIN_DISTANCE = 10;
     static MIN_TIME = 300;
@@ -541,20 +543,123 @@ const ArrayElementProperties = observer(
             return getParent(this.props.object) as EezObject[];
         }
 
+        animate<T>(
+            start: (
+                elements: NodeListOf<HTMLDivElement>,
+                rects: DOMRect[],
+                parent: HTMLDivElement
+            ) => T,
+            step: (params: T, t: number) => void,
+            finish: (params: T) => void
+        ) {
+            const ANIM_DURATION = 150;
+
+            const startTime = Date.now();
+
+            const animate = () => {
+                let t = (Date.now() - startTime) / ANIM_DURATION;
+                if (t > 1.0) {
+                    t = 1.0;
+                }
+
+                step(params, t);
+
+                if (t < 1.0) {
+                    window.requestAnimationFrame(animate);
+                } else {
+                    finish(params);
+                }
+            };
+
+            const parent: HTMLDivElement = this.refHeader.current!.closest(
+                ".EezStudio_ArrayPropertyContent"
+            )!;
+
+            const elements: NodeListOf<HTMLDivElement> =
+                parent?.querySelectorAll(
+                    ".EezStudio_ArrayElementProperty_Item"
+                );
+
+            const rects = [...elements].map(el => {
+                return el.getBoundingClientRect();
+            });
+
+            const params = start(elements, rects, parent);
+            animate();
+        }
+
+        animateAdd(onFinish: () => void, i: number) {
+            this.animate(
+                (elements, rects, parent) => {
+                    const y = -rects[i].height;
+
+                    for (let j = 0; j < i; j++) {
+                        elements[j].style.position = "relative";
+                        elements[j].style.zIndex =
+                            j < i ? "2" : j == i ? "1" : "0";
+                    }
+
+                    return {
+                        elements,
+                        i,
+                        y,
+                        parent,
+                        parentHeight: parent.clientHeight
+                    };
+                },
+                ({ elements, i, y, parent, parentHeight }, t) => {
+                    for (let j = i; j < elements.length; j++) {
+                        elements[j].style.transform = `translate(0px, ${
+                            (1 - t) * y
+                        }px)`;
+                    }
+                    elements[i].style.opacity = `${t}`;
+                    parent.style.height = `${parentHeight + (1 - t) * y}px`;
+                },
+                ({ elements, i, parent }) => {
+                    for (let j = i; j < elements.length; j++) {
+                        elements[j].style.transform = "";
+                    }
+                    elements[i].style.opacity = "";
+
+                    for (let j = 0; j < i; j++) {
+                        elements[j].style.position = "";
+                        elements[j].style.zIndex = "";
+                    }
+
+                    onFinish();
+                    setTimeout(() => (parent.style.height = ""));
+                }
+            );
+        }
+
         onAdd = async (addBefore: boolean) => {
             const typeClass = this.props.propertyInfo.typeClass!;
+
+            let newObject: EezObject | null;
 
             if (typeClass.classInfo.newItem) {
                 this.context.undoManager.setCombineCommands(true);
 
-                const object = await addItem(this.objects);
+                newObject = await addItem(this.objects);
 
-                deleteObject(object);
+                if (!newObject) {
+                    this.context.undoManager.setCombineCommands(false);
+                    return;
+                }
+
+                deleteObject(newObject);
 
                 if (addBefore) {
-                    this.context.insertObjectBefore(this.props.object, object);
+                    this.context.insertObjectBefore(
+                        this.props.object,
+                        newObject
+                    );
                 } else {
-                    this.context.insertObjectAfter(this.props.object, object);
+                    this.context.insertObjectAfter(
+                        this.props.object,
+                        newObject
+                    );
                 }
 
                 this.context.undoManager.setCombineCommands(false);
@@ -563,30 +668,37 @@ const ArrayElementProperties = observer(
                     console.error(
                         `Class "${typeClass.name}" is missing defaultValue`
                     );
-                } else {
-                    this.context.undoManager.setCombineCommands(true);
-
-                    const object = createObject(
-                        this.context,
-                        typeClass.classInfo.defaultValue,
-                        typeClass
-                    );
-
-                    if (addBefore) {
-                        this.context.insertObjectBefore(
-                            this.props.object,
-                            object
-                        );
-                    } else {
-                        this.context.insertObjectAfter(
-                            this.props.object,
-                            object
-                        );
-                    }
-
-                    this.context.undoManager.setCombineCommands(false);
+                    return;
                 }
+
+                this.context.undoManager.setCombineCommands(true);
+
+                newObject = createObject(
+                    this.context,
+                    typeClass.classInfo.defaultValue,
+                    typeClass
+                );
+
+                if (addBefore) {
+                    this.context.insertObjectBefore(
+                        this.props.object,
+                        newObject
+                    );
+                } else {
+                    this.context.insertObjectAfter(
+                        this.props.object,
+                        newObject
+                    );
+                }
+
+                this.context.undoManager.setCombineCommands(false);
             }
+
+            setTimeout(() => {
+                if (newObject) {
+                    this.animateAdd(() => {}, this.objects.indexOf(newObject));
+                }
+            });
         };
 
         onAddBefore = (event: any) => {
@@ -599,44 +711,131 @@ const ArrayElementProperties = observer(
             this.onAdd(false);
         };
 
+        animateDelete(onFinish: () => void, i: number) {
+            this.animate(
+                (elements, rects, parent) => {
+                    const y = -rects[i].height;
+
+                    return {
+                        elements,
+                        i,
+                        y,
+                        parent,
+                        parentHeight: parent.clientHeight
+                    };
+                },
+                ({ elements, i, y, parent, parentHeight }, t) => {
+                    for (let j = i + 1; j < elements.length; j++) {
+                        elements[j].style.transform = `translate(0px, ${
+                            t * y
+                        }px)`;
+                    }
+                    elements[i].style.opacity = `${1 - t}`;
+                    parent.style.height = `${parentHeight + t * y}px`;
+                },
+                ({ elements, i, parent }) => {
+                    onFinish();
+
+                    setTimeout(() => {
+                        for (let j = i + 1; j < elements.length; j++) {
+                            elements[j].style.transform = "";
+                        }
+
+                        parent.style.height = "";
+                    });
+                }
+            );
+        }
+
         onDelete = (event: any) => {
             event.preventDefault();
 
-            this.context.deleteObject(this.props.object);
+            this.animateDelete(() => {
+                this.context.deleteObject(this.props.object);
+            }, this.objects.indexOf(this.props.object));
         };
+
+        animateMove(onFinish: () => void, i: number, fixZIndex: boolean) {
+            this.animate(
+                (elements, rects) => {
+                    const y1 = rects[i].height;
+                    const y2 = -rects[i - 1].height;
+
+                    if (fixZIndex) {
+                        elements[i - 1].style.position = "relative";
+                        elements[i - 1].style.zIndex = "1";
+                    }
+
+                    return {
+                        elements,
+                        i,
+                        y1,
+                        y2
+                    };
+                },
+                ({ elements, i, y1, y2 }, t) => {
+                    elements[i - 1].style.transform = `translate(0px, ${
+                        t * y1
+                    }px)`;
+                    elements[i].style.transform = `translate(0px, ${t * y2}px)`;
+                },
+                ({ elements, i }) => {
+                    onFinish();
+
+                    setTimeout(() => {
+                        elements[i - 1].style.position = "static";
+                        elements[i - 1].style.zIndex = "";
+                        elements[i - 1].style.transform = "";
+                        elements[i].style.transform = "";
+                    });
+                }
+            );
+        }
 
         onMoveUp = action((event: any) => {
             event.preventDefault();
 
-            const objectIndex = this.objects.indexOf(this.props.object);
-            if (objectIndex > 0) {
-                this.context.undoManager.setCombineCommands(true);
+            this.animateMove(
+                () => {
+                    const objectIndex = this.objects.indexOf(this.props.object);
+                    if (objectIndex > 0) {
+                        this.context.undoManager.setCombineCommands(true);
 
-                const objectBefore = this.objects[objectIndex - 1];
+                        const objectBefore = this.objects[objectIndex - 1];
 
-                deleteObject(this.props.object);
+                        deleteObject(this.props.object);
 
-                insertObjectBefore(objectBefore, this.props.object);
+                        insertObjectBefore(objectBefore, this.props.object);
 
-                this.context.undoManager.setCombineCommands(false);
-            }
+                        this.context.undoManager.setCombineCommands(false);
+                    }
+                },
+                this.objects.indexOf(this.props.object),
+                false
+            );
         });
 
         onMoveDown = action((event: any) => {
             event.preventDefault();
 
-            const objectIndex = this.objects.indexOf(this.props.object);
-            if (objectIndex < this.objects.length - 1) {
-                this.context.undoManager.setCombineCommands(true);
+            this.animateMove(
+                () => {
+                    const objectIndex = this.objects.indexOf(this.props.object);
+                    if (objectIndex < this.objects.length - 1) {
+                        this.context.undoManager.setCombineCommands(true);
 
-                const objectAfter = this.objects[objectIndex + 1];
+                        const objectAfter = this.objects[objectIndex + 1];
 
-                deleteObject(this.props.object);
+                        deleteObject(this.props.object);
 
-                insertObjectAfter(objectAfter, this.props.object);
+                        insertObjectAfter(objectAfter, this.props.object);
 
-                this.context.undoManager.setCombineCommands(false);
-            }
+                        this.context.undoManager.setCombineCommands(false);
+                    }
+                },
+                this.objects.indexOf(this.props.object) + 1,
+                true
+            );
         });
 
         render() {
