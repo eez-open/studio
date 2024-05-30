@@ -7265,7 +7265,6 @@ class LVGLMeterScale extends EezObject {
                 name: "indicators",
                 type: PropertyType.Array,
                 typeClass: LVGLMeterIndicator,
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []
@@ -7375,7 +7374,6 @@ export class LVGLMeterWidget extends LVGLWidget {
                 type: PropertyType.Array,
                 typeClass: LVGLMeterScale,
                 propertyGridGroup: specificGroup,
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []

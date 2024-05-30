@@ -738,8 +738,7 @@ export class ScpiCommand extends EezObject {
                 name: "parameters",
                 type: PropertyType.Array,
                 typeClass: ScpiParameter,
-                defaultValue: [],
-                arrayItemOrientation: "vertical"
+                defaultValue: []
             },
             {
                 name: "response",

@@ -2625,7 +2625,6 @@ export const eventHandlersProperty: PropertyInfo = {
     name: "eventHandlers",
     type: PropertyType.Array,
     typeClass: EventHandler,
-    arrayItemOrientation: "vertical",
     propertyGridGroup: eventsGroup,
     partOfNavigation: false,
     enumerable: false,

@@ -718,7 +718,6 @@ export class LineChartWidget extends Widget {
                 name: "lines",
                 type: PropertyType.Array,
                 typeClass: LineChartLine,
-                arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,

@@ -1055,7 +1055,6 @@ export class LVGLActionComponent extends ActionComponent {
                 type: PropertyType.Array,
                 typeClass: LVGLActionType,
                 propertyGridGroup: specificGroup,
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: []

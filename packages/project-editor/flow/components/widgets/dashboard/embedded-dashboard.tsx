@@ -451,7 +451,6 @@ export class EmbeddedDashboardWidget extends Widget {
                 type: PropertyType.Array,
                 typeClass: DashboardParameterDefinition,
                 propertyGridGroup: specificGroup,
-                arrayItemOrientation: "horizontal",
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],

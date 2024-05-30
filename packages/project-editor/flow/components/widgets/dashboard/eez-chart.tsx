@@ -262,7 +262,6 @@ export class EEZChartWidget extends Widget {
                 type: PropertyType.Array,
                 typeClass: WaveformDefinition,
                 propertyGridGroup: specificGroup,
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],

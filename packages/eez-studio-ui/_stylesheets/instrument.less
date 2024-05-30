@@ -1092,47 +1092,47 @@
         }
     }
 
-    &.vertical-orientation {
-        > .accordion {
-            position: relative;
+    .EezStudio_ArrayPropertyContent {
+        position: relative;
+        overflow: auto;
 
-            .accordion-item {
-                border: none;
-                padding: 0 0 2px 0;
-                background-color: transparent;
+        .EezStudio_ArrayElementProperty_Item {
+            border-radius: 4px;
+
+            &:first-child {
+                border-top: 1px solid @borderColor;
+            }
+            border-bottom: 1px solid @borderColor;
+            &:last-child {
+                border-bottom: none;
             }
 
-            .accordion-header {
-                border-top: 1px solid @borderColor;
-
+            .EezStudio_ArrayElementProperty_Header {
+                border-bottom: 1px solid @borderColor;
+                padding: 5px;
                 display: flex;
                 align-items: baseline;
 
-                .accordion-button {
-                    padding: 0.5rem 0.625rem;
-                    font-size: 0.8rem;
-                    display: flex;
-                    .element-index {
-                        padding-right: 5px;
-                    }
-                    .label {
-                        display: flex;
-                        align-items: center;
-                    }
+                &.selected {
+                    color: @selectionColor;
+                    background-color: @selectionBackgroundColor;
+                }
+
+                & > :first-child {
+                    padding-right: 10px;
                 }
             }
 
-            .accordion-body {
-                cursor: default;
-                padding: 5px;
+            .EezStudio_ArrayElementProperty_Body {
+                padding: 10px;
+            }
 
-                table {
-                    width: 100%;
+            table {
+                width: 100%;
 
-                    tr {
-                        td:first-child {
-                            white-space: nowrap;
-                        }
+                tr {
+                    td:first-child {
+                        white-space: nowrap;
                     }
                 }
             }

@@ -261,7 +261,6 @@ export class ExtensionDefinition extends EezObject {
             {
                 name: "useDashboardProjects",
                 displayName: "Dashboard projects",
-                arrayItemOrientation: "horizontal",
                 type: PropertyType.Array,
                 typeClass: UseDashboardProject,
                 defaultValue: []

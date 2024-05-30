@@ -429,7 +429,6 @@ export const conditionalStylesProperty: PropertyInfo = {
     name: "conditionalStyles",
     type: PropertyType.Array,
     typeClass: ConditionalStyle,
-    arrayItemOrientation: "vertical",
     partOfNavigation: false,
     enumerable: false,
     defaultValue: [],

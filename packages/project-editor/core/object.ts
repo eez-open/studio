@@ -241,7 +241,6 @@ export interface PropertyInfo {
     cssAttributeName?: string;
     checkboxStyleSwitch?: boolean;
     checkboxHideLabel?: boolean;
-    arrayItemOrientation?: "vertical" | "horizontal";
     disableBitmapPreview?: boolean;
     inputPlaceholder?: (object: IEezObject) => string;
     embeddedImage?: boolean;

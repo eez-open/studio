@@ -1,4 +1,3 @@
-import bootstrap from "bootstrap";
 import React from "react";
 import {
     computed,
@@ -235,11 +234,6 @@ export const ArrayProperty = observer(
         });
 
         render() {
-            const { objects, propertyInfo } = this.props;
-
-            let isVerticalOrientation =
-                propertyInfo.arrayItemOrientation == "vertical" ? true : false;
-
             const toolbar = (
                 <div className="rounded d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
                     <PropertyName {...this.props} />
@@ -333,78 +327,24 @@ export const ArrayProperty = observer(
                 </div>
             );
 
-            const typeClass = propertyInfo.typeClass!;
-
             let content;
             if (this.objects.length > 0) {
-                if (isVerticalOrientation) {
-                    content = (
-                        <ArrayPropertyContentVerticalOrientation
-                            objects={this.objects}
-                            selectedObject={this.selectedObject}
-                            selectObject={this.selectObject}
-                            moveItem={this.moveItem}
-                            readOnly={this.props.readOnly}
-                        />
-                    );
-                } else {
-                    const properties = typeClass.classInfo.properties.filter(
-                        propertyInfo =>
-                            isArrayElementPropertyVisible(propertyInfo)
-                    );
-
-                    content = (
-                        <table>
-                            <thead>
-                                <tr>
-                                    {properties.map(propertyInfo => (
-                                        <th
-                                            key={propertyInfo.name}
-                                            className={propertyInfo.name}
-                                            style={{
-                                                width: `${
-                                                    100 / properties.length
-                                                }%`
-                                            }}
-                                        >
-                                            {getObjectPropertyDisplayName(
-                                                objects[0],
-                                                propertyInfo
-                                            )}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody style={{ position: "relative" }}>
-                                {this.objects.map((object, itemIndex) => (
-                                    <ArrayElementPropertiesHorizontalOrientation
-                                        itemIndex={itemIndex}
-                                        key={getId(object)}
-                                        object={object}
-                                        readOnly={this.props.readOnly}
-                                        selected={object == this.selectedObject}
-                                        selectObject={this.selectObject}
-                                        moveItem={this.moveItem}
-                                    />
-                                ))}
-                            </tbody>
-                        </table>
-                    );
-                }
+                content = (
+                    <ArrayPropertyContent
+                        objects={this.objects}
+                        selectedObject={this.selectedObject}
+                        selectObject={this.selectObject}
+                        moveItem={this.moveItem}
+                        readOnly={this.props.readOnly}
+                    />
+                );
             }
 
             const formText = getFormText(this.props);
 
             return (
                 <>
-                    <div
-                        className={classNames(
-                            "rounded EezStudio_ArrayProperty",
-                            {
-                                "vertical-orientation": isVerticalOrientation
-                            }
-                        )}
-                    >
+                    <div className="rounded EezStudio_ArrayProperty">
                         {toolbar}
                         {content}
                     </div>
@@ -417,8 +357,8 @@ export const ArrayProperty = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ArrayPropertyContentVerticalOrientation = observer(
-    class ArrayPropertyContentVerticalOrientation extends React.Component<{
+const ArrayPropertyContent = observer(
+    class ArrayPropertyContent extends React.Component<{
         objects: EezObject[];
         selectedObject: EezObject | undefined;
         selectObject: (
@@ -430,13 +370,10 @@ const ArrayPropertyContentVerticalOrientation = observer(
         readOnly: boolean;
     }> {
         render() {
-            const idAccordion =
-                "accordion-" + getId(getParent(this.props.objects[0]));
-
             return (
-                <div className="accordion accordion-flush" id={idAccordion}>
+                <div className="EezStudio_ArrayPropertyContent">
                     {this.props.objects.map((object, itemIndex) => (
-                        <ArrayElementPropertiesVerticalOrientation
+                        <ArrayElementProperties
                             key={getId(object)}
                             itemIndex={itemIndex}
                             object={object}
@@ -444,7 +381,6 @@ const ArrayPropertyContentVerticalOrientation = observer(
                             selected={this.props.selectedObject == object}
                             selectObject={this.props.selectObject}
                             moveItem={this.props.moveItem}
-                            idAccordion={idAccordion}
                         />
                     ))}
                 </div>
@@ -756,27 +692,14 @@ class ArrayPropertyItemDraggable {
                 clearTimeout(this.testDraggingTimeout);
                 this.testDraggingTimeout = undefined;
             }
-
-            if (this.itemElement) {
-                const collapseElement = this.itemElement.querySelector(
-                    ".accordion-collapse"
-                );
-                if (collapseElement) {
-                    const bsCollapse =
-                        bootstrap.Collapse.getInstance(collapseElement);
-                    if (bsCollapse) {
-                        bsCollapse.toggle();
-                    }
-                }
-            }
         }
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ArrayElementPropertiesVerticalOrientation = observer(
-    class ArrayElementPropertiesVerticalOrientation extends React.Component<{
+const ArrayElementProperties = observer(
+    class ArrayElementProperties extends React.Component<{
         itemIndex: number;
         object: IEezObject;
         readOnly: boolean;
@@ -788,129 +711,68 @@ const ArrayElementPropertiesVerticalOrientation = observer(
             toggle: boolean
         ) => void;
         moveItem: (currentIndex: number, newIndex: number) => void;
-        idAccordion: string;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        refCollapse = React.createRef<HTMLDivElement>();
         refHeader = React.createRef<HTMLHeadingElement>();
 
-        bsCollapse: bootstrap.Collapse;
-
         draggable = new ArrayPropertyItemDraggable(
-            "accordion-item",
+            "EezStudio_ArrayElementProperty_Item",
             this.props.moveItem
         );
 
+        open = true;
+
         componentDidMount() {
             this.draggable.attach(this.refHeader.current!);
-
-            this.bsCollapse = new bootstrap.Collapse(
-                this.refCollapse.current!,
-                { toggle: false }
-            );
-            if (this.props.selected) {
-                this.bsCollapse.show();
-            } else {
-                this.bsCollapse.hide();
-            }
-
-            this.refCollapse.current!.addEventListener(
-                "show.bs.collapse",
-                this.onShow
-            );
-            this.refCollapse.current!.addEventListener(
-                "hide.bs.collapse",
-                this.onHide
-            );
         }
 
-        componentDidUpdate() {
-            if (this.props.selected) {
-                this.bsCollapse.show();
-            } else {
-                this.bsCollapse.hide();
-            }
-        }
+        componentDidUpdate() {}
 
         componentWillUnmount() {
             this.draggable.attach(null);
-
-            this.refCollapse.current!.removeEventListener(
-                "show.bs.collapse",
-                this.onShow
-            );
-            this.refCollapse.current!.removeEventListener(
-                "hide.bs.collapse",
-                this.onHide
-            );
         }
 
-        onShow = (event: any) => {
-            if (event.target == this.refCollapse.current) {
-                this.props.selectObject(this.props.object, true, false);
-            }
-        };
-
-        onHide = (event: any) => {
-            if (event.target == this.refCollapse.current) {
-                this.props.selectObject(this.props.object, false, false);
-            }
-        };
-
         render() {
-            const idAccordionHeading =
-                "accordion-heading-" + getId(this.props.object);
-            const idAccordionCollapse =
-                "accordion-collapse-" + getId(this.props.object);
-
             return (
                 <div
-                    className={classNames("element-enclosure accordion-item", {
-                        open: this.props.selected
-                    })}
+                    className={classNames(
+                        "EezStudio_ArrayElementProperty_Item"
+                    )}
                     data-item-index={this.props.itemIndex}
                 >
-                    <h2
+                    <div
+                        className={classNames(
+                            "EezStudio_ArrayElementProperty_Header",
+                            { selected: this.props.selected }
+                        )}
                         ref={this.refHeader}
-                        className="accordion-header"
-                        id={idAccordionHeading}
+                        onClick={() => {
+                            this.props.selectObject(
+                                this.props.object,
+                                true,
+                                true
+                            );
+                        }}
                     >
-                        <button
-                            className={classNames("accordion-button", {
-                                collapsed: !this.props.selected
-                            })}
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target={`#${idAccordionCollapse}`}
-                            aria-expanded="false"
-                            aria-controls={idAccordionCollapse}
-                        >
-                            <div className="element-index">
-                                {`#${this.props.itemIndex + 1} `}
-                            </div>
+                        <div className="element-index">
+                            {`#${this.props.itemIndex + 1} `}
+                        </div>
+                        {!this.open && (
                             <div className="label">
                                 {getListLabel(
                                     this.props.object,
                                     !this.props.selected
                                 )}
                             </div>
-                        </button>
-                    </h2>
-                    <div
-                        ref={this.refCollapse}
-                        id={idAccordionCollapse}
-                        className="accordion-collapse collapse"
-                        aria-labelledby={idAccordionHeading}
-                        data-bs-parent={this.props.idAccordion}
-                    >
-                        <div className="accordion-body">
-                            <table>
-                                <tbody>
-                                    {getClassInfo(
-                                        this.props.object
-                                    ).properties.map(propertyInfo => (
+                        )}
+                    </div>
+                    <div className="EezStudio_ArrayElementProperty_Body">
+                        <table>
+                            <tbody>
+                                {getClassInfo(this.props.object).properties.map(
+                                    propertyInfo => (
                                         <tr
                                             key={propertyInfo.name}
                                             className={classNames({
@@ -920,16 +782,16 @@ const ArrayElementPropertiesVerticalOrientation = observer(
                                                 )
                                             })}
                                         >
-                                            <ArrayElementPropertyVerticalOrientation
+                                            <ArrayElementProperty
                                                 propertyInfo={propertyInfo}
                                                 object={this.props.object}
                                                 readOnly={this.props.readOnly}
                                             />
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    )
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             );
@@ -937,8 +799,8 @@ const ArrayElementPropertiesVerticalOrientation = observer(
     }
 );
 
-const ArrayElementPropertyVerticalOrientation = observer(
-    class ArrayElementPropertyVerticalOrientation extends React.Component<{
+const ArrayElementProperty = observer(
+    class ArrayElementProperty extends React.Component<{
         propertyInfo: PropertyInfo;
         object: IEezObject;
         readOnly: boolean;
@@ -1005,145 +867,6 @@ const ArrayElementPropertyVerticalOrientation = observer(
                         </>
                     );
                 }
-            } else {
-                return <td />;
-            }
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
-const ArrayElementPropertiesHorizontalOrientation = observer(
-    class ArrayElementPropertiesHorizontalOrientation extends React.Component<{
-        itemIndex: number;
-        object: IEezObject;
-        readOnly: boolean;
-        className?: string;
-        selected: boolean;
-        selectObject: (
-            object: IEezObject,
-            select: boolean,
-            toggle: boolean
-        ) => void;
-        moveItem: (currentIndex: number, newIndex: number) => void;
-    }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        refRow = React.createRef<HTMLTableRowElement>();
-
-        draggable = new ArrayPropertyItemDraggable(
-            "horizontal-item",
-            this.props.moveItem
-        );
-
-        componentDidMount() {
-            this.draggable.attach(this.refRow.current!);
-        }
-
-        componentWillUnmount() {
-            this.draggable.attach(null);
-        }
-
-        render() {
-            return (
-                <tr
-                    ref={this.refRow}
-                    className={classNames("horizontal-item", {
-                        selected: this.props.selected
-                    })}
-                    onClick={event => {
-                        if (
-                            event.nativeEvent.target instanceof
-                                HTMLTableCellElement ||
-                            event.nativeEvent.target instanceof
-                                HTMLTableRowElement
-                        ) {
-                            this.props.selectObject(
-                                this.props.object,
-                                true,
-                                true
-                            );
-                        } else {
-                            this.props.selectObject(
-                                this.props.object,
-                                true,
-                                false
-                            );
-                        }
-                    }}
-                    data-item-index={this.props.itemIndex}
-                >
-                    {getClassInfo(this.props.object).properties.map(
-                        propertyInfo => (
-                            <ArrayElementPropertyHorizontalOrientation
-                                key={propertyInfo.name}
-                                propertyInfo={propertyInfo}
-                                object={this.props.object}
-                                readOnly={this.props.readOnly}
-                            />
-                        )
-                    )}
-                </tr>
-            );
-        }
-    }
-);
-
-const ArrayElementPropertyHorizontalOrientation = observer(
-    class ArrayElementPropertyHorizontalOrientation extends React.Component<{
-        propertyInfo: PropertyInfo;
-        object: IEezObject;
-        readOnly: boolean;
-    }> {
-        static contextType = ProjectContext;
-        declare context: React.ContextType<typeof ProjectContext>;
-
-        updateObject = (propertyValues: Object) => {
-            let object = this.props.object;
-            if (object) {
-                if (isValue(object)) {
-                    object = getParent(object);
-                }
-                this.context.updateObject(object, propertyValues);
-            }
-        };
-
-        render() {
-            const { object, propertyInfo, readOnly } = this.props;
-
-            const className = classNames(propertyInfo.name, {
-                inError: isPropertyInError(object, propertyInfo),
-                highlighted: isHighlightedProperty(object, propertyInfo)
-            });
-
-            if (isArrayElementPropertyVisible(propertyInfo, object)) {
-                return (
-                    <td className={className}>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center"
-                            }}
-                        >
-                            <div
-                                className="eez-flow-editor-capture-pointers"
-                                style={{ width: "100%" }}
-                            >
-                                <Property
-                                    propertyInfo={propertyInfo}
-                                    objects={[object]}
-                                    readOnly={
-                                        readOnly ||
-                                        isPropertyReadOnly(object, propertyInfo)
-                                    }
-                                    updateObject={this.updateObject}
-                                />
-                            </div>
-                        </div>
-                    </td>
-                );
             } else {
                 return <td />;
             }

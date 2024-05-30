@@ -747,7 +747,6 @@ export class General extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ExtensionDirective,
                 defaultValue: [],
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 formText:
@@ -760,7 +759,6 @@ export class General extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ImportDirective,
                 defaultValue: [],
-                arrayItemOrientation: "vertical",
                 disabled: (general: General) => {
                     const project = getProject(general);
                     return (
@@ -866,7 +864,6 @@ export class General extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ResourceFile,
                 defaultValue: [],
-                arrayItemOrientation: "vertical",
                 partOfNavigation: false,
                 enumerable: false,
                 disabled: (general: General) =>

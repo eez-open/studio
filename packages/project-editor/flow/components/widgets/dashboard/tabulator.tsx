@@ -485,7 +485,6 @@ export class TabulatorWidget extends Widget {
                 name: "columns",
                 type: PropertyType.Array,
                 typeClass: TabulatorColumn,
-                arrayItemOrientation: "vertical",
                 propertyGridGroup: specificGroup,
                 defaultValue: [],
                 disabled: (widget: TabulatorWidget) => widget.autoColumns
