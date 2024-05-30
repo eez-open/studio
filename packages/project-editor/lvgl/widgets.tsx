@@ -6433,13 +6433,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorNeedleImg,
             collapsed: boolean
-        ) => {
-            return `Needle image at ${
-                indicator.valueType == "literal"
-                    ? indicator.value
-                    : `{${indicator.value}}`
-            }`;
-        },
+        ) => "Needle image",
 
         defaultValue: {
             pivotX: 0,
@@ -6614,13 +6608,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorNeedleLine,
             collapsed: boolean
-        ) => {
-            return `Needle line at ${
-                indicator.valueType == "literal"
-                    ? indicator.value
-                    : `{${indicator.value}}`
-            }`;
-        },
+        ) => "Needle line",
 
         defaultValue: {
             width: 3,
@@ -6796,17 +6784,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorScaleLines,
             collapsed: boolean
-        ) => {
-            return `Scale lines from ${
-                indicator.startValueType == "literal"
-                    ? indicator.startValue
-                    : `{${indicator.startValue}}`
-            } to ${
-                indicator.endValueType == "literal"
-                    ? indicator.endValue
-                    : `{${indicator.endValue}}`
-            } `;
-        },
+        ) => "Scale lines",
 
         defaultValue: {
             colorStart: "#000000",
@@ -7027,17 +7005,8 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             )
         ],
 
-        listLabel: (indicator: LVGLMeterIndicatorArc, collapsed: boolean) => {
-            return `Arc from ${
-                indicator.startValueType == "literal"
-                    ? indicator.startValue
-                    : `{${indicator.startValue}}`
-            } to ${
-                indicator.endValueType == "literal"
-                    ? indicator.endValue
-                    : `{${indicator.endValue}}`
-            } `;
-        },
+        listLabel: (indicator: LVGLMeterIndicatorArc, collapsed: boolean) =>
+            "Arc",
 
         defaultValue: {
             width: 2,
@@ -7271,9 +7240,7 @@ class LVGLMeterScale extends EezObject {
             }
         ],
 
-        listLabel: (scale: LVGLMeterScale, collapsed: boolean) => {
-            return "Scale";
-        },
+        listLabel: (scale: LVGLMeterScale, collapsed: boolean) => "Scale",
 
         defaultValue: {
             minorTickCount: 41,
