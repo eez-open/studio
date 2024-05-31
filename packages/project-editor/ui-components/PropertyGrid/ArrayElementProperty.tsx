@@ -1,5 +1,11 @@
 import React from "react";
-import { computed, action, makeObservable } from "mobx";
+import {
+    computed,
+    action,
+    makeObservable,
+    observable,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -126,7 +132,7 @@ export const ArrayProperty = observer(
 
         render() {
             const toolbar = (
-                <div className="rounded d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
+                <div className="d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
                     <PropertyName {...this.props} />
                     <Toolbar>
                         {this.objects.length == 0 && (
@@ -157,7 +163,7 @@ export const ArrayProperty = observer(
 
             return (
                 <>
-                    <div className="rounded EezStudio_ArrayProperty">
+                    <div className="EezStudio_ArrayProperty">
                         {toolbar}
                         {content}
                     </div>
@@ -522,6 +528,8 @@ const ArrayElementProperties = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        static updateStartTime = observable.box<number | undefined>(undefined);
+
         refHeader = React.createRef<HTMLHeadingElement>();
 
         draggable = new ArrayPropertyItemDraggable(
@@ -645,6 +653,11 @@ const ArrayElementProperties = observer(
 
                 if (!newObject) {
                     this.context.undoManager.setCombineCommands(false);
+
+                    runInAction(() =>
+                        ArrayElementProperties.updateStartTime.set(undefined)
+                    );
+
                     return;
                 }
 
@@ -668,6 +681,11 @@ const ArrayElementProperties = observer(
                     console.error(
                         `Class "${typeClass.name}" is missing defaultValue`
                     );
+
+                    runInAction(() =>
+                        ArrayElementProperties.updateStartTime.set(undefined)
+                    );
+
                     return;
                 }
 
@@ -696,18 +714,42 @@ const ArrayElementProperties = observer(
 
             setTimeout(() => {
                 if (newObject) {
-                    this.animateAdd(() => {}, this.objects.indexOf(newObject));
+                    this.animateAdd(() => {
+                        runInAction(() =>
+                            ArrayElementProperties.updateStartTime.set(
+                                undefined
+                            )
+                        );
+                    }, this.objects.indexOf(newObject));
                 }
             });
         };
 
         onAddBefore = (event: any) => {
             event.preventDefault();
+
+            if (ArrayElementProperties.updateStartTime.get() != undefined) {
+                return;
+            }
+
+            runInAction(() =>
+                ArrayElementProperties.updateStartTime.set(Date.now())
+            );
+
             this.onAdd(true);
         };
 
         onAddAfter = (event: any) => {
             event.preventDefault();
+
+            if (ArrayElementProperties.updateStartTime.get() != undefined) {
+                return;
+            }
+
+            runInAction(() =>
+                ArrayElementProperties.updateStartTime.set(Date.now())
+            );
+
             this.onAdd(false);
         };
 
@@ -750,8 +792,20 @@ const ArrayElementProperties = observer(
         onDelete = (event: any) => {
             event.preventDefault();
 
+            if (ArrayElementProperties.updateStartTime.get() != undefined) {
+                return;
+            }
+
+            runInAction(() =>
+                ArrayElementProperties.updateStartTime.set(Date.now())
+            );
+
             this.animateDelete(() => {
                 this.context.deleteObject(this.props.object);
+
+                runInAction(() =>
+                    ArrayElementProperties.updateStartTime.set(undefined)
+                );
             }, this.objects.indexOf(this.props.object));
         };
 
@@ -774,10 +828,12 @@ const ArrayElementProperties = observer(
                     };
                 },
                 ({ elements, i, y1, y2 }, t) => {
-                    elements[i - 1].style.transform = `translate(0px, ${
+                    elements[i - 1].style.transform = `translate(10px, ${
                         t * y1
                     }px)`;
-                    elements[i].style.transform = `translate(0px, ${t * y2}px)`;
+                    elements[i].style.transform = `translate(-10px, ${
+                        t * y2
+                    }px)`;
                 },
                 ({ elements, i }) => {
                     onFinish();
@@ -795,10 +851,18 @@ const ArrayElementProperties = observer(
         onMoveUp = action((event: any) => {
             event.preventDefault();
 
-            this.animateMove(
-                () => {
-                    const objectIndex = this.objects.indexOf(this.props.object);
-                    if (objectIndex > 0) {
+            if (ArrayElementProperties.updateStartTime.get() != undefined) {
+                return;
+            }
+
+            const objectIndex = this.objects.indexOf(this.props.object);
+            if (objectIndex > 0) {
+                runInAction(() =>
+                    ArrayElementProperties.updateStartTime.set(Date.now())
+                );
+
+                this.animateMove(
+                    () => {
                         this.context.undoManager.setCombineCommands(true);
 
                         const objectBefore = this.objects[objectIndex - 1];
@@ -808,20 +872,30 @@ const ArrayElementProperties = observer(
                         insertObjectBefore(objectBefore, this.props.object);
 
                         this.context.undoManager.setCombineCommands(false);
-                    }
-                },
-                this.objects.indexOf(this.props.object),
-                false
-            );
+
+                        runInAction(() =>
+                            ArrayElementProperties.updateStartTime.set(
+                                undefined
+                            )
+                        );
+                    },
+                    this.objects.indexOf(this.props.object),
+                    false
+                );
+            }
         });
 
         onMoveDown = action((event: any) => {
             event.preventDefault();
 
-            this.animateMove(
-                () => {
-                    const objectIndex = this.objects.indexOf(this.props.object);
-                    if (objectIndex < this.objects.length - 1) {
+            if (ArrayElementProperties.updateStartTime.get() != undefined) {
+                return;
+            }
+
+            const objectIndex = this.objects.indexOf(this.props.object);
+            if (objectIndex < this.objects.length - 1) {
+                this.animateMove(
+                    () => {
                         this.context.undoManager.setCombineCommands(true);
 
                         const objectAfter = this.objects[objectIndex + 1];
@@ -831,11 +905,17 @@ const ArrayElementProperties = observer(
                         insertObjectAfter(objectAfter, this.props.object);
 
                         this.context.undoManager.setCombineCommands(false);
-                    }
-                },
-                this.objects.indexOf(this.props.object) + 1,
-                true
-            );
+
+                        runInAction(() =>
+                            ArrayElementProperties.updateStartTime.set(
+                                undefined
+                            )
+                        );
+                    },
+                    this.objects.indexOf(this.props.object) + 1,
+                    true
+                );
+            }
         });
 
         render() {
@@ -866,6 +946,10 @@ const ArrayElementProperties = observer(
                                 iconSize={18}
                                 onClick={this.onAddBefore}
                                 title="Add Item Before"
+                                enabled={
+                                    ArrayElementProperties.updateStartTime.get() ==
+                                    undefined
+                                }
                             />
                             <IconAction
                                 icon={
@@ -879,6 +963,10 @@ const ArrayElementProperties = observer(
                                 iconSize={18}
                                 onClick={this.onAddAfter}
                                 title="Add Item After"
+                                enabled={
+                                    ArrayElementProperties.updateStartTime.get() ==
+                                    undefined
+                                }
                             />
 
                             <IconAction
@@ -886,6 +974,10 @@ const ArrayElementProperties = observer(
                                 iconSize={16}
                                 onClick={this.onDelete}
                                 title="Delete Item"
+                                enabled={
+                                    ArrayElementProperties.updateStartTime.get() ==
+                                    undefined
+                                }
                             />
                             <IconAction
                                 icon={
@@ -930,6 +1022,8 @@ const ArrayElementProperties = observer(
                                 onClick={this.onMoveUp}
                                 title="Move Up"
                                 enabled={
+                                    ArrayElementProperties.updateStartTime.get() ==
+                                        undefined &&
                                     this.objects.length > 1 &&
                                     this.objects.indexOf(this.props.object) > 0
                                 }
@@ -977,6 +1071,8 @@ const ArrayElementProperties = observer(
                                 onClick={this.onMoveDown}
                                 title="Move Down"
                                 enabled={
+                                    ArrayElementProperties.updateStartTime.get() ==
+                                        undefined &&
                                     this.objects.length > 1 &&
                                     this.objects.indexOf(this.props.object) <
                                         this.objects.length - 1

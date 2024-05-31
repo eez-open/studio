@@ -58,15 +58,17 @@ export const Property = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        textarea: HTMLDivElement | undefined;
+        textarea: HTMLTextAreaElement | undefined;
         input: HTMLInputElement;
         select: HTMLSelectElement;
 
         _value: any = undefined;
 
-        changeDocumentDisposer: any;
+        static propertyComponents: Property[] = [];
+        static resizeTextAreaInterval: any;
+        static resizePropertyComponentIndex = 0;
 
-        resizeObserver: ResizeObserver | undefined;
+        changeDocumentDisposer: any;
 
         disposeEventHandlers: (() => void) | undefined;
 
@@ -80,16 +82,54 @@ export const Property = observer(
             });
         }
 
-        resizeTextArea = () => {
-            if (this.textarea) {
-                this.textarea.style.height = "0";
-                this.textarea.style.height = this.textarea.scrollHeight + "px";
+        static resizeTextAreas() {
+            if (
+                Property.resizePropertyComponentIndex >=
+                Property.propertyComponents.length
+            ) {
+                Property.resizePropertyComponentIndex = 0;
             }
-        };
 
-        resizeObserverCallback = () => {
-            this.resizeTextArea();
-        };
+            const textarea =
+                Property.propertyComponents[
+                    Property.resizePropertyComponentIndex
+                ].textarea;
+
+            if (textarea) {
+                if (textarea.style.height != textarea.scrollHeight + "px") {
+                    textarea.style.height = "0";
+                    textarea.style.height = textarea.scrollHeight + "px";
+                }
+            }
+
+            Property.resizePropertyComponentIndex++;
+        }
+
+        static registerProperty(property: Property) {
+            if (property.textarea) {
+                if (Property.propertyComponents.indexOf(property) == -1) {
+                    if (Property.propertyComponents.length == 0) {
+                        Property.resizeTextAreaInterval = setInterval(
+                            Property.resizeTextAreas
+                        );
+                    }
+                    Property.propertyComponents.push(property);
+                }
+            } else {
+                Property.unregisterProperty(property);
+            }
+        }
+
+        static unregisterProperty(property: Property) {
+            const i = Property.propertyComponents.indexOf(property);
+            if (i != -1) {
+                Property.propertyComponents.splice(i, 1);
+
+                if (Property.propertyComponents.length == 0) {
+                    clearInterval(Property.resizeTextAreaInterval);
+                }
+            }
+        }
 
         updateChangeDocumentObserver() {
             if (this.changeDocumentDisposer) {
@@ -158,13 +198,7 @@ export const Property = observer(
 
             this.addEventHandlers();
 
-            if (this.textarea) {
-                this.resizeTextArea();
-                this.resizeObserver = new ResizeObserver(
-                    this.resizeObserverCallback
-                );
-                this.resizeObserver.observe(this.textarea);
-            }
+            Property.registerProperty(this);
         }
 
         componentDidUpdate(prevProps: PropertyProps) {
@@ -177,9 +211,7 @@ export const Property = observer(
 
             this.addEventHandlers();
 
-            if (this.textarea) {
-                this.resizeTextArea();
-            }
+            Property.registerProperty(this);
         }
 
         componentWillUnmount() {
@@ -189,9 +221,7 @@ export const Property = observer(
                 this.disposeEventHandlers();
             }
 
-            if (this.resizeObserver) {
-                this.resizeObserver.disconnect();
-            }
+            Property.unregisterProperty(this);
         }
 
         onSelect = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
