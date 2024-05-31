@@ -232,6 +232,11 @@ function operationJsonClone(wasmModuleId: number, jsObjectID: number) {
     return createWasmValue(WasmFlowRuntime, value);
 }
 
+function operationJsonMake(wasmModuleId: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    return createWasmValue(WasmFlowRuntime, {});
+}
+
 function dashboardObjectValueIncRef(wasmModuleId: number, jsObjectID: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (WasmFlowRuntime) {
@@ -281,6 +286,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonSet = operationJsonSet;
 (global as any).operationJsonArrayLength = operationJsonArrayLength;
 (global as any).operationJsonClone = operationJsonClone;
+(global as any).operationJsonMake = operationJsonMake;
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;

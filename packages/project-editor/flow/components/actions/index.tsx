@@ -3966,7 +3966,10 @@ const TrixEditor = observer(
         };
 
         return (
-            <div className="EezStudio_TrixEditor" tabIndex={0}>
+            <div
+                className="EezStudio_TrixEditor eez-flow-editor-capture-pointers"
+                tabIndex={0}
+            >
                 {React.createElement("trix-editor", attributes)}
                 <input id={inputId} value={value ?? ""} type="hidden"></input>
             </div>

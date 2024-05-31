@@ -485,7 +485,9 @@ export function findValueTypeInExpressionNode(
                 assignable
             )
         );
-        node.valueType = `struct:any`;
+        node.valueType = project.projectTypeTraits.isDashboard
+            ? "json"
+            : "struct:any";
     } else {
         throw `Unknown expression node "${node.type}"`;
     }

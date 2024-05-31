@@ -224,7 +224,7 @@ export function createWasmArrayValue(
 
 export function createWasmValue(
     WasmFlowRuntime: IWasmFlowRuntime,
-    value: undefined | null | number | boolean | string | ArrayValue,
+    value: undefined | null | number | boolean | string | ArrayValue | Object,
     valueTypeIndex?: number
 ) {
     if (value === undefined) {
@@ -290,7 +290,7 @@ export function createWasmValue(
         return createWasmArrayValue(WasmFlowRuntime, arrayValue);
     }
 
-    if (value.valueTypeIndex != undefined) {
+    if ("valueTypeIndex" in value) {
         return createWasmArrayValue(WasmFlowRuntime, value);
     }
 
