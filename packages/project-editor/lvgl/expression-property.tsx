@@ -350,6 +350,10 @@ export function expressionPropertyBuildEventHandlerSpecific<
         build.indent();
 
         build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+
+        build.line(`if (tick_value_change_obj != ta) {`);
+        build.indent();
+
         if (propertyInfo.expressionType == "integer") {
             build.line(`int32_t value = ${getFunc}(ta);`);
         } else if (propertyInfo.expressionType == "string") {
@@ -395,6 +399,9 @@ export function expressionPropertyBuildEventHandlerSpecific<
                 )}(value);`
             );
         }
+
+        build.unindent();
+        build.line("}");
 
         build.unindent();
         build.line("}");

@@ -1920,6 +1920,10 @@ export class LVGLWidget extends Widget {
             build.indent();
 
             build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
+
+            build.line(`if (tick_value_change_obj != ta) {`);
+            build.indent();
+
             build.line(`bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);`);
 
             if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
@@ -1929,13 +1933,9 @@ export class LVGLWidget extends Widget {
                     "checkedState"
                 );
 
-                build.line(`if (tick_value_change_obj != ta) {`);
-                build.indent();
                 build.line(
                     `assignBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Checked state");`
                 );
-                build.unindent();
-                build.line("}");
             } else {
                 build.line(
                     `${build.getVariableSetterFunctionName(
@@ -1943,6 +1943,9 @@ export class LVGLWidget extends Widget {
                     )}(value);`
                 );
             }
+
+            build.unindent();
+            build.line("}");
 
             build.unindent();
             build.line("}");
