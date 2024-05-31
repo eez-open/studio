@@ -2840,58 +2840,11 @@
             & > td.highlighted {
                 background-color: #ff6666;
             }
-        }
-    }
 
-    & > table {
-        width: 100%;
-        margin-bottom: 0;
-
-        & > thead > tr > th {
-            padding: 5px 0 1px 0;
-            white-space: nowrap;
-            font-weight: normal;
-            /* border-bottom: 1px solid @borderColor; */
-            text-align: center;
-            font-size: 90%;
-            border-right: 1px solid @borderColor;
-            &:last-child {
-                border-right: none;
-            }
-        }
-
-        & > tbody {
-            & > tr {
-                background-color: @backgroundColor;
-                color: @textColor;
-
-                &.selected {
-                    background-color: @selectionBackgroundColor;
-                    color: @selectionColor;
-                }
-
-                & > td {
-                    border-top: 1px solid @borderColor;
-                    border-right: 1px solid @borderColor;
-                    &:last-child {
-                        border-right: none;
-                    }
-
-                    cursor: pointer;
-
-                    padding: 4px 10px;
-
-                    &::last-child {
-                        width: 0;
-                        margin: none;
-                        border-right: none;
-                    }
-                }
-                & > td.inError {
-                    background-color: #ffaaaa;
-                }
-                & > td.highlighted {
-                    background-color: #ff6666;
+            & > tr > td {
+                &:nth-child(2) {
+                    padding-left: 10px;
+                    width: 100%;
                 }
             }
         }
@@ -3124,6 +3077,14 @@
                     font-size: 0.72rem;
                 }
             }
+        }
+    }
+}
+
+.EezStudio_EmbeddedNonCollapsablePropertyGrid {
+    .EezStudio_PropertyGrid {
+        td:first-child {
+            padding-left: 0 !important;
         }
     }
 }

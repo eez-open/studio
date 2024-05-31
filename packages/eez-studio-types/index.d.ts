@@ -534,6 +534,7 @@ export interface IWasmFlowRuntime {
     _createDateValue(value: number): number;
     _createBlobValue(bufferPtr: number, bufferLen: number): number;
     _createJsonValue(value: number): number;
+    _createErrorValue(): number;
 
     _arrayValueSetElementValue(arrayValuePtr: number, elementIndex: number, value: number): void;
 

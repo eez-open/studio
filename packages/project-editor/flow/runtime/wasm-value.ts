@@ -235,6 +235,10 @@ export function createWasmValue(
         return WasmFlowRuntime._createNullValue();
     }
 
+    if (value instanceof Error) {
+        return WasmFlowRuntime._createErrorValue();
+    }
+
     if (typeof value == "number") {
         if (
             Number.isInteger(value) &&
@@ -561,6 +565,8 @@ function getJSObjectID(
             jsObject
         });
         wasmModuleJSObjects.jsObjectIDs.set(jsObject, jsObjectID);
+
+        //console.log("no. of JS objects", wasmModuleJSObjects.jsObjects.size);
     }
     return jsObjectID;
 }

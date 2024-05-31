@@ -218,6 +218,77 @@ function operationJsonArrayLength(wasmModuleId: number, jsObjectID: number) {
     return -1; // error
 }
 
+function operationJsonArrayAppend(
+    wasmModuleId: number,
+    jsObjectID: number,
+    valuePtr: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        let array = getJSObjectFromID(jsObjectID, wasmModuleId);
+        if (array && Array.isArray(array)) {
+            return createWasmValue(WasmFlowRuntime, [
+                ...array,
+                getValue(WasmFlowRuntime, valuePtr).value
+            ]);
+        }
+    }
+
+    return createWasmValue(WasmFlowRuntime, Error()); // error
+}
+
+function operationJsonArrayInsert(
+    wasmModuleId: number,
+    jsObjectID: number,
+    position: number,
+    valuePtr: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        let array = getJSObjectFromID(jsObjectID, wasmModuleId);
+        if (array && Array.isArray(array)) {
+            if (position < 0) {
+                position = 0;
+            } else if (position > array.length) {
+                position = array.length;
+            }
+
+            const newArray = [
+                ...array.slice(0, position),
+                getValue(WasmFlowRuntime, valuePtr).value,
+                ...array.slice(position)
+            ];
+
+            return createWasmValue(WasmFlowRuntime, newArray);
+        }
+    }
+
+    return createWasmValue(WasmFlowRuntime, Error()); // error
+}
+
+function operationJsonArrayRemove(
+    wasmModuleId: number,
+    jsObjectID: number,
+    position: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        let array = getJSObjectFromID(jsObjectID, wasmModuleId);
+        if (array && Array.isArray(array)) {
+            if (position >= 0 && position < array.length) {
+                const newArray = [
+                    ...array.slice(0, position),
+                    ...array.slice(position + 1)
+                ];
+
+                return createWasmValue(WasmFlowRuntime, newArray);
+            }
+        }
+    }
+
+    return createWasmValue(WasmFlowRuntime, Error()); // error
+}
+
 function operationJsonClone(wasmModuleId: number, jsObjectID: number) {
     let value = undefined;
 
@@ -285,6 +356,9 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonGet = operationJsonGet;
 (global as any).operationJsonSet = operationJsonSet;
 (global as any).operationJsonArrayLength = operationJsonArrayLength;
+(global as any).operationJsonArrayAppend = operationJsonArrayAppend;
+(global as any).operationJsonArrayInsert = operationJsonArrayInsert;
+(global as any).operationJsonArrayRemove = operationJsonArrayRemove;
 (global as any).operationJsonClone = operationJsonClone;
 (global as any).operationJsonMake = operationJsonMake;
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
