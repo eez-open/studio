@@ -810,6 +810,7 @@ export class StructureField extends EezObject implements IStructureField {
             },
             variableTypeProperty
         ],
+        listLabel: () => "",
         check: (structureField: StructureField, messages: IMessage[]) => {
             if (!structureField.name) {
                 messages.push(propertyNotSetMessage(structureField, "name"));
@@ -1008,6 +1009,7 @@ export class EnumMember extends EezObject {
                 type: PropertyType.Number
             }
         ],
+        listLabel: () => "",
         check: (enumMember: EnumMember, messages: IMessage[]) => {
             if (!enumMember.name) {
                 messages.push(propertyNotSetMessage(enumMember, "name"));
