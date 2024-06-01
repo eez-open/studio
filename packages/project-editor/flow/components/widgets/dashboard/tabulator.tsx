@@ -30,11 +30,24 @@ import { observer } from "mobx-react";
 
 import classNames from "classnames";
 import { TABULATOR_ICON } from "project-editor/ui-components/icons";
-import { evalProperty } from "project-editor/flow/helper";
+import { evalProperty, evalPropertyWithType } from "project-editor/flow/helper";
 import { IDashboardComponentContext } from "eez-studio-types";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Button } from "eez-studio-ui/button";
-import { Message, getChildOfObject } from "project-editor/store";
+import {
+    Message,
+    ProjectStore,
+    createObject,
+    getChildOfObject
+} from "project-editor/store";
+import { IconAction } from "eez-studio-ui/action";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { humanize } from "eez-studio-shared/string";
+import {
+    getArrayElementTypeFromType,
+    getStructureFromType
+} from "project-editor/features/variable/value-type";
+import type { IStructure } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +69,55 @@ function getTabulator() {
 function openLink(url: string) {
     const { shell } = require("electron");
     shell.openExternal(url);
+}
+
+function getColumnsFromStructure(
+    structure: IStructure
+): Partial<TabulatorColumn>[] {
+    return structure.fields.map(field => {
+        return {
+            title: humanize(field.name),
+            field: field.name,
+            formatter: "plaintext"
+        };
+    });
+}
+
+function buildColumnsFromStructure(
+    structureName: string,
+    tabulatorOptions: TabulatorOptions,
+    projectStore: ProjectStore
+) {
+    const structure = projectStore.project.variables.structures.find(
+        structure => structure.name == structureName
+    );
+    if (!structure) {
+        return;
+    }
+
+    projectStore.undoManager.setCombineCommands(true);
+
+    if (tabulatorOptions.columns.length > 0) {
+        projectStore.deleteObjects(tabulatorOptions.columns);
+    }
+
+    for (const field of structure.fields) {
+        const columnProperties: Partial<TabulatorColumn> = {
+            title: humanize(field.name),
+            field: field.name,
+            formatter: "plaintext"
+        };
+
+        const column = createObject<TabulatorColumn>(
+            projectStore,
+            columnProperties,
+            TabulatorColumn
+        );
+
+        projectStore.addObject(tabulatorOptions.columns, column);
+    }
+
+    projectStore.undoManager.setCombineCommands(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,13 +151,15 @@ const TabulatorElement = observer(
         }
 
         get tableData() {
-            let data = evalProperty(
+            let valueWithType = evalPropertyWithType(
                 this.props.flowContext,
                 this.props.widget,
                 "data"
             );
 
-            if (!Array.isArray(data)) {
+            let data = valueWithType?.value;
+
+            if (!data || !Array.isArray(data)) {
                 return undefined;
             }
 
@@ -110,7 +174,10 @@ const TabulatorElement = observer(
                 });
             });
 
-            return data;
+            return {
+                data,
+                valueType: valueWithType?.valueType ?? ("any" as const)
+            };
         }
 
         get tableConfiguration() {
@@ -128,9 +195,34 @@ const TabulatorElement = observer(
         }
 
         get options(): TabulatorModule.Options {
+            const tableData = this.tableData;
+
             let configuration = this.tableConfiguration;
 
             const widgetOptions = this.props.widget.options.tabulatorOptions;
+
+            if (widgetOptions.autoColumns) {
+                if (tableData) {
+                    const elementType = getArrayElementTypeFromType(
+                        tableData.valueType
+                    );
+
+                    if (elementType) {
+                        const structure = getStructureFromType(
+                            this.props.flowContext.projectStore.project,
+                            elementType
+                        );
+                        if (structure) {
+                            widgetOptions.columns =
+                                TabulatorOptions.getColumnsDefinition(
+                                    getColumnsFromStructure(structure)
+                                );
+
+                            widgetOptions.autoColumns = false;
+                        }
+                    }
+                }
+            }
 
             // persistence
             if (this.props.flowContext.flowState) {
@@ -153,7 +245,7 @@ const TabulatorElement = observer(
 
             const options: TabulatorModule.Options = Object.assign(
                 {
-                    data: this.tableData
+                    data: tableData?.data
                 },
                 widgetOptions,
                 configuration
@@ -489,7 +581,64 @@ class TabulatorOptions extends EezObject {
                 type: PropertyType.Array,
                 typeClass: TabulatorColumn,
                 defaultValue: [],
-                disabled: (options: TabulatorOptions) => options.autoColumns
+                disabled: (options: TabulatorOptions) => options.autoColumns,
+                arrayPropertyEditorAdditionalButtons: (
+                    tabulatorOptions: TabulatorOptions,
+                    propertyInfo,
+                    projectStore
+                ) => {
+                    if (projectStore.project.variables.structures.length == 0) {
+                        return [];
+                    }
+                    return [
+                        <IconAction
+                            key="build-from-structure"
+                            icon={
+                                <svg viewBox="0 0 20 20">
+                                    <path d="M15 9h-3v2h3v3h2v-3h3V9h-3V6h-2v3zM0 3h10v2H0V3zm0 8h10v2H0v-2zm0-4h10v2H0V7zm0 8h10v2H0v-2z" />
+                                </svg>
+                            }
+                            iconSize={16}
+                            onClick={event => {
+                                event.preventDefault();
+
+                                (async () => {
+                                    const result = await showGenericDialog({
+                                        dialogDefinition: {
+                                            title: "Select Structure",
+                                            fields: [
+                                                {
+                                                    name: "structure",
+                                                    type: "enum",
+                                                    enumItems:
+                                                        projectStore.project.variables.structures.map(
+                                                            structure => ({
+                                                                id: structure.name,
+                                                                label: structure.name
+                                                            })
+                                                        )
+                                                }
+                                            ]
+                                        },
+                                        values: {
+                                            structure:
+                                                projectStore.project.variables
+                                                    .structures[0].name
+                                        },
+                                        dialogContext: projectStore.project
+                                    });
+
+                                    buildColumnsFromStructure(
+                                        result.values.structure,
+                                        tabulatorOptions,
+                                        projectStore
+                                    );
+                                })();
+                            }}
+                            title="Build From Structure Definition"
+                        />
+                    ];
+                }
             },
             {
                 name: "pagination",
@@ -538,6 +687,25 @@ class TabulatorOptions extends EezObject {
         });
     }
 
+    static getColumnsDefinition(columns: Partial<TabulatorColumn>[]) {
+        return columns.map(column => {
+            const options = {
+                title: column.title!,
+                field: column.field!,
+                formatter: column.formatter
+            };
+
+            if (column.advanced) {
+                try {
+                    const advanced = JSON.parse(column.advanced);
+                    Object.assign(options, advanced);
+                } catch (err) {}
+            }
+
+            return options;
+        });
+    }
+
     get tabulatorOptions() {
         const options: TabulatorModule.Options = {
             layout: this.layout,
@@ -547,20 +715,9 @@ class TabulatorOptions extends EezObject {
         };
 
         if (!this.autoColumns) {
-            options.columns = this.columns.map(column => {
-                const options = {
-                    title: column.title,
-                    field: column.field,
-                    formatter: column.formatter
-                };
-
-                try {
-                    const advanced = JSON.parse(column.advanced);
-                    Object.assign(options, advanced);
-                } catch (err) {}
-
-                return options;
-            });
+            options.columns = TabulatorOptions.getColumnsDefinition(
+                this.columns
+            );
         }
 
         return options;
@@ -626,6 +783,7 @@ export class TabulatorWidget extends Widget {
             width: 320,
             height: 320,
             options: {
+                layout: "fitColumns",
                 headerVisible: true,
                 autoColumns: true
             }

@@ -41,7 +41,11 @@ import {
     evalExpression,
     IExpressionContext
 } from "project-editor/flow/expression";
-import type { IObjectVariableValue, ValueType } from "eez-studio-types";
+import type {
+    IObjectVariableValue,
+    ValueType,
+    ValueWithType
+} from "eez-studio-types";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -793,6 +797,12 @@ export abstract class RuntimeBase {
         widget: Widget,
         propertyName: string
     ): any;
+
+    abstract evalPropertyWithType(
+        flowState: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ): ValueWithType | undefined;
 
     cleanupFlowStatesTimeout: any;
 

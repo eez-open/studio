@@ -44,6 +44,39 @@ export function evalProperty(
         }
     }
 }
+
+export function evalPropertyWithType(
+    flowContext: IFlowContext,
+    widget: Widget,
+    propertyName: string
+) {
+    let expr = getProperty(widget, propertyName);
+    if (!expr) {
+        return undefined;
+    }
+
+    if (flowContext.flowState) {
+        if (flowContext.projectStore.runtime) {
+            return flowContext.projectStore.runtime.evalPropertyWithType(
+                flowContext,
+                widget,
+                propertyName
+            );
+        } else {
+            return undefined;
+        }
+    } else {
+        try {
+            return evalConstantExpression(
+                flowContext.projectStore.project,
+                expr
+            );
+        } catch (err) {
+            return undefined;
+        }
+    }
+}
+
 export function getBooleanValue(
     flowContext: IFlowContext,
     widget: Widget,

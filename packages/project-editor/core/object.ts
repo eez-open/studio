@@ -258,6 +258,12 @@ export interface PropertyInfo {
     hideInDocumentation?: "widget" | "action" | "all" | "none";
 
     getInstrumentId?: (parentObject: IEezObject) => string | undefined;
+
+    arrayPropertyEditorAdditionalButtons?: (
+        parentObject: IEezObject,
+        propertyInfo: PropertyInfo,
+        projectStore: ProjectStore
+    ) => React.ReactNode[];
 }
 
 export type InheritedValue =

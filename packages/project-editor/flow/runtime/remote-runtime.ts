@@ -11,7 +11,7 @@ import type { ConnectionParameters } from "instrument/connection/interface";
 import type { WebSimulatorMessageDispatcher } from "instrument/connection/connection-renderer";
 import type { ConnectionBase } from "instrument/connection/connection-base";
 
-import type { AssetsMap, ValueType } from "eez-studio-types";
+import type { AssetsMap, ValueType, ValueWithType } from "eez-studio-types";
 
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
 import { Flow } from "project-editor/flow/flow";
@@ -561,6 +561,18 @@ export class RemoteRuntime extends RuntimeBase {
     ) {
         let expr = getProperty(widget, propertyName);
         return evalExpression(flowContext, widget, expr);
+    }
+
+    evalPropertyWithType(
+        flowContext: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ): ValueWithType | undefined {
+        let expr = getProperty(widget, propertyName);
+        return {
+            value: evalExpression(flowContext, widget, expr),
+            valueType: "any" as const
+        };
     }
 }
 

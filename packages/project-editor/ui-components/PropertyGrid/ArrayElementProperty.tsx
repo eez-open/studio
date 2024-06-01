@@ -131,19 +131,34 @@ export const ArrayProperty = observer(
         });
 
         render() {
+            const buttons = [];
+
+            if (this.objects.length == 0) {
+                buttons.push(
+                    <IconAction
+                        key="add"
+                        icon="material:add"
+                        iconSize={16}
+                        onClick={this.onAdd}
+                        title="Add item"
+                    />
+                );
+            }
+
+            if (this.props.propertyInfo.arrayPropertyEditorAdditionalButtons) {
+                buttons.push(
+                    ...this.props.propertyInfo.arrayPropertyEditorAdditionalButtons(
+                        this.props.objects[0],
+                        this.props.propertyInfo,
+                        this.context
+                    )
+                );
+            }
+
             const toolbar = (
                 <div className="d-flex justify-content-between EezStudio_ArrayPropertyToolbar">
                     <PropertyName {...this.props} />
-                    <Toolbar>
-                        {this.objects.length == 0 && (
-                            <IconAction
-                                icon="material:add"
-                                iconSize={16}
-                                onClick={this.onAdd}
-                                title="Add item"
-                            />
-                        )}
-                    </Toolbar>
+                    <Toolbar>{buttons}</Toolbar>
                 </div>
             );
 

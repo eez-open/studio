@@ -107,4 +107,16 @@ export class DebugInfoRuntime extends RuntimeBase {
         let expr = getProperty(widget, propertyName);
         return evalExpression(flowContext, widget, expr);
     }
+
+    evalPropertyWithType(
+        flowContext: IFlowContext,
+        widget: Widget,
+        propertyName: string
+    ) {
+        let expr = getProperty(widget, propertyName);
+        return {
+            value: evalExpression(flowContext, widget, expr),
+            valueType: "any" as const
+        };
+    }
 }

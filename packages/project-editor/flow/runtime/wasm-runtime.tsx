@@ -1043,6 +1043,18 @@ export class WasmRuntime extends RemoteRuntime {
         );
     }
 
+    evalPropertyWithType(
+        flowContext: IFlowContext,
+        component: Component,
+        propertyName: string
+    ) {
+        return this.componentProperties.evalPropertyWithType(
+            flowContext,
+            component,
+            propertyName
+        );
+    }
+
     executeWidgetAction(
         flowContext: IFlowContext,
         widget: Widget,
@@ -1480,7 +1492,7 @@ class ComponentProperties {
         this.nextPropertyValueIndex = 0;
     }
 
-    evalProperty(
+    evalPropertyWithType(
         flowContext: IFlowContext,
         component: Component,
         propertyName: string
@@ -1598,10 +1610,26 @@ class ComponentProperties {
 
         if (propertyValueIndex < this.propertyValues.length) {
             // get evaluated value
-            return this.propertyValues[propertyValueIndex].get().value;
+            return this.propertyValues[propertyValueIndex].get();
         }
 
         // not evaluated yet
+        return undefined;
+    }
+
+    evalProperty(
+        flowContext: IFlowContext,
+        component: Component,
+        propertyName: string
+    ) {
+        const result = this.evalPropertyWithType(
+            flowContext,
+            component,
+            propertyName
+        );
+        if (result) {
+            return result.value;
+        }
         return undefined;
     }
 
