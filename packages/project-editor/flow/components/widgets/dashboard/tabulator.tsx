@@ -17,7 +17,8 @@ import {
     ClassInfo,
     PropertyProps,
     IMessage,
-    MessageType
+    MessageType,
+    WidgetEvents
 } from "project-editor/core/object";
 
 import {
@@ -45,9 +46,38 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { humanize } from "eez-studio-shared/string";
 import {
     getArrayElementTypeFromType,
+    getEnumFromType,
     getStructureFromType
 } from "project-editor/features/variable/value-type";
 import type { IStructure } from "project-editor/features/variable/variable";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const TABULATOR_EVENTS: {
+    [eezEventName: string]: {
+        tabulatorEventName: keyof TabulatorModule.EventCallBackMethods;
+        tabulatorToEezEventData: (data: any) => any;
+    };
+} = {
+    ON_DATA_CHANGED: {
+        tabulatorEventName: "dataChanged",
+        tabulatorToEezEventData: (data: any) => data
+    },
+    ON_ROW_SELECTED: {
+        tabulatorEventName: "rowSelected",
+        tabulatorToEezEventData: (row: TabulatorModule.RowComponent) => ({
+            index: row.getTable().rowManager.rows.indexOf((row as any)._row),
+            position: row.getPosition()
+        })
+    },
+    ON_ROW_DESELECTED: {
+        tabulatorEventName: "rowDeselected",
+        tabulatorToEezEventData: (row: TabulatorModule.RowComponent) => ({
+            index: row.getTable().rowManager.rows.indexOf((row as any)._row),
+            position: row.getPosition()
+        })
+    }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,14 +102,39 @@ function openLink(url: string) {
 }
 
 function getColumnsFromStructure(
+    projectStore: ProjectStore,
     structure: IStructure
-): Partial<TabulatorColumn>[] {
+): TabulatorColumn[] {
     return structure.fields.map(field => {
-        return {
-            title: humanize(field.name),
-            field: field.name,
-            formatter: "plaintext"
-        };
+        const enumType = getEnumFromType(projectStore.project, field.type);
+
+        const column = new TabulatorColumn();
+
+        column.title = humanize(field.name);
+        column.field = field.name;
+
+        if (enumType) {
+            const params: any = {};
+
+            enumType.members.forEach(
+                enumMember =>
+                    (params[enumMember.value.toString()] = enumMember.name)
+            );
+
+            column.formatter = "lookup";
+            column.formatterParams = JSON.stringify(params, undefined, 2);
+
+            column.editor = "list";
+            column.editorParams = JSON.stringify(
+                { values: params },
+                undefined,
+                2
+            );
+        } else {
+            column.formatter = "plaintext";
+        }
+
+        return column;
     });
 }
 
@@ -101,13 +156,9 @@ function buildColumnsFromStructure(
         projectStore.deleteObjects(tabulatorOptions.columns);
     }
 
-    for (const field of structure.fields) {
-        const columnProperties: Partial<TabulatorColumn> = {
-            title: humanize(field.name),
-            field: field.name,
-            formatter: "plaintext"
-        };
+    const columns = getColumnsFromStructure(projectStore, structure);
 
+    for (const columnProperties of columns) {
         const column = createObject<TabulatorColumn>(
             projectStore,
             columnProperties,
@@ -215,7 +266,10 @@ const TabulatorElement = observer(
                         if (structure) {
                             widgetOptions.columns =
                                 TabulatorOptions.getColumnsDefinition(
-                                    getColumnsFromStructure(structure)
+                                    getColumnsFromStructure(
+                                        this.props.flowContext.projectStore,
+                                        structure
+                                    )
                                 );
 
                             widgetOptions.autoColumns = false;
@@ -297,14 +351,14 @@ const TabulatorElement = observer(
             return div.innerHTML;
         }
 
-        onDataChanged = (data: any[]) => {
+        triggerEvent(eventName: string, data: any) {
             const { flowContext, widget } = this.props;
 
             if (
                 !flowContext.projectStore.runtime ||
                 !flowContext.projectStore.projectTypeTraits.isDashboard ||
                 !widget.eventHandlers.find(
-                    eventHandler => eventHandler.eventName == "ON_DATA_CHANGED"
+                    eventHandler => eventHandler.eventName == eventName
                 )
             ) {
                 return undefined;
@@ -314,24 +368,42 @@ const TabulatorElement = observer(
                 flowContext.projectStore.runtime.executeWidgetAction(
                     flowContext,
                     widget,
-                    "ON_DATA_CHANGED",
+                    eventName,
                     data,
                     `json`
                 );
             }
-        };
+        }
 
         async createTabulator(el: HTMLDivElement) {
-            if (this.tabulator) {
-                this.tabulator.off("dataChanged", this.onDataChanged);
-                this.tabulator.destroy();
-            }
-
             const Tabulator = getTabulator();
 
             this.tabulator = new Tabulator(el, this.options);
 
-            this.tabulator.on("dataChanged", this.onDataChanged);
+            const { flowContext, widget } = this.props;
+
+            // register event handlers
+            const runtime = flowContext.projectStore.runtime;
+            if (runtime) {
+                widget.eventHandlers.forEach(eventHandler => {
+                    const eezEventName = eventHandler.eventName;
+                    const tabulatorEvent =
+                        TABULATOR_EVENTS[eventHandler.eventName];
+
+                    this.tabulator.on(
+                        tabulatorEvent.tabulatorEventName,
+                        (data: any) => {
+                            runtime.executeWidgetAction(
+                                flowContext,
+                                widget,
+                                eezEventName,
+                                tabulatorEvent.tabulatorToEezEventData(data),
+                                `json`
+                            );
+                        }
+                    );
+                });
+            }
 
             const flowState = this.props.flowContext.flowState;
             if (flowState) {
@@ -360,12 +432,6 @@ const TabulatorElement = observer(
         async componentDidUpdate() {
             if (this.ref.current) {
                 this.createTabulator(this.ref.current);
-            }
-        }
-
-        componentWillUnmount(): void {
-            if (this.tabulator) {
-                this.tabulator.off("dataChanged", this.onDataChanged);
             }
         }
 
@@ -435,30 +501,49 @@ const CopyOptionsButton = observer(
     }
 );
 
+const FORMATTERS = [
+    "plaintext",
+    "textarea",
+    "html",
+    "money",
+    "image",
+    "datetime",
+    "datetimediff",
+    "link",
+    "tickCross",
+    "color",
+    "star",
+    "traffic",
+    "progress",
+    "lookup",
+    "buttonTick",
+    "buttonCross",
+    "rownum",
+    "handle",
+    "rowSelection",
+    "responsiveCollapse"
+] as const;
+
+const EDITORS = [
+    "input",
+    "textarea",
+    "number",
+    "range",
+    "tickCross",
+    "star",
+    "list",
+    "date",
+    "time",
+    "datetime"
+] as const;
+
 class TabulatorColumn extends EezObject {
     title: string;
     field: string;
-    formatter:
-        | "plaintext"
-        | "textarea"
-        | "html"
-        | "money"
-        | "image"
-        | "datetime"
-        | "datetimediff"
-        | "link"
-        | "tickCross"
-        | "color"
-        | "star"
-        | "traffic"
-        | "progress"
-        | "lookup"
-        | "buttonTick"
-        | "buttonCross"
-        | "rownum"
-        | "handle"
-        | "rowSelection"
-        | "responsiveCollapse";
+    formatter: (typeof FORMATTERS)[number];
+    formatterParams: string;
+    editor: (typeof EDITORS)[number];
+    editorParams: string;
     advanced: string;
 
     static classInfo: ClassInfo = {
@@ -475,35 +560,38 @@ class TabulatorColumn extends EezObject {
             {
                 name: "formatter",
                 type: PropertyType.Enum,
-                enumItems: [
-                    { id: "plaintext" },
-                    { id: "textarea" },
-                    { id: "html" },
-                    { id: "money" },
-                    { id: "image" },
-                    { id: "datetime" },
-                    { id: "datetimediff" },
-                    { id: "link" },
-                    { id: "tickCross" },
-                    { id: "color" },
-                    { id: "star" },
-                    { id: "traffic" },
-                    { id: "progress" },
-                    { id: "lookup" },
-                    { id: "buttonTick" },
-                    { id: "buttonCross" },
-                    { id: "rownum" },
-                    { id: "handle" },
-                    { id: "rowSelection" },
-                    { id: "responsiveCollapse" }
-                ]
+                enumItems: FORMATTERS.slice()
+                    .sort()
+                    .map(id => ({
+                        id
+                    }))
+            },
+            {
+                name: "formatterParams",
+                type: PropertyType.JSON
+            },
+            {
+                name: "editor",
+                type: PropertyType.Enum,
+                enumItems: EDITORS.slice()
+                    .sort()
+                    .map(id => ({
+                        id
+                    }))
+            },
+            {
+                name: "editorParams",
+                type: PropertyType.JSON
             },
             {
                 name: "advanced",
                 type: PropertyType.JSON
             }
         ],
-        defaultValue: {},
+        defaultValue: {
+            formatter: "auto",
+            editor: "plaintext"
+        },
         check: (column: TabulatorColumn, messages: IMessage[]) => {
             if (column.advanced) {
                 try {
@@ -528,8 +616,50 @@ class TabulatorColumn extends EezObject {
             title: observable,
             field: observable,
             formatter: observable,
+            formatterParams: observable,
+            editor: observable,
+            editorParams: observable,
             advanced: observable
         });
+    }
+
+    getColumnDefinition(): TabulatorModule.ColumnDefinition {
+        const columnDefinition: TabulatorModule.ColumnDefinition = {
+            title: this.title,
+            field: this.field,
+            formatter: this.formatter,
+            editor: this.editor
+        };
+
+        if (this.advanced) {
+            try {
+                const advanced = JSON.parse(this.advanced);
+                Object.assign(columnDefinition, advanced);
+            } catch (err) {}
+        }
+
+        if (this.formatterParams) {
+            try {
+                const formatterParams = JSON.parse(this.formatterParams);
+                columnDefinition.formatterParams = formatterParams;
+            } catch (err) {}
+        }
+
+        if (this.editorParams) {
+            try {
+                const editorParams = JSON.parse(this.editorParams);
+                columnDefinition.editorParams = editorParams;
+            } catch (err) {}
+        }
+
+        if (this.advanced) {
+            try {
+                const advanced = JSON.parse(this.advanced);
+                Object.assign(columnDefinition, advanced);
+            } catch (err) {}
+        }
+
+        return columnDefinition;
     }
 }
 
@@ -687,23 +817,8 @@ class TabulatorOptions extends EezObject {
         });
     }
 
-    static getColumnsDefinition(columns: Partial<TabulatorColumn>[]) {
-        return columns.map(column => {
-            const options = {
-                title: column.title!,
-                field: column.field!,
-                formatter: column.formatter
-            };
-
-            if (column.advanced) {
-                try {
-                    const advanced = JSON.parse(column.advanced);
-                    Object.assign(options, advanced);
-                } catch (err) {}
-            }
-
-            return options;
-        });
+    static getColumnsDefinition(columns: TabulatorColumn[]) {
+        return columns.map(column => column.getColumnDefinition());
     }
 
     get tabulatorOptions() {
@@ -839,12 +954,17 @@ export class TabulatorWidget extends Widget {
             }
         },
 
-        widgetEvents: {
-            ON_DATA_CHANGED: {
-                code: 1,
-                paramExpressionType: `json`
-            }
-        }
+        widgetEvents: (() => {
+            const widgetEvents: WidgetEvents = {};
+
+            Object.keys(TABULATOR_EVENTS).forEach((eezEvent, i) => {
+                widgetEvents[eezEvent] = {
+                    code: i + 1,
+                    paramExpressionType: "json"
+                };
+            });
+            return widgetEvents;
+        })()
     });
 
     options: TabulatorOptions;
