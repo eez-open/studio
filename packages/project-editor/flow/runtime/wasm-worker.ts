@@ -308,6 +308,29 @@ function operationJsonMake(wasmModuleId: number) {
     return createWasmValue(WasmFlowRuntime, {});
 }
 
+function convertFromJson(
+    wasmModuleId: number,
+    jsObjectID: number,
+    toValueTypeIndex: number
+) {
+    let value = undefined;
+
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        value = getJSObjectFromID(jsObjectID, wasmModuleId);
+    }
+
+    return createWasmValue(WasmFlowRuntime, value, toValueTypeIndex);
+}
+
+function convertToJson(wasmModuleId: number, valuePtr: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    return createWasmValue(
+        WasmFlowRuntime,
+        getValue(WasmFlowRuntime, valuePtr).value
+    );
+}
+
 function dashboardObjectValueIncRef(wasmModuleId: number, jsObjectID: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (WasmFlowRuntime) {
@@ -361,6 +384,8 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonArrayRemove = operationJsonArrayRemove;
 (global as any).operationJsonClone = operationJsonClone;
 (global as any).operationJsonMake = operationJsonMake;
+(global as any).convertFromJson = convertFromJson;
+(global as any).convertToJson = convertToJson;
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;

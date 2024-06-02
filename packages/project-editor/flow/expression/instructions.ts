@@ -9,6 +9,8 @@ const EXPR_EVAL_INSTRUCTION_TYPE_PUSH_OUTPUT = 4 << 13;
 const EXPR_EVAL_INSTRUCTION_ARRAY_ELEMENT = 5 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_OPERATION = 6 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_END = 7 << 13;
+const EXPR_EVAL_INSTRUCTION_TYPE_END_WITH_DST_VALUE_TYPE =
+    (7 << 13) | (1 << 12);
 
 export function makePushConstantInstruction(
     assets: Assets,
@@ -47,4 +49,17 @@ export function makeOperationInstruction(operationIndex: number) {
 
 export function makeEndInstruction() {
     return EXPR_EVAL_INSTRUCTION_TYPE_END;
+}
+
+export function makeEndInstructionWithType(
+    assets: Assets,
+    valueType: ValueType
+) {
+    const valueTypeIndex = assets.getTypeIndex(valueType);
+
+    return [
+        EXPR_EVAL_INSTRUCTION_TYPE_END_WITH_DST_VALUE_TYPE,
+        valueTypeIndex & 0xffff,
+        valueTypeIndex >> 16
+    ];
 }

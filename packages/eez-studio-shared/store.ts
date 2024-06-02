@@ -316,7 +316,7 @@ export function createStore({
                 ","
             )} FROM "${storeName}" WHERE id = ?`;
 
-            const row = db.prepare(query).get(object.id);
+            const row: any = db.prepare(query).get(object.id);
             map(propertyNames, propertyName => {
                 undoValues.push(row[propertyName]);
                 let type = properties[propertyName];
@@ -694,7 +694,7 @@ export function createStore({
                         `SELECT * FROM versions WHERE tableName = '${versionTable.tableName}'`
                     );
                 }
-                const versionRow = versionRows.get();
+                const versionRow: any = versionRows.get();
                 if (versionRow !== undefined) {
                     version = versionRow.version;
                     break;

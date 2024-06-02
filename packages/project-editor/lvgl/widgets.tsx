@@ -2778,7 +2778,9 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         let userWidgetPageCopy: Page | undefined = undefined;
 
         // WORKAROUND: undoManager.commands.length is used to detect if the page was modified
-        projectStore.undoManager.commands.length;
+        if (projectStore.undoManager) {
+            projectStore.undoManager.commands.length;
+        }
 
         // runInAction is needed to avoid observing copied page
         runInAction(() => {

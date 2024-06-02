@@ -22,7 +22,8 @@ import {
     makePushOutputInstruction,
     makeArrayElementInstruction,
     makeOperationInstruction,
-    makeEndInstruction
+    makeEndInstruction,
+    makeEndInstructionWithType
 } from "./instructions";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
@@ -132,7 +133,9 @@ export function buildAssignableExpression(
 
     const instructions = buildExpressionNode(assets, component, rootNode, true);
 
-    instructions.push(makeEndInstruction());
+    instructions.push(
+        ...makeEndInstructionWithType(assets, rootNode.valueType)
+    );
 
     instructions.forEach(instruction =>
         dataBuffer.writeUint16NonAligned(instruction)
