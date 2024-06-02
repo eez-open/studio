@@ -1984,6 +1984,7 @@ const LONG_MODE_CODES = {
 
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
+    previewValue: string;
     textType: LVGLPropertyType;
     longMode: keyof typeof LONG_MODE_CODES;
     recolor: boolean;
@@ -2018,6 +2019,14 @@ export class LVGLLabelWidget extends LVGLWidget {
                     propertyGridGroup: specificGroup
                 }
             ),
+            {
+                name: "previewValue",
+                type: PropertyType.String,
+                disabled: (widget: LVGLLabelWidget) => {
+                    return widget.textType == "literal";
+                },
+                propertyGridGroup: specificGroup
+            },
             {
                 name: "longMode",
                 type: PropertyType.Enum,
@@ -2109,7 +2118,8 @@ export class LVGLLabelWidget extends LVGLWidget {
             text: observable,
             textType: observable,
             longMode: observable,
-            recolor: observable
+            recolor: observable,
+            previewValue: observable
         });
     }
 
@@ -2138,11 +2148,13 @@ export class LVGLLabelWidget extends LVGLWidget {
                 ? 0
                 : runtime.wasm.allocateUTF8(
                       this.textType == "expression"
-                          ? getExpressionPropertyInitalValue(
-                                runtime,
-                                this,
-                                "text"
-                            )
+                          ? this.previewValue
+                              ? unescapeText(this.previewValue)
+                              : getExpressionPropertyInitalValue(
+                                    runtime,
+                                    this,
+                                    "text"
+                                )
                           : unescapeText(this.text)
                   ),
             LONG_MODE_CODES[this.longMode],
