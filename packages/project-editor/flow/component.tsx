@@ -2378,14 +2378,19 @@ export class Component extends EezObject {
 ////////////////////////////////////////////////////////////////////////////////
 
 function getWidgetEvents(object: IEezObject) {
-    return (
-        getClassInfo(
-            getAncestorOfType<Widget>(
-                object,
-                ProjectEditor.WidgetClass.classInfo
-            )!
-        ).widgetEvents || {}
-    );
+    const widgetEvents = getClassInfo(
+        getAncestorOfType<Widget>(object, ProjectEditor.WidgetClass.classInfo)!
+    ).widgetEvents;
+
+    if (!widgetEvents) {
+        return {};
+    }
+
+    if (typeof widgetEvents == "function") {
+        return widgetEvents(object);
+    }
+
+    return widgetEvents;
 }
 
 function getEventEnumItems(
@@ -2778,7 +2783,10 @@ export class Widget extends Component {
 
             const classInfo = getClassInfo(object);
 
-            if (classInfo.widgetEvents) {
+            if (
+                classInfo.widgetEvents &&
+                typeof classInfo.widgetEvents == "object"
+            ) {
                 if (jsObject.action) {
                     for (const eventName of Object.keys(
                         classInfo.widgetEvents
@@ -3202,14 +3210,12 @@ export class Widget extends Component {
     }
 
     getDefaultActionEventName() {
-        const classInfo = getClassInfo(this);
+        const widgetEvents = getWidgetEvents(this);
 
-        if (classInfo.widgetEvents) {
-            for (const eventName of Object.keys(classInfo.widgetEvents)) {
-                const eventDef = classInfo.widgetEvents[eventName];
-                if (eventDef.oldName == "action") {
-                    return eventName;
-                }
+        for (const eventName of Object.keys(widgetEvents)) {
+            const eventDef = widgetEvents[eventName];
+            if (eventDef.oldName == "action") {
+                return eventName;
             }
         }
 

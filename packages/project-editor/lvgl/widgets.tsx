@@ -104,7 +104,6 @@ import {
     getCode,
     getExpressionPropertyData,
     LV_EVENT_METER_TICK_LABEL_EVENT,
-    LVGL_EVENTS,
     getExpressionPropertyInitalValue,
     unescapeText
 } from "project-editor/lvgl/widget-common";
@@ -139,6 +138,7 @@ import { visitObjects } from "project-editor/core/search";
 import { validators } from "eez-studio-shared/validation";
 import {
     getLvglCoordTypeShift,
+    getLvglEvents,
     getLvglFlagCodes,
     lvglHasLabelRecolorSupport
 } from "project-editor/lvgl/lvgl-versions";
@@ -973,7 +973,7 @@ export class LVGLWidget extends Widget {
 
         showTreeCollapseIcon: "has-children",
 
-        widgetEvents: LVGL_EVENTS
+        widgetEvents: (widget: LVGLWidget) => getLvglEvents(widget)
     });
 
     constructor() {

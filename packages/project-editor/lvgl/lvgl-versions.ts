@@ -3,10 +3,18 @@ import { resolve } from "path";
 import { getTempDirPath, isDev } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 
-import { LVGL_FLAG_CODES, type IEezObject } from "project-editor/core/object";
+import {
+    LVGL_FLAG_CODES,
+    WidgetEvents,
+    type IEezObject
+} from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap, BitmapData } from "project-editor/features/bitmap/bitmap";
 import type { IWasmFlowRuntime } from "eez-studio-types";
+import {
+    LV_EVENT_CHECKED,
+    LV_EVENT_UNCHECKED
+} from "project-editor/lvgl/widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -372,7 +380,27 @@ const versions = {
             return LVGL_FLAG_CODES;
         },
 
-        defaultFontBpp: 8
+        defaultFontBpp: 8,
+
+        LVGL_EVENTS: {
+            PRESSED: { code: 1, paramExpressionType: "null" },
+            PRESS_LOST: { code: 3, paramExpressionType: "null" },
+            RELEASED: { code: 8, paramExpressionType: "null" },
+            CLICKED: { code: 7, paramExpressionType: "null" },
+            LONG_PRESSED: { code: 5, paramExpressionType: "null" },
+            LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
+            FOCUSED: { code: 14, paramExpressionType: "null" },
+            DEFOCUSED: { code: 15, paramExpressionType: "null" },
+            VALUE_CHANGED: { code: 28, paramExpressionType: "null" },
+            READY: { code: 31, paramExpressionType: "null" },
+            CANCEL: { code: 32, paramExpressionType: "null" },
+            SCREEN_LOADED: { code: 39, paramExpressionType: "null" },
+            SCREEN_UNLOADED: { code: 40, paramExpressionType: "null" },
+            SCREEN_LOAD_START: { code: 38, paramExpressionType: "null" },
+            SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
+            CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
+            UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
+        } as WidgetEvents
     },
     "9.0": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v9.0.js",
@@ -579,7 +607,27 @@ const versions = {
             return LVGL_FLAG_CODES_90;
         },
 
-        defaultFontBpp: 4
+        defaultFontBpp: 4,
+
+        LVGL_EVENTS: {
+            PRESSED: { code: 1, paramExpressionType: "null" },
+            PRESS_LOST: { code: 3, paramExpressionType: "null" },
+            RELEASED: { code: 8, paramExpressionType: "null" },
+            CLICKED: { code: 7, paramExpressionType: "null" },
+            LONG_PRESSED: { code: 5, paramExpressionType: "null" },
+            LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
+            FOCUSED: { code: 15, paramExpressionType: "null" },
+            DEFOCUSED: { code: 16, paramExpressionType: "null" },
+            VALUE_CHANGED: { code: 29, paramExpressionType: "null" },
+            READY: { code: 32, paramExpressionType: "null" },
+            CANCEL: { code: 33, paramExpressionType: "null" },
+            SCREEN_LOADED: { code: 41, paramExpressionType: "null" },
+            SCREEN_UNLOADED: { code: 42, paramExpressionType: "null" },
+            SCREEN_LOAD_START: { code: 40, paramExpressionType: "null" },
+            SCREEN_UNLOAD_START: { code: 39, paramExpressionType: "null" },
+            CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
+            UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
+        } as WidgetEvents
     }
 };
 
@@ -683,4 +731,8 @@ export function getLvglFlagCodes(object: IEezObject) {
 
 export function getLvglDefaultFontBpp(object: IEezObject) {
     return getVersionProperty(object, "defaultFontBpp");
+}
+
+export function getLvglEvents(object: IEezObject) {
+    return getVersionProperty(object, "LVGL_EVENTS");
 }

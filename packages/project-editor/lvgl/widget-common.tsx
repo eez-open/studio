@@ -20,7 +20,6 @@ import {
     LVGLPageEditorRuntime,
     type LVGLPageRuntime
 } from "project-editor/lvgl/page-runtime";
-import type { WidgetEvents } from "project-editor/core/object";
 import { evalConstantExpression } from "project-editor/flow/expression";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,26 +34,6 @@ export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
 export const LV_EVENT_CHECKED = 0x7e;
 export const LV_EVENT_UNCHECKED = 0x7f;
-
-export const LVGL_EVENTS: WidgetEvents = {
-    PRESSED: { code: 1, paramExpressionType: "null" },
-    PRESS_LOST: { code: 3, paramExpressionType: "null" },
-    RELEASED: { code: 8, paramExpressionType: "null" },
-    CLICKED: { code: 7, paramExpressionType: "null" },
-    LONG_PRESSED: { code: 5, paramExpressionType: "null" },
-    LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
-    FOCUSED: { code: 14, paramExpressionType: "null" },
-    DEFOCUSED: { code: 15, paramExpressionType: "null" },
-    VALUE_CHANGED: { code: 28, paramExpressionType: "null" },
-    READY: { code: 31, paramExpressionType: "null" },
-    CANCEL: { code: 32, paramExpressionType: "null" },
-    SCREEN_LOADED: { code: 39, paramExpressionType: "null" },
-    SCREEN_UNLOADED: { code: 40, paramExpressionType: "null" },
-    SCREEN_LOAD_START: { code: 38, paramExpressionType: "null" },
-    SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
-    CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
-    UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
