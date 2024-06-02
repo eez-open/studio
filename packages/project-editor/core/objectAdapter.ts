@@ -501,13 +501,15 @@ export class TreeObjectAdapter {
     canPaste() {
         let text = pasteFromClipboard();
         if (text) {
-            let serializedData = clipboardDataToObject(
-                ProjectEditor.getProjectStore(this.object),
-                text
-            );
-            if (serializedData) {
-                return true;
-            }
+            try {
+                let serializedData = clipboardDataToObject(
+                    ProjectEditor.getProjectStore(this.object),
+                    text
+                );
+                if (serializedData) {
+                    return true;
+                }
+            } catch (err) {}
         }
 
         return false;
