@@ -1033,7 +1033,9 @@ export const FlowEditor = observer(
                 let object: EezObject;
                 if (
                     flow instanceof ProjectEditor.PageClass &&
-                    flow.lvglScreenWidget
+                    flow.lvglScreenWidget &&
+                    this.flowContext.dragComponent instanceof
+                        ProjectEditor.LVGLWidgetClass
                 ) {
                     object = this.context.addObject(
                         flow.lvglScreenWidget.children,
