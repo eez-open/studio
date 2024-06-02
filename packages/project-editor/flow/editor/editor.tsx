@@ -1030,10 +1030,21 @@ export const FlowEditor = observer(
             if (this.flowContext.dragComponent) {
                 const flow = this.props.tabState.widgetContainer.object as Flow;
 
-                const object = this.context.addObject(
-                    flow.components,
-                    this.flowContext.dragComponent
-                );
+                let object;
+                if (
+                    flow instanceof ProjectEditor.PageClass &&
+                    flow.lvglScreenWidget
+                ) {
+                    object = this.context.addObject(
+                        flow.lvglScreenWidget.children,
+                        this.flowContext.dragComponent
+                    );
+                } else {
+                    object = this.context.addObject(
+                        flow.components,
+                        this.flowContext.dragComponent
+                    );
+                }
 
                 this.flowContext.dragComponent = undefined;
                 this.dragSnapLines.clear();
