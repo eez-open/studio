@@ -23,7 +23,7 @@ import { Draggable } from "eez-studio-ui/draggable";
 
 import { settingsController } from "home/settings";
 
-import { setParent, getId } from "project-editor/core/object";
+import { setParent, getId, EezObject } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
@@ -1030,7 +1030,7 @@ export const FlowEditor = observer(
             if (this.flowContext.dragComponent) {
                 const flow = this.props.tabState.widgetContainer.object as Flow;
 
-                let object;
+                let object: EezObject;
                 if (
                     flow instanceof ProjectEditor.PageClass &&
                     flow.lvglScreenWidget
