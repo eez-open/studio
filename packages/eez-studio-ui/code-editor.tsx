@@ -9,7 +9,35 @@ import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createEditor(
+// Creating ace editor is slow, so do it one at the time
+
+const createEditorQueue: (() => void)[] = [];
+let processCreateEditorQueueTimeout: any;
+
+function processCreateEditorQueue() {
+    processCreateEditorQueueTimeout = undefined;
+
+    const createEditor = createEditorQueue.shift();
+    if (createEditor) {
+        createEditor();
+    }
+
+    scheduleNextProcessCreateEditorQueue();
+}
+
+function scheduleNextProcessCreateEditorQueue() {
+    if (createEditorQueue.length > 0 && !processCreateEditorQueueTimeout) {
+        processCreateEditorQueueTimeout = setTimeout(processCreateEditorQueue);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+interface AceEditor {
+    getValue(): string;
+}
+
+async function createEditor(
     element: HTMLElement,
     value: string,
     readOnly: boolean,
@@ -19,45 +47,57 @@ function createEditor(
     minLines?: number,
     maxLines?: number
 ) {
-    const editor = ace.edit(element);
+    return new Promise<AceEditor | undefined>(resolve => {
+        createEditorQueue.push(() => {
+            if ($(element).parents("html").length == 0) {
+                console.log("code editor element is detached");
+                resolve(undefined);
+                return;
+            }
 
-    //editor.$blockScrolling = Infinity;
+            const editor = ace.edit(element);
 
-    editor.getSession().setUseWorker(false);
-    editor.getSession().setMode("ace/mode/" + mode);
-    editor.setShowPrintMargin(false);
+            //editor.$blockScrolling = Infinity;
 
-    if (minLines !== undefined) {
-        editor.setOptions({
-            minLines
+            editor.getSession().setUseWorker(false);
+            editor.getSession().setMode("ace/mode/" + mode);
+            editor.setShowPrintMargin(false);
+
+            if (minLines !== undefined) {
+                editor.setOptions({
+                    minLines
+                });
+            }
+
+            if (maxLines !== undefined) {
+                editor.setOptions({
+                    maxLines
+                });
+            }
+
+            if (settingsController.isDarkTheme) {
+                editor.setTheme("ace/theme/dracula");
+            } else {
+                editor.setTheme("ace/theme/github");
+            }
+
+            editor.setReadOnly(readOnly);
+            if (readOnly) {
+                editor.renderer.$cursorLayer.element.style.opacity = 0;
+                editor.container.style.opacity = 0.6;
+            } else {
+                editor.renderer.$cursorLayer.element.style.opacity = 1;
+                editor.container.style.opacity = 1;
+            }
+            editor.setValue(value || "");
+            editor.getSession().getUndoManager().reset();
+            editor.selection.moveTo(lineNumber - 1, columnNumber - 1);
+
+            resolve(editor);
         });
-    }
 
-    if (maxLines !== undefined) {
-        editor.setOptions({
-            maxLines
-        });
-    }
-
-    if (settingsController.isDarkTheme) {
-        editor.setTheme("ace/theme/dracula");
-    } else {
-        editor.setTheme("ace/theme/github");
-    }
-
-    editor.setReadOnly(readOnly);
-    if (readOnly) {
-        editor.renderer.$cursorLayer.element.style.opacity = 0;
-        editor.container.style.opacity = 0.6;
-    } else {
-        editor.renderer.$cursorLayer.element.style.opacity = 1;
-        editor.container.style.opacity = 1;
-    }
-    editor.setValue(value || "");
-    editor.getSession().getUndoManager().reset();
-    editor.selection.moveTo(lineNumber - 1, columnNumber - 1);
-
-    return editor;
+        scheduleNextProcessCreateEditorQueue();
+    });
 }
 
 function resizeEditor(editor: any) {
@@ -129,7 +169,7 @@ interface CodeEditorProps {
 
 export class CodeEditor extends React.Component<CodeEditorProps> {
     elementRef = React.createRef<HTMLDivElement>();
-    editor: any;
+    editor: AceEditor | undefined;
 
     resize = () => {
         if (this.editor) {
@@ -164,11 +204,13 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
     }
 
     onChange = (event: any) => {
-        this.props.onChange(this.editor.getValue());
+        if (this.editor) {
+            this.props.onChange(this.editor.getValue());
+        }
     };
 
-    createEditor(props: CodeEditorProps) {
-        this.editor = createEditor(
+    async createEditor(props: CodeEditorProps) {
+        this.editor = await createEditor(
             this.elementRef.current!,
             props.value,
             props.readOnly || false,
@@ -178,6 +220,10 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
             props.minLines,
             props.maxLines
         );
+
+        if (!this.editor) {
+            return;
+        }
 
         onEditorEvent(this.editor, "change", this.onChange);
 
@@ -215,6 +261,7 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
 
     componentDidUpdate(prevProps: any) {
         if (
+            !this.editor ||
             this.props.value !== this.editor.getValue() ||
             this.props.readOnly !== prevProps.readOnly ||
             this.props.mode !== prevProps.mode
