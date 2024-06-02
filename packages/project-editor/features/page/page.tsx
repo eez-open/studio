@@ -988,7 +988,8 @@ export class Page extends Flow {
     }
 
     get lvglScreenWidget() {
-        return this.isUsedAsUserWidget
+        return this.isUsedAsUserWidget ||
+            !ProjectEditor.getProject(this).projectTypeTraits.isLVGL
             ? undefined
             : (this.components.find(
                   component => component instanceof Widget
