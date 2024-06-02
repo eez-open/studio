@@ -10,12 +10,17 @@ import {
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
 import { IEezObject, getParent } from "project-editor/core/object";
-import { createObject, getProjectStore } from "project-editor/store";
+import {
+    createObject,
+    getAncestorOfType,
+    getProjectStore
+} from "project-editor/store";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { Flow } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { Page } from "project-editor/features/page/page";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -108,7 +113,25 @@ export class FlowDocument implements IDocument {
                     ProjectEditor.ConnectionLineClass
                 )
             ) {
-                const parent = getParent(editorObject.object);
+                let parent = getParent(editorObject.object);
+
+                // make sure we can select action components with the widgets that are immediate children of LVGLScreenWidget
+                if (
+                    editorObject.object instanceof ProjectEditor.LVGLWidgetClass
+                ) {
+                    const page = getAncestorOfType<Page>(
+                        parent,
+                        ProjectEditor.PageClass.classInfo
+                    );
+
+                    if (
+                        page &&
+                        page.lvglScreenWidget &&
+                        parent == page.lvglScreenWidget.children
+                    ) {
+                        parent = page.components;
+                    }
+                }
 
                 let group = editorObjectsGroupedByParent.get(parent);
 

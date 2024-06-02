@@ -31,7 +31,6 @@ import {
     canDuplicate,
     canCut,
     canCopy,
-    canPaste,
     canDelete,
     extendContextMenu,
     cutItem,
@@ -54,7 +53,9 @@ import {
     canAdd,
     addItem,
     isObjectReferencable,
-    canContain
+    canContain,
+    pasteFromClipboard,
+    clipboardDataToObject
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -498,29 +499,13 @@ export class TreeObjectAdapter {
     }
 
     canPaste() {
-        const projectStore = getProjectStore(this.object);
-
-        if (this.selectedItems.length == 0) {
-            if (canPaste(projectStore, this.object)) {
-                return true;
-            }
-            return false;
-        }
-
-        if (this.selectedItems.length == 1) {
-            if (canPaste(projectStore, this.selectedItems[0].object)) {
-                return true;
-            }
-            return false;
-        }
-
-        const allObjectsAreFromTheSameParent = !this.selectedItems.find(
-            selectedItem =>
-                getParent(selectedItem.object) !==
-                getParent(this.selectedItems[0].object)
-        );
-        if (allObjectsAreFromTheSameParent) {
-            if (canPaste(projectStore, this.selectedItems[0].object)) {
+        let text = pasteFromClipboard();
+        if (text) {
+            let serializedData = clipboardDataToObject(
+                ProjectEditor.getProjectStore(this.object),
+                text
+            );
+            if (serializedData) {
                 return true;
             }
         }

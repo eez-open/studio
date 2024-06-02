@@ -341,18 +341,18 @@ export class FlowFragment extends EezObject {
                 closeCombineCommands = true;
             }
 
-            let components: EezObject[] | undefined = undefined;
+            let components: EezObject[] = [];
 
             if (flowFragment.connectionLines.length > 0) {
-                projectStore.addObjects(
-                    flow.connectionLines,
-                    flowFragment.connectionLines
+                flowFragment.connectionLines.forEach(connectionLine =>
+                    projectStore.addObject(flow.connectionLines, connectionLine)
                 );
 
-                components = projectStore.addObjects(
-                    flow.components,
-                    flowFragment.components
-                );
+                flowFragment.components.forEach(component => {
+                    components.push(
+                        projectStore.addObject(flow.components, component)
+                    );
+                });
             } else {
                 if (
                     (object instanceof Widget ||
@@ -369,6 +369,7 @@ export class FlowFragment extends EezObject {
                         getParent(getParent(object)),
                         ContainerWidget.classInfo
                     ) as ContainerWidget | undefined;
+
                     if (!containerAncestor) {
                         containerAncestor = getAncestorOfType(
                             getParent(getParent(object)),
@@ -383,24 +384,33 @@ export class FlowFragment extends EezObject {
                     }
 
                     if (containerAncestor) {
-                        components = projectStore.addObjects(
+                        const parent =
                             containerAncestor instanceof
-                                ProjectEditor.LVGLWidgetClass
+                            ProjectEditor.LVGLWidgetClass
                                 ? containerAncestor.children
-                                : containerAncestor.widgets,
-                            flowFragment.components
-                        );
+                                : containerAncestor.widgets;
+
+                        flowFragment.components.forEach(component => {
+                            components.push(
+                                projectStore.addObject(parent, component)
+                            );
+                        });
                     } else {
-                        components = projectStore.addObjects(
-                            flow.components,
-                            flowFragment.components
-                        );
+                        flowFragment.components.forEach(component => {
+                            components.push(
+                                projectStore.addObject(
+                                    flow.components,
+                                    component
+                                )
+                            );
+                        });
                     }
                 } else {
-                    components = projectStore.addObjects(
-                        flow.components,
-                        flowFragment.components
-                    );
+                    flowFragment.components.forEach(component => {
+                        components.push(
+                            projectStore.addObject(flow.components, component)
+                        );
+                    });
                 }
             }
 
