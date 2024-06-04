@@ -23,6 +23,7 @@ export class Filters {
     lists: boolean = true;
     notes: boolean = true;
     launchedScripts: boolean = true;
+    tabulators: boolean = true;
 
     constructor() {
         makeObservable(this, {
@@ -35,7 +36,8 @@ export class Filters {
             charts: observable,
             lists: observable,
             notes: observable,
-            launchedScripts: observable
+            launchedScripts: observable,
+            tabulators: observable
         });
     }
 
@@ -116,6 +118,12 @@ export class Filters {
             }
         }
 
+        if (this.tabulators) {
+            if (activityLogEntry.type === "instrument/tabulator") {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -173,6 +181,10 @@ export class Filters {
             types.push("instrument/script");
         }
 
+        if (this.tabulators) {
+            types.push("instrument/tabulator");
+        }
+
         if (types.length > 0) {
             return (
                 "(" + types.map(type => `type == '${type}'`).join(" OR ") + ")"
@@ -194,6 +206,7 @@ export class FilterStats {
     lists = 0;
     notes = 0;
     launchedScripts = 0;
+    tabulators = 0;
 
     constructor(public history: History) {
         makeObservable(this, {
@@ -207,6 +220,7 @@ export class FilterStats {
             lists: observable,
             notes: observable,
             launchedScripts: observable,
+            tabulators: observable,
             add: action
         });
 
@@ -269,6 +283,8 @@ export class FilterStats {
             this.notes += amount;
         } else if (type === "instrument/script") {
             this.launchedScripts += amount;
+        } else if (type === "instrument/tabulator") {
+            this.tabulators += amount;
         }
     }
 
@@ -380,6 +396,16 @@ export const FiltersComponent = observer(
                             onChange={action(
                                 (value: boolean) =>
                                     (this.props.appStore.filters.launchedScripts =
+                                        value)
+                            )}
+                        />
+
+                        <BooleanProperty
+                            name={`Tabulators (${filterStats.tabulators})`}
+                            value={this.props.appStore.filters.tabulators}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.tabulators =
                                         value)
                             )}
                         />

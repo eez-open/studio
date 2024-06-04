@@ -354,6 +354,10 @@ export interface WorkerToRenderMessage {
 
     freeArrayValue?: ObjectOrArrayValueWithType;
 
+    getBitmapAsDataURL?: {
+        name: string;
+    };
+
     getLvglImageByName?: {
         name: string;
     };

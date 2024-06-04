@@ -602,6 +602,23 @@ export const builtInFunctions: {
         }
     },
 
+    "Flow.getBitmapAsDataURL": {
+        operationIndex: 78,
+        arity: 1,
+        args: ["bitmapName"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) =>
+            expressionContext
+                ? findBitmap(expressionContext?.projectStore.project, args[0])
+                : undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isDashboard
+    },
+
     "Crypto.sha256": {
         operationIndex: 74,
         arity: 1,

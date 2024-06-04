@@ -287,7 +287,8 @@
         }
     }
 
-    &.EezStudio_PlotlyPreview {
+    &.EezStudio_PlotlyPreview,
+    &.EezStudio_TabulatorPreview {
         cursor: zoom-in;
 
         * {
@@ -532,6 +533,19 @@
 
     table {
         color: #212529 !important;
+    }
+}
+
+.EezStudio_TabulatorHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
+    background-color: @plotterHistoryItemBackgroundColor;
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+
+    .tabulator {
+        height: 480px;
     }
 }
 

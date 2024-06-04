@@ -23,6 +23,7 @@ import type * as ListHistoryItemModule from "instrument/window/history/items/lis
 import type * as PlotterHistoryItemModule from "instrument/window/history/items/plotter";
 import type * as PlotlyHistoryItemModule from "instrument/window/history/items/plotly";
 import type * as ScriptHistoryItemModule from "instrument/window/history/items/script";
+import type * as TabulatorHistoryItemModule from "instrument/window/history/items/tabulator";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -156,6 +157,12 @@ export function createHistoryItem(
         const { ScriptHistoryItem } =
             require("instrument/window/history/items/script") as typeof ScriptHistoryItemModule;
         return new ScriptHistoryItem(store, activityLogEntry);
+    }
+
+    if (activityLogEntry.type === "instrument/tabulator") {
+        const { TabulatorHistoryItem } =
+            require("instrument/window/history/items/tabulator") as typeof TabulatorHistoryItemModule;
+        return new TabulatorHistoryItem(store, activityLogEntry);
     }
 
     throw "Unknown activity log entry";

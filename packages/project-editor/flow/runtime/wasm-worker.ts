@@ -161,16 +161,35 @@ function executeDashboardComponent(
 function operationJsonGet(
     wasmModuleId: number,
     jsObjectID: number,
-    property: string
+    propertyName: string
 ) {
     let value = undefined;
 
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (WasmFlowRuntime) {
         value = getJSObjectFromID(jsObjectID, wasmModuleId);
-        const propertyParts = property.split(".");
-        for (let i = 0; value && i < propertyParts.length; i++) {
-            value = value[propertyParts[i]];
+
+        const path = [];
+        let part = "";
+
+        for (let i = 0; i < propertyName.length; i++) {
+            const ch = propertyName[i];
+            if (ch == "\\") {
+                i++;
+                if (i < propertyName.length) {
+                    part += propertyName[i];
+                }
+            } else if (ch == ".") {
+                path.push(part);
+                part = "";
+            } else {
+                part += ch;
+            }
+        }
+        path.push(part);
+
+        for (let i = 0; value && i < path.length; i++) {
+            value = value[path[i]];
         }
     }
 
@@ -359,6 +378,19 @@ function onObjectArrayValueFree(wasmModuleId: number, ptr: number) {
     setTimeout(() => WasmFlowRuntime.postWorkerToRendererMessage(data));
 }
 
+function getBitmapAsDataURL(wasmModuleId: number, name: string) {
+    let dataURL: string | null = null;
+
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        dataURL = WasmFlowRuntime.postWorkerToRendererMessage({
+            getBitmapAsDataURL: { name }
+        });
+    }
+
+    return createWasmValue(WasmFlowRuntime, dataURL);
+}
+
 function getLvglImageByName(wasmModuleId: number, name: string) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -389,6 +421,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
+(global as any).getBitmapAsDataURL = getBitmapAsDataURL;
 (global as any).executeScpi = executeScpi;
 (global as any).getLvglImageByName = getLvglImageByName;
 

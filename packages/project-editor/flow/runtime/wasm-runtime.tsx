@@ -81,6 +81,7 @@ import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
 import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
 import { releaseRuntimeDashboardStates } from "project-editor/flow/runtime/component-execution-states";
 import { hasClass } from "eez-studio-shared/dom";
+import { findBitmap } from "project-editor/project/assets";
 
 interface IGlobalVariableBase {
     variable: IVariable;
@@ -334,7 +335,16 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     onWorkerMessage = (workerToRenderMessage: WorkerToRenderMessage) => {
-        if (workerToRenderMessage.getLvglImageByName) {
+        if (workerToRenderMessage.getBitmapAsDataURL) {
+            const bitmap = findBitmap(
+                this.projectStore.project,
+                workerToRenderMessage.getBitmapAsDataURL.name
+            );
+            if (bitmap) {
+                return bitmap.imageSrc;
+            }
+            return null;
+        } else if (workerToRenderMessage.getLvglImageByName) {
             return (
                 this.lgvlPageRuntime?.getBitmapPtrByName(
                     workerToRenderMessage.getLvglImageByName.name

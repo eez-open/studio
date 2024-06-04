@@ -88,7 +88,7 @@ export class PlotlyLineChartExecutionState {
 
     debounceTimerId: any;
 
-    getPlotlyData?: () => {
+    getInstrumentItemData?: () => {
         data: any;
         layout: any;
         config: any;
@@ -430,7 +430,7 @@ const LineChartElement = observer(
                     this.props.widget
                 );
             if (executionState) {
-                executionState.getPlotlyData = () => {
+                executionState.getInstrumentItemData = () => {
                     return {
                         data: this.data,
                         layout: this.layout,

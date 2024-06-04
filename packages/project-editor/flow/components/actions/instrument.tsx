@@ -72,6 +72,7 @@ import {
 } from "project-editor/flow/runtime/wasm-worker";
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
 import type { PlotlyLineChartExecutionState } from "../widgets/dashboard/plotly";
+import type { TabulatorExecutionState } from "../widgets/dashboard/tabulator";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1188,6 +1189,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
     static ITEM_TYPE_NONE = 0;
     static ITEM_TYPE_EEZ_CHART = 1;
     static ITEM_TYPE_PLOTLY = 2;
+    static ITEM_TYPE_TABULATOR = 3;
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
@@ -1210,6 +1212,10 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     {
                         id: "plotly",
                         label: "Plotly"
+                    },
+                    {
+                        id: "tabulator",
+                        label: "Tabulator"
                     }
                 ],
                 propertyGridGroup: specificGroup
@@ -1426,19 +1432,31 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             ),
             makeExpressionProperty(
                 {
-                    name: "plotlyWidget",
+                    name: "widget",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
-                        return component.itemType != "plotly";
+                        return (
+                            component.itemType != "plotly" &&
+                            component.itemType != "tabulator"
+                        );
                     }
                 },
                 "widget"
             )
         ],
         defaultValue: {},
+        beforeLoadHook: (
+            component: AddToInstrumentHistoryActionComponent,
+            jsObject: any
+        ) => {
+            if (jsObject.plotlyWidget != undefined) {
+                jsObject.widget = jsObject.plotlyWidget;
+                delete jsObject.plotlyWidget;
+            }
+        },
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1653,41 +1671,47 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 historyItemType = "instrument/file-download";
             } else if (
                 itemType ==
-                AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
+                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY ||
+                itemType ==
+                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_TABULATOR
             ) {
-                const plotlyWidget =
-                    context.evalProperty<number>("plotlyWidget");
-                if (plotlyWidget == undefined) {
-                    context.throwError(`Invalid Plotly widget property`);
+                const widget = context.evalProperty<number>("widget");
+                if (widget == undefined) {
+                    context.throwError(`Invalid widget property`);
                     return;
                 }
 
                 const widgetInfo =
-                    context.WasmFlowRuntime.getWidgetHandleInfo(plotlyWidget);
+                    context.WasmFlowRuntime.getWidgetHandleInfo(widget);
 
                 if (!widgetInfo) {
-                    context.throwError(`Invalid Plotly widget handle`);
+                    context.throwError(`Invalid widget handle`);
                     return;
                 }
 
-                const plotlyWidgetContext = new DashboardComponentContext(
+                const widgetContext = new DashboardComponentContext(
                     context.WasmFlowRuntime,
                     widgetInfo.flowStateIndex,
                     widgetInfo.componentIndex
                 );
 
-                const executionState =
-                    plotlyWidgetContext.getComponentExecutionState<PlotlyLineChartExecutionState>();
+                const executionState = widgetContext.getComponentExecutionState<
+                    PlotlyLineChartExecutionState | TabulatorExecutionState
+                >();
 
-                if (!executionState || !executionState.getPlotlyData) {
+                if (!executionState || !executionState.getInstrumentItemData) {
                     context.throwError(`Invalid Plotly widget execution state`);
                     return;
                 }
 
-                message = executionState.getPlotlyData();
+                message = executionState.getInstrumentItemData();
 
                 chartData = undefined;
-                historyItemType = "instrument/plotly";
+                historyItemType =
+                    itemType ==
+                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
+                        ? "instrument/plotly"
+                        : "instrument/tabulator";
             } else {
                 context.throwError("Invalid item type");
                 return;
@@ -1736,7 +1760,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
     chartHorizontalScale: string;
     chartVerticalScale: string;
 
-    plotlyWidget: string;
+    widget: string;
 
     override makeEditable() {
         super.makeEditable();
@@ -1763,7 +1787,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             chartHorizontalScale: observable,
             chartVerticalScale: observable,
 
-            plotlyWidget: observable
+            widget: observable
         });
     }
 
@@ -1805,6 +1829,10 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
         } else if (this.itemType == "plotly") {
             dataBuffer.writeUint8(
                 AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
+            );
+        } else if (this.itemType == "tabulator") {
+            dataBuffer.writeUint8(
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_TABULATOR
             );
         } else {
             dataBuffer.writeUint8(

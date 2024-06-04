@@ -39,7 +39,9 @@ import {
     Message,
     ProjectStore,
     createObject,
-    getChildOfObject
+    getChildOfObject,
+    propertyNotFoundMessage,
+    propertyNotSetMessage
 } from "project-editor/store";
 import { IconAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -50,6 +52,7 @@ import {
     getStructureFromType
 } from "project-editor/features/variable/value-type";
 import type { IStructure } from "project-editor/features/variable/variable";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -176,6 +179,9 @@ function buildColumnsFromStructure(
 export class TabulatorExecutionState {
     printWidget?: () => void;
     getSheetData?: (lookup: string) => any;
+    getInstrumentItemData?: () => {
+        options: any;
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -418,6 +424,11 @@ const TabulatorElement = observer(
                     };
                     executionState.getSheetData = (lookup: string) => {
                         return this.tabulator.getSheetData(lookup);
+                    };
+                    executionState.getInstrumentItemData = () => {
+                        return {
+                            options: this.options
+                        };
                     };
                 }
             }
@@ -672,6 +683,8 @@ class TabulatorOptions extends EezObject {
         | "fitDataTable"
         | undefined;
     autoColumns: boolean;
+    syncColumns: boolean;
+    syncStructure: string;
     columns: TabulatorColumn[];
     pagination: boolean;
     headerVisible: boolean;
@@ -707,6 +720,21 @@ class TabulatorOptions extends EezObject {
                 checkboxStyleSwitch: true
             },
             {
+                name: "syncColumns",
+                displayName: "Sync columns with structure",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (options: TabulatorOptions) => options.autoColumns
+            },
+            {
+                name: "syncStructure",
+                displayName: "Structure",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "variables/structures",
+                disabled: (options: TabulatorOptions) =>
+                    options.autoColumns || !options.syncColumns
+            },
+            {
                 name: "columns",
                 type: PropertyType.Array,
                 typeClass: TabulatorColumn,
@@ -718,6 +746,9 @@ class TabulatorOptions extends EezObject {
                     projectStore
                 ) => {
                     if (projectStore.project.variables.structures.length == 0) {
+                        return [];
+                    }
+                    if (tabulatorOptions.syncColumns) {
                         return [];
                     }
                     return [
@@ -788,17 +819,33 @@ class TabulatorOptions extends EezObject {
             }
         ],
         defaultValue: {},
-        check: (column: TabulatorColumn, messages: IMessage[]) => {
-            if (column.advanced) {
-                try {
-                    JSON.parse(column.advanced);
-                } catch (err) {
+        check: (options: TabulatorOptions, messages: IMessage[]) => {
+            if (options.syncColumns) {
+                if (options.syncStructure) {
+                    const struct = getStructureFromType(
+                        ProjectEditor.getProject(options),
+                        `struct:${options.syncStructure}`
+                    );
+                    if (struct) {
+                        options.columns.forEach(column => {
+                            if (!struct.fieldsMap.get(column.field)) {
+                                messages.push(
+                                    new Message(
+                                        MessageType.ERROR,
+                                        `Field "${column.field}" not found in the structure "${options.syncStructure}"`,
+                                        getChildOfObject(column, "field")
+                                    )
+                                );
+                            }
+                        });
+                    } else {
+                        messages.push(
+                            propertyNotFoundMessage(options, "syncStructure")
+                        );
+                    }
+                } else {
                     messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Invalid JSON: ${err}`,
-                            getChildOfObject(column, "advanced")
-                        )
+                        propertyNotSetMessage(options, "syncStructure")
                     );
                 }
             }
@@ -811,6 +858,8 @@ class TabulatorOptions extends EezObject {
         makeObservable(this, {
             layout: observable,
             autoColumns: observable,
+            syncColumns: observable,
+            syncStructure: observable,
             columns: observable,
             pagination: observable,
             headerVisible: observable
@@ -830,9 +879,47 @@ class TabulatorOptions extends EezObject {
         };
 
         if (!this.autoColumns) {
-            options.columns = TabulatorOptions.getColumnsDefinition(
-                this.columns
-            );
+            if (this.syncColumns) {
+                const project = ProjectEditor.getProject(this);
+                const struct = getStructureFromType(
+                    project,
+                    `struct:${this.syncStructure}`
+                );
+                if (struct) {
+                    const columns = getColumnsFromStructure(
+                        project._store,
+                        struct
+                    );
+
+                    this.columns.forEach(column => {
+                        const columnFromStructure = columns.find(
+                            columnFromStructure =>
+                                columnFromStructure.field == column.field
+                        );
+
+                        if (columnFromStructure) {
+                            TabulatorColumn.classInfo.properties.forEach(
+                                propertyInfo => {
+                                    const propertyName =
+                                        propertyInfo.name as keyof TabulatorColumn;
+
+                                    if (column[propertyName]) {
+                                        columnFromStructure[propertyName] =
+                                            column[propertyName] as any;
+                                    }
+                                }
+                            );
+                        }
+                    });
+
+                    options.columns =
+                        TabulatorOptions.getColumnsDefinition(columns);
+                }
+            } else {
+                options.columns = TabulatorOptions.getColumnsDefinition(
+                    this.columns
+                );
+            }
         }
 
         return options;
@@ -853,8 +940,7 @@ export class TabulatorWidget extends Widget {
                 displayName: "Basic options",
                 type: PropertyType.Object,
                 typeClass: TabulatorOptions,
-                propertyGridGroup: specificGroup,
-                enumerable: false
+                propertyGridGroup: specificGroup
             },
             makeExpressionProperty(
                 {
