@@ -1,3 +1,4 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import { computed, makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -18,6 +19,7 @@ import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
+import * as notification from "eez-studio-ui/notification";
 
 import {
     IActivityLogEntry,
@@ -37,11 +39,13 @@ import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { TABULATOR_ICON } from "project-editor/ui-components/icons";
 
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
+import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 interface ITabulatorHistoryItemMessage {
     options: any;
+    persistance: any;
     note: string;
 }
 
@@ -74,11 +78,16 @@ export const TabulatorHistoryItemComponent = observer(
 
         zoom: boolean = false;
 
+        actionInProgress: boolean = false;
+
+        defaultPersistance: any = {};
+
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                zoom: observable
+                zoom: observable,
+                actionInProgress: observable
             });
         }
 
@@ -114,13 +123,45 @@ export const TabulatorHistoryItemComponent = observer(
             return this.props.historyItem.tabulatorMessage.options;
         }
 
+        get persistance() {
+            return (
+                this.props.historyItem.tabulatorMessage.persistance ||
+                this.defaultPersistance
+            );
+        }
+
         updateTabulator() {
             if (this.tabulatorDivRef.current) {
                 const Tabulator = getTabulator();
 
+                const options = JSON.parse(JSON.stringify(this.options || {}));
+
+                options.persistence = true;
+
+                options.persistenceWriterFunc = (
+                    id: any,
+                    type: any,
+                    data: any
+                ) => {
+                    runInAction(() => {
+                        this.persistance[type] = data;
+                        // if (this.options) {
+                        //     this.props.historyItem.updateTabulator(
+                        //         this.props.appStore,
+                        //         this.options,
+                        //         this.persistance
+                        //     );
+                        // }
+                    });
+                };
+
+                options.persistenceReaderFunc = (id: any, type: any) => {
+                    return this.persistance[type];
+                };
+
                 this.tabulator = new Tabulator(
                     this.tabulatorDivRef.current,
-                    this.options
+                    options
                 );
             }
         }
@@ -135,6 +176,92 @@ export const TabulatorHistoryItemComponent = observer(
 
         componentWillUnmount() {}
 
+        onExportCSV = async () => {
+            this.tabulator.download("csv", "table.csv");
+        };
+
+        onExportJSON = async () => {
+            if (this.actionInProgress) {
+                return;
+            }
+            runInAction(() => (this.actionInProgress = true));
+
+            const json = {
+                options: this.props.historyItem.tabulatorMessage.options,
+                persistance: this.props.historyItem.tabulatorMessage.persistance
+            };
+
+            const jsonStr = JSON.stringify(json, undefined, 2);
+
+            const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                filters: [
+                    {
+                        name: "JSON Files",
+                        extensions: ["json"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ],
+                defaultPath: "table.json"
+            });
+
+            let filePath = result.filePath;
+            if (filePath) {
+                if (!filePath.toLowerCase().endsWith("json")) {
+                    filePath += ".json";
+                }
+
+                try {
+                    await writeTextFile(filePath, jsonStr);
+                    notification.success(`Exported to "${filePath}"`);
+                } catch (err) {
+                    console.error(err);
+                    notification.error(err.toString());
+                }
+            }
+
+            runInAction(() => (this.actionInProgress = false));
+        };
+
+        onImportJSON = async () => {
+            if (this.actionInProgress) {
+                return;
+            }
+            runInAction(() => (this.actionInProgress = true));
+
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
+                filters: [
+                    {
+                        name: "JSON Files",
+                        extensions: ["json"]
+                    },
+                    { name: "All Files", extensions: ["*"] }
+                ]
+            });
+
+            const filePaths = result.filePaths;
+            if (filePaths && filePaths.length > 0) {
+                const filePath = filePaths[0];
+                try {
+                    const jsonStr = await readTextFile(filePath);
+
+                    const json = JSON.parse(jsonStr);
+
+                    this.props.historyItem.updateTabulator(
+                        this.props.appStore,
+                        json.options,
+                        json.persistance
+                    );
+
+                    notification.success(`Imported from "${filePath}"`);
+                } catch (err) {
+                    console.error(err);
+                    notification.error(err.toString());
+                }
+            }
+
+            runInAction(() => (this.actionInProgress = false));
+        };
+
         render() {
             this.options;
 
@@ -147,6 +274,31 @@ export const TabulatorHistoryItemComponent = observer(
                             onClick={this.onAddNote}
                         />
                     )}
+                    <IconAction
+                        icon="material:save"
+                        title="Save as CSV file"
+                        onClick={this.onExportCSV}
+                        overlayText={"CSV"}
+                        enabled={!this.actionInProgress}
+                    />
+
+                    <IconAction
+                        icon="material:file_download"
+                        title="Export to JSON file"
+                        onClick={this.onExportJSON}
+                        overlayText={"JSON"}
+                        style={{ marginLeft: 10 }}
+                        enabled={!this.actionInProgress}
+                    />
+
+                    <IconAction
+                        icon="material:file_upload"
+                        title="Import from JSON file"
+                        onClick={this.onImportJSON}
+                        overlayText={"JSON"}
+                        style={{ marginLeft: 5 }}
+                        enabled={!this.actionInProgress}
+                    />
                 </Toolbar>
             );
 
@@ -240,6 +392,25 @@ export class TabulatorHistoryItem extends HistoryItem {
         let tabulatorMessage = JSON.parse(this.message);
 
         tabulatorMessage.note = value;
+
+        logUpdate(
+            this.store,
+            {
+                id: this.id,
+                oid: appStore.history.oid,
+                message: JSON.stringify(tabulatorMessage)
+            },
+            {
+                undoable: true
+            }
+        );
+    }
+
+    updateTabulator(appStore: IAppStore, options: any, persistance: any) {
+        let tabulatorMessage = JSON.parse(this.message);
+
+        tabulatorMessage.options = options;
+        tabulatorMessage.persistance = persistance;
 
         logUpdate(
             this.store,
