@@ -80,7 +80,7 @@ export const TabulatorHistoryItemComponent = observer(
 
         actionInProgress: boolean = false;
 
-        defaultPersistance: any = {};
+        persistance: any;
 
         constructor(props: any) {
             super(props);
@@ -123,11 +123,23 @@ export const TabulatorHistoryItemComponent = observer(
             return this.props.historyItem.tabulatorMessage.options;
         }
 
-        get persistance() {
-            return (
-                this.props.historyItem.tabulatorMessage.persistance ||
-                this.defaultPersistance
-            );
+        updatePersistance() {
+            try {
+                const jsonNew = JSON.stringify(this.persistance || {});
+                const jsonOld = JSON.stringify(
+                    this.props.historyItem.tabulatorMessage.persistance || {}
+                );
+
+                if (jsonNew != jsonOld) {
+                    this.props.historyItem.updateTabulator(
+                        this.props.appStore,
+                        this.options,
+                        this.persistance
+                    );
+                }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         updateTabulator() {
@@ -136,6 +148,7 @@ export const TabulatorHistoryItemComponent = observer(
 
                 const options = JSON.parse(JSON.stringify(this.options || {}));
 
+                //
                 options.persistence = true;
 
                 options.persistenceWriterFunc = (
@@ -143,21 +156,23 @@ export const TabulatorHistoryItemComponent = observer(
                     type: any,
                     data: any
                 ) => {
-                    runInAction(() => {
-                        this.persistance[type] = data;
-                        // if (this.options) {
-                        //     this.props.historyItem.updateTabulator(
-                        //         this.props.appStore,
-                        //         this.options,
-                        //         this.persistance
-                        //     );
-                        // }
-                    });
+                    this.persistance[type] = data;
                 };
 
                 options.persistenceReaderFunc = (id: any, type: any) => {
                     return this.persistance[type];
                 };
+                //
+
+                if (this.tabulator) {
+                    this.updatePersistance();
+                } else {
+                    this.persistance = JSON.parse(
+                        JSON.stringify(
+                            this.props.historyItem.tabulatorMessage.persistance
+                        )
+                    );
+                }
 
                 this.tabulator = new Tabulator(
                     this.tabulatorDivRef.current,
@@ -174,7 +189,9 @@ export const TabulatorHistoryItemComponent = observer(
             this.updateTabulator();
         }
 
-        componentWillUnmount() {}
+        componentWillUnmount() {
+            this.updatePersistance();
+        }
 
         onExportCSV = async () => {
             this.tabulator.download("csv", "table.csv");
@@ -188,7 +205,7 @@ export const TabulatorHistoryItemComponent = observer(
 
             const json = {
                 options: this.props.historyItem.tabulatorMessage.options,
-                persistance: this.props.historyItem.tabulatorMessage.persistance
+                persistance: this.persistance
             };
 
             const jsonStr = JSON.stringify(json, undefined, 2);
