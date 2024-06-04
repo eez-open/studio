@@ -77,10 +77,14 @@ registerActionComponents("TCP", [
             try {
                 await tcpConnection.connect();
 
-                context.assignProperty("connection", {
-                    id: tcpConnection.id,
-                    status: tcpConnection.status
-                });
+                context.assignProperty(
+                    "connection",
+                    {
+                        id: tcpConnection.id,
+                        status: tcpConnection.status
+                    },
+                    undefined
+                );
 
                 context.propagateValueThroughSeqout();
             } catch (err) {

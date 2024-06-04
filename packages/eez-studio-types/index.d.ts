@@ -735,7 +735,11 @@ export interface IDashboardComponentContext {
         value: any
     ) => void;
 
-    assignProperty(inputName: string, value: any): void;
+    assignProperty(
+        inputName: string,
+        value: any,
+        iterators: number[] | undefined
+    ): void;
 
     getOutputType: (outputName: string) => IType | undefined;
 

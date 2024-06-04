@@ -45,7 +45,7 @@ import type {
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
 
-import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
+import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import {
     CHECKBOX_CHANGE_EVENT_STRUCT_NAME,
     RADIO_CHANGE_EVENT_STRUCT_NAME,
@@ -304,7 +304,8 @@ function TextInputWidgetInput({
     textInputWidget,
     readOnly,
     placeholder,
-    password
+    password,
+    iterators
 }: {
     value: string;
     flowContext: IFlowContext;
@@ -312,6 +313,7 @@ function TextInputWidgetInput({
     readOnly: boolean;
     placeholder: string;
     password: boolean;
+    iterators: number[];
 }) {
     const ref = React.useRef<HTMLInputElement>(null);
     const [cursor, setCursor] = React.useState<number | null>(null);
@@ -355,7 +357,8 @@ function TextInputWidgetInput({
                                 flowState,
                                 textInputWidget,
                                 "data",
-                                value
+                                value,
+                                iterators
                             );
                         }
 
@@ -560,6 +563,9 @@ export class TextInputWidget extends Widget {
         let readOnly = this.getReadOnly(flowContext) ?? false;
         let placeholder = this.getPlaceholder(flowContext) ?? "";
 
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+
         return (
             <>
                 <TextInputWidgetInput
@@ -569,6 +575,7 @@ export class TextInputWidget extends Widget {
                     readOnly={readOnly}
                     placeholder={placeholder}
                     password={this.password}
+                    iterators={iterators}
                 />
                 {super.render(flowContext, width, height)}
             </>
@@ -588,6 +595,7 @@ const NumberInputDashboardWidgetElement = observer(
         width: number;
         height: number;
         disableDefaultTabHandling: boolean;
+        iterators: number[];
     }> {
         constructor(props: any) {
             super(props);
@@ -658,7 +666,8 @@ const NumberInputDashboardWidgetElement = observer(
                                     flowState,
                                     component,
                                     "value",
-                                    value
+                                    value,
+                                    this.props.iterators
                                 );
                             }
 
@@ -810,6 +819,10 @@ export class NumberInputDashboardWidget extends Widget {
     override render(flowContext: IFlowContext, width: number, height: number) {
         const style: React.CSSProperties = {};
         this.styleHook(style, flowContext);
+
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+
         return (
             <>
                 <NumberInputDashboardWidgetElement
@@ -822,6 +835,7 @@ export class NumberInputDashboardWidget extends Widget {
                     width={width}
                     height={height}
                     disableDefaultTabHandling={this.disableDefaultTabHandling}
+                    iterators={iterators}
                 />
                 {super.render(flowContext, width, height)}
             </>
@@ -928,12 +942,9 @@ export class CheckboxWidget extends Widget {
     ): React.ReactNode {
         let checked = this.getChecked(flowContext);
 
-        let index;
-        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
-            index = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
-        } else {
-            index = 0;
-        }
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+        let index = iterators.length > 0 ? iterators[0] : 0;
 
         let id = "c-" + guid();
         if (index > 0) {
@@ -982,7 +993,8 @@ export class CheckboxWidget extends Widget {
                                         flowState,
                                         this,
                                         "data",
-                                        value
+                                        value,
+                                        iterators
                                     );
                                 }
 
@@ -1124,12 +1136,9 @@ export class RadioWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
-        let index;
-        if (flowContext.dataContext.has(FLOW_ITERATOR_INDEX_VARIABLE)) {
-            index = flowContext.dataContext.get(FLOW_ITERATOR_INDEX_VARIABLE);
-        } else {
-            index = 0;
-        }
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+        let index = iterators.length > 0 ? iterators[0] : 0;
 
         let id = "CheckboxWidgetInput-" + getId(this);
         if (index > 0) {
@@ -1160,7 +1169,8 @@ export class RadioWidget extends Widget {
                                     flowState,
                                     this,
                                     "variable",
-                                    value
+                                    value,
+                                    iterators
                                 );
 
                                 if (flowState.runtime) {
@@ -1281,6 +1291,9 @@ export class SwitchDashboardWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+
         return (
             <>
                 <div
@@ -1307,7 +1320,8 @@ export class SwitchDashboardWidget extends Widget {
                                         flowState,
                                         this,
                                         "data",
-                                        value
+                                        value,
+                                        iterators
                                     );
                                 }
 
@@ -1409,6 +1423,9 @@ export class DropDownListDashboardWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
+        const iterators =
+            flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) || [];
+
         return (
             <>
                 <select
@@ -1422,7 +1439,8 @@ export class DropDownListDashboardWidget extends Widget {
                                 flowContext.flowState as FlowState,
                                 this,
                                 "data",
-                                event.target.selectedIndex
+                                event.target.selectedIndex,
+                                iterators
                             );
 
                             flowContext.projectStore.runtime.executeWidgetAction(
@@ -2299,6 +2317,10 @@ const SliderDashboardWidgetElement = observer(
                 flowContext.flowState ? !component.enabled : true
             );
 
+            const iterators =
+                flowContext.dataContext.get(FLOW_ITERATOR_INDEXES_VARIABLE) ||
+                [];
+
             return (
                 <input
                     className={classNames(
@@ -2339,7 +2361,8 @@ const SliderDashboardWidgetElement = observer(
                                         flowState,
                                         component,
                                         "value",
-                                        this.currentValue
+                                        this.currentValue,
+                                        iterators
                                     );
 
                                     runInAction(() => {

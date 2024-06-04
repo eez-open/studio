@@ -283,7 +283,11 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         this.WasmFlowRuntime._valueFree(valuePtr);
     }
 
-    assignProperty(propertyName: string, value: any) {
+    assignProperty(
+        propertyName: string,
+        value: any,
+        iterators: number[] | undefined
+    ) {
         const flowIndex = this.getFlowIndex();
         const flow = this.WasmFlowRuntime.assetsMap.flows[flowIndex];
         const componentIndex = this.getComponentIndex();
@@ -302,11 +306,19 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             valueTypeIndex
         );
 
+        let iteratorsPtr = 0;
+        if (iterators) {
+            iteratorsPtr = this.WasmFlowRuntime._malloc(iterators.length * 4);
+            for (let i = 0; i < iterators.length; i++) {
+                this.WasmFlowRuntime.HEAP32[iteratorsPtr >> 2] = iterators[i];
+            }
+        }
+
         this.WasmFlowRuntime._assignProperty(
             this.flowStateIndex,
             this.componentIndex,
             propertyIndex,
-            0,
+            iteratorsPtr,
             valuePtr
         );
 
@@ -454,7 +466,8 @@ export function assignProperty(
     flowState: FlowState,
     component: Component,
     propertyName: string,
-    value: any
+    value: any,
+    iterators: number[] | undefined
 ) {
     const wasmRuntime = flowState.runtime as WasmRuntime;
 
@@ -487,5 +500,5 @@ export function assignProperty(
         componentIndex
     );
 
-    dashboardComponentContext.assignProperty(propertyName, value);
+    dashboardComponentContext.assignProperty(propertyName, value, iterators);
 }

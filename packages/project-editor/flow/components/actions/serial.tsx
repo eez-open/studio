@@ -181,10 +181,14 @@ registerActionComponents("Serial Port", [
             let serialConnection = new SerialConnection(id, constructorParams);
             serialConnections.set(id, serialConnection);
 
-            context.assignProperty("connection", {
-                id: serialConnection.id,
-                status: serialConnection.status
-            });
+            context.assignProperty(
+                "connection",
+                {
+                    id: serialConnection.id,
+                    status: serialConnection.status
+                },
+                undefined
+            );
 
             context.propagateValueThroughSeqout();
         }
