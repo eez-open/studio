@@ -189,7 +189,7 @@ export async function extensionDefinitionBuild(projectStore: ProjectStore) {
             projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.INFO,
-                `Instrument definition file "${idfFileName}" builded.`
+                `Instrument definition file "${idfFileName}" built.`
             );
         }
     }

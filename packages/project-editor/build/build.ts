@@ -169,7 +169,7 @@ async function generateFile(
             projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.INFO,
-                `File "${filePath}.map" builded`
+                `File "${filePath}.map" built`
             );
         }
     }
@@ -177,7 +177,7 @@ async function generateFile(
     projectStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
-        `File "${filePath}" builded`
+        `File "${filePath}" built`
     );
 
     return parts;
