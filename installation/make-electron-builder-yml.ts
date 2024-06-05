@@ -75,7 +75,8 @@ let files = [
     "node_modules/mapbox-gl/dist/mapbox-gl.js",
     "!node_modules/xterm/src/**",
     "!node_modules/koffi/src",
-    "!node_modules/koffi/doc"
+    "!node_modules/koffi/doc",
+    "!node_modules/tabulator-tables/src"
     //"!node_modules/koffi/build/koffi/**"
 ];
 

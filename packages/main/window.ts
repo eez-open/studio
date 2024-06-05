@@ -327,7 +327,7 @@ ipcMain.on("printPDF", (event: any, content: any) => {
                 message: err.toString()
             });
         } finally {
-            //printWindow.close();
+            printWindow.close();
         }
 
         if (!data) {

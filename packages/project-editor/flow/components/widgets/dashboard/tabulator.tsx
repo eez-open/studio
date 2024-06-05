@@ -185,7 +185,7 @@ export class TabulatorExecutionState {
     download?: (
         downloadType: TabulatorModule.DownloadType,
         fileName: string,
-        params: TabulatorModule.DownloadOptions,
+        params?: TabulatorModule.DownloadOptions,
         filter?: TabulatorModule.RowRangeLookup
     ) => void;
 }

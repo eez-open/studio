@@ -61,16 +61,16 @@ registerActionComponents("GUI", [
                 type: "enum",
                 enumItems: [
                     {
-                        id: "csv"
+                        id: "csv",
+                        label: "CSV"
                     },
                     {
-                        id: "json"
+                        id: "json",
+                        label: "JSON"
                     },
                     {
-                        id: "pdf"
-                    },
-                    {
-                        id: "html"
+                        id: "html",
+                        label: "HTML"
                     }
                 ],
                 disabled: (...props: string[]) => props[1] != "download"
@@ -150,7 +150,7 @@ registerActionComponents("GUI", [
                 executionState.download(
                     downloadType as any,
                     fileName,
-                    undefined as any,
+                    downloadType == "html" ? { style: true } : undefined,
                     undefined
                 );
             }
