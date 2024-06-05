@@ -713,8 +713,9 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
             sourceNodeBoundingClientRect
         );
 
-        const nodeOutput = sourceNode.querySelector(
-            `[data-connection-output-id="${this.connectionOutput}"]`
+        const nodeOutput = getConnectionOutputNode(
+            sourceNode,
+            this.connectionOutput
         )!;
 
         const nodeOutputBoundingClientRect = nodeOutput.getBoundingClientRect();
@@ -766,8 +767,9 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
                 targetNodeBoundingClientRect
             );
 
-            const nodeInput = targetNode.querySelector(
-                `[data-connection-input-id="${result.connectionInput}"]`
+            const nodeInput = getConnectionInputNode(
+                targetNode,
+                result.connectionInput
             )!;
 
             const nodeInputBoundingClientRect =
@@ -898,8 +900,9 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
             targetNodeBoundingClientRect
         );
 
-        const nodeInput = targetNode.querySelector(
-            `[data-connection-input-id="${this.connectionInput}"]`
+        const nodeInput = getConnectionInputNode(
+            targetNode,
+            this.connectionInput
         )!;
 
         const nodeInputBoundingClientRect = nodeInput.getBoundingClientRect();
@@ -951,8 +954,9 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
                 sourceNodeBoundingClientRect
             );
 
-            const nodeOutput = sourceNode.querySelector(
-                `[data-connection-output-id="${result.connectionOutput}"]`
+            const nodeOutput = getConnectionOutputNode(
+                sourceNode,
+                result.connectionOutput
             )!;
 
             const nodeOutputBoundingClientRect =
@@ -1154,8 +1158,9 @@ export class MoveOutputConnectionLinesMouseHandler extends MouseHandler {
                 sourceNodeBoundingClientRect
             );
 
-            const nodeOutput = sourceNode.querySelector(
-                `[data-connection-output-id="${result.connectionOutput}"]`
+            const nodeOutput = getConnectionOutputNode(
+                sourceNode,
+                result.connectionOutput
             )!;
 
             const nodeOutputBoundingClientRect =
@@ -1395,8 +1400,9 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
                 targetNodeBoundingClientRect
             );
 
-            const nodeInput = targetNode.querySelector(
-                `[data-connection-input-id="${result.connectionInput}"]`
+            const nodeInput = getConnectionInputNode(
+                targetNode,
+                result.connectionInput
             )!;
 
             const nodeInputBoundingClientRect =
@@ -1512,4 +1518,37 @@ export class MoveInputConnectionLinesMouseHandler extends MouseHandler {
             </svg>
         );
     }
+}
+
+function getConnectionOutputNode(
+    sourceNode: Element,
+    connectionOutput: string
+) {
+    const outputNodes = sourceNode.querySelectorAll(
+        `[data-connection-output-id="${connectionOutput}"]`
+    )!;
+
+    for (let i = 0; i < outputNodes.length; i++) {
+        const outputNode = outputNodes[i];
+        if (outputNode.closest(".EezStudio_ComponentEnclosure") == sourceNode) {
+            return outputNode;
+        }
+    }
+
+    return undefined;
+}
+
+function getConnectionInputNode(targetNode: Element, connectionInput: string) {
+    const inputNodes = targetNode.querySelectorAll(
+        `[data-connection-input-id="${connectionInput}"]`
+    )!;
+
+    for (let i = 0; i < inputNodes.length; i++) {
+        const outputNode = inputNodes[i];
+        if (outputNode.closest(".EezStudio_ComponentEnclosure") == targetNode) {
+            return outputNode;
+        }
+    }
+
+    return undefined;
 }

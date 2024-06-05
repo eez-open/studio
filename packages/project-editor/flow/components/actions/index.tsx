@@ -2757,7 +2757,7 @@ export class LoopActionComponent extends ActionComponent {
 
     get variableOutput(): CustomOutput | undefined {
         return this.customOutputs.find(
-            output => output.name == this.variable.trim()
+            output => output.name == this.variable?.trim()
         );
     }
 
