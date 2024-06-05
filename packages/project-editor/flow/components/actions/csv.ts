@@ -184,6 +184,7 @@ registerActionComponents("Dashboard Specific", [
                 valueType: "boolean"
             }
         ],
+        bodyPropertyName: "input",
         execute: (context: IDashboardComponentContext) => {
             const input = context.evalProperty("input");
             if (input == undefined) {
