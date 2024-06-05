@@ -674,7 +674,7 @@ class TabulatorColumn extends EezObject {
             }
         ],
         defaultValue: {
-            formatter: "auto",
+            formatter: "plaintext",
             editor: "plaintext",
             hozAlign: "left",
             headerHozAlign: "left"
@@ -819,6 +819,9 @@ class TabulatorOptions extends EezObject {
     pagination: boolean;
     selectableRows: string;
 
+    dataTree: boolean;
+    dataTreeStartExpanded: boolean;
+
     autoColumns: boolean;
     syncColumns: boolean;
     syncStructure: string;
@@ -867,6 +870,17 @@ class TabulatorOptions extends EezObject {
             {
                 name: "selectableRows",
                 type: PropertyType.String
+            },
+            {
+                name: "dataTreeStartExpanded",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "copyOptionsButton",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: CopyOptionsButton
             },
             {
                 name: "autoColumns",
@@ -956,10 +970,9 @@ class TabulatorOptions extends EezObject {
                 }
             },
             {
-                name: "copyOptionsButton",
-                type: PropertyType.Any,
-                computed: true,
-                propertyGridRowComponent: CopyOptionsButton
+                name: "dataTree",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
             }
         ],
         defaultValue: {},
@@ -1017,6 +1030,10 @@ class TabulatorOptions extends EezObject {
             movableColumns: observable,
             pagination: observable,
             selectableRows: observable,
+
+            dataTree: observable,
+            dataTreeStartExpanded: observable,
+
             autoColumns: observable,
             syncColumns: observable,
             syncStructure: observable,
@@ -1059,7 +1076,9 @@ class TabulatorOptions extends EezObject {
             headerVisible: this.headerVisible,
             movableColumns: this.movableColumns,
             pagination: this.pagination,
-            autoColumns: this.autoColumns
+            autoColumns: this.autoColumns,
+            dataTree: this.dataTree,
+            dataTreeStartExpanded: this.dataTreeStartExpanded
         };
 
         try {
@@ -1176,7 +1195,14 @@ export class TabulatorWidget extends Widget {
                 layout: "fitColumns",
                 headerVisible: true,
                 movableColumns: true,
-                autoColumns: true
+                pagination: false,
+                selectableRows: "false",
+                autoColumns: true,
+                syncColumns: false,
+                syncStructure: "",
+                columns: [],
+                dataTree: false,
+                dataTreeStartExpanded: false
             }
         },
 
