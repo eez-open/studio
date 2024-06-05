@@ -317,8 +317,6 @@ const TabulatorElement = observer(
                 configuration
             );
 
-            console.log(options);
-
             return options;
         }
 
