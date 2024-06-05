@@ -182,6 +182,12 @@ export class TabulatorExecutionState {
     getInstrumentItemData?: () => {
         options: any;
     };
+    download?: (
+        downloadType: TabulatorModule.DownloadType,
+        fileName: string,
+        params: TabulatorModule.DownloadOptions,
+        filter: TabulatorModule.RowRangeLookup
+    ) => void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -431,6 +437,19 @@ const TabulatorElement = observer(
                         return {
                             options: this.options
                         };
+                    };
+                    executionState.download = (
+                        downloadType: TabulatorModule.DownloadType,
+                        fileName: string,
+                        params: TabulatorModule.DownloadOptions,
+                        filter: TabulatorModule.RowRangeLookup
+                    ) => {
+                        return this.tabulator.download(
+                            downloadType,
+                            fileName,
+                            params,
+                            filter
+                        );
                     };
                 }
             }
@@ -1075,8 +1094,9 @@ class TabulatorOptions extends EezObject {
                                         propertyInfo.name as keyof TabulatorColumn;
 
                                     if (column[propertyName]) {
-                                        columnFromStructure[propertyName] =
-                                            column[propertyName] as any;
+                                        (columnFromStructure as any)[
+                                            propertyName
+                                        ] = column[propertyName] as any;
                                     }
                                 }
                             );

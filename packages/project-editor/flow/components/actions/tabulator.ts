@@ -34,6 +34,9 @@ registerActionComponents("GUI", [
                 enumItems: [
                     {
                         id: "getSheetData"
+                    },
+                    {
+                        id: "download"
                     }
                 ]
             },
@@ -43,11 +46,33 @@ registerActionComponents("GUI", [
                 valueType: "string",
                 disabled: (...props: string[]) => props[1] != "getSheetData",
                 optional: () => true
+            },
+            {
+                name: "downloadType",
+                type: "enum",
+                enumItems: [
+                    {
+                        id: "csv"
+                    },
+                    {
+                        id: "json"
+                    },
+                    {
+                        id: "xlsx"
+                    },
+                    {
+                        id: "pdf"
+                    },
+                    {
+                        id: "html"
+                    }
+                ],
+                disabled: (...props: string[]) => props[1] != "download"
             }
         ],
         defaults: {
-            scriptSourceOption: "getSheetData",
-            pythonPath: '""'
+            tabulatorAction: "download",
+            downloadType: "csv"
         },
         bodyPropertyCallback: (...props: string[]) => {
             return humanize(props[1]);
@@ -81,11 +106,6 @@ registerActionComponents("GUI", [
                 return;
             }
 
-            if (!executionState.getSheetData) {
-                context.throwError(`Widget doesn't support getSheetData`);
-                return;
-            }
-
             const tabulatorAction = context.getStringParam(0);
 
             if (tabulatorAction == "getSheetData") {
@@ -96,9 +116,30 @@ registerActionComponents("GUI", [
                     );
                 }
 
+                if (!executionState.getSheetData) {
+                    context.throwError(`Widget doesn't support getSheetData`);
+                    return;
+                }
+
                 const data = executionState.getSheetData(lookup ?? "");
 
                 context.propagateValue("data", data);
+            } else if (tabulatorAction == "download") {
+                if (!executionState.download) {
+                    context.throwError(`Widget doesn't support download`);
+                    return;
+                }
+
+                const downloadType = context.getStringParam(4);
+
+                console.log(downloadType);
+
+                executionState.download(
+                    downloadType as any,
+                    undefined as any,
+                    undefined as any,
+                    undefined as any
+                );
             }
 
             context.propagateValueThroughSeqout();
