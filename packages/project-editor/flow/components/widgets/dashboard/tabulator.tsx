@@ -872,6 +872,11 @@ class TabulatorOptions extends EezObject {
                 type: PropertyType.String
             },
             {
+                name: "dataTree",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
                 name: "dataTreeStartExpanded",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true
@@ -968,11 +973,6 @@ class TabulatorOptions extends EezObject {
                         />
                     ];
                 }
-            },
-            {
-                name: "dataTree",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
             }
         ],
         defaultValue: {},
