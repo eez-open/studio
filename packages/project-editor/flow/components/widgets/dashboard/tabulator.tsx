@@ -311,6 +311,8 @@ const TabulatorElement = observer(
                 configuration
             );
 
+            console.log(options);
+
             return options;
         }
 
@@ -548,13 +550,37 @@ const EDITORS = [
     "datetime"
 ] as const;
 
+const HEADER_FILTERS = [
+    "input",
+    "textarea",
+    "number",
+    "range",
+    "tickCross",
+    "star",
+    "list",
+    "date",
+    "time",
+    "datetime"
+] as const;
+
+const HOZ_ALIGNS = ["left", "center", "right"] as const;
+
 class TabulatorColumn extends EezObject {
     title: string;
     field: string;
+
+    hozAlign: (typeof HOZ_ALIGNS)[number];
+    headerHozAlign: (typeof HOZ_ALIGNS)[number];
+
     formatter: (typeof FORMATTERS)[number];
     formatterParams: string;
+
     editor: (typeof EDITORS)[number];
     editorParams: string;
+
+    headerFilter: (typeof EDITORS)[number];
+    headerFilterParams: string;
+
     advanced: string;
 
     static classInfo: ClassInfo = {
@@ -567,6 +593,24 @@ class TabulatorColumn extends EezObject {
             {
                 name: "field",
                 type: PropertyType.MultilineText
+            },
+            {
+                name: "hozAlign",
+                type: PropertyType.Enum,
+                enumItems: HOZ_ALIGNS.slice()
+                    .sort()
+                    .map(id => ({
+                        id
+                    }))
+            },
+            {
+                name: "headerHozAlign",
+                type: PropertyType.Enum,
+                enumItems: HOZ_ALIGNS.slice()
+                    .sort()
+                    .map(id => ({
+                        id
+                    }))
             },
             {
                 name: "formatter",
@@ -595,15 +639,72 @@ class TabulatorColumn extends EezObject {
                 type: PropertyType.JSON
             },
             {
+                name: "headerFilter",
+                type: PropertyType.Enum,
+                enumItems: HEADER_FILTERS.slice()
+                    .sort()
+                    .map(id => ({
+                        id
+                    }))
+            },
+            {
+                name: "headerFilterParams",
+                type: PropertyType.JSON
+            },
+            {
                 name: "advanced",
                 type: PropertyType.JSON
             }
         ],
         defaultValue: {
             formatter: "auto",
-            editor: "plaintext"
+            editor: "plaintext",
+            hozAlign: "left",
+            headerHozAlign: "left"
         },
         check: (column: TabulatorColumn, messages: IMessage[]) => {
+            if (column.formatterParams) {
+                try {
+                    JSON.parse(column.formatterParams);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid JSON: ${err}`,
+                            getChildOfObject(column, "formatterParams")
+                        )
+                    );
+                }
+            }
+
+            if (column.editorParams) {
+                try {
+                    JSON.parse(column.editorParams);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid JSON: ${err}`,
+                            getChildOfObject(column, "editorParams")
+                        )
+                    );
+                }
+            }
+
+            if (column.headerFilterParams) {
+                try {
+                    JSON.parse(column.headerFilterParams);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid JSON: ${err}`,
+                            getChildOfObject(column, "headerFilterParams")
+                        )
+                    );
+                }
+            }
+
             if (column.advanced) {
                 try {
                     JSON.parse(column.advanced);
@@ -626,10 +727,14 @@ class TabulatorColumn extends EezObject {
         makeObservable(this, {
             title: observable,
             field: observable,
+            hozAlign: observable,
+            headerHozAlign: observable,
             formatter: observable,
             formatterParams: observable,
             editor: observable,
             editorParams: observable,
+            headerFilter: observable,
+            headerFilterParams: observable,
             advanced: observable
         });
     }
@@ -638,8 +743,11 @@ class TabulatorColumn extends EezObject {
         const columnDefinition: TabulatorModule.ColumnDefinition = {
             title: this.title,
             field: this.field,
+            hozAlign: this.hozAlign,
+            headerHozAlign: this.headerHozAlign,
             formatter: this.formatter,
-            editor: this.editor
+            editor: this.editor,
+            headerFilter: this.headerFilter
         };
 
         if (this.advanced) {
@@ -663,6 +771,13 @@ class TabulatorColumn extends EezObject {
             } catch (err) {}
         }
 
+        if (this.headerFilterParams) {
+            try {
+                const headerFilterParams = JSON.parse(this.headerFilterParams);
+                columnDefinition.headerFilterParams = headerFilterParams;
+            } catch (err) {}
+        }
+
         if (this.advanced) {
             try {
                 const advanced = JSON.parse(this.advanced);
@@ -682,12 +797,15 @@ class TabulatorOptions extends EezObject {
         | "fitDataStretch"
         | "fitDataTable"
         | undefined;
+    headerVisible: boolean;
+    movableColumns: boolean;
+    pagination: boolean;
+    selectableRows: string;
+
     autoColumns: boolean;
     syncColumns: boolean;
     syncStructure: string;
     columns: TabulatorColumn[];
-    pagination: boolean;
-    headerVisible: boolean;
 
     static classInfo: ClassInfo = {
         listLabel: (object: TabulatorColumn) => "",
@@ -713,6 +831,25 @@ class TabulatorOptions extends EezObject {
                     }
                 ],
                 enumDisallowUndefined: true
+            },
+            {
+                name: "headerVisible",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "movableColumns",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "pagination",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "selectableRows",
+                type: PropertyType.String
             },
             {
                 name: "autoColumns",
@@ -802,16 +939,6 @@ class TabulatorOptions extends EezObject {
                 }
             },
             {
-                name: "pagination",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
-            },
-            {
-                name: "headerVisible",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
-            },
-            {
                 name: "copyOptionsButton",
                 type: PropertyType.Any,
                 computed: true,
@@ -820,6 +947,18 @@ class TabulatorOptions extends EezObject {
         ],
         defaultValue: {},
         check: (options: TabulatorOptions, messages: IMessage[]) => {
+            try {
+                options.getSelectableRows();
+            } catch (err) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `"Selectable rows" should be either empty, true, false, number or highlight`,
+                        getChildOfObject(options, "selectableRows")
+                    )
+                );
+            }
+
             if (options.syncColumns) {
                 if (options.syncStructure) {
                     const struct = getStructureFromType(
@@ -857,12 +996,14 @@ class TabulatorOptions extends EezObject {
 
         makeObservable(this, {
             layout: observable,
+            headerVisible: observable,
+            movableColumns: observable,
+            pagination: observable,
+            selectableRows: observable,
             autoColumns: observable,
             syncColumns: observable,
             syncStructure: observable,
-            columns: observable,
-            pagination: observable,
-            headerVisible: observable
+            columns: observable
         });
     }
 
@@ -870,13 +1011,43 @@ class TabulatorOptions extends EezObject {
         return columns.map(column => column.getColumnDefinition());
     }
 
+    getSelectableRows() {
+        if (!this.selectableRows) {
+            return undefined;
+        }
+
+        if (this.selectableRows == "true") {
+            return true;
+        }
+
+        if (this.selectableRows == "false") {
+            return true;
+        }
+
+        if (this.selectableRows == "highlight") {
+            return "highlight";
+        }
+
+        const value = parseInt(this.selectableRows);
+        if (isNaN(value)) {
+            throw "invalid number";
+        }
+
+        return value;
+    }
+
     get tabulatorOptions() {
         const options: TabulatorModule.Options = {
             layout: this.layout,
-            autoColumns: this.autoColumns,
+            headerVisible: this.headerVisible,
+            movableColumns: this.movableColumns,
             pagination: this.pagination,
-            headerVisible: this.headerVisible
+            autoColumns: this.autoColumns
         };
+
+        try {
+            options.selectableRows = this.getSelectableRows();
+        } catch (err) {}
 
         if (!this.autoColumns) {
             if (this.syncColumns) {
@@ -986,6 +1157,7 @@ export class TabulatorWidget extends Widget {
             options: {
                 layout: "fitColumns",
                 headerVisible: true,
+                movableColumns: true,
                 autoColumns: true
             }
         },
@@ -994,6 +1166,7 @@ export class TabulatorWidget extends Widget {
             if (jsObject.options == undefined) {
                 jsObject.options = {
                     headerVisible: true,
+                    movableColumns: true,
                     autoColumns: true
                 };
             }
