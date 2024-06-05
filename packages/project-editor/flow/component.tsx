@@ -4399,6 +4399,16 @@ export function createActionComponentClass(
         }
 
         getOutputs(): ComponentOutput[] {
+            let outputs: ComponentOutput[];
+
+            if (typeof actionComponentDefinition.outputs == "function") {
+                outputs = actionComponentDefinition.outputs(
+                    ...(this?._props ?? [])
+                );
+            } else {
+                outputs = actionComponentDefinition.outputs;
+            }
+
             return [
                 {
                     name: "@seqout",
@@ -4406,7 +4416,7 @@ export function createActionComponentClass(
                     isSequenceOutput: true,
                     isOptionalOutput: true
                 },
-                ...actionComponentDefinition.outputs,
+                ...outputs,
                 ...super.getOutputs()
             ];
         }

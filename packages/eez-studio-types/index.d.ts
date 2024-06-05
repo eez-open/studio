@@ -314,7 +314,7 @@ export interface IActionComponentDefinition {
     bodyPropertyCallback?: (...props: string[]) => React.ReactNode;
 
     inputs: IComponentInput[];
-    outputs: IComponentOutput[];
+    outputs: IComponentOutput[] | ((...props: string[]) => IComponentOutput[]);
 
     properties: IComponentProperty[];
 

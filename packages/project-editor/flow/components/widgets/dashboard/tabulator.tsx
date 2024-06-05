@@ -186,7 +186,7 @@ export class TabulatorExecutionState {
         downloadType: TabulatorModule.DownloadType,
         fileName: string,
         params: TabulatorModule.DownloadOptions,
-        filter: TabulatorModule.RowRangeLookup
+        filter?: TabulatorModule.RowRangeLookup
     ) => void;
 }
 
@@ -1096,7 +1096,7 @@ class TabulatorOptions extends EezObject {
                                     if (column[propertyName]) {
                                         (columnFromStructure as any)[
                                             propertyName
-                                        ] = column[propertyName] as any;
+                                        ] = column[propertyName];
                                     }
                                 }
                             );

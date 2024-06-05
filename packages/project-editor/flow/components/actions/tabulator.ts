@@ -14,14 +14,17 @@ registerActionComponents("GUI", [
         icon: TABULATOR_ICON as any,
         componentHeaderColor,
         inputs: [],
-        outputs: [
-            {
-                name: "data",
-                type: "json",
-                isSequenceOutput: false,
-                isOptionalOutput: false
-            }
-        ],
+        outputs: (...props: string[]) =>
+            props[1] == "getSheetData"
+                ? [
+                      {
+                          name: "data",
+                          type: "json",
+                          isSequenceOutput: false,
+                          isOptionalOutput: false
+                      }
+                  ]
+                : [],
         properties: [
             {
                 name: "widget",
@@ -48,6 +51,12 @@ registerActionComponents("GUI", [
                 optional: () => true
             },
             {
+                name: "fileName",
+                type: "expression",
+                valueType: "string",
+                optional: () => true
+            },
+            {
                 name: "downloadType",
                 type: "enum",
                 enumItems: [
@@ -56,9 +65,6 @@ registerActionComponents("GUI", [
                     },
                     {
                         id: "json"
-                    },
-                    {
-                        id: "xlsx"
                     },
                     {
                         id: "pdf"
@@ -75,7 +81,10 @@ registerActionComponents("GUI", [
             downloadType: "csv"
         },
         bodyPropertyCallback: (...props: string[]) => {
-            return humanize(props[1]);
+            return (
+                humanize(props[1]) +
+                (props[1] == "download" ? `: ${props[4]}` : "")
+            );
         },
         execute: (context: IDashboardComponentContext) => {
             const widget = context.evalProperty<number>("widget");
@@ -125,20 +134,24 @@ registerActionComponents("GUI", [
 
                 context.propagateValue("data", data);
             } else if (tabulatorAction == "download") {
-                if (!executionState.download) {
-                    context.throwError(`Widget doesn't support download`);
+                const fileName = context.evalProperty<string>("fileName");
+                if (fileName == undefined) {
+                    context.throwError(`Invalid File name property`);
                     return;
                 }
 
                 const downloadType = context.getStringParam(4);
 
-                console.log(downloadType);
+                if (!executionState.download) {
+                    context.throwError(`Widget doesn't support download`);
+                    return;
+                }
 
                 executionState.download(
                     downloadType as any,
+                    fileName,
                     undefined as any,
-                    undefined as any,
-                    undefined as any
+                    undefined
                 );
             }
 
