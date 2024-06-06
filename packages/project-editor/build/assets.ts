@@ -1298,6 +1298,9 @@ function buildHeaderData(
     if (uncompressed) {
         // external
         dataBuffer.writeUint8(0);
+
+        // reserved
+        dataBuffer.writeUint32(0);
     } else {
         // reserved
         dataBuffer.writeUint8(0);
@@ -1543,25 +1546,49 @@ export async function buildAssets(
         );
 
         if (option != "buildAssets") {
-            if (buildAssetsDecl) {
-                result.GUI_ASSETS_DECL = buildGuiAssetsDecl(uncompressedData);
-            }
+            if (
+                !(
+                    project.projectTypeTraits.isLVGL &&
+                    !project.projectTypeTraits.hasFlowSupport
+                )
+            ) {
+                if (buildAssetsDecl) {
+                    result.GUI_ASSETS_DECL =
+                        buildGuiAssetsDecl(uncompressedData);
+                }
 
-            if (buildAssetsDeclCompressed) {
-                result.GUI_ASSETS_DECL_COMPRESSED =
-                    buildGuiAssetsDecl(compressedData);
-            }
+                if (buildAssetsDeclCompressed) {
+                    result.GUI_ASSETS_DECL_COMPRESSED =
+                        buildGuiAssetsDecl(compressedData);
+                }
 
-            if (buildAssetsDef) {
-                result.GUI_ASSETS_DEF = await buildGuiAssetsDef(
-                    uncompressedData
-                );
-            }
+                if (buildAssetsDef) {
+                    result.GUI_ASSETS_DEF = await buildGuiAssetsDef(
+                        uncompressedData
+                    );
+                }
 
-            if (buildAssetsDefCompressed) {
-                result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(
-                    compressedData
-                );
+                if (buildAssetsDefCompressed) {
+                    result.GUI_ASSETS_DEF_COMPRESSED = await buildGuiAssetsDef(
+                        compressedData
+                    );
+                }
+            } else {
+                if (buildAssetsDecl) {
+                    result.GUI_ASSETS_DECL = "";
+                }
+
+                if (buildAssetsDeclCompressed) {
+                    result.GUI_ASSETS_DECL_COMPRESSED = "";
+                }
+
+                if (buildAssetsDef) {
+                    result.GUI_ASSETS_DEF = "";
+                }
+
+                if (buildAssetsDefCompressed) {
+                    result.GUI_ASSETS_DEF_COMPRESSED = "";
+                }
             }
         }
 
@@ -1687,6 +1714,14 @@ export async function buildAssets(
                 sectionNames.indexOf("LVGL_STYLES_DEF") !== -1
             ) {
                 result.LVGL_STYLES_DEF = await lvglBuild.buildStylesDecl();
+            }
+
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("EEZ_FOR_LVGL_CHECK") !== -1
+            ) {
+                result.EEZ_FOR_LVGL_CHECK =
+                    await lvglBuild.buildEezForLvglCheck();
             }
 
             if (option == "buildFiles") {

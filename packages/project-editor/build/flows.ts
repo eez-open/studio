@@ -692,6 +692,13 @@ export function buildFlowDefs(assets: Assets) {
 }
 
 export function buildFlowStructs(assets: Assets) {
+    if (
+        assets.projectStore.projectTypeTraits.isLVGL &&
+        !assets.projectStore.projectTypeTraits.hasFlowSupport
+    ) {
+        return "";
+    }
+
     const defs = [];
 
     // enum FlowStructures
@@ -773,6 +780,13 @@ export function buildFlowStructs(assets: Assets) {
 }
 
 export function buildFlowStructValues(assets: Assets) {
+    if (
+        assets.projectStore.projectTypeTraits.isLVGL &&
+        !assets.projectStore.projectTypeTraits.hasFlowSupport
+    ) {
+        return "";
+    }
+
     const build = new Build();
 
     build.startBuild();

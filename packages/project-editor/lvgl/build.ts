@@ -633,6 +633,10 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
     }
 
     async buildActionsArrayDef() {
+        if (!this.project.projectTypeTraits.hasFlowSupport) {
+            return "";
+        }
+
         this.startBuild();
         const build = this;
 
@@ -705,6 +709,10 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
     }
 
     async buildNativeVarsTableDef() {
+        if (!this.project.projectTypeTraits.hasFlowSupport) {
+            return "";
+        }
+
         this.startBuild();
         const build = this;
 
@@ -774,6 +782,23 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             build.unindent();
             build.line("};");
         }
+
+        return this.result;
+    }
+
+    async buildEezForLvglCheck() {
+        if (!this.project.projectTypeTraits.hasFlowSupport) {
+            return "";
+        }
+
+        this.startBuild();
+
+        const build = this;
+
+        build.line("#if !defined(EEZ_FOR_LVGL)");
+        build.line(`#warning "EEZ_FOR_LVGL is not enabled"`);
+        build.line(`#define EEZ_FOR_LVGL`);
+        build.line("#endif");
 
         return this.result;
     }
