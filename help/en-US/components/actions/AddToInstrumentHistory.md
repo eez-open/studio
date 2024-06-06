@@ -1,6 +1,6 @@
 # DESCRIPTION
 
-It is used to add a new item to the _History_ view of the instrument. Currently, only adding chart items is supported.
+It is used to add a new item to the _History_ view of the instrument. Currently, only adding chart items or widgets (Tabulator, Plotly or LineChart) are supported.
 
 For example in the _Rigol Waveform Data_ example we have this Action:
 
@@ -18,7 +18,7 @@ An instrument in whose _History_ an item will be added.
 
 ## Item type
 
-Item type to be added. It can be `"Chart"` or `"Plotly"`.
+Item type to be added. It can be `"Chart"` or `"Widget"`.
 
 ## Chart description
 
@@ -126,11 +126,11 @@ The number that defines the Y-axis zoom factor in the default chart view.
 
 This property is only available when `Item type` is `Chart`.
 
-## Plotly widget
+## Widget
 
-Reference to the LineChart widget. See `Output widget handle` property to find out how to obtain this reference.
+Reference to the Tabulator, Plotly or LineChart widget. See `Output widget handle` property to find out how to obtain this reference.
 
-This property is only available when `Item type` is `Plotly`.
+This property is only available when `Item type` is `Widget`.
 
 # INPUTS
 

@@ -14,6 +14,10 @@ Text to be displayed.
 
 Here we can choose whether the `Text` property will be calculated from the Expression.
 
+## Preview value
+
+This is optional property. If specified then the content of the Label in the project editor will be this value not the expression entered in Text property.
+
 ## Long mode
 
 If `content` is selected for `Width` and `Height` then this item has no effect because the size of the Widget will be automatically set to fit the entire text, but if the size of the Widget is set manually (`px` or `%`) then using of this item defines one of the following ways in which the text will be split if it does not fit within the limits of the Widget:

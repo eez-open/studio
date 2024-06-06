@@ -17,6 +17,7 @@ At the beginning of the chart there is not a single point on the lines. In order
 
 ## Data [EMPTY]
 
+
 ## Default style
 
 Style used when rendering of the Widget.
