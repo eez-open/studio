@@ -4,7 +4,8 @@ import {
     action,
     runInAction,
     makeObservable,
-    computed
+    computed,
+    toJS
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -4494,6 +4495,15 @@ export class LabelInActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const DEFAULT_OPTIONS = `{
+    landscape: false,
+    scale: 1,
+    pageSize: "Letter",
+    margins: {
+        marginType: "default"
+    }
+}`;
+
 export class PrintToPDFActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         componentPaletteGroupName: "GUI",
@@ -4505,8 +4515,20 @@ export class PrintToPDFActionComponent extends ActionComponent {
                     propertyGridGroup: specificGroup
                 },
                 "widget"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "options",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup,
+                    isOptional: true
+                },
+                "json"
             )
         ],
+        defaultValue: {
+            options: DEFAULT_OPTIONS
+        },
         icon: PRINT_TO_PDF_ICON,
         componentHeaderColor: "#DEB887",
         execute: (context: IDashboardComponentContext) => {
@@ -4543,7 +4565,13 @@ export class PrintToPDFActionComponent extends ActionComponent {
                 return;
             }
 
-            executionState.printWidget();
+            const options = context.evalProperty<any>("options");
+            if (options != undefined && typeof options != "object") {
+                context.throwError(`Invalid Options property`);
+                return;
+            }
+
+            executionState.printWidget(options ? toJS(options) : {});
 
             context.propagateValueThroughSeqout();
         }

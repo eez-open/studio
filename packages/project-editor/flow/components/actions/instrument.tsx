@@ -1188,8 +1188,7 @@ registerClass(
 export class AddToInstrumentHistoryActionComponent extends ActionComponent {
     static ITEM_TYPE_NONE = 0;
     static ITEM_TYPE_EEZ_CHART = 1;
-    static ITEM_TYPE_PLOTLY = 2;
-    static ITEM_TYPE_TABULATOR = 3;
+    static ITEM_TYPE_WIDGET = 2;
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         properties: [
@@ -1210,12 +1209,8 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                         label: "EEZ-Chart"
                     },
                     {
-                        id: "plotly",
-                        label: "Plotly"
-                    },
-                    {
-                        id: "tabulator",
-                        label: "Tabulator"
+                        id: "widget",
+                        label: "Widget"
                     }
                 ],
                 propertyGridGroup: specificGroup
@@ -1438,10 +1433,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     disabled: (
                         component: AddToInstrumentHistoryActionComponent
                     ) => {
-                        return (
-                            component.itemType != "plotly" &&
-                            component.itemType != "tabulator"
-                        );
+                        return component.itemType != "widget";
                     }
                 },
                 "widget"
@@ -1452,6 +1444,13 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             component: AddToInstrumentHistoryActionComponent,
             jsObject: any
         ) => {
+            if (
+                jsObject.itemType == "plotly" ||
+                jsObject.itemType == "tabulator"
+            ) {
+                jsObject.itemType = "widget";
+            }
+
             if (jsObject.plotlyWidget != undefined) {
                 jsObject.widget = jsObject.plotlyWidget;
                 delete jsObject.plotlyWidget;
@@ -1671,9 +1670,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                 historyItemType = "instrument/file-download";
             } else if (
                 itemType ==
-                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY ||
-                itemType ==
-                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_TABULATOR
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_WIDGET
             ) {
                 const widget = context.evalProperty<number>("widget");
                 if (widget == undefined) {
@@ -1704,14 +1701,12 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     return;
                 }
 
-                message = executionState.getInstrumentItemData();
+                const instrumentItemData =
+                    executionState.getInstrumentItemData();
 
+                historyItemType = instrumentItemData.itemType;
+                message = instrumentItemData.message;
                 chartData = undefined;
-                historyItemType =
-                    itemType ==
-                    AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
-                        ? "instrument/plotly"
-                        : "instrument/tabulator";
             } else {
                 context.throwError("Invalid item type");
                 return;
@@ -1826,13 +1821,9 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
             dataBuffer.writeUint8(
                 AddToInstrumentHistoryActionComponent.ITEM_TYPE_EEZ_CHART
             );
-        } else if (this.itemType == "plotly") {
+        } else if (this.itemType == "widget") {
             dataBuffer.writeUint8(
-                AddToInstrumentHistoryActionComponent.ITEM_TYPE_PLOTLY
-            );
-        } else if (this.itemType == "tabulator") {
-            dataBuffer.writeUint8(
-                AddToInstrumentHistoryActionComponent.ITEM_TYPE_TABULATOR
+                AddToInstrumentHistoryActionComponent.ITEM_TYPE_WIDGET
             );
         } else {
             dataBuffer.writeUint8(

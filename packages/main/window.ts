@@ -294,7 +294,7 @@ ipcMain.on("tabs-change", (event, tabs: { id: string; active: boolean }[]) => {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ipcMain.on("printPDF", (event: any, content: any) => {
+ipcMain.on("printPDF", (event: any, { content, options }: any) => {
     const senderWindow = BrowserWindow.getFocusedWindow();
     if (!senderWindow) {
         return;
@@ -320,7 +320,7 @@ ipcMain.on("printPDF", (event: any, content: any) => {
         let data;
         try {
             // Use default printing options
-            data = await printWindow.webContents.printToPDF({});
+            data = await printWindow.webContents.printToPDF(options);
         } catch (err) {
             await dialog.showMessageBox(senderWindow, {
                 title: "Print to PDF - EEZ Studio",

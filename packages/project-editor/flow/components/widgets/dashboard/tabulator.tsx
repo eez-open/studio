@@ -177,10 +177,13 @@ function buildColumnsFromStructure(
 ////////////////////////////////////////////////////////////////////////////////
 
 export class TabulatorExecutionState {
-    printWidget?: () => void;
+    printWidget?: (options: any) => void;
     getSheetData?: (lookup: string) => any;
     getInstrumentItemData?: () => {
-        options: any;
+        itemType: string;
+        message: {
+            options: any;
+        };
     };
     download?: (
         downloadType: TabulatorModule.DownloadType,
@@ -425,15 +428,25 @@ const TabulatorElement = observer(
                     );
 
                 if (executionState && !executionState.printWidget) {
-                    executionState.printWidget = () => {
-                        ipcRenderer.send("printPDF", this.printHtml);
+                    executionState.printWidget = (options: any) => {
+                        console.log({
+                            content: this.printHtml,
+                            options
+                        });
+                        ipcRenderer.send("printPDF", {
+                            content: this.printHtml,
+                            options
+                        });
                     };
                     executionState.getSheetData = (lookup: string) => {
                         return this.tabulator.getSheetData(lookup);
                     };
                     executionState.getInstrumentItemData = () => {
                         return {
-                            options: this.options
+                            itemType: "instrument/tabulator",
+                            message: {
+                                options: this.options
+                            }
                         };
                     };
                     executionState.download = (

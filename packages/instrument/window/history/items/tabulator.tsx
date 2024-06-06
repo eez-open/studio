@@ -169,7 +169,8 @@ export const TabulatorHistoryItemComponent = observer(
                 } else {
                     this.persistance = JSON.parse(
                         JSON.stringify(
-                            this.props.historyItem.tabulatorMessage.persistance
+                            this.props.historyItem.tabulatorMessage
+                                .persistance || {}
                         )
                     );
                 }
