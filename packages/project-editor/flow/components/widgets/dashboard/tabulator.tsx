@@ -614,7 +614,8 @@ class TabulatorColumn extends EezObject {
     advanced: string;
 
     static classInfo: ClassInfo = {
-        listLabel: (object: TabulatorColumn) => "",
+        listLabel: (object: TabulatorColumn, collapsed: boolean) =>
+            collapsed ? object.field : "",
         properties: [
             {
                 name: "title",

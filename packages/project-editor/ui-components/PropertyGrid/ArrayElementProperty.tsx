@@ -55,10 +55,13 @@ export const ArrayProperty = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        collapsed = new Set<IEezObject>();
+
         constructor(props: PropertyProps) {
             super(props);
 
             makeObservable(this, {
+                collapsed: observable,
                 value: computed,
                 objects: computed
             });
@@ -130,15 +133,66 @@ export const ArrayProperty = observer(
             this.context.undoManager.setCombineCommands(false);
         });
 
+        get allCollapsed() {
+            return this.collapsed.size == this.objects.length;
+        }
+
+        collapseAll = action((event: any) => {
+            event.preventDefault();
+
+            if (this.collapsed.size == this.objects.length) {
+                this.collapsed.clear();
+            } else {
+                this.objects.forEach(object => this.collapsed.add(object));
+            }
+        });
+
         render() {
             const buttons = [];
+
+            if (this.objects.length > 0) {
+                buttons.push(
+                    <IconAction
+                        key="collapse"
+                        icon={
+                            this.allCollapsed ? (
+                                <svg viewBox="0 0 16 16">
+                                    <path d="M9.00024 9H4.00024V10H9.00024V9Z" />
+                                    <path d="M7.00024 12L7.00024 7L6.00024 7L6.00024 12L7.00024 12Z" />
+                                    <path
+                                        fill-rule="evenodd"
+                                        clip-rule="evenodd"
+                                        d="M5.00024 3L6.00024 2H13.0002L14.0002 3V10L13.0002 11H11.0002V13L10.0002 14H3.00024L2.00024 13V6L3.00024 5H5.00024V3ZM6.00024 5H10.0002L11.0002 6V10H13.0002V3H6.00024V5ZM10.0002 6H3.00024V13H10.0002V6Z"
+                                    />
+                                </svg>
+                            ) : (
+                                <svg viewBox="0 0 16 16">
+                                    <path d="M9 9H4v1h5z" />
+                                    <path
+                                        fillRule="evenodd"
+                                        clipRule="evenodd"
+                                        d="m5 3 1-1h7l1 1v7l-1 1h-2v2l-1 1H3l-1-1V6l1-1h2zm1 2h4l1 1v4h2V3H6zm4 1H3v7h7z"
+                                    />
+                                </svg>
+                            )
+                        }
+                        iconSize={17}
+                        onClick={this.collapseAll}
+                        title={
+                            this.allCollapsed
+                                ? "Expand All Items"
+                                : "Collapse All Items"
+                        }
+                    />
+                );
+            }
 
             if (this.objects.length == 0) {
                 buttons.push(
                     <IconAction
                         key="add"
                         icon="material:add"
-                        iconSize={16}
+                        iconSize={18}
                         onClick={this.onAdd}
                         title="Add item"
                     />
@@ -170,6 +224,7 @@ export const ArrayProperty = observer(
                         moveItem={this.moveItem}
                         readOnly={this.props.readOnly}
                         propertyInfo={this.props.propertyInfo}
+                        collapsed={this.collapsed}
                     />
                 );
             }
@@ -197,6 +252,7 @@ const ArrayPropertyContent = observer(
         moveItem: (currentIndex: number, newIndex: number) => void;
         readOnly: boolean;
         propertyInfo: PropertyInfo;
+        collapsed: Set<IEezObject>;
     }> {
         render() {
             return (
@@ -209,6 +265,7 @@ const ArrayPropertyContent = observer(
                             readOnly={this.props.readOnly}
                             moveItem={this.props.moveItem}
                             propertyInfo={this.props.propertyInfo}
+                            collapsed={this.props.collapsed}
                         />
                     ))}
                 </div>
@@ -539,6 +596,7 @@ const ArrayElementProperties = observer(
         className?: string;
         moveItem: (currentIndex: number, newIndex: number) => void;
         propertyInfo: PropertyInfo;
+        collapsed: Set<IEezObject>;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -933,21 +991,45 @@ const ArrayElementProperties = observer(
             }
         });
 
+        toggleCollapse = action((event: any) => {
+            event.preventDefault();
+
+            if (this.props.collapsed.has(this.props.object)) {
+                this.props.collapsed.delete(this.props.object);
+            } else {
+                this.props.collapsed.add(this.props.object);
+            }
+        });
+
         render() {
+            const collapsed = this.props.collapsed.has(this.props.object);
+
             return (
                 <div
                     className={"EezStudio_ArrayElementProperty_Item"}
                     data-item-index={this.props.itemIndex}
                 >
                     <div className="EezStudio_ArrayElementProperty_Header">
+                        <IconAction
+                            icon={
+                                collapsed
+                                    ? "material:keyboard_arrow_right"
+                                    : "material:keyboard_arrow_down"
+                            }
+                            iconSize={18}
+                            onClick={this.toggleCollapse}
+                            title="Add Item Before"
+                        />
+
                         <div ref={this.refHeader}>
                             <div className="element-index">
                                 {`#${this.props.itemIndex + 1} `}
                             </div>
                             <div className="label">
-                                {getListLabel(this.props.object, false)}
+                                {getListLabel(this.props.object, collapsed)}
                             </div>
                         </div>
+
                         <Toolbar>
                             <IconAction
                                 icon={
@@ -1095,11 +1177,13 @@ const ArrayElementProperties = observer(
                             />
                         </Toolbar>
                     </div>
-                    <div className="EezStudio_ArrayElementProperty_Body">
-                        <table>
-                            <tbody>
-                                {getClassInfo(this.props.object).properties.map(
-                                    propertyInfo => (
+                    {!collapsed && (
+                        <div className="EezStudio_ArrayElementProperty_Body">
+                            <table>
+                                <tbody>
+                                    {getClassInfo(
+                                        this.props.object
+                                    ).properties.map(propertyInfo => (
                                         <tr
                                             key={propertyInfo.name}
                                             className={classNames({
@@ -1115,11 +1199,11 @@ const ArrayElementProperties = observer(
                                                 readOnly={this.props.readOnly}
                                             />
                                         </tr>
-                                    )
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             );
         }

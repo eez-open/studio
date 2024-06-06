@@ -2882,17 +2882,20 @@
                 border-bottom: 1px solid @borderColor;
                 padding: 5px;
 
-                & > :first-child {
+                display: flex;
+                align-items: center;
+
+                & > :nth-child(2) {
+                    flex: 1;
                     display: flex;
                     align-items: baseline;
                     & > :first-child {
                         padding-right: 10px;
                     }
-                }
-
-                display: flex;
-                & > div:first-child {
-                    flex: 1;
+                    .label {
+                        display: flex;
+                    }
+                    cursor: move;
                 }
             }
 
