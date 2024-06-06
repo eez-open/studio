@@ -1484,7 +1484,8 @@
     margin: 10px 0;
 
     tr.inError {
-        background-color: #ffcccc;
+        color: @inErrorTextColor;
+        background-color: @inErrorBackgroundColor;
     }
     tr.highlighted {
         background-color: #ff6666;
@@ -2339,7 +2340,8 @@
                 .EezStudio_TreeRowLabel {
                     .EezStudio_Style_PropertyLabel {
                         &.inError {
-                            background-color: #ffaaaa;
+                            color: @inErrorTextColor;
+                            background-color: @inErrorBackgroundColor;
                         }
                     }
                 }
@@ -2423,14 +2425,16 @@
                 background-color: @hoverBackgroundColor;
             }
             &.inError {
-                background-color: #ffaaaa;
+                color: @inErrorTextColor;
+                background-color: @inErrorBackgroundColor;
             }
         }
 
         .EezStudio_LVGLStylesDefinition_GroupProperties {
             .EezStudio_LVGLStylesDefinition_Property {
                 &.inError {
-                    background-color: #ffaaaa;
+                    color: @inErrorTextColor;
+                    background-color: @inErrorBackgroundColor;
                 }
                 padding-left: 10px;
                 display: flex;
@@ -2455,13 +2459,15 @@
 
     .EezStudio_LVGLStyle_PartLabel {
         &.inError {
-            background-color: #ffaaaa;
+            color: @inErrorTextColor;
+            background-color: @inErrorBackgroundColor;
         }
     }
 
     .EezStudio_LVGLStyle_StateLabel {
         &.inError {
-            background-color: #ffaaaa;
+            color: @inErrorTextColor;
+            background-color: @inErrorBackgroundColor;
         }
     }
 }
@@ -2835,7 +2841,8 @@
     table {
         & > tbody {
             & > tr.inError {
-                background-color: #ffaaaa;
+                color: @inErrorTextColor;
+                background-color: @inErrorBackgroundColor;
             }
             & > td.highlighted {
                 background-color: #ff6666;
@@ -2994,7 +3001,8 @@
         & > tbody {
             & > tr {
                 &.inError {
-                    background-color: #ffcccc;
+                    color: @inErrorTextColor;
+                    background-color: @inErrorBackgroundColor;
                 }
 
                 &.highlighted {
