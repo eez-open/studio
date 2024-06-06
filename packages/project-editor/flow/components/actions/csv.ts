@@ -90,18 +90,28 @@ registerActionComponents("Dashboard Specific", [
                 return;
             }
 
-            if (outputType.kind != "array") {
-                context.throwError(`Result output type is not an array`);
+            if (
+                outputType.kind != "array" &&
+                !(outputType.kind == "basic" && outputType.valueType == "json")
+            ) {
+                context.throwError(
+                    `Result output type is not an array or json`
+                );
                 return;
             }
 
-            const elementType = outputType.elementType;
+            let columns;
+            if (outputType.kind == "array") {
+                const elementType = outputType.elementType;
 
-            if (elementType.kind != "object") {
-                context.throwError(
-                    `Result output value type is not an array of struct`
-                );
-                return;
+                if (elementType.kind != "object") {
+                    context.throwError(
+                        `Result output value type is not an array of struct`
+                    );
+                    return;
+                }
+
+                columns = elementType.fields.map(field => field.name);
             }
 
             try {
@@ -113,7 +123,7 @@ registerActionComponents("Dashboard Specific", [
                     input,
                     {
                         delimiter,
-                        columns: elementType.fields.map(field => field.name),
+                        columns,
                         from,
                         to
                     },
