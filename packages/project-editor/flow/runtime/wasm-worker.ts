@@ -237,6 +237,27 @@ function operationJsonArrayLength(wasmModuleId: number, jsObjectID: number) {
     return -1; // error
 }
 
+function operationJsonArraySlice(
+    wasmModuleId: number,
+    jsObjectID: number,
+    from: number,
+    to: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        let array = getJSObjectFromID(jsObjectID, wasmModuleId);
+        if (array && Array.isArray(array)) {
+            if (to == -1) {
+                to = array.length;
+            }
+
+            return createWasmValue(WasmFlowRuntime, array.slice(from, to));
+        }
+    }
+
+    return createWasmValue(WasmFlowRuntime, Error()); // error
+}
+
 function operationJsonArrayAppend(
     wasmModuleId: number,
     jsObjectID: number,
@@ -411,6 +432,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonGet = operationJsonGet;
 (global as any).operationJsonSet = operationJsonSet;
 (global as any).operationJsonArrayLength = operationJsonArrayLength;
+(global as any).operationJsonArraySlice = operationJsonArraySlice;
 (global as any).operationJsonArrayAppend = operationJsonArrayAppend;
 (global as any).operationJsonArrayInsert = operationJsonArrayInsert;
 (global as any).operationJsonArrayRemove = operationJsonArrayRemove;

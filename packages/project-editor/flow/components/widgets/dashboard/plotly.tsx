@@ -5,7 +5,8 @@ import {
     makeObservable,
     runInAction,
     autorun,
-    IReactionDisposer
+    IReactionDisposer,
+    toJS
 } from "mobx";
 
 import {
@@ -51,7 +52,8 @@ import { makeEndInstruction } from "project-editor/flow/expression/instructions"
 import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 import {
     GAUGE_ICON,
-    LINE_CHART_ICON
+    LINE_CHART_ICON,
+    PLOTLY_ICON
 } from "project-editor/ui-components/icons";
 import type { Style } from "project-editor/features/style/style";
 import { getThemedColor } from "project-editor/features/style/theme";
@@ -67,6 +69,409 @@ function Plotly() {
     }
     return plotlyModule;
 }
+
+function openLink(url: string) {
+    const { shell } = require("electron");
+    shell.openExternal(url);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Plotly Widget
+
+export class PlotlyExecutionState {
+    getInstrumentItemData?: () => {
+        itemType: string;
+        message: {
+            data: any;
+            layout: any;
+            config: any;
+        };
+    };
+}
+
+const PlotlyElement = observer(
+    class PlotlyeElement extends React.Component<{
+        widget: PlotlyWidget;
+        flowContext: IFlowContext;
+        width: number;
+        height: number;
+    }> {
+        ref = React.createRef<HTMLDivElement>();
+
+        plotly: PlotlyModule.PlotlyHTMLElement | undefined;
+        plotlyEl: HTMLDivElement | undefined;
+        plotlyWidth: number;
+        plotlyHeight: number;
+
+        updateClientSizeTimeoutId: any;
+        clientWidth = 0;
+        clientHeight = 0;
+
+        createChartState: "idle" | "create" | "cancel" | "stop" = "idle";
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                clientWidth: observable,
+                clientHeight: observable
+            });
+        }
+
+        get data() {
+            let data = evalProperty(
+                this.props.flowContext,
+                this.props.widget,
+                "plotlyData"
+            );
+
+            if (!data) {
+                return undefined;
+            }
+
+            data = toJS(data);
+
+            return data;
+        }
+
+        get layout() {
+            let layout = evalProperty(
+                this.props.flowContext,
+                this.props.widget,
+                "layout"
+            );
+
+            if (!layout) {
+                return undefined;
+            }
+
+            layout = toJS(layout);
+
+            layout.width = this.clientWidth;
+            layout.height = this.clientHeight;
+
+            return layout;
+        }
+
+        get config() {
+            let config = evalProperty(
+                this.props.flowContext,
+                this.props.widget,
+                "config"
+            );
+
+            if (!config) {
+                return undefined;
+            }
+
+            config = toJS(config);
+
+            return config;
+        }
+
+        async createChart(el: HTMLDivElement) {
+            if (this.createChartState != "idle") {
+                if (this.createChartState == "create") {
+                    this.createChartState = "cancel";
+                }
+                return;
+            }
+            this.createChartState = "create";
+
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
+            }
+
+            this.plotly = await Plotly().newPlot(
+                el,
+                this.data,
+                this.layout,
+                this.config
+            );
+
+            if (this.createChartState != "create") {
+                if (this.createChartState == "cancel") {
+                    this.createChartState = "idle";
+                    this.createChart(el);
+                }
+                return;
+            }
+
+            this.createChartState = "idle";
+
+            this.plotlyEl = el;
+            this.plotlyWidth = this.clientWidth;
+            this.plotlyHeight = this.clientHeight;
+
+            const executionState =
+                this.props.flowContext.flowState?.getComponentExecutionState<PlotlyLineChartExecutionState>(
+                    this.props.widget
+                );
+            if (executionState) {
+                executionState.getInstrumentItemData = () => {
+                    return {
+                        itemType: "instrument/plotly",
+                        message: {
+                            data: this.data,
+                            layout: this.layout,
+                            config: this.config
+                        }
+                    };
+                };
+            }
+        }
+
+        updateClientSize = () => {
+            if (this.ref.current) {
+                const parentElement = this.ref.current.parentElement;
+                if (parentElement) {
+                    const clientWidth = parentElement.clientWidth;
+                    const clientHeight = parentElement.clientHeight;
+
+                    if (clientWidth == 0 && clientHeight == 0) {
+                        this.updateClientSizeTimeoutId = setTimeout(() => {
+                            this.updateClientSizeTimeoutId = undefined;
+                            this.updateClientSize();
+                        }, 16);
+                    }
+
+                    if (
+                        clientWidth != this.clientWidth ||
+                        clientHeight != this.clientHeight
+                    ) {
+                        runInAction(() => {
+                            this.clientWidth = clientWidth;
+                            this.clientHeight = clientHeight;
+                        });
+                    }
+                }
+            }
+        };
+
+        componentDidMount() {
+            if (this.ref.current) {
+                this.updateClientSize();
+
+                this.createChart(this.ref.current);
+            }
+        }
+
+        async componentDidUpdate() {
+            if (this.ref.current) {
+                this.updateClientSize();
+
+                if (
+                    !this.plotly ||
+                    !this.props.flowContext.flowState ||
+                    this.clientWidth != this.plotlyWidth ||
+                    this.clientHeight != this.plotlyHeight
+                ) {
+                    this.createChart(this.ref.current);
+                } else {
+                    this.plotly = await Plotly().react(
+                        this.ref.current,
+                        this.data,
+                        this.layout,
+                        this.config
+                    );
+                }
+            }
+        }
+
+        componentWillUnmount(): void {
+            if (this.updateClientSizeTimeoutId) {
+                clearTimeout(this.updateClientSizeTimeoutId);
+                this.updateClientSizeTimeoutId = undefined;
+            }
+
+            this.createChartState = "stop";
+
+            if (this.plotlyEl) {
+                Plotly().purge(this.plotlyEl);
+            }
+        }
+
+        render() {
+            const { flowContext } = this.props;
+
+            this.data;
+            this.layout;
+            this.config;
+            this.clientWidth;
+            this.clientHeight;
+
+            return (
+                <div
+                    ref={this.ref}
+                    style={{
+                        width: this.clientWidth,
+                        height: this.clientHeight
+                    }}
+                    className={classNames("EezStudio_Plotly", {
+                        interactive: !!flowContext.projectStore.runtime
+                    })}
+                ></div>
+            );
+        }
+    }
+);
+
+export class PlotlyWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        componentPaletteGroupName: "!1Visualiser",
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
+            }),
+
+            makeExpressionProperty(
+                {
+                    name: "plotlyData",
+                    displayName: "Chart data",
+                    formText: () => (
+                        <span>
+                            Plotly chart data is set via JSON value, check{" "}
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    openLink(
+                                        "https://plotly.com/javascript/reference/index/"
+                                    );
+                                }}
+                            >
+                                Plotly documentation
+                            </a>{" "}
+                            for available options.
+                        </span>
+                    ),
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "json"
+            ),
+
+            makeExpressionProperty(
+                {
+                    name: "layout",
+                    displayName: "Layout options",
+                    formText: () => (
+                        <span>
+                            Plotly layout options are set via JSON value, check{" "}
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    openLink(
+                                        "https://plotly.com/javascript/reference/layout/"
+                                    );
+                                }}
+                            >
+                                Plotly documentation
+                            </a>{" "}
+                            for available options.
+                        </span>
+                    ),
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "json"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "config",
+                    displayName: "Configurtion options",
+                    formText: () => (
+                        <span>
+                            Plotly configuration options are set via JSON value,
+                            check{" "}
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    openLink(
+                                        "https://plotly.com/javascript/configuration-options/"
+                                    );
+                                }}
+                            >
+                                Plotly documentation
+                            </a>{" "}
+                            for available options.
+                        </span>
+                    ),
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "json"
+            )
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 320,
+            height: 160
+        },
+
+        icon: PLOTLY_ICON,
+
+        showTreeCollapseIcon: "never",
+
+        execute: (context: IDashboardComponentContext) => {
+            Widget.classInfo.execute!(context);
+
+            let executionState =
+                context.getComponentExecutionState<PlotlyExecutionState>();
+            if (!executionState) {
+                context.setComponentExecutionState(new PlotlyExecutionState());
+            }
+        }
+    });
+
+    plotlyData: string;
+    layout: string;
+    config: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            plotlyData: observable,
+            layout: observable,
+            config: observable
+        });
+    }
+
+    override render(
+        flowContext: IFlowContext,
+        width: number,
+        height: number
+    ): React.ReactNode {
+        return (
+            <>
+                <PlotlyElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+}
+
+registerClass("PlotlyWidget", PlotlyWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +494,12 @@ export class PlotlyLineChartExecutionState {
     debounceTimerId: any;
 
     getInstrumentItemData?: () => {
-        data: any;
-        layout: any;
-        config: any;
+        itemType: string;
+        message: {
+            data: any;
+            layout: any;
+            config: any;
+        };
     };
 
     constructor() {
@@ -105,6 +513,8 @@ const LineChartElement = observer(
     class LineChartElement extends React.Component<{
         widget: LineChartWidget;
         flowContext: IFlowContext;
+        width: number;
+        height: number;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -432,9 +842,12 @@ const LineChartElement = observer(
             if (executionState) {
                 executionState.getInstrumentItemData = () => {
                     return {
-                        data: this.data,
-                        layout: this.layout,
-                        config: this.config
+                        itemType: "instrument/plotly",
+                        message: {
+                            data: this.data,
+                            layout: this.layout,
+                            config: this.config
+                        }
                     };
                 };
             }
@@ -1109,7 +1522,12 @@ export class LineChartWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <LineChartElement widget={this} flowContext={flowContext} />
+                <LineChartElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
@@ -1177,6 +1595,8 @@ const GaugeElement = observer(
     class GaugeElement extends React.Component<{
         widget: GaugeWidget;
         flowContext: IFlowContext;
+        width: number;
+        height: number;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -1555,7 +1975,12 @@ export class GaugeWidget extends Widget {
     ): React.ReactNode {
         return (
             <>
-                <GaugeElement widget={this} flowContext={flowContext} />
+                <GaugeElement
+                    widget={this}
+                    flowContext={flowContext}
+                    width={width}
+                    height={height}
+                />
                 {super.render(flowContext, width, height)}
             </>
         );
