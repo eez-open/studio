@@ -692,6 +692,14 @@ EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, void *flow_state, unsig
     addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state, component_index, property_index, 0, 0);
 }
 
+EM_PORT_API(void) lvglUpdateArcRangeMin(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_RANGE_MIN, obj, flow_state, component_index, property_index, 0, 0);
+}
+
+EM_PORT_API(void) lvglUpdateArcRangeMax(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_ARC_RANGE_MAX, obj, flow_state, component_index, property_index, 0, 0);
+}
+
 EM_PORT_API(void) lvglUpdateArcValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
     addUpdateTask(UPDATE_TASK_TYPE_ARC_VALUE, obj, flow_state, component_index, property_index, 0, 0);
 }

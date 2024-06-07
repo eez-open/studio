@@ -218,7 +218,8 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
     propName: Extract<keyof T, string>,
     getFunc: string,
     setFunc: string,
-    setFuncOptArgs?: string
+    setFuncOptArgs?: string,
+    arcRange?: "min" | "max"
 ) {
     if (getProperty(widget, propName + "Type") == "expression") {
         const propertyInfo = findPropertyByNameInClassInfo(
@@ -312,9 +313,30 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             build.line("if (new_val != cur_val) {");
             build.indent();
             build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""});`
-            );
+            if (arcRange) {
+                if (arcRange == "min") {
+                    build.line("int16_t min = new_val;");
+                    build.line(
+                        `int16_t max = lv_arc_get_max_value(${objectAccessor});`
+                    );
+                } else if (arcRange == "max") {
+                    build.line(
+                        `int16_t min = lv_arc_get_min_value(${objectAccessor});`
+                    );
+                    build.line("int16_t max = new_val;");
+                }
+                build.line("if (min < max) {");
+                build.indent();
+                build.line(`lv_arc_set_range(${objectAccessor}, min, max);`);
+                build.unindent();
+                build.line("}");
+            } else {
+                build.line(
+                    `${setFunc}(${objectAccessor}, new_val${
+                        setFuncOptArgs ?? ""
+                    });`
+                );
+            }
             build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line("}");

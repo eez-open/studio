@@ -667,6 +667,8 @@ export interface IWasmFlowRuntime {
     _lvglUpdateSliderValueLeft(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateBarValueStart(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateArcRangeMin(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateArcRangeMax(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateArcValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateTextareaText(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateCheckedState(obj: number, flow_state: number, component_index: number, property_index: number): void;

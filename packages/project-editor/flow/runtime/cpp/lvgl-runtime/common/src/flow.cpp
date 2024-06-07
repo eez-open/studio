@@ -638,9 +638,27 @@ void doUpdateTasks() {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
             int32_t cur_val = lv_slider_get_left_value(updateTask.obj);
             if (new_val != cur_val) lv_slider_set_left_value(updateTask.obj, new_val, LV_ANIM_OFF);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_RANGE_MIN) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Range min in Arc widget");
+            int32_t cur_val = lv_arc_get_min_value(updateTask.obj);
+            if (new_val != cur_val) {
+                auto max = lv_arc_get_max_value(updateTask.obj);
+                if (new_val < max) {
+                    lv_arc_set_range(updateTask.obj, new_val, max);
+                }
+            }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_RANGE_MAX) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Range max in Arc widget");
+            int32_t cur_val = lv_arc_get_max_value(updateTask.obj);
+            if (new_val != cur_val) {
+                auto min = lv_arc_get_min_value(updateTask.obj);
+                if (new_val > min) {
+                    lv_arc_set_range(updateTask.obj, min, new_val);
+                }
+            }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Arc widget");
-            int32_t cur_val = lv_bar_get_value(updateTask.obj);
+            int32_t cur_val = lv_arc_get_value(updateTask.obj);
             if (new_val != cur_val) lv_arc_set_value(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");

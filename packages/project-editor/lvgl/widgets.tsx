@@ -4428,7 +4428,9 @@ const ARC_MODES = {
 
 export class LVGLArcWidget extends LVGLWidget {
     rangeMin: number;
+    rangeMinType: LVGLPropertyType;
     rangeMax: number;
+    rangeMaxType: LVGLPropertyType;
     value: number | string;
     valueType: LVGLPropertyType;
     bgStartAngle: number;
@@ -4443,16 +4445,24 @@ export class LVGLArcWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Basic",
 
         properties: [
-            {
-                name: "rangeMin",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "rangeMax",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
+            ...makeLvglExpressionProperty(
+                "rangeMin",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
+            ...makeLvglExpressionProperty(
+                "rangeMax",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
             ...makeLvglExpressionProperty(
                 "value",
                 "integer",
@@ -4558,7 +4568,9 @@ export class LVGLArcWidget extends LVGLWidget {
 
         makeObservable(this, {
             rangeMin: observable,
+            rangeMinType: observable,
             rangeMax: observable,
+            rangeMaxType: observable,
             value: observable,
             valueType: observable,
             bgStartAngle: observable,
@@ -4576,6 +4588,16 @@ export class LVGLArcWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const rangeMinExpr = getExpressionPropertyData(
+            runtime,
+            this,
+            "rangeMin"
+        );
+        const rangeMaxExpr = getExpressionPropertyData(
+            runtime,
+            this,
+            "rangeMax"
+        );
         const valueExpr = getExpressionPropertyData(runtime, this, "value");
 
         const rect = this.getLvglCreateRect();
@@ -4589,14 +4611,33 @@ export class LVGLArcWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            this.rangeMin,
-            this.rangeMax,
+            rangeMinExpr ? 0 : this.rangeMin,
+            rangeMaxExpr ? 0 : this.rangeMax,
+
             valueExpr ? 0 : (this.value as number),
             this.bgStartAngle,
             this.bgEndAngle,
             ARC_MODES[this.mode],
             this.rotation
         );
+
+        if (rangeMinExpr) {
+            runtime.wasm._lvglUpdateArcRangeMin(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                rangeMinExpr.componentIndex,
+                rangeMinExpr.propertyIndex
+            );
+        }
+
+        if (rangeMaxExpr) {
+            runtime.wasm._lvglUpdateArcRangeMax(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                rangeMaxExpr.componentIndex,
+                rangeMaxExpr.propertyIndex
+            );
+        }
 
         if (valueExpr) {
             runtime.wasm._lvglUpdateArcValue(
@@ -4628,9 +4669,19 @@ export class LVGLArcWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        if (this.rangeMin != 0 || this.rangeMax != 100) {
+        if (this.rangeMinType == "literal" && this.rangeMaxType == "literal") {
+            if (this.rangeMin != 0 || this.rangeMax != 100) {
+                build.line(
+                    `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMax});`
+                );
+            }
+        } else if (this.rangeMinType == "literal") {
             build.line(
-                `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMax});`
+                `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMin});`
+            );
+        } else if (this.rangeMaxType == "literal") {
+            build.line(
+                `lv_arc_set_range(obj, ${this.rangeMax}, ${this.rangeMax});`
             );
         }
 
@@ -4658,6 +4709,26 @@ export class LVGLArcWidget extends LVGLWidget {
     }
 
     override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
+            build,
+            this,
+            "rangeMin" as const,
+            "lv_arc_get_min_value",
+            "lv_arc_set_range",
+            undefined,
+            "min"
+        );
+
+        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
+            build,
+            this,
+            "rangeMax" as const,
+            "lv_arc_get_max_value",
+            "lv_arc_set_range",
+            undefined,
+            "max"
+        );
+
         expressionPropertyBuildTickSpecific<LVGLArcWidget>(
             build,
             this,
