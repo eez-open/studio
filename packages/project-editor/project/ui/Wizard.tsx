@@ -549,8 +549,8 @@ class WizardModel {
                 targetPlatform: example.targetPlatform,
                 targetPlatformLink: example.targetPlatformLink,
                 resourceFiles: example.resourceFiles,
-                author: "EEZ", // example.author,
-                authorLink: "https://www.envox.eu/" //example.authorLink
+                author: example.author,
+                authorLink: example.authorLink
             };
 
             if (!this.searchFilter(projectType)) {
