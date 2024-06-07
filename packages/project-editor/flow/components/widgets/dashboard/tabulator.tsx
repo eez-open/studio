@@ -334,8 +334,6 @@ const TabulatorElement = observer(
         }
 
         get printHtml() {
-            this.tabulator.modules.export.ge;
-
             const printDiv = document.createElement("div");
             printDiv.classList.add("tabulator-print-fullscreen");
 
@@ -348,8 +346,8 @@ const TabulatorElement = observer(
 
             const tableEl = this.tabulator.modules.export.generateTable(
                 this.tabulator.options.printConfig,
-                this.tabulator.options.printStyled,
-                /*this.tabulator.options.printRowRange || */ "active",
+                this.tabulator.options.printStyled ?? true,
+                this.tabulator.options.printRowRange ?? "active",
                 "print"
             );
             printDiv.appendChild(tableEl);
@@ -427,12 +425,8 @@ const TabulatorElement = observer(
                         this.props.widget
                     );
 
-                if (executionState && !executionState.printWidget) {
+                if (executionState) {
                     executionState.printWidget = (options: any) => {
-                        console.log({
-                            content: this.printHtml,
-                            options
-                        });
                         ipcRenderer.send("printPDF", {
                             content: this.printHtml,
                             options
