@@ -128,14 +128,14 @@ registerActionComponents("Dashboard Specific", [
                         to
                     },
                     function (err, records) {
-                        context.endAsyncExecution();
-
                         if (err) {
                             context.throwError(err.toString());
                             return;
                         }
 
                         context.propagateValue("result", records);
+
+                        context.endAsyncExecution();
                     }
                 );
 

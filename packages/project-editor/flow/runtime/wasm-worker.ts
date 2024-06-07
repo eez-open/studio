@@ -365,9 +365,11 @@ function convertFromJson(
 
 function convertToJson(wasmModuleId: number, valuePtr: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+
     return createWasmValue(
         WasmFlowRuntime,
-        getValue(WasmFlowRuntime, valuePtr).value
+        getValue(WasmFlowRuntime, valuePtr).value,
+        +WasmFlowRuntime.assetsMap.typeIndexes["json"]
     );
 }
 
@@ -566,21 +568,6 @@ export function createWasmWorker(
                 if (oldValue.length != newValue.length) {
                     return false;
                 }
-
-                for (let i = 0; i < oldValue.length; i++) {
-                    if (
-                        typeof newValue[i] == "object" &&
-                        typeof oldValue[i] == "object"
-                    ) {
-                        // optimization: skip deep comparison of object elements
-                        continue;
-                    }
-                    if (newValue[i] != oldValue[i]) {
-                        return false;
-                    }
-                }
-
-                return true;
             }
 
             const deepEqual =

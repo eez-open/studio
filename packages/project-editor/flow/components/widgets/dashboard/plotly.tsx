@@ -172,6 +172,10 @@ const PlotlyElement = observer(
         }
 
         async createChart(el: HTMLDivElement) {
+            if (!this.data) {
+                return;
+            }
+
             if (this.createChartState != "idle") {
                 if (this.createChartState == "create") {
                     this.createChartState = "cancel";
