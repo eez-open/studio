@@ -519,7 +519,7 @@ class WizardModel {
                     compareVersions(
                         packageJSON.version,
                         example.minStudioVersion
-                    ) > 0
+                    ) >= 0
             )
             .sort((a, b) => stringCompare(a.projectName, b.projectName));
 
