@@ -27,4 +27,4 @@ Enter variable in which [persistent configuration](https://tabulator.info/docs/6
 # EXAMPLES
 
 -   _Tabulator Examples_
--   _Table Editor with File Import/Export_
+-   _TableEditor_
