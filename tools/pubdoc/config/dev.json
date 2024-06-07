@@ -51,7 +51,7 @@
                         "content": "SetVariable.html",
                         "status": "publish",
                         "id": 10063,
-                        "sha256": "0f5f2aa36478dce1b789a36e1b85acb3fd4ff58c1c0eced5fcf1fbe884c73e19"
+                        "sha256": "49a9b64251d196980f38490b038c3ed1dfcacfbdf1ce19b51a5977f2a935f862"
                     },
                     {
                         "content": "SwitchCase.html",
@@ -188,6 +188,12 @@
                         "sha256": "a84b7fed8cb8143be460ab14132f7fe174c7092fe5828091d82b6cb9d39533f4"
                     },
                     {
+                        "content": "PrintToPDF.html",
+                        "status": "publish",
+                        "id": 12701,
+                        "sha256": "51bb129a1d81f3af0e18c5c98f2b9258952500339fab20fb05cdc5e117541489"
+                    },
+                    {
                         "content": "SelectLanguage.html",
                         "status": "publish",
                         "id": 10082,
@@ -222,6 +228,12 @@
                         "status": "publish",
                         "id": 10087,
                         "sha256": "eb47f177db2c2bc78529b694a543388950493464bfd6b5a6c650a787564dad6a"
+                    },
+                    {
+                        "content": "TabulatorAction.html",
+                        "status": "publish",
+                        "id": 12702,
+                        "sha256": "aec5079488d584fc5e46355cd637252a485a37aa07725778c740a995c6dc79b1"
                     }
                 ]
             },
@@ -347,7 +359,7 @@
                         "content": "JSONParse.html",
                         "status": "publish",
                         "id": 10103,
-                        "sha256": "f606da95d9271a15528bb6fb3e6b3a2fd7f9969878242d2c7bace59e23956072"
+                        "sha256": "1ad2d8302c74749d961ed6da1c63881e0821e42fe47c098b4a6c6f1612e1ece9"
                     },
                     {
                         "content": "JSONStringify.html",
@@ -429,7 +441,7 @@
                         "content": "AddToInstrumentHistory.html",
                         "status": "publish",
                         "id": 10114,
-                        "sha256": "5de5b0424fb665cd5b0156486e329ff1ac359cc0f1068e2a52bcd1fb9231f2cb"
+                        "sha256": "36be2f8c4caa42b0c2999830b3f537ac9b245615aa8015189d03d96cc1e1e836"
                     },
                     {
                         "content": "ConnectInstrument.html",
@@ -958,6 +970,12 @@
                         "sha256": "2ccb122286122b884251f34ebe2da661455b01915023321167bcb37bb1cdf601"
                     },
                     {
+                        "content": "Plotly.html",
+                        "status": "publish",
+                        "id": 12705,
+                        "sha256": "37571e0fbdb6d0aded4cdda9e40b93e69150c90e5ec61dc2e2a37173245af1de"
+                    },
+                    {
                         "content": "Progress (Dashboard).html",
                         "status": "publish",
                         "id": 12115,
@@ -992,6 +1010,12 @@
                         "status": "publish",
                         "id": 12120,
                         "sha256": "2048e7a8b950b64c37512863f5e7bed5859768086a9efcf42c999c3de091b250"
+                    },
+                    {
+                        "content": "Tabulator.html",
+                        "status": "publish",
+                        "id": 12706,
+                        "sha256": "968ff2e81ca1a757e948bb35388dc547f7e64cd2847110c5e0c56420133342a4"
                     }
                 ]
             },
