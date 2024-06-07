@@ -939,14 +939,7 @@ export class Assets {
     }
 
     registerJSONValue(value: any) {
-        for (let i = 0; i < this.jsonValues.length; i++) {
-            if (JSON.stringify(value) == JSON.stringify(this.jsonValues[i])) {
-                return i + 1;
-            }
-        }
-
         this.jsonValues.push(value);
-
         return this.jsonValues.length;
     }
 

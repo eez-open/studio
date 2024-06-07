@@ -10,9 +10,17 @@ The Arc consists of a background and a foreground arc. The foreground (indicator
 
 The minimum value that can be selected by the `Value` property.
 
+## Range min type
+
+Defines whether the `Range min` will be given as a Literal or as an Expression.
+
 ## Range max
 
 The maximum value that can be selected by the `Value` property.
+
+## Range max type
+
+Defines whether the `Range max` will be given as a Literal or as an Expression.
 
 ## Value
 
@@ -48,5 +56,5 @@ An offset to the 0 degree position.
 
 # EXAMPLES
 
-* _LVGL Widgets Demo_
-* _Smart Home_
+-   _LVGL Widgets Demo_
+-   _Smart Home_

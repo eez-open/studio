@@ -896,12 +896,6 @@ class TabulatorOptions extends EezObject {
                 checkboxStyleSwitch: true
             },
             {
-                name: "copyOptionsButton",
-                type: PropertyType.Any,
-                computed: true,
-                propertyGridRowComponent: CopyOptionsButton
-            },
-            {
                 name: "autoColumns",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true
@@ -987,6 +981,12 @@ class TabulatorOptions extends EezObject {
                         />
                     ];
                 }
+            },
+            {
+                name: "copyOptionsButton",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: CopyOptionsButton
             }
         ],
         defaultValue: {},

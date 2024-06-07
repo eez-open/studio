@@ -23,6 +23,7 @@ import {
 import type { Variable } from "project-editor/features/variable/variable";
 import { Loader } from "eez-studio-ui/loader";
 import { Button } from "eez-studio-ui/button";
+import { CodeEditor } from "eez-studio-ui/code-editor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -104,21 +105,43 @@ export const RenderVariableStatusPropertyUI = observer(
                     />
                 );
             } else {
-                return this.context.runtimeSettings.getVariableValue(
-                    variable
-                ) != undefined ? (
-                    <Button
-                        color="secondary"
-                        size="small"
-                        onClick={() => {
-                            this.context.runtimeSettings.setVariableValue(
-                                variable,
-                                undefined
-                            );
-                        }}
-                    >
-                        Clear Persisted Value
-                    </Button>
+                const value =
+                    this.context.runtimeSettings.getVariableValue(variable);
+                return value != undefined ? (
+                    <div>
+                        <div
+                            style={{
+                                marginTop: 10
+                            }}
+                        >
+                            Stored value:
+                        </div>
+                        <CodeEditor
+                            mode="json"
+                            value={JSON.stringify(value, undefined, 2)}
+                            onChange={() => {}}
+                            minLines={2}
+                            maxLines={20}
+                            readOnly={true}
+                            style={{
+                                marginTop: 5,
+                                marginBottom: 10,
+                                border: "1px solid #aaa"
+                            }}
+                        ></CodeEditor>
+                        <Button
+                            color="secondary"
+                            size="small"
+                            onClick={() => {
+                                this.context.runtimeSettings.setVariableValue(
+                                    variable,
+                                    undefined
+                                );
+                            }}
+                        >
+                            Clear Stored Value
+                        </Button>
+                    </div>
                 ) : null;
             }
         }

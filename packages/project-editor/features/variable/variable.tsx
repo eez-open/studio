@@ -810,7 +810,8 @@ export class StructureField extends EezObject implements IStructureField {
             },
             variableTypeProperty
         ],
-        listLabel: () => "",
+        listLabel: (field: StructureField, collapsed: boolean) =>
+            collapsed ? field.name : "",
         check: (structureField: StructureField, messages: IMessage[]) => {
             if (!structureField.name) {
                 messages.push(propertyNotSetMessage(structureField, "name"));
@@ -1009,7 +1010,8 @@ export class EnumMember extends EezObject {
                 type: PropertyType.Number
             }
         ],
-        listLabel: () => "",
+        listLabel: (member: EnumMember, collapsed: boolean) =>
+            collapsed ? `${member.name}: ${member.value}` : "",
         check: (enumMember: EnumMember, messages: IMessage[]) => {
             if (!enumMember.name) {
                 messages.push(propertyNotSetMessage(enumMember, "name"));
