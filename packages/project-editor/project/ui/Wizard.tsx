@@ -55,6 +55,7 @@ import {
 } from "project-editor/project/project";
 import { ButtonAction } from "eez-studio-ui/action";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
+import { compareVersions } from "eez-studio-shared/util";
 
 // from https://envox.hr/gitea
 interface TemplateProject {
@@ -89,6 +90,9 @@ export interface ExampleProject {
     displayHeight?: number;
     targetPlatform?: string;
     targetPlatformLink?: string;
+    author?: string;
+    authorLink?: string;
+    minStudioVersion?: string;
     resourceFiles: string[];
 }
 
@@ -116,6 +120,9 @@ interface IProjectType {
         | string
         | { "8.3": string; "9.0": string }
         | { SCPI: string; PROPRIETARY: string };
+
+    author?: string;
+    authorLink?: string;
 }
 
 const SAVED_OPTIONS_VERSION = 12;
@@ -500,8 +507,20 @@ class WizardModel {
         const _newExamples: IProjectType[] = [];
         map.set("_newExamples", _newExamples);
 
+        const packageJSON: {
+            version: string;
+        } = require("../../../../package.json");
+
         const examples = examplesCatalog.catalog
             .slice()
+            .filter(
+                example =>
+                    !example.minStudioVersion ||
+                    compareVersions(
+                        packageJSON.version,
+                        example.minStudioVersion
+                    ) > 0
+            )
             .sort((a, b) => stringCompare(a.projectName, b.projectName));
 
         examples.forEach(example => {
@@ -529,7 +548,9 @@ class WizardModel {
                 displayHeight: example.displayHeight,
                 targetPlatform: example.targetPlatform,
                 targetPlatformLink: example.targetPlatformLink,
-                resourceFiles: example.resourceFiles
+                resourceFiles: example.resourceFiles,
+                author: "EEZ", // example.author,
+                authorLink: "https://www.envox.eu/" //example.authorLink
             };
 
             if (!this.searchFilter(projectType)) {
@@ -1955,6 +1976,26 @@ const ProjectTypeComponent = observer(
                             </div>
                         )}
                         <div className="EezStudio_NewProjectWizard_ProjectType_Details_Description">
+                            {projectType.author && (
+                                <div>
+                                    Created :{" "}
+                                    {projectType.authorLink ? (
+                                        <a
+                                            href="#"
+                                            onClick={event => {
+                                                event.preventDefault();
+                                                openLink(
+                                                    projectType.authorLink!
+                                                );
+                                            }}
+                                        >
+                                            {projectType.author}
+                                        </a>
+                                    ) : (
+                                        projectType.author
+                                    )}
+                                </div>
+                            )}
                             {projectType.description}
                         </div>
 

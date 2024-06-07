@@ -625,6 +625,9 @@ export class General extends EezObject {
     keywords: string;
     targetPlatform: string;
     targetPlatformLink: string;
+    author: string;
+    authorLink: string;
+    minStudioVersion: string;
     resourceFiles: ResourceFile[];
 
     static classInfo: ClassInfo = {
@@ -863,6 +866,19 @@ export class General extends EezObject {
                 type: PropertyType.String
             },
             {
+                name: "author",
+                type: PropertyType.String
+            },
+            {
+                name: "authorLink",
+                type: PropertyType.String
+            },
+            {
+                name: "minStudioVersion",
+                displayName: "Min. studio version",
+                type: PropertyType.String
+            },
+            {
                 name: "resourceFiles",
                 type: PropertyType.Array,
                 typeClass: ResourceFile,
@@ -1031,6 +1047,9 @@ export class General extends EezObject {
             keywords: observable,
             targetPlatform: observable,
             targetPlatformLink: observable,
+            author: observable,
+            authorLink: observable,
+            minStudioVersion: observable,
             resourceFiles: observable,
             commandsProtocol: observable
         });
