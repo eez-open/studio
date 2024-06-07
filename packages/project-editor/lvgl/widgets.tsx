@@ -5971,6 +5971,13 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             height: 120,
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             localStyles: {
+                definition: {
+                    MAIN: {
+                        DEFAULT: {
+                            align: "DEFAULT"
+                        }
+                    }
+                }
                 // definition: {
                 //     MAIN: {
                 //         DEFAULT: {
