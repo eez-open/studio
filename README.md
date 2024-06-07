@@ -76,6 +76,9 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 -   [M15](https://github.com/eez-open/studio/releases/tag/v0.10.1) - Enhancements (more examples, extension manager, MQTT)
 -   [M16](https://github.com/eez-open/studio/releases/tag/v0.10.2) - Online help, enhancements, bug fixing for “Actions”
 -   [M17](https://github.com/eez-open/studio/releases/tag/v0.10.3) - Online help, enhancements, bug fixing for “Widgets”
+-   [M18](https://github.com/eez-open/studio/releases/tag/v0.12.0) - Simultaneous control of multiple instruments
+-   [M19](https://github.com/eez-open/studio/releases/tag/v0.13.0) - Support for non-SCPI instruments and devices
+-   [M20](https://github.com/eez-open/studio/releases/tag/v0.14.0) - Hybrid table/tree/grid widget
 
 ---
 
