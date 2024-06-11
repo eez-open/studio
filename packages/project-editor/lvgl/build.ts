@@ -1,3 +1,5 @@
+import fs from "fs";
+import { resolve } from "path";
 import { NamingConvention, getName, Build } from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
@@ -7,7 +9,7 @@ import { Project, findAction } from "project-editor/project/project";
 import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
-import { writeTextFile } from "eez-studio-shared/util-electron";
+import { isDev, writeTextFile } from "eez-studio-shared/util-electron";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
     isEnumType,
@@ -18,6 +20,7 @@ import {
     getLvglBitmapSourceFile,
     getLvglStylePropName
 } from "project-editor/lvgl/lvgl-versions";
+import { sourceRootDir } from "eez-studio-shared/util";
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -795,11 +798,14 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 
         const build = this;
 
-        build.line("#if !defined(EEZ_FOR_LVGL)");
-        build.line(`#warning "EEZ_FOR_LVGL is not enabled"`);
-        build.line(`#define EEZ_FOR_LVGL`);
-        build.line("#endif");
-
+        if (this.project.settings.build.generateSourceCodeForEezFramework) {
+            build.line(`#include "eez-flow.h"`);
+        } else {
+            build.line("#if !defined(EEZ_FOR_LVGL)");
+            build.line(`#warning "EEZ_FOR_LVGL is not enabled"`);
+            build.line(`#define EEZ_FOR_LVGL`);
+            build.line("#endif");
+        }
         return this.result;
     }
 
@@ -857,4 +863,128 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             }
         }
     }
+}
+
+export async function generateSourceCodeForEezFramework(
+    project: Project,
+    destinationFolderPath: string,
+    isUsingCrypyoSha256: boolean
+) {
+    if (
+        !(
+            project.projectTypeTraits.isLVGL &&
+            project.projectTypeTraits.hasFlowSupport &&
+            project.settings.build.generateSourceCodeForEezFramework
+        )
+    ) {
+        return;
+    }
+
+    // post fix structs.h
+    try {
+        let structs_H = await fs.promises.readFile(
+            destinationFolderPath + "/structs.h",
+            "utf-8"
+        );
+        structs_H = structs_H.replace(`#include <eez/flow/flow.h>\n`, "");
+        await fs.promises.writeFile(
+            destinationFolderPath + "/structs.h",
+            structs_H,
+            "utf-8"
+        );
+    } catch (err) {}
+
+    // post fix ui.h
+    try {
+        let ui_H = await fs.promises.readFile(
+            destinationFolderPath + "/ui.h",
+            "utf-8"
+        );
+        ui_H = ui_H.replace(
+            `#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n`,
+            ""
+        );
+        await fs.promises.writeFile(
+            destinationFolderPath + "/ui.h",
+            ui_H,
+            "utf-8"
+        );
+    } catch (err) {}
+
+    const eezframeworkAmalgamationPath = isDev
+        ? resolve(`${sourceRootDir()}/../resources/eez-framework-amalgamation`)
+        : process.resourcesPath! + "/eez-framework-amalgamation";
+
+    await fs.promises.cp(
+        eezframeworkAmalgamationPath + "/eez-flow.cpp",
+        destinationFolderPath + "/eez-flow.cpp"
+    );
+
+    await fs.promises.cp(
+        eezframeworkAmalgamationPath + "/eez-flow.h",
+        destinationFolderPath + "/eez-flow.h"
+    );
+
+    let eezH = await fs.promises.readFile(
+        destinationFolderPath + "/eez-flow.h",
+        "utf-8"
+    );
+
+    if (project.settings.build.compressFlowDefinition) {
+        await fs.promises.cp(
+            eezframeworkAmalgamationPath + "/eez-flow-lz4.c",
+            destinationFolderPath + "/eez-flow-lz4.c"
+        );
+
+        await fs.promises.cp(
+            eezframeworkAmalgamationPath + "/eez-flow-lz4.h",
+            destinationFolderPath + "/eez-flow-lz4.h"
+        );
+    } else {
+        eezH = eezH.replace(
+            "#define EEZ_FOR_LVGL_LZ4_OPTION 1",
+            "#define EEZ_FOR_LVGL_LZ4_OPTION 0"
+        );
+    }
+
+    if (isUsingCrypyoSha256) {
+        await fs.promises.cp(
+            eezframeworkAmalgamationPath + "/eez-flow-sha256.c",
+            destinationFolderPath + "/eez-flow-sha256.c"
+        );
+
+        await fs.promises.cp(
+            eezframeworkAmalgamationPath + "/eez-flow-sha256.h",
+            destinationFolderPath + "/eez-flow-sha256.h"
+        );
+    } else {
+        eezH = eezH.replace(
+            "#define EEZ_FOR_LVGL_SHA256_OPTION 1",
+            "#define EEZ_FOR_LVGL_SHA256_OPTION 0"
+        );
+    }
+
+    eezH = eezH.replace(
+        "#define EEZ_FLOW_QUEUE_SIZE 1000",
+        "#define EEZ_FLOW_QUEUE_SIZE " +
+            project.settings.build.executionQueueSize
+    );
+
+    eezH = eezH.replace(
+        "#define EEZ_FLOW_EVAL_STACK_SIZE 20",
+        "#define EEZ_FLOW_EVAL_STACK_SIZE " +
+            project.settings.build.expressionEvaluatorStackSize
+    );
+
+    await fs.promises.writeFile(
+        destinationFolderPath + "/eez-flow.h",
+        eezH,
+        "utf-8"
+    );
+
+    project._store.outputSectionsStore.write(
+        Section.OUTPUT,
+        MessageType.INFO,
+        `EEZ Flow engine built`
+    );
 }

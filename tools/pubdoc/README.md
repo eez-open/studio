@@ -20,6 +20,6 @@ Add for each new html file:
 
 ```
 cd tools/pubdoc/build
-node pubdoc --config ../config/dev.json
-node pubdoc --config ../config/prod.json
+npm run pubdoc-dev
+npm run pubdoc-prod
 ```

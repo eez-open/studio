@@ -386,6 +386,10 @@ function buildExpressionNode(
             }
         }
 
+        if (functionName == "Crypto.sha256") {
+            assets.isUsingCrypyoSha256 = true;
+        }
+
         return [
             ...node.arguments.reduce(
                 (instructions, node) => [

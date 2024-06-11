@@ -170,6 +170,8 @@ export class Assets {
         [componentType: number]: string;
     } = {};
 
+    isUsingCrypyoSha256: boolean = false;
+
     get projectStore() {
         return this.rootProject._store;
     }
@@ -1545,9 +1547,17 @@ export async function buildAssets(
                     !project.projectTypeTraits.hasFlowSupport
                 )
             ) {
+                const lvglCompressFlowDefinition =
+                    project.projectTypeTraits.isLVGL &&
+                    project.settings.build.generateSourceCodeForEezFramework &&
+                    project.settings.build.compressFlowDefinition;
+
                 if (buildAssetsDecl) {
-                    result.GUI_ASSETS_DECL =
-                        buildGuiAssetsDecl(uncompressedData);
+                    result.GUI_ASSETS_DECL = buildGuiAssetsDecl(
+                        lvglCompressFlowDefinition
+                            ? compressedData
+                            : uncompressedData
+                    );
                 }
 
                 if (buildAssetsDeclCompressed) {
@@ -1557,7 +1567,9 @@ export async function buildAssets(
 
                 if (buildAssetsDef) {
                     result.GUI_ASSETS_DEF = await buildGuiAssetsDef(
-                        uncompressedData
+                        lvglCompressFlowDefinition
+                            ? compressedData
+                            : uncompressedData
                     );
                 }
 
@@ -1727,6 +1739,8 @@ export async function buildAssets(
     if (option == "buildAssets") {
         return result;
     }
+
+    result.EEZ_FLOW_IS_USING_CRYPTO_SHA256 = assets.isUsingCrypyoSha256;
 
     return Object.assign(
         result,

@@ -21,9 +21,17 @@ async function getExtraResource() {
         to: "lv_img_conv_9/" + file
     }));
 
+    let eezframeworkAmalgamation = (
+        await fs.promises.readdir("./resources/eez-framework-amalgamation")
+    ).map(file => ({
+        from: "./resources/eez-framework-amalgamation/" + file,
+        to: "eez-framework-amalgamation/" + file
+    }));
+
     return [
         ...extraResources,
         ...lvImgConv9,
+        ...eezframeworkAmalgamation,
         ...[
             {
                 from: "./LICENSE.TXT",

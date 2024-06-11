@@ -252,6 +252,10 @@ export class Build extends EezObject {
     files: BuildFile[];
     destinationFolder?: string;
     lvglInclude: string;
+    generateSourceCodeForEezFramework: boolean;
+    compressFlowDefinition: boolean;
+    executionQueueSize: number;
+    expressionEvaluatorStackSize: number;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -281,12 +285,63 @@ export class Build extends EezObject {
                 displayName: "LVGL include",
                 type: PropertyType.String,
                 disabled: isNotLVGLProject
+            },
+            {
+                name: "generateSourceCodeForEezFramework",
+                displayName:
+                    "Generate source code for EEZ Flow engine (eez-framework)",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: object =>
+                    isNotLVGLProject(object) ||
+                    !getProject(object).projectTypeTraits.hasFlowSupport
+            },
+            {
+                name: "compressFlowDefinition",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (object: Build) =>
+                    isNotLVGLProject(object) ||
+                    !getProject(object).projectTypeTraits.hasFlowSupport ||
+                    !object.generateSourceCodeForEezFramework
+            },
+            {
+                name: "executionQueueSize",
+                type: PropertyType.Number,
+                disabled: (object: Build) =>
+                    isNotLVGLProject(object) ||
+                    !getProject(object).projectTypeTraits.hasFlowSupport ||
+                    !object.generateSourceCodeForEezFramework
+            },
+            {
+                name: "expressionEvaluatorStackSize",
+                type: PropertyType.Number,
+                disabled: (object: Build) =>
+                    isNotLVGLProject(object) ||
+                    !getProject(object).projectTypeTraits.hasFlowSupport ||
+                    !object.generateSourceCodeForEezFramework
             }
         ],
 
         beforeLoadHook: (object: Build, jsObject: Partial<Build>) => {
             if (!jsObject.lvglInclude) {
                 jsObject.lvglInclude = "lvgl/lvgl.h";
+            }
+
+            if (jsObject.generateSourceCodeForEezFramework == undefined) {
+                jsObject.generateSourceCodeForEezFramework = false;
+            }
+
+            if (jsObject.compressFlowDefinition == undefined) {
+                jsObject.compressFlowDefinition = false;
+            }
+
+            if (jsObject.executionQueueSize == undefined) {
+                jsObject.executionQueueSize = 1000;
+            }
+
+            if (jsObject.expressionEvaluatorStackSize == undefined) {
+                jsObject.expressionEvaluatorStackSize = 20;
             }
         },
 
@@ -313,7 +368,11 @@ export class Build extends EezObject {
             configurations: observable,
             files: observable,
             destinationFolder: observable,
-            lvglInclude: observable
+            lvglInclude: observable,
+            generateSourceCodeForEezFramework: observable,
+            compressFlowDefinition: observable,
+            executionQueueSize: observable,
+            expressionEvaluatorStackSize: observable
         });
     }
 }

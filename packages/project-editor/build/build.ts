@@ -34,6 +34,7 @@ import {
 
 import { buildAssets } from "project-editor/build/assets";
 import { buildScpi } from "project-editor/build/scpi";
+import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -422,6 +423,12 @@ export async function build(
                 projectStore,
                 destinationFolderPath || "",
                 configurationBuildResults
+            );
+
+            await generateSourceCodeForEezFramework(
+                project,
+                destinationFolderPath || "",
+                parts.EEZ_FLOW_IS_USING_CRYPTO_SHA256
             );
         } else {
             const baseName = path.basename(
