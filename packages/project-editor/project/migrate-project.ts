@@ -140,6 +140,17 @@ function removeFlowSupport(project: Project) {
         }
     });
 
+    // remove timeline in widgets
+    for (const object of visitObjects(project)) {
+        if (object instanceof ProjectEditor.WidgetClass) {
+            if (object.timeline.length > 0) {
+                projectStore.updateObject(object, {
+                    timeline: []
+                });
+            }
+        }
+    }
+
     // set all globalVariables as native
     project.variables.globalVariables.forEach(globalVariable => {
         if (!globalVariable.native) {

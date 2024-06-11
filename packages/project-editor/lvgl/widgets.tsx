@@ -1464,7 +1464,10 @@ export class LVGLWidget extends Widget {
             return true;
         }
 
-        if (this.timeline.length > 0) {
+        if (
+            getProject(this).projectTypeTraits.hasFlowSupport &&
+            this.timeline.length > 0
+        ) {
             return true;
         }
 

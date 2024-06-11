@@ -2718,7 +2718,8 @@ export class Widget extends Component {
                 computed: true,
                 skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) =>
-                    !isTimelineEditorActive(widget)
+                    !ProjectEditor.getProject(widget).projectTypeTraits
+                        .hasFlowSupport || !isTimelineEditorActive(widget)
             },
             makeExpressionProperty(
                 {

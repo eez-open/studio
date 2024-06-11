@@ -29,7 +29,8 @@ export const PageEditor = observer(
         render() {
             return this.pageTabState.isRuntime ? (
                 <FlowViewer tabState={this.pageTabState} />
-            ) : this.pageTabState.timeline.isEditorActive ? (
+            ) : this.context.projectTypeTraits.hasFlowSupport &&
+              this.pageTabState.timeline.isEditorActive ? (
                 <Splitter
                     type="vertical"
                     sizes="65%|35%"

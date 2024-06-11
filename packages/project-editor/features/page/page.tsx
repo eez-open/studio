@@ -1094,7 +1094,9 @@ export class Page extends Flow {
             }
         }
 
-        lvglBuildPageTimeline(build, this);
+        if (ProjectEditor.getProject(this).projectTypeTraits.hasFlowSupport) {
+            lvglBuildPageTimeline(build, this);
+        }
     }
 
     get _lvglWidgets() {
