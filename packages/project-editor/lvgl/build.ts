@@ -360,7 +360,9 @@ export class LVGLBuild extends Build {
 
                     build.line(`lv_event_code_t event = lv_event_get_code(e);`);
 
-                    build.line(`void *flowState = e->user_data;`);
+                    if (this.project.projectTypeTraits.hasFlowSupport) {
+                        build.line(`void *flowState = e->user_data;`);
+                    }
 
                     for (const eventHandler of widget.eventHandlers) {
                         if (
@@ -870,6 +872,30 @@ export async function generateSourceCodeForEezFramework(
     destinationFolderPath: string,
     isUsingCrypyoSha256: boolean
 ) {
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow.cpp");
+    } catch (err) {}
+
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow.h");
+    } catch (err) {}
+
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.c");
+    } catch (err) {}
+
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.h");
+    } catch (err) {}
+
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.c");
+    } catch (err) {}
+
+    try {
+        await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.h");
+    } catch (err) {}
+
     if (
         !(
             project.projectTypeTraits.isLVGL &&
