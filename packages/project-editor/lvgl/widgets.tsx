@@ -1603,6 +1603,7 @@ export class LVGLWidget extends Widget {
                 useStyle
             );
             if (style) {
+                build.assets.markLvglStyleUsed(style);
                 build.line(`${build.getStyleFunctionName(style)}(obj);`);
             }
         }

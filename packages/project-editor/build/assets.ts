@@ -89,6 +89,7 @@ import { LVGLBuild } from "project-editor/lvgl/build";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { AssetsMap } from "eez-studio-types";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -101,6 +102,7 @@ export class Assets {
     actions: Action[];
     pages: (Page | undefined)[];
     styles: Style[];
+    lvglStyles: LVGLStyle[];
     fonts: Font[];
     bitmaps: Bitmap[];
     colors: string[];
@@ -383,6 +385,7 @@ export class Assets {
         // styles
         //
         this.styles = [];
+        this.lvglStyles = [];
         this.getAssets<Style>(
             project => project.allStyles,
             style => style.id != undefined
@@ -824,39 +827,86 @@ export class Assets {
         return index;
     }
 
+    markBitmapUsed(bitmap: Bitmap) {
+        this.bitmaps.push(bitmap);
+    }
+
+    markFontUsed(font: Font) {
+        this.fonts.push(font);
+    }
+
+    markLvglStyleUsed(style: LVGLStyle) {
+        this.lvglStyles.push(style);
+    }
+
     reportUnusedAssets() {
         this.projects.forEach(project => {
-            if (project.allStyles?.length > 0) {
-                project.allStyles.forEach(style => {
-                    if (
-                        !this.styles.find(usedStyle => {
-                            if (!usedStyle) {
-                                return false;
-                            }
+            if (this.projectStore.projectTypeTraits.isLVGL) {
+                if (project.allLvglStyles?.length > 0) {
+                    project.allLvglStyles.forEach(style => {
+                        if (
+                            !this.lvglStyles.find(usedStyle => {
+                                if (!usedStyle) {
+                                    return false;
+                                }
 
-                            if (usedStyle == style) {
-                                return true;
-                            }
-
-                            let baseStyle = usedStyle.parentStyle;
-                            while (baseStyle) {
-                                if (baseStyle == style) {
+                                if (usedStyle == style) {
                                     return true;
                                 }
-                                baseStyle = baseStyle.parentStyle;
-                            }
 
-                            return false;
-                        })
-                    ) {
-                        this.projectStore.outputSectionsStore.write(
-                            Section.OUTPUT,
-                            MessageType.INFO,
-                            "Unused style: " + style.name,
-                            style
-                        );
-                    }
-                });
+                                let baseStyle = usedStyle.parentStyle;
+                                while (baseStyle) {
+                                    if (baseStyle == style) {
+                                        return true;
+                                    }
+                                    baseStyle = baseStyle.parentStyle;
+                                }
+
+                                return false;
+                            })
+                        ) {
+                            this.projectStore.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.INFO,
+                                "Unused style: " + style.name,
+                                style
+                            );
+                        }
+                    });
+                }
+            } else {
+                if (project.allStyles?.length > 0) {
+                    project.allStyles.forEach(style => {
+                        if (
+                            !this.styles.find(usedStyle => {
+                                if (!usedStyle) {
+                                    return false;
+                                }
+
+                                if (usedStyle == style) {
+                                    return true;
+                                }
+
+                                let baseStyle = usedStyle.parentStyle;
+                                while (baseStyle) {
+                                    if (baseStyle == style) {
+                                        return true;
+                                    }
+                                    baseStyle = baseStyle.parentStyle;
+                                }
+
+                                return false;
+                            })
+                        ) {
+                            this.projectStore.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.INFO,
+                                "Unused style: " + style.name,
+                                style
+                            );
+                        }
+                    });
+                }
             }
 
             if (project.fonts?.length > 0) {
@@ -1451,7 +1501,9 @@ export async function buildAssets(
 
     const assets = new Assets(project, buildConfiguration, option);
 
-    assets.reportUnusedAssets();
+    if (!project.projectTypeTraits.isLVGL) {
+        assets.reportUnusedAssets();
+    }
 
     // build enum's
     if (option != "buildAssets") {
@@ -1734,6 +1786,8 @@ export async function buildAssets(
                 await lvglBuild.copyFontFiles();
             }
         }
+
+        assets.reportUnusedAssets();
     }
 
     if (option == "buildAssets") {

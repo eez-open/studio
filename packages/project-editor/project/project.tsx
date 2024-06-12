@@ -65,7 +65,7 @@ import { Readme } from "project-editor/features/readme";
 import { Changes } from "project-editor/features/changes";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
-import type { LVGLStyles } from "project-editor/lvgl/style";
+import type { LVGLStyle, LVGLStyles } from "project-editor/lvgl/style";
 import { Assets } from "project-editor/project/assets";
 import { getProject } from "project-editor/project/helper";
 import { ImportDirectiveCustomUI } from "project-editor/project/ui/AssetsUsage";
@@ -1560,7 +1560,8 @@ export class Project extends EezObject {
             projectTypeTraits: computed,
             _objectsMap: computed,
             missingExtensions: computed,
-            allStyles: computed
+            allStyles: computed,
+            allLvglStyles: computed
         });
     }
 
@@ -1932,6 +1933,25 @@ export class Project extends EezObject {
         }
 
         return styles;
+    }
+
+    get allLvglStyles() {
+        const lvglStyles: LVGLStyle[] = [];
+
+        function addStyles(style: LVGLStyle) {
+            lvglStyles.push(style);
+            for (const childStyle of style.childStyles) {
+                addStyles(childStyle);
+            }
+        }
+
+        if (this.lvglStyles) {
+            for (const style of this.lvglStyles.styles) {
+                addStyles(style);
+            }
+        }
+
+        return lvglStyles;
     }
 }
 

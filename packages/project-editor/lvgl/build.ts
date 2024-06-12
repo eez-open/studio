@@ -191,12 +191,21 @@ export class LVGLBuild extends Build {
         const IMAGE_PREFIX = "img_";
 
         if (typeof bitmap == "string") {
+            const bitmapobject = this.bitmaps.find(
+                bitmapobject => bitmapobject.name == bitmap
+            );
+            if (bitmapobject) {
+                this.assets.markBitmapUsed(bitmapobject);
+            }
+
             return getName(
                 IMAGE_PREFIX,
                 bitmap,
                 NamingConvention.UnderscoreLowerCase
             );
         } else {
+            this.assets.markBitmapUsed(bitmap);
+
             return IMAGE_PREFIX + this.bitmapNames.get(bitmap.objID)!;
         }
     }
@@ -267,6 +276,7 @@ export class LVGLBuild extends Build {
     }
 
     getFontVariableName(font: Font) {
+        this.assets.markFontUsed(font);
         return "ui_font_" + this.fontNames.get(font.objID)!;
     }
 
