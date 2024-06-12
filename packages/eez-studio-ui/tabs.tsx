@@ -21,6 +21,7 @@ export interface ITab {
     makeActive(): void;
     openInWindow?(): void;
     close?(): void;
+    copyProjectPath?(): void;
 }
 
 /////////////////////////////// ///////////////////////////////////////////////
@@ -66,6 +67,15 @@ export const TabView: React.FC<TabViewProps> = observer(function TabView({
                     new MenuItem({
                         label: "Open in New Window",
                         click: () => tab.openInWindow!()
+                    })
+                );
+            }
+
+            if (tab.copyProjectPath) {
+                menu.append(
+                    new MenuItem({
+                        label: "Copy Project Path",
+                        click: () => tab.copyProjectPath!()
                     })
                 );
             }

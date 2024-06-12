@@ -1,5 +1,5 @@
 import fs from "fs";
-import { ipcRenderer } from "electron";
+import { clipboard, ipcRenderer } from "electron";
 import { getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
@@ -832,6 +832,12 @@ export class ProjectEditorTab implements IHomeTab {
     saveDebugInfo() {
         if (this.projectStore) {
             this.projectStore.runtime?.saveDebugInfo();
+        }
+    }
+
+    copyProjectPath() {
+        if (this.projectStore && this.projectStore.filePath) {
+            clipboard.writeText(this.projectStore.filePath);
         }
     }
 }
