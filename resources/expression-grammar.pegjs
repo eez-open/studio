@@ -216,6 +216,49 @@ JSONLiteral
       return { type: "JSONLiteral", value: chars.map(x => x[1]).join(""), location: location() };
     }
 
+TemplateLiteralCharacter
+  = !('`' / "\\" / "${") SourceCharacter { return text(); }
+  / "\\" sequence:EscapeSequence { return sequence; }
+
+TemplateLiteralChars = chars:TemplateLiteralCharacter* {
+    return chars.join("");
+}
+TemplateLiteralNext
+  = expr:("${" __ Expression __ "}") chars:TemplateLiteralChars {
+    if (chars) {
+        const literal = { type: "Literal", value: chars, location: location() };
+        return {
+            type: "BinaryExpression",
+            operator: "+",
+            left: expr[2],
+            right: literal,
+            location: location()
+        };
+    } else {
+        return expr[2];
+    }
+}
+
+TemplateLiteral
+  = "`" chars:TemplateLiteralChars expr:(TemplateLiteralNext)* "`" {
+    const literal = { type: "Literal", value: chars, location: location() };
+    if (expr.length > 0) {
+        return expr.reduce(function(result, element) {
+            return {
+                type: "BinaryExpression",
+                operator: "+",
+                left: result,
+                right: element,
+                location: location()
+            };
+        }, literal);
+
+    } else {
+        return literal;
+    }
+}
+//
+
 DoubleStringCharacter
   = !('"' / "\\" / LineTerminator) SourceCharacter { return text(); }
   / "\\" sequence:EscapeSequence { return sequence; }
@@ -401,6 +444,7 @@ EOF
 PrimaryExpression
   = TextResource
   / JSONLiteral
+  / TemplateLiteral
   / Identifier
   / Literal
   / ArrayLiteral
