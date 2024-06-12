@@ -7318,7 +7318,10 @@ class LVGLMeterScale extends EezObject {
                 {
                     name: "label",
                     displayName: "Major tick label",
-                    type: PropertyType.MultilineText
+                    type: PropertyType.MultilineText,
+                    disabled: object =>
+                        !ProjectEditor.getProject(object).projectTypeTraits
+                            .hasFlowSupport
                 },
                 "string"
             ),
@@ -7368,7 +7371,11 @@ class LVGLMeterScale extends EezObject {
         },
 
         check: (scale: LVGLMeterScale, messages: IMessage[]) => {
-            if (scale.label) {
+            if (
+                ProjectEditor.getProject(scale).projectTypeTraits
+                    .hasFlowSupport &&
+                scale.label
+            ) {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
                         scale,
@@ -7503,7 +7510,11 @@ export class LVGLMeterWidget extends LVGLWidget {
             ) {
                 const scale = widget.scales[scaleIndex];
 
-                if (scale.label) {
+                if (
+                    ProjectEditor.getProject(widget).projectTypeTraits
+                        .hasFlowSupport &&
+                    scale.label
+                ) {
                     properties.push(
                         Object.assign(
                             {},
@@ -7642,7 +7653,11 @@ export class LVGLMeterWidget extends LVGLWidget {
             scaleIndex++
         ) {
             const scale = this.scales[scaleIndex];
-            if (scale.label) {
+            if (
+                ProjectEditor.getProject(this).projectTypeTraits
+                    .hasFlowSupport &&
+                scale.label
+            ) {
                 return true;
             }
         }
@@ -7658,7 +7673,11 @@ export class LVGLMeterWidget extends LVGLWidget {
         ) {
             const scale = this.scales[scaleIndex];
 
-            if (scale.label) {
+            if (
+                ProjectEditor.getProject(this).projectTypeTraits
+                    .hasFlowSupport &&
+                scale.label
+            ) {
                 const labelExpr = getExpressionPropertyData(
                     runtime,
                     this,
@@ -7769,7 +7788,7 @@ export class LVGLMeterWidget extends LVGLWidget {
         ) {
             const scale = this.scales[scaleIndex];
 
-            if (scale.label) {
+            if (build.project.projectTypeTraits.hasFlowSupport && scale.label) {
                 build.line("if (event == LV_EVENT_DRAW_PART_BEGIN) {");
                 build.indent();
 
@@ -7784,30 +7803,18 @@ export class LVGLMeterWidget extends LVGLWidget {
                 );
 
                 build.line(`const char *temp;`);
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    build.line(
-                        `g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`
-                    );
+                build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
 
-                    const componentIndex = build.assets.getComponentIndex(this);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            this,
-                            `scales[${scaleIndex}].label`
-                        );
+                const componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    `scales[${scaleIndex}].label`
+                );
 
-                    build.line(
-                        `temp = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
-                    );
-                } else {
-                    build.line(
-                        `temp = ${build.getVariableGetterFunctionName(
-                            getProperty(this, `scales[${scaleIndex}].label`)
-                        )}();`
-                    );
-                }
+                build.line(
+                    `temp = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
+                );
+
                 build.line(`if (temp) {`);
                 build.indent();
                 build.line(`static char label[32];`);
