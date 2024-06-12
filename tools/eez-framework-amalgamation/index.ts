@@ -34,6 +34,8 @@ const CONFIG = {
         "core/mouse.h",
         "core/sound.h",
         "core/step_values.h",
+        "flow/dashboard_api.h",
+        "flow/dashboard_api.cpp",
         "flow/components/LineChartWidgetComponenent.cpp",
         "flow/components/LineChartWidgetComponenent.h",
         "flow/components/line_chart_widget.h",
@@ -62,7 +64,6 @@ const CONFIG = {
         "core/util.h",
         "flow/private.h",
         "flow/components.h",
-        "flow/dashboard_api.h",
         "flow/date.h",
         "flow/debugger.h",
         "flow/expression.h",
@@ -594,6 +595,7 @@ walk(BASE_PATH, async (err, results) => {
         BASE_PATH + "/libs/lz4/lz4.c",
         "utf-8"
     );
+    lz4_c = lz4_c.split("\n").slice(2, -2).join("\n");
     lz4_c = lz4_c.replace('#include "lz4.h"', '#include "eez-flow-lz4.h"');
     await fs.promises.writeFile(OUT_DIR + "/eez-flow-lz4.c", lz4_c, "utf-8");
     await fs.promises.cp(
@@ -606,6 +608,7 @@ walk(BASE_PATH, async (err, results) => {
         BASE_PATH + "/libs/sha256/sha256.c",
         "utf-8"
     );
+    sha256_c = sha256_c.split("\n").slice(2, -2).join("\n");
     sha256_c = sha256_c.replace(
         '#include "sha256.h"',
         '#include "eez-flow-sha256.h"'

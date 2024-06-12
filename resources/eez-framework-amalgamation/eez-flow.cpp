@@ -3001,483 +3001,6 @@ void executeComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/dashboard_api.cpp
-// -----------------------------------------------------------------------------
-#if defined(EEZ_DASHBOARD_API)
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-using namespace eez;
-using namespace eez::flow;
-namespace eez {
-namespace flow {
-bool g_dashboardValueFree = false;
-int getFlowStateIndex(FlowState *flowState) {
-    return (int)((uint8_t *)flowState - ALLOC_BUFFER);
-}
-FlowState *getFlowStateFromFlowStateIndex(int flowStateIndex) {
-    return (FlowState *)(ALLOC_BUFFER + flowStateIndex);
-}
-struct DashboardComponentExecutionState : public ComponenentExecutionState {
-    ~DashboardComponentExecutionState() {
-		EM_ASM({
-            freeComponentExecutionState($0, $1);
-        }, g_wasmModuleId, this);
-    }
-};
-void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int componentIndex) {
-    EM_ASM({
-        executeDashboardComponent($0, $1, $2, $3);
-    }, g_wasmModuleId, componentType, flowStateIndex, componentIndex);
-}
-Value operationJsonGet(int json, const char *property) {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return operationJsonGet($0, $1, UTF8ToString($2));
-    }, g_wasmModuleId, json, property);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-int operationJsonSet(int json, const char *property, const Value *valuePtr) {
-    return EM_ASM_INT({
-        return operationJsonSet($0, $1, UTF8ToString($2), $3);
-    }, g_wasmModuleId, json, property, valuePtr);
-}
-int operationJsonArrayLength(int json) {
-    return EM_ASM_INT({
-        return operationJsonArrayLength($0, $1);
-    }, g_wasmModuleId, json);
-}
-Value operationJsonArraySlice(int json, int from, int to) {
-    auto resultValuePtr = (Value *)EM_ASM_INT({
-        return operationJsonArraySlice($0, $1, $2, $3);
-    }, g_wasmModuleId, json, from, to);
-    Value result = *resultValuePtr;
-    ObjectAllocator<Value>::deallocate(resultValuePtr);
-    return result;
-}
-Value operationJsonArrayAppend(int json, const Value *valuePtr) {
-    auto resultValuePtr = (Value *)EM_ASM_INT({
-        return operationJsonArrayAppend($0, $1, $2);
-    }, g_wasmModuleId, json, valuePtr);
-    Value result = *resultValuePtr;
-    ObjectAllocator<Value>::deallocate(resultValuePtr);
-    return result;
-}
-Value operationJsonArrayInsert(int json, int32_t position, const Value *valuePtr) {
-    auto resultValuePtr = (Value *)EM_ASM_INT({
-        return operationJsonArrayInsert($0, $1, $2, $3);
-    }, g_wasmModuleId, json, position, valuePtr);
-    Value result = *resultValuePtr;
-    ObjectAllocator<Value>::deallocate(resultValuePtr);
-    return result;
-}
-Value operationJsonArrayRemove(int json, int32_t position) {
-    auto resultValuePtr = (Value *)EM_ASM_INT({
-        return operationJsonArrayRemove($0, $1, $2);
-    }, g_wasmModuleId, json, position);
-    Value result = *resultValuePtr;
-    ObjectAllocator<Value>::deallocate(resultValuePtr);
-    return result;
-}
-Value operationJsonClone(int json) {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return operationJsonClone($0, $1);
-    }, g_wasmModuleId, json);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-Value operationJsonMake() {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return operationJsonMake($0);
-    }, g_wasmModuleId);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-Value convertFromJson(int json, uint32_t toType) {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return convertFromJson($0, $1, $2);
-    }, g_wasmModuleId, json, toType);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-Value convertToJson(const Value *arrayValuePtr) {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return convertToJson($0, $1);
-    }, g_wasmModuleId, arrayValuePtr);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-void dashboardObjectValueIncRef(int json) {
-    EM_ASM({
-        dashboardObjectValueIncRef($0, $1);
-    }, g_wasmModuleId, json);
-}
-void dashboardObjectValueDecRef(int json) {
-    EM_ASM({
-        dashboardObjectValueDecRef($0, $1);
-    }, g_wasmModuleId, json);
-}
-void onObjectArrayValueFree(ArrayValue *arrayValue) {
-    EM_ASM({
-        onObjectArrayValueFree($0, $1);
-    }, g_wasmModuleId, arrayValue);
-}
-Value getBitmapAsDataURL(const char *bitmapName) {
-    auto valuePtr = (Value *)EM_ASM_INT({
-        return getBitmapAsDataURL($0, UTF8ToString($1));
-    }, g_wasmModuleId, bitmapName);
-    Value result = *valuePtr;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    return result;
-}
-} 
-} 
-static void updateArrayValue(ArrayValue *arrayValue1, ArrayValue *arrayValue2) {
-    for (uint32_t i = 0; i < arrayValue1->arraySize; i++) {
-        if (arrayValue1->values[i].isArray()) {
-            updateArrayValue(arrayValue1->values[i].getArray(), arrayValue2->values[i].getArray());
-        } else {
-            arrayValue1->values[i] = arrayValue2->values[i];
-            onValueChanged(&arrayValue1->values[i]);
-        }
-    }
-}
-EM_PORT_API(Value *) createUndefinedValue() {
-    auto pValue = ObjectAllocator<Value>::allocate(0x2e821285);
-    *pValue = Value(0, VALUE_TYPE_UNDEFINED);
-    return pValue;
-}
-EM_PORT_API(Value *) createNullValue() {
-    auto pValue = ObjectAllocator<Value>::allocate(0x69debded);
-    *pValue = Value(0, VALUE_TYPE_NULL);
-    return pValue;
-}
-EM_PORT_API(Value *) createIntValue(int value) {
-    auto pValue = ObjectAllocator<Value>::allocate(0x20ea356c);
-    *pValue = Value(value, VALUE_TYPE_INT32);
-    return pValue;
-}
-EM_PORT_API(Value *) createDoubleValue(double value) {
-    auto pValue = ObjectAllocator<Value>::allocate(0xecfb69a9);
-    *pValue = Value(value, VALUE_TYPE_DOUBLE);
-    return pValue;
-}
-EM_PORT_API(Value *) createBooleanValue(int value) {
-    auto pValue = ObjectAllocator<Value>::allocate(0x76071378);
-    *pValue = Value(value, VALUE_TYPE_BOOLEAN);
-    return pValue;
-}
-EM_PORT_API(Value *) createStringValue(const char *value) {
-    auto pValue = ObjectAllocator<Value>::allocate(0x0a8a7ed1);
-    Value stringValue = Value::makeStringRef(value, strlen(value), 0x5b1e51d7);
-    *pValue = stringValue;
-    return pValue;
-}
-EM_PORT_API(Value *) createArrayValue(int arraySize, int arrayType) {
-    Value value = Value::makeArrayRef(arraySize, arrayType, 0xeabb7edc);
-    auto pValue = ObjectAllocator<Value>::allocate(0xbab14c6a);
-    if (pValue) {
-        *pValue = value;
-    }
-    return pValue;
-}
-EM_PORT_API(Value *) createStreamValue(int value) {
-    dashboardObjectValueIncRef(value);
-    auto pValue = ObjectAllocator<Value>::allocate(0x53a2e660);
-    *pValue = Value(value, VALUE_TYPE_STREAM);
-    return pValue;
-}
-EM_PORT_API(Value *) createDateValue(double value) {
-    auto pValue = ObjectAllocator<Value>::allocate(0x90b7ce70);
-    *pValue = Value(value, VALUE_TYPE_DATE);
-    return pValue;
-}
-EM_PORT_API(Value *) createBlobValue(const uint8_t *buffer, uint32_t bufferLen) {
-    auto pValue = ObjectAllocator<Value>::allocate(0x35109c5c);
-    *pValue = Value::makeBlobRef(buffer, bufferLen, 0x1100895c);
-    return pValue;
-}
-EM_PORT_API(Value *) createJsonValue(int value) {
-    dashboardObjectValueIncRef(value);
-    auto pValue = ObjectAllocator<Value>::allocate(0x734f514c);
-    *pValue = Value(value, VALUE_TYPE_JSON);
-    return pValue;
-}
-EM_PORT_API(Value *) createErrorValue() {
-    auto pValue = ObjectAllocator<Value>::allocate(0x5ad2f119);
-    *pValue = Value::makeError();
-    return pValue;
-}
-EM_PORT_API(void) arrayValueSetElementValue(Value *arrayValuePtr, int elementIndex, Value *valuePtr) {
-    auto array = arrayValuePtr->getArray();
-    array->values[elementIndex] = *valuePtr;
-}
-EM_PORT_API(void) valueFree(Value *valuePtr) {
-    eez::flow::g_dashboardValueFree = true;
-    ObjectAllocator<Value>::deallocate(valuePtr);
-    eez::flow::g_dashboardValueFree = false;
-}
-EM_PORT_API(Value *) getGlobalVariable(int globalVariableIndex) {
-    auto flowDefinition = static_cast<FlowDefinition *>(eez::g_mainAssets->flowDefinition);
-    if (g_globalVariables) {
-        return g_globalVariables->values + globalVariableIndex;
-    }
-    return flowDefinition->globalVariables[globalVariableIndex];
-}
-EM_PORT_API(void) setGlobalVariable(int globalVariableIndex, Value *valuePtr) {
-    auto flowDefinition = static_cast<FlowDefinition *>(eez::g_mainAssets->flowDefinition);
-    Value *globalVariableValuePtr = g_globalVariables
-        ? g_globalVariables->values + globalVariableIndex
-        : flowDefinition->globalVariables[globalVariableIndex];
-    *globalVariableValuePtr = *valuePtr;
-    onValueChanged(globalVariableValuePtr);
-}
-EM_PORT_API(void) updateGlobalVariable(int globalVariableIndex, Value *valuePtr) {
-    auto flowDefinition = static_cast<FlowDefinition *>(eez::g_mainAssets->flowDefinition);
-    Value *globalVariableValuePtr = g_globalVariables
-        ? g_globalVariables->values + globalVariableIndex
-        : flowDefinition->globalVariables[globalVariableIndex];
-    updateArrayValue(globalVariableValuePtr->getArray(), valuePtr->getArray());
-}
-EM_PORT_API(int) getFlowIndex(int flowStateIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    return flowState->flowIndex;
-}
-EM_PORT_API(void *) getComponentExecutionState(int flowStateIndex, int componentIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto executionState = (DashboardComponentExecutionState *)flowState->componenentExecutionStates[componentIndex];
-    if (executionState) {
-        return executionState;
-    }
-    return nullptr;
-}
-EM_PORT_API(void *) allocateDashboardComponentExecutionState(int flowStateIndex, int componentIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto executionState = (DashboardComponentExecutionState *)flowState->componenentExecutionStates[componentIndex];
-    if (executionState) {
-        return executionState;
-    }
-    return allocateComponentExecutionState<DashboardComponentExecutionState>(flowState, componentIndex);
-}
-EM_PORT_API(void) deallocateDashboardComponentExecutionState(int flowStateIndex, int componentIndex, int state) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto executionState = (DashboardComponentExecutionState *)flowState->componenentExecutionStates[componentIndex];
-    if (executionState) {
-        deallocateComponentExecutionState(flowState, componentIndex);
-    }
-}
-EM_PORT_API(uint32_t) getUint8Param(int flowStateIndex, int componentIndex, int offset) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    return *(const uint8_t *)((const uint8_t *)component + sizeof(Component) + offset);
-}
-EM_PORT_API(uint32_t) getUint32Param(int flowStateIndex, int componentIndex, int offset) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    return *(const uint32_t *)((const uint8_t *)component + sizeof(Component) + offset);
-}
-EM_PORT_API(const char *) getStringParam(int flowStateIndex, int componentIndex, int offset) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto ptr = (AssetsPtr<const char> *)((const uint8_t *)component + sizeof(Component) + offset);
-    return *ptr;
-}
-struct ExpressionList {
-    uint32_t count;
-    Value values[1];
-};
-EM_PORT_API(void *) getExpressionListParam(int flowStateIndex, int componentIndex, int offset) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto &list = *(ListOfAssetsPtr<uint8_t> *)((const uint8_t *)component + sizeof(Component) + offset);
-    auto expressionList = (ExpressionList *)::malloc(sizeof(ExpressionList) + (list.count - 1) * sizeof(Value));
-    expressionList->count = list.count;
-    for (uint32_t i = 0; i < list.count; i++) {
-        new (expressionList->values + i) Value();
-        auto valueExpression = list[i];
-        if (!evalExpression(flowState, componentIndex, valueExpression, expressionList->values[i], "Failed to evaluate expression")) {
-            return nullptr;
-        }
-    }
-    return expressionList;
-}
-EM_PORT_API(void) freeExpressionListParam(void *ptr) {
-    auto expressionList = (ExpressionList*)ptr;
-    for (uint32_t i = 0; i < expressionList->count; i++) {
-        (expressionList->values + i)->~Value();
-    }
-    ::free(ptr);
-}
-struct Expressions {
-    AssetsPtr<uint8_t> expressions[1];
-};
-EM_PORT_API(int) getListParamSize(int flowStateIndex, int componentIndex, int offset) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    auto list = (ListOfAssetsPtr<Expressions> *)((const uint8_t *)component + sizeof(Component) + offset);
-    return list->count;
-}
-EM_PORT_API(Value *) evalListParamElementExpression(int flowStateIndex, int componentIndex, int listOffset, int elementIndex, int expressionOffset, const char *errorMessage) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto component = flowState->flow->components[componentIndex];
-    ListOfAssetsPtr<Expressions> &list = *(ListOfAssetsPtr<Expressions> *)((const uint8_t *)component + sizeof(Component) + listOffset);
-    auto &expressionInstructions = list[elementIndex]->expressions[expressionOffset / 4];
-    Value result;
-    if (!evalExpression(flowState, componentIndex, expressionInstructions, result, errorMessage)) {
-        return nullptr;
-    }
-    auto pValue = ObjectAllocator<Value>::allocate(0x15cb2009);
-    if (!pValue) {
-        throwError(flowState, componentIndex, "Out of memory\n");
-        return nullptr;
-    }
-    *pValue = result;
-    return pValue;
-}
-EM_PORT_API(Value*) getInputValue(int flowStateIndex, int inputIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    return flowState->values + inputIndex;
-}
-EM_PORT_API(void) clearInputValue(int flowStateIndex, int inputIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    clearInputValue(flowState, inputIndex);
-}
-EM_PORT_API(Value *) evalProperty(int flowStateIndex, int componentIndex, int propertyIndex, int32_t *iterators, bool disableThrowError) {
-    if (eez::flow::isFlowStopped()) {
-        return nullptr;
-    }
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    if (disableThrowError) {
-        eez::flow::enableThrowError(false);
-    }
-    Value result;
-    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, result, "Failed to evaluate property", nullptr, iterators)) {
-        return nullptr;
-    }
-    if (disableThrowError) {
-        eez::flow::enableThrowError(true);
-    }
-    auto pValue = ObjectAllocator<Value>::allocate(0xb7e697b8);
-    if (!pValue) {
-        throwError(flowState, componentIndex, "Out of memory\n");
-        return nullptr;
-    }
-    *pValue = result;
-    return pValue;
-}
-EM_PORT_API(void) assignProperty(int flowStateIndex, int componentIndex, int propertyIndex, int32_t *iterators, Value *srcValuePtr) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    Value dstValue;
-    if (evalAssignableProperty(flowState, componentIndex, propertyIndex, dstValue, nullptr, nullptr, iterators)) {
-        assignValue(flowState, componentIndex, dstValue, *srcValuePtr);
-    }
-}
-EM_PORT_API(void) setPropertyField(int flowStateIndex, int componentIndex, int propertyIndex, int fieldIndex, Value *valuePtr) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    Value result;
-    if (!eez::flow::evalProperty(flowState, componentIndex, propertyIndex, result, "Failed to evaluate property")) {
-        return;
-    }
-	if (result.getType() == VALUE_TYPE_VALUE_PTR) {
-		result = *result.pValueValue;
-	}
-    if (!result.isArray()) {
-        throwError(flowState, componentIndex, "Property is not an array");
-        return;
-    }
-    auto array = result.getArray();
-    if (fieldIndex < 0 || fieldIndex >= array->arraySize) {
-        throwError(flowState, componentIndex, "Invalid field index");
-        return;
-    }
-    array->values[fieldIndex] = *valuePtr;
-    onValueChanged(array->values + fieldIndex);
-}
-EM_PORT_API(void) propagateValue(int flowStateIndex, int componentIndex, int outputIndex, Value *valuePtr) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::propagateValue(flowState, componentIndex, outputIndex, *valuePtr);
-}
-EM_PORT_API(void) propagateValueThroughSeqout(int flowStateIndex, int componentIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-	eez::flow::propagateValueThroughSeqout(flowState, componentIndex);
-}
-EM_PORT_API(void) startAsyncExecution(int flowStateIndex, int componentIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::startAsyncExecution(flowState, componentIndex);
-}
-EM_PORT_API(void) endAsyncExecution(int flowStateIndex, int componentIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::endAsyncExecution(flowState, componentIndex);
-}
-EM_PORT_API(void) executeCallAction(int flowStateIndex, int componentIndex, int flowIndex) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::executeCallAction(flowState, componentIndex, flowIndex);
-}
-EM_PORT_API(void) onEvent(int flowStateIndex, FlowEvent flowEvent, Value *flowValue) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::onEvent(flowState, flowEvent, *flowValue);
-}
-EM_PORT_API(void) logInfo(int flowStateIndex, int componentIndex, const char *infoMessage) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    eez::flow::logInfo(flowState, componentIndex, infoMessage);
-}
-EM_PORT_API(void) throwError(int flowStateIndex, int componentIndex, const char *errorMessage) {
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-	eez::flow::throwError(flowState, componentIndex, errorMessage);
-}
-EM_PORT_API(int) getFirstRootFlowState() {
-    if (!g_firstFlowState) {
-        return -1;
-    }
-    return getFlowStateIndex(g_firstFlowState);
-}
-EM_PORT_API(int) getFirstChildFlowState(int flowStateIndex) {
-    if (flowStateIndex == -1) {
-        return -1;
-    }
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto firstChildFlowState = flowState->firstChild;
-    if (!firstChildFlowState) {
-        return -1;
-    }
-    return getFlowStateIndex(firstChildFlowState);
-}
-EM_PORT_API(int) getNextSiblingFlowState(int flowStateIndex) {
-    if (flowStateIndex == -1) {
-        return -1;
-    }
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    auto nextSiblingFlowState = flowState->nextSibling;
-    if (!nextSiblingFlowState) {
-        return -1;
-    }
-    return getFlowStateIndex(nextSiblingFlowState);
-}
-EM_PORT_API(int) getFlowStateFlowIndex(int flowStateIndex) {
-    if (flowStateIndex == -1) {
-        return -1;
-    }
-    auto flowState = getFlowStateFromFlowStateIndex(flowStateIndex);
-    return flowState->flowIndex;
-}
-EM_PORT_API(void) setDebuggerMessageSubsciptionFilter(uint32_t filter) {
-    eez::flow::setDebuggerMessageSubsciptionFilter(filter);
-}
-#if EEZ_OPTION_GUI
-EM_PORT_API(bool) isRTL() {
-    return g_isRTL;
-}
-#endif
-#endif 
-// -----------------------------------------------------------------------------
 // flow/date.cpp
 // -----------------------------------------------------------------------------
 #include <stdio.h>
@@ -7882,6 +7405,77 @@ void enableThrowError(bool enable) {
 } 
 } 
 // -----------------------------------------------------------------------------
+// flow/watch_list.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeWatchVariableComponent(FlowState *flowState, unsigned componentIndex);
+struct WatchListNode {
+    FlowState *flowState;
+    unsigned componentIndex;
+    WatchListNode *prev;
+    WatchListNode *next;
+};
+struct WatchList {
+    WatchListNode *first;
+    WatchListNode *last;
+};
+static WatchList g_watchList;
+WatchListNode *watchListAdd(FlowState *flowState, unsigned componentIndex) {
+    auto node = (WatchListNode *)alloc(sizeof(WatchListNode), 0x00864d67);
+    node->prev = g_watchList.last;
+    if (g_watchList.last != 0) {
+        g_watchList.last->next = node;
+    }
+    g_watchList.last = node;
+    if (g_watchList.first == 0) {
+        g_watchList.first = node;
+    }
+    node->next = 0;
+    node->flowState = flowState;
+    node->componentIndex = componentIndex;
+    incRefCounterForFlowState(flowState);
+    return node;
+}
+void watchListRemove(WatchListNode *node) {
+    if (node->prev) {
+        node->prev->next = node->next;
+    } else {
+        g_watchList.first = node->next;
+    }
+    if (node->next) {
+        node->next->prev = node->prev;
+    } else {
+        g_watchList.last = node->prev;
+    }
+    free(node);
+}
+void visitWatchList() {
+    for (auto node = g_watchList.first; node; ) {
+        auto nextNode = node->next;
+        if (canExecuteStep(node->flowState, node->componentIndex)) {
+            executeWatchVariableComponent(node->flowState, node->componentIndex);
+        }
+        decRefCounterForFlowState(node->flowState);
+        if (canFreeFlowState(node->flowState)) {
+            freeFlowState(node->flowState);
+            watchListRemove(node);
+        } else {
+            incRefCounterForFlowState(node->flowState);
+        }
+        node = nextNode;
+    }
+}
+void watchListReset() {
+    for (auto node = g_watchList.first; node;) {
+        auto nextNode = node->next;
+        watchListRemove(node);
+        node = nextNode;
+    }
+}
+} 
+} 
+// -----------------------------------------------------------------------------
 // flow/queue.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -7978,77 +7572,6 @@ bool isInQueue(FlowState *flowState, unsigned componentIndex) {
         }
 	}
     return false;
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/watch_list.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeWatchVariableComponent(FlowState *flowState, unsigned componentIndex);
-struct WatchListNode {
-    FlowState *flowState;
-    unsigned componentIndex;
-    WatchListNode *prev;
-    WatchListNode *next;
-};
-struct WatchList {
-    WatchListNode *first;
-    WatchListNode *last;
-};
-static WatchList g_watchList;
-WatchListNode *watchListAdd(FlowState *flowState, unsigned componentIndex) {
-    auto node = (WatchListNode *)alloc(sizeof(WatchListNode), 0x00864d67);
-    node->prev = g_watchList.last;
-    if (g_watchList.last != 0) {
-        g_watchList.last->next = node;
-    }
-    g_watchList.last = node;
-    if (g_watchList.first == 0) {
-        g_watchList.first = node;
-    }
-    node->next = 0;
-    node->flowState = flowState;
-    node->componentIndex = componentIndex;
-    incRefCounterForFlowState(flowState);
-    return node;
-}
-void watchListRemove(WatchListNode *node) {
-    if (node->prev) {
-        node->prev->next = node->next;
-    } else {
-        g_watchList.first = node->next;
-    }
-    if (node->next) {
-        node->next->prev = node->prev;
-    } else {
-        g_watchList.last = node->prev;
-    }
-    free(node);
-}
-void visitWatchList() {
-    for (auto node = g_watchList.first; node; ) {
-        auto nextNode = node->next;
-        if (canExecuteStep(node->flowState, node->componentIndex)) {
-            executeWatchVariableComponent(node->flowState, node->componentIndex);
-        }
-        decRefCounterForFlowState(node->flowState);
-        if (canFreeFlowState(node->flowState)) {
-            freeFlowState(node->flowState);
-            watchListRemove(node);
-        } else {
-            incRefCounterForFlowState(node->flowState);
-        }
-        node = nextNode;
-    }
-}
-void watchListReset() {
-    for (auto node = g_watchList.first; node;) {
-        auto nextNode = node->next;
-        watchListRemove(node);
-        node = nextNode;
-    }
 }
 } 
 } 
@@ -8157,19 +7680,6 @@ void executeCallActionComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/catch_error.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeCatchErrorComponent(FlowState *flowState, unsigned componentIndex) {
-	auto catchErrorComponentExecutionState = (CatchErrorComponenentExecutionState *)flowState->componenentExecutionStates[componentIndex];
-	propagateValue(flowState, componentIndex, 1, catchErrorComponentExecutionState->message);
-    deallocateComponentExecutionState(flowState, componentIndex);
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/compare.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -8195,6 +7705,19 @@ void executeCompareComponent(FlowState *flowState, unsigned componentIndex) {
         throwError(flowState, componentIndex, "Failed to convert Value to boolean in IsTrue\n");
         return;
     }
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/catch_error.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeCatchErrorComponent(FlowState *flowState, unsigned componentIndex) {
+	auto catchErrorComponentExecutionState = (CatchErrorComponenentExecutionState *)flowState->componenentExecutionStates[componentIndex];
+	propagateValue(flowState, componentIndex, 1, catchErrorComponentExecutionState->message);
+    deallocateComponentExecutionState(flowState, componentIndex);
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -8283,20 +7806,6 @@ void executeDelayComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/error.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeErrorComponent(FlowState *flowState, unsigned componentIndex) {
-	Value expressionValue;
-	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Message in Error")) {
-		return;
-	}
-	throwError(flowState, componentIndex, expressionValue.getString());
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/end.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -8313,17 +7822,16 @@ void executeEndComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/expr_eval.cpp
+// flow/components/error.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
-void executeEvalExprComponent(FlowState *flowState, unsigned componentIndex) {
+void executeErrorComponent(FlowState *flowState, unsigned componentIndex) {
 	Value expressionValue;
-	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Expression in EvalExpr")) {
+	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Message in Error")) {
 		return;
 	}
-	propagateValue(flowState, componentIndex, 1, expressionValue);
-	propagateValueThroughSeqout(flowState, componentIndex);
+	throwError(flowState, componentIndex, expressionValue.getString());
 }
 } 
 } 
@@ -8379,11 +7887,17 @@ void executeInputComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/label_in.cpp
+// flow/components/expr_eval.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
-void executeLabelInComponent(FlowState *flowState, unsigned componentIndex) {
+void executeEvalExprComponent(FlowState *flowState, unsigned componentIndex) {
+	Value expressionValue;
+	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Expression in EvalExpr")) {
+		return;
+	}
+	propagateValue(flowState, componentIndex, 1, expressionValue);
+	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
 } 
@@ -8414,18 +7928,11 @@ void executeIsTrueComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/label_out.cpp
+// flow/components/label_in.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
-struct LabelOutActionComponent : public Component {
-    uint16_t labelInComponentIndex;
-};
-void executeLabelOutComponent(FlowState *flowState, unsigned componentIndex) {
-    auto component = (LabelOutActionComponent *)flowState->flow->components[componentIndex];
-    if ((int)component->labelInComponentIndex != -1) {
-        propagateValueThroughSeqout(flowState, component->labelInComponentIndex);
-    }
+void executeLabelInComponent(FlowState *flowState, unsigned componentIndex) {
 }
 } 
 } 
@@ -8574,6 +8081,41 @@ void executeLineChartWidgetComponent(FlowState *flowState, unsigned componentInd
 } 
 } 
 #endif 
+// -----------------------------------------------------------------------------
+// flow/components/label_out.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+struct LabelOutActionComponent : public Component {
+    uint16_t labelInComponentIndex;
+};
+void executeLabelOutComponent(FlowState *flowState, unsigned componentIndex) {
+    auto component = (LabelOutActionComponent *)flowState->flow->components[componentIndex];
+    if ((int)component->labelInComponentIndex != -1) {
+        propagateValueThroughSeqout(flowState, component->labelInComponentIndex);
+    }
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/log.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeLogComponent(FlowState *flowState, unsigned componentIndex) {
+    Value value;
+    if (!evalProperty(flowState, componentIndex, defs_v3::LOG_ACTION_COMPONENT_PROPERTY_VALUE, value, "Failed to evaluate Message in Log")) {
+        return;
+    }
+    Value strValue = value.toString(0x0f9812ee);
+    const char *valueStr = strValue.getString();
+    if (valueStr && *valueStr) {
+      logInfo(flowState, componentIndex, valueStr);
+    }
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
 // -----------------------------------------------------------------------------
 // flow/components/loop.cpp
 // -----------------------------------------------------------------------------
@@ -8873,25 +8415,6 @@ void executeLVGLComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 #endif
-// -----------------------------------------------------------------------------
-// flow/components/log.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeLogComponent(FlowState *flowState, unsigned componentIndex) {
-    Value value;
-    if (!evalProperty(flowState, componentIndex, defs_v3::LOG_ACTION_COMPONENT_PROPERTY_VALUE, value, "Failed to evaluate Message in Log")) {
-        return;
-    }
-    Value strValue = value.toString(0x0f9812ee);
-    const char *valueStr = strValue.getString();
-    if (valueStr && *valueStr) {
-      logInfo(flowState, componentIndex, valueStr);
-    }
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
 // -----------------------------------------------------------------------------
 // flow/components/lvgl_user_widget.cpp
 // -----------------------------------------------------------------------------
@@ -9503,22 +9026,22 @@ int eez_mqtt_publish(void *handle, const char *topic, const char *payload) {
 #endif
 #endif
 // -----------------------------------------------------------------------------
-// flow/components/noop.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeNoopComponent(FlowState *flowState, unsigned componentIndex) {
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/on_event.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
 void executeOnEventComponent(FlowState *flowState, unsigned componentIndex) {
     propagateValue(flowState, componentIndex, 1, flowState->eventValue);
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/noop.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeNoopComponent(FlowState *flowState, unsigned componentIndex) {
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -9606,6 +9129,21 @@ void executeSetVariableComponent(FlowState *flowState, unsigned componentIndex) 
         }
         assignValue(flowState, componentIndex, dstValue, srcValue);
     }
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/show_page.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+struct ShowPageActionComponent : public Component {
+	int16_t page;
+};
+void executeShowPageComponent(FlowState *flowState, unsigned componentIndex) {
+	auto component = (ShowPageActionComponent *)flowState->flow->components[componentIndex];
+	replacePageHook(component->page, 0, 0, 0);
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -9700,31 +9238,6 @@ void executeSortArrayComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/show_page.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-struct ShowPageActionComponent : public Component {
-	int16_t page;
-};
-void executeShowPageComponent(FlowState *flowState, unsigned componentIndex) {
-	auto component = (ShowPageActionComponent *)flowState->flow->components[componentIndex];
-	replacePageHook(component->page, 0, 0, 0);
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/components/start.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeStartComponent(FlowState *flowState, unsigned componentIndex) {
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/switch.cpp
 // -----------------------------------------------------------------------------
 #include <stdio.h>
@@ -9758,6 +9271,16 @@ void executeSwitchComponent(FlowState *flowState, unsigned componentIndex) {
             break;
         }
     }
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/start.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeStartComponent(FlowState *flowState, unsigned componentIndex) {
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 

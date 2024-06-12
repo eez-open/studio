@@ -2284,35 +2284,6 @@ void executeComponent(FlowState *flowState, unsigned componentIndex);
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/dashboard_api.h
-// -----------------------------------------------------------------------------
-#if defined(EEZ_DASHBOARD_API)
-#include <emscripten.h>
-namespace eez {
-namespace flow {
-struct FlowState;
-extern bool g_dashboardValueFree;
-int getFlowStateIndex(FlowState *flowState);
-void executeDashboardComponent(uint16_t componentType, int flowStateIndex, int componentIndex);
-Value operationJsonGet(int json, const char *property);
-int operationJsonSet(int json, const char *property, const Value *valuePtr);
-int operationJsonArrayLength(int json);
-Value operationJsonArraySlice(int json, int from, int to);
-Value operationJsonArrayAppend(int json, const Value *valuePtr);
-Value operationJsonArrayInsert(int json, int32_t position, const Value *valuePtr);
-Value operationJsonArrayRemove(int json, int32_t position);
-Value operationJsonClone(int json);
-Value operationJsonMake();
-Value convertFromJson(int json, uint32_t toType);
-Value convertToJson(const Value *arrayValuePtr);
-void dashboardObjectValueIncRef(int json);
-void dashboardObjectValueDecRef(int json);
-void onObjectArrayValueFree(ArrayValue *arrayValue);
-Value getBitmapAsDataURL(const char *bitmapName);
-} 
-} 
-#endif
-// -----------------------------------------------------------------------------
 // flow/date.h
 // -----------------------------------------------------------------------------
 #include <stdint.h>
