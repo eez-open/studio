@@ -634,6 +634,9 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
+    static PREVIEW_WIDTH = 400;
+    static PREVIEW_HEIGHT = 400;
+
     lvglWidgetsMap = new Map<string, LVGLWidget>();
 
     selectedStyle: LVGLStyle | undefined;
@@ -665,6 +668,14 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                         componentClass.objectClass.classInfo.defaultValue,
                         {
                             type: componentClass.name,
+                            left: 0,
+                            leftUnit: "px",
+                            top: 0,
+                            topUnit: "px",
+                            width: LVGLStylesEditorRuntime.PREVIEW_WIDTH,
+                            widthUnit: "px",
+                            height: LVGLStylesEditorRuntime.PREVIEW_HEIGHT,
+                            heightUnit: "px",
                             localStyles: {}
                         }
                     )
@@ -679,8 +690,9 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
         super(page);
 
-        for (const component of page.components) {
-            this.lvglWidgetsMap.set(component.type, component as LVGLWidget);
+        const lvglScreenWidget = page.lvglScreenWidget!;
+        for (const component of lvglScreenWidget.children) {
+            this.lvglWidgetsMap.set(component.type, component);
         }
 
         makeObservable(this, {
@@ -696,11 +708,11 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     }
 
     get displayWidth() {
-        return 400;
+        return LVGLStylesEditorRuntime.PREVIEW_WIDTH;
     }
 
     get displayHeight() {
-        return 400;
+        return LVGLStylesEditorRuntime.PREVIEW_HEIGHT;
     }
 
     mount() {
@@ -786,6 +798,21 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                             }
 
                             lvglWidget.flags = flags.join("|");
+                        }
+
+                        const lvglScreenWidget = this.page.lvglScreenWidget!;
+                        if (
+                            this.selectedStyle &&
+                            this.canvas &&
+                            lvglScreenWidget.type ==
+                                this.selectedStyle.forWidgetType
+                        ) {
+                            lvglScreenWidget.useStyle = this.selectedStyle.name;
+                            lvglScreenWidget.states =
+                                this.project._store.uiStateStore.lvglState;
+                        } else {
+                            lvglScreenWidget.useStyle = "";
+                            lvglScreenWidget.states = "";
                         }
                     });
 
