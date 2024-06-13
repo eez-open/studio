@@ -644,6 +644,45 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                                 readOnly ||
                                                 checkboxState !== true
                                             }
+                                            onClick={() => {
+                                                if (!checkboxState) {
+                                                    this.context.undoManager.setCombineCommands(
+                                                        true
+                                                    );
+
+                                                    stylesDefinitions.forEach(
+                                                        (
+                                                            stylesDefinition,
+                                                            i
+                                                        ) => {
+                                                            if (
+                                                                definedValues[
+                                                                    i
+                                                                ] === undefined
+                                                            ) {
+                                                                this.context.updateObject(
+                                                                    stylesDefinition,
+                                                                    {
+                                                                        definition:
+                                                                            stylesDefinition.addPropertyToDefinition(
+                                                                                propertyInfo,
+                                                                                part,
+                                                                                state,
+                                                                                values[
+                                                                                    i
+                                                                                ]
+                                                                            )
+                                                                    }
+                                                                );
+                                                            }
+                                                        }
+                                                    );
+
+                                                    this.context.undoManager.setCombineCommands(
+                                                        false
+                                                    );
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </div>

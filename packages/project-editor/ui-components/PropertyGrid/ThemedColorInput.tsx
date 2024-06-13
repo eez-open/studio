@@ -24,6 +24,7 @@ export const ThemedColorInput = observer(
         value: any;
         onChange: (newValue: any) => void;
         readOnly: boolean;
+        onClick?: (event: React.MouseEvent) => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -62,11 +63,7 @@ export const ThemedColorInput = observer(
             this.props.onChange(color);
         };
 
-        constructor(props: {
-            value: any;
-            onChange: (newValue: any) => void;
-            readOnly: boolean;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -214,6 +211,7 @@ export const ThemedColorInput = observer(
                         readOnly={readOnly}
                         onDrop={this.onDrop}
                         onDragOver={this.onDragOver}
+                        onClick={this.props.onClick}
                     />
                     {!readOnly && (
                         <>

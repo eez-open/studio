@@ -131,6 +131,7 @@ export interface PropertyProps {
     readOnly: boolean;
     updateObject: (propertyValues: Object) => void;
     collapsed?: boolean;
+    onClick?: (event: React.MouseEvent) => void;
 }
 
 export interface IOnSelectParams {

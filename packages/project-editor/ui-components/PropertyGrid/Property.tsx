@@ -737,6 +737,7 @@ export const Property = observer(
                             className="form-control"
                             value={value || ""}
                             readOnly
+                            onClick={this.props.onClick}
                         />
                     );
                 } else {
@@ -795,6 +796,7 @@ export const Property = observer(
                             spellCheck={
                                 propertyInfo.disableSpellcheck ? false : true
                             }
+                            onClick={this.props.onClick}
                         />
                     );
                 } else {
@@ -960,6 +962,7 @@ export const Property = observer(
                         onChange={this.onChange}
                         onKeyDown={this.onKeyDown}
                         readOnly={readOnly}
+                        onClick={this.props.onClick}
                     />
                 );
             } else if (propertyInfo.type === PropertyType.Color) {
@@ -980,6 +983,7 @@ export const Property = observer(
                         value={this._value || ""}
                         onChange={this.changeValue}
                         readOnly={readOnly}
+                        onClick={this.props.onClick}
                     />
                 );
             } else if (propertyInfo.type === PropertyType.Array) {
