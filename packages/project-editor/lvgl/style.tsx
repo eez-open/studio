@@ -107,6 +107,23 @@ export class LVGLStyle extends EezObject {
             {
                 name: "forWidgetType",
                 type: PropertyType.String,
+                displayValue: (style: LVGLStyle) => {
+                    console.log("t1");
+                    const componentClass = getClassesDerivedFrom(
+                        ProjectEditor.getProjectStore(style),
+                        ProjectEditor.LVGLWidgetClass
+                    ).find(
+                        componentClass =>
+                            componentClass.name == style.forWidgetType
+                    );
+                    return componentClass
+                        ? componentClass.displayName
+                            ? componentClass.displayName
+                            : componentClass.objectClass.classInfo
+                                  .componentPaletteLabel ||
+                              getComponentName(componentClass.name)
+                        : style.forWidgetType;
+                },
                 readOnlyInPropertyGrid: true
             },
             {

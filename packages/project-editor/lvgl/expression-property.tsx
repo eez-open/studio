@@ -184,7 +184,8 @@ export function makeLvglExpressionProperty(
                         ? flowProperty
                         : undefined;
                 },
-                expressionType
+                expressionType,
+                disableSpellcheck: true
             } as PropertyInfo,
             props
         ),

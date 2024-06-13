@@ -760,7 +760,13 @@ export async function addItem(object: IEezObject) {
         return null;
     }
 
-    return getProjectStore(object).addObject(parent, newObject);
+    newObject = getProjectStore(object).addObject(parent, newObject);
+
+    if (newObject) {
+        ProjectEditor.navigateTo(newObject);
+    }
+
+    return newObject;
 }
 
 export function pasteItem(object: IEezObject) {

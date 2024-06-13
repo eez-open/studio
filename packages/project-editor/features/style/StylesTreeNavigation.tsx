@@ -38,6 +38,7 @@ const AddButton = observer(
     class AddButton extends React.Component<{
         treeAdapter: TreeAdapter;
         navigationObject: IEezObject | undefined;
+        onAdd: () => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -59,6 +60,8 @@ const AddButton = observer(
                             result.object,
                             result.subObject
                         );
+                    } else {
+                        this.props.onAdd();
                     }
                 }
             }
@@ -136,6 +139,8 @@ export const StylesTreeNavigation = observer(
 
         dispose1: IReactionDisposer;
         dispose2: IReactionDisposer;
+
+        divRef = React.createRef<HTMLDivElement>();
 
         constructor(props: StylesTreeNavigationProps) {
             super(props);
@@ -325,6 +330,18 @@ export const StylesTreeNavigation = observer(
                         key="add"
                         treeAdapter={this.treeAdapter}
                         navigationObject={this.props.navigationObject}
+                        onAdd={() => {
+                            const treeElement:
+                                | HTMLDivElement
+                                | undefined
+                                | null =
+                                this.divRef.current?.querySelector(
+                                    ".EezStudio_Tree"
+                                );
+                            if (treeElement) {
+                                treeElement.focus();
+                            }
+                        }}
                     />
                 );
 
@@ -334,7 +351,10 @@ export const StylesTreeNavigation = observer(
             }
 
             return (
-                <div className="EezStudio_ProjectEditor_StylesTreeNavigation">
+                <div
+                    className="EezStudio_ProjectEditor_StylesTreeNavigation"
+                    ref={this.divRef}
+                >
                     <div className="EezStudio_Title">
                         <SortControl
                             direction={this.sortDirection}

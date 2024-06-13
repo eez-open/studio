@@ -481,6 +481,27 @@ export const Property = observer(
             }
         };
 
+        get displayValue() {
+            const { propertyInfo } = this.props;
+
+            if (!propertyInfo.displayValue) {
+                return this._value || "";
+            }
+
+            let displayValue = propertyInfo.displayValue(this.props.objects[0]);
+
+            for (let i = 1; i < this.props.objects.length; i++) {
+                if (
+                    displayValue !=
+                    propertyInfo.displayValue(this.props.objects[i])
+                ) {
+                    return "";
+                }
+            }
+
+            return displayValue;
+        }
+
         render() {
             const { propertyInfo, readOnly } = this.props;
 
@@ -922,7 +943,7 @@ export const Property = observer(
                             className={classNames("form-control", {
                                 "font-monospace": propertyInfo.monospaceFont
                             })}
-                            value={this._value || ""}
+                            value={this.displayValue}
                             onChange={this.onChange}
                             onKeyDown={this.onKeyDown}
                             readOnly={readOnly || propertyInfo.computed}
