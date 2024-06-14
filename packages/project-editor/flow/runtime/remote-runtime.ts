@@ -1522,15 +1522,24 @@ export abstract class DebuggerConnectionBase {
                         if (!(component instanceof InputActionComponent)) {
                             const wasmModuleId = this.runtime.getWasmModuleId();
 
-                            flowState.setComponentExecutionState(
-                                component,
-                                wasmModuleId != undefined
-                                    ? getDashboardState(
-                                          wasmModuleId,
-                                          executionState
-                                      )
-                                    : executionState
-                            );
+                            if (executionState) {
+                                let dashboardExecutionState;
+                                if (wasmModuleId != undefined) {
+                                    dashboardExecutionState = getDashboardState(
+                                        wasmModuleId,
+                                        executionState
+                                    );
+                                }
+                                flowState.setComponentExecutionState(
+                                    component,
+                                    dashboardExecutionState || executionState
+                                );
+                            } else {
+                                flowState.setComponentExecutionState(
+                                    component,
+                                    undefined
+                                );
+                            }
                         }
                     }
                     break;
