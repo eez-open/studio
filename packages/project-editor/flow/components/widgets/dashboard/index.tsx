@@ -620,7 +620,7 @@ const NumberInputDashboardWidgetElement = observer(
         render() {
             const { flowContext, component } = this.props;
 
-            let value = evalProperty(flowContext, component, "value") ?? 25;
+            let value = evalProperty(flowContext, component, "value") ?? 0;
             let min = evalProperty(flowContext, component, "min") ?? 0;
             let max = evalProperty(flowContext, component, "max") ?? 100;
             let step = evalProperty(flowContext, component, "step") ?? 1;
@@ -755,7 +755,7 @@ export class NumberInputDashboardWidget extends Widget {
             left: 0,
             top: 0,
             width: 180,
-            height: 20,
+            height: 32,
             min: "0",
             max: "100",
             step: "1"
