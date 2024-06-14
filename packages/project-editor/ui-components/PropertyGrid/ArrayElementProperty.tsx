@@ -722,7 +722,14 @@ const ArrayElementProperties = observer(
             if (typeClass.classInfo.newItem) {
                 this.context.undoManager.setCombineCommands(true);
 
-                newObject = await addItem(this.objects);
+                try {
+                    newObject = await addItem(this.objects);
+                } catch (err) {
+                    runInAction(() =>
+                        ArrayElementProperties.updateStartTime.set(undefined)
+                    );
+                    return;
+                }
 
                 if (!newObject) {
                     this.context.undoManager.setCombineCommands(false);
@@ -794,6 +801,8 @@ const ArrayElementProperties = observer(
                             )
                         );
                     }, this.objects.indexOf(newObject));
+                } else {
+                    ArrayElementProperties.updateStartTime.set(undefined);
                 }
             });
         };
