@@ -162,15 +162,19 @@ export const navigateTo = action((object: IEezObject) => {
             ? NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL
             : NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_GLOBAL;
 
-        runInAction(() => {
-            if (isLocal) {
-                projectStore.navigationStore.selectedLocalVariable.set(object);
-            } else {
-                projectStore.navigationStore.selectedGlobalVariableObject.set(
-                    object
-                );
-            }
-        });
+        if (object instanceof Variable) {
+            runInAction(() => {
+                if (isLocal) {
+                    projectStore.navigationStore.selectedLocalVariable.set(
+                        object
+                    );
+                } else {
+                    projectStore.navigationStore.selectedGlobalVariableObject.set(
+                        object
+                    );
+                }
+            });
+        }
 
         return;
     }
@@ -261,9 +265,13 @@ export const navigateTo = action((object: IEezObject) => {
             NavigationStore.VARIABLES_SUB_NAVIGATION_ID
         ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS;
 
-        runInAction(() => {
-            projectStore.navigationStore.selectedStructureObject.set(object);
-        });
+        if (object instanceof Structure) {
+            runInAction(() => {
+                projectStore.navigationStore.selectedStructureObject.set(
+                    object
+                );
+            });
+        }
         return;
     }
 
@@ -277,9 +285,11 @@ export const navigateTo = action((object: IEezObject) => {
             NavigationStore.VARIABLES_SUB_NAVIGATION_ID
         ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS;
 
-        runInAction(() => {
-            projectStore.navigationStore.selectedEnumObject.set(object);
-        });
+        if (object instanceof Enum) {
+            runInAction(() => {
+                projectStore.navigationStore.selectedEnumObject.set(object);
+            });
+        }
         return;
     }
 
