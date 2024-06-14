@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
@@ -249,7 +249,11 @@ export const SettingsEditor = observer(
             var component = node.getComponent();
 
             if (component === "navigation") {
-                return <SettingsNavigation />;
+                return (
+                    <SettingsNavigation
+                        selectedObject={this.props.editor.subObject}
+                    />
+                );
             }
 
             if (component === "content") {
@@ -478,7 +482,9 @@ export const SettingsContent = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SettingsNavigation = observer(
-    class SettingsNavigation extends React.Component {
+    class SettingsNavigation extends React.Component<{
+        selectedObject: IEezObject | undefined;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -524,7 +530,9 @@ export const SettingsNavigation = observer(
         get treeAdapter() {
             return new TreeAdapter(
                 this.navigationObjectAdapter,
-                undefined,
+                observable.box<IEezObject | undefined>(
+                    this.props.selectedObject
+                ),
                 SettingsNavigation.navigationTreeFilter,
                 true,
                 "none",
@@ -578,7 +586,7 @@ const AddButton = observer(
     class AddButton extends React.Component<{
         objectAdapter: TreeObjectAdapter;
     }> {
-        async onAdd() {
+        onAdd = async () => {
             if (this.props.objectAdapter.selectedObject) {
                 const aNewItem = await addItem(
                     this.props.objectAdapter.selectedObject
@@ -587,7 +595,7 @@ const AddButton = observer(
                     this.props.objectAdapter.selectObject(aNewItem);
                 }
             }
-        }
+        };
 
         render() {
             return (
@@ -595,10 +603,12 @@ const AddButton = observer(
                     title="Add Item"
                     icon="material:add"
                     iconSize={16}
-                    onClick={this.onAdd.bind(this)}
+                    onClick={this.onAdd}
                     enabled={
                         this.props.objectAdapter.selectedObject &&
                         canAdd(this.props.objectAdapter.selectedObject)
+                            ? true
+                            : false
                     }
                 />
             );

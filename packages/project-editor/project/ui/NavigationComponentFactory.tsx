@@ -294,11 +294,7 @@ export const navigateTo = action((object: IEezObject) => {
     }
 
     if (getAncestorOfType(object, Settings.classInfo)) {
-        // TODO Currently, it always shows general object. But, maybe object is not general.
-        projectStore.editorsStore.openEditor(
-            project.settings,
-            project.settings.general
-        );
+        projectStore.editorsStore.openEditor(project.settings, object);
         return;
     }
 });

@@ -11,6 +11,7 @@ export {
 } from "eez-studio-shared/validation-filters";
 
 import { isArray } from "eez-studio-shared/util";
+import { isValidPath } from "./util-electron";
 
 const VALIDATION_MESSAGE_INVALID_VALUE = "Invalid value.";
 export const VALIDATION_MESSAGE_REQUIRED = "Please fill out this field.";
@@ -161,6 +162,16 @@ export const validators = {
 
             return null;
         };
+    },
+
+    filePath: (object: any, ruleName: string) => {
+        if (object[ruleName] == undefined) {
+            return null;
+        }
+
+        return isValidPath(object[ruleName], false)
+            ? null
+            : "Invalid file name";
     }
 };
 

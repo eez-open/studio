@@ -206,8 +206,26 @@ export class BuildFile extends EezObject {
             }
         ],
         newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New File",
+                    fields: [
+                        {
+                            name: "fileName",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.filePath,
+                                validators.unique({}, parent)
+                            ]
+                        }
+                    ]
+                },
+                values: {}
+            });
+
             const buildFileProperties: Partial<BuildFile> = {
-                fileName: "file",
+                fileName: result.values.fileName,
                 template: ""
             };
 
