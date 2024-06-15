@@ -799,7 +799,7 @@ export abstract class DebuggerConnectionBase {
                             runtime.transition(StateMachineAction.SINGLE_STEP);
                         } else if (state == DEBUGGER_STATE_STOPPED) {
                             if (!runtime.error) {
-                                runtime.projectStore.setEditorMode();
+                                runtime.projectStore.setEditorMode(true);
                             }
                         }
                     }
@@ -1152,6 +1152,8 @@ export abstract class DebuggerConnectionBase {
 
                 case MessagesToDebugger.MESSAGE_TO_DEBUGGER_VALUE_CHANGED:
                     {
+                        console.log(messageParameters);
+
                         const valueAddress = parseInt(messageParameters[1], 16);
                         const value = messageParameters[2];
 

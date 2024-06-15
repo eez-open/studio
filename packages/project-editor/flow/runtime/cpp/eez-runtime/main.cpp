@@ -55,10 +55,9 @@ void writeDebuggerBuffer(const char *buffer, uint32_t length) {
             writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2));
         }, eez::flow::g_wasmModuleId, g_debuggerBuffer, g_debuggerBufferIndex);
         g_debuggerBufferIndex = 0;
-    } else {
-        memcpy(g_debuggerBuffer + g_debuggerBufferIndex, buffer, length);
-        g_debuggerBufferIndex += length;
     }
+    memcpy(g_debuggerBuffer + g_debuggerBufferIndex, buffer, length);
+    g_debuggerBufferIndex += length;
 }
 
 void finishToDebuggerMessage() {

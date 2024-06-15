@@ -1157,9 +1157,14 @@ export class ProjectStore {
         this.editorsStore?.refresh(true);
     }
 
-    async setEditorMode() {
+    async setEditorMode(force: boolean = false) {
         if (this.debounceChangeRuntimeMode()) {
-            return;
+            if (force) {
+                clearTimeout(this.changingRuntimeMode);
+                this.changingRuntimeMode = undefined;
+            } else {
+                return;
+            }
         }
 
         if (this.runtime) {
