@@ -205,8 +205,6 @@ export class Page extends Flow {
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
 
-    _refreshCounter: number = 0;
-
     constructor() {
         super();
 
@@ -237,8 +235,7 @@ export class Page extends Flow {
             isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
             _lvglRuntime: observable,
-            _lvglObj: observable,
-            _refreshCounter: observable
+            _lvglObj: observable
         });
     }
 

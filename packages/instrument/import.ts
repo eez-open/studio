@@ -500,6 +500,10 @@ export async function loadInstrumentExtension(extensionFolderPath: string) {
                 if (packageJson) {
                     version = packageJson.version;
                     properties = packageJson["eez-studio"];
+                    if (!properties) {
+                        return undefined;
+                    }
+
                     isEditable = await fileExists(
                         extensionFolderPath + "/.editable"
                     );

@@ -338,7 +338,6 @@ export class LVGLWidget extends Widget {
     localStyles: LVGLStylesDefinition;
 
     _lvglObj: number | undefined;
-    _refreshCounter: number = 0;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1012,8 +1011,7 @@ export class LVGLWidget extends Widget {
             states: observable,
             useStyle: observable,
             localStyles: observable,
-            _lvglObj: observable,
-            _refreshCounter: observable
+            _lvglObj: observable
         });
     }
 
@@ -1026,23 +1024,23 @@ export class LVGLWidget extends Widget {
         };
     }
 
-    override get relativePosition() {
-        // update when _refreshCounter changes
-        this._refreshCounter;
+    _relativePosition: { left: number; top: number } | undefined;
 
+    override get relativePosition() {
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
                 ProjectEditor.PageClass.classInfo
             ) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
-                return {
+                this._relativePosition = {
                     left: page._lvglRuntime.wasm._lvglGetObjRelX(this._lvglObj),
                     top: page._lvglRuntime.wasm._lvglGetObjRelY(this._lvglObj)
                 };
             }
         }
-        return super.relativePosition;
+
+        return this._relativePosition || super.relativePosition;
     }
 
     override fromRelativePosition(left: number, top: number) {
@@ -1078,7 +1076,6 @@ export class LVGLWidget extends Widget {
     }
 
     override get componentWidth() {
-        this._refreshCounter;
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -1092,7 +1089,6 @@ export class LVGLWidget extends Widget {
     }
 
     override get componentHeight() {
-        this._refreshCounter;
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,

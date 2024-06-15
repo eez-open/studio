@@ -648,8 +648,8 @@ export const FlowViewer = observer(
                         return;
                     }
 
-                    canvasEl.style.transition = "transform 0.2s";
-                    selectionEl.style.display = "none";
+                    // canvasEl.style.transition = "transform 0.2s";
+                    // selectionEl.style.display = "none";
 
                     let dx = 0;
                     let dy = 0;
@@ -687,10 +687,10 @@ export const FlowViewer = observer(
                             dy * this.flowContext.viewState.transform.scale
                     };
 
-                    setTimeout(() => {
-                        canvasEl.style.transition = "";
-                        selectionEl.style.display = "block";
-                    }, 200);
+                    // setTimeout(() => {
+                    //     canvasEl.style.transition = "";
+                    //     selectionEl.style.display = "block";
+                    // }, 200);
                 }
 
                 this.props.tabState.onEnsureSelectionVisibleIsDone();

@@ -182,7 +182,8 @@ const resizingProperty: PropertyInfo = {
     propertyGridGroup: geometryGroup,
     propertyGridRowComponent: ResizingProperty,
     skipSearch: true,
-    hideInPropertyGrid: isLVGLProject
+    hideInPropertyGrid: (widget: Widget) =>
+        isLVGLProject(widget) || isWidgetUnderDockingManager(widget)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1638,6 +1639,16 @@ function getComponentLabel(component: Component) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function isWidgetUnderDockingManager(widget: Component) {
+    const parent = getWidgetParent(widget);
+    return (
+        parent instanceof ProjectEditor.ContainerWidgetClass &&
+        parent.layout == "docking-manager"
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type AutoSize = "width" | "height" | "both" | "none";
 
 export class Component extends EezObject {
@@ -1729,6 +1740,9 @@ export class Component extends EezObject {
                 propertyGridRowComponent: AlignAndDistributePropertyGridUI,
                 skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) => {
+                    if (isWidgetUnderDockingManager(widget)) {
+                        return true;
+                    }
                     const projectStore = ProjectEditor.getProjectStore(widget);
                     const propertyGridObjects =
                         projectStore.navigationStore.propertyGridObjects;
@@ -1753,6 +1767,7 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
+                hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
             },
             {
@@ -1760,6 +1775,7 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
+                hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
             },
             {
@@ -1767,6 +1783,7 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
+                hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
             },
             {
@@ -1774,6 +1791,7 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
+                hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
             },
             {
@@ -1782,6 +1800,7 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 computed: true,
                 disabled: isActionComponent,
+                hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
             },
             {
@@ -1793,6 +1812,9 @@ export class Component extends EezObject {
                 propertyGridRowComponent: CenterWidgetUI,
                 skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) => {
+                    if (isWidgetUnderDockingManager(widget)) {
+                        return true;
+                    }
                     const projectStore = ProjectEditor.getProjectStore(widget);
                     if (!projectStore) {
                         return false;
@@ -2219,6 +2241,16 @@ export class Component extends EezObject {
 
     get rect(): Rect {
         if (this instanceof Widget) {
+            if (isWidgetUnderDockingManager(this)) {
+                const parent = getWidgetParent(this);
+                return {
+                    left: 0,
+                    top: 0,
+                    width: parent.width,
+                    height: parent.height
+                };
+            }
+
             if (this.timeline.length > 0) {
                 const timelineEditorState = getTimelineEditorState(this);
                 if (timelineEditorState) {
@@ -2688,7 +2720,8 @@ export class Widget extends Component {
                 displayName: `Hide "Widget is outside of its parent" warning`,
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
-                disabled: component => isLVGLProject(component)
+                disabled: component => isLVGLProject(component),
+                hideInPropertyGrid: isWidgetUnderDockingManager
             },
             {
                 name: "locked",
@@ -2719,7 +2752,9 @@ export class Widget extends Component {
                 skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) =>
                     !ProjectEditor.getProject(widget).projectTypeTraits
-                        .hasFlowSupport || !isTimelineEditorActive(widget)
+                        .hasFlowSupport ||
+                    !isTimelineEditorActive(widget) ||
+                    isWidgetUnderDockingManager(widget)
             },
             makeExpressionProperty(
                 {
@@ -3006,7 +3041,7 @@ export class Widget extends Component {
 
                     if (
                         object.left + object.width >
-                        getWidgetParent(object).width
+                        getWidgetParent(object).rect.width
                     ) {
                         messages.push(
                             new Message(
@@ -3019,7 +3054,7 @@ export class Widget extends Component {
 
                     if (
                         object.top + object.height >
-                        getWidgetParent(object).height
+                        getWidgetParent(object).rect.height
                     ) {
                         messages.push(
                             new Message(

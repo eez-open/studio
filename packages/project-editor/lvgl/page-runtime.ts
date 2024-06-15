@@ -427,9 +427,13 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     this.page._lvglObj = pageObj;
                 });
 
-                (
+                const lgvlPageRuntime = (
                     this.projectStore.runtime as WasmRuntime
-                ).lgvlPageRuntime!.onNonActivePageViewRuntimeMounted(this);
+                ).lgvlPageRuntime;
+
+                if (lgvlPageRuntime) {
+                    lgvlPageRuntime.onNonActivePageViewRuntimeMounted(this);
+                }
             }
         );
         this.isMounted = true;
@@ -475,9 +479,11 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
         if (
             this.projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass
         ) {
-            this.projectStore.runtime.lgvlPageRuntime!.onNonActivePageViewRuntimeUnmounted(
-                this
-            );
+            if (this.projectStore.runtime.lgvlPageRuntime) {
+                this.projectStore.runtime.lgvlPageRuntime.onNonActivePageViewRuntimeUnmounted(
+                    this
+                );
+            }
         }
 
         this.isMounted = false;

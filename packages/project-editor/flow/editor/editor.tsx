@@ -858,15 +858,15 @@ export const FlowEditor = observer(
                     );
 
                 if (!rectContains(pageRect, selectionBoundingRect)) {
-                    const selectionEl = this.divRef.current?.querySelector(
-                        ".EezStudio_FlowEditorSelection"
-                    ) as HTMLDivElement;
-                    const canvasEl = this.divRef.current?.querySelector(
-                        ".eez-canvas"
-                    ) as HTMLCanvasElement;
+                    // const selectionEl = this.divRef.current?.querySelector(
+                    //     ".EezStudio_FlowEditorSelection"
+                    // ) as HTMLDivElement;
+                    // const canvasEl = this.divRef.current?.querySelector(
+                    //     ".eez-canvas"
+                    // ) as HTMLCanvasElement;
 
-                    canvasEl.style.transition = "transform 0.2s";
-                    selectionEl.style.display = "none";
+                    // canvasEl.style.transition = "transform 0.2s";
+                    // selectionEl.style.display = "none";
 
                     this.flowContext.viewState.transform.translate = {
                         x: -(
@@ -879,10 +879,10 @@ export const FlowEditor = observer(
                         )
                     };
 
-                    setTimeout(() => {
-                        canvasEl.style.transition = "";
-                        selectionEl.style.display = "block";
-                    }, 200);
+                    // setTimeout(() => {
+                    //     canvasEl.style.transition = "";
+                    //     selectionEl.style.display = "block";
+                    // }, 200);
                 }
 
                 this.props.tabState.onEnsureSelectionVisibleIsDone();
