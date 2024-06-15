@@ -132,7 +132,7 @@ async function generateFile(
 ): Promise<any> {
     let parts: any;
 
-    if (template) {
+    if (template != undefined) {
         let buildFileContent = template.replace(
             sectionNamesRegexp,
             (_1, part, configurationName) => {
@@ -425,11 +425,15 @@ export async function build(
                 configurationBuildResults
             );
 
-            await generateSourceCodeForEezFramework(
-                project,
-                destinationFolderPath || "",
-                parts.EEZ_FLOW_IS_USING_CRYPTO_SHA256
-            );
+            if (project.projectTypeTraits.isLVGL) {
+                await generateSourceCodeForEezFramework(
+                    project,
+                    destinationFolderPath || "",
+                    configurationBuildResults["Default"]?.[0]?.[
+                        "EEZ_FLOW_IS_USING_CRYPTO_SHA256"
+                    ] as any as boolean
+                );
+            }
         } else {
             const baseName = path.basename(
                 projectStore.filePath || "",
