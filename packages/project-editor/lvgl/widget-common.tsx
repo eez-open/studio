@@ -347,7 +347,10 @@ export function getExpressionPropertyData(
         return undefined;
     }
 
-    const isExpr = getProperty(widget, propertyName + "Type") !== "literal";
+    const propertyType = getProperty(widget, propertyName + "Type");
+
+    const isExpr =
+        propertyType !== "literal" && propertyType !== "translated-literal";
 
     if (!isExpr) {
         return undefined;

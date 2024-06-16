@@ -29,7 +29,7 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { humanize } from "eez-studio-shared/string";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 
-export type LVGLPropertyType = "literal" | "expression";
+export type LVGLPropertyType = "literal" | "translated-literal" | "expression";
 
 const LVGLProperty = observer(
     class LVGLProperty extends React.Component<PropertyProps> {

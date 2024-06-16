@@ -2014,7 +2014,7 @@ export class LVGLLabelWidget extends LVGLWidget {
                 "text",
                 "string",
                 "input",
-                ["literal", "expression"],
+                ["literal", "translated-literal", "expression"],
                 {
                     propertyGridGroup: specificGroup
                 }
@@ -2023,7 +2023,10 @@ export class LVGLLabelWidget extends LVGLWidget {
                 name: "previewValue",
                 type: PropertyType.String,
                 disabled: (widget: LVGLLabelWidget) => {
-                    return widget.textType == "literal";
+                    return (
+                        widget.textType == "literal" ||
+                        widget.textType == "translated-literal"
+                    );
                 },
                 propertyGridGroup: specificGroup
             },
@@ -2193,6 +2196,10 @@ export class LVGLLabelWidget extends LVGLWidget {
         if (this.textType == "literal") {
             build.line(
                 `lv_label_set_text(obj, ${escapeCString(this.text ?? "")});`
+            );
+        } else if (this.textType == "translated-literal") {
+            build.line(
+                `lv_label_set_text(obj, _(${escapeCString(this.text ?? "")}));`
             );
         } else {
             build.line(`lv_label_set_text(obj, "");`);
@@ -3637,7 +3644,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                 "options",
                 "array:string",
                 "input",
-                ["literal", "expression"],
+                ["literal", "translated-literal", "expression"],
                 {
                     propertyGridGroup: specificGroup
                 }
@@ -3829,6 +3836,12 @@ export class LVGLRollerWidget extends LVGLWidget {
                 `lv_roller_set_options(obj, ${escapeCString(
                     this.options ?? ""
                 )}, LV_ROLLER_MODE_${this.mode});`
+            );
+        } else if (this.optionsType == "translated-literal") {
+            build.line(
+                `lv_roller_set_options(obj, _(${escapeCString(
+                    this.options ?? ""
+                )}), LV_ROLLER_MODE_${this.mode});`
             );
         } else {
             build.line(
@@ -4211,7 +4224,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "options",
                 "array:string",
                 "input",
-                ["literal", "expression"],
+                ["literal", "translated-literal", "expression"],
                 {
                     propertyGridGroup: specificGroup
                 }
@@ -4378,6 +4391,12 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 `lv_dropdown_set_options(obj, ${escapeCString(
                     this.options ?? ""
                 )});`
+            );
+        } else if (this.optionsType == "translated-literal") {
+            build.line(
+                `lv_dropdown_set_options(obj, _(${escapeCString(
+                    this.options ?? ""
+                )}));`
             );
         } else {
             build.line(`lv_dropdown_set_options(obj, "");`);
@@ -4959,7 +4978,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 "text",
                 "string",
                 "input",
-                ["literal", "expression"],
+                ["literal", "translated-literal", "expression"],
                 {
                     propertyGridGroup: specificGroup
                 }
@@ -5142,10 +5161,16 @@ export class LVGLTextareaWidget extends LVGLWidget {
             `lv_textarea_set_max_length(obj, ${this.maxTextLength ?? 128});`
         );
 
-        if (this.textType == "literal" && this.text) {
-            build.line(
-                `lv_textarea_set_text(obj, ${escapeCString(this.text)});`
-            );
+        if (this.text) {
+            if (this.textType == "literal") {
+                build.line(
+                    `lv_textarea_set_text(obj, ${escapeCString(this.text)});`
+                );
+            } else if (this.textType == "translated-literal") {
+                build.line(
+                    `lv_textarea_set_text(obj, _(${escapeCString(this.text)}));`
+                );
+            }
         }
 
         if (this.placeholder) {
