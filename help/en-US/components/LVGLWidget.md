@@ -8,31 +8,31 @@ Widget name. We reference the Widget within the project by its name, for example
 
 The following options are available:
 
-- `px` – Left is default in pixels.
-- `%` – Left is set as a percentage in relation to the parent width.
+-   `px` – Left is default in pixels.
+-   `%` – Left is set as a percentage in relation to the parent width.
 
 ## Top unit
 
 The following options are available:
 
-- `px` – Top is set in pixels.
-- `%` – The top is set as a percentage in relation to the parent height.
+-   `px` – Top is set in pixels.
+-   `%` – The top is set as a percentage in relation to the parent height.
 
 ## Width unit
 
 The following options are available:
 
-- `px` – Width is given in pixels.
-- `%` – Width is given as a percentage in relation to the parent width.
-- `content` – Width is automatically set to fit the entire content in width.
+-   `px` – Width is given in pixels.
+-   `%` – Width is given as a percentage in relation to the parent width.
+-   `content` – Width is automatically set to fit the entire content in width.
 
 ## Height unit
 
 The following options are available:
 
-- `px` – Height is given in pixels.
-- `%` – Height is given as a percentage in relation to the parent height.
-- `content` – Height is automatically set to fit the entire content in height.
+-   `px` – Height is given in pixels.
+-   `%` – Height is given as a percentage in relation to the parent height.
+-   `content` – Height is automatically set to fit the entire content in height.
 
 ## Children [EMPTY]
 
@@ -128,9 +128,27 @@ Do not scroll the object when the parent scrolls and ignore layout.
 
 Do not clip the children's content to the parent's boundary.
 
-## Scrollbar mode [EMPTY]
+## Scrollbar mode
 
-## Scroll direction [EMPTY]
+Scrollbars are displayed according to a configured mode. The following mode(s) exist:
+
+-   OFF: Never show the scrollbars
+-   ON: Always show the scrollbars
+-   ACTIVE: Show scroll bars while an object is being scrolled
+-   AUTO: Show scroll bars when the content is large enough to be scrolled
+
+## Scroll direction
+
+Controls the direction in which scrolling happens. The following mode(s) exist:
+
+-   NONE: no scroll
+-   TOP: only scroll up
+-   LEFT: only scroll left
+-   BOTTOM: only scroll down
+-   RIGHT: only scroll right
+-   HOR: only scroll horizontally
+-   VER: only scroll vertically
+-   ALL: scroll any directions
 
 ## Checked
 
