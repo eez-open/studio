@@ -246,7 +246,7 @@ const WatchTable = observer(
                     return undefined;
                 }
 
-                const MAX_CHILDREN = 1000;
+                const MAX_CHILDREN = 1000; // MAX_ARRAY_SIZE_TRANSFERRED_IN_DEBUGGER
 
                 if (isArray(value) || value instanceof Uint8Array) {
                     return () => {

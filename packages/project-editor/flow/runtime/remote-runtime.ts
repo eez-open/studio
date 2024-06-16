@@ -626,7 +626,12 @@ export abstract class DebuggerConnectionBase {
 
         const arrayElementAddresses = addresses.slice(2);
 
-        let value = observable(type.kind == "array" ? [] : {});
+        let value = observable(
+            type.kind == "array" ||
+                (type.kind == "basic" && type.valueType == "array:any")
+                ? new Array(arrayElementAddresses.length)
+                : {}
+        );
 
         for (let i = 0; i < arrayElementAddresses.length; i++) {
             let propertyName: string | number;

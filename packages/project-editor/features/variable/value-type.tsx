@@ -360,7 +360,7 @@ export function getValueLabel(
         }
     }
 
-    if (isArray(value) || value instanceof Uint8Array) {
+    if (isArray(value)) {
         return `${value.length} element(s)`;
     }
 
