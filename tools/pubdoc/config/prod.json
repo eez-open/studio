@@ -601,7 +601,7 @@
                         "content": "Arc.html",
                         "status": "publish",
                         "id": 12211,
-                        "sha256": "0a3619808a94b3def5e40ec9b7441921c7e6b52d0b33f1cb0fe764f4f56791d8"
+                        "sha256": "1805fbda3253b4fbecca120ab0eba2be055544435317da087365a490afd436e9"
                     },
                     {
                         "content": "Bitmap (Dashboard).html",
@@ -631,7 +631,7 @@
                         "content": "Button (LVGL).html",
                         "status": "publish",
                         "id": 12216,
-                        "sha256": "dd87f79311a2e4c2d277c3fcccb0e71dbb3010b81fd1d981fe3d7ca364672321"
+                        "sha256": "4636039477e97a66b901875807a32740e97e4689c54f731334959c7ed58bcefe"
                     },
                     {
                         "content": "ButtonGroup.html",
@@ -649,13 +649,13 @@
                         "content": "Image.html",
                         "status": "publish",
                         "id": 12219,
-                        "sha256": "ffc38042252b7199539c79b321250b0df9ce73f9c580ec8324ffa95168f9b136"
+                        "sha256": "16b426fca09293d7d846521065917e1629858ff5b66abdd3348d426b170a6190"
                     },
                     {
                         "content": "Label.html",
                         "status": "publish",
                         "id": 12220,
-                        "sha256": "a4f6a78fecb02fe008a3675c5a965beeb098a145050b647e1d4b9bc0bf08452b"
+                        "sha256": "586928bc4db616b2de5a0cfaa3ddc6135860524d3543830c07d4c39776bbc032"
                     },
                     {
                         "content": "Markdown.html",
@@ -673,7 +673,7 @@
                         "content": "Panel.html",
                         "status": "publish",
                         "id": 12223,
-                        "sha256": "2a474dd173897eec0813ddac6e60d3babc6a622f45a257a4dcf791322a4eedf7"
+                        "sha256": "6bd4f4748cb5bbcacb6b556d95f3c8e6feab1b4284cd29768fb722b0785c175e"
                     },
                     {
                         "content": "Rectangle (Dashboard).html",
@@ -709,7 +709,7 @@
                         "content": "Textarea.html",
                         "status": "publish",
                         "id": 12229,
-                        "sha256": "a35b29cb7e2fcbacce862bc2e0a0957f345c3a4275bab2b4ad01a17c7d001c86"
+                        "sha256": "c4dcaeceb4ceb9522aac0fb6d756b22371d0923d6293703917bb3e98db190aa9"
                     },
                     {
                         "content": "ToggleButton.html",
@@ -767,7 +767,7 @@
                         "content": "Calendar.html",
                         "status": "publish",
                         "id": 12235,
-                        "sha256": "c7ee3ca99eff881b988137b4e34dfa9a9e74c5e40804d64d1aa822b883912437"
+                        "sha256": "4482a32ff99b511aea6f8e5055b456af5eea1d5fa1e5d45814f25f85255b6ae2"
                     },
                     {
                         "content": "Checkbox (Dashboard).html",
@@ -779,13 +779,13 @@
                         "content": "Checkbox (LVGL).html",
                         "status": "publish",
                         "id": 12237,
-                        "sha256": "49efbcf06525282daf3f3f0bf957cc98326977da779324aae6649fdb9cd1d4b4"
+                        "sha256": "d280b04b246e88122e92ceb277e0c5a49d58176a0a4c01ae2ed0c27249b113a9"
                     },
                     {
                         "content": "Colorwheel.html",
                         "status": "publish",
                         "id": 12238,
-                        "sha256": "1f095d06963f2fd0e11d9ea8d5bb592c3371f2d620d58ad5123923fb3d6a963c"
+                        "sha256": "4e95f11bff9c95fc37f7324371980c8b5aa40a45a9bb4fd50f7565f56e3ac787"
                     },
                     {
                         "content": "Dropdown (Dashboard).html",
@@ -803,13 +803,13 @@
                         "content": "Dropdown (LVGL).html",
                         "status": "publish",
                         "id": 12241,
-                        "sha256": "04b86d6bd6ef4312dc6e5ed4a928a938ad5d20230fc69f40c35fc204d41c089d"
+                        "sha256": "f43517d75cb3bd81b7d13006e66a3e2fc79d07c51ec69b508811c4fd4b0683d1"
                     },
                     {
                         "content": "Imgbutton.html",
                         "status": "publish",
                         "id": 12242,
-                        "sha256": "0c230596be66950f973309f195a952c60f59b473f718c1d6124d64df805c1b66"
+                        "sha256": "9e5120593f99ffe5c1d80c8620724e489352b01477a1a9c955b79f8d20ce77e0"
                     },
                     {
                         "content": "Input (EEZ-GUI).html",
@@ -821,7 +821,7 @@
                         "content": "Keyboard.html",
                         "status": "publish",
                         "id": 12244,
-                        "sha256": "ec7f43d5730fac75789f874cfe713f6aa89bbee68c880d0c0ba975d9bd98fbca"
+                        "sha256": "9f73ca2aa5521246446897786b76ebfa58a11456c19a404de5a563dd2f1f3003"
                     },
                     {
                         "content": "NumberInput.html",
@@ -845,13 +845,13 @@
                         "content": "Roller (LVGL).html",
                         "status": "publish",
                         "id": 12246,
-                        "sha256": "8a7d1fd51a4dc7cc544b5ca7d56d7012b0c169162776d02338f80b807f7d9aa4"
+                        "sha256": "55efbb3827439f15801a3c078d2f7c5d6c8d7a0f80ed513d0d4ef32720da8687"
                     },
                     {
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12630,
-                        "sha256": "2ef918765aca928113718ab7f0f10b3926a638ebe9fe7f47a796202a857726d9"
+                        "sha256": "fa1c77e104d0bf9c3c309895a04b5be7271db97f6d1502bbfad9cdfc76010dd9"
                     },
                     {
                         "content": "Slider (Dashboard).html",
@@ -869,7 +869,7 @@
                         "content": "Slider (LVGL).html",
                         "status": "publish",
                         "id": 12249,
-                        "sha256": "6fa7c2aff00442e2607d8f4d30ddb78cda40a1003fed0d5bf702f23c3c13e03b"
+                        "sha256": "a2581e36d84f330b03cf23da3a1082d2eb27c56061ec3295f0174bd22a6add7b"
                     },
                     {
                         "content": "Switch (Dashboard).html",
@@ -887,7 +887,7 @@
                         "content": "Switch (LVGL).html",
                         "status": "publish",
                         "id": 12252,
-                        "sha256": "c7cfbd8ab1b5c6c153bdaf6a2c66b74d55ced661840ec82a4f25dc4514ad4010"
+                        "sha256": "5e460b61797e015f8149cb0f75dc1a866ae0939a02ae5500f072156b0a314d94"
                     },
                     {
                         "content": "Terminal.html",
@@ -919,7 +919,7 @@
                         "content": "Bar.html",
                         "status": "publish",
                         "id": 12256,
-                        "sha256": "1b0fdab443260daf99ea9f8349d112568f287ee7d8fffe8357649e6ef018d0ab"
+                        "sha256": "08da91fb8f41060113cfa1e923897a09ea80d938c6f38292c13568c6a4f0cead"
                     },
                     {
                         "content": "BarGraph.html",
@@ -931,7 +931,7 @@
                         "content": "Chart.html",
                         "status": "publish",
                         "id": 12258,
-                        "sha256": "a17ec6e64dfc4c0eb9603cbd3005d90c7df0e4769c32928c72e89b851100cc70"
+                        "sha256": "c592d0c30e8e2404c870111ec37156f2694e7c95b3d5e924f1a43707d1439a0a"
                     },
                     {
                         "content": "EEZChart.html",
@@ -967,7 +967,7 @@
                         "content": "Meter.html",
                         "status": "publish",
                         "id": 12264,
-                        "sha256": "04424ad6a61245d19879c02f2467d3fba803655fc1ba2efee7c7922e93c9e8c3"
+                        "sha256": "9ec3f8feed21972745073a07fcdd4de27f1efbd01c2fd292fd55183133edac39"
                     },
                     {
                         "content": "Plotly.html",
@@ -1009,7 +1009,7 @@
                         "content": "Spinner (LVGL).html",
                         "status": "publish",
                         "id": 12270,
-                        "sha256": "bf2f962e86a913d311fc2dd7a2074c58ff08bd9819319937cb88fd8c35c6496c"
+                        "sha256": "e8d71fb6d9eaa492d2674843aea4cfbaa22794c9d4eab0f797f1d4f0e32ee8b2"
                     },
                     {
                         "content": "Tabulator.html",
