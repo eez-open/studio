@@ -622,19 +622,21 @@ export abstract class DebuggerConnectionBase {
             .split(",")
             .map(addressStr => parseInt(addressStr, 16));
 
-        const arrayType = addresses[1];
+        const arraySize = addresses[1];
+
+        const arrayType = addresses[2];
         const type = this.runtime.assetsMap.types[arrayType];
         if (!type) {
             console.error("UNEXPECTED!");
             return undefined;
         }
 
-        const arrayElementAddresses = addresses.slice(2);
+        const arrayElementAddresses = addresses.slice(3);
 
         let value = observable(
             type.kind == "array" ||
                 (type.kind == "basic" && type.valueType == "array:any")
-                ? new Array(arrayElementAddresses.length)
+                ? new Array(arraySize)
                 : {}
         );
 
