@@ -142,6 +142,10 @@ import {
     getLvglFlagCodes,
     lvglHasLabelRecolorSupport
 } from "project-editor/lvgl/lvgl-versions";
+import {
+    LVGL_SCROLL_BAR_MODES,
+    LVGL_SCROLL_DIRECTION
+} from "project-editor/lvgl/lvgl-constants";
 
 4; ////////////////////////////////////////////////////////////////////////////////
 
@@ -325,8 +329,8 @@ export class LVGLWidget extends Widget {
     clickableFlag: string | boolean;
     clickableFlagType: LVGLPropertyType;
     flags: string;
-    scrollbarMode: string;
-    scrollDirection: string;
+    flagScrollbarMode: string;
+    flagScrollDirection: string;
 
     checkedState: string | boolean;
     checkedStateType: LVGLPropertyType;
@@ -486,7 +490,8 @@ export class LVGLWidget extends Widget {
                 enumerable: false
             },
             {
-                name: "scrollbarMode",
+                name: "flagScrollbarMode",
+                displayName: "Scrollbar mode",
                 type: PropertyType.Enum,
                 enumItems: [
                     {
@@ -506,14 +511,18 @@ export class LVGLWidget extends Widget {
                         label: "AUTO"
                     }
                 ],
-                enumDisallowUndefined: true,
-                propertyGridGroup: flagsGroup,
-                hideInPropertyGrid: true
+                enumDisallowUndefined: false,
+                propertyGridGroup: flagsGroup
             },
             {
-                name: "scrollDirection",
+                name: "flagScrollDirection",
+                displayName: "Scroll direction",
                 type: PropertyType.Enum,
                 enumItems: [
+                    {
+                        id: "none",
+                        label: "NONE"
+                    },
                     {
                         id: "top",
                         label: "TOP"
@@ -543,9 +552,8 @@ export class LVGLWidget extends Widget {
                         label: "ALL"
                     }
                 ],
-                enumDisallowUndefined: true,
-                propertyGridGroup: flagsGroup,
-                hideInPropertyGrid: true
+                enumDisallowUndefined: false,
+                propertyGridGroup: flagsGroup
             },
             ...makeLvglExpressionProperty(
                 "checkedState",
@@ -881,8 +889,8 @@ export class LVGLWidget extends Widget {
             topUnit: "px",
             widthUnit: "px",
             heightUnit: "px",
-            scrollbarMode: "auto",
-            scrollDirection: "all",
+            flagScrollbarMode: "",
+            flagScrollDirection: "",
             hiddenFlagType: "literal",
             clickableFlagType: "literal",
             checkedStateType: "literal",
@@ -1002,8 +1010,8 @@ export class LVGLWidget extends Widget {
             hiddenFlagType: observable,
             clickableFlag: observable,
             clickableFlagType: observable,
-            scrollbarMode: observable,
-            scrollDirection: observable,
+            flagScrollbarMode: observable,
+            flagScrollDirection: observable,
             checkedState: observable,
             checkedStateType: observable,
             disabledState: observable,
@@ -1343,6 +1351,20 @@ export class LVGLWidget extends Widget {
             }
         }
 
+        if (this.flagScrollbarMode) {
+            runtime.wasm._lvglSetScrollBarMode(
+                obj,
+                LVGL_SCROLL_BAR_MODES[this.flagScrollbarMode]
+            );
+        }
+
+        if (this.flagScrollDirection) {
+            runtime.wasm._lvglSetScrollDir(
+                obj,
+                LVGL_SCROLL_DIRECTION[this.flagScrollDirection]
+            );
+        }
+
         // add/clear states
         {
             const { added, cleared } = changes(
@@ -1559,6 +1581,18 @@ export class LVGLWidget extends Widget {
                         .join("|")});`
                 );
             }
+        }
+
+        if (this.flagScrollbarMode) {
+            build.line(
+                `lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_${this.flagScrollbarMode.toUpperCase()});`
+            );
+        }
+
+        if (this.flagScrollDirection) {
+            build.line(
+                `lv_obj_set_scroll_dir(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
+            );
         }
 
         // add/clear states

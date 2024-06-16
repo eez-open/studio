@@ -4745,6 +4745,8 @@ var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExport
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline');
+var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode');
+var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');

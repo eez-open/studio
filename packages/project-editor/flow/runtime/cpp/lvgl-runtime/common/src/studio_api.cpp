@@ -762,4 +762,12 @@ EM_PORT_API(void) lvglClearTimeline() {
     clearTimeline();
 }
 
+EM_PORT_API(void) lvglSetScrollBarMode(lv_obj_t *obj, lv_scrollbar_mode_t mode) {
+    lv_obj_set_scrollbar_mode(obj, mode);
+}
+
+EM_PORT_API(void) lvglSetScrollDir(lv_obj_t *obj, lv_dir_t dir) {
+    lv_obj_set_scroll_dir(obj, dir);
+}
+
 ////////////////////////////////////////////////////////////////////////////////

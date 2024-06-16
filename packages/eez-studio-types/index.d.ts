@@ -692,6 +692,8 @@ export interface IWasmFlowRuntime {
     _lvglSetTimelinePosition(timelinePosition: number): void;
     _lvglClearTimeline(): void;
     _lvglGetFlowState(flowState: number, userWidgetComponentIndexOrPageIndex: number): number;
+    _lvglSetScrollBarMode(obj: number, mode: number);
+    _lvglSetScrollDir(obj: number, dir: number);
 }
 
 export interface IDashboardComponentContext {
