@@ -267,10 +267,15 @@ export class RemoteRuntime extends RuntimeBase {
         }
     }
 
+    cleanup() {
+        this.debuggerValues.clear();
+        this.flowStateMap.clear();
+    }
+
     async doStopRuntime(notifyUser: boolean) {
         this.stopDebugger();
 
-        this.debuggerValues.clear();
+        this.cleanup();
 
         const connection = this.connection;
         this.connection = undefined;

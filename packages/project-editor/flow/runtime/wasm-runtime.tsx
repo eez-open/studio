@@ -313,6 +313,8 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         releaseRuntimeDashboardStates(this.wasmModuleId);
+
+        this.cleanup();
     }
 
     stop() {
