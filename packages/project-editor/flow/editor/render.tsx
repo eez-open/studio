@@ -222,11 +222,11 @@ export const ComponentEnclosure = observer(
         };
 
         componentDidMount() {
-            setTimeout(this.updateComponentGeometry, 0);
+            this.updateComponentGeometry();
         }
 
         componentDidUpdate() {
-            setTimeout(this.updateComponentGeometry, 0);
+            this.updateComponentGeometry();
         }
 
         componentWillUnmount() {
@@ -238,6 +238,12 @@ export const ComponentEnclosure = observer(
 
         render() {
             const { component, flowContext, left, top, visible } = this.props;
+
+            // force calling calcComponentGeometry when clientRect changes
+            flowContext.viewState.transform.clientRect.left;
+            flowContext.viewState.transform.clientRect.top;
+            flowContext.viewState.transform.clientRect.width;
+            flowContext.viewState.transform.clientRect.height;
 
             if (component instanceof ProjectEditor.WidgetClass) {
                 if (flowContext.flowState) {

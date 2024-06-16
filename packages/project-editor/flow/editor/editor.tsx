@@ -191,8 +191,7 @@ export const Canvas = observer(
         dragSnapLines: DragSnapLines;
     }> {
         div: HTMLDivElement;
-        resizeObserver: ResizeObserver;
-        clientRectChangeDetectionAnimationFrameHandle: any;
+        updateClientRectRequestAnimationFrameId: any;
         deltaY = 0;
 
         dragScrollDispose: (() => void) | undefined;
@@ -211,10 +210,6 @@ export const Canvas = observer(
                 onDragStart: action.bound,
                 onDragEnd: action.bound
             });
-
-            this.resizeObserver = new ResizeObserver(
-                this.resizeObserverCallback
-            );
         }
 
         _mouseHandler: IMouseHandler | undefined;
@@ -274,9 +269,7 @@ export const Canvas = observer(
             }
         }
 
-        resizeObserverCallback = () => {
-            this.clientRectChangeDetectionAnimationFrameHandle = undefined;
-
+        updateClientRect = () => {
             if ($(this.div).is(":visible")) {
                 const transform = this.props.flowContext.viewState.transform;
 
@@ -294,6 +287,9 @@ export const Canvas = observer(
                     });
                 }
             }
+
+            this.updateClientRectRequestAnimationFrameId =
+                requestAnimationFrame(this.updateClientRect);
         };
 
         componentDidMount() {
@@ -303,13 +299,7 @@ export const Canvas = observer(
                 passive: false
             });
 
-            if (this.div) {
-                this.resizeObserver.observe(this.div);
-            }
-        }
-
-        componentDidUpdate() {
-            this.resizeObserverCallback();
+            this.updateClientRect();
         }
 
         componentWillUnmount() {
@@ -317,9 +307,7 @@ export const Canvas = observer(
 
             this.div.removeEventListener("wheel", this.onWheel);
 
-            if (this.div) {
-                this.resizeObserver.unobserve(this.div);
-            }
+            cancelAnimationFrame(this.updateClientRectRequestAnimationFrameId);
         }
 
         onWheel = (event: WheelEvent) => {

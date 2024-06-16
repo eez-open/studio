@@ -100,7 +100,8 @@ export const Canvas = observer(
         pageRect?: Rect;
     }> {
         div: HTMLDivElement;
-        resizeObserver: ResizeObserver;
+        updateClientRectRequestAnimationFrameId: any;
+        setOverflowTimeout: any;
         deltaY = 0;
 
         buttonsAtDown: number;
@@ -117,10 +118,6 @@ export const Canvas = observer(
                 onDragStart: action.bound,
                 onDragEnd: action.bound
             });
-
-            this.resizeObserver = new ResizeObserver(
-                this.resizeObserverCallback
-            );
         }
 
         _mouseHandler: IMouseHandler | undefined;
@@ -133,8 +130,7 @@ export const Canvas = observer(
             });
         }
 
-        _setOverflowTimeout: any;
-        resizeObserverCallback = () => {
+        updateClientRect = () => {
             if ($(this.div).is(":visible")) {
                 const transform = this.props.flowContext.viewState.transform;
 
@@ -153,13 +149,13 @@ export const Canvas = observer(
                             .isDebuggerActive
                     ) {
                         // set overflow to hidden and back to auto after timeout
-                        if (this._setOverflowTimeout) {
-                            clearTimeout(this._setOverflowTimeout);
-                            this._setOverflowTimeout = undefined;
+                        if (this.setOverflowTimeout) {
+                            clearTimeout(this.setOverflowTimeout);
+                            this.setOverflowTimeout = undefined;
                         }
                         this.div.style.overflow = "hidden";
-                        this._setOverflowTimeout = setTimeout(() => {
-                            this._setOverflowTimeout = undefined;
+                        this.setOverflowTimeout = setTimeout(() => {
+                            this.setOverflowTimeout = undefined;
                             this.div.style.overflow = "auto";
                         }, 100);
                     }
@@ -169,6 +165,9 @@ export const Canvas = observer(
                     });
                 }
             }
+
+            this.updateClientRectRequestAnimationFrameId =
+                requestAnimationFrame(this.updateClientRect);
         };
 
         componentDidMount() {
@@ -183,13 +182,7 @@ export const Canvas = observer(
                 passive: false
             });
 
-            if (this.div) {
-                this.resizeObserver.observe(this.div);
-            }
-        }
-
-        componentDidUpdate() {
-            this.resizeObserverCallback();
+            this.updateClientRect();
         }
 
         componentWillUnmount() {
@@ -197,13 +190,11 @@ export const Canvas = observer(
 
             this.div.removeEventListener("wheel", this.onWheel);
 
-            if (this.div) {
-                this.resizeObserver.unobserve(this.div);
-            }
+            cancelAnimationFrame(this.updateClientRectRequestAnimationFrameId);
 
-            if (this._setOverflowTimeout) {
-                clearTimeout(this._setOverflowTimeout);
-                this._setOverflowTimeout = undefined;
+            if (this.setOverflowTimeout) {
+                clearTimeout(this.setOverflowTimeout);
+                this.setOverflowTimeout = undefined;
             }
         }
 
