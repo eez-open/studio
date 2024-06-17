@@ -125,6 +125,8 @@ function makeEnumPropertyInfo(
         })),
         enumDisallowUndefined: true,
         lvglStyleProp: Object.assign(lvglStyleProp, {
+            buildPrefix,
+            enumItemToCodeOrStringArray,
             valueRead: (value: number) => codeToEnumItem[value.toString()],
             valueToNum: (value: string) => enumItemToCode[value.toString()],
             valueBuild: (value: string) => buildPrefix + value
