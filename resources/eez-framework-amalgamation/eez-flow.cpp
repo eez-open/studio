@@ -83,7 +83,8 @@ void getAllocInfo(uint32_t &free, uint32_t &alloc) {
 	free = mon.free_size;
 	alloc = mon.total_size - mon.free_size;
 }
-#elif 0 && defined(__EMSCRIPTEN__)
+#elif defined(EEZ_DASHBOARD_API)
+#include <emscripten/heap.h>
 void initAllocHeap(uint8_t *heap, size_t heapSize) {
 }
 void *alloc(size_t size, uint32_t id) {
@@ -97,8 +98,8 @@ template<typename T> void freeObject(T *ptr) {
 	::free(ptr);
 }
 void getAllocInfo(uint32_t &free, uint32_t &alloc) {
-	free = 0;
-	alloc = 0;
+	free = emscripten_get_heap_max() - emscripten_get_heap_size();
+	alloc = emscripten_get_heap_size();
 }
 #else
 static const size_t ALIGNMENT = 64;
@@ -331,7 +332,7 @@ void loadMainAssets(const uint8_t *assets, uint32_t assetsSize) {
         g_mainAssets = (Assets *)(assets + sizeof(uint32_t));
         g_mainAssetsUncompressed = true;
     } else {
-#if defined(EEZ_FOR_LVGL)
+#if defined(EEZ_FOR_LVGL) || defined(EEZ_DASHBOARD_API)
         uint8_t *DECOMPRESSED_ASSETS_START_ADDRESS = 0;
         uint32_t MAX_DECOMPRESSED_ASSETS_SIZE = 0;
         allocMemoryForDecompressedAssets(assets, assetsSize, DECOMPRESSED_ASSETS_START_ADDRESS, MAX_DECOMPRESSED_ASSETS_SIZE);
@@ -526,7 +527,7 @@ extern "C" void debug_trace(const char *str, size_t len) {
 #endif
 #endif
 namespace eez {
-#if (defined(EEZ_PLATFORM_SIMULATOR) || defined(__EMSCRIPTEN__)) && !defined(EEZ_FOR_LVGL)
+#if (defined(EEZ_PLATFORM_SIMULATOR) || defined(__EMSCRIPTEN__)) && !defined(EEZ_FOR_LVGL) && !defined(EEZ_DASHBOARD_API)
 uint8_t g_memory[MEMORY_SIZE] = { 0 };
 #endif
 uint8_t *DECOMPRESSED_ASSETS_START_ADDRESS;
@@ -548,11 +549,16 @@ void initMemory() {
     initAssetsMemory();
     initOtherMemory();
 }
+#if defined(EEZ_DASHBOARD_API)
+#include <emscripten/heap.h>
+#endif
 void initAssetsMemory() {
 #if defined(EEZ_FOR_LVGL)
 #if defined(LV_MEM_SIZE)
     ALLOC_BUFFER_SIZE = LV_MEM_SIZE;
 #endif
+#elif defined(EEZ_DASHBOARD_API)
+    ALLOC_BUFFER_SIZE = emscripten_get_heap_max();
 #else
     ALLOC_BUFFER = MEMORY_BEGIN;
     ALLOC_BUFFER_SIZE = MEMORY_SIZE;
@@ -560,7 +566,7 @@ void initAssetsMemory() {
 #endif
 }
 void initOtherMemory() {
-#if !defined(EEZ_FOR_LVGL)
+#if !defined(EEZ_FOR_LVGL) && !defined(EEZ_DASHBOARD_API)
     FLOW_TO_DEBUGGER_MESSAGE_BUFFER = allocBuffer(FLOW_TO_DEBUGGER_MESSAGE_BUFFER_SIZE);
 #endif
 #if EEZ_OPTION_GUI
@@ -587,6 +593,8 @@ uint8_t *allocBuffer(uint32_t size) {
 #else
     return (uint8_t *)lv_mem_alloc(size);
 #endif
+#elif defined(EEZ_DASHBOARD_API)
+    return (uint8_t *)::malloc(size);
 #else
     size = ((size + 1023) / 1024) * 1024;
     auto buffer = ALLOC_BUFFER;
@@ -2253,7 +2261,31 @@ ArrayValueRef::~ArrayValueRef() {
     }
 }
 bool assignValue(Value &dstValue, const Value &srcValue, uint32_t dstValueType) {
-    if (dstValue.isBoolean()) {
+    if (dstValueType == VALUE_TYPE_BOOLEAN) {
+        dstValue = Value(srcValue.toBool(), VALUE_TYPE_BOOLEAN);
+    } else if (Value::isInt32OrLess(dstValueType)) {
+        dstValue = Value(srcValue.toInt32(), (ValueType)dstValueType);
+    } else if (dstValueType == VALUE_TYPE_FLOAT) {
+        dstValue = Value(srcValue.toFloat(), VALUE_TYPE_FLOAT);
+    } else if (dstValueType == VALUE_TYPE_DOUBLE) {
+        dstValue = Value(srcValue.toDouble(), VALUE_TYPE_DOUBLE);
+    } else if (dstValueType == VALUE_TYPE_STRING) {
+        dstValue = srcValue.toString(0x30a91156);
+#if defined(EEZ_DASHBOARD_API)
+    } else if (dstValueType == VALUE_TYPE_JSON) {
+        if (srcValue.isJson()) {
+            dstValue = srcValue;
+        } else {
+            dstValue = flow::convertToJson(&srcValue);
+        }
+    } else if (srcValue.isJson()) {
+        if (dstValueType == VALUE_TYPE_JSON) {
+            dstValue = srcValue;
+        }  else {
+            dstValue = flow::convertFromJson(srcValue.getInt(), dstValueType);
+        }
+#endif
+    } else if (dstValue.isBoolean()) {
         dstValue.int32Value = srcValue.toBool();
     } else if (dstValue.isInt32OrLess()) {
         dstValue.int32Value = srcValue.toInt32();
@@ -2264,17 +2296,7 @@ bool assignValue(Value &dstValue, const Value &srcValue, uint32_t dstValueType) 
     } else if (dstValue.isString()) {
         dstValue = srcValue.toString(0x30a91156);
     } else {
-#if defined(EEZ_DASHBOARD_API)
-        if (dstValueType == VALUE_TYPE_JSON && !srcValue.isJson()) {
-            dstValue = flow::convertToJson(&srcValue);
-        } else if (srcValue.isJson() && dstValueType != VALUE_TYPE_JSON) {
-            dstValue = flow::convertFromJson(srcValue.getInt(), dstValueType);
-        } else {
-#endif
-            dstValue = srcValue;
-#if defined(EEZ_DASHBOARD_API)
-        }
-#endif
+        dstValue = srcValue;
     }
     return true;
 }
@@ -3242,6 +3264,7 @@ static Date timeChangeRuleToLocal(TimeChangeRule &r, int year) {
 #include <inttypes.h>
 namespace eez {
 namespace flow {
+#define MAX_ARRAY_SIZE_TRANSFERRED_IN_DEBUGGER 1000
 enum MessagesToDebugger {
     MESSAGE_TO_DEBUGGER_STATE_CHANGED, 
     MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE, 
@@ -3465,15 +3488,18 @@ void writeArray(const ArrayValue *arrayValue) {
 	WRITE_TO_OUTPUT_BUFFER('{');
 	writeValueAddr(arrayValue);
     WRITE_TO_OUTPUT_BUFFER(',');
+    writeArrayType(arrayValue->arraySize);
+    WRITE_TO_OUTPUT_BUFFER(',');
     writeArrayType(arrayValue->arrayType);
-	for (uint32_t i = 0; i < arrayValue->arraySize; i++) {
+    auto transferredSize = arrayValue->arraySize > MAX_ARRAY_SIZE_TRANSFERRED_IN_DEBUGGER ? MAX_ARRAY_SIZE_TRANSFERRED_IN_DEBUGGER : arrayValue->arraySize;
+	for (uint32_t i = 0; i < transferredSize; i++) {
 		WRITE_TO_OUTPUT_BUFFER(',');
 		writeValueAddr(&arrayValue->values[i]);
 	}
 	WRITE_TO_OUTPUT_BUFFER('}');
 	WRITE_TO_OUTPUT_BUFFER('\n');
 	FLUSH_OUTPUT_BUFFER();
-    for (uint32_t i = 0; i < arrayValue->arraySize; i++) {
+    for (uint32_t i = 0; i < transferredSize; i++) {
         onValueChanged(&arrayValue->values[i]);
     }
 }
@@ -3606,15 +3632,15 @@ void onAddToQueue(FlowState *flowState, int sourceComponentIndex, int sourceOutp
         uint32_t alloc;
         getAllocInfo(free, alloc);
         char buffer[256];
-		snprintf(buffer, sizeof(buffer), "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+		snprintf(buffer, sizeof(buffer), "%d\t%d\t%d\t%d\t%d\t%d\t%u\t%u\n",
 			MESSAGE_TO_DEBUGGER_ADD_TO_QUEUE,
 			(int)flowState->flowStateIndex,
 			sourceComponentIndex,
 			sourceOutputIndex,
 			targetComponentIndex,
 			targetInputIndex,
-            (int)free,
-            (int)ALLOC_BUFFER_SIZE
+            free,
+            ALLOC_BUFFER_SIZE
 		);
         writeDebuggerBufferHook(buffer, strlen(buffer));
     }
@@ -3990,12 +4016,12 @@ static void evalExpression(FlowState *flowState, const uint8_t *instructions, in
     			i += 2;
                 if (g_stack.sp == 1) {
                     auto finalResult = g_stack.pop();
+                    #define VALUE_TYPE (instructions[i] + (instructions[i + 1] << 8) + (instructions[i + 2] << 16) + (instructions[i + 3] << 24))
                     if (finalResult.getType() == VALUE_TYPE_VALUE_PTR) {
-                        finalResult.dstValueType =
-                            instructions[i] +
-                            (instructions[i + 1] << 8) +
-                            (instructions[i + 2] << 16) +
-                            (instructions[i + 3] << 24);
+                        finalResult.dstValueType = VALUE_TYPE;
+                    } else if (finalResult.getType() == VALUE_TYPE_ARRAY_ELEMENT_VALUE) {
+                        auto arrayElementValue = (ArrayElementValue *)finalResult.refValue;
+                        arrayElementValue->dstValueType = VALUE_TYPE;
                     }
                     g_stack.push(finalResult);
                 }
@@ -7241,6 +7267,7 @@ void assignValue(FlowState *flowState, int componentIndex, Value &dstValue, cons
                     return;
                 }
                 pDstValue = &array->values[arrayElementValue->elementIndex];
+                dstValueType = arrayElementValue->dstValueType;
             }
         }
 #if defined(EEZ_DASHBOARD_API)
@@ -7405,77 +7432,6 @@ void enableThrowError(bool enable) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/watch_list.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeWatchVariableComponent(FlowState *flowState, unsigned componentIndex);
-struct WatchListNode {
-    FlowState *flowState;
-    unsigned componentIndex;
-    WatchListNode *prev;
-    WatchListNode *next;
-};
-struct WatchList {
-    WatchListNode *first;
-    WatchListNode *last;
-};
-static WatchList g_watchList;
-WatchListNode *watchListAdd(FlowState *flowState, unsigned componentIndex) {
-    auto node = (WatchListNode *)alloc(sizeof(WatchListNode), 0x00864d67);
-    node->prev = g_watchList.last;
-    if (g_watchList.last != 0) {
-        g_watchList.last->next = node;
-    }
-    g_watchList.last = node;
-    if (g_watchList.first == 0) {
-        g_watchList.first = node;
-    }
-    node->next = 0;
-    node->flowState = flowState;
-    node->componentIndex = componentIndex;
-    incRefCounterForFlowState(flowState);
-    return node;
-}
-void watchListRemove(WatchListNode *node) {
-    if (node->prev) {
-        node->prev->next = node->next;
-    } else {
-        g_watchList.first = node->next;
-    }
-    if (node->next) {
-        node->next->prev = node->prev;
-    } else {
-        g_watchList.last = node->prev;
-    }
-    free(node);
-}
-void visitWatchList() {
-    for (auto node = g_watchList.first; node; ) {
-        auto nextNode = node->next;
-        if (canExecuteStep(node->flowState, node->componentIndex)) {
-            executeWatchVariableComponent(node->flowState, node->componentIndex);
-        }
-        decRefCounterForFlowState(node->flowState);
-        if (canFreeFlowState(node->flowState)) {
-            freeFlowState(node->flowState);
-            watchListRemove(node);
-        } else {
-            incRefCounterForFlowState(node->flowState);
-        }
-        node = nextNode;
-    }
-}
-void watchListReset() {
-    for (auto node = g_watchList.first; node;) {
-        auto nextNode = node->next;
-        watchListRemove(node);
-        node = nextNode;
-    }
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/queue.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -7572,6 +7528,77 @@ bool isInQueue(FlowState *flowState, unsigned componentIndex) {
         }
 	}
     return false;
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/watch_list.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeWatchVariableComponent(FlowState *flowState, unsigned componentIndex);
+struct WatchListNode {
+    FlowState *flowState;
+    unsigned componentIndex;
+    WatchListNode *prev;
+    WatchListNode *next;
+};
+struct WatchList {
+    WatchListNode *first;
+    WatchListNode *last;
+};
+static WatchList g_watchList;
+WatchListNode *watchListAdd(FlowState *flowState, unsigned componentIndex) {
+    auto node = (WatchListNode *)alloc(sizeof(WatchListNode), 0x00864d67);
+    node->prev = g_watchList.last;
+    if (g_watchList.last != 0) {
+        g_watchList.last->next = node;
+    }
+    g_watchList.last = node;
+    if (g_watchList.first == 0) {
+        g_watchList.first = node;
+    }
+    node->next = 0;
+    node->flowState = flowState;
+    node->componentIndex = componentIndex;
+    incRefCounterForFlowState(flowState);
+    return node;
+}
+void watchListRemove(WatchListNode *node) {
+    if (node->prev) {
+        node->prev->next = node->next;
+    } else {
+        g_watchList.first = node->next;
+    }
+    if (node->next) {
+        node->next->prev = node->prev;
+    } else {
+        g_watchList.last = node->prev;
+    }
+    free(node);
+}
+void visitWatchList() {
+    for (auto node = g_watchList.first; node; ) {
+        auto nextNode = node->next;
+        if (canExecuteStep(node->flowState, node->componentIndex)) {
+            executeWatchVariableComponent(node->flowState, node->componentIndex);
+        }
+        decRefCounterForFlowState(node->flowState);
+        if (canFreeFlowState(node->flowState)) {
+            freeFlowState(node->flowState);
+            watchListRemove(node);
+        } else {
+            incRefCounterForFlowState(node->flowState);
+        }
+        node = nextNode;
+    }
+}
+void watchListReset() {
+    for (auto node = g_watchList.first; node;) {
+        auto nextNode = node->next;
+        watchListRemove(node);
+        node = nextNode;
+    }
 }
 } 
 } 
@@ -7680,6 +7707,19 @@ void executeCallActionComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
+// flow/components/catch_error.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeCatchErrorComponent(FlowState *flowState, unsigned componentIndex) {
+	auto catchErrorComponentExecutionState = (CatchErrorComponenentExecutionState *)flowState->componenentExecutionStates[componentIndex];
+	propagateValue(flowState, componentIndex, 1, catchErrorComponentExecutionState->message);
+    deallocateComponentExecutionState(flowState, componentIndex);
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
 // flow/components/compare.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -7705,19 +7745,6 @@ void executeCompareComponent(FlowState *flowState, unsigned componentIndex) {
         throwError(flowState, componentIndex, "Failed to convert Value to boolean in IsTrue\n");
         return;
     }
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/components/catch_error.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeCatchErrorComponent(FlowState *flowState, unsigned componentIndex) {
-	auto catchErrorComponentExecutionState = (CatchErrorComponenentExecutionState *)flowState->componenentExecutionStates[componentIndex];
-	propagateValue(flowState, componentIndex, 1, catchErrorComponentExecutionState->message);
-    deallocateComponentExecutionState(flowState, componentIndex);
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -7806,18 +7833,17 @@ void executeDelayComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/end.cpp
+// flow/components/expr_eval.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
-void executeEndComponent(FlowState *flowState, unsigned componentIndex) {
-	if (flowState->parentFlowState && flowState->isAction) {
-        if (flowState->parentComponentIndex != -1) {
-		    propagateValueThroughSeqout(flowState->parentFlowState, flowState->parentComponentIndex);
-        }
-	} else {
-		stopScriptHook();
+void executeEvalExprComponent(FlowState *flowState, unsigned componentIndex) {
+	Value expressionValue;
+	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Expression in EvalExpr")) {
+		return;
 	}
+	propagateValue(flowState, componentIndex, 1, expressionValue);
+	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
 } 
@@ -7832,6 +7858,22 @@ void executeErrorComponent(FlowState *flowState, unsigned componentIndex) {
 		return;
 	}
 	throwError(flowState, componentIndex, expressionValue.getString());
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/end.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeEndComponent(FlowState *flowState, unsigned componentIndex) {
+	if (flowState->parentFlowState && flowState->isAction) {
+        if (flowState->parentComponentIndex != -1) {
+		    propagateValueThroughSeqout(flowState->parentFlowState, flowState->parentComponentIndex);
+        }
+	} else {
+		stopScriptHook();
+	}
 }
 } 
 } 
@@ -7887,21 +7929,6 @@ void executeInputComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
-// flow/components/expr_eval.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeEvalExprComponent(FlowState *flowState, unsigned componentIndex) {
-	Value expressionValue;
-	if (!evalProperty(flowState, componentIndex, defs_v3::EVAL_EXPR_ACTION_COMPONENT_PROPERTY_EXPRESSION, expressionValue, "Failed to evaluate Expression in EvalExpr")) {
-		return;
-	}
-	propagateValue(flowState, componentIndex, 1, expressionValue);
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/is_true.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -7937,6 +7964,22 @@ void executeLabelInComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
+// flow/components/label_out.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+struct LabelOutActionComponent : public Component {
+    uint16_t labelInComponentIndex;
+};
+void executeLabelOutComponent(FlowState *flowState, unsigned componentIndex) {
+    auto component = (LabelOutActionComponent *)flowState->flow->components[componentIndex];
+    if ((int)component->labelInComponentIndex != -1) {
+        propagateValueThroughSeqout(flowState, component->labelInComponentIndex);
+    }
+}
+} 
+} 
+// -----------------------------------------------------------------------------
 // flow/components/line_chart_widget.cpp
 // -----------------------------------------------------------------------------
 #if EEZ_OPTION_GUI
@@ -7954,7 +7997,7 @@ LineChartWidgetComponenentExecutionState::~LineChartWidgetComponenentExecutionSt
         }
         eez::free(data);
     }
-    for (uint32_t i = 0; i < maxPoints; i++) {
+    for (uint32_t i = 0; i < numLines; i++) {
 		(lineLabels + i)->~Value();
 	}
     eez::free(lineLabels);
@@ -7969,7 +8012,7 @@ void LineChartWidgetComponenentExecutionState::init(uint32_t numLines_, uint32_t
 	}
     numPoints = 0;
     startPointIndex = 0;
-    lineLabels = (Value *)eez::alloc(numLines * sizeof(Value *), 0xe8afd215);
+    lineLabels = (Value *)eez::alloc(numLines * sizeof(Value), 0xe8afd215);
     for (uint32_t i = 0; i < numLines; i++) {
 		new (lineLabels + i) Value();
 	}
@@ -8082,22 +8125,6 @@ void executeLineChartWidgetComponent(FlowState *flowState, unsigned componentInd
 } 
 #endif 
 // -----------------------------------------------------------------------------
-// flow/components/label_out.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-struct LabelOutActionComponent : public Component {
-    uint16_t labelInComponentIndex;
-};
-void executeLabelOutComponent(FlowState *flowState, unsigned componentIndex) {
-    auto component = (LabelOutActionComponent *)flowState->flow->components[componentIndex];
-    if ((int)component->labelInComponentIndex != -1) {
-        propagateValueThroughSeqout(flowState, component->labelInComponentIndex);
-    }
-}
-} 
-} 
-// -----------------------------------------------------------------------------
 // flow/components/log.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
@@ -8193,6 +8220,75 @@ void executeLoopComponent(FlowState *flowState, unsigned componentIndex) {
 }
 } 
 } 
+// -----------------------------------------------------------------------------
+// flow/components/lvgl_user_widget.cpp
+// -----------------------------------------------------------------------------
+#if defined(EEZ_FOR_LVGL)
+namespace eez {
+namespace flow {
+struct LVGLUserWidgetComponent : public Component {
+	int16_t flowIndex;
+	uint8_t inputsStartIndex;
+	uint8_t outputsStartIndex;
+    int32_t widgetStartIndex;
+};
+LVGLUserWidgetExecutionState *createUserWidgetFlowState(FlowState *flowState, unsigned userWidgetWidgetComponentIndex) {
+    auto component = (LVGLUserWidgetComponent *)flowState->flow->components[userWidgetWidgetComponentIndex];
+    auto userWidgetFlowState = initPageFlowState(flowState->assets, component->flowIndex, flowState, userWidgetWidgetComponentIndex);
+    userWidgetFlowState->lvglWidgetStartIndex = component->widgetStartIndex;
+    auto userWidgetWidgetExecutionState = allocateComponentExecutionState<LVGLUserWidgetExecutionState>(flowState, userWidgetWidgetComponentIndex);
+    userWidgetWidgetExecutionState->flowState = userWidgetFlowState;
+    return userWidgetWidgetExecutionState;
+}
+void executeLVGLUserWidgetComponent(FlowState *flowState, unsigned componentIndex) {
+    auto component = (LVGLUserWidgetComponent *)flowState->flow->components[componentIndex];
+    auto userWidgetWidgetExecutionState = (LVGLUserWidgetExecutionState *)flowState->componenentExecutionStates[componentIndex];
+    if (!userWidgetWidgetExecutionState) {
+        userWidgetWidgetExecutionState = createUserWidgetFlowState(flowState, componentIndex);
+    }
+    auto userWidgetFlowState = userWidgetWidgetExecutionState->flowState;
+    for (
+        unsigned userWidgetComponentIndex = 0;
+        userWidgetComponentIndex < userWidgetFlowState->flow->components.count;
+        userWidgetComponentIndex++
+    ) {
+        auto userWidgetComponent = userWidgetFlowState->flow->components[userWidgetComponentIndex];
+        if (userWidgetComponent->type == defs_v3::COMPONENT_TYPE_INPUT_ACTION) {
+            auto inputActionComponentExecutionState = (InputActionComponentExecutionState *)userWidgetFlowState->componenentExecutionStates[userWidgetComponentIndex];
+            if (inputActionComponentExecutionState) {
+                Value value;
+                if (getCallActionValue(userWidgetFlowState, userWidgetComponentIndex, value)) {
+                    if (inputActionComponentExecutionState->value != value) {
+                        addToQueue(userWidgetWidgetExecutionState->flowState, userWidgetComponentIndex, -1, -1, -1, false);
+                        inputActionComponentExecutionState->value = value;
+                    }
+                } else {
+                    return;
+                }
+            }
+        } else if (userWidgetComponent->type == defs_v3::COMPONENT_TYPE_START_ACTION) {
+            Value value;
+            if (getCallActionValue(userWidgetFlowState, userWidgetComponentIndex, value)) {
+                if (value.getType() != VALUE_TYPE_UNDEFINED) {
+                    addToQueue(userWidgetWidgetExecutionState->flowState, userWidgetComponentIndex, -1, -1, -1, false);
+                }
+            } else {
+                return;
+            }
+        }
+    }
+}
+} 
+} 
+#else
+namespace eez {
+namespace flow {
+void executeLVGLUserWidgetComponent(FlowState *flowState, unsigned componentIndex) {
+    throwError(flowState, componentIndex, "Not implemented");
+}
+} 
+} 
+#endif
 // -----------------------------------------------------------------------------
 // flow/components/lvgl.cpp
 // -----------------------------------------------------------------------------
@@ -8410,75 +8506,6 @@ void executeLVGLComponent(FlowState *flowState, unsigned componentIndex) {
 namespace eez {
 namespace flow {
 void executeLVGLComponent(FlowState *flowState, unsigned componentIndex) {
-    throwError(flowState, componentIndex, "Not implemented");
-}
-} 
-} 
-#endif
-// -----------------------------------------------------------------------------
-// flow/components/lvgl_user_widget.cpp
-// -----------------------------------------------------------------------------
-#if defined(EEZ_FOR_LVGL)
-namespace eez {
-namespace flow {
-struct LVGLUserWidgetComponent : public Component {
-	int16_t flowIndex;
-	uint8_t inputsStartIndex;
-	uint8_t outputsStartIndex;
-    int32_t widgetStartIndex;
-};
-LVGLUserWidgetExecutionState *createUserWidgetFlowState(FlowState *flowState, unsigned userWidgetWidgetComponentIndex) {
-    auto component = (LVGLUserWidgetComponent *)flowState->flow->components[userWidgetWidgetComponentIndex];
-    auto userWidgetFlowState = initPageFlowState(flowState->assets, component->flowIndex, flowState, userWidgetWidgetComponentIndex);
-    userWidgetFlowState->lvglWidgetStartIndex = component->widgetStartIndex;
-    auto userWidgetWidgetExecutionState = allocateComponentExecutionState<LVGLUserWidgetExecutionState>(flowState, userWidgetWidgetComponentIndex);
-    userWidgetWidgetExecutionState->flowState = userWidgetFlowState;
-    return userWidgetWidgetExecutionState;
-}
-void executeLVGLUserWidgetComponent(FlowState *flowState, unsigned componentIndex) {
-    auto component = (LVGLUserWidgetComponent *)flowState->flow->components[componentIndex];
-    auto userWidgetWidgetExecutionState = (LVGLUserWidgetExecutionState *)flowState->componenentExecutionStates[componentIndex];
-    if (!userWidgetWidgetExecutionState) {
-        userWidgetWidgetExecutionState = createUserWidgetFlowState(flowState, componentIndex);
-    }
-    auto userWidgetFlowState = userWidgetWidgetExecutionState->flowState;
-    for (
-        unsigned userWidgetComponentIndex = 0;
-        userWidgetComponentIndex < userWidgetFlowState->flow->components.count;
-        userWidgetComponentIndex++
-    ) {
-        auto userWidgetComponent = userWidgetFlowState->flow->components[userWidgetComponentIndex];
-        if (userWidgetComponent->type == defs_v3::COMPONENT_TYPE_INPUT_ACTION) {
-            auto inputActionComponentExecutionState = (InputActionComponentExecutionState *)userWidgetFlowState->componenentExecutionStates[userWidgetComponentIndex];
-            if (inputActionComponentExecutionState) {
-                Value value;
-                if (getCallActionValue(userWidgetFlowState, userWidgetComponentIndex, value)) {
-                    if (inputActionComponentExecutionState->value != value) {
-                        addToQueue(userWidgetWidgetExecutionState->flowState, userWidgetComponentIndex, -1, -1, -1, false);
-                        inputActionComponentExecutionState->value = value;
-                    }
-                } else {
-                    return;
-                }
-            }
-        } else if (userWidgetComponent->type == defs_v3::COMPONENT_TYPE_START_ACTION) {
-            Value value;
-            if (getCallActionValue(userWidgetFlowState, userWidgetComponentIndex, value)) {
-                if (value.getType() != VALUE_TYPE_UNDEFINED) {
-                    addToQueue(userWidgetWidgetExecutionState->flowState, userWidgetComponentIndex, -1, -1, -1, false);
-                }
-            } else {
-                return;
-            }
-        }
-    }
-}
-} 
-} 
-#else
-namespace eez {
-namespace flow {
-void executeLVGLUserWidgetComponent(FlowState *flowState, unsigned componentIndex) {
     throwError(flowState, componentIndex, "Not implemented");
 }
 } 
@@ -9026,22 +9053,22 @@ int eez_mqtt_publish(void *handle, const char *topic, const char *payload) {
 #endif
 #endif
 // -----------------------------------------------------------------------------
+// flow/components/noop.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeNoopComponent(FlowState *flowState, unsigned componentIndex) {
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
 // flow/components/on_event.cpp
 // -----------------------------------------------------------------------------
 namespace eez {
 namespace flow {
 void executeOnEventComponent(FlowState *flowState, unsigned componentIndex) {
     propagateValue(flowState, componentIndex, 1, flowState->eventValue);
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/components/noop.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeNoopComponent(FlowState *flowState, unsigned componentIndex) {
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -9129,21 +9156,6 @@ void executeSetVariableComponent(FlowState *flowState, unsigned componentIndex) 
         }
         assignValue(flowState, componentIndex, dstValue, srcValue);
     }
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/components/show_page.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-struct ShowPageActionComponent : public Component {
-	int16_t page;
-};
-void executeShowPageComponent(FlowState *flowState, unsigned componentIndex) {
-	auto component = (ShowPageActionComponent *)flowState->flow->components[componentIndex];
-	replacePageHook(component->page, 0, 0, 0);
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 
@@ -9238,6 +9250,31 @@ void executeSortArrayComponent(FlowState *flowState, unsigned componentIndex) {
 } 
 } 
 // -----------------------------------------------------------------------------
+// flow/components/show_page.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+struct ShowPageActionComponent : public Component {
+	int16_t page;
+};
+void executeShowPageComponent(FlowState *flowState, unsigned componentIndex) {
+	auto component = (ShowPageActionComponent *)flowState->flow->components[componentIndex];
+	replacePageHook(component->page, 0, 0, 0);
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
+// flow/components/start.cpp
+// -----------------------------------------------------------------------------
+namespace eez {
+namespace flow {
+void executeStartComponent(FlowState *flowState, unsigned componentIndex) {
+	propagateValueThroughSeqout(flowState, componentIndex);
+}
+} 
+} 
+// -----------------------------------------------------------------------------
 // flow/components/switch.cpp
 // -----------------------------------------------------------------------------
 #include <stdio.h>
@@ -9271,16 +9308,6 @@ void executeSwitchComponent(FlowState *flowState, unsigned componentIndex) {
             break;
         }
     }
-	propagateValueThroughSeqout(flowState, componentIndex);
-}
-} 
-} 
-// -----------------------------------------------------------------------------
-// flow/components/start.cpp
-// -----------------------------------------------------------------------------
-namespace eez {
-namespace flow {
-void executeStartComponent(FlowState *flowState, unsigned componentIndex) {
 	propagateValueThroughSeqout(flowState, componentIndex);
 }
 } 

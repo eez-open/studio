@@ -1042,6 +1042,9 @@ struct Value {
     bool isUndefinedOrNull() {
         return type == VALUE_TYPE_UNDEFINED || type == VALUE_TYPE_NULL;
     }
+	static bool isInt32OrLess(int type) {
+		return (type >= VALUE_TYPE_INT8 && type <= VALUE_TYPE_UINT32) || type == VALUE_TYPE_BOOLEAN;
+	}
 	bool isInt32OrLess() const {
 		return (type >= VALUE_TYPE_INT8 && type <= VALUE_TYPE_UINT32) || type == VALUE_TYPE_BOOLEAN;
 	}
@@ -1251,6 +1254,7 @@ struct BlobRef : public Ref {
 struct ArrayElementValue : public Ref {
 	Value arrayValue;
     int elementIndex;
+    uint32_t dstValueType;
 };
 struct JsonMemberValue : public Ref {
 	Value jsonValue;
@@ -1917,7 +1921,7 @@ namespace eez {
 #ifdef CONF_MEMORY_BEGIN
     static uint8_t * const MEMORY_BEGIN = (uint8_t *)CONF_MEMORY_BEGIN;
 #else
-    #if defined(EEZ_FOR_LVGL)
+    #if defined(EEZ_FOR_LVGL) || defined(EEZ_DASHBOARD_API)
         static uint8_t * const MEMORY_BEGIN = 0;
     #else
         #if defined(EEZ_PLATFORM_STM32)
@@ -1932,7 +1936,7 @@ namespace eez {
 #ifdef CONF_MEMORY_SIZE
     static const uint32_t MEMORY_SIZE = CONF_MEMORY_SIZE;
 #else
-    #if defined(EEZ_FOR_LVGL)
+    #if defined(EEZ_FOR_LVGL) || defined(EEZ_DASHBOARD_API)
     #else
         #if defined(EEZ_PLATFORM_STM32)
             #if CONF_OPTION_FPGA
@@ -1950,7 +1954,7 @@ namespace eez {
 #endif
 extern uint8_t *ALLOC_BUFFER;
 extern uint32_t ALLOC_BUFFER_SIZE;
-#if !defined(EEZ_FOR_LVGL)
+#if !defined(EEZ_FOR_LVGL) && !defined(EEZ_DASHBOARD_API)
     extern uint8_t *DECOMPRESSED_ASSETS_START_ADDRESS;
     #if defined(CONF_MAX_DECOMPRESSED_ASSETS_SIZE)
         static const uint32_t MAX_DECOMPRESSED_ASSETS_SIZE = CONF_MAX_DECOMPRESSED_ASSETS_SIZE;
@@ -1963,7 +1967,7 @@ extern uint32_t ALLOC_BUFFER_SIZE;
         #endif
     #endif
 #endif
-#if !defined(EEZ_FOR_LVGL)
+#if !defined(EEZ_FOR_LVGL) && !defined(EEZ_DASHBOARD_API)
     extern uint8_t *FLOW_TO_DEBUGGER_MESSAGE_BUFFER;
     #if defined(EEZ_FOR_LVGL)
         static const uint32_t FLOW_TO_DEBUGGER_MESSAGE_BUFFER_SIZE = 32 * 1024;
