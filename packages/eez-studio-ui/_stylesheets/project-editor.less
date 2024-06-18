@@ -1638,51 +1638,70 @@
     }
 
     .EezStudio_ExpressionBuilder_CommandsBrowser {
-        background-color: white;
-        border: 1px solid @borderColor;
-    }
-
-    .EezStudio_ExpressionBuilder_Panels {
         flex: 1;
         overflow: auto;
 
         display: flex;
         flex-direction: row;
 
-        .EezStudio_SimpleTree {
-            flex: 1;
-            height: 100%;
-            background-color: @backgroundColor;
+        background-color: white;
+        border: 1px solid @borderColor;
+    }
+
+    .EezStudio_ExpressionBuilder_Expression {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        flex: 1;
+
+        .EezStudio_SearchInput_Container {
+            flex: 0;
+            margin-bottom: 5px;
             border: 1px solid @borderColor;
+        }
+
+        .EezStudio_ExpressionBuilder_Panels {
+            flex: 1;
             overflow: auto;
-            margin-right: 10px;
-            &:last-child {
-                margin-right: 0;
+
+            display: flex;
+            flex-direction: row;
+
+            .EezStudio_SimpleTree {
+                flex: 1;
+                height: 100%;
+                background-color: @backgroundColor;
+                border: 1px solid @borderColor;
+                overflow: auto;
+                margin-right: 10px;
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+
+            .name {
+                font-weight: bold;
+            }
+
+            .type {
+                &:before {
+                    content: "<";
+                }
+                &:after {
+                    content: ">";
+                }
+                margin-left: 10px;
+                font-style: italic;
+            }
+
+            .EezStudio_ExpressionBuilder_OperatorSign {
+                margin-left: 5px;
+                padding: 0px 6px;
+                background-color: @panelHeaderColor;
+                border: 1px solid @borderColor;
+                border-radius: 6px;
             }
         }
-    }
-
-    .name {
-        font-weight: bold;
-    }
-
-    .type {
-        &:before {
-            content: "<";
-        }
-        &:after {
-            content: ">";
-        }
-        margin-left: 10px;
-        font-style: italic;
-    }
-
-    .EezStudio_ExpressionBuilder_OperatorSign {
-        margin-left: 5px;
-        padding: 0px 6px;
-        background-color: @panelHeaderColor;
-        border: 1px solid @borderColor;
-        border-radius: 6px;
     }
 }
 

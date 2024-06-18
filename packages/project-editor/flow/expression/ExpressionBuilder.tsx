@@ -58,6 +58,7 @@ import type * as InstrumentObjectModule from "instrument/instrument-object";
 import type * as CommandsBrowserModule from "instrument/window/terminal/commands-browser";
 
 import { TerminalState } from "instrument/window/terminal/terminalState";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +122,7 @@ export async function expressionBuilder(
 class ExpressionBuilderState extends TerminalState {
     activeTab: "scpi" | "expression" = "scpi";
     _instrumentId: string | undefined;
+    expressionSearchText: string = "";
 
     reactionDispose: any;
     autorunDispose: any;
@@ -145,6 +147,7 @@ class ExpressionBuilderState extends TerminalState {
         makeObservable(this, {
             activeTab: observable,
             _instrumentId: observable,
+            expressionSearchText: observable,
             instrumentId: computed
         });
 
@@ -616,7 +619,41 @@ const SelectItemDialog = observer(
             });
         }
 
-        get rootNodeVariables(): ITreeNode<string> {
+        searchTreeNode(treeNode: ITreeNode) {
+            const searchText = this.expressionBuilderState.expressionSearchText
+                .trim()
+                .toLowerCase();
+
+            if (!searchText) {
+                return treeNode;
+            }
+
+            const walk = (node: ITreeNode) => {
+                node.children.forEach(walk);
+
+                node.children = node.children.filter(child => {
+                    if (child.children.length > 0) {
+                        return true;
+                    }
+
+                    const text =
+                        child.label && typeof child.label == "string"
+                            ? child.label
+                            : child.id;
+
+                    return text.toLowerCase().indexOf(searchText) != -1;
+                });
+            };
+
+            walk(treeNode);
+
+            return treeNode;
+        }
+
+        get rootNodeVariables(): {
+            nonEmpty: boolean;
+            node: ITreeNode<string>;
+        } {
             const children: ITreeNode<string>[] = [];
 
             if (
@@ -698,15 +735,21 @@ const SelectItemDialog = observer(
             }
 
             return observable({
-                id: "all",
-                label: "All",
-                children,
-                selected: false,
-                expanded: true
+                nonEmpty: children.length > 0,
+                node: this.searchTreeNode({
+                    id: "all",
+                    label: "All",
+                    children,
+                    selected: false,
+                    expanded: true
+                })
             });
         }
 
-        get rootNodeSystemVariables(): ITreeNode<string> {
+        get rootNodeSystemVariables(): {
+            nonEmpty: boolean;
+            node: ITreeNode<string>;
+        } {
             const children: ITreeNode<string>[] = [];
 
             if (!this.props.assignableExpression) {
@@ -789,15 +832,21 @@ const SelectItemDialog = observer(
             }
 
             return observable({
-                id: "all",
-                label: "All",
-                children,
-                selected: false,
-                expanded: true
+                nonEmpty: children.length > 0,
+                node: this.searchTreeNode({
+                    id: "all",
+                    label: "All",
+                    children,
+                    selected: false,
+                    expanded: true
+                })
             });
         }
 
-        get rootNodeOperations(): ITreeNode<string> {
+        get rootNodeOperations(): {
+            nonEmpty: boolean;
+            node: ITreeNode<string>;
+        } {
             const children: ITreeNode<string>[] = [];
 
             if (!this.props.assignableExpression) {
@@ -844,15 +893,21 @@ const SelectItemDialog = observer(
             }
 
             return observable({
-                id: "all",
-                label: "All",
-                children,
-                selected: false,
-                expanded: true
+                nonEmpty: children.length > 0,
+                node: this.searchTreeNode({
+                    id: "all",
+                    label: "All",
+                    children,
+                    selected: false,
+                    expanded: true
+                })
             });
         }
 
-        get rootNodeFunctions(): ITreeNode<string> {
+        get rootNodeFunctions(): {
+            nonEmpty: boolean;
+            node: ITreeNode<string>;
+        } {
             const children: ITreeNode<string>[] = [];
 
             if (!this.props.assignableExpression) {
@@ -890,15 +945,21 @@ const SelectItemDialog = observer(
             }
 
             return observable({
-                id: "all",
-                label: "All",
-                children,
-                selected: false,
-                expanded: true
+                nonEmpty: children.length > 0,
+                node: this.searchTreeNode({
+                    id: "all",
+                    label: "All",
+                    children,
+                    selected: false,
+                    expanded: true
+                })
             });
         }
 
-        get rootNodeTextResources(): ITreeNode<string> {
+        get rootNodeTextResources(): {
+            nonEmpty: boolean;
+            node: ITreeNode<string>;
+        } {
             const children: ITreeNode<string>[] = [];
 
             if (!this.props.assignableExpression) {
@@ -927,11 +988,14 @@ const SelectItemDialog = observer(
             }
 
             return observable({
-                id: "all",
-                label: "All",
-                children,
-                selected: false,
-                expanded: true
+                nonEmpty: children.length > 0,
+                node: this.searchTreeNode({
+                    id: "all",
+                    label: "All",
+                    children,
+                    selected: false,
+                    expanded: true
+                })
             });
         }
 
@@ -1176,71 +1240,87 @@ const SelectItemDialog = observer(
                         />
                         {tabs}
                         <div
-                            className="EezStudio_ExpressionBuilder_Panels"
+                            className="EezStudio_ExpressionBuilder_Expression"
                             style={{
                                 display:
                                     activeTab == "expression" ? "flex" : "none"
                             }}
                         >
-                            {this.rootNodeVariables.children.length > 0 && (
-                                <Tree
-                                    showOnlyChildren={true}
-                                    rootNode={this.rootNodeVariables}
-                                    selectNode={this.selectNode}
-                                    onDoubleClick={this.onDoubleClick}
-                                />
-                            )}
-                            {this.rootNodeSystemVariables.children.length >
-                                0 && (
-                                <Tree
-                                    showOnlyChildren={true}
-                                    rootNode={this.rootNodeSystemVariables}
-                                    selectNode={this.selectNode}
-                                    onDoubleClick={this.onDoubleClick}
-                                />
-                            )}
-                            {this.rootNodeOperations.children.length > 0 && (
-                                <Tree
-                                    showOnlyChildren={true}
-                                    rootNode={this.rootNodeOperations}
-                                    selectNode={this.selectNode}
-                                    onDoubleClick={this.onDoubleClick}
-                                />
-                            )}
-                            {this.rootNodeFunctions.children.length > 0 && (
-                                <Tree
-                                    showOnlyChildren={true}
-                                    rootNode={this.rootNodeFunctions}
-                                    selectNode={this.selectNode}
-                                    onDoubleClick={this.onDoubleClick}
-                                />
-                            )}
-                            {this.rootNodeTextResources.children.length > 0 && (
-                                <Tree
-                                    showOnlyChildren={true}
-                                    rootNode={this.rootNodeTextResources}
-                                    selectNode={this.selectNode}
-                                    onDoubleClick={this.onDoubleClick}
-                                />
-                            )}
+                            <SearchInput
+                                searchText={
+                                    this.expressionBuilderState
+                                        .expressionSearchText
+                                }
+                                onClear={action(() => {
+                                    this.expressionBuilderState.expressionSearchText =
+                                        "";
+                                })}
+                                onChange={action(event => {
+                                    this.expressionBuilderState.expressionSearchText =
+                                        $(event.target).val() as string;
+                                })}
+                            />
+                            <div className="EezStudio_ExpressionBuilder_Panels">
+                                {this.rootNodeVariables.nonEmpty && (
+                                    <Tree
+                                        showOnlyChildren={true}
+                                        rootNode={this.rootNodeVariables.node}
+                                        selectNode={this.selectNode}
+                                        onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                                {this.rootNodeSystemVariables.nonEmpty && (
+                                    <Tree
+                                        showOnlyChildren={true}
+                                        rootNode={
+                                            this.rootNodeSystemVariables.node
+                                        }
+                                        selectNode={this.selectNode}
+                                        onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                                {this.rootNodeOperations.nonEmpty && (
+                                    <Tree
+                                        showOnlyChildren={true}
+                                        rootNode={this.rootNodeOperations.node}
+                                        selectNode={this.selectNode}
+                                        onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                                {this.rootNodeFunctions.nonEmpty && (
+                                    <Tree
+                                        showOnlyChildren={true}
+                                        rootNode={this.rootNodeFunctions.node}
+                                        selectNode={this.selectNode}
+                                        onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                                {this.rootNodeTextResources.nonEmpty && (
+                                    <Tree
+                                        showOnlyChildren={true}
+                                        rootNode={
+                                            this.rootNodeTextResources.node
+                                        }
+                                        selectNode={this.selectNode}
+                                        onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                            </div>
                         </div>
-                        <div
-                            className="EezStudio_ExpressionBuilder_Panels"
-                            style={{
-                                display: activeTab == "scpi" ? "flex" : "none",
-                                overflow: "hidden"
-                            }}
-                        >
-                            {this.expressionBuilderState.instrument && (
-                                <CommandsBrowser
-                                    appStore={this.expressionBuilderState.instrument.getEditor()}
-                                    host={this}
-                                    terminalState={this.expressionBuilderState}
-                                    className="EezStudio_ExpressionBuilder_CommandsBrowser"
-                                    persistId="project-editor/expression-builder/commands-browser/splitter1"
-                                />
-                            )}
-                        </div>
+                        {this.expressionBuilderState.instrument && (
+                            <CommandsBrowser
+                                appStore={this.expressionBuilderState.instrument.getEditor()}
+                                host={this}
+                                terminalState={this.expressionBuilderState}
+                                className="EezStudio_ExpressionBuilder_CommandsBrowser"
+                                style={{
+                                    display:
+                                        activeTab == "scpi" ? "flex" : "none",
+                                    overflow: "hidden"
+                                }}
+                                persistId="project-editor/expression-builder/commands-browser/splitter1"
+                            />
+                        )}
                     </div>
                 </Dialog>
             );
