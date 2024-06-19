@@ -723,6 +723,28 @@ void doUpdateTasks() {
             int32_t cur_val = indicator->end_value;
             if (new_val != cur_val) lv_meter_set_indicator_end_value(updateTask.obj, indicator, new_val);
 #endif
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_TAB_NAME) {
+            const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Tab name in Tab widget");
+
+            uint32_t tab_id = updateTask.param;
+
+            lv_obj_t *tabview = lv_obj_get_parent(updateTask.obj);
+            if (!lv_obj_check_type(tabview, &lv_tabview_class)) {
+                tabview = lv_obj_get_parent(tabview);
+            }
+
+            if (lv_obj_check_type(tabview, &lv_tabview_class)) {
+#if LVGL_VERSION_MAJOR >= 9
+                lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);
+                lv_obj_t *button = lv_obj_get_child_by_type(tab_bar, tab_id, &lv_button_class);
+                lv_obj_t *label = lv_obj_get_child_by_type(button, 0, &lv_label_class);
+                const char *cur_val = lv_label_get_text(label);
+#else
+                const char *cur_val = ((lv_tabview_t *)tabview)->map[tab_id * 2];
+#endif
+
+                if (strcmp(new_val, cur_val) != 0) lv_tabview_rename_tab(tabview, (uint32_t)updateTask.param, new_val ? new_val : "");
+            }
         }
         g_updateTask = nullptr;
     }

@@ -328,6 +328,31 @@ EM_PORT_API(lv_obj_t *) lvglCreateScale(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
+EM_PORT_API(lv_obj_t *) lvglCreateTabview(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_tabview_create(parentObj);
+    lv_tabview_set_tab_bar_position(obj, tab_pos);
+    lv_tabview_set_tab_bar_size(obj, tab_size);
+#else
+    lv_obj_t *obj = lv_tabview_create(parentObj, tab_pos, tab_size);
+#endif
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglTabviewAddTab(lv_obj_t *parentObj, int32_t index, const char *tabName) {
+    if (!lv_obj_check_type(parentObj, &lv_tabview_class)) {
+        parentObj = lv_obj_get_parent(parentObj);
+    }
+    lv_obj_t *obj = lv_tabview_add_tab(parentObj, tabName);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
 static lv_obj_t *current_screen = 0;
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
@@ -724,6 +749,10 @@ EM_PORT_API(void) lvglUpdateClickableFlag(lv_obj_t *obj, void *flow_state, unsig
     addUpdateTask(UPDATE_TASK_TYPE_CLICKABLE_FLAG, obj, flow_state, component_index, property_index, 0, 0);
 }
 
+EM_PORT_API(void) lvglUpdateTabName(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, int tab_id) {
+    addUpdateTask(UPDATE_TASK_TYPE_TAB_NAME, obj, flow_state, component_index, property_index, 0, tab_id);
+}
+
 EM_PORT_API(void) lvglAddTimelineKeyframe(
     lv_obj_t *obj,
     void *flowState,
@@ -768,6 +797,30 @@ EM_PORT_API(void) lvglSetScrollBarMode(lv_obj_t *obj, lv_scrollbar_mode_t mode) 
 
 EM_PORT_API(void) lvglSetScrollDir(lv_obj_t *obj, lv_dir_t dir) {
     lv_obj_set_scroll_dir(obj, dir);
+}
+
+EM_PORT_API(void) lvglTabviewSetActive(lv_obj_t *obj, uint32_t tab_id, lv_anim_enable_t anim_en) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_tabview_set_active(obj, tab_id, anim_en);
+#else
+    lv_tabview_set_act(obj, tab_id, anim_en);
+#endif
+}
+
+EM_PORT_API(lv_obj_t *) lvglTabviewGetTabBar(lv_obj_t *parentObj, int32_t index) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_tabview_get_tab_bar(parentObj);
+#else
+    lv_obj_t *obj = lv_tabview_get_tab_btns(parentObj);
+#endif
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglTabviewGetTabContent(lv_obj_t *parentObj, int32_t index) {
+    lv_obj_t *obj = lv_tabview_get_content(parentObj);
+    setObjectIndex(obj, index);
+    return obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

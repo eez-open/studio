@@ -14,7 +14,7 @@ import type { IWasmFlowRuntime } from "eez-studio-types";
 import {
     LV_EVENT_CHECKED,
     LV_EVENT_UNCHECKED
-} from "project-editor/lvgl/widget-common";
+} from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 

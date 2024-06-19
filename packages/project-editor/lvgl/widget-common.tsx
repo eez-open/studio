@@ -32,8 +32,6 @@ export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
 export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;
 export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
 export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
-export const LV_EVENT_CHECKED = 0x7e;
-export const LV_EVENT_UNCHECKED = 0x7f;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -623,6 +623,8 @@ export interface IWasmFlowRuntime {
     _lvglCreateChart(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateMeter(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateScale(parentObj: number, index: number, x: number, y: number, w: number, h: number, scaleMode:number, minorRange: number, majorRange: number, totalTickCount: number, majorTickEvery: number, showLabels: boolean): number;
+    _lvglCreateTabview(parentObj: number, index: number, x: number, y: number, w: number, h: number, tab_pos: number, tab_size: number);
+    _lvglTabviewAddTab(parentObj: number, index: number, tabName: number);
     _lvglScreenLoad(page_index: number, obj: number): void;
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
@@ -675,6 +677,7 @@ export interface IWasmFlowRuntime {
     _lvglUpdateDisabledState(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateHiddenFlag(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateClickableFlag(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateTabName(obj: number, flow_state: number, component_index: number, property_index: number, tab_id: number): void;
     _lvglAddTimelineKeyframe(
         obj: number,
         page_index: number,
@@ -694,6 +697,9 @@ export interface IWasmFlowRuntime {
     _lvglGetFlowState(flowState: number, userWidgetComponentIndexOrPageIndex: number): number;
     _lvglSetScrollBarMode(obj: number, mode: number);
     _lvglSetScrollDir(obj: number, dir: number);
+    _lvglTabviewSetActive(obj: number, tab_id: number, anim_en: number);
+    _lvglTabviewGetTabBar(obj: number, index: number);
+    _lvglTabviewGetTabContent(obj: number, index: number);
 }
 
 export interface IDashboardComponentContext {

@@ -15,12 +15,13 @@ import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import {
     createObject,
+    getAncestorOfType,
     getObjectPathAsString,
     getProjectStore,
     ProjectStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLTabWidget, LVGLWidget } from "project-editor/lvgl/widgets";
 import {
     Project,
     ProjectType,
@@ -35,6 +36,8 @@ import {
     getLvglStylePropCode,
     getLvglWasmFlowRuntimeConstructor
 } from "project-editor/lvgl/lvgl-versions";
+import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { LV_ANIM_OFF } from "project-editor/lvgl//lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -212,9 +215,14 @@ export abstract class LVGLPageRuntime {
 
 export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
+    dispose2: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
 
-    constructor(page: Page, public ctx: CanvasRenderingContext2D) {
+    constructor(
+        page: Page,
+        public ctx: CanvasRenderingContext2D,
+        private flowContext: IFlowContext
+    ) {
         super(page);
 
         makeObservable(this, {
@@ -278,6 +286,11 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         return;
                     }
 
+                    if (this.dispose2) {
+                        this.dispose2();
+                        this.dispose2 = undefined;
+                    }
+
                     // set all _lvglObj to undefined
                     runInAction(() => {
                         this.page._lvglWidgetsIncludingUserWidgets.forEach(
@@ -313,6 +326,34 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             this.wasm._lvglDeleteObject(this.page._lvglObj);
                         }
                         this.page._lvglObj = pageObj;
+                    });
+
+                    this.dispose2 = autorun(() => {
+                        for (const objectAdapter of this.flowContext.viewState
+                            .selectedObjects) {
+                            const tabWidget = getAncestorOfType<LVGLTabWidget>(
+                                objectAdapter.object,
+                                ProjectEditor.LVGLTabWidgetClass.classInfo
+                            );
+                            if (tabWidget) {
+                                const tabviewWidget = tabWidget.tabview;
+                                if (tabviewWidget && tabviewWidget._lvglObj) {
+                                    const tabIndex = tabWidget.tabIndex;
+
+                                    if (tabIndex != -1) {
+                                        this.wasm._lvglTabviewSetActive(
+                                            tabviewWidget._lvglObj,
+                                            tabWidget.tabIndex,
+                                            LV_ANIM_OFF
+                                        );
+
+                                        runInAction(() => {
+                                            tabWidget._refreshRelativePosition++;
+                                        });
+                                    }
+                                }
+                            }
+                        }
                     });
                 });
             }
@@ -367,6 +408,11 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
         if (this.autorRunDispose) {
             this.autorRunDispose();
             this.autorRunDispose = undefined;
+        }
+
+        if (this.dispose2) {
+            this.dispose2();
+            this.dispose2 = undefined;
         }
 
         LVGLPageRuntime.detachRuntimeFromPage(this.page);

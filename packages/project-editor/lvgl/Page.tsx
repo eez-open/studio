@@ -34,7 +34,8 @@ export const LVGLPage = observer(
             } else {
                 this.runtime = new LVGLPageEditorRuntime(
                     this.props.page,
-                    this.canvasRef.current!.getContext("2d")!
+                    this.canvasRef.current!.getContext("2d")!,
+                    this.props.flowContext
                 );
             }
 

@@ -17,11 +17,7 @@ import { getClassInfo } from "project-editor/store";
 import { findBitmap } from "project-editor/project/project";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
-import {
-    LVGLRollerWidget,
-    type LVGLLabelWidget,
-    type LVGLWidget
-} from "project-editor/lvgl/widgets";
+import type { LVGLLabelWidget, LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import { ValueType } from "eez-studio-types";
@@ -289,9 +285,35 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         ) {
             const objectAccessor = build.getLvglObjectAccessor(widget);
 
-            build.line(`const char *cur_val = ${getFunc}(${objectAccessor});`);
+            if (widget instanceof ProjectEditor.LVGLTabWidgetClass) {
+                build.line(
+                    `lv_obj_t *tabview = lv_obj_get_parent(lv_obj_get_parent(${objectAccessor}));`
+                );
+                if (build.project.settings.general.lvglVersion == "9.0") {
+                    build.line(
+                        `lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);`
+                    );
+                    build.line(
+                        `lv_obj_t *button = lv_obj_get_child_by_type(tab_bar, ${widget.tabIndex}, &lv_button_class);`
+                    );
+                    build.line(
+                        `lv_obj_t *label = lv_obj_get_child_by_type(button, 0, &lv_label_class);`
+                    );
+                    build.line(
+                        `const char *cur_val = lv_label_get_text(label);`
+                    );
+                } else {
+                    build.line(
+                        `const char *cur_val = ((lv_tabview_t *)tabview)->map[${widget.tabIndex} * 2];`
+                    );
+                }
+            } else {
+                build.line(
+                    `const char *cur_val = ${getFunc}(${objectAccessor});`
+                );
+            }
 
-            if (widget instanceof LVGLRollerWidget) {
+            if (widget instanceof ProjectEditor.LVGLRollerWidgetClass) {
                 build.line(
                     `if (compareRollerOptions((lv_roller_t *)${objectAccessor}, new_val, cur_val, LV_ROLLER_MODE_${widget.mode}) != 0) {`
                 );
@@ -300,9 +322,17 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             }
             build.indent();
             build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `${setFunc}(${objectAccessor}, new_val${setFuncOptArgs ?? ""});`
-            );
+            if (widget instanceof ProjectEditor.LVGLTabWidgetClass) {
+                build.line(
+                    `lv_tabview_rename_tab(tabview, ${widget.tabIndex}, new_val);`
+                );
+            } else {
+                build.line(
+                    `${setFunc}(${objectAccessor}, new_val${
+                        setFuncOptArgs ?? ""
+                    });`
+                );
+            }
             build.line(`tick_value_change_obj = NULL;`);
             build.unindent();
             build.line("}");

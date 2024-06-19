@@ -37,14 +37,14 @@ export const LVGL_SCROLL_BAR_MODES: { [key: string]: number } = {
     auto: LV_SCROLLBAR_MODE_AUTO
 };
 
-const LV_DIR_NONE = 0x00;
-const LV_DIR_LEFT = 1 << 0;
-const LV_DIR_RIGHT = 1 << 1;
-const LV_DIR_TOP = 1 << 2;
-const LV_DIR_BOTTOM = 1 << 3;
-const LV_DIR_HOR = LV_DIR_LEFT | LV_DIR_RIGHT;
-const LV_DIR_VER = LV_DIR_TOP | LV_DIR_BOTTOM;
-const LV_DIR_ALL = LV_DIR_HOR | LV_DIR_VER;
+export const LV_DIR_NONE = 0x00;
+export const LV_DIR_LEFT = 1 << 0;
+export const LV_DIR_RIGHT = 1 << 1;
+export const LV_DIR_TOP = 1 << 2;
+export const LV_DIR_BOTTOM = 1 << 3;
+export const LV_DIR_HOR = LV_DIR_LEFT | LV_DIR_RIGHT;
+export const LV_DIR_VER = LV_DIR_TOP | LV_DIR_BOTTOM;
+export const LV_DIR_ALL = LV_DIR_HOR | LV_DIR_VER;
 
 export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
     none: LV_DIR_NONE,
@@ -56,3 +56,9 @@ export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
     ver: LV_DIR_VER,
     all: LV_DIR_ALL
 };
+
+export const LV_ANIM_OFF = 0;
+export const LV_ANIM_ON = 1;
+
+export const LV_EVENT_CHECKED = 0x7e;
+export const LV_EVENT_UNCHECKED = 0x7f;

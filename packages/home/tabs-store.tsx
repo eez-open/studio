@@ -49,7 +49,6 @@ import {
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
-import { homeTabStore } from "home/home-tab";
 
 const MODIFED_MARK = "\u002A ";
 
@@ -1040,6 +1039,8 @@ export class Tabs {
         let tab;
 
         if (tabId == "extensions" || tabId == "settings") {
+            const { homeTabStore } =
+                require("home/home-tab") as typeof HomeTabModule;
             runInAction(() => (homeTabStore.activeTab = tabId));
             tab = this.findTab("home");
         } else {

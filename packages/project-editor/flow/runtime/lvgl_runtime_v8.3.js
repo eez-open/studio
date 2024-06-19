@@ -969,18 +969,18 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1034608: ($0) => { startToDebuggerMessage($0); },  
- 1034640: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034715: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034790: ($0) => { finishToDebuggerMessage($0); },  
- 1034823: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1034876: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1034982: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1035018: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1035055: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1035095: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1035152: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1035211: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1034640: ($0) => { startToDebuggerMessage($0); },  
+ 1034672: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034747: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034822: ($0) => { finishToDebuggerMessage($0); },  
+ 1034855: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034908: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1035014: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1035050: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1035087: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1035127: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1035184: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1035243: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4693,6 +4693,8 @@ var _lvglCreateKeyboard = Module['_lvglCreateKeyboard'] = createExportWrapper('l
 var _lvglCreateChart = Module['_lvglCreateChart'] = createExportWrapper('lvglCreateChart');
 var _lvglCreateMeter = Module['_lvglCreateMeter'] = createExportWrapper('lvglCreateMeter');
 var _lvglCreateScale = Module['_lvglCreateScale'] = createExportWrapper('lvglCreateScale');
+var _lvglCreateTabview = Module['_lvglCreateTabview'] = createExportWrapper('lvglCreateTabview');
+var _lvglTabviewAddTab = Module['_lvglTabviewAddTab'] = createExportWrapper('lvglTabviewAddTab');
 var _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad');
 var _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject');
 var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag');
@@ -4742,11 +4744,15 @@ var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWr
 var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState');
 var _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = createExportWrapper('lvglUpdateHiddenFlag');
 var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExportWrapper('lvglUpdateClickableFlag');
+var _lvglUpdateTabName = Module['_lvglUpdateTabName'] = createExportWrapper('lvglUpdateTabName');
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline');
 var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode');
 var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir');
+var _lvglTabviewSetActive = Module['_lvglTabviewSetActive'] = createExportWrapper('lvglTabviewSetActive');
+var _lvglTabviewGetTabBar = Module['_lvglTabviewGetTabBar'] = createExportWrapper('lvglTabviewGetTabBar');
+var _lvglTabviewGetTabContent = Module['_lvglTabviewGetTabContent'] = createExportWrapper('lvglTabviewGetTabContent');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');

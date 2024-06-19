@@ -23,6 +23,7 @@ import {
     getClassInfoLvglProperties,
     EezObject,
     ClassInfo,
+    getParent,
     setParent,
     IMessage
 } from "project-editor/core/object";
@@ -143,6 +144,10 @@ import {
     lvglHasLabelRecolorSupport
 } from "project-editor/lvgl/lvgl-versions";
 import {
+    LV_DIR_BOTTOM,
+    LV_DIR_LEFT,
+    LV_DIR_RIGHT,
+    LV_DIR_TOP,
     LVGL_SCROLL_BAR_MODES,
     LVGL_SCROLL_DIRECTION
 } from "project-editor/lvgl/lvgl-constants";
@@ -342,6 +347,7 @@ export class LVGLWidget extends Widget {
     localStyles: LVGLStylesDefinition;
 
     _lvglObj: number | undefined;
+    _refreshRelativePosition: number = 0;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1019,7 +1025,8 @@ export class LVGLWidget extends Widget {
             states: observable,
             useStyle: observable,
             localStyles: observable,
-            _lvglObj: observable
+            _lvglObj: observable,
+            _refreshRelativePosition: observable
         });
     }
 
@@ -1035,6 +1042,8 @@ export class LVGLWidget extends Widget {
     _relativePosition: { left: number; top: number } | undefined;
 
     override get relativePosition() {
+        this._refreshRelativePosition;
+
         if (this._lvglObj) {
             const page = getAncestorOfType(
                 this,
@@ -1528,6 +1537,8 @@ export class LVGLWidget extends Widget {
 
             build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
             build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
+        } else if (this instanceof LVGLTabWidget) {
+            // skip
         } else {
             build.line(
                 `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
@@ -8094,6 +8105,383 @@ export class LVGLScaleWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const TAB_SIZE = 32;
+
+const TABVIEW_POSITION = {
+    LEFT: LV_DIR_LEFT,
+    RIGHT: LV_DIR_RIGHT,
+    TOP: LV_DIR_TOP,
+    BOTTOM: LV_DIR_BOTTOM
+};
+
+export class LVGLTabviewWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic",
+
+        properties: [
+            {
+                name: "tabviewPosition",
+                displayName: "Position",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(TABVIEW_POSITION).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "tabviewSize",
+                displayName: "Size",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 100,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true,
+            tabviewPosition: "TOP",
+            tabviewSize: 32
+        },
+
+        icon: (
+            <svg viewBox="0 0 24 24" strokeWidth={1.5} fill="none">
+                <path
+                    d="M22 8h-6.5M9 4v4h6.5m0 0V4"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d="M2 17.714V6.286C2 5.023 2.995 4 4.222 4h15.556C21.005 4 22 5.023 22 6.286v11.428C22 18.977 21.005 20 19.778 20H4.222C2.995 20 2 18.977 2 17.714Z"
+                    stroke="currentColor"
+                />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    tabviewPosition: keyof typeof TABVIEW_POSITION;
+    tabviewSize: number;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            tabviewPosition: observable,
+            tabviewSize: observable
+        });
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const rect = this.getLvglCreateRect();
+
+        const obj = runtime.wasm._lvglCreateTabview(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+
+            TABVIEW_POSITION[this.tabviewPosition] ?? LV_DIR_TOP,
+
+            this.tabviewSize ?? 32
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        if (build.project.settings.general.lvglVersion == "9.0") {
+            build.line(`lv_obj_t *obj = lv_tabview_create(parent_obj);`);
+            build.line(`lv_tabview_set_tab_bar_position(obj, tab_pos);`);
+            build.line(`lv_tabview_set_tab_bar_size(obj, tab_size);`);
+        } else {
+            build.line(
+                `lv_obj_t *obj = lv_tabview_create(parent_obj, LV_DIR_${
+                    this.tabviewPosition ?? "TOP"
+                }, ${this.tabviewSize ?? 32});`
+            );
+        }
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLTabWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        label: (widget: LVGLTabWidget) => {
+            return widget.tabName;
+        },
+
+        componentPaletteGroupName: "!1Basic",
+
+        properties: [
+            ...makeLvglExpressionProperty(
+                "tabName",
+                "string",
+                "input",
+                ["literal", "translated-literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            )
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 180,
+            height: 100,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true,
+            tabName: "Tab",
+            tabNameType: "literal"
+        },
+
+        icon: (
+            <svg viewBox="0 0 1024 1024">
+                <path d="M931.8 501.8V317.4c0-56.3-46.1-102.4-102.4-102.4h-601C172 215 126 261.1 126 317.4v184.3H30.7v163.8h981V501.8zm30.8 117.7H81.9V553h92.2l1-209.9c1-61.4 11.3-81.9 90.1-81.9h526.3c62.5 0 90.1 8.2 90.1 81.9V553h80.9v66.5z" />
+            </svg>
+        ),
+
+        check: (widget: LVGLTabWidget, messages: IMessage[]) => {
+            if (!widget.tabview) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid position of Tab widget inside Widgets Structure`,
+                        widget
+                    )
+                );
+            }
+        },
+
+        lvgl: {
+            parts: ["MAIN"],
+            flags: [
+                "HIDDEN",
+                "CLICKABLE",
+                "CHECKABLE",
+                "PRESS_LOCK",
+                "CLICK_FOCUSABLE",
+                "ADV_HITTEST",
+                "IGNORE_LAYOUT",
+                "FLOATING",
+                "EVENT_BUBBLE",
+                "GESTURE_BUBBLE",
+                "SNAPPABLE",
+                "SCROLLABLE",
+                "SCROLL_ELASTIC",
+                "SCROLL_MOMENTUM",
+                "SCROLL_ON_FOCUS",
+                "SCROLL_CHAIN",
+                "SCROLL_ONE",
+                "OVERFLOW_VISIBLE"
+            ],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    tabName: string;
+    tabNameType: LVGLPropertyType;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            tabName: observable,
+            tabNameType: observable
+        });
+    }
+
+    get parentWidget() {
+        return getParent(getParent(this)) as LVGLWidget;
+    }
+
+    get tabview() {
+        let parent = this.parentWidget;
+        if (parent instanceof LVGLTabviewWidget) {
+            // Tab is direct child of Tabview widget
+            return parent;
+        }
+
+        parent = getParent(getParent(parent)) as LVGLWidget;
+        if (parent instanceof LVGLTabviewWidget) {
+            // Tab is child of Tabview content widget
+            return parent;
+        }
+
+        // Neither, invalid position of Tab widget.
+        return undefined;
+    }
+
+    get tabIndex() {
+        return (getParent(this) as LVGLWidget[]).indexOf(this);
+    }
+
+    override getIsAccessibleFromSourceCode() {
+        return this.tabNameType == "expression";
+    }
+
+    override get relativePosition() {
+        const relativePosition = super.relativePosition;
+
+        if (this.parentWidget == this.tabview) {
+            // adjust top position if Tab is immediate child of Tabview
+            relativePosition.top += TAB_SIZE;
+        }
+
+        return relativePosition;
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        if (this.tabview) {
+            const tabIndex = this.tabIndex;
+            if (tabIndex != -1) {
+                const tabNameExpr = getExpressionPropertyData(
+                    runtime,
+                    this,
+                    "tabName"
+                );
+
+                const obj = runtime.wasm._lvglTabviewAddTab(
+                    parentObj,
+                    runtime.getWidgetIndex(this),
+
+                    runtime.wasm.allocateUTF8(
+                        tabNameExpr
+                            ? " " // can't be empty in LVGL version 8.3
+                            : this.tabNameType == "expression"
+                            ? getExpressionPropertyInitalValue(
+                                  runtime,
+                                  this,
+                                  "tabName"
+                              )
+                            : unescapeText(this.tabName || "")
+                    )
+                );
+
+                if (tabNameExpr) {
+                    runtime.wasm._lvglUpdateTabName(
+                        obj,
+                        getFlowStateAddressIndex(runtime),
+                        tabNameExpr.componentIndex,
+                        tabNameExpr.propertyIndex,
+                        tabIndex
+                    );
+                }
+
+                return obj;
+            }
+        }
+
+        // Tab widget outside of Tabview, just create dummy widget
+        const rect = this.getLvglCreateRect();
+        const obj = runtime.wasm._lvglCreateContainer(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
+        );
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        if (this.tabview) {
+            const tabIndex = this.tabIndex;
+            if (tabIndex != -1) {
+                console.log(this.tabName, this.tabNameType);
+                if (this.tabNameType == "literal") {
+                    build.line(
+                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, ${escapeCString(
+                            this.tabName ?? ""
+                        )});`
+                    );
+                } else if (this.tabNameType == "translated-literal") {
+                    build.line(
+                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, _(${escapeCString(
+                            this.tabName ?? ""
+                        )});`
+                    );
+                } else {
+                    build.line(
+                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, " ");`
+                    );
+                }
+                return;
+            }
+        } else {
+            // Tab widget outside of Tabview, create "generic" widget
+            build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLTabWidget>(
+            build,
+            this,
+            "tabName" as const,
+            "",
+            ""
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
@@ -8116,3 +8504,5 @@ registerClass("LVGLSliderWidget", LVGLSliderWidget);
 registerClass("LVGLSpinnerWidget", LVGLSpinnerWidget);
 registerClass("LVGLSwitchWidget", LVGLSwitchWidget);
 registerClass("LVGLTextareaWidget", LVGLTextareaWidget);
+registerClass("LVGLTabviewWidget", LVGLTabviewWidget);
+registerClass("LVGLTabWidget", LVGLTabWidget);

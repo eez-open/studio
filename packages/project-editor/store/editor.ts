@@ -337,21 +337,28 @@ export class EditorsStore {
         this.saveState();
 
         setTimeout(() => {
-            runInAction(() => {
-                this.editors = editors;
-                this.activeEditor = activeEditor;
-            });
+            let changed =
+                this.activeEditor != activeEditor ||
+                this.editors.length != editors.length ||
+                this.editors.find((editor, i) => editors[i] != editor);
 
-            if (showActiveEditor) {
-                const activeEditor = this.activeEditor;
-                if (activeEditor) {
-                    activeEditor.makeActive();
-                    this.projectStore.navigationStore.showObjects(
-                        [activeEditor.subObject ?? activeEditor.object],
-                        false,
-                        false,
-                        true
-                    );
+            if (changed) {
+                runInAction(() => {
+                    this.editors = editors;
+                    this.activeEditor = activeEditor;
+                });
+
+                if (showActiveEditor) {
+                    const activeEditor = this.activeEditor;
+                    if (activeEditor) {
+                        activeEditor.makeActive();
+                        this.projectStore.navigationStore.showObjects(
+                            [activeEditor.subObject ?? activeEditor.object],
+                            false,
+                            false,
+                            true
+                        );
+                    }
                 }
             }
         });
