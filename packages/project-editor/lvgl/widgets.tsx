@@ -8231,15 +8231,18 @@ export class LVGLTabviewWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
+        const position = this.tabviewPosition ?? "TOP";
+        const size = this.tabviewSize ?? 32;
+
         if (build.project.settings.general.lvglVersion == "9.0") {
             build.line(`lv_obj_t *obj = lv_tabview_create(parent_obj);`);
-            build.line(`lv_tabview_set_tab_bar_position(obj, tab_pos);`);
-            build.line(`lv_tabview_set_tab_bar_size(obj, tab_size);`);
+            build.line(
+                `lv_tabview_set_tab_bar_position(obj, LV_DIR_${position});`
+            );
+            build.line(`lv_tabview_set_tab_bar_size(obj, ${size});`);
         } else {
             build.line(
-                `lv_obj_t *obj = lv_tabview_create(parent_obj, LV_DIR_${
-                    this.tabviewPosition ?? "TOP"
-                }, ${this.tabviewSize ?? 32});`
+                `lv_obj_t *obj = lv_tabview_create(parent_obj, LV_DIR_${position}, ${size});`
             );
         }
     }

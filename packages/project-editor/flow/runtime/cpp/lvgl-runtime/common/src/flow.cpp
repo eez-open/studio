@@ -740,7 +740,7 @@ void doUpdateTasks() {
                 lv_obj_t *label = lv_obj_get_child_by_type(button, 0, &lv_label_class);
                 const char *cur_val = lv_label_get_text(label);
 #else
-                const char *cur_val = ((lv_tabview_t *)tabview)->map[tab_id * 2];
+                const char *cur_val = ((lv_tabview_t *)tabview)->map[tab_id * (((lv_tabview_t *)tabview)->tab_pos & LV_DIR_HOR ? 2 : 1)];
 #endif
 
                 if (strcmp(new_val, cur_val) != 0) lv_tabview_rename_tab(tabview, (uint32_t)updateTask.param, new_val ? new_val : "");

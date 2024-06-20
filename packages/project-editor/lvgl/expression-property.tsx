@@ -303,9 +303,18 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                         `const char *cur_val = lv_label_get_text(label);`
                     );
                 } else {
-                    build.line(
-                        `const char *cur_val = ((lv_tabview_t *)tabview)->map[${widget.tabIndex} * 2];`
-                    );
+                    if (
+                        widget.tabview?.tabviewPosition == "LEFT" ||
+                        widget.tabview?.tabviewPosition == "RIGHT"
+                    ) {
+                        build.line(
+                            `const char *cur_val = ((lv_tabview_t *)tabview)->map[${widget.tabIndex} * 2];`
+                        );
+                    } else {
+                        build.line(
+                            `const char *cur_val = ((lv_tabview_t *)tabview)->map[${widget.tabIndex}];`
+                        );
+                    }
                 }
             } else {
                 build.line(
