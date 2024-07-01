@@ -3,229 +3,36 @@ import { resolve } from "path";
 import { getTempDirPath, isDev } from "eez-studio-shared/util-electron";
 import { sourceRootDir } from "eez-studio-shared/util";
 
-import {
-    LVGL_FLAG_CODES,
-    WidgetEvents,
-    type IEezObject
-} from "project-editor/core/object";
+import { WidgetEvents, type IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap, BitmapData } from "project-editor/features/bitmap/bitmap";
 import type { IWasmFlowRuntime } from "eez-studio-types";
 import {
+    CF_ALPHA_1_BIT,
+    CF_ALPHA_2_BIT,
+    CF_ALPHA_4_BIT,
+    CF_ALPHA_8_BIT,
+    CF_INDEXED_1_BIT,
+    CF_INDEXED_2_BIT,
+    CF_INDEXED_4_BIT,
+    CF_INDEXED_8_BIT,
+    CF_L8,
+    CF_RAW,
+    CF_RAW_ALPHA,
+    CF_RAW_CHROMA,
+    CF_RGB565,
+    CF_RGB565A8,
+    CF_TRUE_COLOR,
+    CF_TRUE_COLOR_ALPHA,
+    CF_TRUE_COLOR_CHROMA,
+    LVGLStylePropCode,
+    LVGL_FLAG_CODES,
+    LVGL_FLAG_CODES_90,
+    LVGL_PARTS_8,
+    LVGL_PARTS_9,
     LV_EVENT_CHECKED,
     LV_EVENT_UNCHECKED
 } from "project-editor/lvgl/lvgl-constants";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export type LVGLStylePropCode = {
-    "8.3": number | undefined;
-    "9.0": number | undefined;
-};
-
-export const LVGL_STYLE_PROP_CODES: {
-    [key: string]: LVGLStylePropCode;
-} = {
-    /*Group 0*/
-    LV_STYLE_WIDTH: { "8.3": 1, "9.0": 1 },
-    LV_STYLE_HEIGHT: { "8.3": 4, "9.0": 2 },
-    LV_STYLE_LENGTH: { "8.3": undefined, "9.0": 3 }, // ONLY 9.0
-
-    LV_STYLE_MIN_WIDTH: { "8.3": 2, "9.0": 4 },
-    LV_STYLE_MAX_WIDTH: { "8.3": 3, "9.0": 5 },
-    LV_STYLE_MIN_HEIGHT: { "8.3": 5, "9.0": 6 },
-    LV_STYLE_MAX_HEIGHT: { "8.3": 6, "9.0": 7 },
-
-    LV_STYLE_X: { "8.3": 7, "9.0": 8 },
-    LV_STYLE_Y: { "8.3": 8, "9.0": 9 },
-    LV_STYLE_ALIGN: { "8.3": 9, "9.0": 10 },
-
-    LV_STYLE_RADIUS: { "8.3": 11, "9.0": 12 },
-
-    /*Group 1*/
-    LV_STYLE_PAD_TOP: { "8.3": 16, "9.0": 16 },
-    LV_STYLE_PAD_BOTTOM: { "8.3": 17, "9.0": 17 },
-    LV_STYLE_PAD_LEFT: { "8.3": 18, "9.0": 18 },
-    LV_STYLE_PAD_RIGHT: { "8.3": 19, "9.0": 19 },
-
-    LV_STYLE_PAD_ROW: { "8.3": 20, "9.0": 20 },
-    LV_STYLE_PAD_COLUMN: { "8.3": 21, "9.0": 21 },
-    LV_STYLE_LAYOUT: { "8.3": 10, "9.0": 22 },
-
-    LV_STYLE_MARGIN_TOP: { "8.3": undefined, "9.0": 24 }, // ONLY 9.0
-    LV_STYLE_MARGIN_BOTTOM: { "8.3": undefined, "9.0": 25 }, // ONLY 9.0
-    LV_STYLE_MARGIN_LEFT: { "8.3": undefined, "9.0": 26 }, // ONLY 9.0
-    LV_STYLE_MARGIN_RIGHT: { "8.3": undefined, "9.0": 27 }, // ONLY 9.0
-
-    /*Group 2*/
-    LV_STYLE_BG_COLOR: { "8.3": 32, "9.0": 28 },
-    LV_STYLE_BG_OPA: { "8.3": 33, "9.0": 29 },
-
-    LV_STYLE_BG_GRAD_DIR: { "8.3": 35, "9.0": 32 },
-    LV_STYLE_BG_MAIN_STOP: { "8.3": 36, "9.0": 33 },
-    LV_STYLE_BG_GRAD_STOP: { "8.3": 37, "9.0": 34 },
-    LV_STYLE_BG_GRAD_COLOR: { "8.3": 34, "9.0": 35 },
-
-    LV_STYLE_BG_MAIN_OPA: { "8.3": undefined, "9.0": 36 }, // ONLY 9.0
-    LV_STYLE_BG_GRAD_OPA: { "8.3": undefined, "9.0": 37 }, // ONLY 9.0
-    LV_STYLE_BG_GRAD: { "8.3": 38, "9.0": 38 },
-    LV_STYLE_BASE_DIR: { "8.3": 22, "9.0": 39 },
-
-    LV_STYLE_BG_DITHER_MODE: { "8.3": 39, "9.0": undefined }, // ONLY 8.3
-
-    LV_STYLE_BG_IMG_SRC: { "8.3": 40, "9.0": 40 },
-    LV_STYLE_BG_IMG_OPA: { "8.3": 41, "9.0": 41 },
-    LV_STYLE_BG_IMG_RECOLOR: { "8.3": 42, "9.0": 42 },
-    LV_STYLE_BG_IMG_RECOLOR_OPA: { "8.3": 43, "9.0": 43 },
-
-    LV_STYLE_BG_IMG_TILED: { "8.3": 44, "9.0": 44 },
-    LV_STYLE_CLIP_CORNER: { "8.3": 23, "9.0": 45 },
-
-    /*Group 3*/
-    LV_STYLE_BORDER_WIDTH: { "8.3": 50, "9.0": 48 },
-    LV_STYLE_BORDER_COLOR: { "8.3": 48, "9.0": 49 },
-    LV_STYLE_BORDER_OPA: { "8.3": 49, "9.0": 50 },
-
-    LV_STYLE_BORDER_SIDE: { "8.3": 51, "9.0": 52 },
-    LV_STYLE_BORDER_POST: { "8.3": 52, "9.0": 53 },
-
-    LV_STYLE_OUTLINE_WIDTH: { "8.3": 53, "9.0": 56 },
-    LV_STYLE_OUTLINE_COLOR: { "8.3": 54, "9.0": 57 },
-    LV_STYLE_OUTLINE_OPA: { "8.3": 55, "9.0": 58 },
-    LV_STYLE_OUTLINE_PAD: { "8.3": 56, "9.0": 59 },
-
-    /*Group 4*/
-    LV_STYLE_SHADOW_WIDTH: { "8.3": 64, "9.0": 60 },
-    LV_STYLE_SHADOW_COLOR: { "8.3": 68, "9.0": 61 },
-    LV_STYLE_SHADOW_OPA: { "8.3": 69, "9.0": 62 },
-
-    LV_STYLE_SHADOW_OFS_X: { "8.3": 65, "9.0": 64 },
-    LV_STYLE_SHADOW_OFS_Y: { "8.3": 66, "9.0": 65 },
-    LV_STYLE_SHADOW_SPREAD: { "8.3": 67, "9.0": 66 },
-
-    LV_STYLE_IMG_OPA: { "8.3": 70, "9.0": 68 },
-    LV_STYLE_IMG_RECOLOR: { "8.3": 71, "9.0": 69 },
-    LV_STYLE_IMG_RECOLOR_OPA: { "8.3": 72, "9.0": 70 },
-
-    LV_STYLE_LINE_WIDTH: { "8.3": 73, "9.0": 72 },
-    LV_STYLE_LINE_DASH_WIDTH: { "8.3": 74, "9.0": 73 },
-    LV_STYLE_LINE_DASH_GAP: { "8.3": 75, "9.0": 74 },
-    LV_STYLE_LINE_ROUNDED: { "8.3": 76, "9.0": 75 },
-    LV_STYLE_LINE_COLOR: { "8.3": 77, "9.0": 76 },
-    LV_STYLE_LINE_OPA: { "8.3": 78, "9.0": 77 },
-
-    /*Group 5*/
-    LV_STYLE_ARC_WIDTH: { "8.3": 80, "9.0": 80 },
-    LV_STYLE_ARC_ROUNDED: { "8.3": 81, "9.0": 81 },
-    LV_STYLE_ARC_COLOR: { "8.3": 82, "9.0": 82 },
-    LV_STYLE_ARC_OPA: { "8.3": 83, "9.0": 83 },
-    LV_STYLE_ARC_IMG_SRC: { "8.3": 84, "9.0": 84 },
-
-    LV_STYLE_TEXT_COLOR: { "8.3": 85, "9.0": 88 },
-    LV_STYLE_TEXT_OPA: { "8.3": 86, "9.0": 89 },
-    LV_STYLE_TEXT_FONT: { "8.3": 87, "9.0": 90 },
-
-    LV_STYLE_TEXT_LETTER_SPACE: { "8.3": 88, "9.0": 91 },
-    LV_STYLE_TEXT_LINE_SPACE: { "8.3": 89, "9.0": 92 },
-    LV_STYLE_TEXT_DECOR: { "8.3": 90, "9.0": 93 },
-    LV_STYLE_TEXT_ALIGN: { "8.3": 91, "9.0": 94 },
-
-    LV_STYLE_OPA: { "8.3": 96, "9.0": 95 },
-    LV_STYLE_OPA_LAYERED: { "8.3": undefined, "9.0": 96 },
-    LV_STYLE_COLOR_FILTER_DSC: { "8.3": 97, "9.0": 97 },
-    LV_STYLE_COLOR_FILTER_OPA: { "8.3": 98, "9.0": 98 },
-
-    LV_STYLE_ANIM: { "8.3": 99, "9.0": 99 },
-    LV_STYLE_ANIM_TIME: { "8.3": 100, "9.0": undefined }, // ONLY 8.3
-    LV_STYLE_ANIM_DURATION: { "8.3": undefined, "9.0": 100 }, // ONLY 9.0
-    LV_STYLE_ANIM_SPEED: { "8.3": 101, "9.0": undefined }, // ONLY 8.3
-    LV_STYLE_TRANSITION: { "8.3": 102, "9.0": 102 },
-
-    LV_STYLE_BLEND_MODE: { "8.3": 103, "9.0": 103 },
-    LV_STYLE_TRANSFORM_WIDTH: { "8.3": 104, "9.0": 104 },
-    LV_STYLE_TRANSFORM_HEIGHT: { "8.3": 105, "9.0": 105 },
-    LV_STYLE_TRANSLATE_X: { "8.3": 106, "9.0": 106 },
-    LV_STYLE_TRANSLATE_Y: { "8.3": 107, "9.0": 107 },
-    LV_STYLE_TRANSFORM_ZOOM: { "8.3": 108, "9.0": undefined }, // ONLY 8.3
-    LV_STYLE_TRANSFORM_SCALE_X: { "8.3": undefined, "9.0": 108 }, // ONLY 9.0
-    LV_STYLE_TRANSFORM_SCALE_Y: { "8.3": undefined, "9.0": 109 }, // ONLY 9.0
-    LV_STYLE_TRANSFORM_ANGLE: { "8.3": 109, "9.0": undefined }, // ONLY 8.3
-    LV_STYLE_TRANSFORM_ROTATION: { "8.3": undefined, "9.0": 110 }, // ONLY 9.0
-    LV_STYLE_TRANSFORM_PIVOT_X: { "8.3": 110, "9.0": 111 },
-    LV_STYLE_TRANSFORM_PIVOT_Y: { "8.3": 111, "9.0": 112 },
-    LV_STYLE_TRANSFORM_SKEW_X: { "8.3": undefined, "9.0": 113 }, // ONLY 9.0
-    LV_STYLE_TRANSFORM_SKEW_Y: { "8.3": undefined, "9.0": 114 }, // ONLY 9.0
-
-    /* Flex */
-    LV_STYLE_FLEX_FLOW: { "8.3": 112, "9.0": 115 },
-    LV_STYLE_FLEX_MAIN_PLACE: { "8.3": 113, "9.0": 116 },
-    LV_STYLE_FLEX_CROSS_PLACE: { "8.3": 114, "9.0": 117 },
-    LV_STYLE_FLEX_TRACK_PLACE: { "8.3": 115, "9.0": 118 },
-    LV_STYLE_FLEX_GROW: { "8.3": 0, "9.0": 119 },
-
-    /* Grid */
-    LV_STYLE_GRID_COLUMN_ALIGN: { "8.3": 118, "9.0": 120 },
-    LV_STYLE_GRID_ROW_ALIGN: { "8.3": 119, "9.0": 121 },
-    LV_STYLE_GRID_ROW_DSC_ARRAY: { "8.3": 117, "9.0": 122 },
-    LV_STYLE_GRID_COLUMN_DSC_ARRAY: { "8.3": 116, "9.0": 123 },
-    LV_STYLE_GRID_CELL_COLUMN_POS: { "8.3": 123, "9.0": 124 },
-    LV_STYLE_GRID_CELL_COLUMN_SPAN: { "8.3": 122, "9.0": 125 },
-    LV_STYLE_GRID_CELL_X_ALIGN: { "8.3": 124, "9.0": 126 },
-    LV_STYLE_GRID_CELL_ROW_POS: { "8.3": 121, "9.0": 127 },
-    LV_STYLE_GRID_CELL_ROW_SPAN: { "8.3": 120, "9.0": 128 },
-    LV_STYLE_GRID_CELL_Y_ALIGN: { "8.3": 125, "9.0": 129 }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const CF_ALPHA_1_BIT = 1;
-export const CF_ALPHA_2_BIT = 2;
-export const CF_ALPHA_4_BIT = 3;
-export const CF_ALPHA_8_BIT = 4;
-
-export const CF_L8 = 0x06;
-
-export const CF_RGB565 = 15;
-export const CF_RGB565A8 = 16;
-
-export const CF_TRUE_COLOR = 24;
-export const CF_TRUE_COLOR_ALPHA = 32;
-export const CF_TRUE_COLOR_CHROMA = 33;
-
-export const CF_INDEXED_1_BIT = 41;
-export const CF_INDEXED_2_BIT = 42;
-export const CF_INDEXED_4_BIT = 43;
-export const CF_INDEXED_8_BIT = 44;
-
-export const CF_RAW = 51;
-export const CF_RAW_CHROMA = 52;
-export const CF_RAW_ALPHA = 53;
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LVGL_FLAG_CODES_90 = {
-    HIDDEN: 1 << 0, // Make the object hidden. (Like it wasn't there at all)
-    CLICKABLE: 1 << 1, // Make the object clickable by the input devices
-    CLICK_FOCUSABLE: 1 << 2, // Add focused state to the object when clicked
-    CHECKABLE: 1 << 3, // Toggle checked state when the object is clicked
-    SCROLLABLE: 1 << 4, // Make the object scrollable
-    SCROLL_ELASTIC: 1 << 5, // Allow scrolling inside but with slower speed
-    SCROLL_MOMENTUM: 1 << 6, // Make the object scroll further when "thrown"
-    SCROLL_ONE: 1 << 7, // Allow scrolling only one snappable children
-    SCROLL_CHAIN_HOR: 1 << 8, // Allow propagating the horizontal scroll to a parent
-    SCROLL_CHAIN_VER: 1 << 9, // Allow propagating the vertical scroll to a parent
-    SCROLL_CHAIN: (1 << 8) | (1 << 9),
-    SCROLL_ON_FOCUS: 1 << 10, // Automatically scroll object to make it visible when focused
-    SCROLL_WITH_ARROW: 1 << 11, // Allow scrolling the focused object with arrow keys
-    SNAPPABLE: 1 << 12, // If scroll snap is enabled on the parent it can snap to this object
-    PRESS_LOCK: 1 << 13, // Keep the object pressed even if the press slid from the object
-    EVENT_BUBBLE: 1 << 14, // Propagate the events to the parent too
-    GESTURE_BUBBLE: 1 << 15, // Propagate the gestures to the parent
-    ADV_HITTEST: 1 << 16, // Allow performing more accurate hit (click) test. E.g. consider rounded corners.
-    IGNORE_LAYOUT: 1 << 17, // Make the object position-able by the layouts
-    FLOATING: 1 << 18, // Do not scroll the object when the parent scrolls and ignore layout
-    OVERFLOW_VISIBLE: 1 << 20 // Do not clip the children's content to the parent's boundary*/
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -400,7 +207,9 @@ const versions = {
             SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
             CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
             UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
-        } as WidgetEvents
+        } as WidgetEvents,
+
+        LVGL_PARTS: LVGL_PARTS_8
     },
     "9.0": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v9.0.js",
@@ -627,7 +436,9 @@ const versions = {
             SCREEN_UNLOAD_START: { code: 39, paramExpressionType: "null" },
             CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
             UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
-        } as WidgetEvents
+        } as WidgetEvents,
+
+        LVGL_PARTS: LVGL_PARTS_9
     }
 };
 
@@ -735,4 +546,8 @@ export function getLvglDefaultFontBpp(object: IEezObject) {
 
 export function getLvglEvents(object: IEezObject) {
     return getVersionProperty(object, "LVGL_EVENTS");
+}
+
+export function getLvglParts(object: IEezObject) {
+    return getVersionProperty(object, "LVGL_PARTS");
 }

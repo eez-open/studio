@@ -28,8 +28,6 @@ import {
     ClassInfo,
     getObjectPropertyDisplayName,
     isProperSubclassOf,
-    LVGL_FLAG_CODES,
-    LVGL_STATE_CODES,
     PropertyType
 } from "project-editor/core/object";
 import {
@@ -63,6 +61,10 @@ import {
     ListGraphWidget,
     YTGraphWidget
 } from "project-editor/flow/components/widgets/eez-gui";
+import {
+    LVGL_FLAG_CODES,
+    LVGL_STATE_CODES
+} from "project-editor/lvgl/lvgl-constants";
 
 interface ProjectTypeNodeData {
     id: string;

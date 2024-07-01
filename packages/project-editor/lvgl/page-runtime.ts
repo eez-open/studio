@@ -31,13 +31,15 @@ import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import {
-    LVGLStylePropCode,
     getLvglBitmapPtr,
     getLvglStylePropCode,
     getLvglWasmFlowRuntimeConstructor
 } from "project-editor/lvgl/lvgl-versions";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import { LV_ANIM_OFF } from "project-editor/lvgl//lvgl-constants";
+import {
+    LVGLStylePropCode,
+    LV_ANIM_OFF
+} from "project-editor/lvgl//lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 

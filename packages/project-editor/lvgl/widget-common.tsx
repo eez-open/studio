@@ -4,10 +4,6 @@ import { observer } from "mobx-react";
 import {
     getClassInfoLvglProperties,
     getProperty,
-    LVGL_FLAG_CODES,
-    LVGL_REACTIVE_FLAGS,
-    LVGL_REACTIVE_STATES,
-    LVGL_STATE_CODES,
     PropertyProps
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -21,17 +17,12 @@ import {
     type LVGLPageRuntime
 } from "project-editor/lvgl/page-runtime";
 import { evalConstantExpression } from "project-editor/flow/expression";
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x76;
-export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x77;
-export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x78;
-export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x79;
-export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
-export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;
-export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
-export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
+import {
+    LVGL_FLAG_CODES,
+    LVGL_REACTIVE_FLAGS,
+    LVGL_REACTIVE_STATES,
+    LVGL_STATE_CODES
+} from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 

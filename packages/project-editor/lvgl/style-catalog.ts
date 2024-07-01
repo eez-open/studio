@@ -11,9 +11,7 @@ import { ProjectStore } from "project-editor/store";
 
 import {
     LVGLStylePropCode,
-    LVGL_STYLE_PROP_CODES
-} from "project-editor/lvgl/lvgl-versions";
-import {
+    LVGL_STYLE_PROP_CODES,
     LV_FLEX_ALIGN_CENTER,
     LV_FLEX_ALIGN_END,
     LV_FLEX_ALIGN_SPACE_AROUND,

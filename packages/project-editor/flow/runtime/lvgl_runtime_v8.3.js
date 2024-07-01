@@ -969,18 +969,18 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1034656: ($0) => { startToDebuggerMessage($0); },  
- 1034688: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034763: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1034838: ($0) => { finishToDebuggerMessage($0); },  
- 1034871: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1034924: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1035030: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1035066: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1035103: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1035143: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1035200: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1035259: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1034576: ($0) => { startToDebuggerMessage($0); },  
+ 1034608: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034683: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1034758: ($0) => { finishToDebuggerMessage($0); },  
+ 1034791: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034844: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1034950: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1034986: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1035023: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1035063: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1035120: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1035179: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 

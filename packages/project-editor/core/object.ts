@@ -16,10 +16,14 @@ import {
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 
 import type { ValueType } from "project-editor/features/variable/value-type";
-import type { LVGLParts } from "project-editor/lvgl/style-helper";
 import type { Project } from "project-editor/project/project";
 
 import { isArray } from "eez-studio-shared/util";
+import {
+    LVGL_FLAG_CODES,
+    LVGL_STATE_CODES,
+    LVGLParts
+} from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -282,49 +286,8 @@ export interface SerializedData {
     objects?: EezObject[];
 }
 
-export const LVGL_FLAG_CODES = {
-    HIDDEN: 1 << 0, // Make the object hidden. (Like it wasn't there at all)
-    CLICKABLE: 1 << 1, // Make the object clickable by the input devices
-    CLICK_FOCUSABLE: 1 << 2, // Add focused state to the object when clicked
-    CHECKABLE: 1 << 3, // Toggle checked state when the object is clicked
-    SCROLLABLE: 1 << 4, // Make the object scrollable
-    SCROLL_ELASTIC: 1 << 5, // Allow scrolling inside but with slower speed
-    SCROLL_MOMENTUM: 1 << 6, // Make the object scroll further when "thrown"
-    SCROLL_ONE: 1 << 7, // Allow scrolling only one snappable children
-    SCROLL_CHAIN_HOR: 1 << 8, // Allow propagating the horizontal scroll to a parent
-    SCROLL_CHAIN_VER: 1 << 9, // Allow propagating the vertical scroll to a parent
-    SCROLL_CHAIN: (1 << 8) | (1 << 9),
-    SCROLL_ON_FOCUS: 1 << 10, // Automatically scroll object to make it visible when focused
-    SCROLL_WITH_ARROW: 1 << 11, // Allow scrolling the focused object with arrow keys
-    SNAPPABLE: 1 << 12, // If scroll snap is enabled on the parent it can snap to this object
-    PRESS_LOCK: 1 << 13, // Keep the object pressed even if the press slid from the object
-    EVENT_BUBBLE: 1 << 14, // Propagate the events to the parent too
-    GESTURE_BUBBLE: 1 << 15, // Propagate the gestures to the parent
-    ADV_HITTEST: 1 << 16, // Allow performing more accurate hit (click) test. E.g. consider rounded corners.
-    IGNORE_LAYOUT: 1 << 17, // Make the object position-able by the layouts
-    FLOATING: 1 << 18, // Do not scroll the object when the parent scrolls and ignore layout
-    OVERFLOW_VISIBLE: 1 << 19 // Do not clip the children's content to the parent's boundary*/
-};
-
-export const LVGL_REACTIVE_FLAGS: (keyof typeof LVGL_FLAG_CODES)[] = [
-    "HIDDEN",
-    "CLICKABLE"
-];
-
-export const LVGL_STATE_CODES = {
-    CHECKED: 0x0001,
-    DISABLED: 0x0080,
-    FOCUSED: 0x0002,
-    PRESSED: 0x0020
-};
-
-export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
-    "CHECKED",
-    "DISABLED"
-];
-
 interface LVGLClassInfoProperties {
-    parts: LVGLParts[];
+    parts: LVGLParts[] | ((object: IEezObject) => LVGLParts[]);
     flags: (keyof typeof LVGL_FLAG_CODES)[];
     defaultFlags: string;
     states: (keyof typeof LVGL_STATE_CODES)[];
@@ -990,6 +953,16 @@ export function getClassInfoLvglProperties(object: IEezObject) {
     } else {
         return { parts: [], flags: [], defaultFlags: "", states: [] };
     }
+}
+
+export function getClassInfoLvglParts(object: IEezObject) {
+    const lvglClassInfoProperties = getClassInfoLvglProperties(object);
+
+    if (typeof lvglClassInfoProperties.parts == "function") {
+        return lvglClassInfoProperties.parts(object);
+    }
+
+    return lvglClassInfoProperties.parts;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

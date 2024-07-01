@@ -53,10 +53,8 @@ import {
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
 import type { ProjectEditorFeature } from "project-editor/store/features";
-import {
-    getLvglBitmapColorFormats,
-    CF_TRUE_COLOR_ALPHA
-} from "project-editor/lvgl/lvgl-versions";
+import { getLvglBitmapColorFormats } from "project-editor/lvgl/lvgl-versions";
+import { CF_TRUE_COLOR_ALPHA } from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 

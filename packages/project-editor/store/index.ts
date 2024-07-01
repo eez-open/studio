@@ -700,13 +700,6 @@ export class ProjectStore {
         await this.setProject(project, filePath);
 
         this.openProjectsManager.mount();
-
-        if (project.projectTypeTraits.isLVGL) {
-            const { dumpVersionInfo } = await import(
-                "project-editor/lvgl/dump-version-info"
-            );
-            dumpVersionInfo(this);
-        }
     }
 
     async saveModified() {

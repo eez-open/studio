@@ -11,14 +11,10 @@ import {
     makeDerivedClassInfo,
     IPropertyGridGroupDefinition,
     PropertyProps,
-    LVGL_FLAG_CODES,
-    LVGL_STATE_CODES,
     findPropertyByNameInClassInfo,
     IEezObject,
     PropertyInfo,
     getProperty,
-    LVGL_REACTIVE_STATES,
-    LVGL_REACTIVE_FLAGS,
     MessageType,
     getClassInfoLvglProperties,
     EezObject,
@@ -95,16 +91,8 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     LVGLWidgetFlagsProperty,
     LVGLWidgetStatesProperty,
-    LV_EVENT_ARC_VALUE_CHANGED,
-    LV_EVENT_CHECKED_STATE_CHANGED,
-    LV_EVENT_SLIDER_VALUE_CHANGED,
-    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
-    LV_EVENT_TEXTAREA_TEXT_CHANGED,
-    LV_EVENT_DROPDOWN_SELECTED_CHANGED,
-    LV_EVENT_ROLLER_SELECTED_CHANGED,
     getCode,
     getExpressionPropertyData,
-    LV_EVENT_METER_TICK_LABEL_EVENT,
     getExpressionPropertyInitalValue,
     unescapeText
 } from "project-editor/lvgl/widget-common";
@@ -141,6 +129,7 @@ import {
     getLvglCoordTypeShift,
     getLvglEvents,
     getLvglFlagCodes,
+    getLvglParts,
     lvglHasLabelRecolorSupport
 } from "project-editor/lvgl/lvgl-versions";
 import {
@@ -149,7 +138,29 @@ import {
     LV_DIR_RIGHT,
     LV_DIR_TOP,
     LVGL_SCROLL_BAR_MODES,
-    LVGL_SCROLL_DIRECTION
+    LVGL_SCROLL_DIRECTION,
+    LVGL_FLAG_CODES,
+    LVGL_STATE_CODES,
+    LVGL_REACTIVE_STATES,
+    LVGL_REACTIVE_FLAGS,
+    LV_EVENT_ARC_VALUE_CHANGED,
+    LV_EVENT_CHECKED_STATE_CHANGED,
+    LV_EVENT_SLIDER_VALUE_CHANGED,
+    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
+    LV_EVENT_TEXTAREA_TEXT_CHANGED,
+    LV_EVENT_DROPDOWN_SELECTED_CHANGED,
+    LV_EVENT_ROLLER_SELECTED_CHANGED,
+    LV_EVENT_METER_TICK_LABEL_EVENT,
+    LVGLParts,
+    LONG_MODE_CODES,
+    SLIDER_MODES,
+    ROLLER_MODES,
+    BAR_MODES,
+    ARC_MODES,
+    COLORWHEEL_MODES,
+    ImgbuttonStates,
+    KEYBOARD_MODES,
+    SCALE_MODES
 } from "project-editor/lvgl/lvgl-constants";
 
 4; ////////////////////////////////////////////////////////////////////////////////
@@ -377,6 +388,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
+                readOnlyInPropertyGrid: isGeometryControlledByTabview,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using left from the Page
             },
             {
@@ -396,6 +408,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
+                readOnlyInPropertyGrid: isGeometryControlledByTabview,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using top from the Page
             },
             {
@@ -415,6 +428,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
+                readOnlyInPropertyGrid: isGeometryControlledByTabview,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using width from the Page
             },
             {
@@ -435,6 +449,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
+                readOnlyInPropertyGrid: isGeometryControlledByTabview,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using height from the Page
             },
             {
@@ -1537,7 +1552,7 @@ export class LVGLWidget extends Widget {
 
             build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
             build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
-        } else if (this instanceof LVGLTabWidget) {
+        } else if (this instanceof LVGLTabWidget || getTabview(this)) {
             // skip
         } else {
             build.line(
@@ -2019,13 +2034,194 @@ export class LVGLWidget extends Widget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const LONG_MODE_CODES = {
-    WRAP: 0,
-    DOT: 1,
-    SCROLL: 2,
-    SCROLL_CIRCULAR: 3,
-    CLIP: 4
-};
+export class LVGLGenericWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        label: (widget: LVGLTabWidget) => {
+            const tabview = getTabview(widget);
+            if (tabview) {
+                if (tabview.children.indexOf(widget) == 0) {
+                    return "Bar";
+                } else if (tabview.children.indexOf(widget) == 1) {
+                    return "Content";
+                }
+            }
+
+            return LVGLWidget.classInfo.label!(widget);
+        },
+
+        componentPaletteGroupName: "!1Basic",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 100,
+            height: 50,
+            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: (widget: LVGLWidget) =>
+                Object.keys(getLvglParts(widget)) as LVGLParts[],
+            flags: Object.keys(
+                LVGL_FLAG_CODES
+            ) as (keyof typeof LVGL_FLAG_CODES)[],
+            defaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            states: Object.keys(
+                LVGL_STATE_CODES
+            ) as (keyof typeof LVGL_STATE_CODES)[]
+        },
+
+        setRect: (widget: LVGLGenericWidget, value: Partial<Rect>) => {
+            const tabview = getTabview(widget);
+            if (tabview) {
+                if (tabview.children.indexOf(widget) == 0) {
+                    if (
+                        (tabview.tabviewPosition == "TOP" ||
+                            tabview.tabviewPosition == "BOTTOM") &&
+                        value.height != undefined
+                    ) {
+                        const projectStore = getProjectStore(widget);
+                        projectStore.updateObject(tabview, {
+                            tabviewSize: value.height
+                        });
+                    } else if (
+                        (tabview.tabviewPosition == "LEFT" ||
+                            tabview.tabviewPosition == "RIGHT") &&
+                        value.width != undefined
+                    ) {
+                        const projectStore = getProjectStore(widget);
+                        projectStore.updateObject(tabview, {
+                            tabviewSize: value.width
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {});
+    }
+
+    override get autoSize(): AutoSize {
+        const tabview = getTabview(this);
+        if (tabview) {
+            if (
+                tabview.children.indexOf(this) == 0 ||
+                tabview.children.indexOf(this) == 1
+            ) {
+                return "both";
+            }
+        }
+
+        return super.autoSize;
+    }
+
+    override getResizeHandlers(): IResizeHandler[] | undefined | false {
+        const tabview = getTabview(this);
+        if (tabview && tabview.children.indexOf(this) == 0) {
+            return [
+                {
+                    x: 50,
+                    y: 0,
+                    type: "n-resize"
+                },
+                {
+                    x: 50,
+                    y: 100,
+                    type: "s-resize"
+                }
+            ];
+        }
+
+        return super.getResizeHandlers();
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const tabview = getTabview(this);
+        if (tabview) {
+            if (tabview.children.indexOf(this) == 0) {
+                return runtime.wasm._lvglTabviewGetTabBar(
+                    parentObj,
+                    runtime.getWidgetIndex(this)
+                );
+            }
+
+            if (tabview.children.indexOf(this) == 1) {
+                return runtime.wasm._lvglTabviewGetTabContent(
+                    parentObj,
+                    runtime.getWidgetIndex(this)
+                );
+            }
+        }
+
+        const rect = this.getLvglCreateRect();
+        return runtime.wasm._lvglCreatePanel(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
+        );
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        const tabview = getTabview(this);
+        if (tabview) {
+            if (tabview.children.indexOf(this) == 0) {
+                if (build.project.settings.general.lvglVersion == "9.0") {
+                    build.line(
+                        `lv_obj_t *obj = lv_tabview_get_tab_bar(parent_obj);`
+                    );
+                } else {
+                    build.line(
+                        `lv_obj_t *obj = lv_tabview_get_tab_btns(parent_obj);`
+                    );
+                }
+                return;
+            }
+
+            if (tabview.children.indexOf(this) == 1) {
+                build.line(
+                    `lv_obj_t *obj = lv_tabview_get_content(parent_obj);`
+                );
+                return;
+            }
+        }
+
+        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLLabelWidget extends LVGLWidget {
     text: string;
@@ -2279,7 +2475,22 @@ export class LVGLButtonWidget extends LVGLWidget {
             width: 100,
             height: 50,
             flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            clickableFlag: true
+            clickableFlag: true,
+            children: [
+                Object.assign({}, LVGLLabelWidget.classInfo.defaultValue, {
+                    type: "LVGLLabelWidget",
+                    text: "Button",
+                    localStyles: {
+                        definition: {
+                            MAIN: {
+                                DEFAULT: {
+                                    align: "CENTER"
+                                }
+                            }
+                        }
+                    }
+                })
+            ]
         },
 
         icon: (
@@ -3354,12 +3565,6 @@ export class LVGLImageWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const SLIDER_MODES = {
-    NORMAL: 0,
-    SYMMETRICAL: 1,
-    RANGE: 2
-};
-
 export class LVGLSliderWidget extends LVGLWidget {
     min: number;
     max: number;
@@ -3663,11 +3868,6 @@ export class LVGLSliderWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ROLLER_MODES = {
-    NORMAL: 0,
-    INFINITE: 1
-};
 
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
@@ -4007,12 +4207,6 @@ export class LVGLSwitchWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const BAR_MODES = {
-    NORMAL: 0,
-    SYMMETRICAL: 1,
-    RANGE: 2
-};
 
 export class LVGLBarWidget extends LVGLWidget {
     min: number;
@@ -4483,12 +4677,6 @@ export class LVGLDropdownWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const ARC_MODES = {
-    NORMAL: 0,
-    REVERSE: 1,
-    SYMMETRICAL: 2
-};
 
 export class LVGLArcWidget extends LVGLWidget {
     rangeMin: number;
@@ -5446,12 +5634,6 @@ export class LVGLCalendarWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const COLORWHEEL_MODES = {
-    HUE: 0,
-    SATURATION: 1,
-    VALUE: 2
-};
-
 export class LVGLColorwheelWidget extends LVGLWidget {
     mode: keyof typeof COLORWHEEL_MODES;
     fixedMode: boolean;
@@ -5591,15 +5773,6 @@ export class LVGLColorwheelWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const enum ImgbuttonStates {
-    LV_IMGBTN_STATE_RELEASED,
-    LV_IMGBTN_STATE_PRESSED,
-    LV_IMGBTN_STATE_DISABLED,
-    LV_IMGBTN_STATE_CHECKED_RELEASED,
-    LV_IMGBTN_STATE_CHECKED_PRESSED,
-    LV_IMGBTN_STATE_CHECKED_DISABLED
-}
 
 export class LVGLImgbuttonWidget extends LVGLWidget {
     imageReleased: string;
@@ -5978,17 +6151,6 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const KEYBOARD_MODES = {
-    TEXT_LOWER: 0,
-    TEXT_UPPER: 1,
-    SPECIAL: 2,
-    NUMBER: 3,
-    USER1: 4,
-    USER2: 5,
-    USER3: 6,
-    USER4: 7
-};
 
 export class LVGLKeyboardWidget extends LVGLWidget {
     textarea: string;
@@ -7901,16 +8063,6 @@ export class LVGLMeterWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// LV_SCALE_MODE_
-const SCALE_MODES = {
-    HORIZONTAL_TOP: 0x00,
-    HORIZONTAL_BOTTOM: 0x01,
-    VERTICAL_LEFT: 0x02,
-    VERTICAL_RIGHT: 0x04,
-    ROUND_INNER: 0x08,
-    ROUND_OUTER: 0x10
-};
-
 export class LVGLScaleWidget extends LVGLWidget {
     scaleMode: keyof typeof SCALE_MODES;
     minorRange: number;
@@ -8114,6 +8266,22 @@ const TABVIEW_POSITION = {
     BOTTOM: LV_DIR_BOTTOM
 };
 
+function getTabview(widget: LVGLWidget) {
+    const parentChildren = getParent(widget) as LVGLWidget[];
+    const parentWidget = getParent(parentChildren);
+    if (parentWidget instanceof LVGLTabviewWidget) {
+        return parentWidget;
+    }
+    return undefined;
+}
+
+function isGeometryControlledByTabview(widget: LVGLWidget) {
+    if (getTabview(widget) || widget instanceof LVGLTabWidget) {
+        return true;
+    }
+    return false;
+}
+
 export class LVGLTabviewWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -8150,6 +8318,58 @@ export class LVGLTabviewWidget extends LVGLWidget {
             clickableFlag: true,
             tabviewPosition: "TOP",
             tabviewSize: 32
+        },
+
+        check: (widget: LVGLTabviewWidget, messages: IMessage[]) => {
+            let tabBar = false;
+            let tabContent = false;
+
+            for (let i = 0; i < widget.children.length; i++) {
+                const childWidget = widget.children[i];
+                if (childWidget instanceof LVGLGenericWidget) {
+                    if (i == 0) {
+                        tabBar = true;
+                    } else if (i == 1) {
+                        tabContent = true;
+                    } else {
+                        if (tabBar && tabContent) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Redundant Generic widget`,
+                                    childWidget
+                                )
+                            );
+                        } else {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Invalid Generic widget position`,
+                                    childWidget
+                                )
+                            );
+                        }
+                    }
+                } else if (childWidget instanceof LVGLTabWidget) {
+                    if (tabContent) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Tab should be child of Content`,
+                                childWidget
+                            )
+                        );
+                    }
+                } else {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Tabview child is neither Tab or Generic widget`,
+                            childWidget
+                        )
+                    );
+                }
+            }
         },
 
         icon: (
@@ -8258,7 +8478,9 @@ export class LVGLTabWidget extends LVGLWidget {
             projectType === ProjectType.LVGL,
 
         label: (widget: LVGLTabWidget) => {
-            return widget.tabName;
+            return widget.tabNameType == "expression"
+                ? `{${widget.tabName}}`
+                : widget.tabName;
         },
 
         componentPaletteGroupName: "!1Basic",
@@ -8369,6 +8591,10 @@ export class LVGLTabWidget extends LVGLWidget {
         return (getParent(this) as LVGLWidget[]).indexOf(this);
     }
 
+    override get autoSize(): AutoSize {
+        return "both";
+    }
+
     override getIsAccessibleFromSourceCode() {
         return this.tabNameType == "expression";
     }
@@ -8446,22 +8672,27 @@ export class LVGLTabWidget extends LVGLWidget {
         if (this.tabview) {
             const tabIndex = this.tabIndex;
             if (tabIndex != -1) {
-                console.log(this.tabName, this.tabNameType);
+                let parentObj = "parent_obj";
+
+                if (!(this.parentWidget instanceof LVGLTabviewWidget)) {
+                    parentObj = "lv_obj_get_parent(parent_obj)";
+                }
+
                 if (this.tabNameType == "literal") {
                     build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, ${escapeCString(
+                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, ${escapeCString(
                             this.tabName ?? ""
                         )});`
                     );
                 } else if (this.tabNameType == "translated-literal") {
                     build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, _(${escapeCString(
+                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, _(${escapeCString(
                             this.tabName ?? ""
                         )});`
                     );
                 } else {
                     build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(parent_obj, " ");`
+                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, " ");`
                     );
                 }
                 return;
@@ -8493,6 +8724,7 @@ registerClass("LVGLChartWidget", LVGLChartWidget);
 registerClass("LVGLCheckboxWidget", LVGLCheckboxWidget);
 registerClass("LVGLColorwheelWidget", LVGLColorwheelWidget);
 registerClass("LVGLDropdownWidget", LVGLDropdownWidget);
+registerClass("LVGLGenericWidget", LVGLGenericWidget);
 registerClass("LVGLImageWidget", LVGLImageWidget);
 registerClass("LVGLImgbuttonWidget", LVGLImgbuttonWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);

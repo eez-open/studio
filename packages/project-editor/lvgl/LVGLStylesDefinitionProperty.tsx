@@ -5,7 +5,7 @@ import classNames from "classnames";
 import { intersection } from "lodash";
 
 import {
-    getClassInfoLvglProperties,
+    getClassInfoLvglParts,
     IEezObject,
     PropertyInfo,
     PropertyProps
@@ -22,10 +22,7 @@ import {
     LVGLPropertyInfo,
     PropertyValueHolder
 } from "project-editor/lvgl/style-catalog";
-import {
-    LVGLParts,
-    getStylePropDefaultValue
-} from "project-editor/lvgl/style-helper";
+import { getStylePropDefaultValue } from "project-editor/lvgl/style-helper";
 import { ProjectContext } from "project-editor/project/context";
 import { Icon } from "eez-studio-ui/icon";
 import {
@@ -34,6 +31,10 @@ import {
 } from "project-editor/lvgl/page-runtime";
 import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
+import {
+    LVGL_STYLE_STATES,
+    LVGLParts
+} from "project-editor/lvgl/lvgl-constants";
 
 type TreeNodeData =
     | {
@@ -41,15 +42,6 @@ type TreeNodeData =
           state: string;
       }
     | undefined;
-
-const LVGL_STYLE_STATES = [
-    "DEFAULT",
-    "CHECKED",
-    "PRESSED",
-    "CHECKED|PRESSED",
-    "DISABLED",
-    "FOCUSED"
-];
 
 export const LVGLStylesDefinitionProperty = observer(
     class LVGLStylesDefinitionProperty extends React.Component<PropertyProps> {
@@ -71,12 +63,8 @@ export const LVGLStylesDefinitionProperty = observer(
 
             if (part) {
                 this.props.objects.forEach(object => {
-                    const lvglClassInfoProperties =
-                        getClassInfoLvglProperties(object);
-                    if (
-                        part &&
-                        lvglClassInfoProperties.parts.indexOf(part) == -1
-                    ) {
+                    const parts = getClassInfoLvglParts(object);
+                    if (part && parts.indexOf(part) == -1) {
                         part = undefined;
                     }
                 });
@@ -254,12 +242,8 @@ export const LVGLStylesDefinitionTree = observer(
 
             if (part) {
                 this.props.objects.forEach(object => {
-                    const lvglClassInfoProperties =
-                        getClassInfoLvglProperties(object);
-                    if (
-                        part &&
-                        lvglClassInfoProperties.parts.indexOf(part) == -1
-                    ) {
+                    const parts = getClassInfoLvglParts(object);
+                    if (part && parts.indexOf(part)) {
                         part = undefined;
                     }
                 });
@@ -307,12 +291,12 @@ export const LVGLStylesDefinitionTree = observer(
             let parts: LVGLParts[] | undefined;
 
             this.props.objects.forEach(widget => {
-                const lvglClassInfoProperties =
-                    getClassInfoLvglProperties(widget);
+                const widgetParts = getClassInfoLvglParts(widget);
+
                 if (parts == undefined) {
-                    parts = lvglClassInfoProperties.parts;
+                    parts = widgetParts;
                 } else {
-                    parts = intersection(parts, lvglClassInfoProperties.parts);
+                    parts = intersection(parts, widgetParts);
                 }
             });
 
