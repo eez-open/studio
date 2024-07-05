@@ -601,12 +601,15 @@ export interface IWasmFlowRuntime {
     _onMqttEvent(handle: number, eventType: number, eventDataPtr1: number, eventDataPtr2: number): void;
 
     // LVGL API
+    _lvglCreateScreen(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateLabel(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;
     _lvglCreateButton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateButtonMatrix(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateUserWidget(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
+    _lvglCreateLine(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
@@ -629,6 +632,7 @@ export interface IWasmFlowRuntime {
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
     _lvglObjClearFlag(obj: number, f: number): void;
+    _lvglObjHasFlag(obj: number, f: number): boolean;
     _lvglObjAddState(obj: number, s: number): void;
     _lvglObjClearState(obj: number, s: number): void;
     _lvglObjGetStylePropColor(obj: number, part: number, prop: number): number;
@@ -700,6 +704,8 @@ export interface IWasmFlowRuntime {
     _lvglTabviewSetActive(obj: number, tab_id: number, anim_en: number);
     _lvglTabviewGetTabBar(obj: number, index: number);
     _lvglTabviewGetTabContent(obj: number, index: number);
+    _lvglLineSetPoints(obj: number, point_values: number, point_num: number);
+    _lvglLineSetYInvert(obj: number, y_invert: boolean);
 }
 
 export interface IDashboardComponentContext {

@@ -1285,15 +1285,25 @@ class WizardModel {
                         );
                     };
 
-                    await simpleGit({ progress: onGitProgress }).clone(
-                        this.gitCloneUrl!,
-                        projectDirPath,
-                        this.gitInit && !this.isSelectedExampleWithGitRepository
-                            ? {}
-                            : {
-                                  "--recurse-submodules": null
-                              }
-                    );
+                    try {
+                        await simpleGit({ progress: onGitProgress }).clone(
+                            this.gitCloneUrl!,
+                            projectDirPath,
+                            this.gitInit &&
+                                !this.isSelectedExampleWithGitRepository
+                                ? {}
+                                : {
+                                      "--recurse-submodules": null
+                                  }
+                        );
+                    } catch (err) {
+                        await fs.promises.rm(projectDirPath, {
+                            recursive: true,
+                            force: true
+                        });
+
+                        throw err;
+                    }
 
                     if (!this.isSelectedExampleWithGitRepository) {
                         await fs.promises.rm(projectDirPath + "/.git", {
@@ -1377,32 +1387,70 @@ class WizardModel {
                             await git.init();
 
                             for (const submodule of submodules) {
-                                runInAction(
-                                    () =>
-                                        (this.progress = `Adding submodule ${submodule.name} ...`)
-                                );
+                                const NUM_RETRIES = 3;
 
-                                await fs.promises.rm(
-                                    projectDirPath + "/" + submodule.path,
-                                    {
-                                        recursive: true,
-                                        force: true
-                                    }
-                                );
+                                for (let i = 0; i <= NUM_RETRIES; i++) {
+                                    const message = `Adding submodule ${
+                                        submodule.name
+                                    } ${
+                                        i > 0
+                                            ? `retry ${i} of ${NUM_RETRIES}`
+                                            : ""
+                                    } ...`;
 
-                                if (submodule.branch) {
-                                    await git.subModule([
-                                        "add",
-                                        "-b",
-                                        submodule.branch,
-                                        submodule.repository,
-                                        submodule.path
-                                    ]);
-                                } else {
-                                    await git.submoduleAdd(
-                                        submodule.repository,
-                                        submodule.path
+                                    runInAction(
+                                        () => (this.progress = message)
                                     );
+
+                                    await fs.promises.rm(
+                                        projectDirPath + "/" + submodule.path,
+                                        {
+                                            recursive: true,
+                                            force: true
+                                        }
+                                    );
+
+                                    try {
+                                        if (submodule.branch) {
+                                            await git.subModule(
+                                                [
+                                                    "add",
+                                                    "-b",
+                                                    submodule.branch,
+                                                    submodule.repository,
+                                                    submodule.path
+                                                ],
+                                                (err, data) => {
+                                                    console.log(err, data);
+                                                }
+                                            );
+                                        } else {
+                                            await git.submoduleAdd(
+                                                submodule.repository,
+                                                submodule.path,
+                                                (err, data) => {
+                                                    console.log(err, data);
+                                                }
+                                            );
+                                        }
+                                    } catch (err) {
+                                        if (i == NUM_RETRIES) {
+                                            await fs.promises.rm(
+                                                projectDirPath,
+                                                {
+                                                    recursive: true,
+                                                    force: true
+                                                }
+                                            );
+
+                                            throw err;
+                                        }
+
+                                        console.error(err);
+                                        continue;
+                                    }
+
+                                    break;
                                 }
                             }
 

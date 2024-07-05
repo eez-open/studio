@@ -13,7 +13,7 @@ import classNames from "classnames";
 import { objectClone } from "eez-studio-shared/util";
 import { SearchInput } from "eez-studio-ui/search-input";
 
-import { IObjectClassInfo } from "project-editor/core/object";
+import { getDefaultValue, IObjectClassInfo } from "project-editor/core/object";
 import { DragAndDropManager } from "project-editor/core/dd";
 import {
     createObject,
@@ -273,11 +273,12 @@ const PaletteItem = observer(
 
             let defaultValue: Partial<Component> = {};
 
-            if (componentClass.classInfo.defaultValue) {
-                Object.assign(
-                    defaultValue,
-                    objectClone(componentClass.classInfo.defaultValue)
-                );
+            const classInfoDefaultValue = getDefaultValue(
+                this.context,
+                componentClass.classInfo
+            );
+            if (classInfoDefaultValue) {
+                Object.assign(defaultValue, classInfoDefaultValue);
             }
 
             if (componentClass.classInfo.componentDefaultValue) {

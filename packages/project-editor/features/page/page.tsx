@@ -651,23 +651,6 @@ export class Page extends Flow {
         getResizeHandlers(object: Page) {
             return object.getResizeHandlers();
         },
-        lvgl: {
-            parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ONE"
-            ],
-            defaultFlags: "CLICKABLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM",
-            states: ["CHECKED", "FOCUSED", "PRESSED"]
-        },
 
         findChildIndex: (parent: Page[], page: Page) => {
             return parent.findIndex(child => child.name == page.name);
@@ -1020,7 +1003,7 @@ export class Page extends Flow {
                       customWidget.width,
                       customWidget.height
                   )
-                : runtime.wasm._lvglCreateContainer(
+                : runtime.wasm._lvglCreateScreen(
                       parentObj,
                       runtime.getWidgetIndex(this),
                       this.left,

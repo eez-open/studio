@@ -23,6 +23,7 @@ import {
     LVGL_REACTIVE_STATES,
     LVGL_STATE_CODES
 } from "project-editor/lvgl/lvgl-constants";
+import { getLvglFlagCodes } from "./lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,9 +36,10 @@ export const LVGLWidgetFlagsProperty = observer(
             const flagNames: (keyof typeof LVGL_FLAG_CODES)[] = [];
 
             this.props.objects.map((widget: LVGLWidget) => {
-                const lvglClassInfoProperties =
-                    getClassInfoLvglProperties(widget);
-                for (const flagName of lvglClassInfoProperties.flags) {
+                const flags = Object.keys(
+                    getLvglFlagCodes(widget)
+                ) as (keyof typeof LVGL_FLAG_CODES)[];
+                for (const flagName of flags) {
                     if (
                         flagNames.indexOf(flagName) == -1 &&
                         LVGL_REACTIVE_FLAGS.indexOf(flagName) == -1
@@ -87,14 +89,13 @@ export const LVGLWidgetFlagsProperty = observer(
                                     if (value) {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const lvglClassInfoProperties =
-                                                    getClassInfoLvglProperties(
-                                                        widget
-                                                    );
+                                                const flags = Object.keys(
+                                                    getLvglFlagCodes(widget)
+                                                ) as (keyof typeof LVGL_FLAG_CODES)[];
+
                                                 if (
-                                                    lvglClassInfoProperties.flags.indexOf(
-                                                        flagName
-                                                    ) == -1
+                                                    flags.indexOf(flagName) ==
+                                                    -1
                                                 ) {
                                                     return;
                                                 }
@@ -125,14 +126,13 @@ export const LVGLWidgetFlagsProperty = observer(
                                     } else {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const lvglClassInfoProperties =
-                                                    getClassInfoLvglProperties(
-                                                        widget
-                                                    );
+                                                const flags = Object.keys(
+                                                    getLvglFlagCodes(widget)
+                                                ) as (keyof typeof LVGL_FLAG_CODES)[];
+
                                                 if (
-                                                    lvglClassInfoProperties.flags.indexOf(
-                                                        flagName
-                                                    ) == -1
+                                                    flags.indexOf(flagName) ==
+                                                    -1
                                                 ) {
                                                     return;
                                                 }

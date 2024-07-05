@@ -623,7 +623,7 @@ const flex_grow_property_info: LVGLPropertyInfo = {
 // PADDING
 //
 
-const pad_top_property_info: LVGLPropertyInfo = {
+export const pad_top_property_info: LVGLPropertyInfo = {
     name: "pad_top",
     displayName: "Top",
     type: PropertyType.Number,
@@ -637,7 +637,7 @@ const pad_top_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const pad_bottom_property_info: LVGLPropertyInfo = {
+export const pad_bottom_property_info: LVGLPropertyInfo = {
     name: "pad_bottom",
     displayName: "Bottom",
     type: PropertyType.Number,
@@ -651,7 +651,7 @@ const pad_bottom_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const pad_left_property_info: LVGLPropertyInfo = {
+export const pad_left_property_info: LVGLPropertyInfo = {
     name: "pad_left",
     displayName: "Left",
     type: PropertyType.Number,
@@ -665,7 +665,7 @@ const pad_left_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const pad_right_property_info: LVGLPropertyInfo = {
+export const pad_right_property_info: LVGLPropertyInfo = {
     name: "pad_right",
     displayName: "Right",
     type: PropertyType.Number,
@@ -784,7 +784,7 @@ const bg_color_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const bg_opa_property_info: LVGLPropertyInfo = {
+export const bg_opa_property_info: LVGLPropertyInfo = {
     name: "bg_opa",
     displayName: "Opacity",
     type: PropertyType.Number,
@@ -1018,7 +1018,7 @@ const border_opa_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
-const border_width_property_info: LVGLPropertyInfo = {
+export const border_width_property_info: LVGLPropertyInfo = {
     name: "border_width",
     displayName: "Width",
     type: PropertyType.Number,
@@ -1537,7 +1537,7 @@ const text_align_property_info = makeEnumPropertyInfo(
 // MISCELLANEOUS
 //
 
-const radius_property_info: LVGLPropertyInfo = {
+export const radius_property_info: LVGLPropertyInfo = {
     name: "radius",
     displayName: "Radius",
     type: PropertyType.Number,

@@ -8,10 +8,30 @@
 
 #include "flow.h"
 
+EM_PORT_API(lv_obj_t *) lvglCreateScreen(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_obj_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
 EM_PORT_API(lv_obj_t *) lvglCreateContainer(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_obj_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+
+    lv_style_value_t value;
+    value.num = 0;
+    lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_LEFT, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_TOP, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_RIGHT, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_BOTTOM, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_BG_OPA, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_BORDER_WIDTH, value, LV_PART_MAIN);
+    lv_obj_set_local_style_prop(obj, LV_STYLE_RADIUS, value, LV_PART_MAIN);
+
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -40,6 +60,19 @@ EM_PORT_API(lv_obj_t *) lvglCreateLabel(lv_obj_t *parentObj, int32_t index, lv_c
 
 EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_btn_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateButtonMatrix(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_buttonmatrix_create(parentObj);
+#else
+    lv_obj_t *obj = lv_btnmatrix_create(parentObj);
+#endif
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
@@ -85,6 +118,15 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     lv_img_set_pivot(obj, pivotX, pivotY);
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateLine(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+    lv_obj_t *obj = lv_line_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -395,6 +437,10 @@ EM_PORT_API(void) lvglObjAddFlag(lv_obj_t *obj, lv_obj_flag_t f) {
 EM_PORT_API(void) lvglObjClearFlag(lv_obj_t *obj, lv_obj_flag_t f) {
     lv_obj_clear_flag(obj, f);
     lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(bool) lvglObjHasFlag(lv_obj_t *obj, lv_obj_flag_t f) {
+    return lv_obj_has_flag(obj, f);
 }
 
 EM_PORT_API(void) lvglObjAddState(lv_obj_t *obj, lv_obj_flag_t s) {
@@ -821,6 +867,36 @@ EM_PORT_API(lv_obj_t *) lvglTabviewGetTabContent(lv_obj_t *parentObj, int32_t in
     lv_obj_t *obj = lv_tabview_get_content(parentObj);
     setObjectIndex(obj, index);
     return obj;
+}
+
+EM_PORT_API(void) lvglLineSetPoints(lv_obj_t *obj, float *point_values, uint32_t point_num) {
+    lv_line_t *line = (lv_line_t *)obj;
+    if (line->point_array) {
+#if LVGL_VERSION_MAJOR >= 9
+        lv_free((void *)line->point_array);
+#else
+        lv_mem_free((void *)line->point_array);
+#endif
+    }
+
+#if LVGL_VERSION_MAJOR >= 9
+    lv_point_precise_t *points = (lv_point_precise_t *)lv_malloc(point_num * sizeof(lv_point_precise_t));
+#else
+    lv_point_t *points = (lv_point_t *)lv_mem_alloc(point_num * sizeof(lv_point_t));
+#endif
+
+    for (uint32_t i = 0; i < point_num; i++) {
+        points[i].x = point_values[2 * i + 0];
+        points[i].y = point_values[2 * i + 1];
+    }
+
+    lv_line_set_points(obj, points, point_num);
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglLineSetYInvert(lv_obj_t *obj, bool y_invert) {
+    lv_line_set_y_invert(obj, y_invert);
+    lv_obj_update_layout(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

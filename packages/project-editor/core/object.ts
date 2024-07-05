@@ -18,9 +18,8 @@ import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { Project } from "project-editor/project/project";
 
-import { isArray } from "eez-studio-shared/util";
+import { isArray, objectClone } from "eez-studio-shared/util";
 import {
-    LVGL_FLAG_CODES,
     LVGL_STATE_CODES,
     LVGLParts
 } from "project-editor/lvgl/lvgl-constants";
@@ -288,10 +287,12 @@ export interface SerializedData {
 
 interface LVGLClassInfoProperties {
     parts: LVGLParts[] | ((object: IEezObject) => LVGLParts[]);
-    flags: (keyof typeof LVGL_FLAG_CODES)[];
     defaultFlags: string;
     states: (keyof typeof LVGL_STATE_CODES)[];
     defaultStates?: string;
+
+    oldInitFlags?: string;
+    oldDefaultFlags?: string;
 }
 
 export type WidgetEvents = {
@@ -413,7 +414,7 @@ export interface ClassInfo {
 
     lvgl?:
         | LVGLClassInfoProperties
-        | ((object: IEezObject) => LVGLClassInfoProperties);
+        | ((object: IEezObject, project: Project) => LVGLClassInfoProperties);
 
     showTreeCollapseIcon?: "always" | "has-children" | "never";
 
@@ -948,10 +949,15 @@ export function getClassInfoLvglProperties(object: IEezObject) {
         if (typeof classInfo.lvgl == "object") {
             return classInfo.lvgl;
         }
-
-        return classInfo.lvgl(object);
+        return classInfo.lvgl(object, getRootObject(object) as Project);
     } else {
-        return { parts: [], flags: [], defaultFlags: "", states: [] };
+        return {
+            parts: [],
+            defaultFlags: "",
+            states: [],
+            oldInitFlags: "",
+            oldDefaultFlags: ""
+        };
     }
 }
 
@@ -963,6 +969,43 @@ export function getClassInfoLvglParts(object: IEezObject) {
     }
 
     return lvglClassInfoProperties.parts;
+}
+
+export function getDefaultValue(
+    projectStore: ProjectStore | undefined,
+    classInfo: ClassInfo
+) {
+    function removeClickable(flags: string) {
+        const flagsArr = flags.split("|");
+        const i = flagsArr.indexOf("CLICKABLE");
+        if (i != -1) {
+            flagsArr.splice(i, 1);
+        }
+        return flagsArr.join("|");
+    }
+
+    let defaultValue = classInfo.defaultValue;
+    if (defaultValue) {
+        if (classInfo.lvgl) {
+            if (typeof classInfo.lvgl == "function") {
+                if (projectStore) {
+                    defaultValue = objectClone(defaultValue);
+                    defaultValue.flags = removeClickable(
+                        classInfo.lvgl(
+                            projectStore.project,
+                            projectStore.project
+                        ).defaultFlags
+                    );
+                }
+            } else {
+                defaultValue = objectClone(defaultValue);
+                defaultValue.flags = removeClickable(
+                    classInfo.lvgl.defaultFlags
+                );
+            }
+        }
+    }
+    return defaultValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

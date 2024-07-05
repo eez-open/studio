@@ -93,7 +93,8 @@
         "mouse.h": "c",
         "parser_private.h": "c",
         "lv_assert.h": "c",
-        "lv_math.h": "c"
+        "lv_math.h": "c",
+        "stdbool.h": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

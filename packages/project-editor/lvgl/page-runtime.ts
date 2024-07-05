@@ -16,6 +16,7 @@ import type { Font } from "project-editor/features/font/font";
 import {
     createObject,
     getAncestorOfType,
+    getClassInfo,
     getObjectPathAsString,
     getProjectStore,
     ProjectStore
@@ -27,11 +28,16 @@ import {
     ProjectType,
     findBitmap
 } from "project-editor/project/project";
-import { getClassesDerivedFrom, setParent } from "project-editor/core/object";
+import {
+    getClassesDerivedFrom,
+    getDefaultValue,
+    setParent
+} from "project-editor/core/object";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import { PageTabState } from "project-editor/features/page/PageEditor";
 import {
     getLvglBitmapPtr,
+    getLvglFlagCodes,
     getLvglStylePropCode,
     getLvglWasmFlowRuntimeConstructor
 } from "project-editor/lvgl/lvgl-versions";
@@ -719,7 +725,10 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 components: widgets.map(componentClass =>
                     Object.assign(
                         {},
-                        componentClass.objectClass.classInfo.defaultValue,
+                        getDefaultValue(
+                            project._store,
+                            componentClass.objectClass.classInfo
+                        ),
                         {
                             type: componentClass.name,
                             left: 0,
@@ -997,4 +1006,185 @@ function setObjects(
             widget => (widget._lvglObj = objects[index++])
         );
     });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
+    static PREVIEW_WIDTH = 400;
+    static PREVIEW_HEIGHT = 400;
+
+    foundDifferences = false;
+
+    constructor(public project: Project) {
+        const widgets = getClassesDerivedFrom(
+            project._store,
+            ProjectEditor.LVGLWidgetClass
+        ).filter(componentClass =>
+            componentClass.objectClass.classInfo.enabledInComponentPalette
+                ? componentClass.objectClass.classInfo.enabledInComponentPalette(
+                      ProjectType.LVGL,
+                      project._store
+                  )
+                : true
+        );
+
+        const page = createObject<Page>(
+            project._store,
+            {
+                components: widgets.map(componentClass =>
+                    Object.assign(
+                        {},
+                        getDefaultValue(
+                            project._store,
+                            componentClass.objectClass.classInfo
+                        ),
+                        {
+                            type: componentClass.name,
+                            left: 0,
+                            leftUnit: "px",
+                            top: 0,
+                            topUnit: "px",
+                            width: LVGLStylesEditorRuntime.PREVIEW_WIDTH,
+                            widthUnit: "px",
+                            height: LVGLStylesEditorRuntime.PREVIEW_HEIGHT,
+                            heightUnit: "px",
+                            localStyles: {}
+                        }
+                    )
+                )
+            },
+            ProjectEditor.PageClass,
+            undefined,
+            true
+        );
+
+        setParent(page, project);
+
+        super(page);
+
+        this.mount();
+    }
+
+    get isEditor() {
+        return true;
+    }
+
+    get displayWidth() {
+        return LVGLStylesEditorRuntime.PREVIEW_WIDTH;
+    }
+
+    get displayHeight() {
+        return LVGLStylesEditorRuntime.PREVIEW_HEIGHT;
+    }
+
+    mount() {
+        this.wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
+            async () => {
+                runInAction(() => {
+                    this.page._lvglRuntime = this;
+                    this.page._lvglObj = undefined;
+                });
+
+                this.wasm._init(
+                    0,
+                    0,
+                    0,
+                    0,
+                    this.displayWidth,
+                    this.displayHeight,
+                    -(new Date().getTimezoneOffset() / 60) * 100
+                );
+
+                const pageObj = this.page.lvglCreate(this, 0);
+                if (!pageObj) {
+                    console.error("pageObj is undefined");
+                    return;
+                }
+
+                const flags = getLvglFlagCodes(this.page) as {
+                    [key: string]: number;
+                };
+
+                const children = this.page.lvglScreenWidget!.children;
+                for (let i = 0; i < children.length; i++) {
+                    const obj = children[i]._lvglObj!;
+
+                    let reflectFlagsArr: string[] = [];
+                    for (const key of Object.keys(flags)) {
+                        if (this.wasm._lvglObjHasFlag(obj, flags[key])) {
+                            reflectFlagsArr.push(key);
+                        }
+                    }
+                    const reflectFlags = reflectFlagsArr.sort().join("|");
+
+                    const classInfo = getClassInfo(children[i]);
+                    const defaultValue = getDefaultValue(
+                        this.project._store,
+                        classInfo
+                    );
+                    let objInitFlags = defaultValue.flags;
+                    if (defaultValue.hiddenFlag) {
+                        objInitFlags = "HIDDEN|" + objInitFlags;
+                    }
+                    if (defaultValue.clickableFlag) {
+                        objInitFlags = "CLICKABLE|" + objInitFlags;
+                    }
+                    let objDefaultFlags;
+                    if (typeof classInfo.lvgl == "function") {
+                        objDefaultFlags = classInfo.lvgl(
+                            children[i],
+                            this.project
+                        ).defaultFlags;
+                    } else {
+                        objDefaultFlags = classInfo.lvgl!.defaultFlags;
+                    }
+
+                    objInitFlags = objInitFlags.split("|").sort().join("|");
+                    objDefaultFlags = objDefaultFlags
+                        .split("|")
+                        .sort()
+                        .join("|");
+
+                    if (
+                        objInitFlags != objDefaultFlags ||
+                        objDefaultFlags != reflectFlags
+                    ) {
+                        if (!this.foundDifferences) {
+                            this.foundDifferences = true;
+                            console.log("<LVGLReflectEditorRuntime>");
+                            console.log("\tLVGL version:", this.lvglVersion);
+                        }
+
+                        console.log("\t" + children[i].type);
+                        console.log("\t\tInitFlags   : " + objInitFlags);
+                        console.log("\t\tDefaultFlags: " + objDefaultFlags);
+                        console.log("\t\tReflect     : " + reflectFlags);
+                    }
+                }
+
+                if (this.foundDifferences) {
+                    console.log("/<LVGLReflectEditorRuntime>");
+                }
+            }
+        );
+    }
+
+    unmount() {
+        LVGLPageRuntime.detachRuntimeFromPage(this.page);
+    }
+
+    getWidgetIndex(object: LVGLWidget | Page) {
+        return 0;
+    }
+}
+
+let versionReflected = new Set<string>();
+
+export function reflectLvglVersion(project: Project) {
+    if (versionReflected.has(project.settings.general.lvglVersion)) {
+        return;
+    }
+    versionReflected.add(project.settings.general.lvglVersion);
+    new LVGLReflectEditorRuntime(project);
 }

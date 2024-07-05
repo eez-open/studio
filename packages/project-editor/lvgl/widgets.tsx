@@ -21,7 +21,8 @@ import {
     ClassInfo,
     getParent,
     setParent,
-    IMessage
+    IMessage,
+    getDefaultValue
 } from "project-editor/core/object";
 
 import {
@@ -46,7 +47,8 @@ import {
     findBitmap,
     findAction,
     findPage,
-    findLvglStyle
+    findLvglStyle,
+    Project
 } from "project-editor/project/project";
 
 import type {
@@ -124,7 +126,7 @@ import {
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component-types";
 import { visitObjects } from "project-editor/core/search";
-import { validators } from "eez-studio-shared/validation";
+import { filterFloat, validators } from "eez-studio-shared/validation";
 import {
     getLvglCoordTypeShift,
     getLvglEvents,
@@ -162,6 +164,16 @@ import {
     KEYBOARD_MODES,
     SCALE_MODES
 } from "project-editor/lvgl/lvgl-constants";
+import {
+    LVGLPropertyInfo,
+    pad_bottom_property_info,
+    pad_left_property_info,
+    pad_right_property_info,
+    pad_top_property_info,
+    bg_opa_property_info,
+    border_width_property_info,
+    radius_property_info
+} from "project-editor/lvgl/style-catalog";
 
 4; ////////////////////////////////////////////////////////////////////////////////
 
@@ -271,11 +283,11 @@ function flagEnabledInWidget(
     component: Component,
     flag: keyof typeof LVGL_FLAG_CODES
 ) {
-    const lvglClassInfoProperties = getClassInfoLvglProperties(component);
-    return (
-        component instanceof LVGLWidget &&
-        lvglClassInfoProperties.flags.indexOf(flag) != -1
-    );
+    const flags = Object.keys(
+        getLvglFlagCodes(component)
+    ) as (keyof typeof LVGL_FLAG_CODES)[];
+
+    return component instanceof LVGLWidget && flags.indexOf(flag) != -1;
 }
 
 function stateEnabledInWidget(
@@ -806,7 +818,11 @@ export class LVGLWidget extends Widget {
             }
         ],
 
-        beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>) => {
+        beforeLoadHook: (
+            widget: LVGLWidget,
+            jsWidget: Partial<LVGLWidget>,
+            project: Project
+        ) => {
             // MIGRATION TO LOW RES
             if ((window as any).__eezProjectMigration) {
                 jsWidget.left = Math.floor(
@@ -889,6 +905,62 @@ export class LVGLWidget extends Widget {
                 (jsWidget as any).flags = flags
                     .filter(flag => LVGL_REACTIVE_FLAGS.indexOf(flag) == -1)
                     .join("|");
+
+                const classInfo = getClassInfo(widget);
+
+                let lvgl;
+                if (typeof classInfo.lvgl == "function") {
+                    lvgl = classInfo.lvgl(widget, project);
+                } else {
+                    lvgl = classInfo.lvgl!;
+                }
+
+                if (lvgl.oldInitFlags && lvgl.oldDefaultFlags) {
+                    if ((jsWidget as any).flags == lvgl.oldInitFlags) {
+                        (jsWidget as any).flags = lvgl.defaultFlags;
+                        //console.log("migrate flags", jsWidget.type);
+                        //console.log("\tOld flags unchanged");
+                    } else {
+                        const beforeFlags = (jsWidget as any).flags;
+
+                        const defaultFlagsArr = lvgl.defaultFlags.split("|");
+                        const oldDefaultFlagsArr =
+                            lvgl.oldDefaultFlags.split("|");
+
+                        const i = oldDefaultFlagsArr.indexOf("SCROLL_CHAIN");
+                        if (i != -1) {
+                            oldDefaultFlagsArr.splice(i, 1);
+                            oldDefaultFlagsArr.push("SCROLL_CHAIN_HOR");
+                            oldDefaultFlagsArr.push("SCROLL_CHAIN_VER");
+                        }
+
+                        for (const flag of defaultFlagsArr) {
+                            if (
+                                flag != "CLICKABLE" &&
+                                oldDefaultFlagsArr.indexOf(flag) == -1
+                            ) {
+                                if (!(jsWidget as any).flags) {
+                                    (jsWidget as any).flags = flag;
+                                } else {
+                                    if (
+                                        (jsWidget as any).flags.indexOf(flag) ==
+                                        -1
+                                    ) {
+                                        (jsWidget as any).flags += "|" + flag;
+                                    }
+                                }
+                            }
+                        }
+
+                        const afterFlags = (jsWidget as any).flags;
+
+                        if (beforeFlags != afterFlags) {
+                            console.log("migrate flags", jsWidget.type);
+                            console.log("\tBefore:" + beforeFlags);
+                            console.log("\tAfter :" + afterFlags);
+                        }
+                    }
+                }
             } else {
                 (jsWidget as any).flags = "";
             }
@@ -2016,6 +2088,22 @@ export class LVGLWidget extends Widget {
 
     buildEventHandlerSpecific(build: LVGLBuild) {}
 
+    buildStyleIfNotDefined(build: LVGLBuild, propertyInfo: LVGLPropertyInfo) {
+        if (
+            this.localStyles.getPropertyValue(
+                propertyInfo,
+                "MAIN",
+                "DEFAULT"
+            ) == undefined
+        ) {
+            build.line(
+                `lv_obj_set_style_${build.getStylePropName(
+                    propertyInfo.name
+                )}(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);`
+            );
+        }
+    }
+
     override render(flowContext: IFlowContext, width: number, height: number) {
         return this._lvglObj ? (
             <>
@@ -2034,7 +2122,7 @@ export class LVGLWidget extends Widget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class LVGLGenericWidget extends LVGLWidget {
+export class LVGLContainerWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
@@ -2061,8 +2149,27 @@ export class LVGLGenericWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
+        },
+
+        check: (widget: LVGLTabviewWidget, messages: IMessage[]) => {
+            const tabview = getTabview(widget);
+            if (tabview) {
+                if (tabview.children.indexOf(widget) == 1) {
+                    for (let i = 0; i < widget.children.length; i++) {
+                        const childWidget = widget.children[i];
+                        if (!(childWidget instanceof LVGLTabWidget)) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Tab should be child of Content container`,
+                                    childWidget
+                                )
+                            );
+                        }
+                    }
+                }
+            }
         },
 
         icon: (
@@ -2082,17 +2189,19 @@ export class LVGLGenericWidget extends LVGLWidget {
         lvgl: {
             parts: (widget: LVGLWidget) =>
                 Object.keys(getLvglParts(widget)) as LVGLParts[],
-            flags: Object.keys(
-                LVGL_FLAG_CODES
-            ) as (keyof typeof LVGL_FLAG_CODES)[],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
             states: Object.keys(
                 LVGL_STATE_CODES
-            ) as (keyof typeof LVGL_STATE_CODES)[]
+            ) as (keyof typeof LVGL_STATE_CODES)[],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
-        setRect: (widget: LVGLGenericWidget, value: Partial<Rect>) => {
+        setRect: (widget: LVGLContainerWidget, value: Partial<Rect>) => {
             const tabview = getTabview(widget);
             if (tabview) {
                 if (tabview.children.indexOf(widget) == 0) {
@@ -2116,6 +2225,8 @@ export class LVGLGenericWidget extends LVGLWidget {
                         });
                     }
                 }
+            } else {
+                LVGLWidget.classInfo.setRect!(widget, value);
             }
         }
     });
@@ -2182,7 +2293,8 @@ export class LVGLGenericWidget extends LVGLWidget {
         }
 
         const rect = this.getLvglCreateRect();
-        return runtime.wasm._lvglCreatePanel(
+
+        return runtime.wasm._lvglCreateContainer(
             parentObj,
             runtime.getWidgetIndex(this),
 
@@ -2218,6 +2330,16 @@ export class LVGLGenericWidget extends LVGLWidget {
         }
 
         build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {
+        this.buildStyleIfNotDefined(build, pad_left_property_info);
+        this.buildStyleIfNotDefined(build, pad_top_property_info);
+        this.buildStyleIfNotDefined(build, pad_right_property_info);
+        this.buildStyleIfNotDefined(build, pad_bottom_property_info);
+        this.buildStyleIfNotDefined(build, bg_opa_property_info);
+        this.buildStyleIfNotDefined(build, border_width_property_info);
+        this.buildStyleIfNotDefined(build, radius_property_info);
     }
 }
 
@@ -2308,8 +2430,7 @@ export class LVGLLabelWidget extends LVGLWidget {
             textType: "literal",
             longMode: "WRAP",
             recolor: false,
-            localStyles: {},
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+            localStyles: {}
         },
 
         icon: (
@@ -2329,29 +2450,14 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
+                "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
                 "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+            oldDefaultFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -2474,22 +2580,25 @@ export class LVGLButtonWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             children: [
-                Object.assign({}, LVGLLabelWidget.classInfo.defaultValue, {
-                    type: "LVGLLabelWidget",
-                    text: "Button",
-                    localStyles: {
-                        definition: {
-                            MAIN: {
-                                DEFAULT: {
-                                    align: "CENTER"
+                Object.assign(
+                    {},
+                    getDefaultValue(undefined, LVGLLabelWidget.classInfo),
+                    {
+                        type: "LVGLLabelWidget",
+                        text: "Button",
+                        localStyles: {
+                            definition: {
+                                MAIN: {
+                                    DEFAULT: {
+                                        align: "CENTER"
+                                    }
                                 }
                             }
                         }
                     }
-                })
+                )
             ]
         },
 
@@ -2504,29 +2613,14 @@ export class LVGLButtonWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_ON_FOCUS|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -2573,7 +2667,6 @@ export class LVGLScreenWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
         },
 
@@ -2593,29 +2686,14 @@ export class LVGLScreenWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "SCROLLBAR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         isSelectable: (object: IEezObject) => false,
@@ -2655,7 +2733,7 @@ export class LVGLScreenWidget extends LVGLWidget {
                 customWidget.height
             );
         } else {
-            obj = runtime.wasm._lvglCreateContainer(
+            obj = runtime.wasm._lvglCreateScreen(
                 parentObj,
                 runtime.getWidgetIndex(this),
 
@@ -2708,7 +2786,6 @@ export class LVGLPanelWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
         },
 
@@ -2728,29 +2805,14 @@ export class LVGLPanelWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "SCROLLBAR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -2886,7 +2948,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             top: 0,
             width: 100,
             height: 50,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
         },
 
@@ -2894,29 +2955,14 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "SCROLLBAR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         check: (widget: LVGLUserWidgetWidget, messages: IMessage[]) => {
@@ -3208,26 +3254,12 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(`lv_style_value_t value;`);
-        build.line(`value.num = 0;`);
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_LEFT, value, LV_PART_MAIN);`
-        );
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_TOP, value, LV_PART_MAIN);`
-        );
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_RIGHT, value, LV_PART_MAIN);`
-        );
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_PAD_BOTTOM, value, LV_PART_MAIN);`
-        );
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_BG_OPA, value, LV_PART_MAIN);`
-        );
-        build.line(
-            `lv_obj_set_local_style_prop(obj, LV_STYLE_BORDER_WIDTH, value, LV_PART_MAIN);`
-        );
+        this.buildStyleIfNotDefined(build, pad_left_property_info);
+        this.buildStyleIfNotDefined(build, pad_top_property_info);
+        this.buildStyleIfNotDefined(build, pad_right_property_info);
+        this.buildStyleIfNotDefined(build, pad_bottom_property_info);
+        this.buildStyleIfNotDefined(build, bg_opa_property_info);
+        this.buildStyleIfNotDefined(build, border_width_property_info);
 
         const userWidgetPage = findPage(
             getProject(this),
@@ -3369,6 +3401,20 @@ export class LVGLImageWidget extends LVGLWidget {
 
         componentPaletteGroupName: "!1Basic",
 
+        label: (widget: LVGLImageWidget) => {
+            let name = getComponentName(widget.type);
+
+            if (widget.identifier) {
+                return `${name} [${widget.identifier}]`;
+            }
+
+            if (widget.image) {
+                return `${name}: ${widget.image}`;
+            }
+
+            return name;
+        },
+
         properties: [
             {
                 name: "image",
@@ -3412,8 +3458,7 @@ export class LVGLImageWidget extends LVGLWidget {
             pivotX: 0,
             pivotY: 0,
             zoom: 256,
-            angle: 0,
-            flags: "PRESS_LOCK|ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+            angle: 0
         },
 
         icon: (
@@ -3448,29 +3493,14 @@ export class LVGLImageWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|ADV_HITTEST|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -3628,7 +3658,6 @@ export class LVGLSliderWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 10,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             min: 0,
             max: 100,
@@ -3661,26 +3690,20 @@ export class LVGLSliderWidget extends LVGLWidget {
             </svg>
         ),
 
-        lvgl: {
-            parts: ["MAIN", "INDICATOR", "KNOB"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLL_ON_FOCUS",
-                "OVERFLOW_VISIBLE"
-            ],
-            defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        lvgl: (widget: LVGLCheckboxWidget, project: Project) => {
+            return {
+                parts: ["MAIN", "INDICATOR", "KNOB"],
+                defaultFlags:
+                    project.settings.general.lvglVersion == "9.0"
+                        ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+                        : "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+                states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+                oldInitFlags:
+                    "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+                oldDefaultFlags:
+                    "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
+            };
         }
     });
 
@@ -3920,7 +3943,6 @@ export class LVGLRollerWidget extends LVGLWidget {
             top: 0,
             width: 80,
             height: 100,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
             selected: 0,
@@ -3962,23 +3984,13 @@ export class LVGLRollerWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "SELECTED"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
         }
     });
 
@@ -4149,7 +4161,6 @@ export class LVGLSwitchWidget extends LVGLWidget {
             top: 0,
             width: 50,
             height: 25,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true
         },
 
@@ -4157,24 +4168,13 @@ export class LVGLSwitchWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "INDICATOR", "KNOB"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLL_ON_FOCUS",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
         }
     });
 
@@ -4270,7 +4270,6 @@ export class LVGLBarWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 10,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             min: 0,
             max: 100,
@@ -4291,23 +4290,13 @@ export class LVGLBarWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "INDICATOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLL_ON_FOCUS",
-                "OVERFLOW_VISIBLE"
-            ],
-            defaultFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+            defaultFlags:
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            oldDefaultFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
         }
     });
 
@@ -4485,7 +4474,6 @@ export class LVGLDropdownWidget extends LVGLWidget {
             width: 150,
             height: 32,
             heightUnit: "content",
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
             selected: 0,
@@ -4514,23 +4502,13 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "SELECTED"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
         }
     });
 
@@ -4756,7 +4734,6 @@ export class LVGLArcWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 150,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             clickableFlag: true,
             rangeMin: 0,
             rangeMax: 100,
@@ -4788,30 +4765,13 @@ export class LVGLArcWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "INDICATOR", "KNOB"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE"
         }
     });
 
@@ -5015,8 +4975,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
             left: 0,
             top: 0,
             width: 80,
-            height: 80,
-            flags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN"
+            height: 80
         },
 
         icon: (
@@ -5035,19 +4994,12 @@ export class LVGLSpinnerWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "INDICATOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLL_CHAIN",
-                "OVERFLOW_VISIBLE"
-            ],
-            defaultFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+            defaultFlags:
+                "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN",
+            oldDefaultFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN"
         }
     });
 
@@ -5116,7 +5068,6 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             widthUnit: "content",
             height: 20,
             heightUnit: "content",
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
             clickableFlag: true,
             text: "Checkbox"
         },
@@ -5131,25 +5082,20 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             </svg>
         ),
 
-        lvgl: {
-            parts: ["MAIN", "INDICATOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLL_ON_FOCUS",
-                "OVERFLOW_VISIBLE"
-            ],
-            defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        lvgl: (widget: LVGLCheckboxWidget, project: Project) => {
+            return {
+                parts: ["MAIN", "INDICATOR"],
+                defaultFlags:
+                    project.settings.general.lvglVersion == "9.0"
+                        ? "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+                        : "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+                oldInitFlags:
+                    "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS",
+                oldDefaultFlags:
+                    "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ON_FOCUS"
+            };
         }
     });
 
@@ -5248,7 +5194,6 @@ export class LVGLTextareaWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 70,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             text: "",
             textType: "literal",
@@ -5270,31 +5215,20 @@ export class LVGLTextareaWidget extends LVGLWidget {
             </svg>
         ),
 
-        lvgl: {
-            parts: ["MAIN", "SELECTED", "CURSOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
-            defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        lvgl: (widget: LVGLCheckboxWidget, project: Project) => {
+            return {
+                parts: ["MAIN", "SELECTED", "CURSOR"],
+                defaultFlags:
+                    project.settings.general.lvglVersion == "9.0"
+                        ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SNAPPABLE"
+                        : "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+                oldInitFlags:
+                    "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+                oldDefaultFlags:
+                    "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
+            };
         }
     });
 
@@ -5486,7 +5420,6 @@ export class LVGLCalendarWidget extends LVGLWidget {
             top: 0,
             width: 230,
             height: 240,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             todayYear: 2022,
             todayMonth: 11,
@@ -5556,29 +5489,14 @@ export class LVGLCalendarWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "ITEMS"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -5670,7 +5588,6 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             top: 0,
             width: 150,
             height: 150,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             mode: "HUE",
             fixedMode: false
@@ -5696,29 +5613,14 @@ export class LVGLColorwheelWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "KNOB"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "ADV_HITTEST|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         check: (widget, messages) =>
@@ -5841,7 +5743,6 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             width: 64,
             widthUnit: "content",
             height: 64,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
         },
 
@@ -5946,29 +5847,14 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -6201,7 +6087,6 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             top: 0,
             width: 300,
             height: 120,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             localStyles: {
                 definition: {
                     MAIN: {
@@ -6272,29 +6157,14 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "ITEMS"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -6414,7 +6284,6 @@ export class LVGLChartWidget extends LVGLWidget {
             top: 0,
             width: 180,
             height: 100,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true
         },
 
@@ -6436,29 +6305,14 @@ export class LVGLChartWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "ITEMS", "INDICATOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -7686,7 +7540,6 @@ export class LVGLMeterWidget extends LVGLWidget {
             top: 0,
             width: 180,
             height: 180,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             scales: [Object.assign({}, LVGLMeterScale.classInfo.defaultValue)]
         },
@@ -7705,29 +7558,14 @@ export class LVGLMeterWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "TICKS", "INDICATOR", "ITEMS"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         getAdditionalFlowProperties: (widget: LVGLMeterWidget) => {
@@ -8123,7 +7961,6 @@ export class LVGLScaleWidget extends LVGLWidget {
             top: 0,
             width: 240,
             height: 40,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             scaleMode: "HORIZONTAL_BOTTOM",
             localStyles: {
@@ -8163,29 +8000,14 @@ export class LVGLScaleWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN", "ITEMS", "INDICATOR"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         },
 
         check: (widget, messages) =>
@@ -8314,7 +8136,6 @@ export class LVGLTabviewWidget extends LVGLWidget {
             top: 0,
             width: 180,
             height: 100,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             tabviewPosition: "TOP",
             tabviewSize: 32
@@ -8326,7 +8147,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
 
             for (let i = 0; i < widget.children.length; i++) {
                 const childWidget = widget.children[i];
-                if (childWidget instanceof LVGLGenericWidget) {
+                if (childWidget instanceof LVGLContainerWidget) {
                     if (i == 0) {
                         tabBar = true;
                     } else if (i == 1) {
@@ -8336,7 +8157,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
                             messages.push(
                                 new Message(
                                     MessageType.ERROR,
-                                    `Redundant Generic widget`,
+                                    `Redundant Container widget`,
                                     childWidget
                                 )
                             );
@@ -8344,7 +8165,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
                             messages.push(
                                 new Message(
                                     MessageType.ERROR,
-                                    `Invalid Generic widget position`,
+                                    `Invalid Container widget position`,
                                     childWidget
                                 )
                             );
@@ -8355,7 +8176,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
                         messages.push(
                             new Message(
                                 MessageType.ERROR,
-                                `Tab should be child of Content`,
+                                `Tab should be child of Content container`,
                                 childWidget
                             )
                         );
@@ -8364,7 +8185,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `Tabview child is neither Tab or Generic widget`,
+                            `Tabview child is neither Tab or Container widget`,
                             childWidget
                         )
                     );
@@ -8389,29 +8210,14 @@ export class LVGLTabviewWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -8502,7 +8308,6 @@ export class LVGLTabWidget extends LVGLWidget {
             top: 0,
             width: 180,
             height: 100,
-            flags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
             clickableFlag: true,
             tabName: "Tab",
             tabNameType: "literal"
@@ -8528,29 +8333,14 @@ export class LVGLTabWidget extends LVGLWidget {
 
         lvgl: {
             parts: ["MAIN"],
-            flags: [
-                "HIDDEN",
-                "CLICKABLE",
-                "CHECKABLE",
-                "PRESS_LOCK",
-                "CLICK_FOCUSABLE",
-                "ADV_HITTEST",
-                "IGNORE_LAYOUT",
-                "FLOATING",
-                "EVENT_BUBBLE",
-                "GESTURE_BUBBLE",
-                "SNAPPABLE",
-                "SCROLLABLE",
-                "SCROLL_ELASTIC",
-                "SCROLL_MOMENTUM",
-                "SCROLL_ON_FOCUS",
-                "SCROLL_CHAIN",
-                "SCROLL_ONE",
-                "OVERFLOW_VISIBLE"
-            ],
             defaultFlags:
-                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
+
+            oldInitFlags:
+                "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",
+            oldDefaultFlags:
+                "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN"
         }
     });
 
@@ -8716,18 +8506,297 @@ export class LVGLTabWidget extends LVGLWidget {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class LVGLButtonMatrixWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Basic",
+
+        properties: [],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 240,
+            height: 240,
+            clickableFlag: true
+        },
+
+        icon: (
+            <svg viewBox="0 0 522.753 522.752">
+                <path d="M151.891 58.183c0-13.072-10.595-23.677-23.677-23.677h-80.87C21.2 34.506 0 53.937 0 77.901c0 23.973 21.2 43.404 47.344 43.404h80.87c13.072 0 23.677-10.595 23.677-23.677zm185.426 0c0-13.072-10.596-23.677-23.677-23.677H209.104c-13.072 0-23.677 10.595-23.677 23.677v39.455c0 13.072 10.595 23.677 23.677 23.677H313.65c13.071 0 23.677-10.595 23.677-23.677V58.183zm138.092-23.667h-80.87c-13.071 0-23.677 10.595-23.677 23.677v39.455c0 13.072 10.596 23.677 23.677 23.677h80.87c26.145 0 47.344-19.431 47.344-43.404s-21.2-43.405-47.344-43.405M151.891 180.497c0-13.072-10.595-23.677-23.677-23.677h-80.87C21.2 156.82 0 176.251 0 200.215c0 23.973 21.2 43.395 47.344 43.395h80.87c13.072 0 23.677-10.595 23.677-23.677zm185.426 0c0-13.072-10.596-23.677-23.677-23.677H209.104c-13.072 0-23.677 10.595-23.677 23.677v39.445c0 13.072 10.595 23.677 23.677 23.677H313.65c13.071 0 23.677-10.596 23.677-23.677v-39.445zm138.092-23.667h-80.87c-13.071 0-23.677 10.595-23.677 23.677v39.445c0 13.072 10.596 23.677 23.677 23.677h80.87c26.145 0 47.344-19.421 47.344-43.395s-21.2-43.404-47.344-43.404M151.891 302.801c0-13.072-10.595-23.677-23.677-23.677h-80.87C21.2 279.125 0 298.545 0 322.51c0 23.973 21.2 43.404 47.344 43.404h80.87c13.072 0 23.677-10.596 23.677-23.678zm185.426 0c0-13.072-10.596-23.677-23.677-23.677H209.104c-13.072 0-23.677 10.595-23.677 23.677v39.445c0 13.072 10.595 23.678 23.677 23.678H313.65c13.071 0 23.677-10.596 23.677-23.678v-39.445zm138.092-23.667h-80.87c-13.071 0-23.677 10.595-23.677 23.677v39.445c0 13.072 10.596 23.676 23.677 23.676h80.87c26.145 0 47.344-19.43 47.344-43.404 0-23.973-21.2-43.394-47.344-43.394M128.214 401.438h-80.87C21.2 401.438 0 420.87 0 444.833c0 23.975 21.2 43.404 47.344 43.404h80.87c13.072 0 23.677-10.604 23.677-23.676v-39.455c0-13.072-10.605-23.668-23.677-23.668m185.436 0H209.104c-13.072 0-23.677 10.596-23.677 23.678v39.455c0 13.062 10.595 23.676 23.677 23.676H313.65c13.071 0 23.677-10.605 23.677-23.676v-39.455c-.01-13.082-10.605-23.678-23.677-23.678m161.759 0h-80.87c-13.071 0-23.677 10.596-23.677 23.678v39.455c0 13.062 10.596 23.676 23.677 23.676h80.87c26.145 0 47.344-19.432 47.344-43.404s-21.2-43.405-47.344-43.405" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN", "ITEMS"],
+            defaultFlags:
+                "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {});
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const rect = this.getLvglCreateRect();
+
+        const obj = runtime.wasm._lvglCreateButtonMatrix(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
+        );
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        if (build.project.settings.general.lvglVersion == "9.0") {
+            build.line(`lv_obj_t *obj = lv_buttonmatrix_create(parent_obj);`);
+        } else {
+            build.line(`lv_obj_t *obj = lv_btnmatrix_create(parent_obj);`);
+        }
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLLineWidget extends LVGLWidget {
+    static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.LVGL,
+
+        componentPaletteGroupName: "!1Visualiser",
+
+        properties: [
+            {
+                name: "points",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "invertY",
+                displayName: "Invert Y",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 200,
+            widthUnit: "content",
+            height: 50,
+            heightUnit: "content",
+            points: "0,0 50,50 100,0 150,50 200,0"
+        },
+
+        check: (widget: LVGLLineWidget, messages: IMessage[]) => {
+            if (widget.points) {
+                const valueStrs = widget.pointsStrArr;
+
+                for (let i = 0; i < valueStrs.length; i++) {
+                    const value = filterFloat(valueStrs[i]);
+
+                    if (isNaN(value)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Invalid point value "${
+                                    valueStrs[i]
+                                }" at position ${i + 1}`,
+                                getChildOfObject(widget, "points")
+                            )
+                        );
+                    }
+                }
+
+                if (valueStrs.length % 2 == 1) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `The number of values ​​must be even`,
+                            getChildOfObject(widget, "points")
+                        )
+                    );
+                }
+            }
+        },
+
+        icon: (
+            <svg viewBox="0 0 24 24">
+                <path d="M3.293 20.707a1 1 0 0 1 0-1.414l16-16a1 1 0 1 1 1.414 1.414l-16 16a1 1 0 0 1-1.414 0" />
+            </svg>
+        ),
+
+        lvgl: {
+            parts: ["MAIN"],
+            defaultFlags:
+                "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"]
+        }
+    });
+
+    points: string;
+    invertY: boolean;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            points: observable,
+            invertY: observable
+        });
+    }
+
+    get pointsStrArr() {
+        return this.points.trim().split(/\s+|,/);
+    }
+
+    override lvglCreateObj(
+        runtime: LVGLPageRuntime,
+        parentObj: number
+    ): number {
+        const rect = this.getLvglCreateRect();
+
+        const obj = runtime.wasm._lvglCreateLine(
+            parentObj,
+            runtime.getWidgetIndex(this),
+
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height
+        );
+
+        // set points
+        if (this.points) {
+            const values = this.pointsStrArr.map(valueStr =>
+                filterFloat(valueStr)
+            );
+
+            if (
+                values.length % 2 == 0 &&
+                values.findIndex(value => isNaN(value)) == -1
+            ) {
+                const valuesArray = new Float32Array(values.length);
+                for (let i = 0; i < values.length; i++) {
+                    valuesArray[i] = values[i];
+                }
+
+                const valuesBuffer = runtime.wasm._malloc(
+                    valuesArray.length * valuesArray.BYTES_PER_ELEMENT
+                );
+
+                runtime.wasm.HEAPF32.set(valuesArray, valuesBuffer >> 2);
+
+                runtime.wasm._lvglLineSetPoints(
+                    obj,
+                    valuesBuffer,
+                    values.length / 2
+                );
+
+                runtime.wasm._free(valuesBuffer);
+            }
+        }
+
+        // set invertY
+        runtime.wasm._lvglLineSetYInvert(obj, this.invertY);
+
+        return obj;
+    }
+
+    override lvglBuildObj(build: LVGLBuild) {
+        build.line(`lv_obj_t *obj = lv_line_create(parent_obj);`);
+
+        // set points
+        if (this.points) {
+            const values = this.pointsStrArr.map(valueStr =>
+                filterFloat(valueStr)
+            );
+
+            if (
+                values.length % 2 == 0 &&
+                values.findIndex(value => isNaN(value)) == -1
+            ) {
+                build.line(
+                    `static ${
+                        build.project.settings.general.lvglVersion == "9.0"
+                            ? "lv_point_precise_t"
+                            : "lv_point_t"
+                    } line_points[] = {`
+                );
+
+                const numPoints = values.length / 2;
+
+                build.indent();
+
+                for (let i = 0; i < numPoints; i++) {
+                    if (build.project.settings.general.lvglVersion == "9.0") {
+                        build.line(
+                            `{ ${values[2 * i + 0]}, ${values[2 * i + 1]} }${
+                                i == numPoints - 1 ? "" : ","
+                            }`
+                        );
+                    } else {
+                        build.line(
+                            `{ ${Math.floor(values[2 * i + 0])}, ${Math.floor(
+                                values[2 * i + 1]
+                            )} }${i == numPoints - 1 ? "" : ","}`
+                        );
+                    }
+                }
+
+                build.unindent();
+
+                build.line(`};`);
+
+                build.line(
+                    `lv_line_set_points(obj, line_points, ${numPoints});`
+                );
+            }
+        }
+
+        if (this.invertY) {
+            build.line(`lv_line_set_y_invert(obj, true)`);
+        }
+    }
+
+    override lvglBuildSpecific(build: LVGLBuild) {}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("LVGLArcWidget", LVGLArcWidget);
 registerClass("LVGLBarWidget", LVGLBarWidget);
 registerClass("LVGLButtonWidget", LVGLButtonWidget);
+registerClass("LVGLButtonMatrixWidget", LVGLButtonMatrixWidget);
 registerClass("LVGLCalendarWidget", LVGLCalendarWidget);
 registerClass("LVGLChartWidget", LVGLChartWidget);
 registerClass("LVGLCheckboxWidget", LVGLCheckboxWidget);
 registerClass("LVGLColorwheelWidget", LVGLColorwheelWidget);
 registerClass("LVGLDropdownWidget", LVGLDropdownWidget);
-registerClass("LVGLGenericWidget", LVGLGenericWidget);
+registerClass("LVGLContainerWidget", LVGLContainerWidget);
 registerClass("LVGLImageWidget", LVGLImageWidget);
 registerClass("LVGLImgbuttonWidget", LVGLImgbuttonWidget);
 registerClass("LVGLLabelWidget", LVGLLabelWidget);
+registerClass("LVGLLineWidget", LVGLLineWidget);
 registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
 registerClass("LVGLScaleWidget", LVGLScaleWidget);
@@ -8738,6 +8807,6 @@ registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLSliderWidget", LVGLSliderWidget);
 registerClass("LVGLSpinnerWidget", LVGLSpinnerWidget);
 registerClass("LVGLSwitchWidget", LVGLSwitchWidget);
-registerClass("LVGLTextareaWidget", LVGLTextareaWidget);
 registerClass("LVGLTabviewWidget", LVGLTabviewWidget);
 registerClass("LVGLTabWidget", LVGLTabWidget);
+registerClass("LVGLTextareaWidget", LVGLTextareaWidget);

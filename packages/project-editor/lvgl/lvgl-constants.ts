@@ -236,7 +236,6 @@ export const LVGL_FLAG_CODES = {
     SCROLL_ONE: 1 << 7, // Allow scrolling only one snappable children
     SCROLL_CHAIN_HOR: 1 << 8, // Allow propagating the horizontal scroll to a parent
     SCROLL_CHAIN_VER: 1 << 9, // Allow propagating the vertical scroll to a parent
-    SCROLL_CHAIN: (1 << 8) | (1 << 9),
     SCROLL_ON_FOCUS: 1 << 10, // Automatically scroll object to make it visible when focused
     SCROLL_WITH_ARROW: 1 << 11, // Allow scrolling the focused object with arrow keys
     SNAPPABLE: 1 << 12, // If scroll snap is enabled on the parent it can snap to this object
@@ -260,7 +259,6 @@ export const LVGL_FLAG_CODES_90 = {
     SCROLL_ONE: 1 << 7, // Allow scrolling only one snappable children
     SCROLL_CHAIN_HOR: 1 << 8, // Allow propagating the horizontal scroll to a parent
     SCROLL_CHAIN_VER: 1 << 9, // Allow propagating the vertical scroll to a parent
-    SCROLL_CHAIN: (1 << 8) | (1 << 9),
     SCROLL_ON_FOCUS: 1 << 10, // Automatically scroll object to make it visible when focused
     SCROLL_WITH_ARROW: 1 << 11, // Allow scrolling the focused object with arrow keys
     SNAPPABLE: 1 << 12, // If scroll snap is enabled on the parent it can snap to this object

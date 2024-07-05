@@ -34,6 +34,7 @@ import { LVGLStylesTreeNavigation } from "project-editor/lvgl/LVGLStylesTreeNavi
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { Page } from "project-editor/features/page/page";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -257,9 +258,9 @@ export class LVGLStyle extends EezObject {
             forWidgetType: "LVGLPanelWidget",
             definition: {}
         },
-        lvgl: (lvglStyle: LVGLStyle) => {
+        lvgl: (lvglStyle: LVGLStyle, project: Project) => {
             const componentClass = getClassesDerivedFrom(
-                ProjectEditor.getProjectStore(lvglStyle),
+                project._store,
                 ProjectEditor.LVGLWidgetClass
             ).find(
                 componentClass => componentClass.name == lvglStyle.forWidgetType
@@ -267,15 +268,20 @@ export class LVGLStyle extends EezObject {
 
             if (componentClass) {
                 if (
-                    typeof componentClass.objectClass.classInfo.lvgl == "object"
+                    typeof componentClass.objectClass.classInfo.lvgl ==
+                    "function"
                 ) {
+                    return componentClass.objectClass.classInfo.lvgl(
+                        lvglStyle,
+                        project
+                    );
+                } else if (componentClass.objectClass.classInfo.lvgl) {
                     return componentClass.objectClass.classInfo.lvgl;
                 }
             }
 
             return {
                 parts: [],
-                flags: [],
                 defaultFlags: "",
                 states: []
             };
