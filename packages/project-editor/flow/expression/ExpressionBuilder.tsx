@@ -43,7 +43,8 @@ import {
     isArrayType,
     isStructType,
     isObjectType,
-    getObjectVariableTypeFromType
+    getObjectVariableTypeFromType,
+    SYSTEM_ENUMS
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -781,30 +782,40 @@ const SelectItemDialog = observer(
                     expanded: true
                 });
 
-                if (this.context.project.variables.enums.length) {
+                const enumTypes = [
+                    ...this.context.project.variables.enums,
+                    ...SYSTEM_ENUMS.filter(
+                        enumDef =>
+                            enumDef.projectTypes == undefined ||
+                            enumDef.projectTypes.indexOf(
+                                this.context.project.settings.general
+                                    .projectType
+                            ) != -1
+                    )
+                ];
+
+                if (enumTypes.length) {
                     children.push({
                         id: "enumerations",
                         label: "Enumerations",
-                        children: this.context.project.variables.enums.map(
-                            enumeration => ({
-                                id: enumeration.name,
-                                label: enumeration.name,
-                                children: enumeration.members.map(member => {
-                                    const data = `${enumeration.name}.${member.name}`;
-                                    return {
-                                        id: member.name,
-                                        label: member.name,
-                                        children: [],
-                                        selected: this.selection == member.name,
-                                        expanded: false,
-                                        data
-                                    };
-                                }),
-                                selected: false,
-                                expanded: true,
-                                data: undefined
-                            })
-                        ),
+                        children: enumTypes.map(enumeration => ({
+                            id: enumeration.name,
+                            label: enumeration.name,
+                            children: enumeration.members.map(member => {
+                                const data = `${enumeration.name}.${member.name}`;
+                                return {
+                                    id: member.name,
+                                    label: member.name,
+                                    children: [],
+                                    selected: this.selection == member.name,
+                                    expanded: false,
+                                    data
+                                };
+                            }),
+                            selected: false,
+                            expanded: true,
+                            data: undefined
+                        })),
                         selected: false,
                         expanded: true
                     });

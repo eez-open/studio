@@ -418,7 +418,26 @@ static UpdateTask *g_updateTask;
 
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-    flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_GESTURE) {
+#if LVGL_VERSION_MAJOR >= 9
+        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));
+#else
+        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_get_act()));
+#endif
+    } else if (event == LV_EVENT_KEY) {
+#if LVGL_VERSION_MAJOR >= 9
+        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_indev_get_key(lv_indev_active()));
+#else
+        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_indev_get_key(lv_indev_get_act()));
+#endif
+#if LVGL_VERSION_MAJOR >= 9
+    } else if (event == LV_EVENT_ROTARY) {
+        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_event_get_rotary_diff(e));
+#endif
+    } else {
+        flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
+    }
 }
 
 #if LVGL_VERSION_MAJOR >= 9

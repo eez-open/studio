@@ -434,9 +434,42 @@ export class LVGLBuild extends Build {
                                     widget,
                                     eventHandler.eventName
                                 );
-                            build.line(
-                                `flowPropagateValue(flowState, ${componentIndex}, ${outputIndex});`
-                            );
+
+                            if (eventHandler.eventName == "GESTURE") {
+                                if (
+                                    build.project.settings.general
+                                        .lvglVersion == "9.0"
+                                ) {
+                                    build.line(
+                                        `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));`
+                                    );
+                                } else {
+                                    build.line(
+                                        `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_get_act()));`
+                                    );
+                                }
+                            } else if (eventHandler.eventName == "KEY") {
+                                if (
+                                    build.project.settings.general
+                                        .lvglVersion == "9.0"
+                                ) {
+                                    build.line(
+                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_indev_get_key(lv_indev_active()));`
+                                    );
+                                } else {
+                                    build.line(
+                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_indev_get_key(lv_indev_get_act()));`
+                                    );
+                                }
+                            } else if (eventHandler.eventName == "ROTARY") {
+                                build.line(
+                                    `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_rotary_diff(e));`
+                                );
+                            } else {
+                                build.line(
+                                    `flowPropagateValue(flowState, ${componentIndex}, ${outputIndex});`
+                                );
+                            }
                         }
                         build.unindent();
                         build.line("}");

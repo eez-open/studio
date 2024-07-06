@@ -56,7 +56,8 @@ import {
     ValueType,
     getObjectVariableTypeFromType,
     SYSTEM_STRUCTURES,
-    isValidType
+    isValidType,
+    SYSTEM_ENUMS
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -994,7 +995,12 @@ registerClass("Structure", Structure);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class EnumMember extends EezObject {
+export interface IEnumMember {
+    name: string;
+    value: number;
+}
+
+export class EnumMember extends EezObject implements IEnumMember {
     name: string;
     value: number;
 
@@ -1075,7 +1081,13 @@ registerClass("EnumMember", EnumMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class Enum extends EezObject {
+export interface IEnum {
+    name: string;
+    members: IEnumMember[];
+    get membersMap(): Map<string, IEnumMember>;
+}
+
+export class Enum extends EezObject implements IEnum {
     name: string;
     members: EnumMember[];
 
@@ -1213,8 +1225,21 @@ export class ProjectVariables extends EezObject {
     }
 
     get enumsMap() {
-        const map = new Map<string, Enum>();
+        const map = new Map<string, IEnum>();
+
         for (const enumDef of this.enums) {
+            map.set(enumDef.name, enumDef);
+        }
+
+        const project = ProjectEditor.getProject(this);
+        const systemEnums = SYSTEM_ENUMS.filter(
+            enumDef =>
+                enumDef.projectTypes == undefined ||
+                enumDef.projectTypes.indexOf(
+                    project.settings.general.projectType
+                ) != -1
+        );
+        for (const enumDef of systemEnums) {
             map.set(enumDef.name, enumDef);
         }
         return map;

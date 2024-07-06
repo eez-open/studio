@@ -27,7 +27,7 @@ import {
     PropertyInfo,
     PropertyProps
 } from "project-editor/core/object";
-import type { Project } from "project-editor/project/project";
+import { Project, ProjectType } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
@@ -36,6 +36,8 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 
 import type {
+    IEnum,
+    IEnumMember,
     IStructure,
     IStructureField
 } from "project-editor/features/variable/variable";
@@ -299,6 +301,44 @@ export function registerSystemStructure(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class SystemEnum implements IEnum {
+    name: string;
+    members: IEnumMember[];
+    projectTypes: ProjectType[] | undefined;
+
+    constructor(
+        enumDef: Omit<IEnum, "membersMap"> & {
+            projectTypes: ProjectType[] | undefined;
+        }
+    ) {
+        Object.assign(this, enumDef);
+
+        makeObservable(this, {
+            membersMap: computed
+        });
+    }
+
+    get membersMap() {
+        const map = new Map<string, IEnumMember>();
+        for (const member of this.members) {
+            map.set(member.name, member);
+        }
+        return map;
+    }
+}
+
+export const SYSTEM_ENUMS: SystemEnum[] = [];
+
+export function registerSystemEnum(
+    systemEnum: Omit<IEnum, "membersMap"> & {
+        projectTypes: ProjectType[] | undefined;
+    }
+) {
+    SYSTEM_ENUMS.push(new SystemEnum(systemEnum));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function getDefaultValueForType(project: Project, type: string): string {
     if (isObjectType(type)) {
         return "null";
@@ -555,7 +595,18 @@ export const VariableTypeSelect = observer(
                       )
                     : [];
 
-            const enums = project.variables.enums.map(enumDef => (
+            const enumTypes = [
+                ...project.variables.enums,
+                ...SYSTEM_ENUMS.filter(
+                    enumDef =>
+                        enumDef.projectTypes == undefined ||
+                        enumDef.projectTypes.indexOf(
+                            this.props.project.settings.general.projectType
+                        ) != -1
+                )
+            ];
+
+            const enums = enumTypes.map(enumDef => (
                 <li
                     key={enumDef.name}
                     value={addType(`enum:${enumDef.name}`)}

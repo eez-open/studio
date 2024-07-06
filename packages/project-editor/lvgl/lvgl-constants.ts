@@ -1,3 +1,6 @@
+import { ProjectType, WidgetEvents } from "project-editor/core/object";
+import { registerSystemEnum } from "project-editor/features/variable/value-type";
+
 export type LVGLStylePropCode = {
     "8.3": number | undefined;
     "9.0": number | undefined;
@@ -197,6 +200,8 @@ export const LVGL_SCROLL_BAR_MODES: { [key: string]: number } = {
     auto: LV_SCROLLBAR_MODE_AUTO
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
 export const LV_DIR_NONE = 0x00;
 export const LV_DIR_LEFT = 1 << 0;
 export const LV_DIR_RIGHT = 1 << 1;
@@ -205,6 +210,49 @@ export const LV_DIR_BOTTOM = 1 << 3;
 export const LV_DIR_HOR = LV_DIR_LEFT | LV_DIR_RIGHT;
 export const LV_DIR_VER = LV_DIR_TOP | LV_DIR_BOTTOM;
 export const LV_DIR_ALL = LV_DIR_HOR | LV_DIR_VER;
+
+export const LVGL_DIR_ENUM_NAME = "$LVGLDir";
+
+registerSystemEnum({
+    name: LVGL_DIR_ENUM_NAME,
+    members: [
+        {
+            name: "None",
+            value: LV_DIR_NONE
+        },
+        {
+            name: "Left",
+            value: LV_DIR_LEFT
+        },
+        {
+            name: "Right",
+            value: LV_DIR_RIGHT
+        },
+        {
+            name: "Top",
+            value: LV_DIR_TOP
+        },
+        {
+            name: "Bottom",
+            value: LV_DIR_BOTTOM
+        },
+        {
+            name: "Hor",
+            value: LV_DIR_HOR
+        },
+        {
+            name: "Ver",
+            value: LV_DIR_VER
+        },
+        {
+            name: "All",
+            value: LV_DIR_ALL
+        }
+    ],
+    projectTypes: [ProjectType.LVGL]
+});
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
     none: LV_DIR_NONE,
@@ -219,9 +267,6 @@ export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
 
 export const LV_ANIM_OFF = 0;
 export const LV_ANIM_ON = 1;
-
-export const LV_EVENT_CHECKED = 0x7e;
-export const LV_EVENT_UNCHECKED = 0x7f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -354,6 +399,79 @@ export const LVGL_PARTS_9: { [key: string]: number } = {
 export type LVGLParts = string;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export const LV_EVENT_CHECKED = 0x7e;
+export const LV_EVENT_UNCHECKED = 0x7f;
+
+export const LVGL_EVENTS_V8 = {
+    PRESSED: { code: 1, paramExpressionType: "null" },
+    PRESSING: { code: 2, paramExpressionType: "null" },
+    PRESS_LOST: { code: 3, paramExpressionType: "null" },
+    SHORT_CLICKED: { code: 4, paramExpressionType: "null" },
+    LONG_PRESSED: { code: 5, paramExpressionType: "null" },
+    LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
+    CLICKED: { code: 7, paramExpressionType: "null" },
+    RELEASED: { code: 8, paramExpressionType: "null" },
+    SCROLL_BEGIN: { code: 9, paramExpressionType: "null" },
+    SCROLL_END: { code: 10, paramExpressionType: "null" },
+    SCROLL: { code: 11, paramExpressionType: "null" },
+    GESTURE: { code: 12, paramExpressionType: `enum:${LVGL_DIR_ENUM_NAME}` },
+    KEY: { code: 13, paramExpressionType: "integer" },
+    FOCUSED: { code: 14, paramExpressionType: "null" },
+    DEFOCUSED: { code: 15, paramExpressionType: "null" },
+    LEAVE: { code: 15, paramExpressionType: "null" },
+    HIT_TEST: { code: 16, paramExpressionType: "null" },
+
+    VALUE_CHANGED: { code: 28, paramExpressionType: "null" },
+    INSERT: { code: 29, paramExpressionType: "null" },
+    REFRESH: { code: 30, paramExpressionType: "null" },
+    READY: { code: 31, paramExpressionType: "null" },
+    CANCEL: { code: 32, paramExpressionType: "null" },
+
+    SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
+    SCREEN_LOAD_START: { code: 38, paramExpressionType: "null" },
+    SCREEN_LOADED: { code: 39, paramExpressionType: "null" },
+    SCREEN_UNLOADED: { code: 40, paramExpressionType: "null" },
+
+    CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
+    UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
+} as WidgetEvents;
+
+export const LVGL_EVENTS_V9 = {
+    PRESSED: { code: 1, paramExpressionType: "null" },
+    PRESSING: { code: 2, paramExpressionType: "null" },
+    PRESS_LOST: { code: 3, paramExpressionType: "null" },
+    SHORT_CLICKED: { code: 4, paramExpressionType: "null" },
+    LONG_PRESSED: { code: 5, paramExpressionType: "null" },
+    LONG_PRESSED_REPEAT: { code: 6, paramExpressionType: "null" },
+    CLICKED: { code: 7, paramExpressionType: "null" },
+    RELEASED: { code: 8, paramExpressionType: "null" },
+    SCROLL_BEGIN: { code: 9, paramExpressionType: "null" },
+    SCROLL_THROW_BEGIN: { code: 10, paramExpressionType: "null" },
+    SCROLL_END: { code: 11, paramExpressionType: "null" },
+    SCROLL: { code: 12, paramExpressionType: "null" },
+    GESTURE: { code: 13, paramExpressionType: `enum:${LVGL_DIR_ENUM_NAME}` },
+    KEY: { code: 14, paramExpressionType: "integer" },
+    ROTARY: { code: 15, paramExpressionType: "integer" },
+    FOCUSED: { code: 16, paramExpressionType: "null" },
+    DEFOCUSED: { code: 17, paramExpressionType: "null" },
+    LEAVE: { code: 18, paramExpressionType: "null" },
+    HIT_TEST: { code: 19, paramExpressionType: "null" },
+
+    VALUE_CHANGED: { code: 30, paramExpressionType: "null" },
+    INSERT: { code: 31, paramExpressionType: "null" },
+    REFRESH: { code: 32, paramExpressionType: "null" },
+    READY: { code: 33, paramExpressionType: "null" },
+    CANCEL: { code: 34, paramExpressionType: "null" },
+
+    SCREEN_UNLOAD_START: { code: 40, paramExpressionType: "null" },
+    SCREEN_LOAD_START: { code: 41, paramExpressionType: "null" },
+    SCREEN_LOADED: { code: 42, paramExpressionType: "null" },
+    SCREEN_UNLOADED: { code: 43, paramExpressionType: "null" },
+
+    CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
+    UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
+} as WidgetEvents;
 
 export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x76;
 export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x77;
