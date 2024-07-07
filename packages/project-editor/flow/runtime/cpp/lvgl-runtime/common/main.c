@@ -274,6 +274,7 @@ static uint32_t g_prevTick;
 #endif
 
 static void dump_widgets_flags_info();
+static void dump_custom_styles();
 
 EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, uint32_t timeZone) {
     is_editor = assetsSize == 0;
@@ -302,6 +303,8 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
 #endif
 
     initialized = true;
+
+    // dump_custom_styles();
 }
 
 EM_PORT_API(bool) mainLoop() {
