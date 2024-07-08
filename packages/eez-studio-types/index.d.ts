@@ -628,6 +628,20 @@ export interface IWasmFlowRuntime {
     _lvglCreateScale(parentObj: number, index: number, x: number, y: number, w: number, h: number, scaleMode:number, minorRange: number, majorRange: number, totalTickCount: number, majorTickEvery: number, showLabels: boolean): number;
     _lvglCreateTabview(parentObj: number, index: number, x: number, y: number, w: number, h: number, tab_pos: number, tab_size: number);
     _lvglTabviewAddTab(parentObj: number, index: number, tabName: number);
+
+    _lvglCreateAnimationImage(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateCanvas(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateLed(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateList(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateLottie(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateMenu(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateMessageBox(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateSpan(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateSpinbox(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateTable(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateTileView(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateWindow(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+
     _lvglScreenLoad(page_index: number, obj: number): void;
     _lvglDeleteObject(obj: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;

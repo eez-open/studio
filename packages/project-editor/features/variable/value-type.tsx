@@ -27,7 +27,7 @@ import {
     PropertyInfo,
     PropertyProps
 } from "project-editor/core/object";
-import { Project, ProjectType } from "project-editor/project/project";
+import type { Project, ProjectType } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {

@@ -64,7 +64,7 @@ import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
-import { type LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 

@@ -294,26 +294,18 @@ EM_PORT_API(lv_obj_t *) lvglCreateColorwheel(lv_obj_t *parentObj, int32_t index,
 }
 #endif
 
+EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
 #if LVGL_VERSION_MAJOR >= 9
-// TODO LVGL 9.0
-EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
-    lv_obj_t *obj = lv_obj_create(parentObj);
-    lv_obj_set_pos(obj, x, y);
-    lv_obj_set_size(obj, w, h);
-    lv_obj_update_layout(obj);
-    setObjectIndex(obj, index);
-    return obj;
-}
+    lv_obj_t *obj = lv_imagebutton_create(parentObj);
 #else
-EM_PORT_API(lv_obj_t *) lvglCreateImgbutton(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
     lv_obj_t *obj = lv_imgbtn_create(parentObj);
+#endif
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
 }
-#endif
 
 EM_PORT_API(lv_obj_t *) lvglCreateKeyboard(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_keyboard_mode_t mode) {
     lv_obj_t *obj = lv_keyboard_create(parentObj);
@@ -390,6 +382,126 @@ EM_PORT_API(lv_obj_t *) lvglTabviewAddTab(lv_obj_t *parentObj, int32_t index, co
         parentObj = lv_obj_get_parent(parentObj);
     }
     lv_obj_t *obj = lv_tabview_add_tab(parentObj, tabName);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateAnimationImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_animimg_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateCanvas(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_canvas_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateLed(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_led_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateList(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_list_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateLottie(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_obj_create(parentObj);
+#else
+    lv_obj_t *obj = lv_obj_create(parentObj);
+#endif
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateMenu(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_menu_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateMessageBox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_msgbox_create(parentObj);
+#else
+    lv_obj_t *obj = lv_msgbox_create(parentObj, "", "", 0, true);
+#endif
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateSpan(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_spangroup_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_spinbox_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateTable(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_table_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateTileView(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+    lv_obj_t *obj = lv_tileview_create(parentObj);
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
+    lv_obj_update_layout(obj);
+    setObjectIndex(obj, index);
+    return obj;
+}
+
+EM_PORT_API(lv_obj_t *) lvglCreateWindow(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, lv_dir_t tab_pos, lv_coord_t tab_size) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_obj_t *obj = lv_win_create(parentObj);
+#else
+    lv_obj_t *obj = lv_win_create(parentObj, 32);
+#endif
+    lv_obj_set_pos(obj, x, y);
+    lv_obj_set_size(obj, w, h);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
@@ -630,15 +742,17 @@ EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t
 }
 
 #if LVGL_VERSION_MAJOR >= 9
-    // TODO LVGL 9.0
-EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, int state, const void *img_src) {
-}
+EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imagebutton_state_t state, const void *img_src) {
 #else
 EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t state, const void *img_src) {
+#endif
+#if LVGL_VERSION_MAJOR >= 9
+    lv_imagebutton_set_src(obj, state, NULL, img_src, NULL);
+#else
     lv_imgbtn_set_src(obj, state, NULL, img_src, NULL);
+#endif
     lv_obj_update_layout(obj);
 }
-#endif
 
 EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
     lv_keyboard_set_textarea(obj, textarea);

@@ -3,12 +3,25 @@ import { observer } from "mobx-react";
 
 import {
     getClassInfoLvglProperties,
+    getParent,
     getProperty,
+    IEezObject,
+    IMessage,
+    MessageType,
     PropertyProps
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType, getObjectPathAsString } from "project-editor/store";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import {
+    getAncestorOfType,
+    getObjectPathAsString,
+    getProjectStore,
+    Message
+} from "project-editor/store";
+import {
+    LVGLTabviewWidget,
+    LVGLTabWidget,
+    type LVGLWidget
+} from "project-editor/lvgl/widgets";
 import { ProjectContext } from "project-editor/project/context";
 import { humanize } from "eez-studio-shared/string";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
@@ -405,4 +418,59 @@ export function unescapeText(str: string) {
     }
 
     return result;
+}
+
+export function getFlowStateAddressIndex(runtime: LVGLPageRuntime) {
+    return runtime.lvglCreateContext.flowState;
+}
+
+export function lvglAddObjectFlowCallback(
+    runtime: LVGLPageRuntime,
+    obj: number,
+    filter: number,
+    component_index: number,
+    output_or_property_index: number
+) {
+    runtime.wasm._lvglAddObjectFlowCallback(
+        obj,
+        filter,
+        getFlowStateAddressIndex(runtime),
+        component_index,
+        output_or_property_index
+    );
+}
+
+export function checkWidgetTypeLvglVersion(
+    widget: IEezObject,
+    messages: IMessage[],
+    lvglVersion: string
+) {
+    const projectStore = getProjectStore(widget);
+    if (projectStore.project.settings.general.lvglVersion != lvglVersion) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `This widget type is not supported in LVGL ${projectStore.project.settings.general.lvglVersion}`,
+                widget
+            )
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getTabview(widget: LVGLWidget) {
+    const parentChildren = getParent(widget) as LVGLWidget[];
+    const parentWidget = getParent(parentChildren);
+    if (parentWidget instanceof LVGLTabviewWidget) {
+        return parentWidget;
+    }
+    return undefined;
+}
+
+export function isGeometryControlledByTabview(widget: LVGLWidget) {
+    if (getTabview(widget) || widget instanceof LVGLTabWidget) {
+        return true;
+    }
+    return false;
 }

@@ -1,5 +1,4 @@
-import { ProjectType, WidgetEvents } from "project-editor/core/object";
-import { registerSystemEnum } from "project-editor/features/variable/value-type";
+import type { WidgetEvents } from "project-editor/core/object";
 
 export type LVGLStylePropCode = {
     "8.3": number | undefined;
@@ -212,45 +211,6 @@ export const LV_DIR_VER = LV_DIR_TOP | LV_DIR_BOTTOM;
 export const LV_DIR_ALL = LV_DIR_HOR | LV_DIR_VER;
 
 export const LVGL_DIR_ENUM_NAME = "$LVGLDir";
-
-registerSystemEnum({
-    name: LVGL_DIR_ENUM_NAME,
-    members: [
-        {
-            name: "None",
-            value: LV_DIR_NONE
-        },
-        {
-            name: "Left",
-            value: LV_DIR_LEFT
-        },
-        {
-            name: "Right",
-            value: LV_DIR_RIGHT
-        },
-        {
-            name: "Top",
-            value: LV_DIR_TOP
-        },
-        {
-            name: "Bottom",
-            value: LV_DIR_BOTTOM
-        },
-        {
-            name: "Hor",
-            value: LV_DIR_HOR
-        },
-        {
-            name: "Ver",
-            value: LV_DIR_VER
-        },
-        {
-            name: "All",
-            value: LV_DIR_ALL
-        }
-    ],
-    projectTypes: [ProjectType.LVGL]
-});
 
 ////////////////////////////////////////////////////////////////////////////////
 

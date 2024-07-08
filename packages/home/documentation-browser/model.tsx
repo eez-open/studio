@@ -50,11 +50,8 @@ import {
     getOutputDisplayName
 } from "project-editor/flow/helper";
 import { Icon } from "eez-studio-ui/icon";
-import {
-    LVGLScreenWidget,
-    flagsGroup,
-    statesGroup
-} from "project-editor/lvgl/widgets";
+import { LVGLScreenWidget } from "project-editor/lvgl/widgets";
+import { flagsGroup, statesGroup } from "project-editor/lvgl/widgets/Base";
 import {
     AppViewWidget,
     CanvasWidget,
