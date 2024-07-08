@@ -72,7 +72,7 @@ export class LVGLWindowWidget extends LVGLWidget {
         if (build.project.settings.general.lvglVersion == "9.0") {
             build.line(`lv_obj_t *obj = lv_win_create(parent_obj);`);
         } else {
-            build.line(`lv_obj_t *obj = lv_win_create(parentObj, 32);`);
+            build.line(`lv_obj_t *obj = lv_win_create(parent_obj, 32);`);
         }
     }
 

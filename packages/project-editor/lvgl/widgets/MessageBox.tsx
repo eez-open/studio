@@ -100,7 +100,7 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
             build.line(`lv_obj_t *obj = lv_msgbox_create(parent_obj);`);
         } else {
             build.line(
-                `lv_obj_t *obj = lv_msgbox_create(parentObj, "", "", 0, true);`
+                `lv_obj_t *obj = lv_msgbox_create(parent_obj, "", "", 0, true);`
             );
         }
     }

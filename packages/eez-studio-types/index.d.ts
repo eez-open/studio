@@ -629,7 +629,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateTabview(parentObj: number, index: number, x: number, y: number, w: number, h: number, tab_pos: number, tab_size: number);
     _lvglTabviewAddTab(parentObj: number, index: number, tabName: number);
 
-    _lvglCreateAnimationImage(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+    _lvglCreateAnimationImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, images: number, num_images: number, duration: number, repeat: number);
     _lvglCreateCanvas(parentObj: number, index: number, x: number, y: number, w: number, h: number);
     _lvglCreateLed(parentObj: number, index: number, x: number, y: number, w: number, h: number);
     _lvglCreateList(parentObj: number, index: number, x: number, y: number, w: number, h: number);

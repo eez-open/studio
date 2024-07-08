@@ -160,8 +160,8 @@ export const ArrayProperty = observer(
                                     <path d="M9.00024 9H4.00024V10H9.00024V9Z" />
                                     <path d="M7.00024 12L7.00024 7L6.00024 7L6.00024 12L7.00024 12Z" />
                                     <path
-                                        fill-rule="evenodd"
-                                        clip-rule="evenodd"
+                                        fillRule="evenodd"
+                                        clipRule="evenodd"
                                         d="M5.00024 3L6.00024 2H13.0002L14.0002 3V10L13.0002 11H11.0002V13L10.0002 14H3.00024L2.00024 13V6L3.00024 5H5.00024V3ZM6.00024 5H10.0002L11.0002 6V10H13.0002V3H6.00024V5ZM10.0002 6H3.00024V13H10.0002V6Z"
                                     />
                                 </svg>

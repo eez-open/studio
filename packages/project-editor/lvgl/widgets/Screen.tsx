@@ -125,7 +125,7 @@ export class LVGLScreenWidget extends LVGLWidget {
         ) as Page;
 
         if (page.isUsedAsUserWidget) {
-            build.line(`lv_obj_t *obj = lv_obj_create(parentObj);`);
+            build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
         } else {
             if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 let flowIndex = build.assets.getFlowIndex(page);
