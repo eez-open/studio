@@ -439,7 +439,10 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             runtime.lvglCreateContext = {
                 widgetIndex:
                     savedUserWidgetContext.widgetIndex + widgetIndex + 1,
-                pageIndex: savedUserWidgetContext.pageIndex,
+                pageIndex:
+                    runtime.wasm.assetsMap.flowIndexes[
+                        getObjectPathAsString(this.userWidgetPage!)
+                    ],
                 flowState: savedUserWidgetContext.flowState
                     ? runtime.wasm._lvglGetFlowState(
                           savedUserWidgetContext.flowState,
