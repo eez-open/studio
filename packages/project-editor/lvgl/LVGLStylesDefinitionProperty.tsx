@@ -243,7 +243,7 @@ export const LVGLStylesDefinitionTree = observer(
             if (part) {
                 this.props.objects.forEach(object => {
                     const parts = getClassInfoLvglParts(object);
-                    if (part && parts.indexOf(part)) {
+                    if (part && parts.indexOf(part) == -1) {
                         part = undefined;
                     }
                 });
