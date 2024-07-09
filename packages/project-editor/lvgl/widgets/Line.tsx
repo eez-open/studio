@@ -183,9 +183,7 @@ export class LVGLLineWidget extends LVGLWidget {
             ) {
                 build.line(
                     `static ${
-                        build.project.settings.general.lvglVersion == "9.0"
-                            ? "lv_point_precise_t"
-                            : "lv_point_t"
+                        build.isV9 ? "lv_point_precise_t" : "lv_point_t"
                     } line_points[] = {`
                 );
 
@@ -194,7 +192,7 @@ export class LVGLLineWidget extends LVGLWidget {
                 build.indent();
 
                 for (let i = 0; i < numPoints; i++) {
-                    if (build.project.settings.general.lvglVersion == "9.0") {
+                    if (build.isV9) {
                         build.line(
                             `{ ${values[2 * i + 0]}, ${values[2 * i + 1]} }${
                                 i == numPoints - 1 ? "" : ","

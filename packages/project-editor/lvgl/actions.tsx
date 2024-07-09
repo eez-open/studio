@@ -53,12 +53,12 @@ import {
     LVGLWidget
 } from "project-editor/lvgl/widgets";
 import { LeftArrow } from "project-editor/ui-components/icons";
-import { escapeCString } from "project-editor/build/helper";
 import {
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "project-editor/lvgl/expression-property";
 import { buildExpression } from "project-editor/flow/expression";
+import { escapeCString } from "./widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 

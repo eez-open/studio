@@ -69,7 +69,7 @@ export class LVGLWindowWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
-        if (build.project.settings.general.lvglVersion == "9.0") {
+        if (build.isV9) {
             build.line(`lv_obj_t *obj = lv_win_create(parent_obj);`);
         } else {
             build.line(`lv_obj_t *obj = lv_win_create(parent_obj, 32);`);

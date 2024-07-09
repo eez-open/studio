@@ -53,6 +53,10 @@ export class LVGLBuild extends Build {
         this.buildBitmapNames();
     }
 
+    get isV9() {
+        return this.project.settings.general.lvglVersion == "9.0";
+    }
+
     getStylePropName(stylePropName: string) {
         return getLvglStylePropName(this.project, stylePropName);
     }
@@ -436,10 +440,7 @@ export class LVGLBuild extends Build {
                                 );
 
                             if (eventHandler.eventName == "GESTURE") {
-                                if (
-                                    build.project.settings.general
-                                        .lvglVersion == "9.0"
-                                ) {
+                                if (build.isV9) {
                                     build.line(
                                         `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));`
                                     );
@@ -449,10 +450,7 @@ export class LVGLBuild extends Build {
                                     );
                                 }
                             } else if (eventHandler.eventName == "KEY") {
-                                if (
-                                    build.project.settings.general
-                                        .lvglVersion == "9.0"
-                                ) {
+                                if (build.isV9) {
                                     build.line(
                                         `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_indev_get_key(lv_indev_active()));`
                                     );
@@ -464,6 +462,14 @@ export class LVGLBuild extends Build {
                             } else if (eventHandler.eventName == "ROTARY") {
                                 build.line(
                                     `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_rotary_diff(e));`
+                                );
+                            } else if (
+                                eventHandler.eventName == "VALUE_CHANGED" &&
+                                widget instanceof
+                                    ProjectEditor.LVGLButtonMatrixWidgetClass
+                            ) {
+                                build.line(
+                                    `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *(uint32_t *)lv_event_get_param(e));`
                                 );
                             } else {
                                 build.line(

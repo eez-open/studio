@@ -67,14 +67,34 @@ EM_PORT_API(lv_obj_t *) lvglCreateButton(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateButtonMatrix(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
 #if LVGL_VERSION_MAJOR >= 9
+EM_PORT_API(lv_obj_t *) lvglCreateButtonMatrix(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const char **map, lv_buttonmatrix_ctrl_t *ctrl_map, bool one_check) {
     lv_obj_t *obj = lv_buttonmatrix_create(parentObj);
 #else
+EM_PORT_API(lv_obj_t *) lvglCreateButtonMatrix(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const char **map, lv_btnmatrix_ctrl_t *ctrl_map, bool one_check) {
     lv_obj_t *obj = lv_btnmatrix_create(parentObj);
 #endif
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+
+#if LVGL_VERSION_MAJOR >= 9
+    lv_buttonmatrix_set_map(obj, map);
+    if (ctrl_map) {
+        lv_buttonmatrix_set_ctrl_map(obj, ctrl_map);
+    }
+    if (one_check) {
+        lv_buttonmatrix_set_one_checked(obj, one_check);
+    }
+#else
+    lv_btnmatrix_set_map(obj, map);
+    if (ctrl_map) {
+        lv_btnmatrix_set_ctrl_map(obj, ctrl_map);
+    }
+    if (one_check) {
+        lv_btnmatrix_set_one_checked(obj, one_check);
+    }
+#endif
+
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;

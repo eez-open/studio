@@ -427,6 +427,11 @@ export interface ClassInfo {
     widgetEvents?: WidgetEvents | ((object: IEezObject) => WidgetEvents);
 
     addObjectHook?: (object: IEezObject, parent: IEezObject) => void;
+
+    overrideEventParamExpressionType?: (
+        object: IEezObject,
+        eventName: string
+    ) => ValueType | undefined;
 }
 
 export function makeDerivedClassInfo(

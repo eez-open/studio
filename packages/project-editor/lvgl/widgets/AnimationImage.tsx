@@ -33,8 +33,7 @@ class LVGLAnimationImage extends EezObject {
             {
                 name: "image",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "bitmaps",
-                propertyGridGroup: specificGroup
+                referencedObjectCollectionPath: "bitmaps"
             }
         ],
 
@@ -73,6 +72,8 @@ class LVGLAnimationImage extends EezObject {
         });
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLAnimationImageWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -258,9 +259,7 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
         if (imageVariableNames.length > 0) {
             build.line(
                 `static const ${
-                    build.project.settings.general.lvglVersion == "9.0"
-                        ? "lv_image_dsc_t"
-                        : "lv_img_dsc_t"
+                    build.isV9 ? "lv_image_dsc_t" : "lv_img_dsc_t"
                 } *images[${imageVariableNames.length}] = {`
             );
             build.indent();

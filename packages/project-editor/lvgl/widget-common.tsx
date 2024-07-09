@@ -402,19 +402,64 @@ export function getExpressionPropertyInitalValue(
     }
 }
 
-export function unescapeText(str: string) {
+export function escapeCString(unescaped: string) {
+    let result = '"';
+
+    for (let i = 0; i < unescaped.length; i++) {
+        const ch = unescaped[i];
+        if (ch == '"') {
+            result += '\\"';
+        } else if (ch == "\n") {
+            result += "\\n";
+        } else if (ch == "\r") {
+            result += "\\r";
+        } else if (ch == "\t") {
+            result += "\\t";
+        } else {
+            result += ch;
+        }
+    }
+
+    result += '"';
+
+    return result;
+}
+
+export function unescapeCString(escaped: string) {
     let result = "";
 
-    for (let i = 0; i < str.length; i++) {
-        if (str[i] == "\\" && i + 5 < str.length && str[i + 1] == "u") {
-            result += String.fromCharCode(
-                parseInt(str.substring(i + 2, i + 6), 16)
-            );
-            i += 5;
-            continue;
+    for (let i = 0; i < escaped.length; i++) {
+        if (escaped[i] == "\\") {
+            if (i + 1 < escaped.length) {
+                if (escaped[i + 1] == "n") {
+                    result += "\n";
+                    i += 1;
+                    continue;
+                }
+
+                if (escaped[i + 1] == "r") {
+                    result += "\r";
+                    i += 1;
+                    continue;
+                }
+
+                if (escaped[i + 1] == "t") {
+                    result += "\t";
+                    i += 1;
+                    continue;
+                }
+
+                if (escaped[i + 1] == "u" && i + 5 < escaped.length) {
+                    result += String.fromCharCode(
+                        parseInt(escaped.substring(i + 2, i + 6), 16)
+                    );
+                    i += 5;
+                    continue;
+                }
+            }
         }
 
-        result += str[i];
+        result += escaped[i];
     }
 
     return result;

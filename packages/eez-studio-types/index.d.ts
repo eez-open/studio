@@ -605,7 +605,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateContainer(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateLabel(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number, long_mode: number, recolor: number): number;
     _lvglCreateButton(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateButtonMatrix(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
+    _lvglCreateButtonMatrix(parentObj: number, index: number, x: number, y: number, w: number, h: number, map: number, ctrl_map: number, one_check: boolean): number;
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateUserWidget(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;

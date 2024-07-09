@@ -2648,6 +2648,23 @@ export class EventHandler extends EezObject {
     }
 
     get eventParamExpressionType() {
+        const widget = getAncestorOfType(
+            this,
+            ProjectEditor.WidgetClass.classInfo
+        );
+        if (widget) {
+            const classInfo = getClassInfo(widget);
+            if (classInfo.overrideEventParamExpressionType) {
+                const valueType = classInfo.overrideEventParamExpressionType(
+                    widget,
+                    this.eventName
+                );
+                if (valueType != undefined) {
+                    return valueType;
+                }
+            }
+        }
+
         return getWidgetEvents(this)[this.eventName].paramExpressionType;
     }
 }

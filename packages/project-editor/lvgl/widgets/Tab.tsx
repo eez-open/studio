@@ -25,10 +25,10 @@ import {
     getExpressionPropertyData,
     getExpressionPropertyInitalValue,
     getFlowStateAddressIndex,
-    unescapeText
+    escapeCString,
+    unescapeCString
 } from "../widget-common";
 import { AutoSize } from "project-editor/flow/component";
-import { escapeCString } from "project-editor/build/helper";
 import { Message } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +183,7 @@ export class LVGLTabWidget extends LVGLWidget {
                                   this,
                                   "tabName"
                               )
-                            : unescapeText(this.tabName || "")
+                            : unescapeCString(this.tabName || "")
                     )
                 );
 

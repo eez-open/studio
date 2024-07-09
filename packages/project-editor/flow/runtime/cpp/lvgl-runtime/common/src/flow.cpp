@@ -416,6 +416,11 @@ struct UpdateTask {
 
 static UpdateTask *g_updateTask;
 
+#if LVGL_VERSION_MAJOR >= 9
+#else
+#define lv_event_get_target_obj lv_event_get_target
+#endif
+
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
     lv_event_code_t event = lv_event_get_code(e);
@@ -435,15 +440,21 @@ void flow_event_callback(lv_event_t *e) {
     } else if (event == LV_EVENT_ROTARY) {
         flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_event_get_rotary_diff(e));
 #endif
+    } else if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+#if LVGL_VERSION_MAJOR >= 9
+        if (lv_obj_check_type(ta, &lv_buttonmatrix_class)) {
+#else
+        if (lv_obj_check_type(ta, &lv_btnmatrix_class)) {
+#endif
+            flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index, *(uint32_t *)lv_event_get_param(e));
+        } else {
+            flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
+        }
     } else {
         flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
     }
 }
-
-#if LVGL_VERSION_MAJOR >= 9
-#else
-#define lv_event_get_target_obj lv_event_get_target
-#endif
 
 void flow_event_textarea_text_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);

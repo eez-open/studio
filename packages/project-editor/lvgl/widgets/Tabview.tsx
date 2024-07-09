@@ -190,7 +190,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
         const position = this.tabviewPosition ?? "TOP";
         const size = this.tabviewSize ?? 32;
 
-        if (build.project.settings.general.lvglVersion == "9.0") {
+        if (build.isV9) {
             build.line(`lv_obj_t *obj = lv_tabview_create(parent_obj);`);
             build.line(
                 `lv_tabview_set_tab_bar_position(obj, LV_DIR_${position});`

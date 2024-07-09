@@ -11,8 +11,7 @@ import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 
 import { LVGLWidget } from "./internal";
-import { unescapeText } from "../widget-common";
-import { escapeCString } from "project-editor/build/helper";
+import { escapeCString, unescapeCString } from "../widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +91,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            runtime.wasm.allocateUTF8(unescapeText(this.text))
+            runtime.wasm.allocateUTF8(unescapeCString(this.text))
         );
     }
 

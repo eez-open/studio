@@ -96,7 +96,7 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
-        if (build.project.settings.general.lvglVersion == "9.0") {
+        if (build.isV9) {
             build.line(`lv_obj_t *obj = lv_msgbox_create(parent_obj);`);
         } else {
             build.line(

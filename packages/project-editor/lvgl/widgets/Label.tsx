@@ -21,11 +21,11 @@ import {
     getExpressionPropertyData,
     getExpressionPropertyInitalValue,
     getFlowStateAddressIndex,
-    unescapeText
+    escapeCString,
+    unescapeCString
 } from "../widget-common";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { lvglHasLabelRecolorSupport } from "../lvgl-versions";
-import { escapeCString } from "project-editor/build/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -183,13 +183,13 @@ export class LVGLLabelWidget extends LVGLWidget {
                 : runtime.wasm.allocateUTF8(
                       this.textType == "expression"
                           ? this.previewValue
-                              ? unescapeText(this.previewValue)
+                              ? unescapeCString(this.previewValue)
                               : getExpressionPropertyInitalValue(
                                     runtime,
                                     this,
                                     "text"
                                 )
-                          : unescapeText(this.text)
+                          : unescapeCString(this.text)
                   ),
             LONG_MODE_CODES[this.longMode],
             this.recolor ? 1 : 0

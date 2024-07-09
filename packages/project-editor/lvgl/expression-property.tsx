@@ -289,7 +289,7 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 build.line(
                     `lv_obj_t *tabview = lv_obj_get_parent(lv_obj_get_parent(${objectAccessor}));`
                 );
-                if (build.project.settings.general.lvglVersion == "9.0") {
+                if (build.isV9) {
                     build.line(
                         `lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);`
                     );

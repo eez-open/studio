@@ -379,8 +379,19 @@ export const LVGL_EVENTS_V8 = {
     KEY: { code: 13, paramExpressionType: "integer" },
     FOCUSED: { code: 14, paramExpressionType: "null" },
     DEFOCUSED: { code: 15, paramExpressionType: "null" },
-    LEAVE: { code: 15, paramExpressionType: "null" },
-    HIT_TEST: { code: 16, paramExpressionType: "null" },
+    LEAVE: { code: 16, paramExpressionType: "null" },
+    HIT_TEST: { code: 17, paramExpressionType: "null" },
+
+    COVER_CHECK: { code: 18, paramExpressionType: "null" },
+    REFR_EXT_DRAW_SIZE: { code: 19, paramExpressionType: "null" },
+    DRAW_MAIN_BEGIN: { code: 20, paramExpressionType: "null" },
+    DRAW_MAIN: { code: 21, paramExpressionType: "null" },
+    DRAW_MAIN_END: { code: 22, paramExpressionType: "null" },
+    DRAW_POST_BEGIN: { code: 23, paramExpressionType: "null" },
+    DRAW_POST: { code: 24, paramExpressionType: "null" },
+    DRAW_POST_END: { code: 25, paramExpressionType: "null" },
+    DRAW_PART_BEGIN: { code: 26, paramExpressionType: "null" },
+    DRAW_PART_END: { code: 27, paramExpressionType: "null" },
 
     VALUE_CHANGED: { code: 28, paramExpressionType: "null" },
     INSERT: { code: 29, paramExpressionType: "null" },
@@ -388,10 +399,20 @@ export const LVGL_EVENTS_V8 = {
     READY: { code: 31, paramExpressionType: "null" },
     CANCEL: { code: 32, paramExpressionType: "null" },
 
+    DELETE: { code: 33, paramExpressionType: "null" },
+    CHILD_CHANGED: { code: 34, paramExpressionType: "null" },
+    CHILD_CREATED: { code: 35, paramExpressionType: "null" },
+    CHILD_DELETED: { code: 36, paramExpressionType: "null" },
+
     SCREEN_UNLOAD_START: { code: 37, paramExpressionType: "null" },
     SCREEN_LOAD_START: { code: 38, paramExpressionType: "null" },
     SCREEN_LOADED: { code: 39, paramExpressionType: "null" },
     SCREEN_UNLOADED: { code: 40, paramExpressionType: "null" },
+
+    SIZE_CHANGED: { code: 41, paramExpressionType: "null" },
+    STYLE_CHANGED: { code: 42, paramExpressionType: "null" },
+    LAYOUT_CHANGED: { code: 43, paramExpressionType: "null" },
+    GET_SELF_SIZE: { code: 44, paramExpressionType: "null" },
 
     CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
     UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
@@ -418,16 +439,53 @@ export const LVGL_EVENTS_V9 = {
     LEAVE: { code: 18, paramExpressionType: "null" },
     HIT_TEST: { code: 19, paramExpressionType: "null" },
 
+    COVER_CHECK: { code: 20, paramExpressionType: "null" },
+    REFR_EXT_DRAW_SIZE: { code: 21, paramExpressionType: "null" },
+    DRAW_MAIN_BEGIN: { code: 22, paramExpressionType: "null" },
+    DRAW_MAIN: { code: 23, paramExpressionType: "null" },
+    DRAW_MAIN_END: { code: 24, paramExpressionType: "null" },
+    DRAW_POST_BEGIN: { code: 25, paramExpressionType: "null" },
+    DRAW_POST: { code: 26, paramExpressionType: "null" },
+    DRAW_POST_END: { code: 27, paramExpressionType: "null" },
+    DRAW_PART_BEGIN: { code: 28, paramExpressionType: "null" },
+    DRAW_PART_END: { code: 29, paramExpressionType: "null" },
+
     VALUE_CHANGED: { code: 30, paramExpressionType: "null" },
     INSERT: { code: 31, paramExpressionType: "null" },
     REFRESH: { code: 32, paramExpressionType: "null" },
     READY: { code: 33, paramExpressionType: "null" },
     CANCEL: { code: 34, paramExpressionType: "null" },
 
+    CREATE: { code: 35, paramExpressionType: "null" },
+    DELETE: { code: 36, paramExpressionType: "null" },
+    CHILD_CHANGED: { code: 37, paramExpressionType: "null" },
+    CHILD_CREATED: { code: 38, paramExpressionType: "null" },
+    CHILD_DELETED: { code: 39, paramExpressionType: "null" },
+
     SCREEN_UNLOAD_START: { code: 40, paramExpressionType: "null" },
     SCREEN_LOAD_START: { code: 41, paramExpressionType: "null" },
     SCREEN_LOADED: { code: 42, paramExpressionType: "null" },
     SCREEN_UNLOADED: { code: 43, paramExpressionType: "null" },
+
+    SIZE_CHANGED: { code: 44, paramExpressionType: "null" },
+    STYLE_CHANGED: { code: 45, paramExpressionType: "null" },
+    LAYOUT_CHANGED: { code: 46, paramExpressionType: "null" },
+    GET_SELF_SIZE: { code: 47, paramExpressionType: "null" },
+
+    INVALIDATE_AREA: { code: 48, paramExpressionType: "null" },
+    RESOLUTION_CHANGED: { code: 49, paramExpressionType: "null" },
+    COLOR_FORMAT_CHANGED: { code: 50, paramExpressionType: "null" },
+    REFR_REQUEST: { code: 51, paramExpressionType: "null" },
+    REFR_START: { code: 52, paramExpressionType: "null" },
+    REFR_READY: { code: 53, paramExpressionType: "null" },
+    RENDER_START: { code: 54, paramExpressionType: "null" },
+    RENDER_READY: { code: 55, paramExpressionType: "null" },
+    FLUSH_START: { code: 56, paramExpressionType: "null" },
+    FLUSH_FINISH: { code: 57, paramExpressionType: "null" },
+    FLUSH_WAIT_START: { code: 58, paramExpressionType: "null" },
+    FLUSH_WAIT_FINISH: { code: 59, paramExpressionType: "null" },
+
+    VSYNC: { code: 60, paramExpressionType: "null" },
 
     CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "null" },
     UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }

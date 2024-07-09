@@ -60,6 +60,7 @@ import {
 export {
     LVGLArcWidget,
     LVGLBarWidget,
+    LVGLButtonMatrixWidget,
     LVGLDropdownWidget,
     LVGLImageWidget,
     LVGLLabelWidget,

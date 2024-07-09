@@ -217,6 +217,10 @@ export abstract class LVGLPageRuntime {
             page._lvglRuntime = undefined;
         });
     }
+
+    get isV9() {
+        return this.lvglVersion == "9.0";
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,9 +22,9 @@ import {
     getExpressionPropertyData,
     getFlowStateAddressIndex,
     lvglAddObjectFlowCallback,
-    unescapeText
+    escapeCString,
+    unescapeCString
 } from "../widget-common";
-import { escapeCString } from "project-editor/build/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,7 +149,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
             rect.height,
 
             runtime.wasm.allocateUTF8(
-                optionsExpr ? "" : unescapeText(this.options)
+                optionsExpr ? "" : unescapeCString(this.options)
             ),
             selectedExpr ? 0 : (this.selected as number)
         );

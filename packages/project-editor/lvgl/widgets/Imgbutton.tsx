@@ -343,7 +343,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
     }
 
     override lvglBuildObj(build: LVGLBuild) {
-        if (build.project.settings.general.lvglVersion == "9.0") {
+        if (build.isV9) {
             build.line(`lv_obj_t *obj = lv_imagebutton_create(parent_obj);`);
         } else {
             build.line(`lv_obj_t *obj = lv_imgbtn_create(parent_obj);`);
@@ -351,10 +351,9 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        const prefix =
-            build.project.settings.general.lvglVersion == "9.0"
-                ? "LV_IMAGEBUTTON_STATE_"
-                : "LV_IMGBTN_STATE_";
+        const prefix = build.isV9
+            ? "LV_IMAGEBUTTON_STATE_"
+            : "LV_IMGBTN_STATE_";
 
         if (this.imageReleased) {
             build.line(

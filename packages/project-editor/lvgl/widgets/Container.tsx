@@ -222,7 +222,7 @@ export class LVGLContainerWidget extends LVGLWidget {
         const tabview = getTabview(this);
         if (tabview) {
             if (tabview.children.indexOf(this) == 0) {
-                if (build.project.settings.general.lvglVersion == "9.0") {
+                if (build.isV9) {
                     build.line(
                         `lv_obj_t *obj = lv_tabview_get_tab_bar(parent_obj);`
                     );

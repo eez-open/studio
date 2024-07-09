@@ -33,14 +33,6 @@ export function indent(tab: string, text: string) {
         .join("\n");
 }
 
-export function escapeCString(text: string) {
-    return `"${text
-        .replace(/"/g, '\\"')
-        .replace(/\n/g, "\\n")
-        .replace(/\t/g, "\\t")
-        .replace(/\r/g, "\\r")}"`;
-}
-
 export class Build {
     result: string;
     indentation: string;

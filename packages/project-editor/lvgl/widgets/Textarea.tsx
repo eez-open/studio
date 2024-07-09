@@ -22,9 +22,9 @@ import {
     getExpressionPropertyData,
     getFlowStateAddressIndex,
     lvglAddObjectFlowCallback,
-    unescapeText
+    escapeCString,
+    unescapeCString
 } from "../widget-common";
-import { escapeCString } from "project-editor/build/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -159,11 +159,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 : runtime.wasm.allocateUTF8(
                       this.textType == "expression"
                           ? `{${this.text}}`
-                          : unescapeText(this.text)
+                          : unescapeCString(this.text)
                   ),
             !this.placeholder
                 ? 0
-                : runtime.wasm.allocateUTF8(unescapeText(this.placeholder)),
+                : runtime.wasm.allocateUTF8(unescapeCString(this.placeholder)),
             this.oneLineMode,
             this.passwordMode,
             (!runtime.isEditor || this.textType != "expression") &&
