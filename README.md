@@ -139,6 +139,7 @@ cd studio
 npm install
 npm run build
 ```
+(in case of issues: try to remove the build folder and try again)
 
 Start with:
 
