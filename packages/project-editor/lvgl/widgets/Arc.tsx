@@ -109,13 +109,28 @@ export class LVGLArcWidget extends LVGLWidget {
             height: 150,
             clickableFlag: true,
             rangeMin: 0,
+            rangeMinType: "literal",
             rangeMax: 100,
+            rangeMaxType: "literal",
             value: 25,
             valueType: "literal",
             bgStartAngle: 120,
             bgEndAngle: 60,
             mode: "NORMAL",
             rotation: 0
+        },
+
+        beforeLoadHook: (
+            object: LVGLArcWidget,
+            jsObject: Partial<LVGLArcWidget>
+        ) => {
+            if (jsObject.rangeMinType == undefined) {
+                jsObject.rangeMinType = "literal";
+            }
+
+            if (jsObject.rangeMaxType == undefined) {
+                jsObject.rangeMaxType = "literal";
+            }
         },
 
         icon: (
