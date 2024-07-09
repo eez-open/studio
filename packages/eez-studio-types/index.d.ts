@@ -631,7 +631,11 @@ export interface IWasmFlowRuntime {
 
     _lvglCreateAnimationImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, images: number, num_images: number, duration: number, repeat: number);
     _lvglCreateCanvas(parentObj: number, index: number, x: number, y: number, w: number, h: number);
-    _lvglCreateLed(parentObj: number, index: number, x: number, y: number, w: number, h: number);
+
+    _lvglCreateLed(parentObj: number, index: number, x: number, y: number, w: number, h: number, color: number, brightness: number);
+    _lvglUpdateLedColor(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateLedBrightness(obj: number, flow_state: number, component_index: number, property_index: number): void;
+
     _lvglCreateList(parentObj: number, index: number, x: number, y: number, w: number, h: number);
     _lvglCreateLottie(parentObj: number, index: number, x: number, y: number, w: number, h: number);
     _lvglCreateMenu(parentObj: number, index: number, x: number, y: number, w: number, h: number);

@@ -953,17 +953,24 @@ export const Property = observer(
                     );
                 }
             } else if (propertyInfo.type === PropertyType.Number) {
+                const formText = getFormText(this.props);
+
                 return (
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        type="text"
-                        className="form-control"
-                        value={this._value != undefined ? this._value : ""}
-                        onChange={this.onChange}
-                        onKeyDown={this.onKeyDown}
-                        readOnly={readOnly}
-                        onClick={this.props.onClick}
-                    />
+                    <>
+                        <input
+                            ref={(ref: any) => (this.input = ref)}
+                            type="text"
+                            className="form-control"
+                            value={this._value != undefined ? this._value : ""}
+                            onChange={this.onChange}
+                            onKeyDown={this.onKeyDown}
+                            readOnly={readOnly}
+                            onClick={this.props.onClick}
+                        />
+                        {formText && (
+                            <div className="form-text">{formText}</div>
+                        )}
+                    </>
                 );
             } else if (propertyInfo.type === PropertyType.Color) {
                 return (

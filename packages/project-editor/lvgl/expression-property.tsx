@@ -51,15 +51,16 @@ const LVGLProperty = observer(
             if (propertyInfo.dynamicType) {
                 propertyInfoType = propertyInfo.dynamicType(objects[0]);
             } else {
-                propertyInfoType =
-                    propertyInfo.expressionType == "integer"
-                        ? PropertyType.Number
-                        : propertyInfo.expressionType == "string" ||
-                          propertyInfo.expressionType == "array:string"
-                        ? PropertyType.MultilineText
-                        : propertyInfo.expressionType == "boolean"
-                        ? PropertyType.Boolean
-                        : propertyInfo.type;
+                propertyInfoType = propertyInfo.colorEditorForLiteral
+                    ? PropertyType.Color
+                    : propertyInfo.expressionType == "integer"
+                    ? PropertyType.Number
+                    : propertyInfo.expressionType == "string" ||
+                      propertyInfo.expressionType == "array:string"
+                    ? PropertyType.MultilineText
+                    : propertyInfo.expressionType == "boolean"
+                    ? PropertyType.Boolean
+                    : propertyInfo.type;
             }
 
             let referencedObjectCollectionPath =
@@ -112,7 +113,9 @@ const LVGLProperty = observer(
                         type == "expression" &&
                         this.context.projectTypeTraits.hasFlowSupport
                     );
-                }
+                },
+
+                formText: propertyInfo.formText
             } as Partial<PropertyInfo>);
 
             let bitmap;
@@ -132,12 +135,14 @@ const LVGLProperty = observer(
             return (
                 <>
                     <div className="EezStudio_LVGProperty">
-                        <Property
-                            propertyInfo={valuePropertyInfo}
-                            objects={objects}
-                            readOnly={readOnly}
-                            updateObject={updateObject}
-                        />
+                        <div style={{ flex: 1 }}>
+                            <Property
+                                propertyInfo={valuePropertyInfo}
+                                objects={objects}
+                                readOnly={readOnly}
+                                updateObject={updateObject}
+                            />
+                        </div>
 
                         <Property
                             propertyInfo={typePropertyInfo}
@@ -280,6 +285,14 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         }
 
         if (
+            widget instanceof ProjectEditor.LVGLLedWidgetClass &&
+            propName == "brightness"
+        ) {
+            build.line(`if (new_val < 0) new_val = 0;`);
+            build.line(`else if (new_val > 255) new_val = 255;`);
+        }
+
+        if (
             propertyInfo.expressionType == "string" ||
             propertyInfo.expressionType == "array:string"
         ) {
@@ -348,7 +361,22 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         } else if (propertyInfo.expressionType == "integer") {
             const objectAccessor = build.getLvglObjectAccessor(widget);
 
-            build.line(`int32_t cur_val = ${getFunc}(${objectAccessor});`);
+            if (
+                widget instanceof ProjectEditor.LVGLLedWidgetClass &&
+                propName == "color"
+            ) {
+                if (build.isV9) {
+                    build.line(
+                        `uint32_t cur_val = lv_color_to_u32(((lv_led_t *)${objectAccessor})->color);`
+                    );
+                } else {
+                    build.line(
+                        `uint32_t cur_val = lv_color_to32(((lv_led_t *)${objectAccessor})->color);`
+                    );
+                }
+            } else {
+                build.line(`int32_t cur_val = ${getFunc}(${objectAccessor});`);
+            }
 
             build.line("if (new_val != cur_val) {");
             build.indent();
@@ -371,11 +399,20 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 build.unindent();
                 build.line("}");
             } else {
-                build.line(
-                    `${setFunc}(${objectAccessor}, new_val${
-                        setFuncOptArgs ?? ""
-                    });`
-                );
+                if (
+                    widget instanceof ProjectEditor.LVGLLedWidgetClass &&
+                    propName == "color"
+                ) {
+                    build.line(
+                        `lv_led_set_color(${objectAccessor}, lv_color_hex(new_val));`
+                    );
+                } else {
+                    build.line(
+                        `${setFunc}(${objectAccessor}, new_val${
+                            setFuncOptArgs ?? ""
+                        });`
+                    );
+                }
             }
             build.line(`tick_value_change_obj = NULL;`);
             build.unindent();

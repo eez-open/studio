@@ -1,5 +1,5 @@
 import React from "react";
-import { makeObservable } from "mobx";
+import { makeObservable, observable } from "mobx";
 
 import { makeDerivedClassInfo } from "project-editor/core/object";
 
@@ -9,6 +9,17 @@ import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 
 import { LVGLWidget } from "./internal";
+import {
+    expressionPropertyBuildTickSpecific,
+    LVGLPropertyType,
+    makeLvglExpressionProperty
+} from "../expression-property";
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import {
+    getExpressionPropertyData,
+    getFlowStateAddressIndex
+} from "../widget-common";
+import { colorRgbToNum } from "../style-helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,14 +30,42 @@ export class LVGLLedWidget extends LVGLWidget {
 
         componentPaletteGroupName: "!1Visualiser",
 
-        properties: [],
+        properties: [
+            ...makeLvglExpressionProperty(
+                "color",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup,
+                    colorEditorForLiteral: true
+                }
+            ),
+            ...makeLvglExpressionProperty(
+                "brightness",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup,
+                    formText:
+                        "The brightness should be between 0 (darkest) and 255 (lightest)."
+                }
+            )
+        ],
 
         defaultValue: {
             left: 0,
             top: 0,
             width: 32,
             height: 32,
-            clickableFlag: true
+            clickableFlag: true,
+
+            color: "#0000FF",
+            colorType: "literal",
+
+            brightness: 255,
+            brightnessType: "literal"
         },
 
         icon: (
@@ -43,16 +82,55 @@ export class LVGLLedWidget extends LVGLWidget {
         }
     });
 
+    color: string;
+    colorType: LVGLPropertyType;
+    brightness: number;
+    brightnessType: LVGLPropertyType;
+
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            color: observable,
+            colorType: observable,
+            brightness: observable,
+            brightnessType: observable
+        });
+    }
+
+    get colorValue() {
+        return colorRgbToNum(this.color);
+    }
+
+    get brightnessValue() {
+        if (this.brightness < 0) {
+            return 0;
+        }
+        if (this.brightness > 255) {
+            return 255;
+        }
+        return this.brightness;
+    }
+
+    override get hasEventHandler() {
+        return (
+            super.hasEventHandler ||
+            this.colorType == "expression" ||
+            this.brightnessType == "expression"
+        );
     }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
+        const colorExpr = getExpressionPropertyData(runtime, this, "color");
+        const brightnessExpr = getExpressionPropertyData(
+            runtime,
+            this,
+            "brightness"
+        );
+
         const rect = this.getLvglCreateRect();
 
         const obj = runtime.wasm._lvglCreateLed(
@@ -62,8 +140,29 @@ export class LVGLLedWidget extends LVGLWidget {
             rect.left,
             rect.top,
             rect.width,
-            rect.height
+            rect.height,
+
+            colorExpr ? 0 : this.colorValue,
+            brightnessExpr ? 0 : this.brightnessValue
         );
+
+        if (colorExpr) {
+            runtime.wasm._lvglUpdateLedColor(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                colorExpr.componentIndex,
+                colorExpr.propertyIndex
+            );
+        }
+
+        if (brightnessExpr) {
+            runtime.wasm._lvglUpdateLedBrightness(
+                obj,
+                getFlowStateAddressIndex(runtime),
+                brightnessExpr.componentIndex,
+                brightnessExpr.propertyIndex
+            );
+        }
 
         return obj;
     }
@@ -72,5 +171,33 @@ export class LVGLLedWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_led_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) {
+        if (this.colorType == "literal") {
+            build.line(
+                `lv_led_set_color(obj, lv_color_hex(${this.colorValue}));`
+            );
+        }
+
+        if (this.brightnessType == "literal") {
+            build.line(`lv_led_set_brightness(obj, ${this.brightnessValue});`);
+        }
+    }
+
+    override lvglBuildTickSpecific(build: LVGLBuild) {
+        expressionPropertyBuildTickSpecific<LVGLLedWidget>(
+            build,
+            this,
+            "color" as const,
+            "lv_led_get_color",
+            "lv_led_set_color"
+        );
+
+        expressionPropertyBuildTickSpecific<LVGLLedWidget>(
+            build,
+            this,
+            "brightness" as const,
+            "lv_led_get_brightness",
+            "lv_led_set_brightness"
+        );
+    }
 }

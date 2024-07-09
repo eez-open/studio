@@ -94,6 +94,8 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE,
     UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE,
     UPDATE_TASK_TYPE_TAB_NAME,
+    UPDATE_TASK_TYPE_LED_COLOR,
+    UPDATE_TASK_TYPE_LED_BRIGHTNESS,
 };
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param);

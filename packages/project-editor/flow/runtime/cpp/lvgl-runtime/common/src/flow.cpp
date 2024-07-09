@@ -775,6 +775,23 @@ void doUpdateTasks() {
 
                 if (strcmp(new_val, cur_val) != 0) lv_tabview_rename_tab(tabview, (uint32_t)updateTask.param, new_val ? new_val : "");
             }
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LED_COLOR) {
+            uint32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Color in Led widget");
+#if LVGL_VERSION_MAJOR >= 9
+            uint32_t cur_val = lv_color_to_u32(((lv_led_t *)updateTask.obj)->color);
+#else
+            uint32_t cur_val = lv_color_to32(((lv_led_t *)updateTask.obj)->color);
+#endif
+            if (new_val != cur_val) lv_led_set_color(updateTask.obj, lv_color_hex(new_val));
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LED_BRIGHTNESS) {
+            uint32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Brightness in Led widget");
+            if (new_val < 0) {
+                new_val = 0;
+            } else if (new_val > 255) {
+                new_val = 255;
+            }
+            uint32_t cur_val = lv_led_get_brightness(updateTask.obj);
+            if (new_val != cur_val) lv_led_set_brightness(updateTask.obj, new_val);
         }
         g_updateTask = nullptr;
     }

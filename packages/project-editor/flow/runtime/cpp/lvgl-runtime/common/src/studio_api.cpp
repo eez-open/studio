@@ -433,13 +433,25 @@ EM_PORT_API(lv_obj_t *) lvglCreateCanvas(lv_obj_t *parentObj, int32_t index, lv_
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateLed(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateLed(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t color, uint8_t brightness) {
     lv_obj_t *obj = lv_led_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+
+    lv_led_set_color(obj, lv_color_hex(color));
+    lv_led_set_brightness(obj, brightness);
+
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
+}
+
+EM_PORT_API(void) lvglUpdateLedColor(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_LED_COLOR, obj, flow_state, component_index, property_index, 0, 0);
+}
+
+EM_PORT_API(void) lvglUpdateLedBrightness(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_LED_BRIGHTNESS, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(lv_obj_t *) lvglCreateList(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {

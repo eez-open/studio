@@ -269,6 +269,8 @@ export interface PropertyInfo {
         propertyInfo: PropertyInfo,
         projectStore: ProjectStore
     ) => React.ReactNode[];
+
+    colorEditorForLiteral?: boolean;
 }
 
 export type InheritedValue =

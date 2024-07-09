@@ -64,6 +64,7 @@ export {
     LVGLDropdownWidget,
     LVGLImageWidget,
     LVGLLabelWidget,
+    LVGLLedWidget,
     LVGLKeyboardWidget,
     LVGLPanelWidget,
     LVGLRollerWidget,

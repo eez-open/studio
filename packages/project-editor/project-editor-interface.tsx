@@ -76,7 +76,8 @@ import type {
     LVGLUserWidgetWidget,
     LVGLTabWidget,
     LVGLRollerWidget,
-    LVGLButtonMatrixWidget
+    LVGLButtonMatrixWidget,
+    LVGLLedWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
@@ -135,6 +136,7 @@ export interface IProjectEditor {
     LVGLTabWidgetClass: typeof LVGLTabWidget;
     LVGLRollerWidgetClass: typeof LVGLRollerWidget;
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
+    LVGLLedWidgetClass: typeof LVGLLedWidget;
     LVGLStyleClass: typeof LVGLStyle;
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;

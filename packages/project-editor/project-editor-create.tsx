@@ -78,7 +78,8 @@ import {
     LVGLUserWidgetWidget,
     LVGLTabWidget,
     LVGLRollerWidget,
-    LVGLButtonMatrixWidget
+    LVGLButtonMatrixWidget,
+    LVGLLedWidget
 } from "project-editor/lvgl/widgets";
 
 import { getBitmapData } from "project-editor/features/bitmap/bitmap";
@@ -186,6 +187,7 @@ export async function createProjectEditor(
         LVGLTabWidgetClass: LVGLTabWidget,
         LVGLRollerWidgetClass: LVGLRollerWidget,
         LVGLButtonMatrixWidgetClass: LVGLButtonMatrixWidget,
+        LVGLLedWidgetClass: LVGLLedWidget,
         LVGLStyleClass: LVGLStyle,
         getProject,
         getProjectStore,
