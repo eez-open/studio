@@ -243,6 +243,7 @@ export let deleteObject = action((object: any) => {
 
             undo: action(() => {
                 array.splice(index, 0, object);
+                setParent(object, parent);
             }),
 
             get description() {
