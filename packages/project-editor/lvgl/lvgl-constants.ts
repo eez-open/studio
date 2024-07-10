@@ -601,3 +601,19 @@ export const SCALE_MODES = {
     ROUND_INNER: 0x08,
     ROUND_OUTER: 0x10
 };
+
+// _lv_image_align_t
+export const LV_IMAGE_ALIGN = {
+    DEFAULT: 0,
+    TOP_LEFT: 1,
+    TOP_MID: 2,
+    TOP_RIGHT: 3,
+    BOTTOM_LEFT: 4,
+    BOTTOM_MID: 5,
+    BOTTOM_RIGHT: 6,
+    LEFT_MID: 7,
+    RIGHT_MID: 8,
+    CENTER: 9,
+    STRETCH: 11,
+    TILE: 12
+};

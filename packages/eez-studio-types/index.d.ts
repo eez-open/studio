@@ -608,7 +608,10 @@ export interface IWasmFlowRuntime {
     _lvglCreateButtonMatrix(parentObj: number, index: number, x: number, y: number, w: number, h: number, map: number, ctrl_map: number, one_check: boolean): number;
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateUserWidget(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
-    _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): number;
+
+    _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): number;
+    _lvglSetImageSrc(parentObj: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): void;
+
     _lvglCreateLine(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;
@@ -668,7 +671,6 @@ export interface IWasmFlowRuntime {
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
     _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number): void;
-    _lvglSetImageSrc(parentObj: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglMeterAddScale(obj: number,

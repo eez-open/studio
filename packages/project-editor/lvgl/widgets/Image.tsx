@@ -18,6 +18,7 @@ import { LVGLWidget } from "./internal";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { propertyNotFoundMessage } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
+import { LV_IMAGE_ALIGN } from "../lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +28,7 @@ export class LVGLImageWidget extends LVGLWidget {
     pivotY: number;
     zoom: number;
     angle: number;
+    innerAlign: keyof typeof LV_IMAGE_ALIGN;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -78,6 +80,19 @@ export class LVGLImageWidget extends LVGLWidget {
                 displayName: "Rotation",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "innerAlign",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(LV_IMAGE_ALIGN).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: LVGLImageWidget) =>
+                    ProjectEditor.getProject(widget).settings.general
+                        .lvglVersion != "9.0"
             }
         ],
 
@@ -92,6 +107,15 @@ export class LVGLImageWidget extends LVGLWidget {
             pivotY: 0,
             zoom: 256,
             angle: 0
+        },
+
+        beforeLoadHook: (
+            object: LVGLImageWidget,
+            jsObject: Partial<LVGLImageWidget>
+        ) => {
+            if (jsObject.innerAlign == undefined) {
+                jsObject.innerAlign = "CENTER";
+            }
         },
 
         icon: (
@@ -145,7 +169,8 @@ export class LVGLImageWidget extends LVGLWidget {
             pivotX: observable,
             pivotY: observable,
             zoom: observable,
-            angle: observable
+            angle: observable,
+            innerAlign: observable
         });
     }
 
@@ -168,7 +193,8 @@ export class LVGLImageWidget extends LVGLWidget {
             this.pivotX,
             this.pivotY,
             this.zoom,
-            this.angle
+            this.angle,
+            LV_IMAGE_ALIGN[this.innerAlign]
         );
 
         const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
@@ -182,7 +208,8 @@ export class LVGLImageWidget extends LVGLWidget {
                     this.pivotX,
                     this.pivotY,
                     this.zoom,
-                    this.angle
+                    this.angle,
+                    LV_IMAGE_ALIGN[this.innerAlign]
                 );
             }
         }
@@ -222,6 +249,12 @@ export class LVGLImageWidget extends LVGLWidget {
 
         if (this.angle != 0) {
             build.line(`lv_img_set_angle(obj, ${this.angle});`);
+        }
+
+        if (build.isV9 && this.innerAlign != "CENTER") {
+            build.line(
+                `lv_image_set_inner_align(obj, LV_IMAGE_ALIGN_${this.innerAlign});`
+            );
         }
     }
 }

@@ -4679,6 +4679,7 @@ var _lvglCreateButtonMatrix = Module['_lvglCreateButtonMatrix'] = createExportWr
 var _lvglCreatePanel = Module['_lvglCreatePanel'] = createExportWrapper('lvglCreatePanel');
 var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget');
 var _lvglCreateImage = Module['_lvglCreateImage'] = createExportWrapper('lvglCreateImage');
+var _lvglSetImageSrc = Module['_lvglSetImageSrc'] = createExportWrapper('lvglSetImageSrc');
 var _lvglCreateLine = Module['_lvglCreateLine'] = createExportWrapper('lvglCreateLine');
 var _lvglCreateSlider = Module['_lvglCreateSlider'] = createExportWrapper('lvglCreateSlider');
 var _lvglCreateRoller = Module['_lvglCreateRoller'] = createExportWrapper('lvglCreateRoller');
@@ -4735,7 +4736,6 @@ var _lvglLoadFont = Module['_lvglLoadFont'] = createExportWrapper('lvglLoadFont'
 var _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont');
 var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback');
 var _lvglUpdateLabelText = Module['_lvglUpdateLabelText'] = createExportWrapper('lvglUpdateLabelText');
-var _lvglSetImageSrc = Module['_lvglSetImageSrc'] = createExportWrapper('lvglSetImageSrc');
 var _lvglSetImgbuttonImageSrc = Module['_lvglSetImgbuttonImageSrc'] = createExportWrapper('lvglSetImgbuttonImageSrc');
 var _lvglSetKeyboardTextarea = Module['_lvglSetKeyboardTextarea'] = createExportWrapper('lvglSetKeyboardTextarea');
 var _lvglMeterAddScale = Module['_lvglMeterAddScale'] = createExportWrapper('lvglMeterAddScale');
