@@ -42,7 +42,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/components/actions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { LVGLPanelWidget } from "project-editor/lvgl/widgets";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +364,7 @@ export class FlowFragment extends EezObject {
                     let containerAncestor:
                         | ContainerWidget
                         | SelectWidget
-                        | LVGLPanelWidget
+                        | LVGLWidget
                         | undefined = getAncestorOfType(
                         getParent(getParent(object)),
                         ContainerWidget.classInfo
@@ -378,8 +378,8 @@ export class FlowFragment extends EezObject {
                         if (!containerAncestor) {
                             containerAncestor = getAncestorOfType(
                                 getParent(getParent(object)),
-                                ProjectEditor.LVGLPanelWidgetClass.classInfo
-                            ) as LVGLPanelWidget | undefined;
+                                ProjectEditor.LVGLWidgetClass.classInfo
+                            ) as LVGLWidget | undefined;
                         }
                     }
 

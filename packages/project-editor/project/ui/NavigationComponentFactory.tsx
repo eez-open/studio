@@ -179,12 +179,19 @@ export const navigateTo = action((object: IEezObject) => {
         return;
     }
 
-    ancestor = getAncestorOfType(object, Page.classInfo);
+    ancestor = getAncestorOfType(object, Page.classInfo) as Page;
     if (ancestor) {
-        projectStore.layoutModels.selectTab(
-            projectStore.layoutModels.root,
-            LayoutModels.PAGES_TAB_ID
-        );
+        if (ancestor.isUsedAsUserWidget) {
+            projectStore.layoutModels.selectTab(
+                projectStore.layoutModels.root,
+                LayoutModels.USER_WIDGETS_TAB_ID
+            );
+        } else {
+            projectStore.layoutModels.selectTab(
+                projectStore.layoutModels.root,
+                LayoutModels.PAGES_TAB_ID
+            );
+        }
 
         const variable = getAncestorOfType(object, Variable.classInfo);
         if (variable) {
