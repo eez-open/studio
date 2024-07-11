@@ -60,20 +60,22 @@ export const VariablesTab = observer(
             ];
 
             if (this.context.projectTypeTraits.hasFlowSupport) {
-                items.push({
-                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL,
-                    component: this.localVariables ? (
-                        <ListNavigation
-                            id="local-variables"
-                            navigationObject={this.localVariables}
-                            selectedObject={
-                                this.context.navigationStore
-                                    .selectedLocalVariable
-                            }
-                        />
-                    ) : null,
-                    numItems: this.localVariables?.length ?? 0
-                });
+                if (this.localVariables) {
+                    items.push({
+                        name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_LOCAL,
+                        component: (
+                            <ListNavigation
+                                id="local-variables"
+                                navigationObject={this.localVariables}
+                                selectedObject={
+                                    this.context.navigationStore
+                                        .selectedLocalVariable
+                                }
+                            />
+                        ),
+                        numItems: this.localVariables?.length ?? 0
+                    });
+                }
 
                 items.push({
                     name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS,

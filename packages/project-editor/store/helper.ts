@@ -34,7 +34,7 @@ import type { ProjectStore } from "project-editor/store";
 
 import {
     checkClipboard,
-    copyToClipboard,
+    copyProjectEditorDataToClipboard,
     objectToClipboardData
 } from "project-editor/store/clipboard";
 
@@ -857,12 +857,14 @@ export function cutItem(object: EezObject) {
     let clipboardText = objectToClipboardData(getProjectStore(object), object);
 
     deleteItems([object], () => {
-        copyToClipboard(clipboardText);
+        copyProjectEditorDataToClipboard(clipboardText);
     });
 }
 
 export function copyItem(object: EezObject) {
-    copyToClipboard(objectToClipboardData(getProjectStore(object), object));
+    copyProjectEditorDataToClipboard(
+        objectToClipboardData(getProjectStore(object), object)
+    );
 }
 
 export interface IContextMenuContext {

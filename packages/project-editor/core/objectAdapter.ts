@@ -38,7 +38,7 @@ import {
     deleteItems,
     canContainChildren,
     getProjectStore,
-    copyToClipboard,
+    copyProjectEditorDataToClipboard,
     setClipboardData,
     objectToClipboardData,
     findPastePlaceInside,
@@ -54,8 +54,7 @@ import {
     addItem,
     isObjectReferencable,
     canContain,
-    pasteFromClipboard,
-    clipboardDataToObject
+    getProjectEditorDataFromClipboard
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -467,7 +466,7 @@ export class TreeObjectAdapter {
                 ).objectsToClipboardData(objects);
 
                 deleteItems(objects, () => {
-                    copyToClipboard(cliboardText);
+                    copyProjectEditorDataToClipboard(cliboardText);
                 });
             }
         }
@@ -492,27 +491,18 @@ export class TreeObjectAdapter {
             let objects = this.selectedItems.map(
                 item => item.object as EezObject
             );
-            copyToClipboard(
+            copyProjectEditorDataToClipboard(
                 getProjectStore(this.object).objectsToClipboardData(objects)
             );
         }
     }
 
     canPaste() {
-        let text = pasteFromClipboard();
-        if (text) {
-            try {
-                let serializedData = clipboardDataToObject(
-                    ProjectEditor.getProjectStore(this.object),
-                    text
-                );
-                if (serializedData) {
-                    return true;
-                }
-            } catch (err) {}
-        }
-
-        return false;
+        return (
+            getProjectEditorDataFromClipboard(
+                ProjectEditor.getProjectStore(this.object)
+            ) != undefined
+        );
     }
 
     pasteSelection() {

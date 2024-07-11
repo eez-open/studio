@@ -281,6 +281,7 @@ export type InheritedValue =
     | undefined;
 
 export interface SerializedData {
+    originProjectFilePath: string;
     objectClassName: string;
     classInfo?: ClassInfo;
     object?: EezObject;

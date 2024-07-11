@@ -254,28 +254,60 @@ const EditorButtons = observer(
                     )}
 
                     {!this.context.runtime && (
-                        <div className="btn-group" role="group">
-                            <IconAction
-                                title={
-                                    this.context.undoManager.canUndo
-                                        ? `Undo "${this.context.undoManager.undoDescription}"`
-                                        : ""
-                                }
-                                icon="material:undo"
-                                onClick={() => this.context.undoManager.undo()}
-                                enabled={this.context.undoManager.canUndo}
-                            />
-                            <IconAction
-                                title={
-                                    this.context.undoManager.canRedo
-                                        ? `Redo "${this.context.undoManager.redoDescription}"`
-                                        : ""
-                                }
-                                icon="material:redo"
-                                onClick={() => this.context.undoManager.redo()}
-                                enabled={this.context.undoManager.canRedo}
-                            />
-                        </div>
+                        <>
+                            <div className="btn-group" role="group">
+                                <IconAction
+                                    title={
+                                        this.context.undoManager.canUndo
+                                            ? `Undo "${this.context.undoManager.undoDescription}"`
+                                            : ""
+                                    }
+                                    icon="material:undo"
+                                    onClick={() =>
+                                        this.context.undoManager.undo()
+                                    }
+                                    enabled={this.context.undoManager.canUndo}
+                                />
+                                <IconAction
+                                    title={
+                                        this.context.undoManager.canRedo
+                                            ? `Redo "${this.context.undoManager.redoDescription}"`
+                                            : ""
+                                    }
+                                    icon="material:redo"
+                                    onClick={() =>
+                                        this.context.undoManager.redo()
+                                    }
+                                    enabled={this.context.undoManager.canRedo}
+                                />
+                            </div>
+
+                            {false && (
+                                <div className="btn-group" role="group">
+                                    <IconAction
+                                        title="Cut"
+                                        icon="material:content_cut"
+                                        iconSize={20}
+                                        onClick={this.context.cut}
+                                        enabled={this.context.canCut}
+                                    />
+                                    <IconAction
+                                        title="Copy"
+                                        icon="material:content_copy"
+                                        iconSize={20}
+                                        onClick={this.context.copy}
+                                        enabled={this.context.canCopy}
+                                    />
+                                    <IconAction
+                                        title="Paste"
+                                        icon="material:content_paste"
+                                        iconSize={20}
+                                        onClick={this.context.paste}
+                                        enabled={this.context.canPaste}
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {!this.context.runtime &&

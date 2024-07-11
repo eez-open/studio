@@ -551,23 +551,17 @@ export class ProjectEditorTab implements IHomeTab {
         };
         const cut = () => {
             if (!this.runMode) {
-                if (projectStore.navigationStore.selectedPanel) {
-                    projectStore.navigationStore.selectedPanel.cutSelection();
-                }
+                projectStore.cut();
             }
         };
         const copy = () => {
             if (!this.runMode) {
-                if (projectStore.navigationStore.selectedPanel) {
-                    projectStore.navigationStore.selectedPanel.copySelection();
-                }
+                projectStore.copy();
             }
         };
         const paste = () => {
             if (!this.runMode) {
-                if (projectStore.navigationStore.selectedPanel) {
-                    projectStore.navigationStore.selectedPanel.pasteSelection();
-                }
+                projectStore.paste();
             }
         };
         const deleteSelection = () => {

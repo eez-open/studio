@@ -1395,6 +1395,43 @@ export class ProjectStore {
     get isScpiInstrument() {
         return this.project.scpi != undefined;
     }
+
+    get canCut() {
+        return true;
+    }
+
+    cut = () => {
+        if (this.navigationStore.selectedPanel) {
+            this.navigationStore.selectedPanel.cutSelection();
+        }
+    };
+
+    get canCopy() {
+        return true;
+    }
+
+    copy = () => {
+        if (!this.canCopy) {
+            return;
+        }
+        if (this.navigationStore.selectedPanel) {
+            this.navigationStore.selectedPanel.copySelection();
+        }
+    };
+
+    get canPaste() {
+        return true;
+    }
+
+    paste = () => {
+        if (!this.canPaste) {
+            return;
+        }
+
+        if (this.navigationStore.selectedPanel) {
+            this.navigationStore.selectedPanel.pasteSelection();
+        }
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

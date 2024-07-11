@@ -31,6 +31,8 @@ import {
 
 const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
+////////////////////////////////////////////////////////////////////////////////
+
 function cloneObjectWithNewObjIds(
     projectStore: ProjectStore,
     object: IEezObject
@@ -44,6 +46,8 @@ function cloneObjectWithNewObjIds(
     );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export function objectToClipboardData(
     projectStore: ProjectStore,
     object: IEezObject
@@ -52,10 +56,13 @@ export function objectToClipboardData(
     const clonedObject = cloneObjectWithNewObjIds(projectStore, object);
     rewireEnd(clonedObject);
 
-    return JSON.stringify({
+    const serializeData: SerializedData = {
+        originProjectFilePath: projectStore.filePath!,
         objectClassName: getClass(object).name,
-        object: objectToJson(clonedObject)
-    });
+        object: objectToJson(clonedObject) as any as EezObject
+    };
+
+    return JSON.stringify(serializeData);
 }
 
 export function objectsToClipboardData(
@@ -68,11 +75,18 @@ export function objectsToClipboardData(
     );
     rewireEnd(clonedObjects);
 
-    return JSON.stringify({
+    const serializeData: SerializedData = {
+        originProjectFilePath: projectStore.filePath!,
         objectClassName: getClass(objects[0]).name,
-        objects: clonedObjects.map(clonedObject => objectToJson(clonedObject))
-    });
+        objects: clonedObjects.map(
+            clonedObject => objectToJson(clonedObject) as any as EezObject
+        )
+    };
+
+    return JSON.stringify(serializeData);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function clipboardDataToObject(
     projectStore: ProjectStore,
@@ -112,6 +126,8 @@ export function clipboardDataToObject(
     return serializedData;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 let clipboardData: string;
 
 export function setClipboardData(event: any, value: string) {
@@ -132,6 +148,28 @@ export function getEezStudioDataFromDragEvent(
     }
     return undefined;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function copyProjectEditorDataToClipboard(text: string) {
+    clipboard.writeBuffer(CLIPOARD_DATA_ID, Buffer.from(text, "utf-8"));
+}
+
+export function getProjectEditorDataFromClipboard(
+    projectStore: ProjectStore
+): SerializedData | undefined {
+    let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
+    if (textBuffer) {
+        const text = textBuffer.toString("utf-8");
+        let serializedData = clipboardDataToObject(projectStore, text);
+        if (serializedData) {
+            return serializedData;
+        }
+    }
+    return undefined;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export function findPastePlaceInside(
     object: IEezObject,
@@ -216,31 +254,15 @@ export function findPastePlaceInsideAndOutside(
 }
 
 export function checkClipboard(projectStore: ProjectStore, object: IEezObject) {
-    let text = pasteFromClipboard();
-    if (text) {
-        let serializedData = clipboardDataToObject(projectStore, text);
-        if (serializedData) {
-            let pastePlace = findPastePlaceInsideAndOutside(
-                object,
-                serializedData
-            );
-            if (pastePlace) {
-                return {
-                    serializedData: serializedData,
-                    pastePlace: pastePlace
-                };
-            }
+    let serializedData = getProjectEditorDataFromClipboard(projectStore);
+    if (serializedData) {
+        let pastePlace = findPastePlaceInsideAndOutside(object, serializedData);
+        if (pastePlace) {
+            return {
+                serializedData: serializedData,
+                pastePlace: pastePlace
+            };
         }
     }
     return undefined;
-}
-
-export function copyToClipboard(text: string) {
-    clipboard.write({
-        text
-    });
-}
-
-export function pasteFromClipboard(): string | undefined {
-    return clipboard.readText();
 }
