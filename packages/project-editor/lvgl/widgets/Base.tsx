@@ -503,7 +503,7 @@ export class LVGLWidget extends Widget {
             {
                 name: "useStyle",
                 type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "lvglStyles/allStyles",
+                referencedObjectCollectionPath: "allLvglStyles",
                 filterReferencedObjectCollection: (
                     objects: IEezObject[],
                     lvglStyle: LVGLStyle

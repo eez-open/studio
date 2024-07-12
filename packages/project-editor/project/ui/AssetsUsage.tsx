@@ -22,12 +22,16 @@ import { Button } from "eez-studio-ui/button";
 
 import {
     EezObject,
-    PropertyProps,
-    getProperty
+    getProperty,
+    PropertyProps
 } from "project-editor/core/object";
 import { getObjectFromPath, getProjectStore } from "project-editor/store";
 
-import { usage, SearchCallbackMessage } from "project-editor/core/search";
+import {
+    SearchCallbackMessage,
+    importDirectiveUsageWithImportAs,
+    importDirectiveUsage
+} from "project-editor/core/search";
 import type { ImportDirective } from "project-editor/project/project";
 
 export const ImportDirectiveCustomUI = observer((props: PropertyProps) => {
@@ -164,51 +168,108 @@ class BuildAssetsUssage {
     }
 
     onMessage(message: SearchCallbackMessage) {
-        if (message.type == "value") {
-            const path =
-                message.valueObject.propertyInfo
-                    .referencedObjectCollectionPath!;
+        if (this.importDirective.importAs) {
+            if (message.type == "value") {
+                let path = message.valueObject.propertyInfo
+                    .referencedObjectCollectionPath! as any;
 
-            const importedProject = this.importDirective.project!;
+                const assetName = message.valueObject.value;
 
-            const assetName = message.valueObject.value;
-            if (
-                !importedProject._assets.maps["name"].assetCollectionPaths.has(
-                    path
+                const prefix = this.importDirective.importAs + ".";
+
+                let assetNameWithoutLibraryNamePrefix = assetName.startsWith(
+                    prefix
                 )
-            ) {
-                // console.log("NOT INTERESTED", path, assetName);
-                return true;
-            }
+                    ? assetName.slice(prefix.length)
+                    : assetName;
 
-            const collection = getObjectFromPath(
-                importedProject,
-                path.split("/")
-            ) as EezObject[];
-            const object =
-                collection &&
-                collection.find(
-                    object => assetName == getProperty(object, "name")
-                );
+                const importedProject = this.importDirective.project!;
 
-            if (object) {
-                // console.log("FOUND", path, assetName, object);
-                const set = this.assets[path] ?? new Set<string>();
-                set.add(assetName);
-                this.assets[path] = set;
-                runInAction(
-                    () =>
-                        (this.assetsUsage.assets[path] =
-                            Array.from(set).join(", "))
-                );
-            } else {
-                // console.log("NOT FOUND", path, assetName);
+                let assetsMap = importedProject._assets.maps[
+                    "name"
+                ].allAssetsMaps.find(assetMap => assetMap.path == path);
+
+                if (!assetsMap && path == "userWidgets") {
+                    path = "pages";
+
+                    assetsMap = importedProject._assets.maps[
+                        "name"
+                    ].allAssetsMaps.find(assetMap => assetMap.path == path);
+                }
+
+                if (assetsMap) {
+                    const asset = assetsMap.map.get(
+                        assetNameWithoutLibraryNamePrefix
+                    );
+
+                    if (asset) {
+                        if (path == "variables/globalVariables") {
+                            path = "variables";
+                        }
+
+                        const set = this.assets[path] ?? new Set<string>();
+                        set.add(assetName);
+                        this.assets[path] = set;
+                        runInAction(
+                            () =>
+                                (this.assetsUsage.assets[path] =
+                                    Array.from(set).join(", "))
+                        );
+                    }
+                }
             }
-            return true;
         } else {
-            // console.log("finish");
-            return true;
+            if (message.type == "value") {
+                let path =
+                    message.valueObject.propertyInfo
+                        .referencedObjectCollectionPath!;
+
+                const importedProject = this.importDirective.project!;
+
+                const assetName = message.valueObject.value;
+
+                if (
+                    importedProject._assets.maps[
+                        "name"
+                    ].assetCollectionPaths.has(path)
+                ) {
+                    let collection = getObjectFromPath(
+                        importedProject,
+                        path.split("/")
+                    ) as EezObject[];
+
+                    if (!collection) {
+                        if (path == "allStyles" || path == "allLvglStyles") {
+                            collection = importedProject[path];
+                            path = "styles";
+                        }
+                    }
+
+                    const object =
+                        collection &&
+                        collection.find(
+                            object => assetName == getProperty(object, "name")
+                        );
+
+                    if (object) {
+                        if (path == "variables/globalVariables") {
+                            path = "variables";
+                        }
+
+                        const set = this.assets[path] ?? new Set<string>();
+                        set.add(assetName);
+                        this.assets[path] = set;
+                        runInAction(
+                            () =>
+                                (this.assetsUsage.assets[path] =
+                                    Array.from(set).join(", "))
+                        );
+                    }
+                }
+            }
         }
+
+        return true;
     }
 }
 
@@ -217,7 +278,17 @@ function showUsage(importDirective: ImportDirective) {
 
     const projectStore = getProjectStore(importDirective);
 
-    usage(projectStore, message => buildAssetsUsage.onMessage(message));
+    if (importDirective.importAs) {
+        importDirectiveUsageWithImportAs(
+            projectStore,
+            importDirective,
+            message => buildAssetsUsage.onMessage(message)
+        );
+    } else {
+        importDirectiveUsage(projectStore, message =>
+            buildAssetsUsage.onMessage(message)
+        );
+    }
 
     showGenericDialog({
         dialogDefinition: {
