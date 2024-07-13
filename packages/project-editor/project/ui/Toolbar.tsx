@@ -18,6 +18,7 @@ import { getEditorComponent } from "./EditorComponentFactory";
 import { getId } from "project-editor/core/object";
 import type { IObjectVariableValue } from "eez-studio-types";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
+import { isDev } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -282,15 +283,17 @@ const EditorButtons = observer(
                                 />
                             </div>
 
-                            {false && (
+                            {isDev && (
                                 <div className="btn-group" role="group">
-                                    <IconAction
-                                        title="Cut"
-                                        icon="material:content_cut"
-                                        iconSize={20}
-                                        onClick={this.context.cut}
-                                        enabled={this.context.canCut}
-                                    />
+                                    {false && (
+                                        <IconAction
+                                            title="Cut"
+                                            icon="material:content_cut"
+                                            iconSize={20}
+                                            onClick={this.context.cut}
+                                            enabled={this.context.canCut}
+                                        />
+                                    )}
                                     <IconAction
                                         title="Copy"
                                         icon="material:content_copy"
@@ -302,7 +305,7 @@ const EditorButtons = observer(
                                         title="Paste"
                                         icon="material:content_paste"
                                         iconSize={20}
-                                        onClick={this.context.paste}
+                                        onClick={this.context.pasteFromToolbar}
                                         enabled={this.context.canPaste}
                                     />
                                 </div>

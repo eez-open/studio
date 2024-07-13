@@ -1179,8 +1179,8 @@ export class Tabs {
             tab =>
                 tab instanceof ProjectEditorTab &&
                 tab.filePath == filePath &&
-                tab.runMode == runMode
-        );
+                (tab.runMode ?? false) == runMode
+        ) as ProjectEditorTab | undefined;
     }
 
     reloadProject(projectStore: ProjectStore) {

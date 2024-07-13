@@ -101,6 +101,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { isValidUrl } from "project-editor/core/util";
 import { reflectLvglVersion } from "project-editor/lvgl/page-runtime";
+import { deepPaste } from "project-editor/store/deep-paste";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1430,6 +1431,12 @@ export class ProjectStore {
 
         if (this.navigationStore.selectedPanel) {
             this.navigationStore.selectedPanel.pasteSelection();
+        }
+    };
+
+    pasteFromToolbar = () => {
+        if (!deepPaste(this)) {
+            this.paste();
         }
     };
 }
