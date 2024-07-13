@@ -336,95 +336,104 @@ export function* searchForObjectDependencies(
                 valueObject.propertyInfo.expressionType != undefined ||
                 flowProperty == "scpi-template-literal"
             ) {
-                yield {
-                    kind: "expression-start",
-                    valueObject
-                };
+                if (lookInsideExpressions) {
+                    yield {
+                        kind: "expression-start",
+                        valueObject
+                    };
 
-                const component = getAncestorOfType<Component>(
-                    valueObject,
-                    ProjectEditor.ComponentClass.classInfo
-                );
-                let expressions;
+                    const component = getAncestorOfType<Component>(
+                        valueObject,
+                        ProjectEditor.ComponentClass.classInfo
+                    );
+                    let expressions;
 
-                if (flowProperty && flowProperty == "template-literal") {
-                    expressions = templateLiteralToExpressions(
-                        valueObject.value
-                    ).map(expression => ({
-                        start: expression.start + 1,
-                        end: expression.end - 1
-                    }));
-                } else if (
-                    flowProperty &&
-                    flowProperty == "scpi-template-literal"
-                ) {
-                    expressions = [];
+                    if (flowProperty && flowProperty == "template-literal") {
+                        expressions = templateLiteralToExpressions(
+                            valueObject.value
+                        ).map(expression => ({
+                            start: expression.start + 1,
+                            end: expression.end - 1
+                        }));
+                    } else if (
+                        flowProperty &&
+                        flowProperty == "scpi-template-literal"
+                    ) {
+                        expressions = [];
 
-                    try {
-                        const parts = parseScpi(valueObject.value);
-                        for (const part of parts) {
-                            const tag = part.tag;
-                            const str = part.value!;
+                        try {
+                            const parts = parseScpi(valueObject.value);
+                            for (const part of parts) {
+                                const tag = part.tag;
+                                const str = part.value!;
 
-                            if (tag == SCPI_PART_EXPR) {
-                                expressions.push({
-                                    start: part.token.offset + 1,
-                                    end: part.token.offset + str.length - 1
-                                });
-                            } else if (tag == SCPI_PART_QUERY_WITH_ASSIGNMENT) {
-                                if (str[0] == "{") {
+                                if (tag == SCPI_PART_EXPR) {
                                     expressions.push({
                                         start: part.token.offset + 1,
                                         end: part.token.offset + str.length - 1
                                     });
-                                } else {
-                                    expressions.push({
-                                        start: part.token.offset,
-                                        end: part.token.offset + str.length
-                                    });
+                                } else if (
+                                    tag == SCPI_PART_QUERY_WITH_ASSIGNMENT
+                                ) {
+                                    if (str[0] == "{") {
+                                        expressions.push({
+                                            start: part.token.offset + 1,
+                                            end:
+                                                part.token.offset +
+                                                str.length -
+                                                1
+                                        });
+                                    } else {
+                                        expressions.push({
+                                            start: part.token.offset,
+                                            end: part.token.offset + str.length
+                                        });
+                                    }
                                 }
                             }
+                        } catch (err) {
+                            expressions = [];
                         }
-                    } catch (err) {
-                        expressions = [];
+                    } else {
+                        expressions = [
+                            { start: 0, end: valueObject.value.length }
+                        ];
                     }
-                } else {
-                    expressions = [{ start: 0, end: valueObject.value.length }];
-                }
 
-                for (const expression of expressions) {
-                    try {
-                        const rootNode = expressionParser.parse(
-                            valueObject.value.substring(
-                                expression.start,
-                                expression.end
-                            )
-                        );
+                    for (const expression of expressions) {
+                        try {
+                            const rootNode = expressionParser.parse(
+                                valueObject.value.substring(
+                                    expression.start,
+                                    expression.end
+                                )
+                            );
 
-                        findValueTypeInExpressionNode(
-                            projectStore.project,
-                            component,
-                            rootNode,
-                            flowProperty == "assignable"
-                        );
+                            findValueTypeInExpressionNode(
+                                projectStore.project,
+                                component,
+                                rootNode,
+                                flowProperty == "assignable"
+                            );
 
-                        for (const node of visitExpressionNodes(rootNode)) {
-                            yield {
-                                kind: "expression-node",
-                                valueObject,
-                                node,
-                                expressionStartIndex: expression.start
-                            };
+                            for (const node of visitExpressionNodes(rootNode)) {
+                                yield {
+                                    kind: "expression-node",
+                                    valueObject,
+                                    node,
+                                    expressionStartIndex: expression.start
+                                };
+                            }
+                        } catch (err) {
+                            console.error(err);
                         }
-                    } catch (err) {
-                        console.error(err);
                     }
-                }
 
-                yield {
-                    kind: "expression-end",
-                    valueObject
-                };
+                    yield {
+                        kind: "expression-end",
+                        valueObject
+                    };
+                }
             } else if (valueObject.propertyInfo == variableTypeProperty) {
                 yield {
                     kind: "variable-type",
