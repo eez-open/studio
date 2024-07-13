@@ -53,7 +53,9 @@
 }
 
 Start
-  = Expression
+  = __ expr:Expression __ {
+      return expr;
+    }
 
 // ----- A.1 Lexical Grammar -----
 

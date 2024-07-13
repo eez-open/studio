@@ -159,7 +159,7 @@ export function getProjectEditorDataFromClipboard(
     projectStore: ProjectStore
 ): SerializedData | undefined {
     let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
-    if (textBuffer) {
+    if (textBuffer && textBuffer.length > 0) {
         const text = textBuffer.toString("utf-8");
         let serializedData = clipboardDataToObject(projectStore, text);
         if (serializedData) {
