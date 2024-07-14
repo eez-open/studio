@@ -221,7 +221,8 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
     getFunc: string,
     setFunc: string,
     setFuncOptArgs?: string,
-    arcRange?: "min" | "max"
+    arcRange?: "min" | "max",
+    checkStateEdited?: boolean
 ) {
     if (getProperty(widget, propName + "Type") == "expression") {
         const propertyInfo = findPropertyByNameInClassInfo(
@@ -235,6 +236,15 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
 
         build.line(`{`);
         build.indent();
+
+        const objectAccessor = build.getLvglObjectAccessor(widget);
+
+        if (checkStateEdited) {
+            build.line(
+                `if (!(lv_obj_get_state(${objectAccessor}) & LV_STATE_EDITED)) {`
+            );
+            build.indent();
+        }
 
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             let componentIndex = build.assets.getComponentIndex(widget);
@@ -296,8 +306,6 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
             propertyInfo.expressionType == "string" ||
             propertyInfo.expressionType == "array:string"
         ) {
-            const objectAccessor = build.getLvglObjectAccessor(widget);
-
             if (widget instanceof ProjectEditor.LVGLTabWidgetClass) {
                 build.line(
                     `lv_obj_t *tabview = lv_obj_get_parent(lv_obj_get_parent(${objectAccessor}));`
@@ -420,6 +428,11 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
         } else {
             console.error("UNEXPECTED!");
             return;
+        }
+
+        if (checkStateEdited) {
+            build.unindent();
+            build.line(`}`);
         }
 
         build.unindent();

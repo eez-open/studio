@@ -234,7 +234,10 @@ export class LVGLDropdownWidget extends LVGLWidget {
             this,
             "selected" as const,
             "lv_dropdown_get_selected",
-            "lv_dropdown_set_selected"
+            "lv_dropdown_set_selected",
+            undefined,
+            undefined,
+            true
         );
     }
 

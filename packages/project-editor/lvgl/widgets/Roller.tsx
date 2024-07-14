@@ -270,7 +270,9 @@ export class LVGLRollerWidget extends LVGLWidget {
             "selected" as const,
             "lv_roller_get_selected",
             "lv_roller_set_selected",
-            ", LV_ANIM_OFF"
+            ", LV_ANIM_OFF",
+            undefined,
+            true
         );
     }
 
