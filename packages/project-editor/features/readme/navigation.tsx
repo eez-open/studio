@@ -118,10 +118,6 @@ export const ReadmeEditor = observer(
         get selectedObject() {
             return this.context.project.readme;
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };

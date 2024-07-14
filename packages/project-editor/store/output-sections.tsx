@@ -458,22 +458,6 @@ export class OutputSection implements IPanel {
         return this.selectedMessage?.object;
     }
 
-    cutSelection() {
-        // TODO
-    }
-
-    copySelection() {
-        // TODO
-    }
-
-    pasteSelection() {
-        // TODO
-    }
-
-    deleteSelection() {
-        // TODO
-    }
-
     selectMessage(message: Message) {
         if (this.selectedMessage !== message) {
             if (this.selectedMessage) {

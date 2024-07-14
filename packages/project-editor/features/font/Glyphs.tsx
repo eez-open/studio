@@ -88,10 +88,6 @@ export const Glyphs = observer(
         get selectedObject() {
             return this.props.selectedGlyph.get();
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
         onFocus = () => {
             if (!this.props.dialog) {
                 this.context.navigationStore.setSelectedPanel(this);

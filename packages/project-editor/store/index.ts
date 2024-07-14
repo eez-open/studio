@@ -1402,7 +1402,10 @@ export class ProjectStore {
     }
 
     cut = () => {
-        if (this.navigationStore.selectedPanel) {
+        if (
+            this.navigationStore.selectedPanel &&
+            this.navigationStore.selectedPanel.cutSelection
+        ) {
             this.navigationStore.selectedPanel.cutSelection();
         }
     };
@@ -1415,7 +1418,10 @@ export class ProjectStore {
         if (!this.canCopy) {
             return;
         }
-        if (this.navigationStore.selectedPanel) {
+        if (
+            this.navigationStore.selectedPanel &&
+            this.navigationStore.selectedPanel.copySelection
+        ) {
             this.navigationStore.selectedPanel.copySelection();
         }
     };
@@ -1429,7 +1435,10 @@ export class ProjectStore {
             return;
         }
 
-        if (this.navigationStore.selectedPanel) {
+        if (
+            this.navigationStore.selectedPanel &&
+            this.navigationStore.selectedPanel.pasteSelection
+        ) {
             this.navigationStore.selectedPanel.pasteSelection();
         }
     };

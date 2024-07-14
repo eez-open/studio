@@ -583,10 +583,7 @@ export const ChangesEditor = observer(
         get selectedObject() {
             return this.context.project.changes;
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
+
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };

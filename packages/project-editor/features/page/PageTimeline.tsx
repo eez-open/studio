@@ -389,9 +389,6 @@ export const PageTimelineEditor = observer(
         get selectedObjects() {
             return this.props.tabState.selectedObjects;
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
         deleteSelection() {
             if (this.props.tabState.timeline.selectedKeyframes.length > 0) {
                 this.context.deleteObjects(

@@ -566,7 +566,10 @@ export class ProjectEditorTab implements IHomeTab {
         };
         const deleteSelection = () => {
             if (!this.runMode) {
-                if (projectStore.navigationStore.selectedPanel) {
+                if (
+                    projectStore.navigationStore.selectedPanel &&
+                    projectStore.navigationStore.selectedPanel.deleteSelection
+                ) {
                     projectStore.navigationStore.selectedPanel.deleteSelection();
                 }
             }

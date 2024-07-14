@@ -77,10 +77,6 @@ export const Messages = observer(
             }
             return object;
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };

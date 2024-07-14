@@ -1,80 +1,149 @@
 import React from "react";
 import { observer } from "mobx-react";
+import {
+    IObservableValue,
+    makeObservable,
+    observable,
+    runInAction
+} from "mobx";
 
-import { showDialog } from "eez-studio-ui/dialog";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
 import {
     EezObject,
     getParent,
-    SerializedData
+    getProperty,
+    SerializedData,
+    setParent
 } from "project-editor/core/object";
 import {
-    isPropertySearchable,
-    visitWithPause
-} from "project-editor/core/search";
-import { getProjectEditorDataFromClipboard } from "project-editor/store/clipboard";
-import type { ProjectStore } from "project-editor/store";
+    copyProjectEditorDataToClipboard,
+    getProjectEditorDataFromClipboard,
+    objectsToClipboardData
+} from "project-editor/store/clipboard";
+import {
+    getLabel,
+    getObjectFromPath,
+    type ProjectStore
+} from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { IObservableValue, observable } from "mobx";
+import { searchForObjectDependencies } from "project-editor/core/search";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ObjectDependency {
-    reference: {
-        object: EezObject;
-        propertyName: string;
-        startIndex: number;
-        endIndex: number;
-    };
-    referencedObject: EezObject;
+interface ObjectReference {
+    inObject: EezObject;
+    inPropertyName: string;
+    fromIndex: number;
+    toIndex: number;
 }
 
-export function* getObjectDependencies(
-    object: EezObject
-): IterableIterator<ObjectDependency> {
-    const result: ObjectDependency[] = [];
+class DeepPasteModel {
+    objects = new Map<EezObject, ObjectReference[]>();
 
-    const v = visitWithPause(object);
+    constructor(
+        public sourceProjectStore: ProjectStore,
+        public destinationProjectStore: ProjectStore,
+        public serializedData: SerializedData
+    ) {
+        makeObservable(this, {
+            objects: observable
+        });
+    }
 
-    while (true) {
-        let visitResult = v.next();
-        if (visitResult.done) {
-            return;
-        }
-
-        let valueObject = visitResult.value;
-        if (valueObject) {
-            if (
-                !isPropertySearchable(
-                    getParent(valueObject),
-                    valueObject.propertyInfo
-                ) ||
-                !valueObject.value
-            ) {
-                continue;
+    async findAllDependencies() {
+        if (this.serializedData.object) {
+            this.findObjectDependencies(this.serializedData.object);
+        } else {
+            for (const object of this.serializedData.objects!) {
+                this.findObjectDependencies(object);
             }
-
-            let flowProperty;
-            if (valueObject.propertyInfo.flowProperty) {
-                if (typeof valueObject.propertyInfo.flowProperty == "string") {
-                    flowProperty = valueObject.propertyInfo.flowProperty;
-                } else {
-                    flowProperty =
-                        valueObject.propertyInfo.flowProperty(object);
-                }
-            }
-
-            console.log(flowProperty);
         }
     }
 
-    return result;
-}
+    findObjectDependencies(object: EezObject, reference?: ObjectReference) {
+        let references = this.objects.get(object);
+        if (references) {
+            if (reference) {
+                references.push(reference);
+            }
+            return;
+        }
 
-////////////////////////////////////////////////////////////////////////////////
+        runInAction(() => {
+            this.objects.set(object, reference ? [reference] : []);
+        });
 
-class DeepPasteModel {
-    constructor(serializedData: SerializedData) {}
+        setParent(object, this.sourceProjectStore.project);
+
+        const search = searchForObjectDependencies(
+            this.sourceProjectStore,
+            object,
+            true,
+            true
+        );
+
+        const interval = setInterval(() => {
+            while (true) {
+                let visitResult = search.next();
+                if (visitResult.done) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                let dependency = visitResult.value;
+                if (!dependency) {
+                    return;
+                }
+
+                if (dependency.kind == "object-reference") {
+                    let path =
+                        dependency.valueObject.propertyInfo
+                            .referencedObjectCollectionPath!;
+                    const name = dependency.valueObject.value;
+
+                    if (
+                        this.sourceProjectStore.project._assets.maps[
+                            "name"
+                        ].assetCollectionPaths.has(path)
+                    ) {
+                        let collection = getObjectFromPath(
+                            this.sourceProjectStore.project,
+                            path.split("/")
+                        ) as EezObject[];
+
+                        if (!collection) {
+                            if (
+                                path == "allStyles" ||
+                                path == "allLvglStyles"
+                            ) {
+                                collection =
+                                    this.sourceProjectStore.project[path];
+                                path = "styles";
+                            }
+                        }
+
+                        const referencedObject =
+                            collection &&
+                            collection.find(
+                                object => name == getProperty(object, "name")
+                            );
+                        if (referencedObject) {
+                            this.findObjectDependencies(referencedObject, {
+                                inObject: getParent(
+                                    dependency.valueObject
+                                ) as EezObject,
+                                inPropertyName:
+                                    dependency.valueObject.propertyInfo.name,
+                                fromIndex: 0,
+                                toIndex: name.length
+                            });
+                        }
+                    }
+                }
+            }
+        }, 0);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,9 +152,39 @@ export const DeepPasteDialog = observer(
     class NewProjectWizard extends React.Component<{
         deepPasteModel: DeepPasteModel;
         modalDialog: IObservableValue<any>;
+        onOk: () => void;
+        onCancel: () => void;
     }> {
+        onOkEnabled = () => {
+            return true;
+        };
+
+        onOk = () => {
+            this.props.onOk();
+        };
+
         render() {
-            return <div className="EezStudio_DeepPasteDialog"></div>;
+            const objects = this.props.deepPasteModel.objects;
+
+            return (
+                <Dialog
+                    modal={false}
+                    okButtonText="Paste"
+                    okEnabled={this.onOkEnabled}
+                    onOk={this.onOk}
+                    onCancel={this.props.onCancel}
+                >
+                    <div>
+                        {[...objects.keys()].map(object => {
+                            // const references = objects.get(object)!;
+
+                            return (
+                                <div key={object.objID}>{getLabel(object)}</div>
+                            );
+                        })}
+                    </div>
+                </Dialog>
+            );
         }
     }
 );
@@ -114,14 +213,44 @@ export function deepPaste(projectStore: ProjectStore) {
         return false;
     }
 
-    const deepPasteModel = new DeepPasteModel(serializedData);
+    const deepPasteModel = new DeepPasteModel(
+        projectEditorTab.projectStore,
+        projectStore,
+        serializedData
+    );
 
     const modalDialogObservable = observable.box<any>();
+
+    let disposed = false;
+
+    const onDispose = () => {
+        if (!disposed) {
+            disposed = true;
+
+            if (modalDialog) {
+                modalDialog.close();
+            }
+        }
+    };
+
+    const onOk = () => {
+        copyProjectEditorDataToClipboard(
+            objectsToClipboardData(deepPasteModel.sourceProjectStore, [
+                ...deepPasteModel.objects.keys()
+            ])
+        );
+
+        deepPasteModel.destinationProjectStore.paste();
+
+        onDispose();
+    };
 
     const [modalDialog] = showDialog(
         <DeepPasteDialog
             deepPasteModel={deepPasteModel}
             modalDialog={modalDialogObservable}
+            onOk={onOk}
+            onCancel={onDispose}
         />,
         {
             jsPanel: {
@@ -134,6 +263,8 @@ export function deepPaste(projectStore: ProjectStore) {
     );
 
     modalDialogObservable.set(modalDialog);
+
+    deepPasteModel.findAllDependencies();
 
     return true;
 }

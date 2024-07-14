@@ -106,10 +106,6 @@ export const FlowViewer = observer(
         get selectedObjects() {
             return [];
         }
-        cutSelection() {}
-        copySelection() {}
-        pasteSelection() {}
-        deleteSelection() {}
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };

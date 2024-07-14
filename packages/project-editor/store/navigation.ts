@@ -15,10 +15,10 @@ import {
 export interface IPanel {
     selectedObject: IEezObject | undefined;
     selectedObjects?: IEezObject[];
-    cutSelection(): void;
-    copySelection(): void;
-    pasteSelection(): void;
-    deleteSelection(): void;
+    cutSelection?(): void;
+    copySelection?(): void;
+    pasteSelection?(): void;
+    deleteSelection?(): void;
     selectAll?(): void;
 }
 

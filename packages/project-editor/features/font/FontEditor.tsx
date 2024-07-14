@@ -130,9 +130,6 @@ export const FontEditor = observer(
                 return this.font;
             }
         }
-        cutSelection() {
-            // TODO
-        }
         copySelection() {
             const glyph = this.selectedGlyph;
             if (glyph) {
@@ -144,9 +141,6 @@ export const FontEditor = observer(
             if (glyph) {
                 glyph.pasteFromClipboard();
             }
-        }
-        deleteSelection() {
-            // TODO
         }
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
