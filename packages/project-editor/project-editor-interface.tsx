@@ -40,7 +40,10 @@ import type {
     ScpiSubsystem
 } from "project-editor/features/scpi/scpi";
 import type { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
-import type { getBitmapData } from "project-editor/features/bitmap/bitmap";
+import type {
+    Bitmap,
+    getBitmapData
+} from "project-editor/features/bitmap/bitmap";
 import type {
     migrateProjectVersion,
     migrateProjectType
@@ -94,6 +97,7 @@ import type { Style } from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
 import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
+import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -129,6 +133,7 @@ export interface IProjectEditor {
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
+    BitmapClass: typeof Bitmap;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLScreenWidgetClass: typeof LVGLScreenWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
@@ -170,6 +175,7 @@ export interface IProjectEditor {
     makeExpressionProperty: typeof makeExpressionProperty;
     evalProperty: typeof evalProperty;
     conditionalStyleConditionProperty: PropertyInfo;
+    FlowTabStateClass: typeof FlowTabState;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

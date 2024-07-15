@@ -282,10 +282,15 @@ export type InheritedValue =
 
 export interface SerializedData {
     originProjectFilePath: string;
+
     objectClassName: string;
     classInfo?: ClassInfo;
+
     object?: EezObject;
+    objectParentPath?: string;
+
     objects?: EezObject[];
+    objectsParentPath?: string[];
 }
 
 interface LVGLClassInfoProperties {

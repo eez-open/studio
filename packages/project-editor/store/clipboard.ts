@@ -24,7 +24,8 @@ import {
     ProjectStore,
     rewireBegin,
     rewireEnd,
-    canContain
+    canContain,
+    getObjectPathAsString
 } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,7 +34,7 @@ const CLIPOARD_DATA_ID = "application/eez-studio-project-editor-data";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function cloneObjectWithNewObjIds(
+export function cloneObjectWithNewObjIds(
     projectStore: ProjectStore,
     object: IEezObject
 ) {
@@ -59,7 +60,8 @@ export function objectToClipboardData(
     const serializeData: SerializedData = {
         originProjectFilePath: projectStore.filePath!,
         objectClassName: getClass(object).name,
-        object: objectToJson(clonedObject) as any as EezObject
+        object: objectToJson(clonedObject) as any as EezObject,
+        objectParentPath: getObjectPathAsString(getParent(object))
     };
 
     return JSON.stringify(serializeData);
@@ -80,6 +82,9 @@ export function objectsToClipboardData(
         objectClassName: getClass(objects[0]).name,
         objects: clonedObjects.map(
             clonedObject => objectToJson(clonedObject) as any as EezObject
+        ),
+        objectsParentPath: objects.map(object =>
+            getObjectPathAsString(getParent(object))
         )
     };
 

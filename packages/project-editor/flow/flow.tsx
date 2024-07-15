@@ -10,7 +10,8 @@ import {
     PropertyInfo,
     PropertyType,
     registerClass,
-    SerializedData
+    SerializedData,
+    setParent
 } from "project-editor/core/object";
 import { visitObjects } from "project-editor/core/search";
 import {
@@ -185,6 +186,7 @@ export abstract class Flow extends EezObject {
     objectsToClipboardData(objects: IEezObject[]) {
         const flowFragment = new FlowFragment();
         flowFragment.addObjects(this, objects);
+        setParent(flowFragment, this);
         return objectToClipboardData(
             ProjectEditor.getProjectStore(this),
             flowFragment
@@ -324,87 +326,91 @@ export class FlowFragment extends EezObject {
             const flow = ProjectEditor.getFlow(clipboardData.pastePlace);
             const pasteFlowFragment = clipboardData.serializedData
                 .object as FlowFragment;
-
             const projectStore = getProjectStore(flow);
 
-            const flowFragment = createObject(
+            return FlowFragment.paste(
                 projectStore,
+                flow,
                 pasteFlowFragment,
-                FlowFragment,
-                undefined,
-                false
+                object
+            );
+        }
+    };
+
+    static paste(
+        projectStore: ProjectStore,
+        flow: Flow,
+        pasteFlowFragment: FlowFragment,
+        object: IEezObject
+    ) {
+        const flowFragment = createObject(
+            projectStore,
+            pasteFlowFragment,
+            FlowFragment,
+            undefined,
+            false
+        );
+
+        let closeCombineCommands = false;
+        if (!projectStore.undoManager.combineCommands) {
+            projectStore.undoManager.setCombineCommands(true);
+            closeCombineCommands = true;
+        }
+
+        let components: EezObject[] = [];
+
+        if (flowFragment.connectionLines.length > 0) {
+            flowFragment.connectionLines.forEach(connectionLine =>
+                projectStore.addObject(flow.connectionLines, connectionLine)
             );
 
-            let closeCombineCommands = false;
-            if (!projectStore.undoManager.combineCommands) {
-                projectStore.undoManager.setCombineCommands(true);
-                closeCombineCommands = true;
-            }
-
-            let components: EezObject[] = [];
-
-            if (flowFragment.connectionLines.length > 0) {
-                flowFragment.connectionLines.forEach(connectionLine =>
-                    projectStore.addObject(flow.connectionLines, connectionLine)
+            flowFragment.components.forEach(component => {
+                components.push(
+                    projectStore.addObject(flow.components, component)
                 );
+            });
+        } else {
+            if (
+                (object instanceof Widget ||
+                    object instanceof ProjectEditor.LVGLWidgetClass) &&
+                flowFragment.components.every(
+                    component => component instanceof Widget
+                )
+            ) {
+                let containerAncestor:
+                    | ContainerWidget
+                    | SelectWidget
+                    | LVGLWidget
+                    | undefined = getAncestorOfType(
+                    getParent(getParent(object)),
+                    ContainerWidget.classInfo
+                ) as ContainerWidget | undefined;
 
-                flowFragment.components.forEach(component => {
-                    components.push(
-                        projectStore.addObject(flow.components, component)
-                    );
-                });
-            } else {
-                if (
-                    (object instanceof Widget ||
-                        object instanceof ProjectEditor.LVGLWidgetClass) &&
-                    flowFragment.components.every(
-                        component => component instanceof Widget
-                    )
-                ) {
-                    let containerAncestor:
-                        | ContainerWidget
-                        | SelectWidget
-                        | LVGLWidget
-                        | undefined = getAncestorOfType(
+                if (!containerAncestor) {
+                    containerAncestor = getAncestorOfType(
                         getParent(getParent(object)),
-                        ContainerWidget.classInfo
-                    ) as ContainerWidget | undefined;
-
+                        SelectWidget.classInfo
+                    ) as SelectWidget | undefined;
                     if (!containerAncestor) {
                         containerAncestor = getAncestorOfType(
                             getParent(getParent(object)),
-                            SelectWidget.classInfo
-                        ) as SelectWidget | undefined;
-                        if (!containerAncestor) {
-                            containerAncestor = getAncestorOfType(
-                                getParent(getParent(object)),
-                                ProjectEditor.LVGLWidgetClass.classInfo
-                            ) as LVGLWidget | undefined;
-                        }
+                            ProjectEditor.LVGLWidgetClass.classInfo
+                        ) as LVGLWidget | undefined;
                     }
+                }
 
-                    if (containerAncestor) {
-                        const parent =
-                            containerAncestor instanceof
-                            ProjectEditor.LVGLWidgetClass
-                                ? containerAncestor.children
-                                : containerAncestor.widgets;
+                if (containerAncestor) {
+                    const parent =
+                        containerAncestor instanceof
+                        ProjectEditor.LVGLWidgetClass
+                            ? containerAncestor.children
+                            : containerAncestor.widgets;
 
-                        flowFragment.components.forEach(component => {
-                            components.push(
-                                projectStore.addObject(parent, component)
-                            );
-                        });
-                    } else {
-                        flowFragment.components.forEach(component => {
-                            components.push(
-                                projectStore.addObject(
-                                    flow.components,
-                                    component
-                                )
-                            );
-                        });
-                    }
+                    flowFragment.components.forEach(component => {
+                        components.push(
+                            projectStore.addObject(parent, component)
+                        );
+                    });
                 } else {
                     flowFragment.components.forEach(component => {
                         components.push(
@@ -412,15 +418,21 @@ export class FlowFragment extends EezObject {
                         );
                     });
                 }
+            } else {
+                flowFragment.components.forEach(component => {
+                    components.push(
+                        projectStore.addObject(flow.components, component)
+                    );
+                });
             }
-
-            if (closeCombineCommands) {
-                projectStore.undoManager.setCombineCommands(false);
-            }
-
-            return components;
         }
-    };
+
+        if (closeCombineCommands) {
+            projectStore.undoManager.setCombineCommands(false);
+        }
+
+        return components;
+    }
 
     addObjects(flow: Flow, objects: IEezObject[]) {
         this.components = [];

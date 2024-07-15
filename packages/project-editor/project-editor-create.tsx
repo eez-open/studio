@@ -82,7 +82,7 @@ import {
     LVGLLedWidget
 } from "project-editor/lvgl/widgets";
 
-import { getBitmapData } from "project-editor/features/bitmap/bitmap";
+import { Bitmap, getBitmapData } from "project-editor/features/bitmap/bitmap";
 import {
     migrateProjectVersion,
     migrateProjectType
@@ -117,6 +117,7 @@ import { ConditionalStyle, Style } from "project-editor/features/style/style";
 import { PropertyType } from "project-editor/core/object";
 import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
+import { FlowTabState } from "project-editor/flow/flow-tab-state";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -180,6 +181,7 @@ export async function createProjectEditor(
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
+        BitmapClass: Bitmap,
         LVGLWidgetClass: LVGLWidget,
         LVGLScreenWidgetClass: LVGLScreenWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
@@ -220,7 +222,8 @@ export async function createProjectEditor(
         createActionComponentClass,
         makeExpressionProperty,
         evalProperty,
-        conditionalStyleConditionProperty
+        conditionalStyleConditionProperty,
+        FlowTabStateClass: FlowTabState
     };
 
     ConditionalStyle.classInfo.properties.push(
