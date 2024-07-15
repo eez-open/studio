@@ -1082,6 +1082,19 @@ export const builtInFunctions: {
         }
     },
 
+    "String.format": {
+        operationIndex: 79,
+        arity: 2,
+        args: ["format", "number"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => (window as any).d3.format(args[0])(args[1]),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        }
+    },
+
     "String.padStart": {
         operationIndex: 50,
         arity: 3,
