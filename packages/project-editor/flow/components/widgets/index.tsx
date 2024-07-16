@@ -38,7 +38,8 @@ import {
     getProject,
     ProjectType,
     findPage,
-    findVariable
+    findVariable,
+    Project
 } from "project-editor/project/project";
 
 import type {
@@ -425,12 +426,13 @@ export class ContainerWidget extends Widget {
 
         beforeLoadHook: (
             widget: ContainerWidget,
-            jsWidget: Partial<ContainerWidget>
+            jsWidget: Partial<ContainerWidget>,
+            project: Project
         ) => {
             if (jsWidget.layout == undefined) {
                 jsWidget.layout = "static";
             } else if (jsWidget.layout == "docking-manager") {
-                if (!getProject(widget).projectTypeTraits.isDashboard) {
+                if (!project.projectTypeTraits.isDashboard) {
                     jsWidget.layout = "static";
                 }
             }

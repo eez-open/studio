@@ -969,7 +969,6 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-<<<<<<< HEAD
   1035384: ($0) => { startToDebuggerMessage($0); },  
  1035416: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
  1035491: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
@@ -982,20 +981,6 @@ var ASM_CONSTS = {
  1035871: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
  1035928: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
  1035987: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
-=======
-  1035304: ($0) => { startToDebuggerMessage($0); },  
- 1035336: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1035411: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1035486: ($0) => { finishToDebuggerMessage($0); },  
- 1035519: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1035572: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1035678: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1035714: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1035751: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1035791: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1035848: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1035907: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
->>>>>>> d68a813bee242a4f1f3bd6d69eb5862f81aac3d1
 };
 
 
