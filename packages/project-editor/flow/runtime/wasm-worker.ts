@@ -355,12 +355,9 @@ function operationStringFormat(
 ) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (WasmFlowRuntime) {
-        console.log("T3", format);
         const param = getValue(WasmFlowRuntime, paramValuePtr).value;
-        console.log("T4", param);
         try {
             const result = (window as any).d3.format(format)(param);
-            console.log("T5", result);
             return createWasmValue(WasmFlowRuntime, result);
         } catch (err) {}
     }
