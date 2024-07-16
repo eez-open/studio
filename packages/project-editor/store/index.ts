@@ -101,7 +101,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { isValidUrl } from "project-editor/core/util";
 import { reflectLvglVersion } from "project-editor/lvgl/page-runtime";
-import { deepPaste } from "project-editor/store/deep-paste";
+import { pasteWithDependencies } from "project-editor/store/paste-with-dependencies";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1444,7 +1444,7 @@ export class ProjectStore {
     };
 
     pasteFromToolbar = () => {
-        if (!deepPaste(this)) {
+        if (!pasteWithDependencies(this)) {
             this.paste();
         }
     };

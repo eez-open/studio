@@ -54,7 +54,7 @@ interface ObjectsMapValue {
     references: ObjectReference[];
 }
 
-class DeepPasteModel {
+class PasteWithDependenciesModel {
     objects = new Map<EezObject, ObjectsMapValue>();
     remaining: number = 0;
 
@@ -363,15 +363,15 @@ class DeepPasteModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const DeepPasteDialog = observer(
+export const PasteWithDependenciesDialog = observer(
     class NewProjectWizard extends React.Component<{
-        deepPasteModel: DeepPasteModel;
+        pasteWithDependencies: PasteWithDependenciesModel;
         modalDialog: IObservableValue<any>;
         onOk: () => void;
         onCancel: () => void;
     }> {
         onOkEnabled = () => {
-            return this.props.deepPasteModel.remaining == 0;
+            return this.props.pasteWithDependencies.remaining == 0;
         };
 
         onOk = () => {
@@ -379,7 +379,7 @@ export const DeepPasteDialog = observer(
         };
 
         render() {
-            const objects = this.props.deepPasteModel.objects;
+            const objects = this.props.pasteWithDependencies.objects;
 
             return (
                 <Dialog
@@ -390,7 +390,7 @@ export const DeepPasteDialog = observer(
                     onCancel={this.props.onCancel}
                 >
                     <div>
-                        {this.props.deepPasteModel.remaining > 0 && (
+                        {this.props.pasteWithDependencies.remaining > 0 && (
                             <div>
                                 <div>Searching for dependencies ...</div>
                                 <Loader />
@@ -452,7 +452,7 @@ export const DeepPasteDialog = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function deepPaste(projectStore: ProjectStore) {
+export function pasteWithDependencies(projectStore: ProjectStore) {
     let serializedData = getProjectEditorDataFromClipboard(projectStore);
     if (!serializedData) {
         return false;
@@ -474,7 +474,7 @@ export function deepPaste(projectStore: ProjectStore) {
         return false;
     }
 
-    const deepPasteModel = new DeepPasteModel(
+    const pasteWithDependenciesModel = new PasteWithDependenciesModel(
         projectEditorTab.projectStore,
         projectStore,
         serializedData
@@ -495,22 +495,22 @@ export function deepPaste(projectStore: ProjectStore) {
     };
 
     const onOk = () => {
-        deepPasteModel.doPaste();
+        pasteWithDependenciesModel.doPaste();
 
         onDispose();
     };
 
     const [modalDialog] = showDialog(
-        <DeepPasteDialog
-            deepPasteModel={deepPasteModel}
+        <PasteWithDependenciesDialog
+            pasteWithDependencies={pasteWithDependenciesModel}
             modalDialog={modalDialogObservable}
             onOk={onOk}
             onCancel={onDispose}
         />,
         {
             jsPanel: {
-                id: "deep-paste",
-                title: "Deep Paste",
+                id: "paste-with-dependencies-dialog",
+                title: "Paste",
                 width: 800,
                 height: 600
             }
@@ -519,7 +519,7 @@ export function deepPaste(projectStore: ProjectStore) {
 
     modalDialogObservable.set(modalDialog);
 
-    deepPasteModel.findAllDependencies();
+    pasteWithDependenciesModel.findAllDependencies();
 
     return true;
 }
