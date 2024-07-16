@@ -67,6 +67,7 @@ import { visitObjects } from "project-editor/core/search";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { PAGES_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -361,6 +362,7 @@ export class Page extends Flow {
                     isDashboardProject(object) || isLVGLProject(object)
             }
         ],
+        icon: PAGES_ICON,
         label: (page: Page) => {
             return page.name;
         },

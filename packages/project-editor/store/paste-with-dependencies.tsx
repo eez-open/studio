@@ -1,6 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import {
+    action,
     IObservableValue,
     makeObservable,
     observable,
@@ -8,6 +9,8 @@ import {
 } from "mobx";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
+import { Loader } from "eez-studio-ui/loader";
+import { Icon } from "eez-studio-ui/icon";
 
 import {
     EezObject,
@@ -24,6 +27,7 @@ import {
     addObject,
     getAncestorOfType,
     getClass,
+    getClassInfo,
     getLabel,
     getObjectFromPath,
     getObjectFromStringPath,
@@ -32,13 +36,13 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { searchForObjectDependencies } from "project-editor/core/search";
 import type { Style } from "project-editor/features/style/style";
-import { Loader } from "eez-studio-ui/loader";
 import type { Flow } from "project-editor/flow/flow";
 import {
     getArrayElementTypeFromType,
     getEnumFromType,
     getStructureFromType
 } from "project-editor/features/variable/value-type";
+import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +56,8 @@ interface ObjectReference {
 interface ObjectsMapValue {
     clonedObject: EezObject;
     references: ObjectReference[];
+
+    enabled: boolean;
 }
 
 class PasteWithDependenciesModel {
@@ -124,7 +130,8 @@ class PasteWithDependenciesModel {
 
         objectsMapValue = {
             clonedObject,
-            references: reference ? [reference] : []
+            references: reference ? [reference] : [],
+            enabled: true
         };
 
         runInAction(() => {
@@ -166,9 +173,10 @@ class PasteWithDependenciesModel {
                 let visitResult = search.next();
                 if (visitResult.done) {
                     clearInterval(interval);
-                    runInAction(() => {
-                        this.remaining--;
-                    });
+                    setTimeout(
+                        action(() => this.remaining--),
+                        250
+                    );
                     return;
                 }
 
@@ -359,27 +367,77 @@ class PasteWithDependenciesModel {
 
         this.destinationProjectStore.undoManager.setCombineCommands(false);
     }
+
+    get allEnabled() {
+        return ![...this.objects.values()].find(
+            objectsMapValue => !objectsMapValue.enabled
+        );
+    }
+
+    get allDisabled() {
+        return ![...this.objects.values()].find(
+            objectsMapValue => objectsMapValue.enabled
+        );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const PasteWithDependenciesDialog = observer(
     class NewProjectWizard extends React.Component<{
-        pasteWithDependencies: PasteWithDependenciesModel;
+        pasteWithDependenciesModel: PasteWithDependenciesModel;
         modalDialog: IObservableValue<any>;
         onOk: () => void;
         onCancel: () => void;
     }> {
+        enableAllCheckboxRef = React.createRef<HTMLInputElement>();
+
+        get allDependenciesFound() {
+            return this.props.pasteWithDependenciesModel.remaining == 0;
+        }
+
+        updateIndeterminate() {
+            if (this.enableAllCheckboxRef.current) {
+                this.enableAllCheckboxRef.current.indeterminate =
+                    !this.props.pasteWithDependenciesModel.allEnabled &&
+                    !this.props.pasteWithDependenciesModel.allDisabled;
+            }
+        }
+
+        componentDidMount() {
+            this.updateIndeterminate();
+        }
+
+        componentDidUpdate() {
+            this.updateIndeterminate();
+        }
+
         onOkEnabled = () => {
-            return this.props.pasteWithDependencies.remaining == 0;
+            return (
+                this.props.pasteWithDependenciesModel.remaining == 0 &&
+                !this.props.pasteWithDependenciesModel.allDisabled
+            );
         };
 
         onOk = () => {
             this.props.onOk();
         };
 
+        onChangeEnableAllCheckbox = (
+            event: React.ChangeEvent<HTMLInputElement>
+        ) => {
+            runInAction(() => {
+                this.props.pasteWithDependenciesModel.objects.forEach(
+                    objectsMapValue =>
+                        (objectsMapValue.enabled = event.target.checked)
+                );
+            });
+        };
+
         render() {
-            const objects = this.props.pasteWithDependencies.objects;
+            const pasteWithDependenciesModel =
+                this.props.pasteWithDependenciesModel;
+            const objects = this.props.pasteWithDependenciesModel.objects;
 
             return (
                 <Dialog
@@ -389,60 +447,155 @@ export const PasteWithDependenciesDialog = observer(
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
                 >
-                    <div>
-                        {this.props.pasteWithDependencies.remaining > 0 && (
+                    <div className="EezStudio_PasteWithDependenciesDialog">
+                        {!this.allDependenciesFound && (
                             <div>
-                                <div>Searching for dependencies ...</div>
-                                <Loader />
+                                <div>
+                                    <div>Searching for dependencies ...</div>
+                                    <Loader />
+                                </div>
                             </div>
                         )}
-                        <div>
-                            {[...objects.keys()].map(object => {
-                                const objectsMapValue = objects.get(object)!;
-
-                                return (
-                                    <div key={object.objID}>
-                                        {getClass(object).name}:{" "}
-                                        {getLabel(object)}
-                                        <div style={{ marginLeft: 20 }}>
-                                            {objectsMapValue.references.map(
-                                                (reference, i) => (
-                                                    <div key={i}>
-                                                        <div>
-                                                            inPropertyName:{" "}
-                                                            {
-                                                                reference.inPropertyName
-                                                            }
-                                                        </div>
-                                                        <div>
-                                                            value:{" "}
-                                                            {
-                                                                (
-                                                                    reference.inObject as any
-                                                                )[
-                                                                    reference
-                                                                        .inPropertyName
-                                                                ]
-                                                            }
-                                                        </div>
-                                                        <div>
-                                                            fromIndex:{" "}
-                                                            {
-                                                                reference.fromIndex
-                                                            }
-                                                        </div>
-                                                        <div>
-                                                            toIndex:{" "}
-                                                            {reference.toIndex}
-                                                        </div>
-                                                    </div>
-                                                )
+                        {this.allDependenciesFound && (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            {this.allDependenciesFound && (
+                                                <input
+                                                    ref={
+                                                        this
+                                                            .enableAllCheckboxRef
+                                                    }
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    checked={
+                                                        pasteWithDependenciesModel.allEnabled
+                                                    }
+                                                    onChange={
+                                                        this
+                                                            .onChangeEnableAllCheckbox
+                                                    }
+                                                ></input>
                                             )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                        </th>
+                                        <th>Object Type</th>
+                                        <th>Object Name</th>
+                                        <th></th>
+                                        <th>Conflict Resolution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[...objects.keys()].map(object => {
+                                        const objectsMapValue =
+                                            objects.get(object)!;
+
+                                        const classInfo = getClassInfo(object);
+                                        const isUserWidget =
+                                            object instanceof
+                                                ProjectEditor.PageClass &&
+                                            object.isUsedAsUserWidget;
+                                        const isFlowFragment =
+                                            object instanceof
+                                            ProjectEditor.FlowFragmentClass;
+                                        const icon = isUserWidget
+                                            ? USER_WIDGET_ICON
+                                            : classInfo.icon;
+
+                                        return (
+                                            <tr key={object.objID}>
+                                                <td>
+                                                    {this
+                                                        .allDependenciesFound && (
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            checked={
+                                                                objectsMapValue.enabled
+                                                            }
+                                                            onChange={action(
+                                                                event =>
+                                                                    (objectsMapValue.enabled =
+                                                                        event.target.checked)
+                                                            )}
+                                                        ></input>
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    {icon && (
+                                                        <Icon icon={icon} />
+                                                    )}
+                                                    {isUserWidget
+                                                        ? "User Widget"
+                                                        : isFlowFragment
+                                                        ? "Flow Fragment"
+                                                        : getClass(object).name}
+                                                </td>
+
+                                                <td>
+                                                    {" "}
+                                                    {isFlowFragment
+                                                        ? ""
+                                                        : getLabel(object)}
+                                                </td>
+
+                                                <td>
+                                                    {objectsMapValue.references.map(
+                                                        (reference, i) => (
+                                                            <div key={i}>
+                                                                <div>
+                                                                    inPropertyName:{" "}
+                                                                    {
+                                                                        reference.inPropertyName
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    value:{" "}
+                                                                    {
+                                                                        (
+                                                                            reference.inObject as any
+                                                                        )[
+                                                                            reference
+                                                                                .inPropertyName
+                                                                        ]
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    fromIndex:{" "}
+                                                                    {
+                                                                        reference.fromIndex
+                                                                    }
+                                                                </div>
+                                                                <div>
+                                                                    toIndex:{" "}
+                                                                    {
+                                                                        reference.toIndex
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    <select>
+                                                        <option>
+                                                            Rename source
+                                                        </option>
+                                                        <option>
+                                                            Rename destination
+                                                        </option>
+                                                        <option>Replace</option>
+                                                        <option>Keep</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </Dialog>
             );
@@ -502,7 +655,7 @@ export function pasteWithDependencies(projectStore: ProjectStore) {
 
     const [modalDialog] = showDialog(
         <PasteWithDependenciesDialog
-            pasteWithDependencies={pasteWithDependenciesModel}
+            pasteWithDependenciesModel={pasteWithDependenciesModel}
             modalDialog={modalDialogObservable}
             onOk={onOk}
             onCancel={onDispose}
