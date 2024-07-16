@@ -22,6 +22,7 @@ import {
 } from "project-editor/store/clipboard";
 import {
     addObject,
+    getAncestorOfType,
     getClass,
     getLabel,
     getObjectFromPath,
@@ -32,6 +33,12 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { searchForObjectDependencies } from "project-editor/core/search";
 import type { Style } from "project-editor/features/style/style";
 import { Loader } from "eez-studio-ui/loader";
+import type { Flow } from "project-editor/flow/flow";
+import {
+    getArrayElementTypeFromType,
+    getEnumFromType,
+    getStructureFromType
+} from "project-editor/features/variable/value-type";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +63,6 @@ class DeepPasteModel {
         public destinationProjectStore: ProjectStore,
         public serializedData: SerializedData
     ) {
-        console.log(serializedData);
         makeObservable(this, {
             objects: observable,
             remaining: observable
@@ -177,6 +183,10 @@ class DeepPasteModel {
                             .referencedObjectCollectionPath!;
                     const name = dependency.valueObject.value;
 
+                    if (path == "userWidgets" || path == "userPages") {
+                        path = "pages";
+                    }
+
                     if (
                         this.sourceProjectStore.project._assets.maps[
                             "name"
@@ -195,6 +205,9 @@ class DeepPasteModel {
                                 collection =
                                     this.sourceProjectStore.project[path];
                                 path = "styles";
+                            } else if (path == "pages") {
+                                collection =
+                                    this.sourceProjectStore.project[path];
                             }
                         }
 
@@ -220,6 +233,86 @@ class DeepPasteModel {
                             );
                         }
                     }
+                } else if (dependency.kind == "expression-start") {
+                } else if (dependency.kind == "expression-node") {
+                    const node = dependency.node;
+                    if (node.type == "Identifier") {
+                        if (node.identifierType == "local-variable") {
+                            const flow = getAncestorOfType<Flow>(
+                                object,
+                                ProjectEditor.FlowClass.classInfo
+                            );
+                            if (flow) {
+                                const localVariable = flow.localVariables.find(
+                                    localVariable =>
+                                        localVariable.name == node.name
+                                );
+                                if (localVariable) {
+                                    this.findObjectDependencies(
+                                        localVariable,
+                                        undefined,
+                                        {
+                                            inObject: getParent(
+                                                dependency.valueObject
+                                            ) as EezObject,
+                                            inPropertyName:
+                                                dependency.valueObject
+                                                    .propertyInfo.name,
+                                            fromIndex:
+                                                node.location.start.offset,
+                                            toIndex: node.location.end.offset
+                                        }
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } else if (dependency.kind == "expression-end") {
+                } else if (dependency.kind == "variable-type") {
+                    const checkType = (
+                        variableType: string,
+                        fromIndex: number
+                    ) => {
+                        const enumType = getEnumFromType(
+                            this.sourceProjectStore.project,
+                            variableType
+                        );
+                        if (enumType instanceof ProjectEditor.EnumClass) {
+                            this.findObjectDependencies(enumType, undefined, {
+                                inObject: getParent(
+                                    dependency.valueObject
+                                ) as EezObject,
+                                inPropertyName:
+                                    dependency.valueObject.propertyInfo.name,
+                                fromIndex: fromIndex + "enum:".length,
+                                toIndex: dependency.valueObject.value.length
+                            });
+                        }
+
+                        const structure = getStructureFromType(
+                            this.sourceProjectStore.project,
+                            variableType
+                        );
+                        if (structure instanceof ProjectEditor.StructureClass) {
+                            this.findObjectDependencies(structure, undefined, {
+                                inObject: getParent(
+                                    dependency.valueObject
+                                ) as EezObject,
+                                inPropertyName:
+                                    dependency.valueObject.propertyInfo.name,
+                                fromIndex: fromIndex + "struct:".length,
+                                toIndex: dependency.valueObject.value.length
+                            });
+                        }
+
+                        const elementType =
+                            getArrayElementTypeFromType(variableType);
+                        if (elementType) {
+                            checkType(elementType, fromIndex + "array:".length);
+                        }
+                    };
+
+                    checkType(dependency.valueObject.value, 0);
                 }
             }
         }, 0);
@@ -305,12 +398,47 @@ export const DeepPasteDialog = observer(
                         )}
                         <div>
                             {[...objects.keys()].map(object => {
-                                // const references = objects.get(object)!;
+                                const objectsMapValue = objects.get(object)!;
 
                                 return (
                                     <div key={object.objID}>
                                         {getClass(object).name}:{" "}
                                         {getLabel(object)}
+                                        <div style={{ marginLeft: 20 }}>
+                                            {objectsMapValue.references.map(
+                                                (reference, i) => (
+                                                    <div key={i}>
+                                                        <div>
+                                                            inPropertyName:{" "}
+                                                            {
+                                                                reference.inPropertyName
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            value:{" "}
+                                                            {
+                                                                (
+                                                                    reference.inObject as any
+                                                                )[
+                                                                    reference
+                                                                        .inPropertyName
+                                                                ]
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            fromIndex:{" "}
+                                                            {
+                                                                reference.fromIndex
+                                                            }
+                                                        </div>
+                                                        <div>
+                                                            toIndex:{" "}
+                                                            {reference.toIndex}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
