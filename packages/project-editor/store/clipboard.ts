@@ -57,11 +57,17 @@ export function objectToClipboardData(
     const clonedObject = cloneObjectWithNewObjIds(projectStore, object);
     rewireEnd(clonedObject);
 
+    let objectParentPath;
+    const parentObject = getParent(object);
+    if (parentObject) {
+        objectParentPath = getObjectPathAsString(parentObject);
+    }
+
     const serializeData: SerializedData = {
         originProjectFilePath: projectStore.filePath!,
         objectClassName: getClass(object).name,
         object: objectToJson(clonedObject) as any as EezObject,
-        objectParentPath: getObjectPathAsString(getParent(object))
+        objectParentPath
     };
 
     return JSON.stringify(serializeData);

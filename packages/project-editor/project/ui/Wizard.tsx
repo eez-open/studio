@@ -2125,6 +2125,12 @@ const ProjectProperties = observer(
             }
         };
 
+        onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+            if (event.key == "Enter") {
+                this.onCreateProject();
+            }
+        };
+
         render() {
             const { wizardModel } = this.props;
 
@@ -2165,6 +2171,7 @@ const ProjectProperties = observer(
                                         (value: string | undefined) =>
                                             (wizardModel.name = value)
                                     )}
+                                    onKeyDown={this.onKeyDown}
                                 />
                                 {wizardModel.nameError && (
                                     <div className="form-text text-danger">
@@ -2727,6 +2734,7 @@ class NameInput extends React.Component<{
     id?: string;
     value: string | undefined;
     onChange: (value: string | undefined) => void;
+    onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }> {
     render() {
         return (
@@ -2737,6 +2745,7 @@ class NameInput extends React.Component<{
                 value={this.props.value || ""}
                 onChange={event => this.props.onChange(event.target.value)}
                 spellCheck={false}
+                onKeyDown={this.props.onKeyDown}
             />
         );
     }
