@@ -154,7 +154,11 @@ export class LVGLTabWidget extends LVGLWidget {
 
         if (this.parentWidget == this.tabview) {
             // adjust top position if Tab is immediate child of Tabview
-            relativePosition.top += this.tabview.tabviewSize;
+            if (this.tabview.tabviewPosition == "TOP") {
+                relativePosition.top += this.tabview.tabviewSize;
+            } else if (this.tabview.tabviewPosition == "LEFT") {
+                relativePosition.left += this.tabview.tabviewSize;
+            }
         }
 
         return relativePosition;
