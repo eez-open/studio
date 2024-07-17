@@ -16,6 +16,7 @@ import {
     EezObject,
     getParent,
     getProperty,
+    isPropertyHidden,
     SerializedData,
     setParent
 } from "project-editor/core/object";
@@ -53,16 +54,38 @@ interface ObjectReference {
     toIndex: number;
 }
 
-interface ObjectsMapValue {
-    clonedObject: EezObject;
-    references: ObjectReference[];
+class PasteObject {
+    constructor(object: EezObject, reference: ObjectReference | undefined) {
+        this.object = object;
 
-    enabled: boolean;
+        if (reference) {
+            this.references.push(reference);
+        }
+
+        if (object instanceof ProjectEditor.VariableClass) {
+            this.isLocalVariable =
+                getAncestorOfType(object, ProjectEditor.FlowClass.classInfo) !=
+                undefined;
+        }
+
+        makeObservable(this, {
+            enabled: observable
+        });
+    }
+
+    object: EezObject;
+    isLocalVariable: boolean = false;
+    references: ObjectReference[] = [];
+    enabled: boolean = true;
+    hasConflict: boolean = false;
 }
 
 class PasteWithDependenciesModel {
-    objects = new Map<EezObject, ObjectsMapValue>();
+    foundObjects = new Map<EezObject, PasteObject>();
+    pasteObjects: PasteObject[] = [];
+
     remaining: number = 0;
+    allDependenciesFound: boolean;
 
     constructor(
         public sourceProjectStore: ProjectStore,
@@ -70,12 +93,12 @@ class PasteWithDependenciesModel {
         public serializedData: SerializedData
     ) {
         makeObservable(this, {
-            objects: observable,
-            remaining: observable
+            pasteObjects: observable,
+            allDependenciesFound: observable
         });
     }
 
-    async findAllDependencies() {
+    findAllDependencies() {
         if (this.serializedData.object) {
             this.findObjectDependencies(
                 this.serializedData.object,
@@ -96,12 +119,12 @@ class PasteWithDependenciesModel {
         objectParentPath?: string,
         reference?: ObjectReference
     ) {
-        let objectsMapValue = this.objects.get(object);
-        if (objectsMapValue) {
+        let pasteObject = this.foundObjects.get(object);
+        if (pasteObject) {
             if (reference) {
-                objectsMapValue.references.push(reference);
+                pasteObject.references.push(reference);
             }
-            return objectsMapValue;
+            return pasteObject;
         }
 
         let clonedObject: EezObject;
@@ -128,14 +151,11 @@ class PasteWithDependenciesModel {
             }
         }
 
-        objectsMapValue = {
-            clonedObject,
-            references: reference ? [reference] : [],
-            enabled: true
-        };
+        pasteObject = new PasteObject(clonedObject, reference);
 
         runInAction(() => {
-            this.objects.set(object, objectsMapValue);
+            this.foundObjects.set(object, pasteObject);
+            this.pasteObjects.push(pasteObject);
             this.remaining++;
         });
 
@@ -143,21 +163,22 @@ class PasteWithDependenciesModel {
             object instanceof ProjectEditor.StyleClass ||
             object instanceof ProjectEditor.LVGLStyleClass
         ) {
-            if (object.parentStyle) {
-                let parentObjectMapValue = this.findObjectDependencies(
-                    object.parentStyle
-                );
+            const parentObject = getParent(getParent(object));
+
+            if (
+                parentObject instanceof ProjectEditor.StyleClass ||
+                parentObject instanceof ProjectEditor.LVGLStyleClass
+            ) {
+                let parentObjectMapValue =
+                    this.findObjectDependencies(parentObject);
 
                 runInAction(() => {
-                    (
-                        parentObjectMapValue.clonedObject as Style
-                    ).childStyles.push(objectsMapValue.clonedObject as Style);
+                    (parentObjectMapValue.object as Style).childStyles.push(
+                        pasteObject.object as Style
+                    );
                 });
 
-                setParent(
-                    objectsMapValue.clonedObject,
-                    parentObjectMapValue.clonedObject
-                );
+                setParent(pasteObject.object, parentObjectMapValue.object);
             }
         }
 
@@ -173,10 +194,13 @@ class PasteWithDependenciesModel {
                 let visitResult = search.next();
                 if (visitResult.done) {
                     clearInterval(interval);
-                    setTimeout(
-                        action(() => this.remaining--),
-                        250
-                    );
+
+                    runInAction(() => this.remaining--);
+
+                    if (this.remaining == 0) {
+                        this.finalize();
+                    }
+
                     return;
                 }
 
@@ -224,6 +248,7 @@ class PasteWithDependenciesModel {
                             collection.find(
                                 object => name == getProperty(object, "name")
                             );
+
                         if (referencedObject) {
                             this.findObjectDependencies(
                                 referencedObject,
@@ -256,22 +281,47 @@ class PasteWithDependenciesModel {
                                         localVariable.name == node.name
                                 );
                                 if (localVariable) {
-                                    this.findObjectDependencies(
-                                        localVariable,
-                                        undefined,
-                                        {
-                                            inObject: getParent(
-                                                dependency.valueObject
-                                            ) as EezObject,
-                                            inPropertyName:
-                                                dependency.valueObject
-                                                    .propertyInfo.name,
-                                            fromIndex:
-                                                node.location.start.offset,
-                                            toIndex: node.location.end.offset
-                                        }
-                                    );
+                                    const pasteObject =
+                                        this.findObjectDependencies(
+                                            localVariable,
+                                            undefined,
+                                            {
+                                                inObject: getParent(
+                                                    dependency.valueObject
+                                                ) as EezObject,
+                                                inPropertyName:
+                                                    dependency.valueObject
+                                                        .propertyInfo.name,
+                                                fromIndex:
+                                                    node.location.start.offset,
+                                                toIndex:
+                                                    node.location.end.offset
+                                            }
+                                        );
+                                    pasteObject.isLocalVariable = true;
                                 }
+                            }
+                        } else if (node.identifierType == "global-variable") {
+                            const globalVariable =
+                                this.sourceProjectStore.project.variables.globalVariables.find(
+                                    globalVariable =>
+                                        globalVariable.name == node.name
+                                );
+                            if (globalVariable) {
+                                this.findObjectDependencies(
+                                    globalVariable,
+                                    undefined,
+                                    {
+                                        inObject: getParent(
+                                            dependency.valueObject
+                                        ) as EezObject,
+                                        inPropertyName:
+                                            dependency.valueObject.propertyInfo
+                                                .name,
+                                        fromIndex: node.location.start.offset,
+                                        toIndex: node.location.end.offset
+                                    }
+                                );
                             }
                         }
                     }
@@ -325,14 +375,93 @@ class PasteWithDependenciesModel {
             }
         }, 0);
 
-        return objectsMapValue;
+        return pasteObject;
+    }
+
+    finalize() {
+        this.pasteObjects.forEach(pasteObject => {
+            runInAction(() => {
+                pasteObject.hasConflict = this.hasConflict(pasteObject);
+            });
+        });
+
+        runInAction(() => (this.allDependenciesFound = true));
+    }
+
+    hasConflict(pasteObject: PasteObject) {
+        if (pasteObject.object instanceof ProjectEditor.FlowFragmentClass) {
+            return false;
+        }
+
+        if (pasteObject.object instanceof ProjectEditor.VariableClass) {
+            if (pasteObject.isLocalVariable) {
+                const localVariable = pasteObject.object;
+
+                const destinationFlow = this.destinationFlow;
+                if (!destinationFlow) {
+                    return false;
+                }
+
+                return destinationFlow.localVariables.find(
+                    destinationLocalVariable =>
+                        destinationLocalVariable.name == localVariable.name &&
+                        !this.compareObjects(
+                            destinationLocalVariable,
+                            localVariable
+                        )
+                )
+                    ? true
+                    : false;
+            } else {
+                const globalVariable = pasteObject.object;
+
+                return this.destinationProjectStore.project.variables.globalVariables.find(
+                    destinationGlobalVariable =>
+                        destinationGlobalVariable.name == globalVariable.name &&
+                        !this.compareObjects(
+                            destinationGlobalVariable,
+                            globalVariable
+                        )
+                )
+                    ? true
+                    : false;
+            }
+        }
+
+        return true;
+    }
+
+    compareObjects(existingObject: EezObject, newObject: EezObject) {
+        const classInfo = getClassInfo(existingObject);
+
+        for (const propertyInfo of classInfo.properties) {
+            if (!isPropertyHidden(existingObject, propertyInfo)) {
+                if (
+                    (existingObject as any)[propertyInfo.name] !=
+                    (newObject as any)[propertyInfo.name]
+                ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    get destinationFlow() {
+        const editorState =
+            this.destinationProjectStore.editorsStore.activeEditor?.state;
+        if (editorState instanceof ProjectEditor.FlowTabStateClass) {
+            return editorState.flow;
+        }
+        return undefined;
     }
 
     doPaste() {
         this.destinationProjectStore.undoManager.setCombineCommands(true);
 
-        for (const objectsMapValue of this.objects.values()) {
-            const object = objectsMapValue.clonedObject;
+        for (const pasteObject of this.pasteObjects) {
+            const object = pasteObject.object;
             if (object instanceof ProjectEditor.FlowFragmentClass) {
                 const editorState =
                     this.destinationProjectStore.editorsStore.activeEditor
@@ -362,6 +491,23 @@ class PasteWithDependenciesModel {
                         object
                     );
                 }
+            } else if (object instanceof ProjectEditor.VariableClass) {
+                if (pasteObject.isLocalVariable) {
+                    if (this.destinationFlow) {
+                        addObject(this.destinationFlow.localVariables, object);
+                    }
+                } else {
+                    addObject(
+                        this.destinationProjectStore.project.variables
+                            .globalVariables,
+                        object
+                    );
+                }
+            } else if (object instanceof ProjectEditor.EnumClass) {
+                addObject(
+                    this.destinationProjectStore.project.variables.enums,
+                    object
+                );
             }
         }
 
@@ -369,22 +515,18 @@ class PasteWithDependenciesModel {
     }
 
     get allEnabled() {
-        return ![...this.objects.values()].find(
-            objectsMapValue => !objectsMapValue.enabled
-        );
+        return !this.pasteObjects.find(pasteObject => !pasteObject.enabled);
     }
 
     get allDisabled() {
-        return ![...this.objects.values()].find(
-            objectsMapValue => objectsMapValue.enabled
-        );
+        return !this.pasteObjects.find(pasteObject => pasteObject.enabled);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const PasteWithDependenciesDialog = observer(
-    class NewProjectWizard extends React.Component<{
+    class PasteWithDependenciesDialog extends React.Component<{
         pasteWithDependenciesModel: PasteWithDependenciesModel;
         modalDialog: IObservableValue<any>;
         onOk: () => void;
@@ -393,7 +535,7 @@ export const PasteWithDependenciesDialog = observer(
         enableAllCheckboxRef = React.createRef<HTMLInputElement>();
 
         get allDependenciesFound() {
-            return this.props.pasteWithDependenciesModel.remaining == 0;
+            return this.props.pasteWithDependenciesModel.allDependenciesFound;
         }
 
         updateIndeterminate() {
@@ -414,7 +556,7 @@ export const PasteWithDependenciesDialog = observer(
 
         onOkEnabled = () => {
             return (
-                this.props.pasteWithDependenciesModel.remaining == 0 &&
+                this.allDependenciesFound &&
                 !this.props.pasteWithDependenciesModel.allDisabled
             );
         };
@@ -427,9 +569,8 @@ export const PasteWithDependenciesDialog = observer(
             event: React.ChangeEvent<HTMLInputElement>
         ) => {
             runInAction(() => {
-                this.props.pasteWithDependenciesModel.objects.forEach(
-                    objectsMapValue =>
-                        (objectsMapValue.enabled = event.target.checked)
+                this.props.pasteWithDependenciesModel.pasteObjects.forEach(
+                    pasteObject => (pasteObject.enabled = event.target.checked)
                 );
             });
         };
@@ -437,7 +578,7 @@ export const PasteWithDependenciesDialog = observer(
         render() {
             const pasteWithDependenciesModel =
                 this.props.pasteWithDependenciesModel;
-            const objects = this.props.pasteWithDependenciesModel.objects;
+            const objects = this.props.pasteWithDependenciesModel.pasteObjects;
 
             return (
                 <Dialog
@@ -486,21 +627,31 @@ export const PasteWithDependenciesDialog = observer(
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {[...objects.keys()].map(object => {
-                                        const objectsMapValue =
-                                            objects.get(object)!;
+                                    {objects.map(pasteObject => {
+                                        const object = pasteObject.object;
 
                                         const classInfo = getClassInfo(object);
+
                                         const isUserWidget =
                                             object instanceof
                                                 ProjectEditor.PageClass &&
                                             object.isUsedAsUserWidget;
+
                                         const isFlowFragment =
                                             object instanceof
                                             ProjectEditor.FlowFragmentClass;
+
                                         const icon = isUserWidget
                                             ? USER_WIDGET_ICON
                                             : classInfo.icon;
+
+                                        let objectType = isUserWidget
+                                            ? "User Widget"
+                                            : isFlowFragment
+                                            ? "Flow Fragment"
+                                            : pasteObject.isLocalVariable
+                                            ? "Local Variable"
+                                            : getClass(object).name;
 
                                         return (
                                             <tr key={object.objID}>
@@ -511,11 +662,11 @@ export const PasteWithDependenciesDialog = observer(
                                                             className="form-check-input"
                                                             type="checkbox"
                                                             checked={
-                                                                objectsMapValue.enabled
+                                                                pasteObject.enabled
                                                             }
                                                             onChange={action(
                                                                 event =>
-                                                                    (objectsMapValue.enabled =
+                                                                    (pasteObject.enabled =
                                                                         event.target.checked)
                                                             )}
                                                         ></input>
@@ -526,11 +677,7 @@ export const PasteWithDependenciesDialog = observer(
                                                     {icon && (
                                                         <Icon icon={icon} />
                                                     )}
-                                                    {isUserWidget
-                                                        ? "User Widget"
-                                                        : isFlowFragment
-                                                        ? "Flow Fragment"
-                                                        : getClass(object).name}
+                                                    {objectType}
                                                 </td>
 
                                                 <td>
@@ -541,7 +688,7 @@ export const PasteWithDependenciesDialog = observer(
                                                 </td>
 
                                                 <td>
-                                                    {objectsMapValue.references.map(
+                                                    {pasteObject.references.map(
                                                         (reference, i) => (
                                                             <div key={i}>
                                                                 <div>
@@ -579,16 +726,14 @@ export const PasteWithDependenciesDialog = observer(
                                                 </td>
 
                                                 <td>
-                                                    <select>
-                                                        <option>
-                                                            Rename source
-                                                        </option>
-                                                        <option>
-                                                            Rename destination
-                                                        </option>
-                                                        <option>Replace</option>
-                                                        <option>Keep</option>
-                                                    </select>
+                                                    <ConflictResolution
+                                                        pasteWithDependenciesModel={
+                                                            pasteWithDependenciesModel
+                                                        }
+                                                        pasteObject={
+                                                            pasteObject
+                                                        }
+                                                    />
                                                 </td>
                                             </tr>
                                         );
@@ -598,6 +743,30 @@ export const PasteWithDependenciesDialog = observer(
                         )}
                     </div>
                 </Dialog>
+            );
+        }
+    }
+);
+
+const ConflictResolution = observer(
+    class ConflictResolution extends React.Component<{
+        pasteWithDependenciesModel: PasteWithDependenciesModel;
+        pasteObject: PasteObject;
+    }> {
+        render() {
+            const { pasteObject } = this.props;
+
+            if (!pasteObject.hasConflict) {
+                return "No conflict";
+            }
+
+            return (
+                <select>
+                    <option>Rename source</option>
+                    <option>Rename destination</option>
+                    <option>Replace</option>
+                    <option>Keep</option>
+                </select>
             );
         }
     }
@@ -663,7 +832,7 @@ export function pasteWithDependencies(projectStore: ProjectStore) {
         {
             jsPanel: {
                 id: "paste-with-dependencies-dialog",
-                title: "Paste",
+                title: "Paste - Resolve Conflicts",
                 width: 800,
                 height: 600
             }
