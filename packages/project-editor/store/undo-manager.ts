@@ -63,6 +63,10 @@ export class UndoManager {
     setCombineCommands(value: boolean) {
         this.pushToUndoStack();
         this.combineCommands = value;
+
+        if (!this.combineCommands) {
+            this.projectStore.updateLastRevisionStable();
+        }
     }
 
     executeCommand(command: ICommand) {

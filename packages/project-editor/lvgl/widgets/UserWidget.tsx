@@ -301,6 +301,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         return testForCycle(userWidgetPage);
     }
 
+    _userWidgetPageCopyIds: string[] = [];
+
     get userWidgetPageCopy(): Page | undefined {
         const page = this.userWidgetPage;
 
@@ -313,18 +315,29 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         let userWidgetPageCopy: Page | undefined = undefined;
 
-        // WORKAROUND: undoManager.commands.length is used to detect if the page was modified
-        if (projectStore.undoManager) {
-            projectStore.undoManager.commands.length;
-        }
+        // WORKAROUND: projectStore.lastRevisionStable is read to detect if the page was modified
+        projectStore.lastRevisionStable;
 
         // runInAction is needed to avoid observing copied page
         runInAction(() => {
+            const idsBefore = new Set(projectStore.objects.keys());
+
             userWidgetPageCopy = clipboardDataToObject(
                 projectStore,
                 objectToClipboardData(projectStore, page)
             ).object as Page;
             setParent(userWidgetPageCopy, project.userWidgets);
+
+            for (const id of this._userWidgetPageCopyIds) {
+                projectStore.objects.delete(id);
+            }
+            console.log(projectStore.objects.size);
+            this._userWidgetPageCopyIds = [];
+            for (const id of projectStore.objects.keys()) {
+                if (!idsBefore.has(id)) {
+                    this._userWidgetPageCopyIds.push(id);
+                }
+            }
         });
 
         return userWidgetPageCopy;

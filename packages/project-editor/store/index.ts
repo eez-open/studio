@@ -163,6 +163,7 @@ export class ProjectStore {
 
     savedRevision: symbol;
     lastRevision: symbol;
+    lastRevisionStable: symbol;
 
     filePath: string | undefined;
     backgroundCheckEnabled = true;
@@ -202,7 +203,10 @@ export class ProjectStore {
 
     constructor(public context: ProjectStoreContext) {
         if (this.context.type == "project-editor") {
-            this.savedRevision = this.lastRevision = Symbol();
+            this.savedRevision =
+                this.lastRevision =
+                this.lastRevisionStable =
+                    Symbol();
             this.undoManager = new UndoManager(this);
             this.navigationStore = new NavigationStore(this);
 
@@ -234,8 +238,10 @@ export class ProjectStore {
             masterProject: computed,
             savedRevision: observable,
             lastRevision: observable,
+            lastRevisionStable: observable,
             isModified: computed,
             setModified: action,
+            updateLastRevisionStable: action,
             setProject: action,
             setEditorMode: action,
             onSetEditorMode: action,
@@ -875,8 +881,18 @@ export class ProjectStore {
 
     setModified(revision: symbol) {
         const previousRevision = this.lastRevision;
+
         this.lastRevision = revision;
+
+        if (this.undoManager && !this.undoManager.combineCommands) {
+            this.lastRevisionStable = this.lastRevision;
+        }
+
         return previousRevision;
+    }
+
+    updateLastRevisionStable() {
+        this.lastRevisionStable = this.lastRevision;
     }
 
     async setProject(project: Project, projectFilePath: string | undefined) {
