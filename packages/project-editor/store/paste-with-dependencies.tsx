@@ -27,15 +27,18 @@ import {
 } from "project-editor/store/clipboard";
 import {
     addObject,
+    createObject,
     getAncestorOfType,
     getClass,
     getClassInfo,
+    getJSON,
     getLabel,
     getObjectFromPath,
     getObjectFromStringPath,
+    loadProject,
+    ProjectStore,
     rewireBegin,
-    rewireEnd,
-    type ProjectStore
+    rewireEnd
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { searchForObjectDependencies } from "project-editor/core/search";
@@ -47,23 +50,14 @@ import {
     getStructureFromType
 } from "project-editor/features/variable/value-type";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
+import type { Page } from "project-editor/features/page/page";
+import { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ObjectReference {
-    inObject: EezObject;
-    inPropertyName: string;
-    fromIndex: number;
-    toIndex: number;
-}
-
 class PasteObject {
-    constructor(object: EezObject, reference: ObjectReference | undefined) {
+    constructor(object: EezObject) {
         this.object = object;
-
-        if (reference) {
-            this.references.push(reference);
-        }
 
         if (object instanceof ProjectEditor.VariableClass) {
             this.isLocalVariable =
@@ -79,12 +73,14 @@ class PasteObject {
     object: EezObject;
     isLocalVariable: boolean = false;
     styleWithParent: boolean = false;
-    references: ObjectReference[] = [];
     enabled: boolean = true;
     hasConflict: boolean = false;
 }
 
 class PasteWithDependenciesModel {
+    interProjectStore: ProjectStore;
+    interProjectStoreFlowFragmentFlow: Page;
+
     foundObjects = new Map<EezObject, PasteObject>();
     pasteObjects: PasteObject[] = [];
 
@@ -96,10 +92,140 @@ class PasteWithDependenciesModel {
         public destinationProjectStore: ProjectStore,
         public serializedData: SerializedData
     ) {
+        this.createInterProjectStore();
+
         makeObservable(this, {
             pasteObjects: observable,
             allDependenciesFound: observable
         });
+    }
+
+    createInterProjectStore() {
+        this.interProjectStore = ProjectStore.create({
+            type: "project-editor"
+        });
+
+        const projectJsonStr = getJSON(this.sourceProjectStore);
+
+        const projectJson: Partial<Project> = JSON.parse(projectJsonStr);
+
+        runInAction(() => {
+            if (projectJson.variables) {
+                projectJson.variables.globalVariables = [];
+                projectJson.variables.structures = [];
+                projectJson.variables.enums = [];
+            }
+            projectJson.actions = [];
+            projectJson.userPages = [];
+            projectJson.userWidgets = [];
+            projectJson.styles = [];
+            projectJson.fonts = [];
+            if (projectJson.texts) {
+                projectJson.texts.languages = [];
+                projectJson.texts.resources = [];
+            }
+            if (projectJson.readme) {
+                projectJson.readme.readmeFile = undefined;
+            }
+            projectJson.bitmaps = [];
+            if (projectJson.scpi) {
+                projectJson.scpi.subsystems = [];
+                projectJson.scpi.enums = [];
+            }
+            if (projectJson.instrumentCommands) {
+                projectJson.instrumentCommands.commands = [];
+            }
+            if (projectJson.shortcuts) {
+                projectJson.shortcuts.shortcuts = [];
+            }
+            if (projectJson.micropython) {
+                projectJson.micropython.code = "";
+            }
+            projectJson.extensionDefinitions = [];
+            projectJson.colors = [];
+            projectJson.themes = [
+                {
+                    name: "default",
+                    colors: []
+                } as any
+            ];
+            if (projectJson.lvglStyles) {
+                projectJson.lvglStyles.styles = [];
+                projectJson.lvglStyles.defaultStyles = {};
+            }
+        });
+
+        const project = loadProject(this.interProjectStore, projectJson, false);
+
+        this.interProjectStore.setProject(project, "");
+
+        this.interProjectStoreFlowFragmentFlow = createObject<Page>(
+            this.interProjectStore,
+            {
+                name: "$$$FLOW_FRAGMENT$$$",
+                left: 0,
+                top: 0,
+                width: 900,
+                height: 600,
+                components: [],
+                connectionLines: [],
+                localVariables: [],
+                isUsedAsUserWidget: false
+            },
+            ProjectEditor.PageClass,
+            undefined,
+            false
+        );
+
+        addObject(
+            this.interProjectStore.project.userPages,
+            this.interProjectStoreFlowFragmentFlow
+        );
+    }
+
+    static addObjectToProject(
+        projectStore: ProjectStore,
+        flow: Flow,
+        object: EezObject,
+        isLocalVariable: boolean
+    ) {
+        if (object instanceof ProjectEditor.FlowFragmentClass) {
+            ProjectEditor.FlowFragmentClass.paste(
+                projectStore,
+                flow,
+                object,
+                flow
+            );
+        } else if (object instanceof ProjectEditor.VariableClass) {
+            if (isLocalVariable) {
+                addObject(flow.localVariables, object);
+            } else {
+                addObject(
+                    projectStore.project.variables.globalVariables,
+                    object
+                );
+            }
+        } else if (object instanceof ProjectEditor.StructureClass) {
+            addObject(projectStore.project.variables.structures, object);
+        } else if (object instanceof ProjectEditor.EnumClass) {
+            addObject(projectStore.project.variables.enums, object);
+        } else if (object instanceof ProjectEditor.ActionClass) {
+            addObject(projectStore.project.actions, object);
+        } else if (object instanceof ProjectEditor.PageClass) {
+            if (object.isUsedAsUserWidget) {
+                addObject(projectStore.project.userWidgets, object);
+            } else {
+                addObject(projectStore.project.userPages, object);
+            }
+        } else if (object instanceof ProjectEditor.StyleClass) {
+            addObject(projectStore.project.styles, object);
+        } else if (object instanceof ProjectEditor.LVGLStyleClass) {
+            addObject(projectStore.project.lvglStyles, object);
+        } else if (object instanceof ProjectEditor.BitmapClass) {
+            addObject(projectStore.project.bitmaps, object);
+        } else if (object instanceof ProjectEditor.FontClass) {
+            addObject(projectStore.project.fonts, object);
+        }
     }
 
     findAllDependencies() {
@@ -118,22 +244,28 @@ class PasteWithDependenciesModel {
         }
     }
 
-    findObjectDependencies(
-        object: EezObject,
-        objectParentPath?: string,
-        reference?: ObjectReference
-    ) {
+    findObjectDependencies(object: EezObject, objectParentPath?: string) {
         let pasteObject = this.foundObjects.get(object);
         if (pasteObject) {
-            if (reference) {
-                pasteObject.references.push(reference);
-            }
             return pasteObject;
         }
 
         let clonedObject: EezObject;
         if (objectParentPath) {
+            const clonedObjectTemp = cloneObjectWithoutNewObjIds(
+                this.interProjectStore,
+                object
+            );
+
+            PasteWithDependenciesModel.addObjectToProject(
+                this.interProjectStore,
+                this.interProjectStoreFlowFragmentFlow,
+                clonedObjectTemp,
+                false
+            );
+
             clonedObject = object;
+
             setParent(
                 object,
                 getObjectFromStringPath(
@@ -142,12 +274,17 @@ class PasteWithDependenciesModel {
                 )
             );
         } else {
-            rewireBegin();
             clonedObject = cloneObjectWithoutNewObjIds(
-                this.destinationProjectStore,
+                this.interProjectStore,
                 object
             );
-            rewireEnd(clonedObject);
+
+            PasteWithDependenciesModel.addObjectToProject(
+                this.interProjectStore,
+                this.interProjectStoreFlowFragmentFlow,
+                clonedObject,
+                false
+            );
 
             if (
                 clonedObject instanceof ProjectEditor.StyleClass ||
@@ -157,7 +294,7 @@ class PasteWithDependenciesModel {
             }
         }
 
-        pasteObject = new PasteObject(clonedObject, reference);
+        pasteObject = new PasteObject(clonedObject);
 
         runInAction(() => {
             this.foundObjects.set(object, pasteObject);
@@ -256,17 +393,7 @@ class PasteWithDependenciesModel {
                         if (referencedObject) {
                             this.findObjectDependencies(
                                 referencedObject,
-                                undefined,
-                                {
-                                    inObject: getParent(
-                                        dependency.valueObject
-                                    ) as EezObject,
-                                    inPropertyName:
-                                        dependency.valueObject.propertyInfo
-                                            .name,
-                                    fromIndex: 0,
-                                    toIndex: name.length
-                                }
+                                undefined
                             );
                         }
                     }
@@ -288,19 +415,7 @@ class PasteWithDependenciesModel {
                                     const pasteObject =
                                         this.findObjectDependencies(
                                             localVariable,
-                                            undefined,
-                                            {
-                                                inObject: getParent(
-                                                    dependency.valueObject
-                                                ) as EezObject,
-                                                inPropertyName:
-                                                    dependency.valueObject
-                                                        .propertyInfo.name,
-                                                fromIndex:
-                                                    node.location.start.offset,
-                                                toIndex:
-                                                    node.location.end.offset
-                                            }
+                                            undefined
                                         );
                                     pasteObject.isLocalVariable = true;
                                 }
@@ -314,17 +429,7 @@ class PasteWithDependenciesModel {
                             if (globalVariable) {
                                 this.findObjectDependencies(
                                     globalVariable,
-                                    undefined,
-                                    {
-                                        inObject: getParent(
-                                            dependency.valueObject
-                                        ) as EezObject,
-                                        inPropertyName:
-                                            dependency.valueObject.propertyInfo
-                                                .name,
-                                        fromIndex: node.location.start.offset,
-                                        toIndex: node.location.end.offset
-                                    }
+                                    undefined
                                 );
                             }
                         }
@@ -340,15 +445,7 @@ class PasteWithDependenciesModel {
                             variableType
                         );
                         if (enumType instanceof ProjectEditor.EnumClass) {
-                            this.findObjectDependencies(enumType, undefined, {
-                                inObject: getParent(
-                                    dependency.valueObject
-                                ) as EezObject,
-                                inPropertyName:
-                                    dependency.valueObject.propertyInfo.name,
-                                fromIndex: fromIndex + "enum:".length,
-                                toIndex: dependency.valueObject.value.length
-                            });
+                            this.findObjectDependencies(enumType, undefined);
                         }
 
                         const structure = getStructureFromType(
@@ -356,15 +453,7 @@ class PasteWithDependenciesModel {
                             variableType
                         );
                         if (structure instanceof ProjectEditor.StructureClass) {
-                            this.findObjectDependencies(structure, undefined, {
-                                inObject: getParent(
-                                    dependency.valueObject
-                                ) as EezObject,
-                                inPropertyName:
-                                    dependency.valueObject.propertyInfo.name,
-                                fromIndex: fromIndex + "struct:".length,
-                                toIndex: dependency.valueObject.value.length
-                            });
+                            this.findObjectDependencies(structure, undefined);
                         }
 
                         const elementType =
@@ -403,6 +492,10 @@ class PasteWithDependenciesModel {
         });
 
         runInAction(() => (this.allDependenciesFound = true));
+
+        // TODO remove this
+        this.interProjectStore.filePath = `interProjectStore.eez-project`;
+        this.interProjectStore.save();
     }
 
     hasConflict(pasteObject: PasteObject) {
@@ -662,7 +755,6 @@ export const PasteWithDependenciesDialog = observer(
                                         </th>
                                         <th>Object Type</th>
                                         <th>Object Name</th>
-                                        <th></th>
                                         <th>Conflict Resolution</th>
                                     </tr>
                                 </thead>
@@ -725,44 +817,6 @@ export const PasteWithDependenciesDialog = observer(
                                                     {isFlowFragment
                                                         ? ""
                                                         : getLabel(object)}
-                                                </td>
-
-                                                <td>
-                                                    {pasteObject.references.map(
-                                                        (reference, i) => (
-                                                            <div key={i}>
-                                                                <div>
-                                                                    inPropertyName:{" "}
-                                                                    {
-                                                                        reference.inPropertyName
-                                                                    }
-                                                                </div>
-                                                                <div>
-                                                                    value:{" "}
-                                                                    {
-                                                                        (
-                                                                            reference.inObject as any
-                                                                        )[
-                                                                            reference
-                                                                                .inPropertyName
-                                                                        ]
-                                                                    }
-                                                                </div>
-                                                                <div>
-                                                                    fromIndex:{" "}
-                                                                    {
-                                                                        reference.fromIndex
-                                                                    }
-                                                                </div>
-                                                                <div>
-                                                                    toIndex:{" "}
-                                                                    {
-                                                                        reference.toIndex
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    )}
                                                 </td>
 
                                                 <td>

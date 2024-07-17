@@ -1517,50 +1517,28 @@ export class Project extends EezObject {
     _store!: ProjectStore;
     _isReadOnly: boolean = false;
     _isDashboardBuild: boolean = false;
-
     _fullyLoaded = false;
-
     _assets = new Assets(this);
-
-    get _objectsMap() {
-        const objectsMap = new Map<string, EezObject>();
-
-        for (const object of visitObjects(this)) {
-            if (object instanceof EezObject) {
-                objectsMap.set(object.objID, object);
-            }
-        }
-
-        return objectsMap;
-    }
 
     settings: Settings;
     variables: ProjectVariables;
     actions: Action[];
-
     userPages: Page[];
     userWidgets: Page[];
-
-    get pages() {
-        return [...this.userPages, ...this.userWidgets];
-    }
-
     styles: Style[];
+    lvglStyles: LVGLStyles;
+    bitmaps: Bitmap[];
     fonts: Font[];
     texts: Texts;
     readme: Readme;
-    bitmaps: Bitmap[];
     scpi: Scpi;
     instrumentCommands: InstrumentCommands;
     shortcuts: Shortcuts;
     micropython: MicroPython;
     extensionDefinitions: ExtensionDefinition[];
     changes: Changes;
-
     colors: Color[];
     themes: Theme[];
-
-    lvglStyles: LVGLStyles;
 
     constructor() {
         super();
@@ -1610,6 +1588,22 @@ export class Project extends EezObject {
 
             setThemeColor: action
         });
+    }
+
+    get _objectsMap() {
+        const objectsMap = new Map<string, EezObject>();
+
+        for (const object of visitObjects(this)) {
+            if (object instanceof EezObject) {
+                objectsMap.set(object.objID, object);
+            }
+        }
+
+        return objectsMap;
+    }
+
+    get pages() {
+        return [...this.userPages, ...this.userWidgets];
     }
 
     get projectTypeTraits() {
