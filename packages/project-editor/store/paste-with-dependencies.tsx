@@ -22,6 +22,7 @@ import {
 } from "project-editor/core/object";
 import {
     cloneObjectWithNewObjIds,
+    cloneObjectWithoutNewObjIds,
     getProjectEditorDataFromClipboard
 } from "project-editor/store/clipboard";
 import {
@@ -32,6 +33,8 @@ import {
     getLabel,
     getObjectFromPath,
     getObjectFromStringPath,
+    rewireBegin,
+    rewireEnd,
     type ProjectStore
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -75,6 +78,7 @@ class PasteObject {
 
     object: EezObject;
     isLocalVariable: boolean = false;
+    styleWithParent: boolean = false;
     references: ObjectReference[] = [];
     enabled: boolean = true;
     hasConflict: boolean = false;
@@ -138,10 +142,12 @@ class PasteWithDependenciesModel {
                 )
             );
         } else {
-            clonedObject = cloneObjectWithNewObjIds(
+            rewireBegin();
+            clonedObject = cloneObjectWithoutNewObjIds(
                 this.destinationProjectStore,
                 object
             );
+            rewireEnd(clonedObject);
 
             if (
                 clonedObject instanceof ProjectEditor.StyleClass ||
@@ -172,13 +178,11 @@ class PasteWithDependenciesModel {
                 let parentObjectMapValue =
                     this.findObjectDependencies(parentObject);
 
-                runInAction(() => {
-                    (parentObjectMapValue.object as Style).childStyles.push(
-                        pasteObject.object as Style
-                    );
-                });
+                (parentObjectMapValue.object as Style).childStyles.push(
+                    pasteObject.object as Style
+                );
 
-                setParent(pasteObject.object, parentObjectMapValue.object);
+                pasteObject.styleWithParent = true;
             }
         }
 
@@ -379,6 +383,19 @@ class PasteWithDependenciesModel {
     }
 
     finalize() {
+        rewireBegin();
+        const clonedObjects = this.pasteObjects.map(pasteObject =>
+            cloneObjectWithNewObjIds(
+                this.destinationProjectStore,
+                pasteObject.object
+            )
+        );
+        rewireEnd(clonedObjects);
+
+        this.pasteObjects.forEach((pasteObject, i) => {
+            pasteObject.object = clonedObjects[i];
+        });
+
         this.pasteObjects.forEach(pasteObject => {
             runInAction(() => {
                 pasteObject.hasConflict = this.hasConflict(pasteObject);
@@ -485,7 +502,7 @@ class PasteWithDependenciesModel {
             } else if (object instanceof ProjectEditor.BitmapClass) {
                 addObject(this.destinationProjectStore.project.bitmaps, object);
             } else if (object instanceof ProjectEditor.StyleClass) {
-                if (getParent(object) == undefined) {
+                if (!pasteObject.styleWithParent) {
                     addObject(
                         this.destinationProjectStore.project.styles,
                         object
@@ -508,6 +525,29 @@ class PasteWithDependenciesModel {
                     this.destinationProjectStore.project.variables.enums,
                     object
                 );
+            } else if (object instanceof ProjectEditor.StructureClass) {
+                addObject(
+                    this.destinationProjectStore.project.variables.structures,
+                    object
+                );
+            } else if (object instanceof ProjectEditor.PageClass) {
+                if (object.isUsedAsUserWidget) {
+                    addObject(
+                        this.destinationProjectStore.project.userWidgets,
+                        object
+                    );
+                } else {
+                    addObject(
+                        this.destinationProjectStore.project.userPages,
+                        object
+                    );
+                }
+            } else if (object instanceof ProjectEditor.ActionClass) {
+                addObject(this.destinationProjectStore.project.actions, object);
+            } else if (object instanceof ProjectEditor.BitmapClass) {
+                addObject(this.destinationProjectStore.project.bitmaps, object);
+            } else if (object instanceof ProjectEditor.FontClass) {
+                addObject(this.destinationProjectStore.project.fonts, object);
             }
         }
 

@@ -47,6 +47,19 @@ export function cloneObjectWithNewObjIds(
     );
 }
 
+export function cloneObjectWithoutNewObjIds(
+    projectStore: ProjectStore,
+    object: IEezObject
+) {
+    return createObject(
+        projectStore,
+        toJS(object) as any,
+        getClass(object),
+        undefined,
+        false
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function objectToClipboardData(
@@ -54,7 +67,7 @@ export function objectToClipboardData(
     object: IEezObject
 ): string {
     rewireBegin();
-    const clonedObject = cloneObjectWithNewObjIds(projectStore, object);
+    const clonedObject = cloneObjectWithoutNewObjIds(projectStore, object);
     rewireEnd(clonedObject);
 
     let objectParentPath;
@@ -79,7 +92,7 @@ export function objectsToClipboardData(
 ): string {
     rewireBegin();
     const clonedObjects = objects.map(object =>
-        cloneObjectWithNewObjIds(projectStore, object)
+        cloneObjectWithoutNewObjIds(projectStore, object)
     );
     rewireEnd(clonedObjects);
 

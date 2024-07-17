@@ -83,6 +83,7 @@ import {
 } from "project-editor/lvgl/widgets";
 
 import { Bitmap, getBitmapData } from "project-editor/features/bitmap/bitmap";
+import { Font } from "project-editor/features/font/font";
 import {
     migrateProjectVersion,
     migrateProjectType
@@ -182,6 +183,7 @@ export async function createProjectEditor(
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
         BitmapClass: Bitmap,
+        FontClass: Font,
         LVGLWidgetClass: LVGLWidget,
         LVGLScreenWidgetClass: LVGLScreenWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,

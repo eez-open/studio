@@ -44,6 +44,7 @@ import type {
     Bitmap,
     getBitmapData
 } from "project-editor/features/bitmap/bitmap";
+import type { Font } from "project-editor/features/font/font";
 import type {
     migrateProjectVersion,
     migrateProjectType
@@ -134,6 +135,7 @@ export interface IProjectEditor {
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
     BitmapClass: typeof Bitmap;
+    FontClass: typeof Font;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLScreenWidgetClass: typeof LVGLScreenWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
