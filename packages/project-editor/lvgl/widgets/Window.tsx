@@ -31,7 +31,10 @@ export class LVGLWindowWidget extends LVGLWidget {
 
         icon: (
             <svg viewBox="0 0 16 16">
-                <path d="M14.5 2h-13l-.5.5v11l.5.5h13l.5-.5v-11zM14 13H2V6h12zm0-8H2V3h12z" />
+                <path
+                    d="M14.5 2h-13l-.5.5v11l.5.5h13l.5-.5v-11zM14 13H2V6h12zm0-8H2V3h12z"
+                    fill="currentcolor"
+                />
             </svg>
         ),
 

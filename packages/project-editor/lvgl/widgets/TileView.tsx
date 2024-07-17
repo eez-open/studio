@@ -36,6 +36,7 @@ export class LVGLTileViewWidget extends LVGLWidget {
                         fillRule: "evenodd"
                     }}
                     d="M1 1h5.4v5.4H1zm1.2 1.2h3v3h-3zM1 7.6h5.4V13H1zm1.2 1.2h3v3h-3zM7.6 1H13v5.4H7.6zm1.2 1.2h3v3h-3zM7.6 7.6H13V13H7.6zm1.2 1.2h3v3h-3z"
+                    fill="currentcolor"
                 />
             </svg>
         ),

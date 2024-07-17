@@ -125,7 +125,10 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
 
         icon: (
             <svg viewBox="0 0 24 24">
-                <path d="M22 11H12a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V12a1 1 0 0 0-1-1m-1 10h-8v-8h8ZM2 13a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h10a1 1 0 0 1 0 2H3v9a1 1 0 0 1-1 1m15-7a1 1 0 0 1 0 2H8v9a1 1 0 0 1-2 0V7a1 1 0 0 1 1-1Z" />
+                <path
+                    d="M22 11H12a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V12a1 1 0 0 0-1-1m-1 10h-8v-8h8ZM2 13a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h10a1 1 0 0 1 0 2H3v9a1 1 0 0 1-1 1m15-7a1 1 0 0 1 0 2H8v9a1 1 0 0 1-2 0V7a1 1 0 0 1 1-1Z"
+                    fill="currentcolor"
+                />
             </svg>
         ),
 

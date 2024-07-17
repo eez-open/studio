@@ -32,7 +32,7 @@ export class LVGLTableWidget extends LVGLWidget {
         icon: (
             <svg viewBox="0 0 16 16">
                 <path
-                    fill="#444"
+                    fill="currentcolor"
                     d="M0 1v15h16V1zm5 14H1v-2h4zm0-3H1v-2h4zm0-3H1V7h4zm0-3H1V4h4zm5 9H6v-2h4zm0-3H6v-2h4zm0-3H6V7h4zm0-3H6V4h4zm5 9h-4v-2h4zm0-3h-4v-2h4zm0-3h-4V7h4zm0-3h-4V4h4z"
                 />
             </svg>

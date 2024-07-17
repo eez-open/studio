@@ -87,7 +87,10 @@ export class LVGLLineWidget extends LVGLWidget {
 
         icon: (
             <svg viewBox="0 0 24 24">
-                <path d="M3.293 20.707a1 1 0 0 1 0-1.414l16-16a1 1 0 1 1 1.414 1.414l-16 16a1 1 0 0 1-1.414 0" />
+                <path
+                    d="M3.293 20.707a1 1 0 0 1 0-1.414l16-16a1 1 0 1 1 1.414 1.414l-16 16a1 1 0 0 1-1.414 0"
+                    fill="currentcolor"
+                />
             </svg>
         ),
 

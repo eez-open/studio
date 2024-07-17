@@ -72,7 +72,10 @@ export class LVGLTabWidget extends LVGLWidget {
 
         icon: (
             <svg viewBox="0 0 1024 1024">
-                <path d="M931.8 501.8V317.4c0-56.3-46.1-102.4-102.4-102.4h-601C172 215 126 261.1 126 317.4v184.3H30.7v163.8h981V501.8zm30.8 117.7H81.9V553h92.2l1-209.9c1-61.4 11.3-81.9 90.1-81.9h526.3c62.5 0 90.1 8.2 90.1 81.9V553h80.9v66.5z" />
+                <path
+                    d="M931.8 501.8V317.4c0-56.3-46.1-102.4-102.4-102.4h-601C172 215 126 261.1 126 317.4v184.3H30.7v163.8h981V501.8zm30.8 117.7H81.9V553h92.2l1-209.9c1-61.4 11.3-81.9 90.1-81.9h526.3c62.5 0 90.1 8.2 90.1 81.9V553h80.9v66.5z"
+                    fill="currentcolor"
+                />
             </svg>
         ),
 
@@ -151,7 +154,7 @@ export class LVGLTabWidget extends LVGLWidget {
 
         if (this.parentWidget == this.tabview) {
             // adjust top position if Tab is immediate child of Tabview
-            relativePosition.top += TAB_SIZE;
+            relativePosition.top += this.tabview.tabviewSize;
         }
 
         return relativePosition;
