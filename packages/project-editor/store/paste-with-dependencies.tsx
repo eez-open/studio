@@ -660,13 +660,11 @@ class PasteWithDependenciesModel {
                     function getRootStyle(object: EezObject) {
                         let collection = getParent(object);
                         if (!collection) {
-                            console.log("no colleaction");
                             return object;
                         }
 
                         let parent = getParent(collection);
                         if (!parent) {
-                            console.log("no parent");
                             return object;
                         }
 
@@ -674,7 +672,6 @@ class PasteWithDependenciesModel {
                             parent instanceof ProjectEditor.StyleClass ||
                             parent instanceof ProjectEditor.LVGLStyleClass
                         ) {
-                            console.log("no style");
                             return getRootStyle(parent);
                         }
 
@@ -683,9 +680,6 @@ class PasteWithDependenciesModel {
 
                     let aRoot = getRootStyle(a.object);
                     let bRoot = getRootStyle(b.object);
-
-                    console.log("A", a.object?.name, aRoot?.name);
-                    console.log("B", b.object?.name, bRoot?.name);
 
                     if (aRoot == bRoot) {
                         result = a.styleLevel - b.styleLevel;
