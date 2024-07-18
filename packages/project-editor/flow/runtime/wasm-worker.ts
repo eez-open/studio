@@ -365,6 +365,34 @@ function operationStringFormat(
     return createWasmValue(WasmFlowRuntime, Error()); // error
 }
 
+function operationStringFormatPrefix(
+    wasmModuleId: number,
+    format: string,
+    valueValuePtr: number,
+    paramValuePtr: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        console.log(format);
+        const value = getValue(WasmFlowRuntime, valueValuePtr).value;
+        console.log(value);
+        const param = getValue(WasmFlowRuntime, paramValuePtr).value;
+        console.log(param);
+        try {
+            const result = (window as any).d3.formatPrefix(
+                format,
+                value
+            )(param);
+            console.log(result);
+            return createWasmValue(WasmFlowRuntime, result);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    return createWasmValue(WasmFlowRuntime, Error()); // error
+}
+
 function convertFromJson(
     wasmModuleId: number,
     jsObjectID: number,
@@ -458,6 +486,7 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).operationJsonClone = operationJsonClone;
 (global as any).operationJsonMake = operationJsonMake;
 (global as any).operationStringFormat = operationStringFormat;
+(global as any).operationStringFormatPrefix = operationStringFormatPrefix;
 (global as any).convertFromJson = convertFromJson;
 (global as any).convertToJson = convertToJson;
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;

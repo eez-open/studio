@@ -1085,7 +1085,7 @@ export const builtInFunctions: {
     "String.format": {
         operationIndex: 79,
         arity: 2,
-        args: ["format", "number"],
+        args: ["specifier", "number"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
@@ -1093,6 +1093,20 @@ export const builtInFunctions: {
         getValueType: (...args: ValueType[]) => {
             return "string";
         }
+    },
+
+    "String.formatPrefix": {
+        operationIndex: 80,
+        arity: 3,
+        args: ["specifier", "value", "number"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => (window as any).d3.formatPrefix(args[0], args[1])(args[2]),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isDashboard
     },
 
     "String.padStart": {
