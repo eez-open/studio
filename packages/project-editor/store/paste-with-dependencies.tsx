@@ -16,7 +16,9 @@ import {
     EezObject,
     getParent,
     getProperty,
+    IEezObject,
     isPropertyHidden,
+    PropertyType,
     SerializedData,
     setParent
 } from "project-editor/core/object";
@@ -29,6 +31,7 @@ import {
     addObject,
     createObject,
     getAncestorOfType,
+    getChildOfObject,
     getClass,
     getClassInfo,
     getJSON,
@@ -52,8 +55,21 @@ import {
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import type { Page } from "project-editor/features/page/page";
 import { Project } from "project-editor/project/project";
+import type { LVGLStyle } from "project-editor/lvgl/style";
+import { isArray } from "lodash";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+type Conflict =
+    | { kind: "doesnt-exists" }
+    | { kind: "exists-same" }
+    | { kind: "exists-different" };
+
+type ConflictResolution =
+    | { kind: "rename-source"; newName: string }
+    | { kind: "rename-destination"; newName: string }
+    | { kind: "replace" }
+    | { kind: "keep" };
 
 class PasteObject {
     constructor(object: EezObject) {
@@ -74,7 +90,8 @@ class PasteObject {
     isLocalVariable: boolean = false;
     styleWithParent: boolean = false;
     enabled: boolean = true;
-    hasConflict: boolean = false;
+    conflict: Conflict = { kind: "doesnt-exists" };
+    conflictResolution: ConflictResolution;
 }
 
 class PasteWithDependenciesModel {
@@ -230,13 +247,13 @@ class PasteWithDependenciesModel {
 
     findAllDependencies() {
         if (this.serializedData.object) {
-            this.findObjectDependencies(
+            this.addObject(
                 this.serializedData.object,
                 this.serializedData.objectParentPath
             );
         } else {
             for (let i = 0; i < this.serializedData.objects!.length; i++) {
-                this.findObjectDependencies(
+                this.addObject(
                     this.serializedData.objects![i],
                     this.serializedData.objectsParentPath![i]
                 );
@@ -244,10 +261,26 @@ class PasteWithDependenciesModel {
         }
     }
 
-    findObjectDependencies(object: EezObject, objectParentPath?: string) {
+    addObject(object: EezObject, objectParentPath?: string) {
         let pasteObject = this.foundObjects.get(object);
         if (pasteObject) {
             return pasteObject;
+        }
+
+        let parentStyleObject: Style | LVGLStyle | undefined;
+
+        if (
+            object instanceof ProjectEditor.StyleClass ||
+            object instanceof ProjectEditor.LVGLStyleClass
+        ) {
+            const parentObject = getParent(getParent(object));
+
+            if (
+                parentObject instanceof ProjectEditor.StyleClass ||
+                parentObject instanceof ProjectEditor.LVGLStyleClass
+            ) {
+                parentStyleObject = parentObject;
+            }
         }
 
         let clonedObject: EezObject;
@@ -257,12 +290,14 @@ class PasteWithDependenciesModel {
                 object
             );
 
-            PasteWithDependenciesModel.addObjectToProject(
-                this.interProjectStore,
-                this.interProjectStoreFlowFragmentFlow,
-                clonedObjectTemp,
-                false
-            );
+            if (!parentStyleObject) {
+                PasteWithDependenciesModel.addObjectToProject(
+                    this.interProjectStore,
+                    this.interProjectStoreFlowFragmentFlow,
+                    clonedObjectTemp,
+                    false
+                );
+            }
 
             clonedObject = object;
 
@@ -279,12 +314,14 @@ class PasteWithDependenciesModel {
                 object
             );
 
-            PasteWithDependenciesModel.addObjectToProject(
-                this.interProjectStore,
-                this.interProjectStoreFlowFragmentFlow,
-                clonedObject,
-                false
-            );
+            if (!parentStyleObject) {
+                PasteWithDependenciesModel.addObjectToProject(
+                    this.interProjectStore,
+                    this.interProjectStoreFlowFragmentFlow,
+                    clonedObject,
+                    false
+                );
+            }
 
             if (
                 clonedObject instanceof ProjectEditor.StyleClass ||
@@ -302,27 +339,22 @@ class PasteWithDependenciesModel {
             this.remaining++;
         });
 
-        if (
-            object instanceof ProjectEditor.StyleClass ||
-            object instanceof ProjectEditor.LVGLStyleClass
-        ) {
-            const parentObject = getParent(getParent(object));
+        if (parentStyleObject) {
+            let parentObjectMapValue = this.addObject(parentStyleObject);
 
-            if (
-                parentObject instanceof ProjectEditor.StyleClass ||
-                parentObject instanceof ProjectEditor.LVGLStyleClass
-            ) {
-                let parentObjectMapValue =
-                    this.findObjectDependencies(parentObject);
+            (parentObjectMapValue.object as Style).childStyles.push(
+                pasteObject.object as Style
+            );
 
-                (parentObjectMapValue.object as Style).childStyles.push(
-                    pasteObject.object as Style
-                );
-
-                pasteObject.styleWithParent = true;
-            }
+            pasteObject.styleWithParent = true;
         }
 
+        this.searchForDependencies(object);
+
+        return pasteObject;
+    }
+
+    searchForDependencies(object: EezObject) {
         const search = searchForObjectDependencies(
             this.sourceProjectStore,
             object,
@@ -391,10 +423,7 @@ class PasteWithDependenciesModel {
                             );
 
                         if (referencedObject) {
-                            this.findObjectDependencies(
-                                referencedObject,
-                                undefined
-                            );
+                            this.addObject(referencedObject, undefined);
                         }
                     }
                 } else if (dependency.kind == "expression-start") {
@@ -412,11 +441,10 @@ class PasteWithDependenciesModel {
                                         localVariable.name == node.name
                                 );
                                 if (localVariable) {
-                                    const pasteObject =
-                                        this.findObjectDependencies(
-                                            localVariable,
-                                            undefined
-                                        );
+                                    const pasteObject = this.addObject(
+                                        localVariable,
+                                        undefined
+                                    );
                                     pasteObject.isLocalVariable = true;
                                 }
                             }
@@ -427,10 +455,7 @@ class PasteWithDependenciesModel {
                                         globalVariable.name == node.name
                                 );
                             if (globalVariable) {
-                                this.findObjectDependencies(
-                                    globalVariable,
-                                    undefined
-                                );
+                                this.addObject(globalVariable, undefined);
                             }
                         }
                     }
@@ -445,7 +470,7 @@ class PasteWithDependenciesModel {
                             variableType
                         );
                         if (enumType instanceof ProjectEditor.EnumClass) {
-                            this.findObjectDependencies(enumType, undefined);
+                            this.addObject(enumType, undefined);
                         }
 
                         const structure = getStructureFromType(
@@ -453,7 +478,7 @@ class PasteWithDependenciesModel {
                             variableType
                         );
                         if (structure instanceof ProjectEditor.StructureClass) {
-                            this.findObjectDependencies(structure, undefined);
+                            this.addObject(structure, undefined);
                         }
 
                         const elementType =
@@ -467,8 +492,6 @@ class PasteWithDependenciesModel {
                 }
             }
         }, 0);
-
-        return pasteObject;
     }
 
     finalize() {
@@ -487,8 +510,39 @@ class PasteWithDependenciesModel {
 
         this.pasteObjects.forEach(pasteObject => {
             runInAction(() => {
-                pasteObject.hasConflict = this.hasConflict(pasteObject);
+                pasteObject.conflict = this.hasConflict(pasteObject);
             });
+        });
+
+        this.pasteObjects.sort((a: PasteObject, b: PasteObject) => {
+            function order(pasteObject: PasteObject) {
+                const object = pasteObject.object;
+                if (object instanceof ProjectEditor.FlowFragmentClass) {
+                    return 0;
+                } else if (object instanceof ProjectEditor.VariableClass) {
+                    return pasteObject.isLocalVariable ? 1 : 2;
+                } else if (object instanceof ProjectEditor.StructureClass) {
+                    return 3;
+                } else if (object instanceof ProjectEditor.EnumClass) {
+                    return 4;
+                } else if (object instanceof ProjectEditor.ActionClass) {
+                    return 5;
+                } else if (object instanceof ProjectEditor.PageClass) {
+                    return 6;
+                } else if (object instanceof ProjectEditor.StyleClass) {
+                    return 7;
+                } else if (object instanceof ProjectEditor.LVGLStyleClass) {
+                    return 8;
+                } else if (object instanceof ProjectEditor.BitmapClass) {
+                    return 9;
+                } else if (object instanceof ProjectEditor.FontClass) {
+                    return 10;
+                } else {
+                    return 11;
+                }
+            }
+
+            return order(a) - order(b);
         });
 
         runInAction(() => (this.allDependenciesFound = true));
@@ -498,59 +552,121 @@ class PasteWithDependenciesModel {
         this.interProjectStore.save();
     }
 
-    hasConflict(pasteObject: PasteObject) {
+    hasConflict(pasteObject: PasteObject): Conflict {
         if (pasteObject.object instanceof ProjectEditor.FlowFragmentClass) {
-            return false;
+            return { kind: "doesnt-exists" };
         }
+
+        let collection:
+            | ({
+                  name: string;
+              } & IEezObject)[]
+            | undefined;
 
         if (pasteObject.object instanceof ProjectEditor.VariableClass) {
             if (pasteObject.isLocalVariable) {
-                const localVariable = pasteObject.object;
-
                 const destinationFlow = this.destinationFlow;
-                if (!destinationFlow) {
-                    return false;
+                if (destinationFlow) {
+                    collection = destinationFlow.localVariables;
                 }
-
-                return destinationFlow.localVariables.find(
-                    destinationLocalVariable =>
-                        destinationLocalVariable.name == localVariable.name &&
-                        !this.compareObjects(
-                            destinationLocalVariable,
-                            localVariable
-                        )
-                )
-                    ? true
-                    : false;
             } else {
-                const globalVariable = pasteObject.object;
-
-                return this.destinationProjectStore.project.variables.globalVariables.find(
-                    destinationGlobalVariable =>
-                        destinationGlobalVariable.name == globalVariable.name &&
-                        !this.compareObjects(
-                            destinationGlobalVariable,
-                            globalVariable
-                        )
-                )
-                    ? true
-                    : false;
+                collection =
+                    this.destinationProjectStore.project.variables
+                        .globalVariables;
             }
+        } else if (pasteObject.object instanceof ProjectEditor.StructureClass) {
+            collection =
+                this.destinationProjectStore.project.variables.structures;
+        } else if (pasteObject.object instanceof ProjectEditor.EnumClass) {
+            collection = this.destinationProjectStore.project.variables.enums;
+        } else if (pasteObject.object instanceof ProjectEditor.ActionClass) {
+            collection = this.destinationProjectStore.project.actions;
+        } else if (pasteObject.object instanceof ProjectEditor.PageClass) {
+            const page = pasteObject.object;
+            if (page.isUsedAsUserWidget) {
+                collection = this.destinationProjectStore.project.userWidgets;
+            } else {
+                collection = this.destinationProjectStore.project.userPages;
+            }
+        } else if (pasteObject.object instanceof ProjectEditor.BitmapClass) {
+            collection = this.destinationProjectStore.project.bitmaps;
+        } else if (pasteObject.object instanceof ProjectEditor.FontClass) {
+            collection = this.destinationProjectStore.project.fonts;
         }
 
-        return true;
+        if (!collection) {
+            return { kind: "doesnt-exists" };
+        }
+
+        const destinationObject = collection.find(
+            destinationObject =>
+                destinationObject.name == (pasteObject.object as any).name
+        );
+
+        if (!destinationObject) {
+            return { kind: "doesnt-exists" };
+        }
+
+        if (this.compareObjects(destinationObject, pasteObject.object)) {
+            return { kind: "exists-same" };
+        }
+
+        return { kind: "exists-different" };
     }
 
-    compareObjects(existingObject: EezObject, newObject: EezObject) {
+    compareObjects(
+        existingObject: IEezObject | undefined,
+        newObject: IEezObject | undefined
+    ) {
+        if (!existingObject) {
+            return newObject ? false : true;
+        }
+
+        if (!newObject) {
+            return false;
+        }
+
         const classInfo = getClassInfo(existingObject);
 
-        for (const propertyInfo of classInfo.properties) {
-            if (!isPropertyHidden(existingObject, propertyInfo)) {
-                if (
-                    (existingObject as any)[propertyInfo.name] !=
-                    (newObject as any)[propertyInfo.name]
-                ) {
+        if (isArray(existingObject) || isArray(newObject)) {
+            if (!isArray(existingObject) || !isArray(newObject)) {
+                return false;
+            }
+
+            if (existingObject.length != newObject.length) {
+                return false;
+            }
+
+            for (let i = 0; i < existingObject.length; i++) {
+                if (!this.compareObjects(existingObject[i], newObject[i])) {
                     return false;
+                }
+            }
+        } else {
+            for (const propertyInfo of classInfo.properties) {
+                if (!isPropertyHidden(existingObject, propertyInfo)) {
+                    if (
+                        propertyInfo.type == PropertyType.Object ||
+                        propertyInfo.type == PropertyType.Array
+                    ) {
+                        let childObject1 = getChildOfObject(
+                            existingObject,
+                            propertyInfo
+                        );
+                        let childObject2 = getChildOfObject(
+                            newObject,
+                            propertyInfo
+                        );
+
+                        if (!this.compareObjects(childObject1, childObject2)) {
+                            return false;
+                        }
+                    } else if (
+                        (existingObject as any)[propertyInfo.name] !=
+                        (newObject as any)[propertyInfo.name]
+                    ) {
+                        return false;
+                    }
                 }
             }
         }
@@ -850,8 +966,10 @@ const ConflictResolution = observer(
         render() {
             const { pasteObject } = this.props;
 
-            if (!pasteObject.hasConflict) {
-                return "No conflict";
+            if (pasteObject.conflict.kind == "doesnt-exists") {
+                return "No conflict - Doesn't exists.";
+            } else if (pasteObject.conflict.kind == "exists-same") {
+                return "No conflict - Exists, but same.";
             }
 
             return (
