@@ -88,7 +88,7 @@ class PasteObject {
 
     object: EezObject;
     isLocalVariable: boolean = false;
-    styleWithParent: boolean = false;
+    styleLevel: number = 0;
     enabled: boolean = true;
     conflict: Conflict = { kind: "doesnt-exists" };
     conflictResolution: ConflictResolution;
@@ -340,13 +340,13 @@ class PasteWithDependenciesModel {
         });
 
         if (parentStyleObject) {
-            let parentObjectMapValue = this.addObject(parentStyleObject);
+            let parentPasteObject = this.addObject(parentStyleObject);
 
-            (parentObjectMapValue.object as Style).childStyles.push(
+            (parentPasteObject.object as Style).childStyles.push(
                 pasteObject.object as Style
             );
 
-            pasteObject.styleWithParent = true;
+            pasteObject.styleLevel = parentPasteObject.styleLevel + 1;
         }
 
         this.searchForDependencies(object);
@@ -542,7 +542,61 @@ class PasteWithDependenciesModel {
                 }
             }
 
-            return order(a) - order(b);
+            let result = order(a) - order(b);
+
+            if (result == 0) {
+                if (
+                    (a.object instanceof ProjectEditor.StyleClass &&
+                        b.object instanceof ProjectEditor.StyleClass) ||
+                    (a.object instanceof ProjectEditor.LVGLStyleClass &&
+                        b.object instanceof ProjectEditor.LVGLStyleClass)
+                ) {
+                    function getRootStyle(object: EezObject) {
+                        let collection = getParent(object);
+                        if (!collection) {
+                            return object;
+                        }
+
+                        let parent = getParent(collection);
+                        if (!parent) {
+                            return object;
+                        }
+
+                        if (
+                            parent instanceof ProjectEditor.StyleClass ||
+                            parent instanceof ProjectEditor.LVGLStyleClass
+                        ) {
+                            return getRootStyle(parent);
+                        }
+
+                        return object;
+                    }
+
+                    let aRoot = getRootStyle(a.object);
+                    let bRoot = getRootStyle(b.object);
+
+                    if (aRoot == bRoot) {
+                        result = a.styleLevel - b.styleLevel;
+                    }
+                }
+            }
+
+            if (result == 0) {
+                const aName = (a.object as any).name;
+                const bName = (b.object as any).name;
+
+                if (aName && bName) {
+                    if (aName < bName) {
+                        return -1;
+                    } else if (aName > bName) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            }
+
+            return result;
         });
 
         runInAction(() => (this.allDependenciesFound = true));
@@ -711,7 +765,7 @@ class PasteWithDependenciesModel {
             } else if (object instanceof ProjectEditor.BitmapClass) {
                 addObject(this.destinationProjectStore.project.bitmaps, object);
             } else if (object instanceof ProjectEditor.StyleClass) {
-                if (!pasteObject.styleWithParent) {
+                if (pasteObject.styleLevel == 0) {
                     addObject(
                         this.destinationProjectStore.project.styles,
                         object
@@ -922,10 +976,18 @@ export const PasteWithDependenciesDialog = observer(
                                                 </td>
 
                                                 <td>
-                                                    {icon && (
-                                                        <Icon icon={icon} />
-                                                    )}
-                                                    {objectType}
+                                                    <div
+                                                        style={{
+                                                            paddingLeft:
+                                                                pasteObject.styleLevel *
+                                                                10
+                                                        }}
+                                                    >
+                                                        {icon && (
+                                                            <Icon icon={icon} />
+                                                        )}
+                                                        {objectType}
+                                                    </div>
                                                 </td>
 
                                                 <td>
