@@ -810,6 +810,17 @@ export function findPropertyByNameInClassInfo(
     );
 }
 
+export function isPropertyDisabled(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (propertyInfo.disabled && propertyInfo.disabled(object, propertyInfo)) {
+        return true;
+    }
+
+    return false;
+}
+
 export function isPropertyHidden(
     object: IEezObject,
     propertyInfo: PropertyInfo

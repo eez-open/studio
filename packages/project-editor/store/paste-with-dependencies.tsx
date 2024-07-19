@@ -17,7 +17,7 @@ import {
     getParent,
     getProperty,
     IEezObject,
-    isPropertyHidden,
+    isPropertyDisabled,
     PropertyType,
     SerializedData,
     setParent
@@ -45,7 +45,6 @@ import {
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { searchForObjectDependencies } from "project-editor/core/search";
-import type { Style } from "project-editor/features/style/style";
 import type { Flow } from "project-editor/flow/flow";
 import {
     getArrayElementTypeFromType,
@@ -55,8 +54,19 @@ import {
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import type { Page } from "project-editor/features/page/page";
 import { Project } from "project-editor/project/project";
-import type { LVGLStyle } from "project-editor/lvgl/style";
 import { isArray } from "lodash";
+import type { ConnectionLine } from "project-editor/flow/connection-line";
+import {
+    getInputDisplayName,
+    getOutputDisplayName
+} from "project-editor/flow/helper";
+
+////////////////////////////////////////////////////////////////////////////////
+
+type CommonStyle = {
+    name: string;
+    childStyles: CommonStyle[];
+} & EezObject;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -273,7 +283,7 @@ class PasteWithDependenciesModel {
             object
         );
 
-        let parentStyleObject: Style | LVGLStyle | undefined;
+        let parentStyleObject: CommonStyle | undefined;
         if (
             object instanceof ProjectEditor.StyleClass ||
             object instanceof ProjectEditor.LVGLStyleClass
@@ -317,7 +327,7 @@ class PasteWithDependenciesModel {
                 this.addObject(parentStyleObject);
 
             addObject(
-                (pasteObject.parentStylePasteObject.object as Style)
+                (pasteObject.parentStylePasteObject.object as CommonStyle)
                     .childStyles,
                 pasteObject.object
             );
@@ -487,10 +497,12 @@ class PasteWithDependenciesModel {
         newObject: IEezObject | undefined
     ) {
         if (!existingObject) {
+            // console.log("T1", existingObject, newObject);
             return newObject ? false : true;
         }
 
         if (!newObject) {
+            // console.log("T2", existingObject, newObject);
             return false;
         }
 
@@ -498,10 +510,12 @@ class PasteWithDependenciesModel {
 
         if (isArray(existingObject) || isArray(newObject)) {
             if (!isArray(existingObject) || !isArray(newObject)) {
+                // console.log("T3", existingObject, newObject);
                 return false;
             }
 
             if (existingObject.length != newObject.length) {
+                // console.log("T4", existingObject, newObject);
                 return false;
             }
 
@@ -512,7 +526,94 @@ class PasteWithDependenciesModel {
             }
         } else {
             for (const propertyInfo of classInfo.properties) {
-                if (!isPropertyHidden(existingObject, propertyInfo)) {
+                if (!isPropertyDisabled(existingObject, propertyInfo)) {
+                    if (
+                        propertyInfo.type == PropertyType.Array &&
+                        (existingObject instanceof
+                            ProjectEditor.LVGLStyleClass ||
+                            existingObject instanceof
+                                ProjectEditor.StyleClass) &&
+                        propertyInfo.name == "childStyles"
+                    ) {
+                        continue;
+                    }
+
+                    if (
+                        existingObject instanceof
+                            ProjectEditor.ConnectionLineClass &&
+                        propertyInfo.name == "source"
+                    ) {
+                        if (
+                            !this.compareObjects(
+                                existingObject.sourceComponent,
+                                (newObject as ConnectionLine).sourceComponent
+                            )
+                        ) {
+                            // console.log("T4", existingObject, newObject);
+                            return false;
+                        }
+                        continue;
+                    }
+
+                    if (
+                        existingObject instanceof
+                            ProjectEditor.ConnectionLineClass &&
+                        propertyInfo.name == "output"
+                    ) {
+                        if (
+                            getOutputDisplayName(
+                                existingObject.sourceComponent,
+                                existingObject.output
+                            ) !=
+                            getOutputDisplayName(
+                                (newObject as ConnectionLine).sourceComponent,
+                                (newObject as ConnectionLine).output
+                            )
+                        ) {
+                            // console.log("T5", existingObject, newObject);
+                            return false;
+                        }
+                        continue;
+                    }
+
+                    if (
+                        existingObject instanceof
+                            ProjectEditor.ConnectionLineClass &&
+                        propertyInfo.name == "target"
+                    ) {
+                        if (
+                            !this.compareObjects(
+                                existingObject.targetComponent,
+                                (newObject as ConnectionLine).targetComponent
+                            )
+                        ) {
+                            // console.log("T6", existingObject, newObject);
+                            return false;
+                        }
+                        continue;
+                    }
+
+                    if (
+                        existingObject instanceof
+                            ProjectEditor.ConnectionLineClass &&
+                        propertyInfo.name == "input"
+                    ) {
+                        if (
+                            getInputDisplayName(
+                                existingObject.targetComponent,
+                                existingObject.input
+                            ) !=
+                            getInputDisplayName(
+                                (newObject as ConnectionLine).targetComponent,
+                                (newObject as ConnectionLine).input
+                            )
+                        ) {
+                            // console.log("T7", existingObject, newObject);
+                            return false;
+                        }
+                        continue;
+                    }
+
                     if (
                         propertyInfo.type == PropertyType.Object ||
                         propertyInfo.type == PropertyType.Array
@@ -527,12 +628,24 @@ class PasteWithDependenciesModel {
                         );
 
                         if (!this.compareObjects(childObject1, childObject2)) {
+                            // console.log(
+                            //     "T8",
+                            //     propertyInfo,
+                            //     existingObject,
+                            //     newObject
+                            // );
                             return false;
                         }
                     } else if (
                         (existingObject as any)[propertyInfo.name] !=
                         (newObject as any)[propertyInfo.name]
                     ) {
+                        // console.log(
+                        //     "T9",
+                        //     propertyInfo,
+                        //     existingObject,
+                        //     newObject
+                        // );
                         return false;
                     }
                 }
@@ -554,6 +667,46 @@ class PasteWithDependenciesModel {
     hasConflict(pasteObject: PasteObject): Conflict {
         if (pasteObject.object instanceof ProjectEditor.FlowFragmentClass) {
             return { kind: "doesnt-exists" };
+        }
+
+        if (
+            pasteObject.object instanceof ProjectEditor.StyleClass ||
+            pasteObject.object instanceof ProjectEditor.LVGLStyleClass
+        ) {
+            const findDestinationStyle = (
+                pasteObject: PasteObject
+            ): CommonStyle | undefined => {
+                if (pasteObject.styleLevel == 0) {
+                    return this.destinationProjectStore.project.styles.find(
+                        destinationObject =>
+                            destinationObject.name ==
+                            (pasteObject.object as any).name
+                    );
+                } else {
+                    const parentDestinationStyle = findDestinationStyle(
+                        pasteObject.parentStylePasteObject
+                    );
+                    if (!parentDestinationStyle) {
+                        return undefined;
+                    }
+                    return parentDestinationStyle.childStyles.find(
+                        destinationObject =>
+                            destinationObject.name ==
+                            (pasteObject.object as any).name
+                    );
+                }
+            };
+
+            const destinationStyle = findDestinationStyle(pasteObject);
+            if (!destinationStyle) {
+                return { kind: "doesnt-exists" };
+            }
+
+            if (this.compareObjects(destinationStyle, pasteObject.object)) {
+                return { kind: "exists-same" };
+            }
+
+            return { kind: "exists-different" };
         }
 
         let collection:
@@ -622,87 +775,89 @@ class PasteWithDependenciesModel {
     }
 
     sortPasteObjects() {
-        this.pasteObjects.sort((a: PasteObject, b: PasteObject) => {
-            function order(pasteObject: PasteObject) {
-                const object = pasteObject.object;
-                if (object instanceof ProjectEditor.FlowFragmentClass) {
-                    return 0;
-                } else if (object instanceof ProjectEditor.VariableClass) {
-                    return pasteObject.isLocalVariable ? 1 : 2;
-                } else if (object instanceof ProjectEditor.StructureClass) {
-                    return 3;
-                } else if (object instanceof ProjectEditor.EnumClass) {
-                    return 4;
-                } else if (object instanceof ProjectEditor.ActionClass) {
-                    return 5;
-                } else if (object instanceof ProjectEditor.PageClass) {
-                    return 6;
-                } else if (object instanceof ProjectEditor.StyleClass) {
-                    return 7;
-                } else if (object instanceof ProjectEditor.LVGLStyleClass) {
-                    return 8;
-                } else if (object instanceof ProjectEditor.BitmapClass) {
-                    return 9;
-                } else if (object instanceof ProjectEditor.FontClass) {
-                    return 10;
-                } else {
-                    return 11;
-                }
-            }
-
-            let result = order(a) - order(b);
-
-            if (result == 0) {
-                if (
-                    a.object instanceof ProjectEditor.StyleClass ||
-                    a.object instanceof ProjectEditor.LVGLStyleClass
-                ) {
-                    function getRootStyle(object: EezObject) {
-                        let collection = getParent(object);
-                        if (!collection) {
-                            return object;
-                        }
-
-                        let parent = getParent(collection);
-                        if (!parent) {
-                            return object;
-                        }
-
-                        if (
-                            parent instanceof ProjectEditor.StyleClass ||
-                            parent instanceof ProjectEditor.LVGLStyleClass
-                        ) {
-                            return getRootStyle(parent);
-                        }
-
-                        return object;
-                    }
-
-                    let aRoot = getRootStyle(a.object);
-                    let bRoot = getRootStyle(b.object);
-
-                    if (aRoot == bRoot) {
-                        result = a.styleLevel - b.styleLevel;
-                    }
-                }
-            }
-
-            if (result == 0) {
-                const aName = (a.object as any).name;
-                const bName = (b.object as any).name;
-
-                if (aName && bName) {
-                    if (aName < bName) {
-                        return -1;
-                    } else if (aName > bName) {
-                        return 1;
-                    } else {
+        runInAction(() => {
+            this.pasteObjects.sort((a: PasteObject, b: PasteObject) => {
+                function order(pasteObject: PasteObject) {
+                    const object = pasteObject.object;
+                    if (object instanceof ProjectEditor.FlowFragmentClass) {
                         return 0;
+                    } else if (object instanceof ProjectEditor.VariableClass) {
+                        return pasteObject.isLocalVariable ? 1 : 2;
+                    } else if (object instanceof ProjectEditor.StructureClass) {
+                        return 3;
+                    } else if (object instanceof ProjectEditor.EnumClass) {
+                        return 4;
+                    } else if (object instanceof ProjectEditor.ActionClass) {
+                        return 5;
+                    } else if (object instanceof ProjectEditor.PageClass) {
+                        return 6;
+                    } else if (object instanceof ProjectEditor.StyleClass) {
+                        return 7;
+                    } else if (object instanceof ProjectEditor.LVGLStyleClass) {
+                        return 8;
+                    } else if (object instanceof ProjectEditor.BitmapClass) {
+                        return 9;
+                    } else if (object instanceof ProjectEditor.FontClass) {
+                        return 10;
+                    } else {
+                        return 11;
                     }
                 }
-            }
 
-            return result;
+                let result = order(a) - order(b);
+
+                if (result == 0) {
+                    if (
+                        a.object instanceof ProjectEditor.StyleClass ||
+                        a.object instanceof ProjectEditor.LVGLStyleClass
+                    ) {
+                        function getRootStyle(object: EezObject) {
+                            let collection = getParent(object);
+                            if (!collection) {
+                                return object;
+                            }
+
+                            let parent = getParent(collection);
+                            if (!parent) {
+                                return object;
+                            }
+
+                            if (
+                                parent instanceof ProjectEditor.StyleClass ||
+                                parent instanceof ProjectEditor.LVGLStyleClass
+                            ) {
+                                return getRootStyle(parent);
+                            }
+
+                            return object;
+                        }
+
+                        let aRoot = getRootStyle(a.object);
+                        let bRoot = getRootStyle(b.object);
+
+                        if (aRoot == bRoot) {
+                            result = a.styleLevel - b.styleLevel;
+                        }
+                    }
+                }
+
+                if (result == 0) {
+                    const aName = (a.object as any).name;
+                    const bName = (b.object as any).name;
+
+                    if (aName && bName) {
+                        if (aName < bName) {
+                            return -1;
+                        } else if (aName > bName) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                }
+
+                return result;
+            });
         });
     }
 
@@ -729,10 +884,10 @@ class PasteWithDependenciesModel {
                 if (pasteObject.styleLevel == level) {
                     found = true;
 
-                    const styleName = (pasteObject.object as Style).name;
+                    const styleName = (pasteObject.object as CommonStyle).name;
 
                     pasteObject.object = (
-                        pasteObject.parentStylePasteObject.object as Style
+                        pasteObject.parentStylePasteObject.object as CommonStyle
                     ).childStyles.find(
                         childStyle => childStyle.name == styleName
                     )!;
@@ -751,7 +906,7 @@ class PasteWithDependenciesModel {
         runInAction(() => (this.allDependenciesFound = true));
 
         // TODO remove this
-        this.interProjectStore.filePath = `interProjectStore.eez-project`;
+        this.interProjectStore.filePath = `c:/Users/mvladic/Downloads/interProjectStore.eez-project`;
         this.interProjectStore.save();
     }
 
@@ -759,6 +914,10 @@ class PasteWithDependenciesModel {
         this.destinationProjectStore.undoManager.setCombineCommands(true);
 
         for (const pasteObject of this.pasteObjects) {
+            if (pasteObject.conflict.kind == "exists-same") {
+                continue;
+            }
+
             const object = pasteObject.object;
             if (object instanceof ProjectEditor.FlowFragmentClass) {
                 const editorState =
@@ -899,7 +1058,12 @@ export const PasteWithDependenciesDialog = observer(
         render() {
             const pasteWithDependenciesModel =
                 this.props.pasteWithDependenciesModel;
-            const objects = this.props.pasteWithDependenciesModel.pasteObjects;
+
+            const posteObjectsWithConflicts =
+                this.props.pasteWithDependenciesModel.pasteObjects.filter(
+                    pasteObject =>
+                        pasteObject.conflict.kind == "exists-different"
+                );
 
             return (
                 <Dialog
@@ -918,119 +1082,132 @@ export const PasteWithDependenciesDialog = observer(
                                 </div>
                             </div>
                         )}
-                        {this.allDependenciesFound && (
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            {this.allDependenciesFound && (
-                                                <input
-                                                    ref={
-                                                        this
-                                                            .enableAllCheckboxRef
-                                                    }
-                                                    className="form-check-input"
-                                                    type="checkbox"
-                                                    checked={
-                                                        pasteWithDependenciesModel.allEnabled
-                                                    }
-                                                    onChange={
-                                                        this
-                                                            .onChangeEnableAllCheckbox
-                                                    }
-                                                ></input>
-                                            )}
-                                        </th>
-                                        <th>Object Type</th>
-                                        <th>Object Name</th>
-                                        <th>Conflict Resolution</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {objects.map(pasteObject => {
-                                        const object = pasteObject.object;
+                        {this.allDependenciesFound &&
+                            (posteObjectsWithConflicts.length == 0 ? (
+                                "No conflicts found."
+                            ) : (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                {this.allDependenciesFound && (
+                                                    <input
+                                                        ref={
+                                                            this
+                                                                .enableAllCheckboxRef
+                                                        }
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        checked={
+                                                            pasteWithDependenciesModel.allEnabled
+                                                        }
+                                                        onChange={
+                                                            this
+                                                                .onChangeEnableAllCheckbox
+                                                        }
+                                                    ></input>
+                                                )}
+                                            </th>
+                                            <th>Object Type</th>
+                                            <th>Object Name</th>
+                                            <th>Conflict Resolution</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {posteObjectsWithConflicts.map(
+                                            pasteObject => {
+                                                const object =
+                                                    pasteObject.object;
 
-                                        const classInfo = getClassInfo(object);
+                                                const classInfo =
+                                                    getClassInfo(object);
 
-                                        const isUserWidget =
-                                            object instanceof
-                                                ProjectEditor.PageClass &&
-                                            object.isUsedAsUserWidget;
+                                                const isUserWidget =
+                                                    object instanceof
+                                                        ProjectEditor.PageClass &&
+                                                    object.isUsedAsUserWidget;
 
-                                        const isFlowFragment =
-                                            object instanceof
-                                            ProjectEditor.FlowFragmentClass;
+                                                const isFlowFragment =
+                                                    object instanceof
+                                                    ProjectEditor.FlowFragmentClass;
 
-                                        const icon = isUserWidget
-                                            ? USER_WIDGET_ICON
-                                            : classInfo.icon;
+                                                const icon = isUserWidget
+                                                    ? USER_WIDGET_ICON
+                                                    : classInfo.icon;
 
-                                        let objectType = isUserWidget
-                                            ? "User Widget"
-                                            : isFlowFragment
-                                            ? "Flow Fragment"
-                                            : pasteObject.isLocalVariable
-                                            ? "Local Variable"
-                                            : getClass(object).name;
+                                                let objectType = isUserWidget
+                                                    ? "User Widget"
+                                                    : isFlowFragment
+                                                    ? "Flow Fragment"
+                                                    : pasteObject.isLocalVariable
+                                                    ? "Local Variable"
+                                                    : getClass(object).name;
 
-                                        return (
-                                            <tr key={object.objID}>
-                                                <td>
-                                                    {this
-                                                        .allDependenciesFound && (
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            checked={
-                                                                pasteObject.enabled
-                                                            }
-                                                            onChange={action(
-                                                                event =>
-                                                                    (pasteObject.enabled =
-                                                                        event.target.checked)
+                                                return (
+                                                    <tr key={object.objID}>
+                                                        <td>
+                                                            {this
+                                                                .allDependenciesFound && (
+                                                                <input
+                                                                    className="form-check-input"
+                                                                    type="checkbox"
+                                                                    checked={
+                                                                        pasteObject.enabled
+                                                                    }
+                                                                    onChange={action(
+                                                                        event =>
+                                                                            (pasteObject.enabled =
+                                                                                event.target.checked)
+                                                                    )}
+                                                                ></input>
                                                             )}
-                                                        ></input>
-                                                    )}
-                                                </td>
+                                                        </td>
 
-                                                <td>
-                                                    <div
-                                                        style={{
-                                                            paddingLeft:
-                                                                pasteObject.styleLevel *
-                                                                10
-                                                        }}
-                                                    >
-                                                        {icon && (
-                                                            <Icon icon={icon} />
-                                                        )}
-                                                        {objectType}
-                                                    </div>
-                                                </td>
+                                                        <td>
+                                                            <div
+                                                                style={{
+                                                                    paddingLeft:
+                                                                        pasteObject.styleLevel *
+                                                                        10
+                                                                }}
+                                                            >
+                                                                {icon && (
+                                                                    <Icon
+                                                                        icon={
+                                                                            icon
+                                                                        }
+                                                                    />
+                                                                )}
+                                                                {objectType}
+                                                            </div>
+                                                        </td>
 
-                                                <td>
-                                                    {" "}
-                                                    {isFlowFragment
-                                                        ? ""
-                                                        : getLabel(object)}
-                                                </td>
+                                                        <td>
+                                                            {" "}
+                                                            {isFlowFragment
+                                                                ? ""
+                                                                : getLabel(
+                                                                      object
+                                                                  )}
+                                                        </td>
 
-                                                <td>
-                                                    <ConflictResolution
-                                                        pasteWithDependenciesModel={
-                                                            pasteWithDependenciesModel
-                                                        }
-                                                        pasteObject={
-                                                            pasteObject
-                                                        }
-                                                    />
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        )}
+                                                        <td>
+                                                            <ConflictResolution
+                                                                pasteWithDependenciesModel={
+                                                                    pasteWithDependenciesModel
+                                                                }
+                                                                pasteObject={
+                                                                    pasteObject
+                                                                }
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+                                        )}
+                                    </tbody>
+                                </table>
+                            ))}
                     </div>
                 </Dialog>
             );
