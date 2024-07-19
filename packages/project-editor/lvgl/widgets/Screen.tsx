@@ -15,8 +15,6 @@ import {
     ICustomWidgetCreateParams,
     Page
 } from "project-editor/features/page/page";
-import { getLvglFlagCodes } from "../lvgl-versions";
-import { getCode } from "../widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,11 +105,6 @@ export class LVGLScreenWidget extends LVGLWidget {
                 rect.top,
                 rect.width,
                 rect.height
-            );
-
-            runtime.wasm._lvglObjClearFlag(
-                obj,
-                getCode(["SCROLLABLE"], getLvglFlagCodes(this))
             );
         }
 
