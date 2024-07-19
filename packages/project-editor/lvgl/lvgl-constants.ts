@@ -586,10 +586,10 @@ export const KEYBOARD_MODES = {
     TEXT_UPPER: 1,
     SPECIAL: 2,
     NUMBER: 3,
-    USER1: 4,
-    USER2: 5,
-    USER3: 6,
-    USER4: 7
+    USER_1: 4,
+    USER_2: 5,
+    USER_3: 6,
+    USER_4: 7
 };
 
 // lv_scale_mode_t, LV_SCALE_MODE_

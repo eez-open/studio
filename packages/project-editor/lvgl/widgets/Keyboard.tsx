@@ -109,6 +109,18 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             mode: "TEXT_LOWER"
         },
 
+        beforeLoadHook: (object: LVGLKeyboardWidget, jsObject: any) => {
+            if (jsObject.mode == "USER1") {
+                jsObject.mode = "USER_1";
+            } else if (jsObject.mode == "USER2") {
+                jsObject.mode = "USER_2";
+            } else if (jsObject.mode == "USER3") {
+                jsObject.mode = "USER_3";
+            } else if (jsObject.mode == "USER4") {
+                jsObject.mode = "USER_4";
+            }
+        },
+
         icon: (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
