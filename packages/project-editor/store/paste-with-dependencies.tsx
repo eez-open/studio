@@ -2,6 +2,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import {
     action,
+    computed,
     IObservableValue,
     makeObservable,
     observable,
@@ -40,6 +41,7 @@ import {
     getObjectFromStringPath,
     loadProject,
     ProjectStore,
+    replaceObject,
     rewireBegin,
     rewireEnd
 } from "project-editor/store";
@@ -63,6 +65,8 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type ObjectWithName = { name: string } & EezObject;
+
 type CommonStyle = {
     name: string;
     childStyles: CommonStyle[];
@@ -73,16 +77,16 @@ type CommonStyle = {
 type Conflict =
     | { kind: "doesnt-exists" }
     | { kind: "exists-same" }
-    | { kind: "exists-different" };
+    | { kind: "exists-different"; destinationObject: EezObject };
 
 type ConflictResolution =
-    | { kind: "rename-source"; newName: string }
-    | { kind: "rename-destination"; newName: string }
-    | { kind: "replace" }
-    | { kind: "keep" };
+    | "rename-source"
+    | "rename-destination"
+    | "replace"
+    | "keep";
 
 class PasteObject {
-    constructor(object: EezObject) {
+    constructor(public model: PasteWithDependenciesModel, object: EezObject) {
         this.object = object;
 
         if (object instanceof ProjectEditor.VariableClass) {
@@ -92,7 +96,11 @@ class PasteObject {
         }
 
         makeObservable(this, {
-            enabled: observable
+            destinationStyle: computed,
+            destinationCollection: computed,
+            conflictResolution: observable,
+            conflictResolutionName: observable,
+            conflictResolutionError: computed
         });
     }
 
@@ -100,9 +108,143 @@ class PasteObject {
     parentStylePasteObject: PasteObject;
     isLocalVariable: boolean = false;
     styleLevel: number = 0;
-    enabled: boolean = true;
+
+    get destinationStyle(): CommonStyle | undefined {
+        if (this.styleLevel == 0) {
+            return this.model.destinationProjectStore.project.styles.find(
+                destinationObject =>
+                    destinationObject.name == (this.object as any).name
+            );
+        } else {
+            const parentDestinationStyle =
+                this.parentStylePasteObject.destinationStyle;
+            if (!parentDestinationStyle) {
+                return undefined;
+            }
+            return parentDestinationStyle.childStyles.find(
+                destinationObject =>
+                    destinationObject.name == (this.object as any).name
+            );
+        }
+    }
+
+    get destinationCollection(): ObjectWithName[] | undefined {
+        if (this.object instanceof ProjectEditor.FlowFragmentClass) {
+            return undefined;
+        }
+
+        if (
+            this.object instanceof ProjectEditor.StyleClass ||
+            this.object instanceof ProjectEditor.LVGLStyleClass
+        ) {
+            return this.destinationStyle
+                ? (getParent(this.destinationStyle) as
+                      | ObjectWithName[]
+                      | undefined)
+                : undefined;
+        }
+
+        let collection:
+            | ({
+                  name: string;
+              } & EezObject)[]
+            | undefined;
+
+        if (this.object instanceof ProjectEditor.VariableClass) {
+            if (this.isLocalVariable) {
+                const destinationFlow = this.model.destinationFlow;
+                if (destinationFlow) {
+                    collection = destinationFlow.localVariables;
+                }
+            } else {
+                collection =
+                    this.model.destinationProjectStore.project.variables
+                        .globalVariables;
+            }
+        } else if (this.object instanceof ProjectEditor.StructureClass) {
+            collection =
+                this.model.destinationProjectStore.project.variables.structures;
+        } else if (this.object instanceof ProjectEditor.EnumClass) {
+            collection =
+                this.model.destinationProjectStore.project.variables.enums;
+        } else if (this.object instanceof ProjectEditor.ActionClass) {
+            collection = this.model.destinationProjectStore.project.actions;
+        } else if (this.object instanceof ProjectEditor.PageClass) {
+            const page = this.object;
+            if (page.isUsedAsUserWidget) {
+                collection =
+                    this.model.destinationProjectStore.project.userWidgets;
+            } else {
+                collection =
+                    this.model.destinationProjectStore.project.userPages;
+            }
+        } else if (this.object instanceof ProjectEditor.BitmapClass) {
+            collection = this.model.destinationProjectStore.project.bitmaps;
+        } else if (this.object instanceof ProjectEditor.FontClass) {
+            collection = this.model.destinationProjectStore.project.fonts;
+        }
+
+        return collection;
+    }
+
     conflict: Conflict = { kind: "doesnt-exists" };
-    conflictResolution: ConflictResolution;
+
+    conflictResolution: ConflictResolution = "rename-source";
+
+    conflictResolutionName: string;
+
+    get conflictResolutionError() {
+        if (this.conflict.kind != "exists-different") {
+            return "";
+        }
+
+        if (
+            this.conflictResolution != "rename-source" &&
+            this.conflictResolution != "rename-destination"
+        ) {
+            return "";
+        }
+
+        if (!this.destinationCollection) {
+            return "";
+        }
+
+        if (
+            !this.destinationCollection.find(
+                destinationObject =>
+                    destinationObject.name == this.conflictResolutionName
+            )
+        ) {
+            if (
+                !this.model.pasteObjects.find(pasteObject => {
+                    if (
+                        pasteObject.destinationCollection !=
+                        this.destinationCollection
+                    ) {
+                        return false;
+                    }
+
+                    if (pasteObject.conflict.kind != "exists-different") {
+                        if (
+                            (pasteObject.object as any).name ==
+                            this.conflictResolutionName
+                        ) {
+                            return true;
+                        }
+                    }
+
+                    return (
+                        pasteObject.conflictResolutionName !=
+                        this.conflictResolutionName
+                    );
+                })
+            ) {
+                return "";
+            }
+        }
+
+        return "This name already exists.";
+    }
 }
 
 class PasteWithDependenciesModel {
@@ -314,7 +456,7 @@ class PasteWithDependenciesModel {
             clonedObject.childStyles.splice(0, clonedObject.childStyles.length);
         }
 
-        pasteObject = new PasteObject(clonedObject);
+        pasteObject = new PasteObject(this, clonedObject);
 
         runInAction(() => {
             this.foundObjects.set(object, pasteObject);
@@ -673,31 +815,7 @@ class PasteWithDependenciesModel {
             pasteObject.object instanceof ProjectEditor.StyleClass ||
             pasteObject.object instanceof ProjectEditor.LVGLStyleClass
         ) {
-            const findDestinationStyle = (
-                pasteObject: PasteObject
-            ): CommonStyle | undefined => {
-                if (pasteObject.styleLevel == 0) {
-                    return this.destinationProjectStore.project.styles.find(
-                        destinationObject =>
-                            destinationObject.name ==
-                            (pasteObject.object as any).name
-                    );
-                } else {
-                    const parentDestinationStyle = findDestinationStyle(
-                        pasteObject.parentStylePasteObject
-                    );
-                    if (!parentDestinationStyle) {
-                        return undefined;
-                    }
-                    return parentDestinationStyle.childStyles.find(
-                        destinationObject =>
-                            destinationObject.name ==
-                            (pasteObject.object as any).name
-                    );
-                }
-            };
-
-            const destinationStyle = findDestinationStyle(pasteObject);
+            const destinationStyle = pasteObject.destinationStyle;
             if (!destinationStyle) {
                 return { kind: "doesnt-exists" };
             }
@@ -706,51 +824,17 @@ class PasteWithDependenciesModel {
                 return { kind: "exists-same" };
             }
 
-            return { kind: "exists-different" };
+            return {
+                kind: "exists-different",
+                destinationObject: destinationStyle
+            };
         }
 
-        let collection:
-            | ({
-                  name: string;
-              } & IEezObject)[]
-            | undefined;
-
-        if (pasteObject.object instanceof ProjectEditor.VariableClass) {
-            if (pasteObject.isLocalVariable) {
-                const destinationFlow = this.destinationFlow;
-                if (destinationFlow) {
-                    collection = destinationFlow.localVariables;
-                }
-            } else {
-                collection =
-                    this.destinationProjectStore.project.variables
-                        .globalVariables;
-            }
-        } else if (pasteObject.object instanceof ProjectEditor.StructureClass) {
-            collection =
-                this.destinationProjectStore.project.variables.structures;
-        } else if (pasteObject.object instanceof ProjectEditor.EnumClass) {
-            collection = this.destinationProjectStore.project.variables.enums;
-        } else if (pasteObject.object instanceof ProjectEditor.ActionClass) {
-            collection = this.destinationProjectStore.project.actions;
-        } else if (pasteObject.object instanceof ProjectEditor.PageClass) {
-            const page = pasteObject.object;
-            if (page.isUsedAsUserWidget) {
-                collection = this.destinationProjectStore.project.userWidgets;
-            } else {
-                collection = this.destinationProjectStore.project.userPages;
-            }
-        } else if (pasteObject.object instanceof ProjectEditor.BitmapClass) {
-            collection = this.destinationProjectStore.project.bitmaps;
-        } else if (pasteObject.object instanceof ProjectEditor.FontClass) {
-            collection = this.destinationProjectStore.project.fonts;
-        }
-
-        if (!collection) {
+        if (!pasteObject.destinationCollection) {
             return { kind: "doesnt-exists" };
         }
 
-        const destinationObject = collection.find(
+        const destinationObject = pasteObject.destinationCollection.find(
             destinationObject =>
                 destinationObject.name == (pasteObject.object as any).name
         );
@@ -763,7 +847,7 @@ class PasteWithDependenciesModel {
             return { kind: "exists-same" };
         }
 
-        return { kind: "exists-different" };
+        return { kind: "exists-different", destinationObject };
     }
 
     findConflicts() {
@@ -918,6 +1002,10 @@ class PasteWithDependenciesModel {
                 continue;
             }
 
+            if (pasteObject.conflictResolution == "keep") {
+                continue;
+            }
+
             const object = pasteObject.object;
             if (object instanceof ProjectEditor.FlowFragmentClass) {
                 const editorState =
@@ -939,67 +1027,80 @@ class PasteWithDependenciesModel {
                         fromObject
                     );
                 }
-            } else if (object instanceof ProjectEditor.BitmapClass) {
-                addObject(this.destinationProjectStore.project.bitmaps, object);
-            } else if (object instanceof ProjectEditor.StyleClass) {
-                if (pasteObject.styleLevel == 0) {
-                    addObject(
-                        this.destinationProjectStore.project.styles,
-                        object
-                    );
-                }
-            } else if (object instanceof ProjectEditor.VariableClass) {
-                if (pasteObject.isLocalVariable) {
-                    if (this.destinationFlow) {
-                        addObject(this.destinationFlow.localVariables, object);
+            } else {
+                let collection: IEezObject | undefined;
+
+                if (object instanceof ProjectEditor.VariableClass) {
+                    if (pasteObject.isLocalVariable) {
+                        if (this.destinationFlow) {
+                            collection = this.destinationFlow.localVariables;
+                        }
+                    } else {
+                        collection =
+                            this.destinationProjectStore.project.variables
+                                .globalVariables;
                     }
-                } else {
-                    addObject(
+                } else if (object instanceof ProjectEditor.StructureClass) {
+                    collection =
                         this.destinationProjectStore.project.variables
-                            .globalVariables,
-                        object
-                    );
+                            .structures;
+                } else if (object instanceof ProjectEditor.EnumClass) {
+                    collection =
+                        this.destinationProjectStore.project.variables.enums;
+                } else if (object instanceof ProjectEditor.ActionClass) {
+                    collection = this.destinationProjectStore.project.actions;
+                } else if (object instanceof ProjectEditor.PageClass) {
+                    if (object.isUsedAsUserWidget) {
+                        collection =
+                            this.destinationProjectStore.project.userWidgets;
+                    } else {
+                        collection =
+                            this.destinationProjectStore.project.userPages;
+                    }
+                } else if (object instanceof ProjectEditor.StyleClass) {
+                    if (pasteObject.styleLevel == 0) {
+                        collection =
+                            this.destinationProjectStore.project.styles;
+                    }
+                } else if (object instanceof ProjectEditor.LVGLStyleClass) {
+                    if (pasteObject.styleLevel == 0) {
+                        collection =
+                            this.destinationProjectStore.project.lvglStyles;
+                    }
+                } else if (object instanceof ProjectEditor.BitmapClass) {
+                    collection = this.destinationProjectStore.project.bitmaps;
+                } else if (object instanceof ProjectEditor.FontClass) {
+                    collection = this.destinationProjectStore.project.fonts;
                 }
-            } else if (object instanceof ProjectEditor.EnumClass) {
-                addObject(
-                    this.destinationProjectStore.project.variables.enums,
-                    object
-                );
-            } else if (object instanceof ProjectEditor.StructureClass) {
-                addObject(
-                    this.destinationProjectStore.project.variables.structures,
-                    object
-                );
-            } else if (object instanceof ProjectEditor.PageClass) {
-                if (object.isUsedAsUserWidget) {
-                    addObject(
-                        this.destinationProjectStore.project.userWidgets,
-                        object
-                    );
-                } else {
-                    addObject(
-                        this.destinationProjectStore.project.userPages,
-                        object
-                    );
+
+                if (collection) {
+                    if (
+                        pasteObject.conflict.kind == "exists-different" &&
+                        pasteObject.conflictResolution == "replace"
+                    ) {
+                        replaceObject(
+                            pasteObject.conflict.destinationObject,
+                            object
+                        );
+                    } else {
+                        addObject(collection, object);
+                    }
                 }
-            } else if (object instanceof ProjectEditor.ActionClass) {
-                addObject(this.destinationProjectStore.project.actions, object);
-            } else if (object instanceof ProjectEditor.BitmapClass) {
-                addObject(this.destinationProjectStore.project.bitmaps, object);
-            } else if (object instanceof ProjectEditor.FontClass) {
-                addObject(this.destinationProjectStore.project.fonts, object);
             }
         }
 
         this.destinationProjectStore.undoManager.setCombineCommands(false);
     }
 
-    get allEnabled() {
-        return !this.pasteObjects.find(pasteObject => !pasteObject.enabled);
-    }
-
-    get allDisabled() {
-        return !this.pasteObjects.find(pasteObject => pasteObject.enabled);
+    get allConflictsResolved() {
+        return !this.pasteObjects.find(
+            pasteObject =>
+                pasteObject.conflict.kind == "exists-different" &&
+                (pasteObject.conflictResolution == "rename-source" ||
+                    pasteObject.conflictResolution == "rename-destination") &&
+                (!pasteObject.conflictResolutionName ||
+                    pasteObject.conflictResolutionError)
+        );
     }
 }
 
@@ -1018,41 +1119,15 @@ export const PasteWithDependenciesDialog = observer(
             return this.props.pasteWithDependenciesModel.allDependenciesFound;
         }
 
-        updateIndeterminate() {
-            if (this.enableAllCheckboxRef.current) {
-                this.enableAllCheckboxRef.current.indeterminate =
-                    !this.props.pasteWithDependenciesModel.allEnabled &&
-                    !this.props.pasteWithDependenciesModel.allDisabled;
-            }
-        }
-
-        componentDidMount() {
-            this.updateIndeterminate();
-        }
-
-        componentDidUpdate() {
-            this.updateIndeterminate();
-        }
-
         onOkEnabled = () => {
             return (
                 this.allDependenciesFound &&
-                !this.props.pasteWithDependenciesModel.allDisabled
+                this.props.pasteWithDependenciesModel.allConflictsResolved
             );
         };
 
         onOk = () => {
             this.props.onOk();
-        };
-
-        onChangeEnableAllCheckbox = (
-            event: React.ChangeEvent<HTMLInputElement>
-        ) => {
-            runInAction(() => {
-                this.props.pasteWithDependenciesModel.pasteObjects.forEach(
-                    pasteObject => (pasteObject.enabled = event.target.checked)
-                );
-            });
         };
 
         render() {
@@ -1089,25 +1164,6 @@ export const PasteWithDependenciesDialog = observer(
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>
-                                                {this.allDependenciesFound && (
-                                                    <input
-                                                        ref={
-                                                            this
-                                                                .enableAllCheckboxRef
-                                                        }
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        checked={
-                                                            pasteWithDependenciesModel.allEnabled
-                                                        }
-                                                        onChange={
-                                                            this
-                                                                .onChangeEnableAllCheckbox
-                                                        }
-                                                    ></input>
-                                                )}
-                                            </th>
                                             <th>Object Type</th>
                                             <th>Object Name</th>
                                             <th>Conflict Resolution</th>
@@ -1145,24 +1201,6 @@ export const PasteWithDependenciesDialog = observer(
 
                                                 return (
                                                     <tr key={object.objID}>
-                                                        <td>
-                                                            {this
-                                                                .allDependenciesFound && (
-                                                                <input
-                                                                    className="form-check-input"
-                                                                    type="checkbox"
-                                                                    checked={
-                                                                        pasteObject.enabled
-                                                                    }
-                                                                    onChange={action(
-                                                                        event =>
-                                                                            (pasteObject.enabled =
-                                                                                event.target.checked)
-                                                                    )}
-                                                                ></input>
-                                                            )}
-                                                        </td>
-
                                                         <td>
                                                             <div
                                                                 style={{
@@ -1230,12 +1268,44 @@ const ConflictResolution = observer(
             }
 
             return (
-                <select>
-                    <option>Rename source</option>
-                    <option>Rename destination</option>
-                    <option>Replace</option>
-                    <option>Keep</option>
-                </select>
+                <div className="EezStudio_PasteWithDependenciesDialog_ConflictResolution">
+                    <select
+                        className="form-select"
+                        value={pasteObject.conflictResolution}
+                        onChange={action(
+                            event =>
+                                (pasteObject.conflictResolution = event.target
+                                    .value as any)
+                        )}
+                    >
+                        <option value="rename-source">Rename source</option>
+                        <option value="rename-destination">
+                            Rename destination
+                        </option>
+                        <option value="replace">Replace</option>
+                        <option value="keep">Keep</option>
+                    </select>
+                    {(pasteObject.conflictResolution == "rename-source" ||
+                        pasteObject.conflictResolution ==
+                            "rename-destination") && (
+                        <input
+                            className="form-control"
+                            type="text"
+                            value={pasteObject.conflictResolutionName}
+                            onChange={action(
+                                event =>
+                                    (pasteObject.conflictResolutionName =
+                                        event.target.value)
+                            )}
+                            placeholder="Name"
+                        ></input>
+                    )}
+                    {pasteObject.conflictResolutionError && (
+                        <div className="alert alert-danger" role="alert">
+                            {pasteObject.conflictResolutionError}
+                        </div>
+                    )}
+                </div>
             );
         }
     }
