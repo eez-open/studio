@@ -1325,7 +1325,7 @@ export default feature;
 const VALIDATION_MESSAGE_INVALID_IDENTIFIER =
     "Not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
 
-const identifierValidator = (object: any, ruleName: string) => {
+export const identifierValidator = (object: any, ruleName: string) => {
     const value = object[ruleName];
     if (!parseIdentifier(value) || value.startsWith("$")) {
         return VALIDATION_MESSAGE_INVALID_IDENTIFIER;

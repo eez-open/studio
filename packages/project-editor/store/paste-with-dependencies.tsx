@@ -65,6 +65,8 @@ import {
     getInputDisplayName,
     getOutputDisplayName
 } from "project-editor/flow/helper";
+import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
+import { identifierValidator } from "project-editor/features/variable/variable";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -197,6 +199,24 @@ class PasteObject {
     conflictResolutionName: string;
 
     get conflictResolutionError() {
+        if (this.conflictResolutionName == undefined) {
+            return "";
+        }
+
+        if (this.conflictResolutionName.trim() == "") {
+            return VALIDATION_MESSAGE_REQUIRED;
+        }
+
+        if (this.object instanceof ProjectEditor.VariableClass) {
+            const errorMessage = identifierValidator(
+                this,
+                "conflictResolutionName"
+            );
+            if (errorMessage) {
+                return errorMessage;
+            }
+        }
+
         if (this.conflict.kind != "exists-different") {
             return "";
         }
@@ -221,23 +241,23 @@ class PasteObject {
             if (
                 !this.model.pasteObjects.find(pasteObject => {
                     if (
+                        pasteObject == this ||
                         pasteObject.destinationCollection !=
-                        this.destinationCollection
+                            this.destinationCollection
                     ) {
                         return false;
                     }
 
-                    if (pasteObject.conflict.kind != "exists-different") {
-                        if (
-                            (pasteObject.object as any).name ==
+                    if (
+                        pasteObject.conflict.kind != "exists-different" &&
+                        (pasteObject.object as any).name ==
                             this.conflictResolutionName
-                        ) {
-                            return true;
-                        }
+                    ) {
+                        return true;
                     }
 
                     return (
-                        pasteObject.conflictResolutionName !=
+                        pasteObject.conflictResolutionName ==
                         this.conflictResolutionName
                     );
                 })
@@ -482,6 +502,7 @@ class PasteWithDependenciesModel {
         }
 
         if (objectParentPath) {
+            const parent = getParent(object);
             setParent(
                 object,
                 getObjectFromStringPath(
@@ -489,7 +510,7 @@ class PasteWithDependenciesModel {
                     objectParentPath
                 )
             );
-            this.searchForDependencies(object);
+            this.searchForDependencies(object, parent);
         } else {
             this.searchForDependencies(clonedObject);
         }
@@ -497,7 +518,7 @@ class PasteWithDependenciesModel {
         return pasteObject;
     }
 
-    searchForDependencies(object: EezObject) {
+    searchForDependencies(object: EezObject, parent?: IEezObject) {
         const search = searchForObjectDependencies(
             this.sourceProjectStore,
             object,
@@ -510,6 +531,10 @@ class PasteWithDependenciesModel {
                 let visitResult = search.next();
                 if (visitResult.done) {
                     clearInterval(interval);
+
+                    if (parent) {
+                        setParent(object, parent);
+                    }
 
                     runInAction(() => this.remaining--);
 
@@ -949,6 +974,15 @@ class PasteWithDependenciesModel {
     }
 
     finalize() {
+        //
+        this.findConflicts();
+
+        this.sortPasteObjects();
+
+        runInAction(() => (this.allDependenciesFound = true));
+    }
+
+    beforePaste() {
         // rename source objects
         runInAction(() => {
             for (const pasteObject of this.pasteObjects) {
@@ -956,13 +990,22 @@ class PasteWithDependenciesModel {
                     pasteObject.conflict.kind == "exists-different" &&
                     pasteObject.conflictResolution == "rename-source"
                 ) {
+                    (pasteObject.object as ObjectWithName).name =
+                        pasteObject.conflictResolutionName;
+
                     replaceObjectReference(
                         pasteObject.object,
                         pasteObject.conflictResolutionName
                     );
+
+                    pasteObject.conflict = { kind: "doesnt-exists" };
                 }
             }
         });
+
+        // TODO remove this
+        this.interProjectStore.filePath = `c:/Users/mvladic/Downloads/interProjectStore.eez-project`;
+        this.interProjectStore.save();
 
         // Clone objects once more, this time with new ID's and in destination project store.
         // Do not clone non-root level style objects.
@@ -999,20 +1042,11 @@ class PasteWithDependenciesModel {
                 break;
             }
         }
-
-        //
-        this.findConflicts();
-
-        this.sortPasteObjects();
-
-        runInAction(() => (this.allDependenciesFound = true));
-
-        // TODO remove this
-        this.interProjectStore.filePath = `c:/Users/mvladic/Downloads/interProjectStore.eez-project`;
-        this.interProjectStore.save();
     }
 
     doPaste() {
+        this.beforePaste();
+
         this.destinationProjectStore.undoManager.setCombineCommands(true);
 
         // rename destination objects
@@ -1020,12 +1054,18 @@ class PasteWithDependenciesModel {
             for (const pasteObject of this.pasteObjects) {
                 if (
                     pasteObject.conflict.kind == "exists-different" &&
-                    pasteObject.conflictResolution == "rename-source"
+                    pasteObject.conflictResolution == "rename-destination"
                 ) {
+                    (
+                        pasteObject.conflict.destinationObject as ObjectWithName
+                    ).name = pasteObject.conflictResolutionName;
+
                     replaceObjectReference(
                         pasteObject.conflict.destinationObject,
                         pasteObject.conflictResolutionName
                     );
+
+                    pasteObject.conflict = { kind: "doesnt-exists" };
                 }
             }
         });
@@ -1324,7 +1364,7 @@ const ConflictResolution = observer(
                         <input
                             className="form-control"
                             type="text"
-                            value={pasteObject.conflictResolutionName}
+                            value={pasteObject.conflictResolutionName || ""}
                             onChange={action(
                                 event =>
                                     (pasteObject.conflictResolutionName =
