@@ -46,7 +46,10 @@ import {
     rewireEnd
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { searchForObjectDependencies } from "project-editor/core/search";
+import {
+    replaceObjectReference,
+    searchForObjectDependencies
+} from "project-editor/core/search";
 import type { Flow } from "project-editor/flow/flow";
 import {
     getArrayElementTypeFromType,
@@ -946,6 +949,21 @@ class PasteWithDependenciesModel {
     }
 
     finalize() {
+        // rename source objects
+        runInAction(() => {
+            for (const pasteObject of this.pasteObjects) {
+                if (
+                    pasteObject.conflict.kind == "exists-different" &&
+                    pasteObject.conflictResolution == "rename-source"
+                ) {
+                    replaceObjectReference(
+                        pasteObject.object,
+                        pasteObject.conflictResolutionName
+                    );
+                }
+            }
+        });
+
         // Clone objects once more, this time with new ID's and in destination project store.
         // Do not clone non-root level style objects.
         const rootPasteObjects = this.pasteObjects.filter(
@@ -996,6 +1014,21 @@ class PasteWithDependenciesModel {
 
     doPaste() {
         this.destinationProjectStore.undoManager.setCombineCommands(true);
+
+        // rename destination objects
+        runInAction(() => {
+            for (const pasteObject of this.pasteObjects) {
+                if (
+                    pasteObject.conflict.kind == "exists-different" &&
+                    pasteObject.conflictResolution == "rename-source"
+                ) {
+                    replaceObjectReference(
+                        pasteObject.conflict.destinationObject,
+                        pasteObject.conflictResolutionName
+                    );
+                }
+            }
+        });
 
         for (const pasteObject of this.pasteObjects) {
             if (pasteObject.conflict.kind == "exists-same") {
