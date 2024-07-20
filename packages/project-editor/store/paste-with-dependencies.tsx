@@ -990,13 +990,13 @@ class PasteWithDependenciesModel {
                     pasteObject.conflict.kind == "exists-different" &&
                     pasteObject.conflictResolution == "rename-source"
                 ) {
-                    (pasteObject.object as ObjectWithName).name =
-                        pasteObject.conflictResolutionName;
-
                     replaceObjectReference(
                         pasteObject.object,
                         pasteObject.conflictResolutionName
                     );
+
+                    (pasteObject.object as ObjectWithName).name =
+                        pasteObject.conflictResolutionName;
 
                     pasteObject.conflict = { kind: "doesnt-exists" };
                 }
@@ -1056,14 +1056,14 @@ class PasteWithDependenciesModel {
                     pasteObject.conflict.kind == "exists-different" &&
                     pasteObject.conflictResolution == "rename-destination"
                 ) {
-                    (
-                        pasteObject.conflict.destinationObject as ObjectWithName
-                    ).name = pasteObject.conflictResolutionName;
-
                     replaceObjectReference(
                         pasteObject.conflict.destinationObject,
                         pasteObject.conflictResolutionName
                     );
+
+                    (
+                        pasteObject.conflict.destinationObject as ObjectWithName
+                    ).name = pasteObject.conflictResolutionName;
 
                     pasteObject.conflict = { kind: "doesnt-exists" };
                 }
