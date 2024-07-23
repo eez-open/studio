@@ -590,6 +590,8 @@ export const FlowViewer = observer(
                 "ensure-selection-visible",
                 this.ensureSelectionVisible
             );
+
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidCatch(error: any, info: any) {
@@ -601,10 +603,9 @@ export const FlowViewer = observer(
                 "ensure-selection-visible",
                 this.ensureSelectionVisible
             );
+
             setTimeout(() => {
-                if (this.context.navigationStore?.selectedPanel === this) {
-                    this.context.navigationStore.setSelectedPanel(undefined);
-                }
+                this.context.navigationStore.unmountPanel(this);
             });
         }
 

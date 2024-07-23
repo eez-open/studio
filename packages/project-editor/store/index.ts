@@ -1431,6 +1431,8 @@ export class ProjectStore {
     }
 
     copy = () => {
+        console.log(this.navigationStore.selectedPanel);
+
         if (!this.canCopy) {
             return;
         }

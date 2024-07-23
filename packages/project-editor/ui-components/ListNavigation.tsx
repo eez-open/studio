@@ -223,9 +223,7 @@ export const ListNavigation = observer(
         }
 
         componentDidMount() {
-            if (this.listAdapter.allRows.length > 0) {
-                this.context.navigationStore.setInitialSelectedPanel(this);
-            }
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidUpdate() {
@@ -234,9 +232,7 @@ export const ListNavigation = observer(
 
         componentWillUnmount() {
             this.dispose();
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
+            this.context.navigationStore.unmountPanel(this);
         }
 
         get listAdapter() {

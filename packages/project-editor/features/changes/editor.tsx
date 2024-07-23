@@ -396,7 +396,19 @@ export const ChangesEditor = observer(
         componentDidMount() {
             this.refresh();
 
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
+        }
+
+        componentWillUnmount() {
+            if (this.activeTask) {
+                this.activeTask();
+            }
+
+            if (this.dispose) {
+                this.dispose();
+            }
+
+            this.context.navigationStore.unmountPanel(this);
         }
 
         async refresh() {
@@ -451,20 +463,6 @@ export const ChangesEditor = observer(
                     }
                 }, 0);
             });
-        }
-
-        componentWillUnmount() {
-            if (this.activeTask) {
-                this.activeTask();
-            }
-
-            if (this.dispose) {
-                this.dispose();
-            }
-
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
         }
 
         get isRevertChangesEnabled() {

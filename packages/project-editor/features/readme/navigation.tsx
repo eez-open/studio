@@ -43,7 +43,7 @@ export const ReadmeEditor = observer(
                 this.loadText();
             });
 
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidUpdate() {
@@ -79,9 +79,7 @@ export const ReadmeEditor = observer(
                 $(this.divRef.current).find("a").off("click", this.onClick);
             }
 
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
+            this.context.navigationStore.unmountPanel(this);
 
             if (this.dispose) {
                 this.dispose();

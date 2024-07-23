@@ -7,7 +7,8 @@ import type { ProjectStore } from "project-editor/store";
 import {
     isValue,
     getObjectPathAsString,
-    findPropertyByChildObject
+    findPropertyByChildObject,
+    getAncestorOfType
 } from "project-editor/store/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,12 +317,40 @@ export class NavigationStore {
 
     initialPanelSet = false;
 
-    setInitialSelectedPanel(selectedPanel: IPanel) {
+    mountPanel(panel: IPanel) {
         if (!this.initialPanelSet) {
-            this.setSelectedPanel(selectedPanel);
+            if (this.selectedPanel) {
+                let selectedObject = panel.selectedObject;
+                if (
+                    !selectedObject &&
+                    panel.selectedObjects &&
+                    panel.selectedObjects.length > 0
+                ) {
+                    selectedObject = panel.selectedObjects[0];
+                }
+
+                if (
+                    selectedObject &&
+                    getAncestorOfType(
+                        selectedObject,
+                        ProjectEditor.FlowClass.classInfo
+                    )
+                ) {
+                    this.setSelectedPanel(panel);
+                }
+            } else {
+                this.setSelectedPanel(panel);
+            }
+
             setTimeout(() => {
                 this.initialPanelSet = true;
             }, 100);
+        }
+    }
+
+    unmountPanel(panel: IPanel) {
+        if (this.selectedPanel === panel) {
+            this.setSelectedPanel(undefined);
         }
     }
 

@@ -3408,22 +3408,22 @@
     }
 }
 
-.EezStudio_PasteWithDependenciesDialog {
-    padding: 10px;
-    width: 100%;
+.EezStudio_FindAllPasteDependenciesProgressDialog {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     & > div {
-        height: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-
-        & > div {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
     }
+}
+
+.EezStudio_ResolvePasteConflictsDialog {
+    padding: 10px;
+    width: 100%;
 
     & > table {
         width: 100%;

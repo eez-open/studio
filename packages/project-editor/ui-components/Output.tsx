@@ -46,12 +46,17 @@ export const Messages = observer(
         };
 
         componentDidMount() {
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
+
             this.ensureSelectionVisible();
         }
 
         componentDidUpdate() {
             this.ensureSelectionVisible();
+        }
+
+        componentWillUnmount() {
+            this.context.navigationStore.unmountPanel(this);
         }
 
         ensureSelectionVisible() {
@@ -81,12 +86,6 @@ export const Messages = observer(
             this.context.navigationStore.setSelectedPanel(this);
         };
         //
-
-        componentWillUnmount() {
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
-        }
 
         get rootNode(): ITreeNode<Message> {
             const section = this.props.section;

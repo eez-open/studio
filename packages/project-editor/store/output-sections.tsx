@@ -23,7 +23,6 @@ import {
     humanizePropertyName
 } from "project-editor/store/helper";
 
-import { IPanel } from "project-editor/store/navigation";
 import { ProjectStore, getLabel } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -358,7 +357,7 @@ export class MessagesCollection {
     }
 }
 
-export class OutputSection implements IPanel {
+export class OutputSection {
     permanent: boolean = true;
 
     loading = false;

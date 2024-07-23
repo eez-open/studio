@@ -65,11 +65,15 @@ export const Glyphs = observer(
 
         componentDidMount() {
             this.ensureVisible();
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidUpdate() {
             this.ensureVisible();
+        }
+
+        componentWillUnmount() {
+            this.context.navigationStore.unmountPanel(this);
         }
 
         ensureVisible() {
@@ -93,12 +97,6 @@ export const Glyphs = observer(
                 this.context.navigationStore.setSelectedPanel(this);
             }
         };
-
-        componentWillUnmount() {
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
-        }
 
         render() {
             const glyphs: JSX.Element[] = this.props.glyphs

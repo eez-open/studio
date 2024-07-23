@@ -289,7 +289,8 @@ class PasteWithDependenciesModel {
 
         makeObservable(this, {
             pasteObjects: observable,
-            allDependenciesFound: observable
+            allDependenciesFound: observable,
+            posteObjectsWithConflicts: computed
         });
     }
 
@@ -982,6 +983,12 @@ class PasteWithDependenciesModel {
         runInAction(() => (this.allDependenciesFound = true));
     }
 
+    get posteObjectsWithConflicts() {
+        return this.pasteObjects.filter(
+            pasteObject => pasteObject.conflict.kind == "exists-different"
+        );
+    }
+
     beforePaste() {
         // rename source objects
         runInAction(() => {
@@ -1179,8 +1186,8 @@ class PasteWithDependenciesModel {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const PasteWithDependenciesDialog = observer(
-    class PasteWithDependenciesDialog extends React.Component<{
+export const ResolvePasteConflictsDialog = observer(
+    class ResolvePasteConflictsDialog extends React.Component<{
         pasteWithDependenciesModel: PasteWithDependenciesModel;
         modalDialog: IObservableValue<any>;
         onOk: () => void;
@@ -1208,10 +1215,7 @@ export const PasteWithDependenciesDialog = observer(
                 this.props.pasteWithDependenciesModel;
 
             const posteObjectsWithConflicts =
-                this.props.pasteWithDependenciesModel.pasteObjects.filter(
-                    pasteObject =>
-                        pasteObject.conflict.kind == "exists-different"
-                );
+                this.props.pasteWithDependenciesModel.posteObjectsWithConflicts;
 
             return (
                 <Dialog
@@ -1221,104 +1225,90 @@ export const PasteWithDependenciesDialog = observer(
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
                 >
-                    <div className="EezStudio_PasteWithDependenciesDialog">
-                        {!this.allDependenciesFound && (
-                            <div>
-                                <div>
-                                    <div>Searching for dependencies ...</div>
-                                    <Loader />
-                                </div>
-                            </div>
+                    <div className="EezStudio_ResolvePasteConflictsDialog">
+                        {posteObjectsWithConflicts.length == 0 ? (
+                            "No conflicts found."
+                        ) : (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Object Type</th>
+                                        <th>Object Name</th>
+                                        <th>Conflict Resolution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {posteObjectsWithConflicts.map(
+                                        pasteObject => {
+                                            const object = pasteObject.object;
+
+                                            const classInfo =
+                                                getClassInfo(object);
+
+                                            const isUserWidget =
+                                                object instanceof
+                                                    ProjectEditor.PageClass &&
+                                                object.isUsedAsUserWidget;
+
+                                            const isFlowFragment =
+                                                object instanceof
+                                                ProjectEditor.FlowFragmentClass;
+
+                                            const icon = isUserWidget
+                                                ? USER_WIDGET_ICON
+                                                : classInfo.icon;
+
+                                            let objectType = isUserWidget
+                                                ? "User Widget"
+                                                : isFlowFragment
+                                                ? "Flow Fragment"
+                                                : pasteObject.isLocalVariable
+                                                ? "Local Variable"
+                                                : getClass(object).name;
+
+                                            return (
+                                                <tr key={object.objID}>
+                                                    <td>
+                                                        <div
+                                                            style={{
+                                                                paddingLeft:
+                                                                    pasteObject.styleLevel *
+                                                                    10
+                                                            }}
+                                                        >
+                                                            {icon && (
+                                                                <Icon
+                                                                    icon={icon}
+                                                                />
+                                                            )}
+                                                            {objectType}
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        {" "}
+                                                        {isFlowFragment
+                                                            ? ""
+                                                            : getLabel(object)}
+                                                    </td>
+
+                                                    <td>
+                                                        <ConflictResolution
+                                                            pasteWithDependenciesModel={
+                                                                pasteWithDependenciesModel
+                                                            }
+                                                            pasteObject={
+                                                                pasteObject
+                                                            }
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+                                    )}
+                                </tbody>
+                            </table>
                         )}
-                        {this.allDependenciesFound &&
-                            (posteObjectsWithConflicts.length == 0 ? (
-                                "No conflicts found."
-                            ) : (
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Object Type</th>
-                                            <th>Object Name</th>
-                                            <th>Conflict Resolution</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {posteObjectsWithConflicts.map(
-                                            pasteObject => {
-                                                const object =
-                                                    pasteObject.object;
-
-                                                const classInfo =
-                                                    getClassInfo(object);
-
-                                                const isUserWidget =
-                                                    object instanceof
-                                                        ProjectEditor.PageClass &&
-                                                    object.isUsedAsUserWidget;
-
-                                                const isFlowFragment =
-                                                    object instanceof
-                                                    ProjectEditor.FlowFragmentClass;
-
-                                                const icon = isUserWidget
-                                                    ? USER_WIDGET_ICON
-                                                    : classInfo.icon;
-
-                                                let objectType = isUserWidget
-                                                    ? "User Widget"
-                                                    : isFlowFragment
-                                                    ? "Flow Fragment"
-                                                    : pasteObject.isLocalVariable
-                                                    ? "Local Variable"
-                                                    : getClass(object).name;
-
-                                                return (
-                                                    <tr key={object.objID}>
-                                                        <td>
-                                                            <div
-                                                                style={{
-                                                                    paddingLeft:
-                                                                        pasteObject.styleLevel *
-                                                                        10
-                                                                }}
-                                                            >
-                                                                {icon && (
-                                                                    <Icon
-                                                                        icon={
-                                                                            icon
-                                                                        }
-                                                                    />
-                                                                )}
-                                                                {objectType}
-                                                            </div>
-                                                        </td>
-
-                                                        <td>
-                                                            {" "}
-                                                            {isFlowFragment
-                                                                ? ""
-                                                                : getLabel(
-                                                                      object
-                                                                  )}
-                                                        </td>
-
-                                                        <td>
-                                                            <ConflictResolution
-                                                                pasteWithDependenciesModel={
-                                                                    pasteWithDependenciesModel
-                                                                }
-                                                                pasteObject={
-                                                                    pasteObject
-                                                                }
-                                                            />
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }
-                                        )}
-                                    </tbody>
-                                </table>
-                            ))}
                     </div>
                 </Dialog>
             );
@@ -1386,6 +1376,80 @@ const ConflictResolution = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const FindAllPasteDependenciesProgressDialog = observer(
+    class FindAllPasteDependenciesProgressDialog extends React.Component<{
+        pasteWithDependenciesModel: PasteWithDependenciesModel;
+        onFinished: () => void;
+    }> {
+        render() {
+            return (
+                <Dialog
+                    size="small"
+                    cancelDisabled={true}
+                    onCancel={this.props.onFinished}
+                    open={
+                        !this.props.pasteWithDependenciesModel
+                            .allDependenciesFound
+                    }
+                    modal={true}
+                >
+                    <div className="EezStudio_FindAllPasteDependenciesProgressDialog">
+                        <div>
+                            <div>Searching for dependencies ...</div>
+                            <Loader />
+                        </div>
+                    </div>
+                </Dialog>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function showResolvePasteConflictsDialog(
+    pasteWithDependenciesModel: PasteWithDependenciesModel
+) {
+    const modalDialogObservable = observable.box<any>();
+
+    let disposed = false;
+
+    const onDispose = () => {
+        if (!disposed) {
+            disposed = true;
+
+            if (modalDialog) {
+                modalDialog.close();
+            }
+        }
+    };
+
+    const onOk = () => {
+        pasteWithDependenciesModel.doPaste();
+
+        onDispose();
+    };
+
+    const [modalDialog] = showDialog(
+        <ResolvePasteConflictsDialog
+            pasteWithDependenciesModel={pasteWithDependenciesModel}
+            modalDialog={modalDialogObservable}
+            onOk={onOk}
+            onCancel={onDispose}
+        />,
+        {
+            jsPanel: {
+                id: "resolve-paste-conflicts-dialog",
+                title: "Paste - Resolve Conflicts",
+                width: 800,
+                height: 600
+            }
+        }
+    );
+
+    modalDialogObservable.set(modalDialog);
+}
+
 export function pasteWithDependencies(projectStore: ProjectStore) {
     let serializedData = getProjectEditorDataFromClipboard(projectStore);
     if (!serializedData) {
@@ -1414,46 +1478,23 @@ export function pasteWithDependencies(projectStore: ProjectStore) {
         serializedData
     );
 
-    const modalDialogObservable = observable.box<any>();
-
-    let disposed = false;
-
-    const onDispose = () => {
-        if (!disposed) {
-            disposed = true;
-
-            if (modalDialog) {
-                modalDialog.close();
-            }
-        }
-    };
-
-    const onOk = () => {
-        pasteWithDependenciesModel.doPaste();
-
-        onDispose();
-    };
-
-    const [modalDialog] = showDialog(
-        <PasteWithDependenciesDialog
-            pasteWithDependenciesModel={pasteWithDependenciesModel}
-            modalDialog={modalDialogObservable}
-            onOk={onOk}
-            onCancel={onDispose}
-        />,
-        {
-            jsPanel: {
-                id: "paste-with-dependencies-dialog",
-                title: "Paste - Resolve Conflicts",
-                width: 800,
-                height: 600
-            }
-        }
-    );
-
-    modalDialogObservable.set(modalDialog);
-
     pasteWithDependenciesModel.findAllDependencies();
+
+    showDialog(
+        <FindAllPasteDependenciesProgressDialog
+            pasteWithDependenciesModel={pasteWithDependenciesModel}
+            onFinished={() => {
+                if (
+                    pasteWithDependenciesModel.posteObjectsWithConflicts
+                        .length > 0
+                ) {
+                    showResolvePasteConflictsDialog(pasteWithDependenciesModel);
+                } else {
+                    pasteWithDependenciesModel.doPaste();
+                }
+            }}
+        />
+    );
 
     return true;
 }

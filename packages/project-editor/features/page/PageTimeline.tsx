@@ -346,7 +346,7 @@ export const PageTimelineEditor = observer(
 
             this.updateHorizontalScoll();
 
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentWillUnmount() {
@@ -356,9 +356,7 @@ export const PageTimelineEditor = observer(
                 );
             }
 
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
+            this.context.navigationStore.unmountPanel(this);
         }
 
         onVerticalScroll = action(() => {

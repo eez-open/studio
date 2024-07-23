@@ -198,7 +198,7 @@ export const LVGLStylesTreeNavigation = observer(
                 }
             );
 
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidUpdate() {
@@ -208,9 +208,7 @@ export const LVGLStylesTreeNavigation = observer(
         componentWillUnmount() {
             this.dispose1();
             this.dispose2();
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
+            this.context.navigationStore.unmountPanel(this);
         }
 
         get treeObjectAdapter() {

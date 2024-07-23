@@ -802,7 +802,7 @@ export const FlowEditor = observer(
                 this.ensureSelectionVisible
             );
 
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidCatch(error: any, info: any) {
@@ -815,9 +815,7 @@ export const FlowEditor = observer(
                 this.ensureSelectionVisible
             );
 
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
+            this.context.navigationStore.unmountPanel(this);
         }
 
         ensureSelectionVisible = () => {

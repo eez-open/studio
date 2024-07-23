@@ -202,7 +202,7 @@ export const Dialog = observer(
         };
 
         render() {
-            const buttons: IDialogButton[] = [];
+            let buttons: IDialogButton[] | undefined = [];
 
             if (this.props.additionalButtons) {
                 buttons.push(...this.props.additionalButtons);
@@ -234,6 +234,10 @@ export const Dialog = observer(
                     style: {},
                     text: this.props.okButtonText || "OK"
                 });
+            }
+
+            if (buttons.length == 0) {
+                buttons = undefined;
             }
 
             return (

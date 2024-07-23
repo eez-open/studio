@@ -93,7 +93,11 @@ export const FontEditor = observer(
         }
 
         componentDidMount() {
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
+        }
+
+        componentWillUnmount() {
+            this.context.navigationStore.unmountPanel(this);
         }
 
         onSelectGlyph(glyph: Glyph) {
@@ -145,12 +149,6 @@ export const FontEditor = observer(
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };
-
-        componentWillUnmount() {
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
-        }
 
         onAddGlyph() {
             const projectStore = this.context;

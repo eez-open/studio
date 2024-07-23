@@ -91,11 +91,15 @@ export const FlowViewer = observer(
         }
 
         componentDidMount() {
-            this.context.navigationStore.setInitialSelectedPanel(this);
+            this.context.navigationStore.mountPanel(this);
         }
 
         componentDidCatch(error: any, info: any) {
             console.error(error, info);
+        }
+
+        componentWillUnmount() {
+            this.context.navigationStore.unmountPanel(this);
         }
 
         // interface IPanel implementation
@@ -109,12 +113,6 @@ export const FlowViewer = observer(
         onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
         };
-
-        componentWillUnmount() {
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
-        }
 
         getDragComponent(event: React.DragEvent) {
             return undefined;
