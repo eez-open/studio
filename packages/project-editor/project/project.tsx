@@ -691,6 +691,7 @@ export class General extends EezObject {
     displayWidth: number;
     displayHeight: number;
     circularDisplay: boolean;
+    darkTheme: boolean;
     colorFormat: string;
     //css: string;
 
@@ -873,6 +874,12 @@ export class General extends EezObject {
             },
             {
                 name: "circularDisplay",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: isNotLVGLProject
+            },
+            {
+                name: "darkTheme",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
                 disabled: isNotLVGLProject
@@ -1118,6 +1125,7 @@ export class General extends EezObject {
             displayWidth: observable,
             displayHeight: observable,
             circularDisplay: observable,
+            darkTheme: observable,
             colorFormat: observable,
             description: observable,
             image: observable,

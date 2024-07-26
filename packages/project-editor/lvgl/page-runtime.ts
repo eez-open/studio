@@ -286,6 +286,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
+                    getProjectStore(this.page).project.settings.general
+                        .darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
@@ -471,6 +473,8 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     0,
                     this.page.width,
                     this.page.height,
+                    getProjectStore(this.page).project.settings.general
+                        .darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
@@ -805,6 +809,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
+                    getProjectStore(this.page).project.settings.general
+                        .darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
@@ -1097,6 +1103,8 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
+                    getProjectStore(this.page).project.settings.general
+                        .darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 

@@ -505,6 +505,7 @@ export function createWasmWorker(
     lvglVersion: "8.3" | "9.0" | undefined,
     displayWidth: number,
     displayHeight: number,
+    darkTheme: boolean,
     getClassByName: (className: string) => any,
     readSettings: (key: string) => any,
     writeSettings: (key: string, value: any) => any,
@@ -750,6 +751,7 @@ export function createWasmWorker(
                 assets.length,
                 displayWidth,
                 displayHeight,
+                darkTheme,
                 -(new Date().getTimezoneOffset() / 60) * 100
             );
 

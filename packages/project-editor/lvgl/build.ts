@@ -563,7 +563,9 @@ export class LVGLBuild extends Build {
         build.indent();
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
-            "lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);"
+            `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
+                this.project.settings.general.darkTheme ? "true" : "false"
+            }, LV_FONT_DEFAULT);`
         );
         build.line("lv_disp_set_theme(dispp, theme);");
 

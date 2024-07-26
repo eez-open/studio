@@ -259,6 +259,7 @@ export class WasmRuntime extends RemoteRuntime {
                 : undefined,
             this.displayWidth,
             this.displayHeight,
+            this.projectStore.project.settings.general.darkTheme,
             (className: string) => getClassByName(this.projectStore, className),
             (key: string) => {
                 return this.projectStore.runtimeSettings.readSettings(key);

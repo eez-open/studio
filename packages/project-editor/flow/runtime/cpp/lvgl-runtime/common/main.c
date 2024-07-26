@@ -276,7 +276,7 @@ static uint32_t g_prevTick;
 static void dump_widgets_flags_info();
 static void dump_custom_styles();
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, uint32_t timeZone) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone) {
     is_editor = assetsSize == 0;
 
     hor_res = displayWidth;
@@ -289,13 +289,13 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     hal_init();
 
     lv_disp_t *dispp = lv_disp_get_default();
-    lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
+    lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
 
     //dump_widgets_flags_info();
 
     if (!is_editor) {
-        flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, timeZone);
+        flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, darkTheme, timeZone);
     }
 
 #if LVGL_VERSION_MAJOR >= 9

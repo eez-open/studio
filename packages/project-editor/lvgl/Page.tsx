@@ -65,6 +65,7 @@ export const LVGLPage = observer(
 
         render() {
             this.context.project.settings.general.lvglVersion;
+            this.context.project.settings.general.darkTheme;
 
             return (
                 <LVGLPageCanvasWithForwardedRef
