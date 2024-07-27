@@ -322,7 +322,11 @@ const EditorButtons = observer(
                                                 </svg>
                                             }
                                             iconSize={24}
-                                            onClick={showScrapbookManager}
+                                            onClick={() =>
+                                                showScrapbookManager(
+                                                    this.context
+                                                )
+                                            }
                                         />
                                     </div>
                                 </>

@@ -280,12 +280,17 @@ class PasteWithDependenciesModel {
     remaining: number = 0;
     allDependenciesFound: boolean;
 
+    _destinationFlow: Flow | undefined;
+
     constructor(
         public sourceProjectStore: ProjectStore,
         public destinationProjectStore: ProjectStore,
+        destinationFlow: Flow | undefined,
         public serializedData: SerializedData
     ) {
         this.createInterProjectStore();
+
+        this._destinationFlow = destinationFlow;
 
         makeObservable(this, {
             pasteObjects: observable,
@@ -295,86 +300,12 @@ class PasteWithDependenciesModel {
     }
 
     createInterProjectStore() {
-        this.interProjectStore = ProjectStore.create({
-            type: "project-editor"
-        });
+        const { projectStore, projectStoreFlowFragmentFlow } =
+            createEmptyProjectStore(this.sourceProjectStore);
 
-        const projectJsonStr = getJSON(this.sourceProjectStore);
+        this.interProjectStore = projectStore;
 
-        const projectJson: Partial<Project> = JSON.parse(projectJsonStr);
-
-        runInAction(() => {
-            if (projectJson.variables) {
-                projectJson.variables.globalVariables = [];
-                projectJson.variables.structures = [];
-                projectJson.variables.enums = [];
-            }
-            projectJson.actions = [];
-            projectJson.userPages = [];
-            projectJson.userWidgets = [];
-            projectJson.styles = [];
-            projectJson.fonts = [];
-            if (projectJson.texts) {
-                projectJson.texts.languages = [];
-                projectJson.texts.resources = [];
-            }
-            if (projectJson.readme) {
-                projectJson.readme.readmeFile = undefined;
-            }
-            projectJson.bitmaps = [];
-            if (projectJson.scpi) {
-                projectJson.scpi.subsystems = [];
-                projectJson.scpi.enums = [];
-            }
-            if (projectJson.instrumentCommands) {
-                projectJson.instrumentCommands.commands = [];
-            }
-            if (projectJson.shortcuts) {
-                projectJson.shortcuts.shortcuts = [];
-            }
-            if (projectJson.micropython) {
-                projectJson.micropython.code = "";
-            }
-            projectJson.extensionDefinitions = [];
-            projectJson.colors = [];
-            projectJson.themes = [
-                {
-                    name: "default",
-                    colors: []
-                } as any
-            ];
-            if (projectJson.lvglStyles) {
-                projectJson.lvglStyles.styles = [];
-                projectJson.lvglStyles.defaultStyles = {};
-            }
-        });
-
-        const project = loadProject(this.interProjectStore, projectJson, false);
-
-        this.interProjectStore.setProject(project, "");
-
-        this.interProjectStoreFlowFragmentFlow = createObject<Page>(
-            this.interProjectStore,
-            {
-                name: "$$$FLOW_FRAGMENT$$$",
-                left: 0,
-                top: 0,
-                width: 900,
-                height: 600,
-                components: [],
-                connectionLines: [],
-                localVariables: [],
-                isUsedAsUserWidget: false
-            },
-            ProjectEditor.PageClass,
-            undefined,
-            false
-        );
-
-        addObject(
-            this.interProjectStore.project.userPages,
-            this.interProjectStoreFlowFragmentFlow
-        );
+        this.interProjectStoreFlowFragmentFlow = projectStoreFlowFragmentFlow;
     }
 
     static addObjectToProject(
@@ -827,6 +758,9 @@ class PasteWithDependenciesModel {
     }
 
     get destinationFlow() {
+        if (this._destinationFlow) {
+            return this._destinationFlow;
+        }
         const editorState =
             this.destinationProjectStore.editorsStore.activeEditor?.state;
         if (editorState instanceof ProjectEditor.FlowTabStateClass) {
@@ -1376,6 +1310,93 @@ const ConflictResolution = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function createEmptyProjectStore(sourceProjectStore: ProjectStore) {
+    const projectStore = ProjectStore.create({
+        type: "project-editor"
+    });
+
+    const projectJsonStr = getJSON(sourceProjectStore);
+
+    const projectJson: Partial<Project> = JSON.parse(projectJsonStr);
+
+    runInAction(() => {
+        if (projectJson.variables) {
+            projectJson.variables.globalVariables = [];
+            projectJson.variables.structures = [];
+            projectJson.variables.enums = [];
+        }
+        projectJson.actions = [];
+        projectJson.userPages = [];
+        projectJson.userWidgets = [];
+        projectJson.styles = [];
+        projectJson.fonts = [];
+        if (projectJson.texts) {
+            projectJson.texts.languages = [];
+            projectJson.texts.resources = [];
+        }
+        if (projectJson.readme) {
+            projectJson.readme.readmeFile = undefined;
+        }
+        projectJson.bitmaps = [];
+        if (projectJson.scpi) {
+            projectJson.scpi.subsystems = [];
+            projectJson.scpi.enums = [];
+        }
+        if (projectJson.instrumentCommands) {
+            projectJson.instrumentCommands.commands = [];
+        }
+        if (projectJson.shortcuts) {
+            projectJson.shortcuts.shortcuts = [];
+        }
+        if (projectJson.micropython) {
+            projectJson.micropython.code = "";
+        }
+        projectJson.extensionDefinitions = [];
+        projectJson.colors = [];
+        projectJson.themes = [
+            {
+                name: "default",
+                colors: []
+            } as any
+        ];
+        if (projectJson.lvglStyles) {
+            projectJson.lvglStyles.styles = [];
+            projectJson.lvglStyles.defaultStyles = {};
+        }
+    });
+
+    const project = loadProject(projectStore, projectJson, false);
+
+    projectStore.setProject(project, "");
+
+    const projectStoreFlowFragmentFlow = createObject<Page>(
+        projectStore,
+        {
+            name: "$$$FLOW_FRAGMENT$$$",
+            left: 0,
+            top: 0,
+            width: 900,
+            height: 600,
+            components: [],
+            connectionLines: [],
+            localVariables: [],
+            isUsedAsUserWidget: false
+        },
+        ProjectEditor.PageClass,
+        undefined,
+        false
+    );
+
+    addObject(projectStore.project.userPages, projectStoreFlowFragmentFlow);
+
+    return {
+        projectStore,
+        projectStoreFlowFragmentFlow
+    };
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const FindAllPasteDependenciesProgressDialog = observer(
     class FindAllPasteDependenciesProgressDialog extends React.Component<{
         pasteWithDependenciesModel: PasteWithDependenciesModel;
@@ -1408,7 +1429,8 @@ const FindAllPasteDependenciesProgressDialog = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function showResolvePasteConflictsDialog(
-    pasteWithDependenciesModel: PasteWithDependenciesModel
+    pasteWithDependenciesModel: PasteWithDependenciesModel,
+    onFinished?: (destinationProjectStore: ProjectStore) => void
 ) {
     const modalDialogObservable = observable.box<any>();
 
@@ -1426,6 +1448,10 @@ export function showResolvePasteConflictsDialog(
 
     const onOk = () => {
         pasteWithDependenciesModel.doPaste();
+
+        if (onFinished) {
+            onFinished(pasteWithDependenciesModel.destinationProjectStore);
+        }
 
         onDispose();
     };
@@ -1450,13 +1476,21 @@ export function showResolvePasteConflictsDialog(
     modalDialogObservable.set(modalDialog);
 }
 
-export function pasteWithDependencies(projectStore: ProjectStore) {
-    let serializedData = getProjectEditorDataFromClipboard(projectStore);
+export function pasteWithDependencies(
+    destinationProjectStore: ProjectStore,
+    onFinished?: (destinationProjectStore: ProjectStore) => void
+) {
+    let serializedData = getProjectEditorDataFromClipboard(
+        destinationProjectStore
+    );
     if (!serializedData) {
         return false;
     }
 
-    if (serializedData.originProjectFilePath == projectStore.filePath) {
+    if (
+        !onFinished &&
+        serializedData.originProjectFilePath == destinationProjectStore.filePath
+    ) {
         return false;
     }
 
@@ -1472,9 +1506,18 @@ export function pasteWithDependencies(projectStore: ProjectStore) {
         return false;
     }
 
+    let destinationFlow: Flow | undefined;
+    if (onFinished) {
+        const { projectStore, projectStoreFlowFragmentFlow } =
+            createEmptyProjectStore(projectEditorTab.projectStore);
+        destinationProjectStore = projectStore;
+        destinationFlow = projectStoreFlowFragmentFlow;
+    }
+
     const pasteWithDependenciesModel = new PasteWithDependenciesModel(
         projectEditorTab.projectStore,
-        projectStore,
+        destinationProjectStore,
+        destinationFlow,
         serializedData
     );
 
@@ -1488,9 +1531,17 @@ export function pasteWithDependencies(projectStore: ProjectStore) {
                     pasteWithDependenciesModel.posteObjectsWithConflicts
                         .length > 0
                 ) {
-                    showResolvePasteConflictsDialog(pasteWithDependenciesModel);
+                    showResolvePasteConflictsDialog(
+                        pasteWithDependenciesModel,
+                        onFinished
+                    );
                 } else {
                     pasteWithDependenciesModel.doPaste();
+                    if (onFinished) {
+                        onFinished(
+                            pasteWithDependenciesModel.destinationProjectStore
+                        );
+                    }
                 }
             }}
         />
