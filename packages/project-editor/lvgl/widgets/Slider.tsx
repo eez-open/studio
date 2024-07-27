@@ -38,6 +38,7 @@ export class LVGLSliderWidget extends LVGLWidget {
     valueType: LVGLPropertyType;
     valueLeft: number | string;
     valueLeftType: LVGLPropertyType;
+    enableAnimation: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -85,7 +86,13 @@ export class LVGLSliderWidget extends LVGLWidget {
                     disabled: (slider: LVGLSliderWidget) =>
                         slider.mode != "RANGE"
                 }
-            )
+            ),
+            {
+                name: "enableAnimation",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            }
         ],
 
         defaultValue: {
@@ -100,7 +107,8 @@ export class LVGLSliderWidget extends LVGLWidget {
             value: 25,
             valueType: "literal",
             valueLeft: 0,
-            valueLeftType: "literal"
+            valueLeftType: "literal",
+            enableAnimation: false
         },
 
         icon: (
@@ -152,7 +160,8 @@ export class LVGLSliderWidget extends LVGLWidget {
             value: observable,
             valueType: observable,
             valueLeft: observable,
-            valueLeftType: observable
+            valueLeftType: observable,
+            enableAnimation: observable
         });
     }
 
@@ -207,7 +216,8 @@ export class LVGLSliderWidget extends LVGLWidget {
                 obj,
                 getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                this.enableAnimation
             );
         }
 
@@ -216,7 +226,8 @@ export class LVGLSliderWidget extends LVGLWidget {
                 obj,
                 getFlowStateAddressIndex(runtime),
                 valueLeftExpr.componentIndex,
-                valueLeftExpr.propertyIndex
+                valueLeftExpr.propertyIndex,
+                this.enableAnimation
             );
         }
 
@@ -266,7 +277,9 @@ export class LVGLSliderWidget extends LVGLWidget {
         if (this.valueType == "literal") {
             if (this.value != 0) {
                 build.line(
-                    `lv_slider_set_value(obj, ${this.value}, LV_ANIM_OFF);`
+                    `lv_slider_set_value(obj, ${this.value}, ${
+                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                    });`
                 );
             }
         }
@@ -274,12 +287,16 @@ export class LVGLSliderWidget extends LVGLWidget {
         if (this.mode == "RANGE" && this.valueLeftType == "literal") {
             if (this.valueType == "expression") {
                 build.line(
-                    `lv_slider_set_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
+                    `lv_slider_set_value(obj, ${this.valueLeft}, ${
+                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                    });`
                 );
             }
 
             build.line(
-                `lv_slider_set_left_value(obj, ${this.valueLeft}, LV_ANIM_OFF);`
+                `lv_slider_set_left_value(obj, ${this.valueLeft}, ${
+                    this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                });`
             );
         }
     }
@@ -291,7 +308,7 @@ export class LVGLSliderWidget extends LVGLWidget {
             "value" as const,
             "lv_slider_get_value",
             "lv_slider_set_value",
-            ", LV_ANIM_OFF"
+            this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
         );
 
         if (this.mode == "RANGE") {
@@ -301,7 +318,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 "valueLeft" as const,
                 "lv_slider_get_left_value",
                 "lv_slider_set_left_value",
-                ", LV_ANIM_OFF"
+                this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
             );
         }
     }

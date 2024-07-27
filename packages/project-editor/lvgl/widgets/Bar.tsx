@@ -32,6 +32,7 @@ export class LVGLBarWidget extends LVGLWidget {
     valueType: LVGLPropertyType;
     valueStart: number | string;
     valueStartType: LVGLPropertyType;
+    enableAnimation: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -78,7 +79,13 @@ export class LVGLBarWidget extends LVGLWidget {
                     propertyGridGroup: specificGroup,
                     disabled: (bar: LVGLBarWidget) => bar.mode != "RANGE"
                 }
-            )
+            ),
+            {
+                name: "enableAnimation",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
+            }
         ],
 
         defaultValue: {
@@ -93,7 +100,8 @@ export class LVGLBarWidget extends LVGLWidget {
             value: 25,
             valueType: "literal",
             valueStart: 0,
-            valueStartType: "literal"
+            valueStartType: "literal",
+            enableAnimation: false
         },
 
         icon: (
@@ -126,7 +134,8 @@ export class LVGLBarWidget extends LVGLWidget {
             value: observable,
             valueType: observable,
             valueStart: observable,
-            valueStartType: observable
+            valueStartType: observable,
+            enableAnimation: observable
         });
     }
 
@@ -175,7 +184,8 @@ export class LVGLBarWidget extends LVGLWidget {
                 obj,
                 getFlowStateAddressIndex(runtime),
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                this.enableAnimation
             );
         }
 
@@ -184,7 +194,8 @@ export class LVGLBarWidget extends LVGLWidget {
                 obj,
                 getFlowStateAddressIndex(runtime),
                 valueStartExpr.componentIndex,
-                valueStartExpr.propertyIndex
+                valueStartExpr.propertyIndex,
+                this.enableAnimation
             );
         }
 
@@ -207,7 +218,9 @@ export class LVGLBarWidget extends LVGLWidget {
         if (this.valueType == "literal") {
             if (this.value != 0) {
                 build.line(
-                    `lv_bar_set_value(obj, ${this.value}, LV_ANIM_OFF);`
+                    `lv_bar_set_value(obj, ${this.value}, ${
+                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                    });`
                 );
             }
         }
@@ -215,12 +228,16 @@ export class LVGLBarWidget extends LVGLWidget {
         if (this.mode == "RANGE" && this.valueStartType == "literal") {
             if (this.valueType == "expression") {
                 build.line(
-                    `lv_bar_set_value(obj, ${this.valueStart}, LV_ANIM_OFF);`
+                    `lv_bar_set_value(obj, ${this.valueStart}, ${
+                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                    });`
                 );
             }
 
             build.line(
-                `lv_bar_set_start_value(obj, ${this.valueStart}, LV_ANIM_OFF);`
+                `lv_bar_set_start_value(obj, ${this.valueStart}, ${
+                    this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                });`
             );
         }
     }
@@ -232,7 +249,7 @@ export class LVGLBarWidget extends LVGLWidget {
             "value" as const,
             "lv_bar_get_value",
             "lv_bar_set_value",
-            ", LV_ANIM_OFF"
+            this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
         );
 
         if (this.mode == "RANGE") {
@@ -242,7 +259,7 @@ export class LVGLBarWidget extends LVGLWidget {
                 "valueStart" as const,
                 "lv_bar_get_start_value",
                 "lv_bar_set_start_value",
-                ", LV_ANIM_OFF"
+                this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
             );
         }
     }

@@ -907,20 +907,20 @@ EM_PORT_API(void) lvglUpdateRollerSelected(lv_obj_t *obj, void *flow_state, unsi
     addUpdateTask(UPDATE_TASK_TYPE_ROLLER_SELECTED, obj, flow_state, component_index, property_index, 0, 0);
 }
 
-EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, flow_state, component_index, property_index, 0, 0);
+EM_PORT_API(void) lvglUpdateSliderValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, bool anim) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE, obj, flow_state, component_index, property_index, 0, anim);
 }
 
-EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, flow_state, component_index, property_index, 0, 0);
+EM_PORT_API(void) lvglUpdateSliderValueLeft(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, bool anim) {
+    addUpdateTask(UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT, obj, flow_state, component_index, property_index, 0, anim);
 }
 
-EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, flow_state, component_index, property_index, 0, 0);
+EM_PORT_API(void) lvglUpdateBarValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, bool anim) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE, obj, flow_state, component_index, property_index, 0, anim);
 }
 
-EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
-    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state, component_index, property_index, 0, 0);
+EM_PORT_API(void) lvglUpdateBarValueStart(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, bool anim) {
+    addUpdateTask(UPDATE_TASK_TYPE_BAR_VALUE_START, obj, flow_state, component_index, property_index, 0, anim);
 }
 
 EM_PORT_API(void) lvglUpdateArcRangeMin(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {

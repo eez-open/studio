@@ -663,11 +663,11 @@ void doUpdateTasks() {
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
             int32_t cur_val = lv_slider_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_slider_set_value(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (new_val != cur_val) lv_slider_set_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
             int32_t cur_val = lv_slider_get_left_value(updateTask.obj);
-            if (new_val != cur_val) lv_slider_set_left_value(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (new_val != cur_val) lv_slider_set_left_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_RANGE_MIN) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Range min in Arc widget");
             int32_t cur_val = lv_arc_get_min_value(updateTask.obj);
@@ -693,11 +693,11 @@ void doUpdateTasks() {
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
             int32_t cur_val = lv_bar_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_bar_set_value(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (new_val != cur_val) lv_bar_set_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE_START) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
             int32_t cur_val = lv_bar_get_start_value(updateTask.obj);
-            if (new_val != cur_val) lv_bar_set_start_value(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (new_val != cur_val) lv_bar_set_start_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CHECKED_STATE) {
             bool new_val = evalBooleanProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
             bool cur_val = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);

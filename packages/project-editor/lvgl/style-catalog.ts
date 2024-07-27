@@ -1921,7 +1921,11 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             //anim_speed_property_info,
             //transition_property_info,
             blend_mode_property_info,
-            base_dir_property_info
+            base_dir_property_info,
+
+            anim_time_property_info,
+            anim_duration_property_info,
+            anim_speed_property_info
         ]
     }
 ];
@@ -1936,11 +1940,7 @@ export const unusedProperties = [
 
     color_filter_dsc_property_info,
     color_filter_opa_property_info,
-
     anim_property_info,
-    anim_time_property_info,
-    anim_duration_property_info,
-    anim_speed_property_info,
     transition_property_info
 ];
 

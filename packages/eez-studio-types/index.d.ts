@@ -689,10 +689,10 @@ export interface IWasmFlowRuntime {
     _lvglUpdateRollerSelected(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateDropdownOptions(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateDropdownSelected(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateSliderValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateSliderValueLeft(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateBarValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateBarValueStart(obj: number, flow_state: number, component_index: number, property_index: number): void;
+    _lvglUpdateSliderValue(obj: number, flow_state: number, component_index: number, property_index: number, anim: boolean): void;
+    _lvglUpdateSliderValueLeft(obj: number, flow_state: number, component_index: number, property_index: number, anim: boolean): void;
+    _lvglUpdateBarValue(obj: number, flow_state: number, component_index: number, property_index: number, anim: boolean): void;
+    _lvglUpdateBarValueStart(obj: number, flow_state: number, component_index: number, property_index: number, anim: boolean): void;
     _lvglUpdateArcRangeMin(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateArcRangeMax(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateArcValue(obj: number, flow_state: number, component_index: number, property_index: number): void;
