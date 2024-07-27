@@ -23,6 +23,7 @@ import { DashboardComponentContext } from "project-editor/flow/runtime/worker-da
 import { isArray } from "eez-studio-shared/util";
 import { getLvglWasmFlowRuntimeConstructor } from "project-editor/lvgl/lvgl-versions";
 import { runInAction } from "mobx";
+import deepEqual from "fast-deep-equal";
 
 const eez_flow_runtime_constructor = require("project-editor/flow/runtime/eez_runtime.js");
 
@@ -618,8 +619,6 @@ export function createWasmWorker(
                 }
             }
 
-            const deepEqual =
-                require("deep-equal") as typeof import("deep-equal");
             return deepEqual(oldValue, newValue);
         }
 
@@ -801,6 +800,10 @@ export function createWasmWorker(
 
         let propertyValues: IPropertyValue[] | undefined;
         if (rendererToWorkerMessage.evalProperties) {
+            const MAX_ITERATORS = 4;
+            const iteratorsPtr = WasmFlowRuntime._malloc(MAX_ITERATORS * 4);
+            const iteratorsOffset = iteratorsPtr >> 2;
+
             rendererToWorkerMessage.evalProperties.forEach(evalProperty => {
                 const {
                     flowStateIndex,
@@ -810,30 +813,26 @@ export function createWasmWorker(
                     indexes
                 } = evalProperty;
 
-                let iteratorsPtr = 0;
+                let iteratorsPtrTemp = 0;
                 if (indexes) {
-                    const MAX_ITERATORS = 4;
-
-                    const arr = new Uint32Array(MAX_ITERATORS);
-                    for (let i = 0; i < MAX_ITERATORS; i++) {
-                        arr[i] =
-                            indexes.length < MAX_ITERATORS ? indexes[i] : 0;
+                    for (let i = 0; i < indexes.length; i++) {
+                        WasmFlowRuntime.HEAP32[iteratorsOffset + i] =
+                            indexes[i];
                     }
-                    iteratorsPtr = WasmFlowRuntime._malloc(MAX_ITERATORS * 4);
-                    WasmFlowRuntime.HEAP32.set(arr, iteratorsPtr >> 2);
+
+                    for (let i = indexes.length; i < MAX_ITERATORS; i++) {
+                        WasmFlowRuntime.HEAP32[iteratorsOffset + i] = 0;
+                    }
+                    iteratorsPtrTemp = iteratorsPtr;
                 }
 
                 const valuePtr = WasmFlowRuntime._evalProperty(
                     flowStateIndex,
                     componentIndex,
                     propertyIndex,
-                    iteratorsPtr,
+                    iteratorsPtrTemp,
                     true
                 );
-
-                if (iteratorsPtr) {
-                    WasmFlowRuntime._free(iteratorsPtr);
-                }
 
                 let propertyValue: IPropertyValue;
 
@@ -863,6 +862,10 @@ export function createWasmWorker(
                     propertyValues.push(propertyValue);
                 }
             });
+
+            if (iteratorsPtr) {
+                WasmFlowRuntime._free(iteratorsPtr);
+            }
         } else {
             savedPropertyValues.clear();
         }
