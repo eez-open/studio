@@ -591,7 +591,9 @@ export const FlowViewer = observer(
                 this.ensureSelectionVisible
             );
 
-            this.context.navigationStore.mountPanel(this);
+            if (this.context.navigationStore) {
+                this.context.navigationStore.mountPanel(this);
+            }
         }
 
         componentDidCatch(error: any, info: any) {
