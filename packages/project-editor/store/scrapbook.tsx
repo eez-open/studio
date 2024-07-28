@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import React from "react";
 import {
+    action,
+    computed,
     IObservableValue,
     makeObservable,
     observable,
@@ -20,6 +22,12 @@ import { pasteWithDependencies } from "./paste-with-dependencies";
 import { getJSON, type ProjectStore } from "project-editor/store";
 import { IconAction } from "eez-studio-ui/action";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import type { Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Icon } from "eez-studio-ui/icon";
+import type { Style } from "project-editor/features/style/style";
+import type { LVGLStyle } from "project-editor/lvgl/style";
+import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,8 +51,124 @@ class ScrapbookItem {
         makeObservable(this, {
             name: observable,
             description: observable,
-            eezProject: observable
+            eezProject: observable,
+            allObjects: computed
         });
+    }
+
+    get allObjects() {
+        const project = this.eezProject as Project;
+
+        const objects: {
+            name: string;
+            icon: any;
+        }[] = [];
+
+        if (project.variables) {
+            if (project.variables.globalVariables) {
+                project.variables.globalVariables.forEach(variable => {
+                    objects.push({
+                        name: variable.name,
+                        icon: ProjectEditor.VariableClass.classInfo.icon!
+                    });
+                });
+            }
+
+            if (project.variables.structures) {
+                project.variables.structures.forEach(structure => {
+                    objects.push({
+                        name: structure.name,
+                        icon: ProjectEditor.StructureClass.classInfo.icon!
+                    });
+                });
+            }
+
+            if (project.variables.enums) {
+                project.variables.enums.forEach(enumObject => {
+                    objects.push({
+                        name: enumObject.name,
+                        icon: ProjectEditor.EnumClass.classInfo.icon!
+                    });
+                });
+            }
+        }
+
+        if (project.actions) {
+            project.actions.forEach(action => {
+                objects.push({
+                    name: action.name,
+                    icon: ProjectEditor.ActionClass.classInfo.icon!
+                });
+            });
+        }
+
+        if (project.userPages) {
+            project.userPages.forEach(page => {
+                objects.push({
+                    name: page.name,
+                    icon: ProjectEditor.PageClass.classInfo.icon!
+                });
+            });
+        }
+
+        if (project.userWidgets) {
+            project.userWidgets.forEach(userWidget => {
+                objects.push({
+                    name: userWidget.name,
+                    icon: USER_WIDGET_ICON
+                });
+            });
+        }
+
+        if (project.styles) {
+            function addStyles(styles: Style[]) {
+                styles.forEach(style => {
+                    objects.push({
+                        name: style.name,
+                        icon: ProjectEditor.StyleClass.classInfo.icon!
+                    });
+
+                    addStyles(style.childStyles);
+                });
+            }
+
+            addStyles(project.styles);
+        }
+
+        if (project.lvglStyles) {
+            function addStyles(styles: LVGLStyle[]) {
+                styles.forEach(style => {
+                    objects.push({
+                        name: style.name,
+                        icon: ProjectEditor.StyleClass.classInfo.icon!
+                    });
+
+                    addStyles(style.childStyles);
+                });
+            }
+
+            addStyles(project.lvglStyles.styles);
+        }
+
+        if (project.bitmaps) {
+            project.bitmaps.forEach(bitmap => {
+                objects.push({
+                    name: bitmap.name,
+                    icon: ProjectEditor.BitmapClass.classInfo.icon!
+                });
+            });
+        }
+
+        if (project.fonts) {
+            project.fonts.forEach(font => {
+                objects.push({
+                    name: font.name,
+                    icon: ProjectEditor.FontClass.classInfo.icon!
+                });
+            });
+        }
+
+        return objects;
     }
 }
 
@@ -195,10 +319,77 @@ const Items = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ItemDetails = observer(
-    class ItemDetails extends React.Component {
+    class ItemDetails extends React.Component<{
+        item: ScrapbookItem | undefined;
+    }> {
         render() {
+            const item = model.store.selectedItem;
+
+            if (!item) {
+                return null;
+            }
+
             return (
-                <div className="EezStudio_ProjectEditorScrapbook_ItemDetails"></div>
+                <div className="EezStudio_ProjectEditorScrapbook_ItemDetails">
+                    <div>
+                        <form>
+                            <div className="mb-3">
+                                <label
+                                    htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Name"
+                                    className="form-label"
+                                >
+                                    Name
+                                </label>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    id="EezStudio_ProjectEditorScrapbook_ItemDetails_Name"
+                                    value={item.name}
+                                    onChange={event => {
+                                        runInAction(() => {
+                                            item.name = event.target.value;
+                                        });
+                                        model.store.save();
+                                    }}
+                                />
+                            </div>
+
+                            <div className="mb-3">
+                                <label
+                                    htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
+                                    className="form-label"
+                                >
+                                    Description
+                                </label>
+                                <textarea
+                                    className="form-control"
+                                    id="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
+                                    rows={3}
+                                    value={item.description}
+                                    onChange={event => {
+                                        runInAction(() => {
+                                            item.description =
+                                                event.target.value;
+                                        });
+                                        model.store.save();
+                                    }}
+                                ></textarea>
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="form-label">Objects</label>
+                                <div className="ps-3">
+                                    {item.allObjects.map((object, i) => (
+                                        <div key={i}>
+                                            <Icon icon={object.icon} />
+                                            <span>{object.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             );
         }
     }
