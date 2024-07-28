@@ -607,7 +607,9 @@ export const FlowViewer = observer(
             );
 
             setTimeout(() => {
-                this.context.navigationStore.unmountPanel(this);
+                if (this.context.navigationStore) {
+                    this.context.navigationStore.unmountPanel(this);
+                }
             });
         }
 
