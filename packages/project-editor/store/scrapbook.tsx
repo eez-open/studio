@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import React from "react";
 import {
-    action,
     computed,
     IObservableValue,
     makeObservable,
@@ -319,9 +318,7 @@ const Items = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ItemDetails = observer(
-    class ItemDetails extends React.Component<{
-        item: ScrapbookItem | undefined;
-    }> {
+    class ItemDetails extends React.Component {
         render() {
             const item = model.store.selectedItem;
 
