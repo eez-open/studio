@@ -424,7 +424,7 @@ class ScrapbookManagerModel {
 
         const project = loadProject(projectStore, item.eezProject, false);
 
-        projectStore.setProject(project, "");
+        projectStore.setProject(project, SCRAPBOOK_ITEM_FILE_PREFIX + item.id);
 
         copyObjects(
             projectStore,

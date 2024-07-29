@@ -375,6 +375,7 @@ class PasteWithDependenciesModel {
             this.interProjectStore,
             object
         );
+        setParent(clonedObject, getParent(object));
 
         let parentStyleObject: CommonStyle | undefined;
         if (
@@ -527,6 +528,7 @@ class PasteWithDependenciesModel {
                     const node = dependency.node;
                     if (node.type == "Identifier") {
                         if (node.identifierType == "local-variable") {
+                            console.log(node);
                             const flow = getAncestorOfType<Flow>(
                                 object,
                                 ProjectEditor.FlowClass.classInfo
@@ -1054,27 +1056,6 @@ class PasteWithDependenciesModel {
                             fromObject
                         );
                     }
-                }
-            } else if (
-                object instanceof ProjectEditor.PageClass &&
-                object.name.startsWith(FLOW_FRAGMENT_PAGE_NAME)
-            ) {
-                const destinationFlow = this.destinationFlow;
-
-                if (destinationFlow) {
-                    const flowFragment = new ProjectEditor.FlowFragmentClass();
-
-                    flowFragment.addObjects(destinationFlow, [
-                        ...object.components,
-                        ...object.connectionLines
-                    ]);
-
-                    ProjectEditor.FlowFragmentClass.paste(
-                        this.destinationProjectStore,
-                        destinationFlow,
-                        flowFragment,
-                        destinationFlow
-                    );
                 }
             } else {
                 let collection: IEezObject | undefined;
@@ -1620,6 +1601,31 @@ export function copyObjects(
     sourceObjects: EezObject[],
     destinationProjectStore: ProjectStore
 ) {
+    sourceObjects = sourceObjects.map(object => {
+        if (
+            object instanceof ProjectEditor.PageClass &&
+            object.name == FLOW_FRAGMENT_PAGE_NAME
+        ) {
+            const flowFragment = new ProjectEditor.FlowFragmentClass();
+            setParent(flowFragment, object);
+
+            flowFragment.components = object.components.slice();
+            setParent(flowFragment.components, flowFragment);
+            object.components.forEach(component =>
+                setParent(component, flowFragment.components)
+            );
+
+            flowFragment.connectionLines = object.connectionLines.slice();
+            setParent(flowFragment.connectionLines, flowFragment);
+            object.connectionLines.forEach(connectionLine =>
+                setParent(connectionLine, flowFragment.connectionLines)
+            );
+
+            return flowFragment;
+        }
+        return object;
+    });
+
     const sourceObjectsParentPath = sourceObjects.map(sourceObject => "");
 
     showFindAllPasteDependenciesProgressDialog(
