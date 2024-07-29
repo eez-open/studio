@@ -10,6 +10,7 @@ import { getObjectPathAsString } from "project-editor/store/helper";
 import type { ProjectStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
 import type { LVGLParts } from "project-editor/lvgl/lvgl-constants";
+import { isScrapbookItemFilePath } from "project-editor/store/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -110,7 +111,10 @@ export class UIStateStore {
     }
 
     getUIStateFilePath() {
-        if (this.projectStore.filePath) {
+        if (
+            this.projectStore.filePath &&
+            !isScrapbookItemFilePath(this.projectStore.filePath)
+        ) {
             return this.projectStore.filePath + "-ui-state";
         }
         return undefined;

@@ -2,31 +2,34 @@ import fs from "fs";
 import path from "path";
 import React from "react";
 import {
+    action,
     computed,
     IObservableValue,
     makeObservable,
     observable,
-    runInAction,
-    toJS
+    runInAction
 } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import classNames from "classnames";
+import Database from "better-sqlite3";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 
 import { showDialog } from "eez-studio-ui/dialog";
-import { pasteWithDependencies } from "./paste-with-dependencies";
-import { getJSON, type ProjectStore } from "project-editor/store";
+import {
+    copyObjects,
+    getAllObjects,
+    pasteWithDependencies
+} from "./paste-with-dependencies";
+import { getJSON, loadProject, ProjectStore } from "project-editor/store";
 import { IconAction } from "eez-studio-ui/action";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import type { Project } from "project-editor/project/project";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Icon } from "eez-studio-ui/icon";
-import type { Style } from "project-editor/features/style/style";
-import type { LVGLStyle } from "project-editor/lvgl/style";
-import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { SCRAPBOOK_ITEM_FILE_PREFIX } from "project-editor/core/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -34,17 +37,15 @@ const DEFAULT_SCRAPBOOK_FILE_PATH = getUserDataPath(
     "/scrapbooks/default.eez-scrapbook"
 );
 
-const EMPTY_SCRAPBOOK_PROJECT_JSON = {
-    items: []
-};
+const DB_VERSION = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class ScrapbookItem {
+export class ScrapbookItem {
     id: string;
     name: string;
     description: string;
-    eezProject: any;
+    eezProject: string;
 
     constructor() {
         makeObservable(this, {
@@ -56,118 +57,7 @@ class ScrapbookItem {
     }
 
     get allObjects() {
-        const project = this.eezProject as Project;
-
-        const objects: {
-            name: string;
-            icon: any;
-        }[] = [];
-
-        if (project.variables) {
-            if (project.variables.globalVariables) {
-                project.variables.globalVariables.forEach(variable => {
-                    objects.push({
-                        name: variable.name,
-                        icon: ProjectEditor.VariableClass.classInfo.icon!
-                    });
-                });
-            }
-
-            if (project.variables.structures) {
-                project.variables.structures.forEach(structure => {
-                    objects.push({
-                        name: structure.name,
-                        icon: ProjectEditor.StructureClass.classInfo.icon!
-                    });
-                });
-            }
-
-            if (project.variables.enums) {
-                project.variables.enums.forEach(enumObject => {
-                    objects.push({
-                        name: enumObject.name,
-                        icon: ProjectEditor.EnumClass.classInfo.icon!
-                    });
-                });
-            }
-        }
-
-        if (project.actions) {
-            project.actions.forEach(action => {
-                objects.push({
-                    name: action.name,
-                    icon: ProjectEditor.ActionClass.classInfo.icon!
-                });
-            });
-        }
-
-        if (project.userPages) {
-            project.userPages.forEach(page => {
-                objects.push({
-                    name: page.name,
-                    icon: ProjectEditor.PageClass.classInfo.icon!
-                });
-            });
-        }
-
-        if (project.userWidgets) {
-            project.userWidgets.forEach(userWidget => {
-                objects.push({
-                    name: userWidget.name,
-                    icon: USER_WIDGET_ICON
-                });
-            });
-        }
-
-        if (project.styles) {
-            function addStyles(styles: Style[]) {
-                styles.forEach(style => {
-                    objects.push({
-                        name: style.name,
-                        icon: ProjectEditor.StyleClass.classInfo.icon!
-                    });
-
-                    addStyles(style.childStyles);
-                });
-            }
-
-            addStyles(project.styles);
-        }
-
-        if (project.lvglStyles) {
-            function addStyles(styles: LVGLStyle[]) {
-                styles.forEach(style => {
-                    objects.push({
-                        name: style.name,
-                        icon: ProjectEditor.StyleClass.classInfo.icon!
-                    });
-
-                    addStyles(style.childStyles);
-                });
-            }
-
-            addStyles(project.lvglStyles.styles);
-        }
-
-        if (project.bitmaps) {
-            project.bitmaps.forEach(bitmap => {
-                objects.push({
-                    name: bitmap.name,
-                    icon: ProjectEditor.BitmapClass.classInfo.icon!
-                });
-            });
-        }
-
-        if (project.fonts) {
-            project.fonts.forEach(font => {
-                objects.push({
-                    name: font.name,
-                    icon: ProjectEditor.FontClass.classInfo.icon!
-                });
-            });
-        }
-
-        return objects;
+        return getAllObjects(JSON.parse(this.eezProject) as Project);
     }
 }
 
@@ -185,11 +75,147 @@ class ScrapbookProject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface ICommand {
+    execute(): void;
+    undo(): void;
+    description: string;
+}
+
+interface IUndoItem {
+    commands: ICommand[];
+}
+
+class ScrapbookUndoManager {
+    undoStack: IUndoItem[] = [];
+    redoStack: IUndoItem[] = [];
+    commands: ICommand[] = [];
+
+    combineCommands: boolean = false;
+
+    constructor() {
+        makeObservable(this, {
+            undoStack: observable,
+            redoStack: observable,
+            commands: observable,
+            clear: action,
+            pushToUndoStack: action,
+            setCombineCommands: action,
+            executeCommand: action,
+            canUndo: computed,
+            undoDescription: computed,
+            undo: action,
+            canRedo: computed,
+            redoDescription: computed,
+            redo: action
+        });
+    }
+
+    clear() {
+        this.undoStack = [];
+        this.redoStack = [];
+    }
+
+    pushToUndoStack() {
+        if (this.commands.length > 0) {
+            this.undoStack.push({
+                commands: this.commands
+            });
+
+            this.commands = [];
+        }
+    }
+
+    setCombineCommands(value: boolean) {
+        this.pushToUndoStack();
+        this.combineCommands = value;
+    }
+
+    executeCommand(command: ICommand) {
+        if (this.commands.length == 0) {
+        } else {
+            if (!this.combineCommands) {
+                this.pushToUndoStack();
+            }
+        }
+
+        command.execute();
+
+        this.commands.push(command);
+
+        this.redoStack = [];
+    }
+
+    static getCommandsDescription(commands: ICommand[]) {
+        return commands[commands.length - 1].description;
+    }
+
+    get canUndo() {
+        return this.undoStack.length > 0 || this.commands.length > 0;
+    }
+
+    get undoDescription() {
+        let commands;
+        if (this.commands.length > 0) {
+            commands = this.commands;
+        } else if (this.undoStack.length > 0) {
+            commands = this.undoStack[this.undoStack.length - 1].commands;
+        }
+        if (commands) {
+            return ScrapbookUndoManager.getCommandsDescription(commands);
+        }
+        return undefined;
+    }
+
+    undo() {
+        this.pushToUndoStack();
+
+        let undoItem = this.undoStack.pop();
+        if (undoItem) {
+            for (let i = undoItem.commands.length - 1; i >= 0; i--) {
+                undoItem.commands[i].undo();
+            }
+
+            this.redoStack.push(undoItem);
+        }
+    }
+
+    get canRedo() {
+        return this.redoStack.length > 0;
+    }
+
+    get redoDescription() {
+        let commands;
+        if (this.redoStack.length > 0) {
+            commands = this.redoStack[this.redoStack.length - 1].commands;
+        }
+        if (commands) {
+            return ScrapbookUndoManager.getCommandsDescription(commands);
+        }
+        return undefined;
+    }
+
+    redo() {
+        let redoItem = this.redoStack.pop();
+        if (redoItem) {
+            for (let i = 0; i < redoItem.commands.length; i++) {
+                redoItem.commands[i].execute();
+            }
+
+            this.undoStack.push(redoItem);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class ScrapbookStore {
+    db: Database.Database;
     filePath: string;
     project: ScrapbookProject = new ScrapbookProject();
 
     selectedItem: ScrapbookItem | undefined;
+
+    undoManager = new ScrapbookUndoManager();
 
     constructor() {
         makeObservable(this, {
@@ -198,19 +224,32 @@ class ScrapbookStore {
     }
 
     async load(filePath: string) {
-        const jsonStr = await fs.promises.readFile(filePath, "utf-8");
-        const json = JSON.parse(jsonStr);
+        let db = new Database(filePath);
+        db.defaultSafeIntegers();
 
-        for (const itemJson of json.items) {
+        let dbItems: any;
+        try {
+            dbItems = db
+                .prepare(
+                    `SELECT id, name, description, eez_project FROM items${DB_VERSION}`
+                )
+                .all();
+        } catch (err) {
+            db.exec(`CREATE TABLE items${DB_VERSION}(
+                    id TEXT PRIMARY KEY NOT NULL UNIQUE,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    eez_project TEXT NOT NULL);`);
+            dbItems = [];
+        }
+
+        for (const dbItem of dbItems) {
             const item = new ScrapbookItem();
 
-            if (item.id == undefined) {
-                item.id = guid();
-            }
-
-            item.name = itemJson.name;
-            item.description = itemJson.description;
-            item.eezProject = itemJson.eezProject;
+            item.id = dbItem.id;
+            item.name = dbItem.name;
+            item.description = dbItem.description;
+            item.eezProject = dbItem.eez_project;
 
             runInAction(() => {
                 this.project.items.push(item);
@@ -220,15 +259,118 @@ class ScrapbookStore {
             });
         }
 
+        this.db = db;
         this.filePath = filePath;
     }
 
-    async save() {
-        await fs.promises.writeFile(
-            this.filePath,
-            JSON.stringify(toJS(this.project), undefined, 2),
-            "utf-8"
-        );
+    addNewItem(item: ScrapbookItem) {
+        let index = this.project.items.length;
+        let selectedItem = this.selectedItem;
+
+        this.undoManager.executeCommand({
+            execute: () => {
+                this.db
+                    .prepare(
+                        `INSERT INTO items${DB_VERSION}(id, name, description, eez_project) VALUES(?, ?, ?, ?)`
+                    )
+                    .run(item.id, item.name, item.description, item.eezProject);
+
+                this.project.items.push(item);
+                this.selectedItem = item;
+            },
+            undo: () => {
+                this.db
+                    .prepare(`DELETE FROM items${DB_VERSION} WHERE id = ?`)
+                    .run(item.id);
+
+                this.project.items.splice(index, 1);
+                this.selectedItem = selectedItem;
+            },
+            description: "Add new item"
+        });
+    }
+
+    deleteItem(item: ScrapbookItem) {
+        let index = this.project.items.findIndex(item1 => item1 == item);
+        let selectedItem = this.selectedItem;
+
+        this.undoManager.executeCommand({
+            execute: () => {
+                this.db
+                    .prepare(`DELETE FROM items${DB_VERSION} WHERE id = ?`)
+                    .run(item.id);
+
+                this.project.items.splice(index, 1);
+                if (selectedItem == item) {
+                    this.selectedItem = undefined;
+                }
+            },
+            undo: () => {
+                this.db
+                    .prepare(
+                        `INSERT INTO items${DB_VERSION}(id, name, description, eez_project) VALUES(?, ?, ?, ?)`
+                    )
+                    .run(item.id, item.name, item.description, item.eezProject);
+
+                this.project.items.splice(index, 0, item);
+                if (selectedItem == item) {
+                    this.selectedItem = item;
+                }
+            },
+            description: "Add new item"
+        });
+    }
+
+    setItemName(item: ScrapbookItem, newName: string) {
+        const oldName = item.name;
+
+        this.undoManager.executeCommand({
+            execute: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET name = ? WHERE id = ?`
+                    )
+                    .run(newName, item.id);
+
+                item.name = newName;
+            },
+            undo: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET name = ? WHERE id = ?`
+                    )
+                    .run(oldName, item.id);
+
+                item.name = oldName;
+            },
+            description: "Change name"
+        });
+    }
+
+    setItemDescription(item: ScrapbookItem, newDescription: string) {
+        const oldDescription = item.description;
+
+        this.undoManager.executeCommand({
+            execute: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET description = ? WHERE id = ?`
+                    )
+                    .run(newDescription, item.id);
+
+                item.description = newDescription;
+            },
+            undo: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET description = ? WHERE id = ?`
+                    )
+                    .run(oldDescription, item.id);
+
+                item.description = oldDescription;
+            },
+            description: "Change description"
+        });
     }
 }
 
@@ -251,17 +393,11 @@ class ScrapbookManagerModel {
                 recursive: true
             });
 
-            await fs.promises.writeFile(
-                DEFAULT_SCRAPBOOK_FILE_PATH,
-                JSON.stringify(EMPTY_SCRAPBOOK_PROJECT_JSON, undefined, 2),
-                "utf-8"
-            );
-
             await this.store.load(DEFAULT_SCRAPBOOK_FILE_PATH);
         }
     }
 
-    onPasteInNewItem = (projectStore: ProjectStore) => {
+    pasteIntoNewItem(projectStore: ProjectStore) {
         pasteWithDependencies(
             projectStore,
             (destinationProjectStore: ProjectStore) => {
@@ -271,17 +407,50 @@ class ScrapbookManagerModel {
                 item.name =
                     "From paste " + (this.store.project.items.length + 1);
                 item.description = "";
-                item.eezProject = JSON.parse(getJSON(destinationProjectStore));
+                item.eezProject = getJSON(destinationProjectStore);
 
-                runInAction(() => {
-                    this.store.project.items.push(item);
-                    this.store.selectedItem = item;
-                });
-
-                this.store.save();
+                this.store.addNewItem(item);
             }
         );
-    };
+    }
+
+    insertItemIntoProject(
+        item: ScrapbookItem,
+        destinationProjectStore: ProjectStore
+    ) {
+        const projectStore = ProjectStore.create({
+            type: "read-only"
+        });
+
+        const project = loadProject(projectStore, item.eezProject, false);
+
+        projectStore.setProject(project, "");
+
+        copyObjects(
+            projectStore,
+            getAllObjects(project).map(object => object.object),
+            destinationProjectStore
+        );
+    }
+
+    openItemProject(item: ScrapbookItem) {
+        const homeTabs = ProjectEditor.homeTabs;
+        if (!homeTabs) {
+            return;
+        }
+
+        const tabId = `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`;
+
+        let projectTab = homeTabs.findProjectEditorTab(tabId, false);
+        if (!projectTab) {
+            projectTab = ProjectEditor.homeTabs!.addProjectTab(
+                `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`,
+                false
+            );
+        }
+
+        homeTabs.makeActive(projectTab);
+    }
 }
 
 const model = new ScrapbookManagerModel();
@@ -318,7 +487,10 @@ const Items = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ItemDetails = observer(
-    class ItemDetails extends React.Component {
+    class ItemDetails extends React.Component<{
+        insertItemIntoProject: (item: ScrapbookItem) => void;
+        openItemProject: (item: ScrapbookItem) => void;
+    }> {
         render() {
             const item = model.store.selectedItem;
 
@@ -328,6 +500,32 @@ const ItemDetails = observer(
 
             return (
                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails">
+                    <div className="pb-3 d-flex justify-content-between">
+                        <div>
+                            <button
+                                className="btn btn-lg btn-primary"
+                                onClick={() =>
+                                    this.props.insertItemIntoProject(item)
+                                }
+                            >
+                                Insert into project
+                            </button>
+                            <button
+                                className="btn btn-lg btn-secondary ms-2"
+                                onClick={() => this.props.openItemProject(item)}
+                            >
+                                Open
+                            </button>
+                        </div>
+                        <div>
+                            <button
+                                className="btn btn-lg btn-danger"
+                                onClick={() => model.store.deleteItem(item)}
+                            >
+                                Delete this item
+                            </button>
+                        </div>
+                    </div>
                     <div>
                         <form>
                             <div className="mb-3">
@@ -343,11 +541,21 @@ const ItemDetails = observer(
                                     id="EezStudio_ProjectEditorScrapbook_ItemDetails_Name"
                                     value={item.name}
                                     onChange={event => {
-                                        runInAction(() => {
-                                            item.name = event.target.value;
-                                        });
-                                        model.store.save();
+                                        model.store.setItemName(
+                                            item,
+                                            event.target.value
+                                        );
                                     }}
+                                    onFocus={() =>
+                                        model.store.undoManager.setCombineCommands(
+                                            true
+                                        )
+                                    }
+                                    onBlur={() =>
+                                        model.store.undoManager.setCombineCommands(
+                                            false
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -364,12 +572,21 @@ const ItemDetails = observer(
                                     rows={3}
                                     value={item.description}
                                     onChange={event => {
-                                        runInAction(() => {
-                                            item.description =
-                                                event.target.value;
-                                        });
-                                        model.store.save();
+                                        model.store.setItemDescription(
+                                            item,
+                                            event.target.value
+                                        );
                                     }}
+                                    onFocus={() =>
+                                        model.store.undoManager.setCombineCommands(
+                                            true
+                                        )
+                                    }
+                                    onBlur={() =>
+                                        model.store.undoManager.setCombineCommands(
+                                            false
+                                        )
+                                    }
                                 ></textarea>
                             </div>
 
@@ -407,7 +624,21 @@ const ScrapbookManagerDialog = observer(
             }
 
             if (component === "item-details") {
-                return <ItemDetails />;
+                return (
+                    <ItemDetails
+                        insertItemIntoProject={item => {
+                            model.insertItemIntoProject(
+                                item,
+                                this.props.destinationProjectStore
+                            );
+                            this.props.modalDialog.get().close();
+                        }}
+                        openItemProject={item => {
+                            model.openItemProject(item);
+                            this.props.modalDialog.get().close();
+                        }}
+                    />
+                );
             }
 
             return null;
@@ -417,19 +648,35 @@ const ScrapbookManagerDialog = observer(
             return (
                 <div className="EezStudio_ProjectEditorScrapbook">
                     <div className="EezStudio_ProjectEditorScrapbook_Toolbar">
-                        <IconAction
-                            title="Paste"
-                            icon="material:content_paste"
-                            iconSize={22}
-                            onClick={() =>
-                                model.onPasteInNewItem(
-                                    this.props.destinationProjectStore
-                                )
-                            }
-                            enabled={
-                                this.props.destinationProjectStore.canPaste
-                            }
-                        />
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Undo"
+                                icon="material:undo"
+                                onClick={() => model.store.undoManager.undo()}
+                                enabled={model.store.undoManager.canUndo}
+                            />
+                            <IconAction
+                                title="Redo"
+                                icon="material:redo"
+                                onClick={() => model.store.undoManager.redo()}
+                                enabled={model.store.undoManager.canRedo}
+                            />
+                        </div>
+                        <div className="btn-group" role="group">
+                            <IconAction
+                                title="Paste"
+                                icon="material:content_paste"
+                                iconSize={22}
+                                onClick={() =>
+                                    model.pasteIntoNewItem(
+                                        this.props.destinationProjectStore
+                                    )
+                                }
+                                enabled={
+                                    this.props.destinationProjectStore.canPaste
+                                }
+                            />
+                        </div>
                     </div>
                     <div className="EezStudio_ProjectEditorScrapbook_Body">
                         <FlexLayoutContainer
@@ -461,10 +708,33 @@ export function showScrapbookManager(destinationProjectStore: ProjectStore) {
                 id: "scrapbook-manager-dialog",
                 title: "Scrapbook",
                 width: 1280,
-                height: 800
+                height: 800,
+                modeless: true
             }
         }
     );
 
     modalDialogObservable.set(modalDialog);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function isScrapbookItemFilePath(filePath: string) {
+    return filePath.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX);
+}
+
+export function getScrapbookItemEezProject(filePath: string) {
+    if (!isScrapbookItemFilePath(filePath)) {
+        throw "Not a scrapbook item";
+    }
+
+    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+
+    const item = model.store.project.items.find(item => (item.id = itemId));
+
+    if (!item) {
+        throw "Scrapbook item not found";
+    }
+
+    return item.eezProject;
 }

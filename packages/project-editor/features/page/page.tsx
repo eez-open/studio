@@ -69,6 +69,8 @@ import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { PAGES_ICON } from "project-editor/ui-components/icons";
 
+export const FLOW_FRAGMENT_PAGE_NAME = "$$$FLOW_FRAGMENT$$$";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface ICustomWidgetCreateParams {
@@ -364,7 +366,9 @@ export class Page extends Flow {
         ],
         icon: PAGES_ICON,
         label: (page: Page) => {
-            return page.name;
+            return page.name == FLOW_FRAGMENT_PAGE_NAME
+                ? "FlowFragment"
+                : page.name;
         },
         listLabel: (page: Page) => {
             let label: React.ReactNode = getLabel(page);

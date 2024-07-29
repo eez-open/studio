@@ -117,7 +117,13 @@ export function onAfterPaste(
     });
 }
 
+export const SCRAPBOOK_ITEM_FILE_PREFIX = "scrapbook://";
+
 export function isValidUrl(s: string) {
+    if (s.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX)) {
+        return true;
+    }
+
     try {
         const url = new URL(s);
         return url.protocol === "http:" || url.protocol === "https:";

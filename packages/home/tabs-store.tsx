@@ -49,6 +49,10 @@ import {
 import { getProjectIcon } from "home/helper";
 import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
+import {
+    getScrapbookItemEezProject,
+    isScrapbookItemFilePath
+} from "project-editor/store/scrapbook";
 
 const MODIFED_MARK = "\u002A ";
 
@@ -715,10 +719,21 @@ export class ProjectEditorTab implements IHomeTab {
 
         if (!this._iconPromise) {
             this._iconPromise = (async () => {
-                const jsonStr = await fs.promises.readFile(
-                    this.filePath,
-                    "utf-8"
-                );
+                let jsonStr;
+                if (isScrapbookItemFilePath(this.filePath)) {
+                    try {
+                        jsonStr = getScrapbookItemEezProject(this.filePath);
+                    } catch (err) {
+                        console.error(err);
+                        return;
+                    }
+                } else {
+                    jsonStr = await fs.promises.readFile(
+                        this.filePath,
+                        "utf-8"
+                    );
+                }
+
                 const json = JSON.parse(jsonStr);
                 const projectType = json.settings.general.projectType;
                 const icon = getProjectIcon(

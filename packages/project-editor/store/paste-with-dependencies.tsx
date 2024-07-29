@@ -20,7 +20,6 @@ import {
     IEezObject,
     isPropertyDisabled,
     PropertyType,
-    SerializedData,
     setParent
 } from "project-editor/core/object";
 import {
@@ -57,7 +56,10 @@ import {
     getStructureFromType
 } from "project-editor/features/variable/value-type";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
-import type { Page } from "project-editor/features/page/page";
+import {
+    FLOW_FRAGMENT_PAGE_NAME,
+    type Page
+} from "project-editor/features/page/page";
 import { Project } from "project-editor/project/project";
 import { isArray } from "lodash";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
@@ -67,6 +69,8 @@ import {
 } from "project-editor/flow/helper";
 import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
 import { identifierValidator } from "project-editor/features/variable/variable";
+import type { Style } from "project-editor/features/style/style";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -270,6 +274,8 @@ class PasteObject {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 class PasteWithDependenciesModel {
     interProjectStore: ProjectStore;
     interProjectStoreFlowFragmentFlow: Page;
@@ -280,17 +286,14 @@ class PasteWithDependenciesModel {
     remaining: number = 0;
     allDependenciesFound: boolean;
 
-    _destinationFlow: Flow | undefined;
-
     constructor(
         public sourceProjectStore: ProjectStore,
+        private sourceObjects: EezObject[],
+        private sourceObjectsParentPath: string[],
         public destinationProjectStore: ProjectStore,
-        destinationFlow: Flow | undefined,
-        public serializedData: SerializedData
+        private _destinationFlow: Flow | undefined
     ) {
         this.createInterProjectStore();
-
-        this._destinationFlow = destinationFlow;
 
         makeObservable(this, {
             pasteObjects: observable,
@@ -354,18 +357,11 @@ class PasteWithDependenciesModel {
     }
 
     findAllDependencies() {
-        if (this.serializedData.object) {
+        for (let i = 0; i < this.sourceObjects.length; i++) {
             this.addObject(
-                this.serializedData.object,
-                this.serializedData.objectParentPath
+                this.sourceObjects[i],
+                this.sourceObjectsParentPath[i]
             );
-        } else {
-            for (let i = 0; i < this.serializedData.objects!.length; i++) {
-                this.addObject(
-                    this.serializedData.objects![i],
-                    this.serializedData.objectsParentPath![i]
-                );
-            }
         }
     }
 
@@ -944,10 +940,6 @@ class PasteWithDependenciesModel {
             }
         });
 
-        // TODO remove this
-        this.interProjectStore.filePath = `c:/Users/mvladic/Downloads/interProjectStore.eez-project`;
-        this.interProjectStore.save();
-
         // Clone objects once more, this time with new ID's and in destination project store.
         // Do not clone non-root level style objects.
         const rootPasteObjects = this.pasteObjects.filter(
@@ -961,6 +953,13 @@ class PasteWithDependenciesModel {
             )
         );
         rewireEnd(clonedObjects);
+
+        let i = 0;
+        for (const pasteObject of this.pasteObjects) {
+            if (pasteObject.styleLevel == 0) {
+                pasteObject.object = clonedObjects[i++];
+            }
+        }
 
         // find non-root level style objects in newly cloned objects
         for (let level = 1; ; level++) {
@@ -1022,23 +1021,59 @@ class PasteWithDependenciesModel {
 
             const object = pasteObject.object;
             if (object instanceof ProjectEditor.FlowFragmentClass) {
-                const editorState =
-                    this.destinationProjectStore.editorsStore.activeEditor
-                        ?.state;
-                if (editorState instanceof ProjectEditor.FlowTabStateClass) {
-                    let fromObject;
-                    if (editorState.widgetContainer.selectedItems.length == 0) {
-                        fromObject = editorState.widgetContainer.object;
-                    } else {
-                        fromObject =
-                            editorState.widgetContainer.selectedItems[0].object;
+                if (this.destinationFlow) {
+                    ProjectEditor.FlowFragmentClass.paste(
+                        this.destinationProjectStore,
+                        this.destinationFlow,
+                        object,
+                        this.destinationFlow
+                    );
+                } else {
+                    const editorState =
+                        this.destinationProjectStore.editorsStore.activeEditor
+                            ?.state;
+                    if (
+                        editorState instanceof ProjectEditor.FlowTabStateClass
+                    ) {
+                        let fromObject;
+                        if (
+                            editorState.widgetContainer.selectedItems.length ==
+                            0
+                        ) {
+                            fromObject = editorState.widgetContainer.object;
+                        } else {
+                            fromObject =
+                                editorState.widgetContainer.selectedItems[0]
+                                    .object;
+                        }
+
+                        ProjectEditor.FlowFragmentClass.paste(
+                            this.destinationProjectStore,
+                            editorState.flow,
+                            object,
+                            fromObject
+                        );
                     }
+                }
+            } else if (
+                object instanceof ProjectEditor.PageClass &&
+                object.name.startsWith(FLOW_FRAGMENT_PAGE_NAME)
+            ) {
+                const destinationFlow = this.destinationFlow;
+
+                if (destinationFlow) {
+                    const flowFragment = new ProjectEditor.FlowFragmentClass();
+
+                    flowFragment.addObjects(destinationFlow, [
+                        ...object.components,
+                        ...object.connectionLines
+                    ]);
 
                     ProjectEditor.FlowFragmentClass.paste(
                         this.destinationProjectStore,
-                        editorState.flow,
-                        object,
-                        fromObject
+                        destinationFlow,
+                        flowFragment,
+                        destinationFlow
                     );
                 }
             } else {
@@ -1372,7 +1407,7 @@ export function createEmptyProjectStore(sourceProjectStore: ProjectStore) {
     const projectStoreFlowFragmentFlow = createObject<Page>(
         projectStore,
         {
-            name: "$$$FLOW_FRAGMENT$$$",
+            name: FLOW_FRAGMENT_PAGE_NAME,
             left: 0,
             top: 0,
             width: 900,
@@ -1476,6 +1511,51 @@ export function showResolvePasteConflictsDialog(
     modalDialogObservable.set(modalDialog);
 }
 
+export function showFindAllPasteDependenciesProgressDialog(
+    sourceProjectStore: ProjectStore,
+    sourceObjects: EezObject[],
+    sourceObjectsParentPath: string[],
+    destinationProjectStore: ProjectStore,
+    destinationFlow: Flow | undefined,
+    onFinished?: (destinationProjectStore: ProjectStore) => void
+) {
+    const pasteWithDependenciesModel = new PasteWithDependenciesModel(
+        sourceProjectStore,
+        sourceObjects,
+        sourceObjectsParentPath,
+        destinationProjectStore,
+        destinationFlow
+    );
+
+    pasteWithDependenciesModel.findAllDependencies();
+
+    showDialog(
+        <FindAllPasteDependenciesProgressDialog
+            pasteWithDependenciesModel={pasteWithDependenciesModel}
+            onFinished={() => {
+                if (
+                    pasteWithDependenciesModel.posteObjectsWithConflicts
+                        .length > 0
+                ) {
+                    showResolvePasteConflictsDialog(
+                        pasteWithDependenciesModel,
+                        undefined
+                    );
+                } else {
+                    pasteWithDependenciesModel.doPaste();
+                    if (onFinished) {
+                        onFinished(
+                            pasteWithDependenciesModel.destinationProjectStore
+                        );
+                    }
+                }
+            }}
+        />
+    );
+
+    return true;
+}
+
 export function pasteWithDependencies(
     destinationProjectStore: ProjectStore,
     onFinished?: (destinationProjectStore: ProjectStore) => void
@@ -1494,58 +1574,188 @@ export function pasteWithDependencies(
         return false;
     }
 
-    const projectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
+    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
         serializedData.originProjectFilePath,
         false
     );
-    if (!projectEditorTab) {
+    if (!sourceProjectEditorTab) {
         return false;
     }
 
-    if (!projectEditorTab.projectStore) {
+    const sourceProjectStore = sourceProjectEditorTab.projectStore;
+    if (!sourceProjectStore) {
         return false;
     }
+
+    const sourceObjects = serializedData.object
+        ? [serializedData.object]
+        : serializedData.objects!;
+
+    const sourceObjectsParentPath = serializedData.object
+        ? [serializedData.objectParentPath!]
+        : serializedData.objectsParentPath!;
 
     let destinationFlow: Flow | undefined;
     if (onFinished) {
         const { projectStore, projectStoreFlowFragmentFlow } =
-            createEmptyProjectStore(projectEditorTab.projectStore);
+            createEmptyProjectStore(sourceProjectStore);
         destinationProjectStore = projectStore;
         destinationFlow = projectStoreFlowFragmentFlow;
     }
 
-    const pasteWithDependenciesModel = new PasteWithDependenciesModel(
-        projectEditorTab.projectStore,
+    showFindAllPasteDependenciesProgressDialog(
+        sourceProjectStore,
+        sourceObjects,
+        sourceObjectsParentPath,
         destinationProjectStore,
         destinationFlow,
-        serializedData
-    );
-
-    pasteWithDependenciesModel.findAllDependencies();
-
-    showDialog(
-        <FindAllPasteDependenciesProgressDialog
-            pasteWithDependenciesModel={pasteWithDependenciesModel}
-            onFinished={() => {
-                if (
-                    pasteWithDependenciesModel.posteObjectsWithConflicts
-                        .length > 0
-                ) {
-                    showResolvePasteConflictsDialog(
-                        pasteWithDependenciesModel,
-                        onFinished
-                    );
-                } else {
-                    pasteWithDependenciesModel.doPaste();
-                    if (onFinished) {
-                        onFinished(
-                            pasteWithDependenciesModel.destinationProjectStore
-                        );
-                    }
-                }
-            }}
-        />
+        onFinished
     );
 
     return true;
+}
+
+export function copyObjects(
+    sourceProjectStore: ProjectStore,
+    sourceObjects: EezObject[],
+    destinationProjectStore: ProjectStore
+) {
+    const sourceObjectsParentPath = sourceObjects.map(sourceObject => "");
+
+    showFindAllPasteDependenciesProgressDialog(
+        sourceProjectStore,
+        sourceObjects,
+        sourceObjectsParentPath,
+        destinationProjectStore,
+        undefined
+    );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function getAllObjects(project: Project) {
+    const objects: {
+        object: EezObject;
+        name: string;
+        icon: any;
+    }[] = [];
+
+    if (project.variables) {
+        if (project.variables.globalVariables) {
+            project.variables.globalVariables.forEach(variable => {
+                objects.push({
+                    object: variable,
+                    name: variable.name,
+                    icon: ProjectEditor.VariableClass.classInfo.icon!
+                });
+            });
+        }
+
+        if (project.variables.structures) {
+            project.variables.structures.forEach(structure => {
+                objects.push({
+                    object: structure,
+                    name: structure.name,
+                    icon: ProjectEditor.StructureClass.classInfo.icon!
+                });
+            });
+        }
+
+        if (project.variables.enums) {
+            project.variables.enums.forEach(enumObject => {
+                objects.push({
+                    object: enumObject,
+                    name: enumObject.name,
+                    icon: ProjectEditor.EnumClass.classInfo.icon!
+                });
+            });
+        }
+    }
+
+    if (project.actions) {
+        project.actions.forEach(action => {
+            objects.push({
+                object: action,
+                name: action.name,
+                icon: ProjectEditor.ActionClass.classInfo.icon!
+            });
+        });
+    }
+
+    if (project.userPages) {
+        project.userPages.forEach(page => {
+            objects.push({
+                object: page,
+                name:
+                    page.name == FLOW_FRAGMENT_PAGE_NAME
+                        ? "FlowFragment"
+                        : page.name,
+                icon: ProjectEditor.PageClass.classInfo.icon!
+            });
+        });
+    }
+
+    if (project.userWidgets) {
+        project.userWidgets.forEach(userWidget => {
+            objects.push({
+                object: userWidget,
+                name: userWidget.name,
+                icon: USER_WIDGET_ICON
+            });
+        });
+    }
+
+    if (project.styles) {
+        function addStyles(styles: Style[]) {
+            styles.forEach(style => {
+                objects.push({
+                    object: style,
+                    name: style.name,
+                    icon: ProjectEditor.StyleClass.classInfo.icon!
+                });
+
+                addStyles(style.childStyles);
+            });
+        }
+
+        addStyles(project.styles);
+    }
+
+    if (project.lvglStyles) {
+        function addStyles(styles: LVGLStyle[]) {
+            styles.forEach(style => {
+                objects.push({
+                    object: style,
+                    name: style.name,
+                    icon: ProjectEditor.StyleClass.classInfo.icon!
+                });
+
+                addStyles(style.childStyles);
+            });
+        }
+
+        addStyles(project.lvglStyles.styles);
+    }
+
+    if (project.bitmaps) {
+        project.bitmaps.forEach(bitmap => {
+            objects.push({
+                object: bitmap,
+                name: bitmap.name,
+                icon: ProjectEditor.BitmapClass.classInfo.icon!
+            });
+        });
+    }
+
+    if (project.fonts) {
+        project.fonts.forEach(font => {
+            objects.push({
+                object: font,
+                name: font.name,
+                icon: ProjectEditor.FontClass.classInfo.icon!
+            });
+        });
+    }
+
+    return objects;
 }

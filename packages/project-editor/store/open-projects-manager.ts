@@ -18,6 +18,10 @@ import { loadProject } from "project-editor/store/serialization";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Style } from "project-editor/features/style/style";
 import { isValidUrl } from "project-editor/core/util";
+import {
+    getScrapbookItemEezProject,
+    isScrapbookItemFilePath
+} from "project-editor/store/scrapbook";
 
 type ProjectReference =
     | {
@@ -283,14 +287,18 @@ export class OpenProjectsManager {
         let fileData: Buffer;
 
         if (isValidUrl(filePath)) {
-            // fetch project file from URL
-            try {
-                const response = await fetch(filePath);
-                const blob = await response.blob();
-                const arrayBuffer = await blob.arrayBuffer();
-                fileData = Buffer.from(arrayBuffer);
-            } catch (err) {
-                throw new Error(`URL fetch error: ${err.toString()}`);
+            if (isScrapbookItemFilePath(filePath)) {
+                fileData = Buffer.from(getScrapbookItemEezProject(filePath));
+            } else {
+                // fetch project file from URL
+                try {
+                    const response = await fetch(filePath);
+                    const blob = await response.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+                    fileData = Buffer.from(arrayBuffer);
+                } catch (err) {
+                    throw new Error(`URL fetch error: ${err.toString()}`);
+                }
             }
         } else {
             // read project file
