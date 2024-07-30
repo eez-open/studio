@@ -574,8 +574,7 @@ class ScrapbookManagerModel {
                 const item = new ScrapbookItem();
 
                 item.id = guid();
-                item.name =
-                    "From paste " + (this.store.project.items.length + 1);
+                item.name = "Paste " + (this.store.project.items.length + 1);
                 item.description = "";
                 item.eezProject = getJSON(destinationProjectStore);
 
@@ -604,14 +603,9 @@ class ScrapbookManagerModel {
     }
 
     openItemProject(item: ScrapbookItem) {
-        const homeTabs = ProjectEditor.homeTabs;
-        if (!homeTabs) {
-            return;
-        }
-
         const tabId = `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`;
 
-        let projectTab = homeTabs.findProjectEditorTab(tabId, false);
+        let projectTab = tabs.findProjectEditorTab(tabId, false);
         if (!projectTab) {
             projectTab = ProjectEditor.homeTabs!.addProjectTab(
                 `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`,
@@ -619,7 +613,7 @@ class ScrapbookManagerModel {
             );
         }
 
-        homeTabs.makeActive(projectTab);
+        tabs.makeActive(projectTab);
     }
 }
 
@@ -697,9 +691,7 @@ const Items = observer(
 const ItemDetails = observer(
     class ItemDetails extends React.Component {
         render() {
-            const item = model.store.selectedItem;
-
-            if (!item) {
+            if (!model.store.selectedItem) {
                 return null;
             }
 
@@ -711,14 +703,18 @@ const ItemDetails = observer(
                             <button
                                 className="btn btn-lg btn-primary"
                                 onClick={() => {
-                                    if (model.destinationProjectStore) {
+                                    if (
+                                        model.store.selectedItem &&
+                                        model.destinationProjectStore
+                                    ) {
                                         model.insertItemIntoProject(
-                                            item,
+                                            model.store.selectedItem,
                                             model.destinationProjectStore
                                         );
                                     }
                                 }}
                                 disabled={
+                                    model.store.selectedItem == undefined ||
                                     model.destinationProjectStore == undefined
                                 }
                             >
@@ -727,8 +723,13 @@ const ItemDetails = observer(
                             <button
                                 className="btn btn-lg btn-secondary ms-2"
                                 onClick={() => {
-                                    model.openItemProject(item);
+                                    if (model.store.selectedItem) {
+                                        model.openItemProject(
+                                            model.store.selectedItem
+                                        );
+                                    }
                                 }}
+                                disabled={model.store.selectedItem == undefined}
                             >
                                 Open in Project Editor
                             </button>
@@ -748,12 +749,14 @@ const ItemDetails = observer(
                                     type="text"
                                     className="form-control"
                                     id="EezStudio_ProjectEditorScrapbook_ItemDetails_Name"
-                                    value={item.name}
+                                    value={model.store.selectedItem.name}
                                     onChange={event => {
-                                        model.store.setItemName(
-                                            item,
-                                            event.target.value
-                                        );
+                                        if (model.store.selectedItem) {
+                                            model.store.setItemName(
+                                                model.store.selectedItem,
+                                                event.target.value
+                                            );
+                                        }
                                     }}
                                     onFocus={() =>
                                         model.store.undoManager.setCombineCommands(
@@ -779,12 +782,14 @@ const ItemDetails = observer(
                                     className="form-control"
                                     id="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
                                     rows={3}
-                                    value={item.description}
+                                    value={model.store.selectedItem.description}
                                     onChange={event => {
-                                        model.store.setItemDescription(
-                                            item,
-                                            event.target.value
-                                        );
+                                        if (model.store.selectedItem) {
+                                            model.store.setItemDescription(
+                                                model.store.selectedItem,
+                                                event.target.value
+                                            );
+                                        }
                                     }}
                                     onFocus={() =>
                                         model.store.undoManager.setCombineCommands(
@@ -804,19 +809,21 @@ const ItemDetails = observer(
                                     Resources in this scrapbook item:
                                 </label>
                                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources">
-                                    {item.allObjects.map((object, i) => (
-                                        <div
-                                            key={i}
-                                            className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Item"
-                                        >
-                                            {object.icon && (
-                                                <Icon icon={object.icon} />
-                                            )}
-                                            <span className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_ItemName">
-                                                {object.name}
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {model.store.selectedItem.allObjects.map(
+                                        (object, i) => (
+                                            <div
+                                                key={i}
+                                                className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Item"
+                                            >
+                                                {object.icon && (
+                                                    <Icon icon={object.icon} />
+                                                )}
+                                                <span className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_ItemName">
+                                                    {object.name}
+                                                </span>
+                                            </div>
+                                        )
+                                    )}
                                 </div>
                             </div>
                         </form>
@@ -945,7 +952,7 @@ export function getScrapbookItemEezProject(filePath: string) {
 
     const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
 
-    const item = model.store.project.items.find(item => (item.id = itemId));
+    const item = model.store.project.items.find(item => item.id == itemId);
 
     if (!item) {
         throw "Scrapbook item not found";
@@ -964,7 +971,7 @@ export function setScrapbookItemEezProject(
 
     const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
 
-    const item = model.store.project.items.find(item => (item.id = itemId));
+    const item = model.store.project.items.find(item => item.id == itemId);
 
     if (!item) {
         throw "Scrapbook item not found";
@@ -976,7 +983,7 @@ export function setScrapbookItemEezProject(
 export function getScrapbookItemName(filePath: string) {
     const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
 
-    const item = model.store.project.items.find(item => (item.id = itemId));
+    const item = model.store.project.items.find(item => item.id == itemId);
 
     if (!item) {
         throw "not found";

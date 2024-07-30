@@ -279,7 +279,7 @@ class PasteObject {
 
 class PasteWithDependenciesModel {
     interProjectStore: ProjectStore;
-    interProjectStoreFlowFragmentFlow: Page;
+    interProjectStoreFlowFragmentFlow: Page | undefined;
 
     foundObjects = new Map<EezObject, PasteObject>();
     pasteObjects: PasteObject[] = [];
@@ -304,8 +304,14 @@ class PasteWithDependenciesModel {
     }
 
     createInterProjectStore() {
+        const hasFlowFragment =
+            this.sourceObjects.find(
+                sourceObject =>
+                    sourceObject instanceof ProjectEditor.FlowFragmentClass
+            ) != undefined;
+
         const { projectStore, projectStoreFlowFragmentFlow } =
-            createEmptyProjectStore(this.sourceProjectStore);
+            createEmptyProjectStore(this.sourceProjectStore, hasFlowFragment);
 
         this.interProjectStore = projectStore;
 
@@ -314,20 +320,20 @@ class PasteWithDependenciesModel {
 
     static addObjectToProject(
         projectStore: ProjectStore,
-        flow: Flow,
+        flow: Flow | undefined,
         object: EezObject,
         isLocalVariable: boolean
     ) {
         if (object instanceof ProjectEditor.FlowFragmentClass) {
             ProjectEditor.FlowFragmentClass.paste(
                 projectStore,
-                flow,
+                flow!,
                 object,
-                flow
+                flow!
             );
         } else if (object instanceof ProjectEditor.VariableClass) {
             if (isLocalVariable) {
-                addObject(flow.localVariables, object);
+                addObject(flow!.localVariables, object);
             } else {
                 addObject(
                     projectStore.project.variables.globalVariables,
@@ -1343,7 +1349,10 @@ const ConflictResolution = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createEmptyProjectStore(sourceProjectStore: ProjectStore) {
+export function createEmptyProjectStore(
+    sourceProjectStore: ProjectStore,
+    createFlowFragmentPage: boolean
+) {
     const projectStore = ProjectStore.create({
         type: "project-editor"
     });
@@ -1402,25 +1411,29 @@ export function createEmptyProjectStore(sourceProjectStore: ProjectStore) {
 
     projectStore.setProject(project, "");
 
-    const projectStoreFlowFragmentFlow = createObject<Page>(
-        projectStore,
-        {
-            name: FLOW_FRAGMENT_PAGE_NAME,
-            left: 0,
-            top: 0,
-            width: 900,
-            height: 600,
-            components: [],
-            connectionLines: [],
-            localVariables: [],
-            isUsedAsUserWidget: false
-        },
-        ProjectEditor.PageClass,
-        undefined,
-        false
-    );
+    let projectStoreFlowFragmentFlow;
 
-    addObject(projectStore.project.userPages, projectStoreFlowFragmentFlow);
+    if (createFlowFragmentPage) {
+        projectStoreFlowFragmentFlow = createObject<Page>(
+            projectStore,
+            {
+                name: FLOW_FRAGMENT_PAGE_NAME,
+                left: 0,
+                top: 0,
+                width: 900,
+                height: 600,
+                components: [],
+                connectionLines: [],
+                localVariables: [],
+                isUsedAsUserWidget: false
+            },
+            ProjectEditor.PageClass,
+            undefined,
+            false
+        );
+
+        addObject(projectStore.project.userPages, projectStoreFlowFragmentFlow);
+    }
 
     return {
         projectStore,
@@ -1625,10 +1638,16 @@ export function pasteWithDependencies(
         ? [serializedData.objectParentPath!]
         : serializedData.objectsParentPath!;
 
+    const hasFlowFragment =
+        sourceObjects.find(
+            sourceObject =>
+                sourceObject instanceof ProjectEditor.FlowFragmentClass
+        ) != undefined;
+
     let destinationFlow: Flow | undefined;
     if (onFinished) {
         const { projectStore, projectStoreFlowFragmentFlow } =
-            createEmptyProjectStore(sourceProjectStore);
+            createEmptyProjectStore(sourceProjectStore, hasFlowFragment);
         destinationProjectStore = projectStore;
         destinationFlow = projectStoreFlowFragmentFlow;
     }
