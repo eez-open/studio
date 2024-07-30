@@ -324,9 +324,7 @@ const EditorButtons = observer(
                                             }
                                             iconSize={24}
                                             onClick={() =>
-                                                showScrapbookManager(
-                                                    this.context
-                                                )
+                                                showScrapbookManager()
                                             }
                                         />
                                     </div>

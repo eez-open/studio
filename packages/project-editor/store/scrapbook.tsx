@@ -35,6 +35,8 @@ import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { stringCompare } from "eez-studio-shared/string";
+import { layoutModels } from "eez-studio-ui/side-dock";
+import { ProjectEditorTab, tabs } from "home/tabs-store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,6 +256,7 @@ class ScrapbookStore {
 
         runInAction(() => {
             this.project.items = [];
+            this.selectedItem = undefined;
         });
 
         for (const dbItem of dbItems) {
@@ -457,6 +460,13 @@ class ScrapbookManagerModel {
         });
     }
 
+    get destinationProjectStore() {
+        if (tabs.activeTab instanceof ProjectEditorTab) {
+            return tabs.activeTab.projectStore;
+        }
+        return undefined;
+    }
+
     save() {
         window.localStorage.setItem(
             "ScrapbookManagerConf",
@@ -622,22 +632,60 @@ const Items = observer(
         render() {
             return (
                 <div className="EezStudio_ProjectEditorScrapbook_Items">
-                    {model.store.project.items.map(item => (
-                        <div
-                            key={item.id}
-                            className={classNames(
-                                "EezStudio_ProjectEditorScrapbook_Item",
-                                { selected: model.store.selectedItem == item }
-                            )}
-                            onClick={() => {
-                                runInAction(() => {
-                                    model.store.selectedItem = item;
-                                });
-                            }}
-                        >
-                            {item.name}
+                    <div className="EezStudio_ProjectEditorScrapbook_Items_Toolbar">
+                        <div>Items</div>
+                        <div>
+                            <IconAction
+                                title="Paste"
+                                icon="material:content_paste"
+                                iconSize={22}
+                                onClick={() => {
+                                    if (model.destinationProjectStore) {
+                                        model.pasteIntoNewItem(
+                                            model.destinationProjectStore
+                                        );
+                                    }
+                                }}
+                                enabled={
+                                    model.destinationProjectStore &&
+                                    model.destinationProjectStore.canPaste
+                                }
+                            />
+                            <IconAction
+                                icon="material:delete"
+                                onClick={() => {
+                                    if (model.store.selectedItem) {
+                                        model.store.deleteItem(
+                                            model.store.selectedItem
+                                        );
+                                    }
+                                }}
+                                title="Delete this item"
+                                enabled={model.store.selectedItem != undefined}
+                            />
                         </div>
-                    ))}
+                    </div>
+                    <div className="EezStudio_ProjectEditorScrapbook_Items_Body">
+                        {model.store.project.items.map(item => (
+                            <div
+                                key={item.id}
+                                className={classNames(
+                                    "EezStudio_ProjectEditorScrapbook_Item",
+                                    {
+                                        selected:
+                                            model.store.selectedItem == item
+                                    }
+                                )}
+                                onClick={() => {
+                                    runInAction(() => {
+                                        model.store.selectedItem = item;
+                                    });
+                                }}
+                            >
+                                {item.name}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         }
@@ -647,10 +695,7 @@ const Items = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ItemDetails = observer(
-    class ItemDetails extends React.Component<{
-        insertItemIntoProject: (item: ScrapbookItem) => void;
-        openItemProject: (item: ScrapbookItem) => void;
-    }> {
+    class ItemDetails extends React.Component {
         render() {
             const item = model.store.selectedItem;
 
@@ -661,29 +706,34 @@ const ItemDetails = observer(
             return (
                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails">
                     <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar">
+                        <div></div>
                         <div>
                             <button
                                 className="btn btn-lg btn-primary"
-                                onClick={() =>
-                                    this.props.insertItemIntoProject(item)
+                                onClick={() => {
+                                    if (model.destinationProjectStore) {
+                                        model.insertItemIntoProject(
+                                            item,
+                                            model.destinationProjectStore
+                                        );
+                                    }
+                                }}
+                                disabled={
+                                    model.destinationProjectStore == undefined
                                 }
                             >
-                                Insert into project
+                                Insert into Active Project
                             </button>
                             <button
                                 className="btn btn-lg btn-secondary ms-2"
-                                onClick={() => this.props.openItemProject(item)}
+                                onClick={() => {
+                                    model.openItemProject(item);
+                                }}
                             >
-                                Open
+                                Open in Project Editor
                             </button>
                         </div>
-                        <div>
-                            <IconAction
-                                icon="material:delete"
-                                onClick={() => model.store.deleteItem(item)}
-                                title="Delete this item"
-                            />
-                        </div>
+                        <div></div>
                     </div>
                     <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Body">
                         <form>
@@ -780,9 +830,7 @@ const ItemDetails = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const ScrapbookManagerDialog = observer(
-    class ScrapbookManagerDialog extends React.Component<{
-        destinationProjectStore: ProjectStore;
-    }> {
+    class ScrapbookManagerDialog extends React.Component {
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
 
@@ -791,23 +839,7 @@ const ScrapbookManagerDialog = observer(
             }
 
             if (component === "item-details") {
-                return (
-                    <ItemDetails
-                        insertItemIntoProject={item => {
-                            model.insertItemIntoProject(
-                                item,
-                                this.props.destinationProjectStore
-                            );
-                            model.modalDialog.close();
-                            model.modalDialog = undefined;
-                        }}
-                        openItemProject={item => {
-                            model.openItemProject(item);
-                            model.modalDialog.close();
-                            model.modalDialog = undefined;
-                        }}
-                    />
-                );
+                return <ItemDetails />;
             }
 
             return null;
@@ -851,7 +883,7 @@ const ScrapbookManagerDialog = observer(
                                         model.selectedFile
                                     )
                                 }
-                                title="Delete this item"
+                                title="Delete Scrapbook File"
                                 enabled={
                                     model.selectedFile !=
                                     DEFAULT_SCRAPBOOK_FILE_PATH
@@ -872,28 +904,10 @@ const ScrapbookManagerDialog = observer(
                                 enabled={model.store.undoManager.canRedo}
                             />
                         </div>
-                        <div className="btn-group" role="group">
-                            <IconAction
-                                title="Paste"
-                                icon="material:content_paste"
-                                iconSize={22}
-                                onClick={() =>
-                                    model.pasteIntoNewItem(
-                                        this.props.destinationProjectStore
-                                    )
-                                }
-                                enabled={
-                                    this.props.destinationProjectStore.canPaste
-                                }
-                            />
-                        </div>
                     </div>
                     <div className="EezStudio_ProjectEditorScrapbook_Body">
                         <FlexLayoutContainer
-                            model={
-                                this.props.destinationProjectStore.layoutModels
-                                    .scrapbook
-                            }
+                            model={layoutModels.scrapbook}
                             factory={this.factory}
                         />
                     </div>
@@ -905,21 +919,16 @@ const ScrapbookManagerDialog = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function showScrapbookManager(destinationProjectStore: ProjectStore) {
-    const result = showDialog(
-        <ScrapbookManagerDialog
-            destinationProjectStore={destinationProjectStore}
-        />,
-        {
-            jsPanel: {
-                id: "scrapbook-manager-dialog",
-                title: "Scrapbook",
-                width: 1280,
-                height: 800,
-                modeless: true
-            }
+export function showScrapbookManager() {
+    const result = showDialog(<ScrapbookManagerDialog />, {
+        jsPanel: {
+            id: "scrapbook-manager-dialog",
+            title: "Scrapbook",
+            width: 1280,
+            height: 800,
+            modeless: true
         }
-    );
+    });
     model.modalDialog = result[0];
 }
 

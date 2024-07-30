@@ -201,8 +201,6 @@ export class LayoutModels extends AbstractLayoutModels {
     scpi: FlexLayout.Model;
     texts: FlexLayout.Model;
 
-    scrapbook: FlexLayout.Model;
-
     constructor(public projectStore: ProjectStore) {
         super();
 
@@ -979,53 +977,6 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
-            },
-            {
-                name: "scrapbook",
-                version: 1,
-                json: {
-                    global: LayoutModels.GLOBAL_OPTIONS,
-                    borders: [],
-                    layout: {
-                        type: "row",
-                        children: [
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                weight: 33,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Items",
-                                        component: "items"
-                                    }
-                                ]
-                            },
-                            {
-                                type: "tabset",
-                                enableTabStrip: false,
-                                enableDrag: false,
-                                enableDrop: false,
-                                enableClose: false,
-                                weight: 67,
-                                children: [
-                                    {
-                                        type: "tab",
-                                        enableClose: false,
-                                        name: "Selected Item Info",
-                                        component: "item-details"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                },
-                get: () => this.scrapbook,
-                set: action(model => (this.scrapbook = model))
             }
         ];
     }

@@ -3464,6 +3464,7 @@
     flex-direction: column;
 
     .EezStudio_ProjectEditorScrapbook_Toolbar {
+        height: 43px;
         flex: 0;
         padding: 3px;
         background-color: @panelHeaderColor;
@@ -3488,14 +3489,29 @@
         position: relative;
 
         .EezStudio_ProjectEditorScrapbook_Items {
-            overflow: auto;
-            padding: 5px;
+            .EezStudio_ProjectEditorScrapbook_Items_Toolbar {
+                height: 43px;
+                flex: 0;
+                padding: 5px;
+                background-color: @panelHeaderColor;
+                border-bottom: 1px solid @borderColor;
 
-            .EezStudio_ProjectEditorScrapbook_Item {
-                padding: 4px 2px;
-                &.selected {
-                    background-color: @selectionBackgroundColor;
-                    color: @selectionColor!important;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .EezStudio_ProjectEditorScrapbook_Items_Body {
+                flex: 1;
+                padding: 5px;
+                overflow: auto;
+
+                .EezStudio_ProjectEditorScrapbook_Item {
+                    padding: 4px 2px;
+                    &.selected {
+                        background-color: @selectionBackgroundColor;
+                        color: @selectionColor!important;
+                    }
                 }
             }
         }
@@ -3506,6 +3522,7 @@
             height: 100%;
 
             .EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar {
+                height: 43px;
                 flex: 0;
                 padding: 5px;
                 background-color: @panelHeaderColor;

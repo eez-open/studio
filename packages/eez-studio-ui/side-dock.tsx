@@ -231,6 +231,8 @@ export class LayoutModels {
     chartsViewModel3: FlexLayout.Model;
     chartsViewModel4: FlexLayout.Model;
 
+    scrapbook: FlexLayout.Model;
+
     constructor() {
         makeObservable(this, {
             historyViewModel1: observable,
@@ -508,6 +510,53 @@ export class LayoutModels {
                 },
                 get: () => this.chartsViewModel4,
                 set: action(model => (this.chartsViewModel4 = model))
+            },
+            {
+                name: "scrapbook",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 33,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Items",
+                                        component: "items"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 67,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Selected Item Info",
+                                        component: "item-details"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.scrapbook,
+                set: action(model => (this.scrapbook = model))
             }
         ];
     }
