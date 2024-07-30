@@ -42,7 +42,8 @@ import {
     ProjectStore,
     replaceObject,
     rewireBegin,
-    rewireEnd
+    rewireEnd,
+    updateObject
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -528,7 +529,6 @@ class PasteWithDependenciesModel {
                     const node = dependency.node;
                     if (node.type == "Identifier") {
                         if (node.identifierType == "local-variable") {
-                            console.log(node);
                             const flow = getAncestorOfType<Flow>(
                                 object,
                                 ProjectEditor.FlowClass.classInfo
@@ -924,6 +924,22 @@ class PasteWithDependenciesModel {
     beforePaste() {
         // rename source objects
         runInAction(() => {
+            // make sure flow fragment is included in replaceObjectReference
+            let includeAdditionObjects;
+            const flowFragmentPasteObject = this.pasteObjects.find(
+                pasteObject =>
+                    pasteObject.object instanceof
+                    ProjectEditor.FlowFragmentClass
+            );
+            if (flowFragmentPasteObject) {
+                const flowFragment = flowFragmentPasteObject.object;
+                if (getParent(flowFragment) == undefined) {
+                    setParent(flowFragment, this.interProjectStore.project);
+                }
+
+                includeAdditionObjects = [flowFragment];
+            }
+
             for (const pasteObject of this.pasteObjects) {
                 if (
                     pasteObject.conflict.kind == "exists-different" &&
@@ -931,7 +947,8 @@ class PasteWithDependenciesModel {
                 ) {
                     replaceObjectReference(
                         pasteObject.object,
-                        pasteObject.conflictResolutionName
+                        pasteObject.conflictResolutionName,
+                        includeAdditionObjects
                     );
 
                     (pasteObject.object as ObjectWithName).name =
@@ -1003,9 +1020,9 @@ class PasteWithDependenciesModel {
                         pasteObject.conflictResolutionName
                     );
 
-                    (
-                        pasteObject.conflict.destinationObject as ObjectWithName
-                    ).name = pasteObject.conflictResolutionName;
+                    updateObject(pasteObject.conflict.destinationObject, {
+                        name: pasteObject.conflictResolutionName
+                    });
 
                     pasteObject.conflict = { kind: "doesnt-exists" };
                 }
@@ -1446,7 +1463,7 @@ const FindAllPasteDependenciesProgressDialog = observer(
 
 export function showResolvePasteConflictsDialog(
     pasteWithDependenciesModel: PasteWithDependenciesModel,
-    onFinished?: (destinationProjectStore: ProjectStore) => void
+    onFinished: ((destinationProjectStore: ProjectStore) => void) | undefined
 ) {
     const modalDialogObservable = observable.box<any>();
 
@@ -1537,9 +1554,8 @@ export function showFindAllPasteDependenciesProgressDialog(
     return true;
 }
 
-export function pasteWithDependencies(
-    destinationProjectStore: ProjectStore,
-    onFinished?: (destinationProjectStore: ProjectStore) => void
+export function canPasteWithDependencies(
+    destinationProjectStore: ProjectStore
 ) {
     let serializedData = getProjectEditorDataFromClipboard(
         destinationProjectStore
@@ -1549,7 +1565,6 @@ export function pasteWithDependencies(
     }
 
     if (
-        !onFinished &&
         serializedData.originProjectFilePath == destinationProjectStore.filePath
     ) {
         return false;
@@ -1566,6 +1581,40 @@ export function pasteWithDependencies(
     const sourceProjectStore = sourceProjectEditorTab.projectStore;
     if (!sourceProjectStore) {
         return false;
+    }
+
+    return true;
+}
+
+export function pasteWithDependencies(
+    destinationProjectStore: ProjectStore,
+    onFinished?: (destinationProjectStore: ProjectStore) => void
+) {
+    let serializedData = getProjectEditorDataFromClipboard(
+        destinationProjectStore
+    );
+    if (!serializedData) {
+        return;
+    }
+
+    if (
+        !onFinished &&
+        serializedData.originProjectFilePath == destinationProjectStore.filePath
+    ) {
+        return;
+    }
+
+    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
+        serializedData.originProjectFilePath,
+        false
+    );
+    if (!sourceProjectEditorTab) {
+        return;
+    }
+
+    const sourceProjectStore = sourceProjectEditorTab.projectStore;
+    if (!sourceProjectStore) {
+        return;
     }
 
     const sourceObjects = serializedData.object
@@ -1592,8 +1641,6 @@ export function pasteWithDependencies(
         destinationFlow,
         onFinished
     );
-
-    return true;
 }
 
 export function copyObjects(

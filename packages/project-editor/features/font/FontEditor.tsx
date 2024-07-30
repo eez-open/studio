@@ -134,11 +134,17 @@ export const FontEditor = observer(
                 return this.font;
             }
         }
+        canCopy() {
+            return !!this.selectedGlyph;
+        }
         copySelection() {
             const glyph = this.selectedGlyph;
             if (glyph) {
                 glyph.copyToClipboard();
             }
+        }
+        canPaste() {
+            return !!this.selectedGlyph;
         }
         pasteSelection() {
             const glyph = this.selectedGlyph;

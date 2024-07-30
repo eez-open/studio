@@ -75,7 +75,8 @@ export function isPropertySearchable(
 type VisitResult = EezValueObject | null;
 
 export function* visitWithPause(
-    parentObject: IEezObject
+    parentObject: IEezObject,
+    includeAdditionObjects?: IEezObject[]
 ): IterableIterator<VisitResult> {
     if (isEezObjectArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
@@ -111,12 +112,19 @@ export function* visitWithPause(
         }
     }
 
+    if (includeAdditionObjects) {
+        for (let i = 0; i < includeAdditionObjects.length; i++) {
+            yield* visitWithPause(includeAdditionObjects[i]);
+        }
+    }
+
     // pause
     yield null;
 }
 
 function* visitWithoutPause(
-    parentObject: IEezObject
+    parentObject: IEezObject,
+    includeAdditionObjects?: IEezObject[]
 ): IterableIterator<VisitResult> {
     if (isEezObjectArray(parentObject)) {
         let arrayOfObjects = parentObject as IEezObject[];
@@ -149,6 +157,12 @@ function* visitWithoutPause(
                     }
                 }
             }
+        }
+    }
+
+    if (includeAdditionObjects) {
+        for (let i = 0; i < includeAdditionObjects.length; i++) {
+            yield* visitWithoutPause(includeAdditionObjects[i]);
         }
     }
 }
@@ -265,7 +279,8 @@ export function* searchForObjectDependencies(
     projectStore: ProjectStore,
     root: IEezObject,
     withPause: boolean,
-    lookInsideExpressions: boolean
+    lookInsideExpressions: boolean,
+    includeAdditionObjects?: IEezObject[]
 ): IterableIterator<
     | { kind: "object-reference"; valueObject: EezValueObject }
     | { kind: "configuration-reference"; valueObject: EezValueObject }
@@ -280,7 +295,10 @@ export function* searchForObjectDependencies(
     | { kind: "variable-type"; valueObject: EezValueObject }
     | null
 > {
-    let v = (withPause ? visitWithPause : visitWithoutPause)(root);
+    let v = (withPause ? visitWithPause : visitWithoutPause)(
+        root,
+        includeAdditionObjects
+    );
 
     while (true) {
         let visitResult = v.next();
@@ -534,7 +552,8 @@ export function* searchForReference(
         project._store,
         root,
         withPause,
-        identifierType != undefined || structType != undefined
+        identifierType != undefined || structType != undefined,
+        searchParams.includeAdditionObjects
     );
     while (true) {
         let visitResult = v.next();
@@ -773,6 +792,7 @@ export interface SearchParamsPattern {
 export interface SearchParamsObject {
     type: "object";
     object: IEezObject;
+    includeAdditionObjects?: IEezObject[];
 }
 
 export interface SearchParamsReferences {
@@ -918,11 +938,15 @@ export function isReferenced(object: IEezObject) {
     }
 }
 
-export function replaceObjectReference(object: IEezObject, newValue: string) {
+export function replaceObjectReference(
+    object: IEezObject,
+    newValue: string,
+    includeAdditionObjects?: IEezObject[]
+) {
     const rootObject = getRootObject(object);
     let resultsGenerator = searchForReference(
         rootObject,
-        { type: "object", object },
+        { type: "object", object, includeAdditionObjects },
         false
     );
 

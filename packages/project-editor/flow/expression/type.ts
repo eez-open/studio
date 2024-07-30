@@ -85,13 +85,15 @@ export function findValueTypeInExpressionNode(
 
         if (component) {
             const flow = ProjectEditor.getFlow(component);
-            let localVariable = flow.localVariables.find(
-                localVariable => localVariable.name == node.name
-            );
-            if (localVariable) {
-                node.valueType = getType(project, localVariable.type);
-                node.identifierType = "local-variable";
-                return;
+            if (flow) {
+                let localVariable = flow.localVariables.find(
+                    localVariable => localVariable.name == node.name
+                );
+                if (localVariable) {
+                    node.valueType = getType(project, localVariable.type);
+                    node.identifierType = "local-variable";
+                    return;
+                }
             }
         }
 

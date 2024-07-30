@@ -92,14 +92,26 @@ export const ActionComponents = observer(
 
             return [];
         }
+        canCut() {
+            return this.treeAdapter ? this.treeAdapter.canCut() : false;
+        }
         cutSelection() {
             this.treeAdapter!.cutSelection();
+        }
+        canCopy() {
+            return this.treeAdapter ? this.treeAdapter.canCopy() : false;
         }
         copySelection() {
             this.treeAdapter!.copySelection();
         }
+        canPaste() {
+            return this.treeAdapter ? this.treeAdapter.canPaste() : false;
+        }
         pasteSelection() {
             this.treeAdapter!.pasteSelection();
+        }
+        canDelete() {
+            return this.treeAdapter ? this.treeAdapter.canDelete() : false;
         }
         deleteSelection() {
             this.treeAdapter!.deleteSelection();

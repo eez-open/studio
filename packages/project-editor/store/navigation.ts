@@ -16,11 +16,20 @@ import {
 export interface IPanel {
     selectedObject: IEezObject | undefined;
     selectedObjects?: IEezObject[];
-    cutSelection?(): void;
-    copySelection?(): void;
-    pasteSelection?(): void;
-    deleteSelection?(): void;
+
     selectAll?(): void;
+
+    canCut?(): boolean;
+    cutSelection?(): void;
+
+    canCopy?(): boolean;
+    copySelection?(): void;
+
+    canPaste?(): boolean;
+    pasteSelection?(): void;
+
+    canDelete?(): boolean;
+    deleteSelection?(): void;
 }
 
 export class NavigationStore {

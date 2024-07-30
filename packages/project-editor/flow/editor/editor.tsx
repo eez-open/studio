@@ -882,14 +882,26 @@ export const FlowEditor = observer(
         get selectedObjects() {
             return this.props.tabState.widgetContainer.selectedObjects;
         }
+        canCut() {
+            return this.props.tabState.widgetContainer.canCut();
+        }
         cutSelection() {
             this.props.tabState.widgetContainer.cutSelection();
+        }
+        canCopy() {
+            return this.props.tabState.widgetContainer.canCopy();
         }
         copySelection() {
             this.props.tabState.widgetContainer.copySelection();
         }
+        canPaste() {
+            return this.props.tabState.widgetContainer.canPaste();
+        }
         pasteSelection() {
             this.flowContext.document.pasteSelection();
+        }
+        canDelete() {
+            return this.props.tabState.widgetContainer.canDelete();
         }
         deleteSelection() {
             this.props.tabState.widgetContainer.deleteSelection();

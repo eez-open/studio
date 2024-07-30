@@ -292,18 +292,30 @@ export const ListNavigation = observer(
         get selectedObjects() {
             return this.listAdapter.rootItem.selectedObjects;
         }
+        canCut() {
+            return this.listAdapter.canCut();
+        }
         cutSelection() {
             if (this.editable) {
                 this.listAdapter.cutSelection();
             }
         }
+        canCopy() {
+            return this.listAdapter.canCopy();
+        }
         copySelection() {
             this.listAdapter.copySelection();
+        }
+        canPaste() {
+            return this.listAdapter.canPaste();
         }
         pasteSelection() {
             if (this.editable) {
                 this.listAdapter.pasteSelection();
             }
+        }
+        canDelete() {
+            return this.listAdapter.canDelete();
         }
         deleteSelection() {
             if (this.editable) {

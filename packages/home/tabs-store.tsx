@@ -51,6 +51,7 @@ import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
 import {
     getScrapbookItemEezProject,
+    getScrapbookItemName,
     isScrapbookItemFilePath
 } from "project-editor/store/scrapbook";
 
@@ -673,6 +674,9 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
+        if (isScrapbookItemFilePath(this.filePath)) {
+            return `${getScrapbookItemName(this.filePath)} - Scrapbook Item`;
+        }
         return (this.modified ? MODIFED_MARK : "") + this.titleStr;
     }
 

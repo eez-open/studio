@@ -277,18 +277,30 @@ export const LVGLStylesTreeNavigation = observer(
         get selectedObjects() {
             return this.treeAdapter.rootItem.selectedObjects;
         }
+        canCut() {
+            return this.treeAdapter.canCut();
+        }
         cutSelection() {
             if (this.editable) {
                 this.treeAdapter.cutSelection();
             }
         }
+        canCopy() {
+            return this.treeAdapter.canCopy();
+        }
         copySelection() {
             this.treeAdapter.copySelection();
+        }
+        canPaste() {
+            return this.treeAdapter.canPaste();
         }
         pasteSelection() {
             if (this.editable) {
                 this.treeAdapter.pasteSelection();
             }
+        }
+        canDelete() {
+            return this.treeAdapter.canDelete();
         }
         deleteSelection() {
             if (this.editable) {

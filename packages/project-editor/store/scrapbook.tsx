@@ -1,10 +1,10 @@
+import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
 import path from "path";
 import React from "react";
 import {
     action,
     computed,
-    IObservableValue,
     makeObservable,
     observable,
     runInAction
@@ -13,6 +13,7 @@ import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import classNames from "classnames";
 import Database from "better-sqlite3";
+import { confirm } from "eez-studio-ui/dialog-electron";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
@@ -30,12 +31,18 @@ import type { Project } from "project-editor/project/project";
 import { Icon } from "eez-studio-ui/icon";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { SCRAPBOOK_ITEM_FILE_PREFIX } from "project-editor/core/util";
+import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { validators } from "eez-studio-shared/validation";
+import { stringCompare } from "eez-studio-shared/string";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const DEFAULT_SCRAPBOOK_FILE_PATH = getUserDataPath(
-    "/scrapbooks/default.eez-scrapbook"
+    `scrapbooks${path.sep}default.eez-scrapbook`
 );
+
+console.log(DEFAULT_SCRAPBOOK_FILE_PATH);
 
 const DB_VERSION = 1;
 
@@ -243,6 +250,12 @@ class ScrapbookStore {
             dbItems = [];
         }
 
+        this.undoManager.clear();
+
+        runInAction(() => {
+            this.project.items = [];
+        });
+
         for (const dbItem of dbItems) {
             const item = new ScrapbookItem();
 
@@ -372,29 +385,176 @@ class ScrapbookStore {
             description: "Change description"
         });
     }
+
+    setItemEezProject(item: ScrapbookItem, newEezProject: string) {
+        const oldnewEezProject = item.description;
+
+        this.undoManager.executeCommand({
+            execute: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET eez_project = ? WHERE id = ?`
+                    )
+                    .run(newEezProject, item.id);
+
+                item.eezProject = newEezProject;
+            },
+            undo: () => {
+                this.db
+                    .prepare(
+                        `UPDATE items${DB_VERSION} SET eez_project = ? WHERE id = ?`
+                    )
+                    .run(oldnewEezProject, item.id);
+
+                item.eezProject = oldnewEezProject;
+            },
+            description: "Change eez-project"
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class ScrapbookManagerModel {
+    files: string[];
+    selectedFile: string;
+
     store: ScrapbookStore = new ScrapbookStore();
 
-    constructor() {
-        makeObservable(this, {});
+    modalDialog: any;
 
-        this.load();
+    constructor() {
+        let confJSONStr = window.localStorage.getItem("ScrapbookManagerConf");
+        let conf: {
+            files?: string[];
+            selectedFile?: string;
+        };
+        if (confJSONStr) {
+            conf = JSON.parse(confJSONStr);
+        } else {
+            conf = {
+                files: []
+            };
+        }
+
+        if (!conf.files) {
+            conf.files = [];
+        }
+
+        this.files = conf.files.filter(filePath => fs.existsSync(filePath));
+        if (
+            conf.selectedFile &&
+            this.files.find(filePath => filePath == conf.selectedFile)
+        ) {
+            this.openScrapbookFile(conf.selectedFile);
+        } else {
+            this.openScrapbookFile(DEFAULT_SCRAPBOOK_FILE_PATH);
+        }
+
+        makeObservable(this, {
+            files: observable,
+            selectedFile: observable
+        });
     }
 
-    async load() {
-        try {
-            await this.store.load(DEFAULT_SCRAPBOOK_FILE_PATH);
-        } catch (err) {
-            await fs.promises.mkdir(path.dirname(DEFAULT_SCRAPBOOK_FILE_PATH), {
-                recursive: true
-            });
+    save() {
+        window.localStorage.setItem(
+            "ScrapbookManagerConf",
+            JSON.stringify({
+                files: this.files,
+                selectedFile: this.selectedFile
+            })
+        );
+    }
 
-            await this.store.load(DEFAULT_SCRAPBOOK_FILE_PATH);
+    async createNewScrapbookFile() {
+        const result = await showGenericDialog({
+            dialogDefinition: {
+                title: "New Scrapbook File",
+                fields: [
+                    {
+                        name: "name",
+                        displayName: "Scrabook file name",
+                        type: "string",
+                        validators: [
+                            validators.required,
+                            function (object: any, ruleName: string) {
+                                const value = object[ruleName];
+                                if (value == undefined) {
+                                    return null;
+                                }
+                                if (
+                                    model.files.find(
+                                        filePath =>
+                                            path.parse(filePath).name == value
+                                    )
+                                ) {
+                                    return "Scrapbook file with the same name already exists";
+                                }
+                                return null;
+                            }
+                        ]
+                    }
+                ]
+            },
+            values: {
+                name: ""
+            }
+        });
+
+        this.openScrapbookFile(
+            getUserDataPath(
+                `scrapbooks${path.sep}${result.values.name}.eez-scrapbook`
+            )
+        );
+    }
+
+    async selectScrapbookFile() {
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
+            properties: ["openFile"],
+            filters: [
+                {
+                    name: "EEZ Scrapbook files",
+                    extensions: ["eez-scrapbook"]
+                },
+                { name: "All Files", extensions: ["*"] }
+            ]
+        });
+        const filePaths = result.filePaths;
+        if (filePaths && filePaths[0]) {
+            this.openScrapbookFile(filePaths[0]);
         }
+    }
+
+    async openScrapbookFile(filePath: string) {
+        console.log(filePath);
+
+        await this.store.load(filePath);
+
+        if (
+            !this.files.find(existingFilePath => existingFilePath == filePath)
+        ) {
+            runInAction(() => {
+                this.files.push(filePath);
+            });
+        }
+
+        runInAction(() => {
+            this.selectedFile = filePath;
+        });
+
+        this.save();
+    }
+
+    deleteScrapbookFile(filePath: string) {
+        confirm("Are you sure?", undefined, () => {
+            this.files = this.files.filter(
+                existingFilePath => existingFilePath != filePath
+            );
+            if (this.selectedFile == filePath) {
+                this.openScrapbookFile(DEFAULT_SCRAPBOOK_FILE_PATH);
+            }
+        });
     }
 
     pasteIntoNewItem(projectStore: ProjectStore) {
@@ -419,7 +579,7 @@ class ScrapbookManagerModel {
         destinationProjectStore: ProjectStore
     ) {
         const projectStore = ProjectStore.create({
-            type: "read-only"
+            type: "project-editor"
         });
 
         const project = loadProject(projectStore, item.eezProject, false);
@@ -500,7 +660,7 @@ const ItemDetails = observer(
 
             return (
                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails">
-                    <div className="pb-3 d-flex justify-content-between">
+                    <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar">
                         <div>
                             <button
                                 className="btn btn-lg btn-primary"
@@ -518,22 +678,21 @@ const ItemDetails = observer(
                             </button>
                         </div>
                         <div>
-                            <button
-                                className="btn btn-lg btn-danger"
+                            <IconAction
+                                icon="material:delete"
                                 onClick={() => model.store.deleteItem(item)}
-                            >
-                                Delete this item
-                            </button>
+                                title="Delete this item"
+                            />
                         </div>
                     </div>
-                    <div>
+                    <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Body">
                         <form>
                             <div className="mb-3">
                                 <label
                                     htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Name"
                                     className="form-label"
                                 >
-                                    Name
+                                    Name:
                                 </label>
                                 <input
                                     type="text"
@@ -564,7 +723,7 @@ const ItemDetails = observer(
                                     htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
                                     className="form-label"
                                 >
-                                    Description
+                                    Description:
                                 </label>
                                 <textarea
                                     className="form-control"
@@ -591,12 +750,21 @@ const ItemDetails = observer(
                             </div>
 
                             <div className="mb-3">
-                                <label className="form-label">Objects</label>
-                                <div className="ps-3">
+                                <label className="form-label">
+                                    Resources in this scrapbook item:
+                                </label>
+                                <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources">
                                     {item.allObjects.map((object, i) => (
-                                        <div key={i}>
-                                            <Icon icon={object.icon} />
-                                            <span>{object.name}</span>
+                                        <div
+                                            key={i}
+                                            className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Item"
+                                        >
+                                            {object.icon && (
+                                                <Icon icon={object.icon} />
+                                            )}
+                                            <span className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_ItemName">
+                                                {object.name}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
@@ -613,7 +781,6 @@ const ItemDetails = observer(
 
 const ScrapbookManagerDialog = observer(
     class ScrapbookManagerDialog extends React.Component<{
-        modalDialog: IObservableValue<any>;
         destinationProjectStore: ProjectStore;
     }> {
         factory = (node: FlexLayout.TabNode) => {
@@ -631,11 +798,13 @@ const ScrapbookManagerDialog = observer(
                                 item,
                                 this.props.destinationProjectStore
                             );
-                            this.props.modalDialog.get().close();
+                            model.modalDialog.close();
+                            model.modalDialog = undefined;
                         }}
                         openItemProject={item => {
                             model.openItemProject(item);
-                            this.props.modalDialog.get().close();
+                            model.modalDialog.close();
+                            model.modalDialog = undefined;
                         }}
                     />
                 );
@@ -648,6 +817,47 @@ const ScrapbookManagerDialog = observer(
             return (
                 <div className="EezStudio_ProjectEditorScrapbook">
                     <div className="EezStudio_ProjectEditorScrapbook_Toolbar">
+                        <div className="btn-group" role="group">
+                            <select
+                                className="form-select"
+                                value={model.selectedFile}
+                                onChange={event =>
+                                    model.openScrapbookFile(event.target.value)
+                                }
+                            >
+                                {model.files
+                                    .slice()
+                                    .sort(stringCompare)
+                                    .map(filePath => (
+                                        <option key={filePath} value={filePath}>
+                                            {path.parse(filePath).name}
+                                        </option>
+                                    ))}
+                            </select>
+                            <IconAction
+                                title="Create a New Scrapbook File"
+                                icon="material:add"
+                                onClick={() => model.createNewScrapbookFile()}
+                            />
+                            <IconAction
+                                title="Open Scrapbook File"
+                                icon={HOME_TAB_OPEN_ICON}
+                                onClick={() => model.selectScrapbookFile()}
+                            />
+                            <IconAction
+                                icon="material:delete"
+                                onClick={() =>
+                                    model.deleteScrapbookFile(
+                                        model.selectedFile
+                                    )
+                                }
+                                title="Delete this item"
+                                enabled={
+                                    model.selectedFile !=
+                                    DEFAULT_SCRAPBOOK_FILE_PATH
+                                }
+                            />
+                        </div>
                         <div className="btn-group" role="group">
                             <IconAction
                                 title="Undo"
@@ -696,11 +906,8 @@ const ScrapbookManagerDialog = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function showScrapbookManager(destinationProjectStore: ProjectStore) {
-    const modalDialogObservable = observable.box<any>();
-
-    const [modalDialog] = showDialog(
+    const result = showDialog(
         <ScrapbookManagerDialog
-            modalDialog={modalDialogObservable}
             destinationProjectStore={destinationProjectStore}
         />,
         {
@@ -713,8 +920,7 @@ export function showScrapbookManager(destinationProjectStore: ProjectStore) {
             }
         }
     );
-
-    modalDialogObservable.set(modalDialog);
+    model.modalDialog = result[0];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -737,4 +943,35 @@ export function getScrapbookItemEezProject(filePath: string) {
     }
 
     return item.eezProject;
+}
+
+export function setScrapbookItemEezProject(
+    filePath: string,
+    eezProject: string
+) {
+    if (!isScrapbookItemFilePath(filePath)) {
+        throw "Not a scrapbook item";
+    }
+
+    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+
+    const item = model.store.project.items.find(item => (item.id = itemId));
+
+    if (!item) {
+        throw "Scrapbook item not found";
+    }
+
+    model.store.setItemEezProject(item, eezProject);
+}
+
+export function getScrapbookItemName(filePath: string) {
+    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+
+    const item = model.store.project.items.find(item => (item.id = itemId));
+
+    if (!item) {
+        throw "not found";
+    }
+
+    return item.name;
 }

@@ -1012,16 +1012,32 @@ export class TreeAdapter {
         this.rootItem.showSelectionContextMenu(this.editable ?? true);
     }
 
+    canCut() {
+        return this.rootItem.canCut();
+    }
+
     cutSelection() {
         this.rootItem.cutSelection();
+    }
+
+    canCopy() {
+        return this.rootItem.canCopy();
     }
 
     copySelection() {
         this.rootItem.copySelection();
     }
 
+    canPaste() {
+        return this.rootItem.canPaste();
+    }
+
     pasteSelection() {
         this.rootItem.pasteSelection();
+    }
+
+    canDelete() {
+        return this.rootItem.canDelete();
     }
 
     deleteSelection() {

@@ -3501,7 +3501,44 @@
         }
 
         .EezStudio_ProjectEditorScrapbook_ItemDetails {
-            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            .EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar {
+                flex: 0;
+                padding: 5px;
+                background-color: @panelHeaderColor;
+                border-bottom: 1px solid @borderColor;
+
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .EezStudio_ProjectEditorScrapbook_ItemDetails_Body {
+                flex: 1;
+                padding: 10px;
+                overflow: auto;
+
+                .EezStudio_ProjectEditorScrapbook_ItemDetails_Resources {
+                    margin-top: 10px;
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+
+                    .EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Item {
+                        border: 1px solid @borderColor;
+                        background-color: @panelHeaderColor;
+                        padding: 2px 4px;
+                        margin: 5px;
+
+                        .EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_ItemName {
+                            padding-left: 5px;
+                        }
+                    }
+                }
+            }
         }
     }
 }

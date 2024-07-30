@@ -19,7 +19,10 @@ import { getId } from "project-editor/core/object";
 import type { IObjectVariableValue } from "eez-studio-types";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 import { isDev } from "eez-studio-shared/util-electron";
-import { showScrapbookManager } from "project-editor/store/scrapbook";
+import {
+    isScrapbookItemFilePath,
+    showScrapbookManager
+} from "project-editor/store/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -307,9 +310,7 @@ const EditorButtons = observer(
                                             title="Paste"
                                             icon="material:content_paste"
                                             iconSize={22}
-                                            onClick={
-                                                this.context.pasteFromToolbar
-                                            }
+                                            onClick={this.context.paste}
                                             enabled={this.context.canPaste}
                                         />
                                     </div>
@@ -364,12 +365,17 @@ const EditorButtons = observer(
                                     enabled={this.context.project._fullyLoaded}
                                 />
                             )}
-                            <IconAction
-                                title="Build"
-                                icon="material:build"
-                                onClick={() => this.context.build()}
-                                enabled={this.context.project._fullyLoaded}
-                            />
+                            {!(
+                                this.context.filePath &&
+                                isScrapbookItemFilePath(this.context.filePath)
+                            ) && (
+                                <IconAction
+                                    title="Build"
+                                    icon="material:build"
+                                    onClick={() => this.context.build()}
+                                    enabled={this.context.project._fullyLoaded}
+                                />
+                            )}
                         </div>
                     )}
 

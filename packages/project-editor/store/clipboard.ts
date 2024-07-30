@@ -1,5 +1,5 @@
 import { clipboard } from "@electron/remote";
-import { toJS } from "mobx";
+import { observable, runInAction, toJS } from "mobx";
 
 import {
     IEezObject,
@@ -175,13 +175,27 @@ export function getEezStudioDataFromDragEvent(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const pasteContentChanged = observable.box<number>(0);
+function onPasteContentChanged() {
+    runInAction(() => {
+        pasteContentChanged.set(pasteContentChanged.get() + 1);
+    });
+}
+
 export function copyProjectEditorDataToClipboard(text: string) {
     clipboard.writeBuffer(CLIPOARD_DATA_ID, Buffer.from(text, "utf-8"));
+    onPasteContentChanged();
 }
+
+document.addEventListener("copy", function (e) {
+    onPasteContentChanged();
+});
 
 export function getProjectEditorDataFromClipboard(
     projectStore: ProjectStore
 ): SerializedData | undefined {
+    pasteContentChanged.get();
+
     let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
     if (textBuffer && textBuffer.length > 0) {
         const text = textBuffer.toString("utf-8");

@@ -101,7 +101,14 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { isValidUrl } from "project-editor/core/util";
 import { reflectLvglVersion } from "project-editor/lvgl/page-runtime";
-import { pasteWithDependencies } from "project-editor/store/paste-with-dependencies";
+import {
+    canPasteWithDependencies,
+    pasteWithDependencies
+} from "project-editor/store/paste-with-dependencies";
+import {
+    isScrapbookItemFilePath,
+    setScrapbookItemEezProject
+} from "./scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1414,7 +1421,11 @@ export class ProjectStore {
     }
 
     get canCut() {
-        return true;
+        return (
+            this.navigationStore.selectedPanel &&
+            this.navigationStore.selectedPanel.cutSelection &&
+            this.navigationStore.selectedPanel.canCut!()
+        );
     }
 
     cut = () => {
@@ -1427,7 +1438,11 @@ export class ProjectStore {
     };
 
     get canCopy() {
-        return true;
+        return (
+            this.navigationStore.selectedPanel &&
+            this.navigationStore.selectedPanel.copySelection &&
+            this.navigationStore.selectedPanel.canCopy!()
+        );
     }
 
     copy = () => {
@@ -1443,25 +1458,24 @@ export class ProjectStore {
     };
 
     get canPaste() {
-        return true;
+        return (
+            canPasteWithDependencies(this) ||
+            (this.navigationStore.selectedPanel &&
+                this.navigationStore.selectedPanel.pasteSelection &&
+                this.navigationStore.selectedPanel.canPaste!())
+        );
     }
 
     paste = () => {
-        if (!this.canPaste) {
-            return;
-        }
-
-        if (
-            this.navigationStore.selectedPanel &&
-            this.navigationStore.selectedPanel.pasteSelection
-        ) {
-            this.navigationStore.selectedPanel.pasteSelection();
-        }
-    };
-
-    pasteFromToolbar = () => {
-        if (!pasteWithDependencies(this)) {
-            this.paste();
+        if (canPasteWithDependencies(this)) {
+            pasteWithDependencies(this);
+        } else {
+            if (
+                this.navigationStore.selectedPanel &&
+                this.navigationStore.selectedPanel.pasteSelection
+            ) {
+                this.navigationStore.selectedPanel.pasteSelection();
+            }
         }
     };
 }
@@ -1489,6 +1503,17 @@ export function getJSON(projectStore: ProjectStore, tabWidth: number = 2) {
 
 export function save(projectStore: ProjectStore, filePath: string) {
     const json = getJSON(projectStore);
+
+    if (isScrapbookItemFilePath(filePath)) {
+        return new Promise<void>((resolve, reject) => {
+            try {
+                setScrapbookItemEezProject(filePath, json);
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(filePath, json, "utf8", (err: any) => {
