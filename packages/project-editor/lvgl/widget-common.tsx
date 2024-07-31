@@ -129,9 +129,10 @@ export const LVGLWidgetFlagsProperty = observer(
                                                     this.context.updateObject(
                                                         widget,
                                                         {
-                                                            flags: flagsArr.join(
-                                                                "|"
-                                                            )
+                                                            widgetFlags:
+                                                                flagsArr.join(
+                                                                    "|"
+                                                                )
                                                         }
                                                     );
                                                 }
@@ -161,9 +162,10 @@ export const LVGLWidgetFlagsProperty = observer(
                                                     this.context.updateObject(
                                                         widget,
                                                         {
-                                                            flags: flagsArr.join(
-                                                                "|"
-                                                            )
+                                                            widgetFlags:
+                                                                flagsArr.join(
+                                                                    "|"
+                                                                )
                                                         }
                                                     );
                                                 }
