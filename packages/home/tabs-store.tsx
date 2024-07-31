@@ -51,7 +51,7 @@ import type { HomeTabCategory } from "eez-studio-shared/extensions/extension";
 import { homeLayoutModels } from "home/home-layout-models";
 import {
     getScrapbookItemEezProject,
-    getScrapbookItemName,
+    getScrapbookItemTabTitle,
     isScrapbookItemFilePath
 } from "project-editor/store/scrapbook";
 
@@ -674,15 +674,16 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get title() {
-        if (isScrapbookItemFilePath(this.filePath)) {
-            return `${getScrapbookItemName(this.filePath)} - Scrapbook Item`;
-        }
         return (this.modified ? MODIFED_MARK : "") + this.titleStr;
     }
 
     get titleStr() {
         if (this.projectStore) {
             return this.projectStore.title;
+        }
+
+        if (isScrapbookItemFilePath(this.filePath)) {
+            return getScrapbookItemTabTitle(this.filePath);
         }
 
         if (this.filePath) {
@@ -698,6 +699,10 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     get tooltipTitle() {
+        if (isScrapbookItemFilePath(this.filePath)) {
+            return this.titleStr;
+        }
+
         return this.filePath;
     }
 

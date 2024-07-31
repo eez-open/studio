@@ -235,18 +235,25 @@ static void hal_init() {
         lv_indev_drv_register(&indev_drv_1);
 #endif
 
+        // lv_group_t * my_group = lv_group_create();
+        // lv_group_set_default(my_group);
+
         // keyboard init
 #if LVGL_VERSION_MAJOR >= 9
         lv_indev_t * indev2 = lv_indev_create();
         lv_indev_set_type(indev2, LV_INDEV_TYPE_KEYPAD);
         lv_indev_set_read_cb(indev2, my_keyboard_read);
         //lv_indev_set_mode(indev2, LV_INDEV_MODE_EVENT);
+
+        //lv_indev_set_group(indev2, my_group);
 #else
         static lv_indev_drv_t indev_drv_2;
         lv_indev_drv_init(&indev_drv_2);
         indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
         indev_drv_2.read_cb = my_keyboard_read;
         lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
+
+        //lv_indev_set_group(kb_indev, my_group);
 #endif
 
         // mousewheel init
@@ -255,12 +262,16 @@ static void hal_init() {
         lv_indev_set_type(indev3, LV_INDEV_TYPE_ENCODER);
         lv_indev_set_read_cb(indev3, my_mousewheel_read);
         //lv_indev_set_mode(indev3, LV_INDEV_MODE_EVENT);
+
+        //lv_indev_set_group(indev3, my_group);
 #else
         static lv_indev_drv_t indev_drv_3;
         lv_indev_drv_init(&indev_drv_3);
         indev_drv_3.type = LV_INDEV_TYPE_ENCODER;
         indev_drv_3.read_cb = my_mousewheel_read;
         lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
+
+        //lv_indev_set_group(enc_indev, my_group);
 #endif
     }
 

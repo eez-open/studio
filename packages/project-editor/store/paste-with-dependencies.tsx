@@ -75,6 +75,11 @@ import type { LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const NOT_COMPATIBLE_WITH_PROJECT_TYPE =
+    "Not compatible with this project type, will be skipped.";
+
+////////////////////////////////////////////////////////////////////////////////
+
 type ObjectWithName = { name: string } & EezObject;
 
 type CommonStyle = {
@@ -87,7 +92,8 @@ type CommonStyle = {
 type Conflict =
     | { kind: "doesnt-exists" }
     | { kind: "exists-same" }
-    | { kind: "exists-different"; destinationObject: EezObject };
+    | { kind: "exists-different"; destinationObject: EezObject }
+    | { kind: "not-compatible"; message: string };
 
 type ConflictResolution =
     | "rename-source"
@@ -775,6 +781,42 @@ class PasteWithDependenciesModel {
 
     hasConflict(pasteObject: PasteObject): Conflict {
         if (pasteObject.object instanceof ProjectEditor.FlowFragmentClass) {
+            if (
+                this.sourceProjectStore.project.settings.general.projectType !=
+                this.destinationProjectStore.project.settings.general
+                    .projectType
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
+                };
+            }
+
+            const hasWidgets = pasteObject.object.components.find(
+                component => component instanceof ProjectEditor.WidgetClass
+            );
+
+            if (!this.destinationFlow) {
+                return {
+                    kind: "not-compatible",
+                    message: hasWidgets
+                        ? "No Page, UserWidget or UserAction selected, will be skipped."
+                        : "No Page or UserWidget selected, will be skipped."
+                };
+            }
+
+            if (
+                hasWidgets &&
+                this.destinationFlow &&
+                this.destinationFlow instanceof ProjectEditor.ActionClass
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message:
+                        "Can't paste Flow Fragment with the Widgets to the User Action, will be skipped."
+                };
+            }
+
             return { kind: "doesnt-exists" };
         }
 
@@ -782,6 +824,17 @@ class PasteWithDependenciesModel {
             pasteObject.object instanceof ProjectEditor.StyleClass ||
             pasteObject.object instanceof ProjectEditor.LVGLStyleClass
         ) {
+            if (
+                this.sourceProjectStore.project.settings.general.projectType !=
+                this.destinationProjectStore.project.settings.general
+                    .projectType
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
+                };
+            }
+
             const destinationStyle = pasteObject.destinationStyle;
             if (!destinationStyle) {
                 return { kind: "doesnt-exists" };
@@ -795,6 +848,23 @@ class PasteWithDependenciesModel {
                 kind: "exists-different",
                 destinationObject: destinationStyle
             };
+        }
+
+        if (
+            pasteObject.object instanceof ProjectEditor.FontClass ||
+            pasteObject.object instanceof ProjectEditor.PageClass ||
+            pasteObject.object instanceof ProjectEditor.ActionClass
+        ) {
+            if (
+                this.sourceProjectStore.project.settings.general.projectType !=
+                this.destinationProjectStore.project.settings.general
+                    .projectType
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
+                };
+            }
         }
 
         if (!pasteObject.destinationCollection) {
@@ -923,7 +993,9 @@ class PasteWithDependenciesModel {
 
     get posteObjectsWithConflicts() {
         return this.pasteObjects.filter(
-            pasteObject => pasteObject.conflict.kind == "exists-different"
+            pasteObject =>
+                pasteObject.conflict.kind == "exists-different" ||
+                pasteObject.conflict.kind == "not-compatible"
         );
     }
 
@@ -1036,7 +1108,10 @@ class PasteWithDependenciesModel {
         });
 
         for (const pasteObject of this.pasteObjects) {
-            if (pasteObject.conflict.kind == "exists-same") {
+            if (
+                pasteObject.conflict.kind == "exists-same" ||
+                pasteObject.conflict.kind == "not-compatible"
+            ) {
                 continue;
             }
 
@@ -1301,6 +1376,8 @@ const ConflictResolution = observer(
                 return "No conflict - Doesn't exists.";
             } else if (pasteObject.conflict.kind == "exists-same") {
                 return "No conflict - Exists, but same.";
+            } else if (pasteObject.conflict.kind == "not-compatible") {
+                return pasteObject.conflict.message;
             }
 
             return (
@@ -1706,16 +1783,48 @@ export function copyObjects(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getAllObjects(project: Project) {
-    const objects: {
+    interface ObjectInfo {
         object: EezObject;
         name: string;
         icon: any;
+    }
+
+    const objects: {
+        groupName: string;
+        objects: ObjectInfo[];
     }[] = [];
+
+    function addObject(groupName: string, object: ObjectInfo) {
+        let group = objects.find(group => group.groupName == groupName);
+        if (!group) {
+            group = {
+                groupName,
+                objects: []
+            };
+            objects.push(group);
+        }
+        group.objects.push(object);
+    }
+
+    if (project.userPages) {
+        project.userPages.forEach(page => {
+            if (page.name == FLOW_FRAGMENT_PAGE_NAME) {
+                addObject("Flow Fragment", {
+                    object: page,
+                    name:
+                        page.name == FLOW_FRAGMENT_PAGE_NAME
+                            ? "FlowFragment"
+                            : page.name,
+                    icon: ProjectEditor.PageClass.classInfo.icon!
+                });
+            }
+        });
+    }
 
     if (project.variables) {
         if (project.variables.globalVariables) {
             project.variables.globalVariables.forEach(variable => {
-                objects.push({
+                addObject("Variables", {
                     object: variable,
                     name: variable.name,
                     icon: ProjectEditor.VariableClass.classInfo.icon!
@@ -1725,7 +1834,7 @@ export function getAllObjects(project: Project) {
 
         if (project.variables.structures) {
             project.variables.structures.forEach(structure => {
-                objects.push({
+                addObject("Structures", {
                     object: structure,
                     name: structure.name,
                     icon: ProjectEditor.StructureClass.classInfo.icon!
@@ -1735,7 +1844,7 @@ export function getAllObjects(project: Project) {
 
         if (project.variables.enums) {
             project.variables.enums.forEach(enumObject => {
-                objects.push({
+                addObject("Enums", {
                     object: enumObject,
                     name: enumObject.name,
                     icon: ProjectEditor.EnumClass.classInfo.icon!
@@ -1746,7 +1855,7 @@ export function getAllObjects(project: Project) {
 
     if (project.actions) {
         project.actions.forEach(action => {
-            objects.push({
+            addObject("User Actions", {
                 object: action,
                 name: action.name,
                 icon: ProjectEditor.ActionClass.classInfo.icon!
@@ -1756,20 +1865,22 @@ export function getAllObjects(project: Project) {
 
     if (project.userPages) {
         project.userPages.forEach(page => {
-            objects.push({
-                object: page,
-                name:
-                    page.name == FLOW_FRAGMENT_PAGE_NAME
-                        ? "FlowFragment"
-                        : page.name,
-                icon: ProjectEditor.PageClass.classInfo.icon!
-            });
+            if (page.name != FLOW_FRAGMENT_PAGE_NAME) {
+                addObject("Pages", {
+                    object: page,
+                    name:
+                        page.name == FLOW_FRAGMENT_PAGE_NAME
+                            ? "FlowFragment"
+                            : page.name,
+                    icon: ProjectEditor.PageClass.classInfo.icon!
+                });
+            }
         });
     }
 
     if (project.userWidgets) {
         project.userWidgets.forEach(userWidget => {
-            objects.push({
+            addObject("User Widgets", {
                 object: userWidget,
                 name: userWidget.name,
                 icon: USER_WIDGET_ICON
@@ -1780,7 +1891,7 @@ export function getAllObjects(project: Project) {
     if (project.styles) {
         function addStyles(styles: Style[]) {
             styles.forEach(style => {
-                objects.push({
+                addObject("Styles", {
                     object: style,
                     name: style.name,
                     icon: ProjectEditor.StyleClass.classInfo.icon!
@@ -1796,7 +1907,7 @@ export function getAllObjects(project: Project) {
     if (project.lvglStyles) {
         function addStyles(styles: LVGLStyle[]) {
             styles.forEach(style => {
-                objects.push({
+                addObject("LVGL Styles", {
                     object: style,
                     name: style.name,
                     icon: ProjectEditor.StyleClass.classInfo.icon!
@@ -1811,7 +1922,7 @@ export function getAllObjects(project: Project) {
 
     if (project.bitmaps) {
         project.bitmaps.forEach(bitmap => {
-            objects.push({
+            addObject("Bitmaps", {
                 object: bitmap,
                 name: bitmap.name,
                 icon: ProjectEditor.BitmapClass.classInfo.icon!
@@ -1821,7 +1932,7 @@ export function getAllObjects(project: Project) {
 
     if (project.fonts) {
         project.fonts.forEach(font => {
-            objects.push({
+            addObject("Fonts", {
                 object: font,
                 name: font.name,
                 icon: ProjectEditor.FontClass.classInfo.icon!

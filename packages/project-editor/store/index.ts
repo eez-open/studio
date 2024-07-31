@@ -106,6 +106,7 @@ import {
     pasteWithDependencies
 } from "project-editor/store/paste-with-dependencies";
 import {
+    getScrapbookItemTabTitle,
     isScrapbookItemFilePath,
     setScrapbookItemEezProject
 } from "./scrapbook";
@@ -509,6 +510,10 @@ export class ProjectStore {
 
     get title() {
         if (this.filePath) {
+            if (isScrapbookItemFilePath(this.filePath)) {
+                return getScrapbookItemTabTitle(this.filePath);
+            }
+
             if (this.filePath.endsWith(".eez-project")) {
                 return path.basename(this.filePath, ".eez-project");
             } else {
@@ -554,12 +559,14 @@ export class ProjectStore {
             return;
         }
 
-        ipcRenderer.send("setMruFilePath", {
-            filePath: this.filePath,
-            projectType: this.project?.settings?.general?.projectType,
-            hasFlowSupport:
-                this.project?.projectTypeTraits.hasFlowSupport ?? false
-        });
+        if (this.filePath && !isScrapbookItemFilePath(this.filePath)) {
+            ipcRenderer.send("setMruFilePath", {
+                filePath: this.filePath,
+                projectType: this.project?.settings?.general?.projectType,
+                hasFlowSupport:
+                    this.project?.projectTypeTraits.hasFlowSupport ?? false
+            });
+        }
     }
 
     getFilePathRelativeToProjectPath(absoluteFilePath: string) {

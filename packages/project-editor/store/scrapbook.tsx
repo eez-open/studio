@@ -37,11 +37,12 @@ import { validators } from "eez-studio-shared/validation";
 import { stringCompare } from "eez-studio-shared/string";
 import { layoutModels } from "eez-studio-ui/side-dock";
 import { ProjectEditorTab, tabs } from "home/tabs-store";
+import { EezObject } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const DEFAULT_SCRAPBOOK_FILE_PATH = getUserDataPath(
-    `scrapbooks${path.sep}default.eez-scrapbook`
+    `scrapbooks${path.sep}Default.eez-scrapbook`
 );
 
 console.log(DEFAULT_SCRAPBOOK_FILE_PATH);
@@ -593,24 +594,52 @@ class ScrapbookManagerModel {
 
         const project = loadProject(projectStore, item.eezProject, false);
 
-        projectStore.setProject(project, SCRAPBOOK_ITEM_FILE_PREFIX + item.id);
+        projectStore.setProject(project, model.getItemUrl(item));
 
-        copyObjects(
-            projectStore,
-            getAllObjects(project).map(object => object.object),
-            destinationProjectStore
+        const sourceObjects: EezObject[] = [];
+
+        getAllObjects(project).forEach(group => {
+            group.objects.forEach(objectInfo => {
+                sourceObjects.push(objectInfo.object);
+            });
+        });
+
+        copyObjects(projectStore, sourceObjects, destinationProjectStore);
+    }
+
+    getItemUrl(item: ScrapbookItem) {
+        return `${SCRAPBOOK_ITEM_FILE_PREFIX}${this.selectedFile}|${item.id}`;
+    }
+
+    parseItemUrl(itemUrl: string) {
+        if (!itemUrl.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX)) {
+            return undefined;
+        }
+
+        let filePathAndItemId = itemUrl.substring(
+            SCRAPBOOK_ITEM_FILE_PREFIX.length
         );
+
+        const index = filePathAndItemId.indexOf("|");
+        if (index == -1) {
+            return undefined;
+        }
+
+        let filePath = filePathAndItemId.substring(0, index);
+        let itemId = filePathAndItemId.substring(index + 1);
+
+        return {
+            filePath,
+            itemId
+        };
     }
 
     openItemProject(item: ScrapbookItem) {
-        const tabId = `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`;
+        const itemUrl = this.getItemUrl(item);
 
-        let projectTab = tabs.findProjectEditorTab(tabId, false);
+        let projectTab = tabs.findProjectEditorTab(itemUrl, false);
         if (!projectTab) {
-            projectTab = ProjectEditor.homeTabs!.addProjectTab(
-                `${SCRAPBOOK_ITEM_FILE_PREFIX}${item.id}`,
-                false
-            );
+            projectTab = ProjectEditor.homeTabs!.addProjectTab(itemUrl, false);
         }
 
         tabs.makeActive(projectTab);
@@ -809,21 +838,56 @@ const ItemDetails = observer(
                                     Resources in this scrapbook item:
                                 </label>
                                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources">
-                                    {model.store.selectedItem.allObjects.map(
-                                        (object, i) => (
-                                            <div
-                                                key={i}
-                                                className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Item"
-                                            >
-                                                {object.icon && (
-                                                    <Icon icon={object.icon} />
-                                                )}
-                                                <span className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_ItemName">
-                                                    {object.name}
-                                                </span>
-                                            </div>
-                                        )
-                                    )}
+                                    <table>
+                                        <tbody>
+                                            {model.store.selectedItem.allObjects.map(
+                                                (group, i) => (
+                                                    <tr key={group.groupName}>
+                                                        <td>
+                                                            {group.objects[0]
+                                                                .icon && (
+                                                                <Icon
+                                                                    icon={
+                                                                        group
+                                                                            .objects[0]
+                                                                            .icon
+                                                                    }
+                                                                />
+                                                            )}
+                                                            <span className="ps-2">
+                                                                {
+                                                                    group.groupName
+                                                                }
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Group_Objects">
+                                                                {group.groupName !=
+                                                                "Flow Fragment"
+                                                                    ? group.objects.map(
+                                                                          objectInfo => (
+                                                                              <div
+                                                                                  key={
+                                                                                      objectInfo
+                                                                                          .object
+                                                                                          .objID
+                                                                                  }
+                                                                                  className="EezStudio_ProjectEditorScrapbook_ItemDetails_Resources_Group_Object"
+                                                                              >
+                                                                                  {
+                                                                                      objectInfo.name
+                                                                                  }
+                                                                              </div>
+                                                                          )
+                                                                      )
+                                                                    : null}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </form>
@@ -941,53 +1005,89 @@ export function showScrapbookManager() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function isScrapbookItemFilePath(filePath: string) {
-    return filePath.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX);
+export function isScrapbookItemFilePath(itemUrl: string) {
+    return model.parseItemUrl(itemUrl) != undefined;
 }
 
-export function getScrapbookItemEezProject(filePath: string) {
-    if (!isScrapbookItemFilePath(filePath)) {
+export function getScrapbookItemTabTitle(itemUrl: string) {
+    const result = model.parseItemUrl(itemUrl);
+
+    if (!result) {
+        throw itemUrl;
+    }
+
+    return `${getScrapbookItemName(itemUrl)} - ${
+        path.parse(result.filePath).name
+    } - Scrapbook Item`;
+}
+
+export function getScrapbookItemEezProject(itemUrl: string) {
+    const result = model.parseItemUrl(itemUrl);
+
+    if (!result) {
         throw "Not a scrapbook item";
     }
 
-    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+    const { filePath, itemId } = result;
 
-    const item = model.store.project.items.find(item => item.id == itemId);
+    if (filePath == model.selectedFile) {
+        const item = model.store.project.items.find(item => item.id == itemId);
 
-    if (!item) {
+        if (!item) {
+            throw "Scrapbook item not found";
+        }
+
+        return item.eezProject;
+    } else {
+        // TODO
         throw "Scrapbook item not found";
     }
-
-    return item.eezProject;
 }
 
 export function setScrapbookItemEezProject(
-    filePath: string,
+    itemUrl: string,
     eezProject: string
 ) {
-    if (!isScrapbookItemFilePath(filePath)) {
+    const result = model.parseItemUrl(itemUrl);
+
+    if (!result) {
         throw "Not a scrapbook item";
     }
 
-    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+    const { filePath, itemId } = result;
 
-    const item = model.store.project.items.find(item => item.id == itemId);
+    if (filePath == model.selectedFile) {
+        const item = model.store.project.items.find(item => item.id == itemId);
 
-    if (!item) {
-        throw "Scrapbook item not found";
+        if (!item) {
+            throw "Scrapbook item not found";
+        }
+
+        model.store.setItemEezProject(item, eezProject);
+    } else {
+        // TODO
     }
-
-    model.store.setItemEezProject(item, eezProject);
 }
 
-export function getScrapbookItemName(filePath: string) {
-    const itemId = filePath.substring(SCRAPBOOK_ITEM_FILE_PREFIX.length);
+export function getScrapbookItemName(itemUrl: string) {
+    const result = model.parseItemUrl(itemUrl);
 
-    const item = model.store.project.items.find(item => item.id == itemId);
-
-    if (!item) {
-        throw "not found";
+    if (!result) {
+        return "[NOT FOUND]";
     }
 
-    return item.name;
+    const { filePath, itemId } = result;
+
+    if (filePath == model.selectedFile) {
+        const item = model.store.project.items.find(item => item.id == itemId);
+
+        if (!item) {
+            return "[NOT FOUND]";
+        }
+
+        return item.name;
+    } else {
+        // TODO
+        return "[NOT FOUND]";
+    }
 }
