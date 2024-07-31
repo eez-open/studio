@@ -237,7 +237,7 @@ export class LVGLWidget extends Widget {
     hiddenFlagType: LVGLPropertyType;
     clickableFlag: string | boolean;
     clickableFlagType: LVGLPropertyType;
-    flags: string;
+    widgetFlags: string;
     flagScrollbarMode: string;
     flagScrollDirection: string;
 
@@ -397,7 +397,7 @@ export class LVGLWidget extends Widget {
                 }
             ),
             {
-                name: "flags",
+                name: "widgetFlags",
                 type: PropertyType.String,
                 propertyGridGroup: flagsGroup,
                 propertyGridRowComponent: LVGLWidgetFlagsProperty,
@@ -799,8 +799,8 @@ export class LVGLWidget extends Widget {
                 if (lvgl.oldInitFlags && lvgl.oldDefaultFlags) {
                     if ((jsWidget as any).flags == lvgl.oldInitFlags) {
                         (jsWidget as any).flags = lvgl.defaultFlags;
-                        //console.log("migrate flags", jsWidget.type);
-                        //console.log("\tOld flags unchanged");
+                        console.log("migrate flags", jsWidget.type);
+                        console.log("\tOld flags unchanged");
                     } else {
                         const beforeFlags = (jsWidget as any).flags;
 
@@ -842,8 +842,11 @@ export class LVGLWidget extends Widget {
                         }
                     }
                 }
-            } else {
-                (jsWidget as any).flags = "";
+
+                (jsWidget as any).widgetFlags = (jsWidget as any).flags;
+                delete (jsWidget as any).flags;
+            } else if ((jsWidget as any).widgetFlags == undefined) {
+                (jsWidget as any).widgetFlags = "";
             }
 
             LVGL_REACTIVE_FLAGS.forEach(flag => {
@@ -979,7 +982,7 @@ export class LVGLWidget extends Widget {
             widthUnit: observable,
             heightUnit: observable,
             children: observable,
-            flags: observable,
+            widgetFlags: observable,
             hiddenFlag: observable,
             hiddenFlagType: observable,
             clickableFlag: observable,
@@ -1161,8 +1164,10 @@ export class LVGLWidget extends Widget {
 
     get allFlags() {
         const flags =
-            this.flags.trim() != ""
-                ? (this.flags.split("|") as (keyof typeof LVGL_FLAG_CODES)[])
+            this.widgetFlags.trim() != ""
+                ? (this.widgetFlags.split(
+                      "|"
+                  ) as (keyof typeof LVGL_FLAG_CODES)[])
                 : [];
 
         LVGL_REACTIVE_FLAGS.forEach(flag => {

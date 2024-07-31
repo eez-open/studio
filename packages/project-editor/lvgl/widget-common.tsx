@@ -67,7 +67,7 @@ export const LVGLWidgetFlagsProperty = observer(
                     {flagNames.map(flagName => {
                         let values = this.props.objects.map(
                             (widget: LVGLWidget) =>
-                                (widget.flags || "")
+                                (widget.widgetFlags || "")
                                     .split("|")
                                     .indexOf(flagName) != -1
                         );
@@ -114,8 +114,9 @@ export const LVGLWidgetFlagsProperty = observer(
                                                 }
 
                                                 const flagsArr =
-                                                    widget.flags.trim() != ""
-                                                        ? widget.flags.split(
+                                                    widget.widgetFlags.trim() !=
+                                                    ""
+                                                        ? widget.widgetFlags.split(
                                                               "|"
                                                           )
                                                         : [];
@@ -151,7 +152,7 @@ export const LVGLWidgetFlagsProperty = observer(
                                                 }
 
                                                 const flagsArr = (
-                                                    widget.flags || ""
+                                                    widget.widgetFlags || ""
                                                 ).split("|");
                                                 const i =
                                                     flagsArr.indexOf(flagName);

@@ -1014,7 +1014,7 @@ export function getDefaultValue(
             if (typeof classInfo.lvgl == "function") {
                 if (projectStore) {
                     defaultValue = objectClone(defaultValue);
-                    defaultValue.flags = removeClickable(
+                    defaultValue.widgetFlags = removeClickable(
                         classInfo.lvgl(
                             projectStore.project,
                             projectStore.project
@@ -1023,7 +1023,7 @@ export function getDefaultValue(
                 }
             } else {
                 defaultValue = objectClone(defaultValue);
-                defaultValue.flags = removeClickable(
+                defaultValue.widgetFlags = removeClickable(
                     classInfo.lvgl.defaultFlags
                 );
             }

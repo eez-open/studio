@@ -838,8 +838,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     runInAction(() => {
                         for (const lvglWidget of this.lvglWidgetsMap.values()) {
                             const flags =
-                                lvglWidget.flags.trim() != ""
-                                    ? lvglWidget.flags.split("|")
+                                lvglWidget.widgetFlags.trim() != ""
+                                    ? lvglWidget.widgetFlags.split("|")
                                     : [];
 
                             const i = flags.indexOf("HIDDEN");
@@ -870,7 +870,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                                 flags.push("HIDDEN");
                             }
 
-                            lvglWidget.flags = flags.join("|");
+                            lvglWidget.widgetFlags = flags.join("|");
                         }
 
                         const lvglScreenWidget = this.page.lvglScreenWidget!;
@@ -1135,7 +1135,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                         this.project._store,
                         classInfo
                     );
-                    let objInitFlags = defaultValue.flags;
+                    let objInitFlags = defaultValue.widgetFlags;
                     if (defaultValue.hiddenFlag) {
                         objInitFlags = "HIDDEN|" + objInitFlags;
                     }
