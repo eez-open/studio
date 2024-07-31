@@ -99,6 +99,7 @@ import type { evalProperty } from "project-editor/flow/helper";
 import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
+import type { Color } from "project-editor/features/style/theme";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -136,6 +137,7 @@ export interface IProjectEditor {
     StyleClass: typeof Style;
     BitmapClass: typeof Bitmap;
     FontClass: typeof Font;
+    ColorClass: typeof Color;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLScreenWidgetClass: typeof LVGLScreenWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;

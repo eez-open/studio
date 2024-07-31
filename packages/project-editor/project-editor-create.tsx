@@ -119,6 +119,7 @@ import { PropertyType } from "project-editor/core/object";
 import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
+import { Color } from "project-editor/features/style/theme";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -184,6 +185,7 @@ export async function createProjectEditor(
         StyleClass: Style,
         BitmapClass: Bitmap,
         FontClass: Font,
+        ColorClass: Color,
         LVGLWidgetClass: LVGLWidget,
         LVGLScreenWidgetClass: LVGLScreenWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,

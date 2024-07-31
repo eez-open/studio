@@ -25,7 +25,10 @@ import {
 } from "project-editor/store";
 import { replaceObjectReference } from "project-editor/core/search";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import {
+    IFieldProperties,
+    showGenericDialog
+} from "eez-studio-ui/generic-dialog";
 
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 
@@ -35,6 +38,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import { getName, NamingConvention } from "project-editor/build/helper";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import { isFirmwareProject } from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -176,26 +180,31 @@ export const ThemesSideView = observer(
         onEditColorName = (itemId: string) => {
             const color = this.context.getObjectFromObjectId(itemId) as Color;
 
+            const fields: IFieldProperties[] = [];
+
+            if (isFirmwareProject(color)) {
+                fields.push({
+                    name: "id",
+                    type: "optional-integer",
+                    validators: [
+                        validators.unique(color, getParent(color)),
+                        validators.rangeInclusive(0, 1000)
+                    ]
+                });
+            }
+
+            fields.push({
+                name: "name",
+                type: "string",
+                validators: [
+                    validators.required,
+                    validators.unique(color, getParent(color))
+                ]
+            });
+
             showGenericDialog({
                 dialogDefinition: {
-                    fields: [
-                        {
-                            name: "id",
-                            type: "optional-integer",
-                            validators: [
-                                validators.unique(color, getParent(color)),
-                                validators.rangeInclusive(0, 1000)
-                            ]
-                        },
-                        {
-                            name: "name",
-                            type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique(color, getParent(color))
-                            ]
-                        }
-                    ]
+                    fields
                 },
                 values: color
             })
@@ -301,6 +310,14 @@ export class Color extends EezObject {
     id: number | undefined;
     name: string;
 
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            toJSON: computed
+        });
+    }
+
     override makeEditable() {
         super.makeEditable();
 
@@ -308,6 +325,14 @@ export class Color extends EezObject {
             id: observable,
             name: observable
         });
+    }
+
+    get toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            colorValues: this.colorValues
+        };
     }
 
     static classInfo: ClassInfo = {
@@ -332,6 +357,38 @@ export class Color extends EezObject {
                 unique: true
             }
         ],
+        icon: (
+            <svg width={20} height={20} viewBox="0 0 20 20">
+                <circle
+                    cx={10.859}
+                    cy={5.521}
+                    r={1.5}
+                    fill="var(--iconPrimary, #222)"
+                />
+                <circle
+                    cx={6.859}
+                    cy={7.521}
+                    r={1.5}
+                    fill="var(--iconPrimary, #222)"
+                />
+                <circle
+                    cx={6.859}
+                    cy={12.521}
+                    r={1.5}
+                    fill="var(--iconPrimary, #222)"
+                />
+                <circle
+                    cx={10.859}
+                    cy={14.521}
+                    r={1.5}
+                    fill="var(--iconPrimary, #222)"
+                />
+                <path
+                    d="M11.003 18.771c-2.595-.018-4.935-.91-6.662-2.507-1.762-1.631-2.732-3.814-2.732-6.145s.97-4.514 2.732-6.144C6.192 2.257 8.683 1.27 11.17 1.27c2.157 0 4.143.737 5.594 2.074 1.048.97 1.626 2.27 1.626 3.659s-.578 2.69-1.625 3.66l-1.204 1.12c-.086.078-.188.206-.188.362s.102.284.188.364c.146.136.18.169.516.226.414.073.95.166 1.373.576l.001.001c.396.386.626.979.618 1.586-.008.59-.234 1.119-.636 1.49-1.625 1.513-3.97 2.382-6.431 2.382m.168-16c-2.114 0-4.233.84-5.81 2.304C3.907 6.42 3.108 8.211 3.108 10.12s.8 3.7 2.251 5.043c1.431 1.325 3.465 2.094 5.581 2.11 2.147 0 4.12-.723 5.473-1.983.133-.123.154-.31.156-.41.003-.223-.083-.41-.164-.49-.092-.088-.352-.134-.562-.17-.61-.106-.923-.254-1.306-.614-.428-.397-.664-.916-.664-1.46 0-.542.236-1.061.666-1.46l1.205-1.122c.74-.683 1.146-1.592 1.146-2.56s-.407-1.873-1.144-2.556c-1.172-1.08-2.797-1.675-4.576-1.675"
+                    fill="var(--iconPrimary, #222)"
+                />
+            </svg>
+        ),
         check: (color: Color, messages: IMessage[]) => {
             const projectStore = getProjectStore(color);
 
@@ -458,6 +515,20 @@ export class Color extends EezObject {
             menuItems.unshift(...additionalMenuItems);
         }
     };
+
+    get colorValues() {
+        const colorValues: { [colorName: string]: string } = {};
+
+        const project = ProjectEditor.getProject(this);
+        for (const theme of project.themes) {
+            colorValues[this.name] = project.getThemeColor(
+                theme.name,
+                this.name
+            );
+        }
+
+        return colorValues;
+    }
 }
 
 registerClass("Color", Color);

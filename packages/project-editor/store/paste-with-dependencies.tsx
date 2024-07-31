@@ -61,7 +61,7 @@ import {
     FLOW_FRAGMENT_PAGE_NAME,
     type Page
 } from "project-editor/features/page/page";
-import { Project } from "project-editor/project/project";
+import { Project, ProjectType } from "project-editor/project/project";
 import { isArray } from "lodash";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
 import {
@@ -198,6 +198,8 @@ class PasteObject {
             collection = this.model.destinationProjectStore.project.bitmaps;
         } else if (this.object instanceof ProjectEditor.FontClass) {
             collection = this.model.destinationProjectStore.project.fonts;
+        } else if (this.object instanceof ProjectEditor.ColorClass) {
+            collection = this.model.destinationProjectStore.project.colors;
         }
 
         return collection;
@@ -366,6 +368,8 @@ class PasteWithDependenciesModel {
             addObject(projectStore.project.bitmaps, object);
         } else if (object instanceof ProjectEditor.FontClass) {
             addObject(projectStore.project.fonts, object);
+        } else if (object instanceof ProjectEditor.ColorClass) {
+            addObject(projectStore.project.colors, object);
         }
     }
 
@@ -867,6 +871,18 @@ class PasteWithDependenciesModel {
             }
         }
 
+        if (pasteObject.object instanceof ProjectEditor.ColorClass) {
+            if (
+                this.destinationProjectStore.project.settings.general
+                    .projectType == ProjectType.LVGL
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
+                };
+            }
+        }
+
         if (!pasteObject.destinationCollection) {
             return { kind: "doesnt-exists" };
         }
@@ -920,8 +936,10 @@ class PasteWithDependenciesModel {
                         return 9;
                     } else if (object instanceof ProjectEditor.FontClass) {
                         return 10;
-                    } else {
+                    } else if (object instanceof ProjectEditor.ColorClass) {
                         return 11;
+                    } else {
+                        return 12;
                     }
                 }
 
@@ -1199,6 +1217,8 @@ class PasteWithDependenciesModel {
                     collection = this.destinationProjectStore.project.bitmaps;
                 } else if (object instanceof ProjectEditor.FontClass) {
                     collection = this.destinationProjectStore.project.fonts;
+                } else if (object instanceof ProjectEditor.ColorClass) {
+                    collection = this.destinationProjectStore.project.colors;
                 }
 
                 if (collection) {
@@ -1936,6 +1956,16 @@ export function getAllObjects(project: Project) {
                 object: font,
                 name: font.name,
                 icon: ProjectEditor.FontClass.classInfo.icon!
+            });
+        });
+    }
+
+    if (project.colors) {
+        project.colors.forEach(color => {
+            addObject("Colors", {
+                object: color,
+                name: color.name,
+                icon: ProjectEditor.ColorClass.classInfo.icon!
             });
         });
     }
