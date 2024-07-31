@@ -456,7 +456,7 @@ export class LVGLBuild extends Build {
                                     );
                                 } else {
                                     build.line(
-                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *((uint32_t *)lv_event_get_param(e)));`
+                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, (uint32_t)(*((lv_key_t *)lv_event_get_param(e))));`
                                     );
                                 }
                             } else if (eventHandler.eventName == "ROTARY") {
