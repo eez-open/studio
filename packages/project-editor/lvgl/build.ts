@@ -442,7 +442,7 @@ export class LVGLBuild extends Build {
                             if (eventHandler.eventName == "GESTURE") {
                                 if (build.isV9) {
                                     build.line(
-                                        `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));`
+                                        `flowPropagateValueUnt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));`
                                     );
                                 } else {
                                     build.line(
@@ -456,7 +456,7 @@ export class LVGLBuild extends Build {
                                     );
                                 } else {
                                     build.line(
-                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *((int32_t *)lv_event_get_param(e)));`
+                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *((uint32_t *)lv_event_get_param(e)));`
                                     );
                                 }
                             } else if (eventHandler.eventName == "ROTARY") {

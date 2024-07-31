@@ -432,9 +432,9 @@ void flow_event_callback(lv_event_t *e) {
 #endif
     } else if (event == LV_EVENT_KEY) {
 #if LVGL_VERSION_MAJOR >= 9
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index,  lv_event_get_key());
+        flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index,  lv_event_get_key());
 #else
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, *((int32_t *)lv_event_get_param(e))));
+        flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index, *((uint32_t *)lv_event_get_param(e))));
 #endif
 #if LVGL_VERSION_MAJOR >= 9
     } else if (event == LV_EVENT_ROTARY) {
