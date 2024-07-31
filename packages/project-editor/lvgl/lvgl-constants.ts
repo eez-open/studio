@@ -214,6 +214,23 @@ export const LVGL_DIR_ENUM_NAME = "$LVGLDir";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_KEY_UP = 17;
+export const LV_KEY_DOWN = 18;
+export const LV_KEY_RIGHT = 19;
+export const LV_KEY_LEFT = 20;
+export const LV_KEY_ESC = 27;
+export const LV_KEY_DEL = 127;
+export const LV_KEY_BACKSPACE = 8;
+export const LV_KEY_ENTER = 10;
+export const LV_KEY_NEXT = 9;
+export const LV_KEY_PREV = 11;
+export const LV_KEY_HOME = 2;
+export const LV_KEY_END = 3;
+
+export const LVGL_KEY_ENUM_NAME = "$LVGLKey";
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
     none: LV_DIR_NONE,
     left: LV_DIR_LEFT,

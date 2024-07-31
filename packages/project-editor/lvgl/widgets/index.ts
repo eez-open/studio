@@ -52,7 +52,20 @@ import {
     LV_DIR_RIGHT,
     LV_DIR_TOP,
     LV_DIR_VER,
-    LVGL_DIR_ENUM_NAME
+    LV_KEY_BACKSPACE,
+    LV_KEY_DEL,
+    LV_KEY_DOWN,
+    LV_KEY_END,
+    LV_KEY_ENTER,
+    LV_KEY_ESC,
+    LV_KEY_HOME,
+    LV_KEY_LEFT,
+    LV_KEY_NEXT,
+    LV_KEY_PREV,
+    LV_KEY_RIGHT,
+    LV_KEY_UP,
+    LVGL_DIR_ENUM_NAME,
+    LVGL_KEY_ENUM_NAME
 } from "../lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +168,61 @@ registerSystemEnum({
         {
             name: "All",
             value: LV_DIR_ALL
+        }
+    ],
+    projectTypes: [ProjectType.LVGL]
+});
+
+registerSystemEnum({
+    name: LVGL_KEY_ENUM_NAME,
+    members: [
+        {
+            name: "Up",
+            value: LV_KEY_UP
+        },
+        {
+            name: "Down",
+            value: LV_KEY_DOWN
+        },
+        {
+            name: "Right",
+            value: LV_KEY_RIGHT
+        },
+        {
+            name: "Left",
+            value: LV_KEY_LEFT
+        },
+        {
+            name: "Esc",
+            value: LV_KEY_ESC
+        },
+        {
+            name: "Del",
+            value: LV_KEY_DEL
+        },
+        {
+            name: "Backspace",
+            value: LV_KEY_BACKSPACE
+        },
+        {
+            name: "Enter",
+            value: LV_KEY_ENTER
+        },
+        {
+            name: "Next",
+            value: LV_KEY_NEXT
+        },
+        {
+            name: "Prev",
+            value: LV_KEY_PREV
+        },
+        {
+            name: "Home",
+            value: LV_KEY_HOME
+        },
+        {
+            name: "End",
+            value: LV_KEY_END
         }
     ],
     projectTypes: [ProjectType.LVGL]
