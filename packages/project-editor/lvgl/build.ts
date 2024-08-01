@@ -450,15 +450,9 @@ export class LVGLBuild extends Build {
                                     );
                                 }
                             } else if (eventHandler.eventName == "KEY") {
-                                if (build.isV9) {
-                                    build.line(
-                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_key(e)));`
-                                    );
-                                } else {
-                                    build.line(
-                                        `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, (uint32_t)(*((lv_key_t *)lv_event_get_param(e))));`
-                                    );
-                                }
+                                build.line(
+                                    `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_key(e)));`
+                                );
                             } else if (eventHandler.eventName == "ROTARY") {
                                 build.line(
                                     `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_rotary_diff(e));`
@@ -466,7 +460,7 @@ export class LVGLBuild extends Build {
                             } else if (
                                 eventHandler.eventName == "VALUE_CHANGED" &&
                                 widget instanceof
-                                ProjectEditor.LVGLButtonMatrixWidgetClass
+                                    ProjectEditor.LVGLButtonMatrixWidgetClass
                             ) {
                                 build.line(
                                     `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *(uint32_t *)lv_event_get_param(e));`
@@ -563,7 +557,8 @@ export class LVGLBuild extends Build {
         build.indent();
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
-            `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${this.project.settings.general.darkTheme ? "true" : "false"
+            `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
+                this.project.settings.general.darkTheme ? "true" : "false"
             }, LV_FONT_DEFAULT);`
         );
         build.line("lv_disp_set_theme(dispp, theme);");
@@ -782,9 +777,10 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                 variable.native
             ) {
                 build.line(
-                    `{ NATIVE_VAR_TYPE_${isEnumType(variable.type)
-                        ? "INTEGER"
-                        : variable.type.toUpperCase()
+                    `{ NATIVE_VAR_TYPE_${
+                        isEnumType(variable.type)
+                            ? "INTEGER"
+                            : variable.type.toUpperCase()
                     }, ${this.getVariableGetterFunctionName(
                         variable.name
                     )}, ${this.getVariableSetterFunctionName(
@@ -872,9 +868,9 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     this.project._store.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
                     ) +
-                    "/" +
-                    output +
-                    ".c",
+                        "/" +
+                        output +
+                        ".c",
                     await getLvglBitmapSourceFile(
                         bitmap,
                         this.getImageVariableName(bitmap)
@@ -906,9 +902,9 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     this.project._store.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
                     ) +
-                    "/" +
-                    output +
-                    ".c",
+                        "/" +
+                        output +
+                        ".c",
                     font.lvglSourceFile
                 );
             }
@@ -923,27 +919,27 @@ export async function generateSourceCodeForEezFramework(
 ) {
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow.cpp");
-    } catch (err) { }
+    } catch (err) {}
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow.h");
-    } catch (err) { }
+    } catch (err) {}
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.c");
-    } catch (err) { }
+    } catch (err) {}
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.h");
-    } catch (err) { }
+    } catch (err) {}
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.c");
-    } catch (err) { }
+    } catch (err) {}
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.h");
-    } catch (err) { }
+    } catch (err) {}
 
     if (
         !(
@@ -967,7 +963,7 @@ export async function generateSourceCodeForEezFramework(
             structs_H,
             "utf-8"
         );
-    } catch (err) { }
+    } catch (err) {}
 
     // post fix ui.h
     try {
@@ -984,7 +980,7 @@ export async function generateSourceCodeForEezFramework(
             ui_H,
             "utf-8"
         );
-    } catch (err) { }
+    } catch (err) {}
 
     const eezframeworkAmalgamationPath = isDev
         ? resolve(`${sourceRootDir()}/../resources/eez-framework-amalgamation`)
@@ -1042,13 +1038,13 @@ export async function generateSourceCodeForEezFramework(
     eezH = eezH.replace(
         "#define EEZ_FLOW_QUEUE_SIZE 1000",
         "#define EEZ_FLOW_QUEUE_SIZE " +
-        project.settings.build.executionQueueSize
+            project.settings.build.executionQueueSize
     );
 
     eezH = eezH.replace(
         "#define EEZ_FLOW_EVAL_STACK_SIZE 20",
         "#define EEZ_FLOW_EVAL_STACK_SIZE " +
-        project.settings.build.expressionEvaluatorStackSize
+            project.settings.build.expressionEvaluatorStackSize
     );
 
     await fs.promises.writeFile(
