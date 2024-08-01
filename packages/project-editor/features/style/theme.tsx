@@ -629,11 +629,13 @@ export class Theme extends EezObject implements ITheme {
     set colors(value: string[]) {
         const project = ProjectEditor.getProject(this);
         for (let i = 0; i < value.length; i++) {
-            project.setThemeColor(
-                this.objID,
-                project.colors[i].objID,
-                value[i]
-            );
+            if (i < project.colors.length) {
+                project.setThemeColor(
+                    this.objID,
+                    project.colors[i].objID,
+                    value[i]
+                );
+            }
         }
     }
 }

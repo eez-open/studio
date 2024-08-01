@@ -575,7 +575,24 @@ class ScrapbookManagerModel {
                 const item = new ScrapbookItem();
 
                 item.id = guid();
-                item.name = "Paste " + (this.store.project.items.length + 1);
+
+                // find unique item name
+                let name: string;
+                let i = 1;
+                while (true) {
+                    name = `Item ${i}`;
+                    if (
+                        !this.store.project.items.find(
+                            item => item.name == name
+                        )
+                    ) {
+                        break;
+                    }
+                    i++;
+                }
+
+                item.name = name;
+
                 item.description = "";
                 item.eezProject = getJSON(destinationProjectStore);
 

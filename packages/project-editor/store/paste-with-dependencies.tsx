@@ -72,6 +72,11 @@ import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
 import { identifierValidator } from "project-editor/features/variable/variable";
 import type { Style } from "project-editor/features/style/style";
 import type { LVGLStyle } from "project-editor/lvgl/style";
+import {
+    type Theme,
+    type Color,
+    getProjectWithThemes
+} from "project-editor/features/style/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,8 +106,44 @@ type ConflictResolution =
     | "replace"
     | "keep";
 
+////////////////////////////////////////////////////////////////////////////////
+
+function compareThemes(
+    sourceProjectStore: ProjectStore,
+    destinationProjectStore: ProjectStore
+) {
+    for (const sourceTheme of sourceProjectStore.project.themes) {
+        let destinationTheme = destinationProjectStore.project.themes.find(
+            destinationTheme => destinationTheme.name == sourceTheme.name
+        );
+        if (!destinationTheme) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function getSelectedTheme(projectStore: ProjectStore) {
+    const project = getProjectWithThemes(projectStore);
+
+    let selectedTheme =
+        projectStore.navigationStore?.selectedThemeObject.get() as Theme;
+
+    if (!selectedTheme) {
+        selectedTheme = project.themes[0];
+    }
+
+    return selectedTheme!;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class PasteObject {
-    constructor(public model: PasteWithDependenciesModel, object: EezObject) {
+    constructor(
+        public model: PasteWithDependenciesModel,
+        public sourceObject: EezObject,
+        object: EezObject
+    ) {
         this.object = object;
 
         if (object instanceof ProjectEditor.VariableClass) {
@@ -425,7 +466,7 @@ class PasteWithDependenciesModel {
             clonedObject.childStyles.splice(0, clonedObject.childStyles.length);
         }
 
-        pasteObject = new PasteObject(this, clonedObject);
+        pasteObject = new PasteObject(this, object, clonedObject);
 
         runInAction(() => {
             this.foundObjects.set(object, pasteObject);
@@ -897,6 +938,75 @@ class PasteWithDependenciesModel {
         }
 
         if (this.compareObjects(destinationObject, pasteObject.object)) {
+            if (pasteObject.object instanceof ProjectEditor.ColorClass) {
+                const sourceColor = pasteObject.object;
+                const destinationColor = destinationObject as Color;
+
+                const checkColorConflict = (
+                    sourceTheme: Theme,
+                    destinationTheme: Theme
+                ): Conflict | undefined => {
+                    const sourceColorValue =
+                        this.sourceProjectStore.project.getThemeColor(
+                            sourceTheme.objID,
+                            sourceColor.objID
+                        );
+
+                    const destinationColorValue =
+                        this.destinationProjectStore.project.getThemeColor(
+                            destinationTheme.objID,
+                            destinationColor.objID
+                        );
+
+                    if (sourceColorValue != destinationColorValue) {
+                        return {
+                            kind: "exists-different",
+                            destinationObject
+                        };
+                    }
+                    return undefined;
+                };
+
+                if (
+                    compareThemes(
+                        this.sourceProjectStore,
+                        this.destinationProjectStore
+                    )
+                ) {
+                    for (const sourceTheme of this.sourceProjectStore.project
+                        .themes) {
+                        let destinationTheme =
+                            this.destinationProjectStore.project.themes.find(
+                                destinationTheme =>
+                                    destinationTheme.name == sourceTheme.name
+                            )!;
+
+                        const result = checkColorConflict(
+                            sourceTheme,
+                            destinationTheme
+                        );
+                        if (result) {
+                            return result;
+                        }
+                    }
+                } else {
+                    const sourceTheme = getSelectedTheme(
+                        this.sourceProjectStore
+                    );
+                    const destinationTheme = getSelectedTheme(
+                        this.destinationProjectStore
+                    );
+
+                    const result = checkColorConflict(
+                        sourceTheme,
+                        destinationTheme
+                    );
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+
             return { kind: "exists-same" };
         }
 
@@ -1234,6 +1344,61 @@ class PasteWithDependenciesModel {
                         addObject(collection, object);
                     }
                 }
+
+                if (object instanceof ProjectEditor.ColorClass) {
+                    const destinationColor = object;
+                    const sourceColor = pasteObject.sourceObject as Color;
+                    if (sourceColor) {
+                        const destinationColorIndex =
+                            this.destinationProjectStore.project.colors.findIndex(
+                                color => color.name == destinationColor.name
+                            );
+
+                        const updateColor = (
+                            sourceTheme: Theme,
+                            destinationTheme: Theme
+                        ) => {
+                            const colors = destinationTheme.colors.slice();
+
+                            colors[destinationColorIndex] =
+                                this.sourceProjectStore.project.getThemeColor(
+                                    sourceTheme.objID,
+                                    sourceColor.objID
+                                );
+
+                            updateObject(destinationTheme, {
+                                colors
+                            });
+                        };
+
+                        if (
+                            compareThemes(
+                                this.sourceProjectStore,
+                                this.destinationProjectStore
+                            )
+                        ) {
+                            for (const sourceTheme of this.sourceProjectStore
+                                .project.themes) {
+                                let destinationTheme =
+                                    this.destinationProjectStore.project.themes.find(
+                                        destinationTheme =>
+                                            destinationTheme.name ==
+                                            sourceTheme.name
+                                    )!;
+
+                                updateColor(sourceTheme, destinationTheme);
+                            }
+                        } else {
+                            const sourceTheme = getSelectedTheme(
+                                this.sourceProjectStore
+                            );
+                            const destinationTheme = getSelectedTheme(
+                                this.destinationProjectStore
+                            );
+                            updateColor(sourceTheme, destinationTheme);
+                        }
+                    }
+                }
             }
         }
 
@@ -1492,12 +1657,9 @@ export function createEmptyProjectStore(
         }
         projectJson.extensionDefinitions = [];
         projectJson.colors = [];
-        projectJson.themes = [
-            {
-                name: "default",
-                colors: []
-            } as any
-        ];
+
+        // leave projectJson.themes
+
         if (projectJson.lvglStyles) {
             projectJson.lvglStyles.styles = [];
             projectJson.lvglStyles.defaultStyles = {};
