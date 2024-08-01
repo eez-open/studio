@@ -22,9 +22,15 @@ import { showDialog } from "eez-studio-ui/dialog";
 import {
     copyObjects,
     getAllObjects,
-    pasteWithDependencies
+    pasteWithDependenciesIntoNewStorebookItem,
+    pasteWithDependenciesIntoExistingStorebookItem
 } from "./paste-with-dependencies";
-import { getJSON, loadProject, ProjectStore } from "project-editor/store";
+import {
+    getJSON,
+    loadProject,
+    pasteModel,
+    ProjectStore
+} from "project-editor/store";
 import { IconAction } from "eez-studio-ui/action";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import type { Project } from "project-editor/project/project";
@@ -568,9 +574,9 @@ class ScrapbookManagerModel {
         });
     }
 
-    pasteIntoNewItem(projectStore: ProjectStore) {
-        pasteWithDependencies(
-            projectStore,
+    pasteIntoNewItem(pasteModelSourceProjectStore: ProjectStore) {
+        pasteWithDependenciesIntoNewStorebookItem(
+            pasteModelSourceProjectStore,
             (destinationProjectStore: ProjectStore) => {
                 const item = new ScrapbookItem();
 
@@ -597,6 +603,27 @@ class ScrapbookManagerModel {
                 item.eezProject = getJSON(destinationProjectStore);
 
                 this.store.addNewItem(item);
+            }
+        );
+    }
+
+    pasteIntoExistingItem(
+        item: ScrapbookItem,
+        pasteModelSourceProjectStore: ProjectStore
+    ) {
+        const projectStore = ProjectStore.create({
+            type: "project-editor"
+        });
+
+        const project = loadProject(projectStore, item.eezProject, false);
+
+        projectStore.setProject(project, model.getItemUrl(item));
+
+        pasteWithDependenciesIntoExistingStorebookItem(
+            pasteModelSourceProjectStore,
+            projectStore,
+            () => {
+                model.store.setItemEezProject(item, getJSON(projectStore));
             }
         );
     }
@@ -676,19 +703,18 @@ const Items = observer(
                         <div>Items</div>
                         <div>
                             <IconAction
-                                title="Paste"
+                                title="Create a New Scrapbook Item from the Clipboard"
                                 icon="material:content_paste"
                                 iconSize={22}
                                 onClick={() => {
-                                    if (model.destinationProjectStore) {
+                                    if (pasteModel.sourceProjectStore) {
                                         model.pasteIntoNewItem(
-                                            model.destinationProjectStore
+                                            pasteModel.sourceProjectStore
                                         );
                                     }
                                 }}
                                 enabled={
-                                    model.destinationProjectStore &&
-                                    model.destinationProjectStore.canPaste
+                                    pasteModel.sourceProjectStore != undefined
                                 }
                             />
                             <IconAction
@@ -780,7 +806,28 @@ const ItemDetails = observer(
                                 Open in Project Editor
                             </button>
                         </div>
-                        <div></div>
+                        <div>
+                            <IconAction
+                                title="Paste Clipboard Content into Select Scrapbook Item"
+                                icon="material:content_paste"
+                                iconSize={22}
+                                onClick={() => {
+                                    if (
+                                        model.store.selectedItem &&
+                                        pasteModel.sourceProjectStore
+                                    ) {
+                                        model.pasteIntoExistingItem(
+                                            model.store.selectedItem,
+                                            pasteModel.sourceProjectStore
+                                        );
+                                    }
+                                }}
+                                enabled={
+                                    model.store.selectedItem &&
+                                    pasteModel.sourceProjectStore != undefined
+                                }
+                            />
+                        </div>
                     </div>
                     <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Body">
                         <form>

@@ -1,5 +1,13 @@
 import { clipboard } from "@electron/remote";
-import { observable, runInAction, toJS } from "mobx";
+import {
+    action,
+    computed,
+    makeObservable,
+    observable,
+    reaction,
+    runInAction,
+    toJS
+} from "mobx";
 
 import {
     IEezObject,
@@ -175,26 +183,87 @@ export function getEezStudioDataFromDragEvent(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const pasteContentChanged = observable.box<number>(0);
-function onPasteContentChanged() {
-    runInAction(() => {
-        pasteContentChanged.set(pasteContentChanged.get() + 1);
-    });
+class PasteModel {
+    changed: number = 0;
+
+    sourceProjectStore: ProjectStore | undefined;
+
+    constructor() {
+        makeObservable(this, {
+            changed: observable,
+            sourceProjectStore: observable,
+            onPasteContentChanged: action,
+            serializedData: computed
+        });
+
+        reaction(
+            () => this.changed,
+            async () => {
+                let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
+                if (textBuffer && textBuffer.length > 0) {
+                    const text = textBuffer.toString("utf-8");
+                    const serializedData: SerializedData = JSON.parse(text);
+
+                    const projectStore = ProjectStore.create({
+                        type: "read-only"
+                    });
+
+                    await projectStore.openFile(
+                        serializedData.originProjectFilePath
+                    );
+
+                    runInAction(() => {
+                        this.sourceProjectStore = projectStore;
+                    });
+                } else {
+                    runInAction(() => {
+                        this.sourceProjectStore = undefined;
+                    });
+                }
+            }
+        );
+    }
+
+    onPasteContentChanged() {
+        this.changed++;
+    }
+
+    get serializedData() {
+        if (!this.sourceProjectStore) {
+            return undefined;
+        }
+
+        let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
+        if (textBuffer && textBuffer.length > 0) {
+            const text = textBuffer.toString("utf-8");
+            let serializedData = clipboardDataToObject(
+                this.sourceProjectStore,
+                text
+            );
+            if (serializedData) {
+                return serializedData;
+            }
+        }
+        return undefined;
+    }
 }
+
+export const pasteModel = new PasteModel();
 
 export function copyProjectEditorDataToClipboard(text: string) {
     clipboard.writeBuffer(CLIPOARD_DATA_ID, Buffer.from(text, "utf-8"));
-    onPasteContentChanged();
+    pasteModel.onPasteContentChanged();
 }
 
 document.addEventListener("copy", function (e) {
-    onPasteContentChanged();
+    pasteModel.onPasteContentChanged();
 });
 
 export function getProjectEditorDataFromClipboard(
     projectStore: ProjectStore
 ): SerializedData | undefined {
-    pasteContentChanged.get();
+    // make it observable
+    pasteModel.changed;
 
     let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
     if (textBuffer && textBuffer.length > 0) {

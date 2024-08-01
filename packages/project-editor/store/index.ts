@@ -110,6 +110,7 @@ import {
     isScrapbookItemFilePath,
     setScrapbookItemEezProject
 } from "./scrapbook";
+import { confirm } from "eez-studio-ui/dialog-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1474,15 +1475,24 @@ export class ProjectStore {
     }
 
     paste = () => {
-        if (canPasteWithDependencies(this)) {
-            pasteWithDependencies(this);
-        } else {
+        const pasteToSelectedPanel = () => {
             if (
                 this.navigationStore.selectedPanel &&
                 this.navigationStore.selectedPanel.pasteSelection
             ) {
                 this.navigationStore.selectedPanel.pasteSelection();
             }
+        };
+
+        if (canPasteWithDependencies(this)) {
+            confirm(
+                "Do you want to paste with all the dependencies?",
+                "Clipboard content is from the different project.",
+                () => pasteWithDependencies(this),
+                () => pasteToSelectedPanel()
+            );
+        } else {
+            pasteToSelectedPanel();
         }
     };
 }

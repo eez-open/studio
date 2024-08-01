@@ -6,6 +6,7 @@ import {
     IObservableValue,
     makeObservable,
     observable,
+    reaction,
     runInAction
 } from "mobx";
 
@@ -353,14 +354,8 @@ class PasteWithDependenciesModel {
     }
 
     createInterProjectStore() {
-        const hasFlowFragment =
-            this.sourceObjects.find(
-                sourceObject =>
-                    sourceObject instanceof ProjectEditor.FlowFragmentClass
-            ) != undefined;
-
         const { projectStore, projectStoreFlowFragmentFlow } =
-            createEmptyProjectStore(this.sourceProjectStore, hasFlowFragment);
+            createEmptyProjectStore(this.sourceProjectStore);
 
         this.interProjectStore = projectStore;
 
@@ -1611,10 +1606,7 @@ const ConflictResolution = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function createEmptyProjectStore(
-    sourceProjectStore: ProjectStore,
-    createFlowFragmentPage: boolean
-) {
+export function createEmptyProjectStore(sourceProjectStore: ProjectStore) {
     const projectStore = ProjectStore.create({
         type: "project-editor"
     });
@@ -1670,29 +1662,25 @@ export function createEmptyProjectStore(
 
     projectStore.setProject(project, "");
 
-    let projectStoreFlowFragmentFlow;
+    const projectStoreFlowFragmentFlow = createObject<Page>(
+        projectStore,
+        {
+            name: FLOW_FRAGMENT_PAGE_NAME,
+            left: 0,
+            top: 0,
+            width: 900,
+            height: 600,
+            components: [],
+            connectionLines: [],
+            localVariables: [],
+            isUsedAsUserWidget: false
+        },
+        ProjectEditor.PageClass,
+        undefined,
+        false
+    );
 
-    if (createFlowFragmentPage) {
-        projectStoreFlowFragmentFlow = createObject<Page>(
-            projectStore,
-            {
-                name: FLOW_FRAGMENT_PAGE_NAME,
-                left: 0,
-                top: 0,
-                width: 900,
-                height: 600,
-                components: [],
-                connectionLines: [],
-                localVariables: [],
-                isUsedAsUserWidget: false
-            },
-            ProjectEditor.PageClass,
-            undefined,
-            false
-        );
-
-        addObject(projectStore.project.userPages, projectStoreFlowFragmentFlow);
-    }
+    addObject(projectStore.project.userPages, projectStoreFlowFragmentFlow);
 
     return {
         projectStore,
@@ -1705,14 +1693,12 @@ export function createEmptyProjectStore(
 const FindAllPasteDependenciesProgressDialog = observer(
     class FindAllPasteDependenciesProgressDialog extends React.Component<{
         pasteWithDependenciesModel: PasteWithDependenciesModel;
-        onFinished: () => void;
     }> {
         render() {
             return (
                 <Dialog
                     size="small"
                     cancelDisabled={true}
-                    onCancel={this.props.onFinished}
                     open={
                         !this.props.pasteWithDependenciesModel
                             .allDependenciesFound
@@ -1797,31 +1783,47 @@ export function showFindAllPasteDependenciesProgressDialog(
         destinationFlow
     );
 
-    pasteWithDependenciesModel.findAllDependencies();
+    const onFindDependenciesFinished = () => {
+        if (pasteWithDependenciesModel.posteObjectsWithConflicts.length > 0) {
+            showResolvePasteConflictsDialog(
+                pasteWithDependenciesModel,
+                undefined
+            );
+        } else {
+            pasteWithDependenciesModel.doPaste();
+            if (onFinished) {
+                onFinished(pasteWithDependenciesModel.destinationProjectStore);
+            }
+        }
+    };
 
-    showDialog(
-        <FindAllPasteDependenciesProgressDialog
-            pasteWithDependenciesModel={pasteWithDependenciesModel}
-            onFinished={() => {
-                if (
-                    pasteWithDependenciesModel.posteObjectsWithConflicts
-                        .length > 0
-                ) {
-                    showResolvePasteConflictsDialog(
-                        pasteWithDependenciesModel,
-                        undefined
-                    );
-                } else {
-                    pasteWithDependenciesModel.doPaste();
-                    if (onFinished) {
-                        onFinished(
-                            pasteWithDependenciesModel.destinationProjectStore
-                        );
-                    }
-                }
-            }}
-        />
+    const reactionDisposer = reaction(
+        () => pasteWithDependenciesModel.allDependenciesFound,
+        () => {
+            reactionDisposer();
+
+            // all dependencies found, cancel showing progress dialog
+            if (showProgressTimeout) {
+                clearTimeout(showProgressTimeout);
+                showProgressTimeout = undefined;
+            }
+
+            onFindDependenciesFinished();
+        }
     );
+
+    // show progress dialog after period of time
+    let showProgressTimeout: any;
+    showProgressTimeout = setTimeout(() => {
+        showProgressTimeout = undefined;
+        showDialog(
+            <FindAllPasteDependenciesProgressDialog
+                pasteWithDependenciesModel={pasteWithDependenciesModel}
+            />
+        );
+    }, 250);
+
+    pasteWithDependenciesModel.findAllDependencies();
 
     return true;
 }
@@ -1858,10 +1860,7 @@ export function canPasteWithDependencies(
     return true;
 }
 
-export function pasteWithDependencies(
-    destinationProjectStore: ProjectStore,
-    onFinished?: (destinationProjectStore: ProjectStore) => void
-) {
+export function pasteWithDependencies(destinationProjectStore: ProjectStore) {
     let serializedData = getProjectEditorDataFromClipboard(
         destinationProjectStore
     );
@@ -1870,7 +1869,6 @@ export function pasteWithDependencies(
     }
 
     if (
-        !onFinished &&
         serializedData.originProjectFilePath == destinationProjectStore.filePath
     ) {
         return;
@@ -1897,19 +1895,97 @@ export function pasteWithDependencies(
         ? [serializedData.objectParentPath!]
         : serializedData.objectsParentPath!;
 
-    const hasFlowFragment =
-        sourceObjects.find(
-            sourceObject =>
-                sourceObject instanceof ProjectEditor.FlowFragmentClass
-        ) != undefined;
+    showFindAllPasteDependenciesProgressDialog(
+        sourceProjectStore,
+        sourceObjects,
+        sourceObjectsParentPath,
+        destinationProjectStore,
+        undefined,
+        undefined
+    );
+}
 
-    let destinationFlow: Flow | undefined;
-    if (onFinished) {
-        const { projectStore, projectStoreFlowFragmentFlow } =
-            createEmptyProjectStore(sourceProjectStore, hasFlowFragment);
-        destinationProjectStore = projectStore;
-        destinationFlow = projectStoreFlowFragmentFlow;
+export function pasteWithDependenciesIntoNewStorebookItem(
+    pasteModelSourceProjectStore: ProjectStore,
+    onFinished: (destinationProjectStore: ProjectStore) => void
+) {
+    let serializedData = getProjectEditorDataFromClipboard(
+        pasteModelSourceProjectStore
+    );
+    if (!serializedData) {
+        return;
     }
+
+    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
+        serializedData.originProjectFilePath,
+        false
+    );
+    if (!sourceProjectEditorTab) {
+        return;
+    }
+
+    const sourceProjectStore = sourceProjectEditorTab.projectStore;
+    if (!sourceProjectStore) {
+        return;
+    }
+
+    const sourceObjects = serializedData.object
+        ? [serializedData.object]
+        : serializedData.objects!;
+
+    const sourceObjectsParentPath = serializedData.object
+        ? [serializedData.objectParentPath!]
+        : serializedData.objectsParentPath!;
+
+    const { projectStore, projectStoreFlowFragmentFlow } =
+        createEmptyProjectStore(sourceProjectStore);
+
+    showFindAllPasteDependenciesProgressDialog(
+        sourceProjectStore,
+        sourceObjects,
+        sourceObjectsParentPath,
+        projectStore,
+        projectStoreFlowFragmentFlow,
+        onFinished
+    );
+}
+
+export function pasteWithDependenciesIntoExistingStorebookItem(
+    pasteModelSourceProjectStore: ProjectStore,
+    destinationProjectStore: ProjectStore,
+    onFinished: () => void
+) {
+    let serializedData = getProjectEditorDataFromClipboard(
+        pasteModelSourceProjectStore
+    );
+    if (!serializedData) {
+        return;
+    }
+
+    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
+        serializedData.originProjectFilePath,
+        false
+    );
+    if (!sourceProjectEditorTab) {
+        return;
+    }
+
+    const sourceProjectStore = sourceProjectEditorTab.projectStore;
+    if (!sourceProjectStore) {
+        return;
+    }
+
+    const sourceObjects = serializedData.object
+        ? [serializedData.object]
+        : serializedData.objects!;
+
+    const sourceObjectsParentPath = serializedData.object
+        ? [serializedData.objectParentPath!]
+        : serializedData.objectsParentPath!;
+
+    const destinationFlow = destinationProjectStore.project.userPages.find(
+        page => page.name == FLOW_FRAGMENT_PAGE_NAME
+    );
 
     showFindAllPasteDependenciesProgressDialog(
         sourceProjectStore,
@@ -1990,13 +2066,13 @@ export function getAllObjects(project: Project) {
 
     if (project.userPages) {
         project.userPages.forEach(page => {
-            if (page.name == FLOW_FRAGMENT_PAGE_NAME) {
+            if (
+                page.name == FLOW_FRAGMENT_PAGE_NAME &&
+                page.components.length > 0
+            ) {
                 addObject("Flow Fragment", {
                     object: page,
-                    name:
-                        page.name == FLOW_FRAGMENT_PAGE_NAME
-                            ? "FlowFragment"
-                            : page.name,
+                    name: page.name,
                     icon: ProjectEditor.PageClass.classInfo.icon!
                 });
             }
@@ -2050,10 +2126,7 @@ export function getAllObjects(project: Project) {
             if (page.name != FLOW_FRAGMENT_PAGE_NAME) {
                 addObject("Pages", {
                     object: page,
-                    name:
-                        page.name == FLOW_FRAGMENT_PAGE_NAME
-                            ? "FlowFragment"
-                            : page.name,
+                    name: page.name,
                     icon: ProjectEditor.PageClass.classInfo.icon!
                 });
             }

@@ -12,6 +12,7 @@ import {
     DropPosition,
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -186,6 +187,9 @@ interface TreeProps {
 
 export const Tree = observer(
     class Tree extends React.Component<TreeProps, {}> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
         static defaultProps = {
             tabIndex: -1,
             maxLevel: undefined,
@@ -245,7 +249,7 @@ export const Tree = observer(
                 } else if (event.keyCode == "C".charCodeAt(0)) {
                     this.props.treeAdapter.copySelection();
                 } else if (event.keyCode == "V".charCodeAt(0)) {
-                    this.props.treeAdapter.pasteSelection();
+                    this.context.paste();
                 }
             } else {
                 let focusedItemId = $(this.treeDiv)

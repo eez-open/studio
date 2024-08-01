@@ -1086,7 +1086,7 @@ export const FlowEditor = observer(
                 } else if (event.keyCode == "C".charCodeAt(0)) {
                     this.copySelection();
                 } else if (event.keyCode == "V".charCodeAt(0)) {
-                    this.pasteSelection();
+                    this.context.paste();
                 }
             } else if (event.keyCode == 46) {
                 // delete
