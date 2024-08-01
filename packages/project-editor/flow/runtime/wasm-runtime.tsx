@@ -721,6 +721,10 @@ export class WasmRuntime extends RemoteRuntime {
                 );
                 globalVariable.objectVariableValue = objectVariableValue;
                 globalVariable.studioModified = true;
+                this.projectStore.dataContext.set(
+                    globalVariable.variable.name,
+                    objectVariableValue
+                );
                 return;
             }
         }
