@@ -247,10 +247,19 @@ export class LayoutModels {
             chartsViewModel1: observable,
             chartsViewModel2: observable,
             chartsViewModel3: observable,
-            chartsViewModel4: observable
+            chartsViewModel4: observable,
+
+            scrapbook: observable,
+            app: observable
         });
 
-        this.load(undefined);
+        const sideDockLayoutModelsStr = window.localStorage.getItem(
+            "SideDockLayoutModels"
+        );
+        const sideDockLayoutModels = sideDockLayoutModelsStr
+            ? JSON.parse(sideDockLayoutModelsStr)
+            : undefined;
+        this.load(sideDockLayoutModels);
     }
 
     get models(): {
@@ -665,6 +674,13 @@ export class LayoutModels {
         }
 
         return layoutModels;
+    }
+
+    saveToLocalStorage() {
+        window.localStorage.setItem(
+            "SideDockLayoutModels",
+            JSON.stringify(this.save())
+        );
     }
 
     selectTab(model: FlexLayout.Model, tabId: string) {

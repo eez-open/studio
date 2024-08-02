@@ -26,6 +26,7 @@ import "home/settings";
 import { extensionsCatalog } from "./extensions-manager/catalog";
 import { initProjectEditor } from "project-editor/project-editor-bootstrap";
 import { buildProject } from "home/build-project";
+import { layoutModels } from "eez-studio-ui/side-dock";
 
 configure({ enforceActions: "observed", useProxies: "always" });
 
@@ -52,6 +53,8 @@ async function beforeAppClose() {
         destroyExtensions
     } = require("eez-studio-shared/extensions/extensions");
     destroyExtensions();
+
+    layoutModels.saveToLocalStorage();
 
     return true;
 }
