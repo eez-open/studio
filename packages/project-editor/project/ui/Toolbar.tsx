@@ -18,7 +18,6 @@ import { getEditorComponent } from "./EditorComponentFactory";
 import { getId } from "project-editor/core/object";
 import type { IObjectVariableValue } from "eez-studio-types";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
-import { isDev } from "eez-studio-shared/util-electron";
 import {
     isScrapbookItemFilePath,
     showScrapbookManager
