@@ -800,10 +800,10 @@ export class LVGLWidget extends Widget {
                 if (lvgl.oldInitFlags && lvgl.oldDefaultFlags) {
                     if ((jsWidget as any).flags == lvgl.oldInitFlags) {
                         (jsWidget as any).flags = lvgl.defaultFlags;
-                        console.log("migrate flags", jsWidget.type);
-                        console.log("\tOld flags unchanged");
+                        //console.log("migrate flags", jsWidget.type);
+                        //console.log("\tOld flags unchanged");
                     } else {
-                        const beforeFlags = (jsWidget as any).flags;
+                        //const beforeFlags = (jsWidget as any).flags;
 
                         const defaultFlagsArr = lvgl.defaultFlags.split("|");
                         const oldDefaultFlagsArr =
@@ -834,13 +834,13 @@ export class LVGLWidget extends Widget {
                             }
                         }
 
-                        const afterFlags = (jsWidget as any).flags;
+                        //const afterFlags = (jsWidget as any).flags;
 
-                        if (beforeFlags != afterFlags) {
-                            console.log("migrate flags", jsWidget.type);
-                            console.log("\tBefore:" + beforeFlags);
-                            console.log("\tAfter :" + afterFlags);
-                        }
+                        // if (beforeFlags != afterFlags) {
+                        //     console.log("migrate flags", jsWidget.type);
+                        //     console.log("\tBefore:" + beforeFlags);
+                        //     console.log("\tAfter :" + afterFlags);
+                        // }
                     }
                 }
 

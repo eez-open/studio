@@ -331,7 +331,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             for (const id of this._userWidgetPageCopyIds) {
                 projectStore.objects.delete(id);
             }
-            console.log(projectStore.objects.size);
             this._userWidgetPageCopyIds = [];
             for (const id of projectStore.objects.keys()) {
                 if (!idsBefore.has(id)) {
