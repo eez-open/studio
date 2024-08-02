@@ -1,4 +1,5 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
+import { shell } from "electron";
 import fs from "fs";
 import path from "path";
 import React from "react";
@@ -37,7 +38,10 @@ import type { Project } from "project-editor/project/project";
 import { Icon } from "eez-studio-ui/icon";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { SCRAPBOOK_ITEM_FILE_PREFIX } from "project-editor/core/util";
-import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
+import {
+    HOME_TAB_OPEN_ICON,
+    SHOW_FILE_IN_FOLDER_ICON
+} from "project-editor/ui-components/icons";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { stringCompare } from "eez-studio-shared/string";
@@ -1023,6 +1027,14 @@ const ScrapbookManagerDialog = observer(
                                     model.selectedFile !=
                                     DEFAULT_SCRAPBOOK_FILE_PATH
                                 }
+                            />
+
+                            <IconAction
+                                icon={SHOW_FILE_IN_FOLDER_ICON}
+                                onClick={() =>
+                                    shell.showItemInFolder(model.selectedFile)
+                                }
+                                title="Show Scrapbook File in File Explorer"
                             />
                         </div>
                         <div className="btn-group" role="group">
