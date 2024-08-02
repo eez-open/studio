@@ -13,14 +13,18 @@ import {
 import { RenderVariableStatus } from "project-editor/features/variable/global-variable-status";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { RuntimeType } from "project-editor/project/project-type-traits";
-import { RUN_ICON } from "project-editor/ui-components/icons";
+import {
+    PROJECT_EDITOR_SCRAPBOOK,
+    RUN_ICON
+} from "project-editor/ui-components/icons";
 import { getEditorComponent } from "./EditorComponentFactory";
 import { getId } from "project-editor/core/object";
 import type { IObjectVariableValue } from "eez-studio-types";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
 import {
     isScrapbookItemFilePath,
-    showScrapbookManager
+    showScrapbookManager,
+    model as scrapbookModel
 } from "project-editor/store/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,13 +318,10 @@ const EditorButtons = observer(
                             <div className="btn-group" role="group">
                                 <IconAction
                                     title="Scrapbook"
-                                    icon={
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="m19 23.3-.6-.5c-2-1.9-3.4-3.1-3.4-4.6 0-1.2 1-2.2 2.2-2.2.7 0 1.4.3 1.8.8.4-.5 1.1-.8 1.8-.8 1.2 0 2.2.9 2.2 2.2 0 1.5-1.4 2.7-3.4 4.6zM17 4v6l-2-2-2 2V4H9v16h4.08c.12.72.37 1.39.72 2H7c-1.05 0-2-.95-2-2v-1H3v-2h2v-4H3v-2h2V7H3V5h2V4a2 2 0 0 1 2-2h12c1.05 0 2 .95 2 2v9.34c-.63-.22-1.3-.34-2-.34V4zM5 19h2v-2H5zm0-6h2v-2H5zm0-6h2V5H5z" />
-                                        </svg>
-                                    }
+                                    icon={PROJECT_EDITOR_SCRAPBOOK}
                                     iconSize={24}
                                     onClick={() => showScrapbookManager()}
+                                    selected={scrapbookModel.isVisible}
                                 />
                             </div>
                         </>

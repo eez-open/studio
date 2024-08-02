@@ -928,6 +928,8 @@ export class Tabs {
     }
 
     constructor() {
+        initProjectEditor(tabs, ProjectEditorTab);
+
         makeObservable(this, {
             tabs: observable,
             activeTab: observable,

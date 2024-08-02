@@ -232,6 +232,7 @@ export class LayoutModels {
     chartsViewModel4: FlexLayout.Model;
 
     scrapbook: FlexLayout.Model;
+    app: FlexLayout.Model;
 
     constructor() {
         makeObservable(this, {
@@ -557,6 +558,54 @@ export class LayoutModels {
                 },
                 get: () => this.scrapbook,
                 set: action(model => (this.scrapbook = model))
+            },
+            {
+                name: "app",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 75,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Tabs",
+                                        component: "main-content"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                enableTabStrip: true,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 25,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        icon: "svg:project-editor-scrapbook",
+                                        enableClose: false,
+                                        name: "Scrapbook",
+                                        component: "scrapbook"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.app,
+                set: action(model => (this.app = model))
             }
         ];
     }

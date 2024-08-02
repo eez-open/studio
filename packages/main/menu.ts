@@ -634,6 +634,17 @@ function buildViewMenu(win: IWindow | undefined) {
         },
         {
             type: "separator"
+        },
+        {
+            label: "Scrapbook for Project Editor",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    focusedWindow.webContents.send("showScrapbookManager");
+                }
+            }
+        },
+        {
+            type: "separator"
         }
     );
 

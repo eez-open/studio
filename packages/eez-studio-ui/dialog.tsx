@@ -17,7 +17,9 @@ export interface IDialogOptions {
         title: string;
         width: number;
         height?: number;
+        headerLogo?: any;
         modeless?: boolean;
+        headerControls?: any;
         onclosed?: () => void;
     };
     fieldsEnclosureDiv?: React.ComponentType<{ children?: React.ReactNode }>;
@@ -47,6 +49,7 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             container: "#EezStudio_Content",
             theme: "primary",
             headerTitle: opts.jsPanel.title,
+            headerLogo: opts.jsPanel.headerLogo,
             panelSize: {
                 width: Math.min(
                     Math.round(window.innerWidth * 0.9),
@@ -60,10 +63,12 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
                     : Math.round(window.innerHeight * 0.9)
             },
             content: element,
-            headerControls: {
-                minimize: "remove",
-                smallify: "remove"
-            },
+            headerControls: opts.jsPanel.headerControls
+                ? opts.jsPanel.headerControls
+                : {
+                      minimize: "remove",
+                      smallify: "remove"
+                  },
             dragit: {
                 containment: [0, 0, 0, 0]
             },

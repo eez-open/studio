@@ -1,10 +1,11 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
-import { shell } from "electron";
+import { shell, ipcRenderer } from "electron";
 import fs from "fs";
 import path from "path";
 import React from "react";
 import {
     action,
+    autorun,
     computed,
     makeObservable,
     observable,
@@ -46,7 +47,6 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { stringCompare } from "eez-studio-shared/string";
 import { layoutModels } from "eez-studio-ui/side-dock";
-import { ProjectEditorTab, tabs } from "home/tabs-store";
 import { EezObject } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -429,6 +429,8 @@ class ScrapbookStore {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type DockOption = "float" | "dock";
+
 class ScrapbookManagerModel {
     files: string[];
     selectedFile: string;
@@ -437,11 +439,16 @@ class ScrapbookManagerModel {
 
     modalDialog: any;
 
+    isVisible: boolean = false;
+    dockOption: DockOption = "float";
+
     constructor() {
         let confJSONStr = window.localStorage.getItem("ScrapbookManagerConf");
         let conf: {
             files?: string[];
             selectedFile?: string;
+            isVisible?: boolean;
+            dockOption?: DockOption;
         };
         if (confJSONStr) {
             conf = JSON.parse(confJSONStr);
@@ -465,15 +472,65 @@ class ScrapbookManagerModel {
             this.openScrapbookFile(DEFAULT_SCRAPBOOK_FILE_PATH);
         }
 
+        if (conf.isVisible) {
+            this.isVisible = conf.isVisible;
+        }
+
+        if (conf.dockOption != undefined) {
+            this.dockOption = conf.dockOption;
+        }
+
         makeObservable(this, {
             files: observable,
-            selectedFile: observable
+            selectedFile: observable,
+            isVisible: observable,
+            dockOption: observable
+        });
+    }
+
+    mount() {
+        autorun(() => {
+            if (this.isVisible && this.dockOption == "float") {
+                if (!model.modalDialog) {
+                    const result = showDialog(<ScrapbookManagerDialog />, {
+                        jsPanel: {
+                            id: "scrapbook-manager-dialog",
+                            title: "Scrapbook",
+                            width: 1280,
+                            height: 800,
+                            modeless: true,
+                            headerLogo: `<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAQdJREFUSEvNVcERgzAMszZpNymbwCSwSekkZRQ2cSsu6YVcTJpQeuTDQRLLSLYMOXjh4PiSBFDVm4jcReRSmMAsIg0APpdlATxFhCA1awLQ5AA0jAxglYiqJvf99/B88qI/kLpA4PMCeFqsDHP7WYpyAaL9zlVZv0WpVUU5kVsAo9NjeNfAEGpjivztH1i1m6UoPmBV0XkBfkARreUCYNrVySX+UVVFfwNQVVLSO2N8OGC+k6KOrlrlRYFWW667uOpegFVDxtSx4XZpoKocSq2hyQigqx04nFqT04A0xZNvBnDdmmi8wOysqbZk5/yHZ0OQT3AToKQMIxDxmW82WimABwmHvY/xAi1e2RmDH2CoAAAAAElFTkSuQmCC"/>`,
+                            headerControls: {
+                                minimize: "remove",
+                                smallify: "remove",
+                                close: "remove"
+                            },
+                            onclosed: action(() => {
+                                if (this.dockOption == "float") {
+                                    this.isVisible = false;
+                                }
+                            })
+                        }
+                    });
+                    model.modalDialog = result[0];
+                }
+            } else {
+                if (model.modalDialog) {
+                    model.modalDialog.close();
+                    model.modalDialog = undefined;
+                }
+            }
+
+            this.save();
         });
     }
 
     get destinationProjectStore() {
-        if (tabs.activeTab instanceof ProjectEditorTab) {
-            return tabs.activeTab.projectStore;
+        if (
+            ProjectEditor.homeTabs?.activeTab instanceof
+            ProjectEditor.ProjectEditorTabClass
+        ) {
+            return ProjectEditor.homeTabs.activeTab.projectStore;
         }
         return undefined;
     }
@@ -483,7 +540,9 @@ class ScrapbookManagerModel {
             "ScrapbookManagerConf",
             JSON.stringify({
                 files: this.files,
-                selectedFile: this.selectedFile
+                selectedFile: this.selectedFile,
+                isVisible: this.isVisible,
+                dockOption: this.dockOption
             })
         );
     }
@@ -683,18 +742,25 @@ class ScrapbookManagerModel {
     }
 
     openItemProject(item: ScrapbookItem) {
-        const itemUrl = this.getItemUrl(item);
-
-        let projectTab = tabs.findProjectEditorTab(itemUrl, false);
-        if (!projectTab) {
-            projectTab = ProjectEditor.homeTabs!.addProjectTab(itemUrl, false);
+        if (!ProjectEditor.homeTabs) {
+            return;
         }
 
-        tabs.makeActive(projectTab);
+        const itemUrl = this.getItemUrl(item);
+
+        let projectTab = ProjectEditor.homeTabs.findProjectEditorTab(
+            itemUrl,
+            false
+        );
+        if (!projectTab) {
+            projectTab = ProjectEditor.homeTabs.addProjectTab(itemUrl, false);
+        }
+
+        ProjectEditor.homeTabs.makeActive(projectTab);
     }
 }
 
-const model = new ScrapbookManagerModel();
+export const model = new ScrapbookManagerModel();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -766,6 +832,47 @@ const Items = observer(
 
 const ItemDetails = observer(
     class ItemDetails extends React.Component {
+        refToolbar = React.createRef<HTMLDivElement>();
+
+        static THRESHOLD_TOOLBAR_SIZE = 390;
+
+        requestAnimationFrameId: any;
+
+        isSmallToolbar: boolean = false;
+
+        constructor(props: any) {
+            super(props);
+            makeObservable(this, {
+                isSmallToolbar: observable
+            });
+        }
+
+        checkToolbarSize = () => {
+            if (this.refToolbar.current) {
+                const isSmallToolbar =
+                    this.refToolbar.current.clientWidth <
+                    ItemDetails.THRESHOLD_TOOLBAR_SIZE;
+
+                runInAction(() => {
+                    this.isSmallToolbar = isSmallToolbar;
+                });
+            }
+
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.checkToolbarSize
+            );
+        };
+
+        componentDidMount() {
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.checkToolbarSize
+            );
+        }
+
+        componentWillUnmount(): void {
+            cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+
         render() {
             if (!model.store.selectedItem) {
                 return null;
@@ -773,7 +880,10 @@ const ItemDetails = observer(
 
             return (
                 <div className="EezStudio_ProjectEditorScrapbook_ItemDetails">
-                    <div className="EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar">
+                    <div
+                        ref={this.refToolbar}
+                        className="EezStudio_ProjectEditorScrapbook_ItemDetails_Toolbar"
+                    >
                         <div></div>
                         <div>
                             <button
@@ -794,7 +904,9 @@ const ItemDetails = observer(
                                     model.destinationProjectStore == undefined
                                 }
                             >
-                                Insert into Active Project
+                                {this.isSmallToolbar
+                                    ? "Insert"
+                                    : "Insert into Active Project"}
                             </button>
                             <button
                                 className="btn btn-lg btn-secondary ms-2"
@@ -807,7 +919,9 @@ const ItemDetails = observer(
                                 }}
                                 disabled={model.store.selectedItem == undefined}
                             >
-                                Open in Project Editor
+                                {this.isSmallToolbar
+                                    ? "Open"
+                                    : "Open in Project Editor"}
                             </button>
                         </div>
                         <div>
@@ -968,7 +1082,7 @@ const ItemDetails = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const ScrapbookManagerDialog = observer(
+export const ScrapbookManagerDialog = observer(
     class ScrapbookManagerDialog extends React.Component {
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
@@ -988,67 +1102,118 @@ const ScrapbookManagerDialog = observer(
             return (
                 <div className="EezStudio_ProjectEditorScrapbook">
                     <div className="EezStudio_ProjectEditorScrapbook_Toolbar">
-                        <div className="btn-group" role="group">
-                            <select
-                                className="form-select"
-                                value={model.selectedFile}
-                                onChange={event =>
-                                    model.openScrapbookFile(event.target.value)
-                                }
-                            >
-                                {model.files
-                                    .slice()
-                                    .sort(stringCompare)
-                                    .map(filePath => (
-                                        <option key={filePath} value={filePath}>
-                                            {path.parse(filePath).name}
-                                        </option>
-                                    ))}
-                            </select>
-                            <IconAction
-                                title="Create a New Scrapbook File"
-                                icon="material:add"
-                                onClick={() => model.createNewScrapbookFile()}
-                            />
-                            <IconAction
-                                title="Open Scrapbook File"
-                                icon={HOME_TAB_OPEN_ICON}
-                                onClick={() => model.selectScrapbookFile()}
-                            />
-                            <IconAction
-                                icon="material:delete"
-                                onClick={() =>
-                                    model.deleteScrapbookFile(
-                                        model.selectedFile
-                                    )
-                                }
-                                title="Delete Scrapbook File"
-                                enabled={
-                                    model.selectedFile !=
-                                    DEFAULT_SCRAPBOOK_FILE_PATH
-                                }
-                            />
+                        <div>
+                            <div className="btn-group" role="group">
+                                <select
+                                    className="form-select"
+                                    value={model.selectedFile}
+                                    onChange={event =>
+                                        model.openScrapbookFile(
+                                            event.target.value
+                                        )
+                                    }
+                                >
+                                    {model.files
+                                        .slice()
+                                        .sort(stringCompare)
+                                        .map(filePath => (
+                                            <option
+                                                key={filePath}
+                                                value={filePath}
+                                            >
+                                                {path.parse(filePath).name}
+                                            </option>
+                                        ))}
+                                </select>
+                                <IconAction
+                                    title="Create a New Scrapbook File"
+                                    icon="material:add"
+                                    onClick={() =>
+                                        model.createNewScrapbookFile()
+                                    }
+                                />
+                                <IconAction
+                                    title="Open Scrapbook File"
+                                    icon={HOME_TAB_OPEN_ICON}
+                                    onClick={() => model.selectScrapbookFile()}
+                                />
+                                <IconAction
+                                    icon="material:delete"
+                                    onClick={() =>
+                                        model.deleteScrapbookFile(
+                                            model.selectedFile
+                                        )
+                                    }
+                                    title="Delete Scrapbook File"
+                                    enabled={
+                                        model.selectedFile !=
+                                        DEFAULT_SCRAPBOOK_FILE_PATH
+                                    }
+                                />
 
-                            <IconAction
-                                icon={SHOW_FILE_IN_FOLDER_ICON}
-                                onClick={() =>
-                                    shell.showItemInFolder(model.selectedFile)
-                                }
-                                title="Show Scrapbook File in File Explorer"
-                            />
+                                <IconAction
+                                    icon={SHOW_FILE_IN_FOLDER_ICON}
+                                    onClick={() =>
+                                        shell.showItemInFolder(
+                                            model.selectedFile
+                                        )
+                                    }
+                                    title="Show Scrapbook File in File Explorer"
+                                />
+                            </div>
+                            <div className="btn-group" role="group">
+                                <IconAction
+                                    title="Undo"
+                                    icon="material:undo"
+                                    onClick={() =>
+                                        model.store.undoManager.undo()
+                                    }
+                                    enabled={model.store.undoManager.canUndo}
+                                />
+                                <IconAction
+                                    title="Redo"
+                                    icon="material:redo"
+                                    onClick={() =>
+                                        model.store.undoManager.redo()
+                                    }
+                                    enabled={model.store.undoManager.canRedo}
+                                />
+                            </div>
                         </div>
-                        <div className="btn-group" role="group">
+                        <div>
+                            <div className="btn-group" role="group">
+                                <IconAction
+                                    title="Undock into Separate Window"
+                                    icon={
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M16 7H4c-1.103 0-2 .897-2 2v10c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2V9c0-1.103-.897-2-2-2M4 19v-8h12V9l.002 10z" />
+                                            <path d="M22 5c0-1.103-.897-2-2-2H7c-1.103 0-2 .897-2 2h13.001c1.101 0 1.996.895 1.999 1.994L20.002 15H20v2c1.103 0 2-.897 2-2V8.007L22.001 8V6L22 5.99z" />
+                                        </svg>
+                                    }
+                                    onClick={action(
+                                        () => (model.dockOption = "float")
+                                    )}
+                                    selected={model.dockOption == "float"}
+                                />
+                                <IconAction
+                                    title="Dock to the Side"
+                                    icon={
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m-5 14H4V6h11Z" />
+                                        </svg>
+                                    }
+                                    onClick={action(
+                                        () => (model.dockOption = "dock")
+                                    )}
+                                    selected={model.dockOption == "dock"}
+                                />
+                            </div>
                             <IconAction
-                                title="Undo"
-                                icon="material:undo"
-                                onClick={() => model.store.undoManager.undo()}
-                                enabled={model.store.undoManager.canUndo}
-                            />
-                            <IconAction
-                                title="Redo"
-                                icon="material:redo"
-                                onClick={() => model.store.undoManager.redo()}
-                                enabled={model.store.undoManager.canRedo}
+                                title="Close"
+                                icon="material:close"
+                                onClick={action(
+                                    () => (model.isVisible = false)
+                                )}
                             />
                         </div>
                     </div>
@@ -1067,16 +1232,9 @@ const ScrapbookManagerDialog = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function showScrapbookManager() {
-    const result = showDialog(<ScrapbookManagerDialog />, {
-        jsPanel: {
-            id: "scrapbook-manager-dialog",
-            title: "Scrapbook",
-            width: 1280,
-            height: 800,
-            modeless: true
-        }
+    runInAction(() => {
+        model.isVisible = !model.isVisible;
     });
-    model.modalDialog = result[0];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1167,3 +1325,12 @@ export function getScrapbookItemName(itemUrl: string) {
         return "[NOT FOUND]";
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+ipcRenderer.on(
+    "showScrapbookManager",
+    action((sender: any, tabId: string) => {
+        showScrapbookManager();
+    })
+);

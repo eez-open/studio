@@ -401,7 +401,8 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: flagsGroup,
                 propertyGridRowComponent: LVGLWidgetFlagsProperty,
-                enumerable: false
+                enumerable: false,
+                hideInDocumentation: "all"
             },
             {
                 name: "flagScrollbarMode",

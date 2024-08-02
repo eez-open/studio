@@ -18,7 +18,8 @@ import {
     WATCH_PANEL_ICON,
     QUEUE_PANEL_ICON,
     ACTIVE_FLOWS_PANEL_ICON,
-    BREAKPOINTS_PANEL_ICON
+    BREAKPOINTS_PANEL_ICON,
+    PROJECT_EDITOR_SCRAPBOOK
 } from "project-editor/ui-components/icons";
 
 const MATERIAL_PREFIX = "material:";
@@ -40,7 +41,8 @@ const SVG_ICONS: { [icon: string]: JSX.Element } = {
     watch_panel: WATCH_PANEL_ICON,
     queue_panel: QUEUE_PANEL_ICON,
     active_flows_panel: ACTIVE_FLOWS_PANEL_ICON,
-    breakpoints_panel: BREAKPOINTS_PANEL_ICON
+    breakpoints_panel: BREAKPOINTS_PANEL_ICON,
+    "project-editor-scrapbook": PROJECT_EDITOR_SCRAPBOOK
 };
 
 export const Icon = observer(
