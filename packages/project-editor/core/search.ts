@@ -308,6 +308,10 @@ export function* searchForObjectDependencies(
 
         let valueObject = visitResult.value;
         if (valueObject) {
+            if (!valueObject.value) {
+                continue;
+            }
+
             if (
                 !isPropertySearchable(
                     getParent(valueObject),
@@ -355,6 +359,11 @@ export function* searchForObjectDependencies(
                 flowProperty == "scpi-template-literal"
             ) {
                 if (lookInsideExpressions) {
+                    let value = valueObject.value;
+                    if (typeof value != "string") {
+                        value = valueObject.value.toString();
+                    }
+
                     yield {
                         kind: "expression-start",
                         valueObject
@@ -367,12 +376,12 @@ export function* searchForObjectDependencies(
                     let expressions;
 
                     if (flowProperty && flowProperty == "template-literal") {
-                        expressions = templateLiteralToExpressions(
-                            valueObject.value
-                        ).map(expression => ({
-                            start: expression.start + 1,
-                            end: expression.end - 1
-                        }));
+                        expressions = templateLiteralToExpressions(value).map(
+                            expression => ({
+                                start: expression.start + 1,
+                                end: expression.end - 1
+                            })
+                        );
                     } else if (
                         flowProperty &&
                         flowProperty == "scpi-template-literal"
@@ -380,7 +389,7 @@ export function* searchForObjectDependencies(
                         expressions = [];
 
                         try {
-                            const parts = parseScpi(valueObject.value);
+                            const parts = parseScpi(value);
                             for (const part of parts) {
                                 const tag = part.tag;
                                 const str = part.value!;
@@ -413,15 +422,13 @@ export function* searchForObjectDependencies(
                             expressions = [];
                         }
                     } else {
-                        expressions = [
-                            { start: 0, end: valueObject.value.length }
-                        ];
+                        expressions = [{ start: 0, end: value.length }];
                     }
 
                     for (const expression of expressions) {
                         try {
                             const rootNode = expressionParser.parse(
-                                valueObject.value.substring(
+                                value.substring(
                                     expression.start,
                                     expression.end
                                 )

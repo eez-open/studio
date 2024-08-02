@@ -6,6 +6,14 @@ export async function initProjectEditor(
     ProjectEditorTabClass: typeof ProjectEditorTab
 ) {
     if (ProjectEditor.DataContextClass) {
+        if (homeTabs && !ProjectEditor.homeTabs) {
+            ProjectEditor.homeTabs = homeTabs;
+        }
+
+        if (ProjectEditorTabClass && !ProjectEditor.ProjectEditorTabClass) {
+            ProjectEditor.ProjectEditorTabClass = ProjectEditorTabClass;
+        }
+
         // already initialized
         return;
     }
