@@ -234,7 +234,9 @@ class Model {
                 properties = properties.slice();
 
                 properties.splice(
-                    properties.findIndex(property => property.name == "flags"),
+                    properties.findIndex(
+                        property => property.name == "widgetFlags"
+                    ),
                     1,
                     ...Object.keys(LVGL_FLAG_CODES)
                         .filter(
@@ -270,12 +272,21 @@ class Model {
                 properties = properties.slice();
 
                 properties.splice(
-                    properties.findIndex(property => property.name == "flags"),
+                    properties.findIndex(
+                        property => property.name == "widgetFlags"
+                    ),
                     1
                 );
 
                 properties.splice(
                     properties.findIndex(property => property.name == "states"),
+                    1
+                );
+
+                properties.splice(
+                    properties.findIndex(
+                        property => property.name == "localStyles"
+                    ),
                     1
                 );
             }

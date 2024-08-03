@@ -38,10 +38,14 @@ If `RANGE` mode is selected then this is selected start value on the slider.
 
 Select between `Literal` and `Assignable`. If `Assignable` is selected then `Value left` can be variable in which the selected start value will be stored.
 
+## Enable animation
+
+If enabled then value change will be animated. Duration of animation is controlled with the style property ("Miscellaneous" section) "Anim time" in LVGL 8.4 or "Anim duration" in LVGL 9.1.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
 # EXAMPLES
 
-* _Dashboard Widgets Demo_
+-   _Dashboard Widgets Demo_

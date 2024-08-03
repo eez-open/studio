@@ -84,10 +84,6 @@ Allow propagating the horizontal scroll to a parent.
 
 Allow propagating the vertical scroll to a parent.
 
-## Scroll chain
-
-Allow propagating both the horizontal and the vertical scroll to a parent.
-
 ## Scroll on focus
 
 Automatically scroll object to make it visible when focused.
