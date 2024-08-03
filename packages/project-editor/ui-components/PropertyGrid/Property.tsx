@@ -8,6 +8,8 @@ import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
 
+import { confirm } from "eez-studio-ui/dialog-electron";
+
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Icon } from "eez-studio-ui/icon";
 
@@ -50,6 +52,7 @@ import { Checkbox } from "./Checkbox";
 import { ImageProperty } from "./ImageProperty";
 
 import { isArray } from "eez-studio-shared/util";
+import { General } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -874,7 +877,23 @@ export const Property = observer(
                 return (
                     <Checkbox
                         state={checkboxState}
-                        onChange={value => this.changeValue(value)}
+                        onChange={value => {
+                            if (
+                                propertyInfo.name == "flowSupport" &&
+                                this.props.objects[0] instanceof General &&
+                                value == false
+                            ) {
+                                confirm(
+                                    "Are you sure?",
+                                    "If flow support is turned off then all your flow specific parts will be removed from the project and after saving the project it will irreversibly lost.",
+                                    () => {
+                                        this.changeValue(value);
+                                    }
+                                );
+                            } else {
+                                this.changeValue(value);
+                            }
+                        }}
                         readOnly={readOnly}
                         switchStyle={propertyInfo.checkboxStyleSwitch}
                         label={
