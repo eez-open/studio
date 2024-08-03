@@ -334,8 +334,11 @@ export function* searchForObjectDependencies(
             }
 
             if (
-                (valueObject.propertyInfo.type ===
-                    PropertyType.ObjectReference &&
+                ((valueObject.propertyInfo.type ===
+                    PropertyType.ObjectReference ||
+                    (valueObject.propertyInfo.type === PropertyType.Enum &&
+                        valueObject.propertyInfo
+                            .referencedObjectCollectionPath)) &&
                     (!projectStore.project.projectTypeTraits.hasFlowSupport ||
                         valueObject.propertyInfo
                             .referencedObjectCollectionPath !=
@@ -355,7 +358,8 @@ export function* searchForObjectDependencies(
                     valueObject
                 };
             } else if (
-                valueObject.propertyInfo.expressionType != undefined ||
+                (flowProperty &&
+                    valueObject.propertyInfo.expressionType != undefined) ||
                 flowProperty == "scpi-template-literal"
             ) {
                 if (lookInsideExpressions) {

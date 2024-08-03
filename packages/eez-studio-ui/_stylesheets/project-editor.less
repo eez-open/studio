@@ -3517,9 +3517,11 @@
             .EezStudio_ProjectEditorScrapbook_Items_Body {
                 flex: 1;
                 padding: 5px;
+                overflow-x: hidden;
                 overflow-y: auto;
 
                 .EezStudio_ProjectEditorScrapbook_Item {
+                    white-space: nowrap;
                     padding: 4px 2px;
                     &.selected {
                         background-color: @selectionBackgroundColor;

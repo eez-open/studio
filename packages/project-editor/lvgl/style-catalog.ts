@@ -1458,6 +1458,7 @@ export const text_font_property_info: LVGLPropertyInfo = {
     name: "text_font",
     displayName: "Font",
     type: PropertyType.Enum,
+    referencedObjectCollectionPath: "fonts",
     enumItems: (propertyValueHolder: PropertyValueHolder) => {
         return [
             ...propertyValueHolder.projectStore.project.fonts.map(font => ({

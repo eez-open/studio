@@ -857,7 +857,39 @@ class PasteWithDependenciesModel {
                 };
             }
 
+            const hasActions = pasteObject.object.components.find(
+                component =>
+                    component instanceof ProjectEditor.ActionComponentClass
+            );
+
+            if (
+                hasActions &&
+                !this.destinationProjectStore.projectTypeTraits.hasFlowSupport
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: "Destination project has no flow support."
+                };
+            }
+
             return { kind: "doesnt-exists" };
+        }
+
+        if (pasteObject.object instanceof ProjectEditor.FlowClass) {
+            const hasActions = pasteObject.object.components.find(
+                component =>
+                    component instanceof ProjectEditor.ActionComponentClass
+            );
+
+            if (
+                hasActions &&
+                !this.destinationProjectStore.projectTypeTraits.hasFlowSupport
+            ) {
+                return {
+                    kind: "not-compatible",
+                    message: "Destination project has no flow support."
+                };
+            }
         }
 
         if (
@@ -1032,19 +1064,19 @@ class PasteWithDependenciesModel {
                     } else if (object instanceof ProjectEditor.ActionClass) {
                         return 5;
                     } else if (object instanceof ProjectEditor.PageClass) {
-                        return 6;
+                        return !object.isUsedAsUserWidget ? 6 : 7;
                     } else if (object instanceof ProjectEditor.StyleClass) {
-                        return 7;
-                    } else if (object instanceof ProjectEditor.LVGLStyleClass) {
                         return 8;
-                    } else if (object instanceof ProjectEditor.BitmapClass) {
+                    } else if (object instanceof ProjectEditor.LVGLStyleClass) {
                         return 9;
-                    } else if (object instanceof ProjectEditor.FontClass) {
+                    } else if (object instanceof ProjectEditor.BitmapClass) {
                         return 10;
-                    } else if (object instanceof ProjectEditor.ColorClass) {
+                    } else if (object instanceof ProjectEditor.FontClass) {
                         return 11;
-                    } else {
+                    } else if (object instanceof ProjectEditor.ColorClass) {
                         return 12;
+                    } else {
+                        return 13;
                     }
                 }
 
@@ -2010,15 +2042,34 @@ export function copyObjects(
             const flowFragment = new ProjectEditor.FlowFragmentClass();
             setParent(flowFragment, object);
 
-            flowFragment.components = object.components.slice();
+            if (destinationProjectStore.projectTypeTraits.isLVGL) {
+                flowFragment.components = [];
+
+                object.components.forEach(component => {
+                    if (
+                        component instanceof ProjectEditor.LVGLScreenWidgetClass
+                    ) {
+                        console.log(component.children);
+                        component.children.forEach(child => {
+                            flowFragment.components.push(child);
+                        });
+                    } else {
+                        flowFragment.components.push(component);
+                    }
+                });
+            } else {
+                flowFragment.components = object.components.slice();
+            }
+
             setParent(flowFragment.components, flowFragment);
-            object.components.forEach(component =>
+
+            flowFragment.components.forEach(component =>
                 setParent(component, flowFragment.components)
             );
 
             flowFragment.connectionLines = object.connectionLines.slice();
             setParent(flowFragment.connectionLines, flowFragment);
-            object.connectionLines.forEach(connectionLine =>
+            flowFragment.connectionLines.forEach(connectionLine =>
                 setParent(connectionLine, flowFragment.connectionLines)
             );
 
