@@ -446,6 +446,8 @@ class ScrapbookManagerModel {
     isVisible: boolean = false;
     dockOption: DockOption = "float";
 
+    focused: boolean = false;
+
     constructor() {
         let confJSONStr = window.localStorage.getItem("ScrapbookManagerConf");
         let conf: {
@@ -1104,7 +1106,12 @@ export const ScrapbookManagerDialog = observer(
 
         render() {
             return (
-                <div className="EezStudio_ProjectEditorScrapbook">
+                <div
+                    className="EezStudio_ProjectEditorScrapbook"
+                    tabIndex={0}
+                    onFocus={() => (model.focused = true)}
+                    onBlur={() => (model.focused = false)}
+                >
                     <div className="EezStudio_ProjectEditorScrapbook_Toolbar">
                         <div>
                             <div className="btn-group" role="group">

@@ -1819,7 +1819,7 @@ export function showFindAllPasteDependenciesProgressDialog(
         if (pasteWithDependenciesModel.posteObjectsWithConflicts.length > 0) {
             showResolvePasteConflictsDialog(
                 pasteWithDependenciesModel,
-                undefined
+                onFinished
             );
         } else {
             pasteWithDependenciesModel.doPaste();
@@ -1948,19 +1948,6 @@ export function pasteWithDependenciesIntoNewStorebookItem(
         return;
     }
 
-    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
-        serializedData.originProjectFilePath,
-        false
-    );
-    if (!sourceProjectEditorTab) {
-        return;
-    }
-
-    const sourceProjectStore = sourceProjectEditorTab.projectStore;
-    if (!sourceProjectStore) {
-        return;
-    }
-
     const sourceObjects = serializedData.object
         ? [serializedData.object]
         : serializedData.objects!;
@@ -1970,10 +1957,10 @@ export function pasteWithDependenciesIntoNewStorebookItem(
         : serializedData.objectsParentPath!;
 
     const { projectStore, projectStoreFlowFragmentFlow } =
-        createEmptyProjectStore(sourceProjectStore);
+        createEmptyProjectStore(pasteModelSourceProjectStore);
 
     showFindAllPasteDependenciesProgressDialog(
-        sourceProjectStore,
+        pasteModelSourceProjectStore,
         sourceObjects,
         sourceObjectsParentPath,
         projectStore,
@@ -1994,19 +1981,6 @@ export function pasteWithDependenciesIntoExistingStorebookItem(
         return;
     }
 
-    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
-        serializedData.originProjectFilePath,
-        false
-    );
-    if (!sourceProjectEditorTab) {
-        return;
-    }
-
-    const sourceProjectStore = sourceProjectEditorTab.projectStore;
-    if (!sourceProjectStore) {
-        return;
-    }
-
     const sourceObjects = serializedData.object
         ? [serializedData.object]
         : serializedData.objects!;
@@ -2020,7 +1994,7 @@ export function pasteWithDependenciesIntoExistingStorebookItem(
     );
 
     showFindAllPasteDependenciesProgressDialog(
-        sourceProjectStore,
+        pasteModelSourceProjectStore,
         sourceObjects,
         sourceObjectsParentPath,
         destinationProjectStore,

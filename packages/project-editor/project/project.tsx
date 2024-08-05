@@ -1552,6 +1552,7 @@ export class Project extends EezObject {
         super();
 
         makeObservable(this, {
+            _themeColors: observable,
             pages: computed,
             projectName: computed,
             importDirective: computed,
@@ -1592,7 +1593,6 @@ export class Project extends EezObject {
             changes: observable,
             colors: observable,
             themes: observable,
-            _themeColors: observable,
 
             setThemeColor: action
         });

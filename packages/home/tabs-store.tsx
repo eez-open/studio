@@ -52,7 +52,8 @@ import { homeLayoutModels } from "home/home-layout-models";
 import {
     getScrapbookItemEezProject,
     getScrapbookItemTabTitle,
-    isScrapbookItemFilePath
+    isScrapbookItemFilePath,
+    model as scrapbookModel
 } from "project-editor/store/scrapbook";
 
 const MODIFED_MARK = "\u002A ";
@@ -545,32 +546,56 @@ export class ProjectEditorTab implements IHomeTab {
             }
         };
         const undo = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 projectStore.undoManager.undo();
             }
         };
         const redo = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 projectStore.undoManager.redo();
             }
         };
         const cut = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 projectStore.cut();
             }
         };
         const copy = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 projectStore.copy();
             }
         };
         const paste = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 console.log("paste");
                 projectStore.paste();
             }
         };
         const deleteSelection = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (!this.runMode) {
                 if (
                     projectStore.navigationStore.selectedPanel &&
@@ -581,6 +606,10 @@ export class ProjectEditorTab implements IHomeTab {
             }
         };
         const selectAll = () => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (
                 projectStore.navigationStore.selectedPanel &&
                 projectStore.navigationStore.selectedPanel.selectAll
@@ -599,6 +628,10 @@ export class ProjectEditorTab implements IHomeTab {
         };
 
         const onKeyDown = (event: KeyboardEvent) => {
+            if (scrapbookModel.focused) {
+                return;
+            }
+
             if (this.projectStore?.runtime) {
                 this.projectStore.runtime.onKeyDown(event);
             } else {
