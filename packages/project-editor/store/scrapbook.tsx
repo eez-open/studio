@@ -405,7 +405,7 @@ class ScrapbookStore {
     }
 
     setItemEezProject(item: ScrapbookItem, newEezProject: string) {
-        const oldnewEezProject = item.description;
+        const oldnewEezProject = item.eezProject;
 
         this.undoManager.executeCommand({
             execute: () => {

@@ -21,6 +21,7 @@ import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
+import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -152,10 +153,7 @@ export class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: TreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu({
-            duplicateSelection: this.duplicateSelection,
-            pasteSelection: this.pasteSelection
-        });
+        return this.flow.createSelectionContextMenu();
     }
 
     duplicateSelection = () => {
@@ -179,35 +177,48 @@ export class FlowDocument implements IDocument {
     };
 
     pasteSelection = () => {
-        this.projectStore.undoManager.setCombineCommands(true);
+        if (canPasteWithDependencies(this.projectStore)) {
+            this.flow.pasteSelection();
+        } else {
+            this.projectStore.undoManager.setCombineCommands(true);
 
-        this.flow.pasteSelection();
+            this.flow.pasteSelection();
 
-        const rectBounding = getSelectedObjectsBoundingRect(
-            this.flowContext.viewState
-        );
-        const rectPage = this.flowContext.viewState.transform.clientToPageRect(
-            this.flowContext.viewState.transform.clientRect
-        );
-
-        const left = rectPage.left + (rectPage.width - rectBounding.width) / 2;
-        const top = rectPage.top + (rectPage.height - rectBounding.height) / 2;
-
-        this.flowContext.viewState.selectedObjects.forEach(objectAdapter => {
-            if (objectAdapter.object instanceof Component) {
-                this.flowContext.projectStore.updateObject(
-                    objectAdapter.object,
-                    {
-                        left:
-                            left +
-                            (objectAdapter.object.left - rectBounding.left),
-                        top: top + (objectAdapter.object.top - rectBounding.top)
-                    }
+            const rectBounding = getSelectedObjectsBoundingRect(
+                this.flowContext.viewState
+            );
+            const rectPage =
+                this.flowContext.viewState.transform.clientToPageRect(
+                    this.flowContext.viewState.transform.clientRect
                 );
-            }
-        });
 
-        this.projectStore.undoManager.setCombineCommands(false);
+            const left =
+                rectPage.left + (rectPage.width - rectBounding.width) / 2;
+            const top =
+                rectPage.top + (rectPage.height - rectBounding.height) / 2;
+
+            this.flowContext.viewState.selectedObjects.forEach(
+                objectAdapter => {
+                    if (objectAdapter.object instanceof Component) {
+                        this.flowContext.projectStore.updateObject(
+                            objectAdapter.object,
+                            {
+                                left:
+                                    left +
+                                    (objectAdapter.object.left -
+                                        rectBounding.left),
+                                top:
+                                    top +
+                                    (objectAdapter.object.top -
+                                        rectBounding.top)
+                            }
+                        );
+                    }
+                }
+            );
+
+            this.projectStore.undoManager.setCombineCommands(false);
+        }
     };
 
     get projectStore() {

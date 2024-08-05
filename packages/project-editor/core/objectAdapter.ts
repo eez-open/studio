@@ -691,7 +691,8 @@ export class TreeObjectAdapter {
                         if (actions?.pasteSelection) {
                             actions.pasteSelection();
                         } else {
-                            this.pasteSelection();
+                            const projectStore = getProjectStore(this.object);
+                            projectStore.paste();
                         }
                     }
                 })
