@@ -646,11 +646,15 @@ export const FontEditor = observer(
             }
         };
 
-        onKeyDown = (event: any) => {
+        onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
             if (event.ctrlKey) {
-                if (event.keyCode == "C".charCodeAt(0)) {
+                if (event.key == "c") {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.copySelection();
-                } else if (event.keyCode == "V".charCodeAt(0)) {
+                } else if (event.key == "v") {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.pasteSelection();
                 }
             }

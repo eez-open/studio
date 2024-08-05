@@ -1082,10 +1082,16 @@ export const FlowEditor = observer(
                 }
             } else if (event.ctrlKey) {
                 if (event.keyCode == "X".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.cutSelection();
                 } else if (event.keyCode == "C".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.copySelection();
                 } else if (event.keyCode == "V".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.context.paste();
                 }
             } else if (event.keyCode == 46) {

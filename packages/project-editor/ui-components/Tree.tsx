@@ -245,10 +245,16 @@ export const Tree = observer(
             } else if (event.shiftKey) {
             } else if (event.ctrlKey) {
                 if (event.keyCode == "X".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.props.treeAdapter.cutSelection();
                 } else if (event.keyCode == "C".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.props.treeAdapter.copySelection();
                 } else if (event.keyCode == "V".charCodeAt(0)) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     this.context.paste();
                 }
             } else {

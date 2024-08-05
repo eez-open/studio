@@ -598,9 +598,24 @@ export class ProjectEditorTab implements IHomeTab {
             this.reloadProject();
         };
 
-        const onKeyDown = (e: KeyboardEvent) => {
+        const onKeyDown = (event: KeyboardEvent) => {
             if (this.projectStore?.runtime) {
-                this.projectStore.runtime.onKeyDown(e);
+                this.projectStore.runtime.onKeyDown(event);
+            } else {
+                if (
+                    !(event.target instanceof HTMLInputElement) &&
+                    !(event.target instanceof HTMLTextAreaElement)
+                ) {
+                    if (event.ctrlKey) {
+                        if (event.key == "x") {
+                            cut();
+                        } else if (event.key == "c") {
+                            copy();
+                        } else if (event.key == "v") {
+                            paste();
+                        }
+                    }
+                }
             }
         };
 
