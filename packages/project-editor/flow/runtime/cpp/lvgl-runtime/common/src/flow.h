@@ -40,14 +40,16 @@ void addTimelineKeyframe(
 void setTimelinePosition(float timelinePosition);
 void clearTimeline();
 
-#define LV_EVENT_METER_TICK_LABEL_EVENT 0x76
-#define LV_EVENT_DROPDOWN_SELECTED_CHANGED 0x77
-#define LV_EVENT_ROLLER_SELECTED_CHANGED 0x78
-#define LV_EVENT_TEXTAREA_TEXT_CHANGED 0x79
-#define LV_EVENT_CHECKED_STATE_CHANGED 0x7A
-#define LV_EVENT_ARC_VALUE_CHANGED 0x7B
-#define LV_EVENT_SLIDER_VALUE_CHANGED 0x7C
-#define LV_EVENT_SLIDER_VALUE_LEFT_CHANGED 0x7D
+#define LV_EVENT_METER_TICK_LABEL_EVENT 0x74
+#define LV_EVENT_DROPDOWN_SELECTED_CHANGED 0x75
+#define LV_EVENT_ROLLER_SELECTED_CHANGED 0x76
+#define LV_EVENT_TEXTAREA_TEXT_CHANGED 0x77
+#define LV_EVENT_CHECKED_STATE_CHANGED 0x78
+#define LV_EVENT_ARC_VALUE_CHANGED 0x79
+#define LV_EVENT_SLIDER_VALUE_CHANGED 0x7A
+#define LV_EVENT_SLIDER_VALUE_LEFT_CHANGED 0x7B
+#define LV_EVENT_SPINBOX_VALUE_CHANGED 0x7C
+#define LV_EVENT_SPINBOX_STEP_CHANGED 0x7D
 #define LV_EVENT_CHECKED   0x7E
 #define LV_EVENT_UNCHECKED 0x7F
 
@@ -67,6 +69,8 @@ void flow_event_dropdown_selected_changed_callback(lv_event_t *e);
 void flow_event_roller_selected_changed_callback(lv_event_t *e);
 void flow_event_slider_value_changed_callback(lv_event_t *e);
 void flow_event_slider_value_left_changed_callback(lv_event_t *e);
+void flow_event_spinbox_value_changed_callback(lv_event_t *e);
+void flow_event_spinbox_step_changed_callback(lv_event_t *e);
 void flow_event_checked_callback(lv_event_t *e);
 void flow_event_unchecked_callback(lv_event_t *e);
 void flow_event_meter_tick_label_event_callback(lv_event_t *e);
@@ -96,6 +100,8 @@ enum UpdateTaskType {
     UPDATE_TASK_TYPE_TAB_NAME,
     UPDATE_TASK_TYPE_LED_COLOR,
     UPDATE_TASK_TYPE_LED_BRIGHTNESS,
+    UPDATE_TASK_TYPE_SPINBOX_VALUE,
+    UPDATE_TASK_TYPE_SPINBOX_STEP,
 };
 
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param);

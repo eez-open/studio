@@ -521,13 +521,29 @@ EM_PORT_API(lv_obj_t *) lvglCreateSpan(lv_obj_t *parentObj, int32_t index, lv_co
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
+EM_PORT_API(lv_obj_t *) lvglCreateSpinbox(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, uint32_t  digit_count, uint32_t separator_position, int32_t min, int32_t max, bool rollover, int32_t step, int32_t value) {
     lv_obj_t *obj = lv_spinbox_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
+
+    lv_spinbox_set_digit_format(obj, digit_count, separator_position);
+    lv_spinbox_set_range(obj, min, max);
+    lv_spinbox_set_rollover(obj, rollover);
+
+    lv_spinbox_set_step(obj, step);
+    lv_spinbox_set_value(obj, value);
+
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;
+}
+
+EM_PORT_API(void) lvglUpdateSpinboxValue(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SPINBOX_VALUE, obj, flow_state, component_index, property_index, 0, 0);
+}
+
+EM_PORT_API(void) lvglUpdateSpinboxStep(lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index) {
+    addUpdateTask(UPDATE_TASK_TYPE_SPINBOX_STEP, obj, flow_state, component_index, property_index, 0, 0);
 }
 
 EM_PORT_API(lv_obj_t *) lvglCreateTable(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h) {
@@ -776,6 +792,10 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
         lv_obj_add_event_cb(obj, flow_event_checked_callback, LV_EVENT_VALUE_CHANGED, data);
     } else if (filter == LV_EVENT_UNCHECKED) {
         lv_obj_add_event_cb(obj, flow_event_unchecked_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_SPINBOX_VALUE_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_spinbox_value_changed_callback, LV_EVENT_VALUE_CHANGED, data);
+    } else if (filter == LV_EVENT_SPINBOX_STEP_CHANGED) {
+        lv_obj_add_event_cb(obj, flow_event_spinbox_step_changed_callback, LV_EVENT_VALUE_CHANGED, data);
     } else {
         lv_obj_add_event_cb(obj, flow_event_callback, filter, data);
     }

@@ -969,18 +969,18 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1030472: ($0) => { startToDebuggerMessage($0); },  
- 1030504: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1030579: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1030654: ($0) => { finishToDebuggerMessage($0); },  
- 1030687: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1030740: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1030846: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1030882: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1030919: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1030959: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1031016: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1031075: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1030600: ($0) => { startToDebuggerMessage($0); },  
+ 1030632: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1030707: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1030782: ($0) => { finishToDebuggerMessage($0); },  
+ 1030815: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1030868: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1030974: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1031010: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1031047: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1031087: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1031144: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1031203: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4710,6 +4710,8 @@ var _lvglCreateMenu = Module['_lvglCreateMenu'] = createExportWrapper('lvglCreat
 var _lvglCreateMessageBox = Module['_lvglCreateMessageBox'] = createExportWrapper('lvglCreateMessageBox');
 var _lvglCreateSpan = Module['_lvglCreateSpan'] = createExportWrapper('lvglCreateSpan');
 var _lvglCreateSpinbox = Module['_lvglCreateSpinbox'] = createExportWrapper('lvglCreateSpinbox');
+var _lvglUpdateSpinboxValue = Module['_lvglUpdateSpinboxValue'] = createExportWrapper('lvglUpdateSpinboxValue');
+var _lvglUpdateSpinboxStep = Module['_lvglUpdateSpinboxStep'] = createExportWrapper('lvglUpdateSpinboxStep');
 var _lvglCreateTable = Module['_lvglCreateTable'] = createExportWrapper('lvglCreateTable');
 var _lvglCreateTileView = Module['_lvglCreateTileView'] = createExportWrapper('lvglCreateTileView');
 var _lvglCreateWindow = Module['_lvglCreateWindow'] = createExportWrapper('lvglCreateWindow');

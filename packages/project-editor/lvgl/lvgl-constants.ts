@@ -508,14 +508,16 @@ export const LVGL_EVENTS_V9 = {
     UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "null" }
 } as WidgetEvents;
 
-export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x76;
-export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x77;
-export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x78;
-export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x79;
-export const LV_EVENT_CHECKED_STATE_CHANGED = 0x7a;
-export const LV_EVENT_ARC_VALUE_CHANGED = 0x7b;
-export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7c;
-export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7d;
+export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x74;
+export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x75;
+export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x76;
+export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x77;
+export const LV_EVENT_CHECKED_STATE_CHANGED = 0x78;
+export const LV_EVENT_ARC_VALUE_CHANGED = 0x79;
+export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7a;
+export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7b;
+export const LV_EVENT_SPINBOX_VALUE_CHANGED = 0x7c;
+export const LV_EVENT_SPINBOX_STEP_CHANGED = 0x7d;
 
 ////////////////////////////////////////////////////////////////////////////////
 

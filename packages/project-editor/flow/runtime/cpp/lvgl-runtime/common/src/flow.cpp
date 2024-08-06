@@ -560,6 +560,30 @@ void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
     }
 }
 
+void flow_event_spinbox_value_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_spinbox_get_value(ta);
+            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Spinbox widget");
+        }
+    }
+}
+
+void flow_event_spinbox_step_changed_callback(lv_event_t *e) {
+    lv_event_code_t event = lv_event_get_code(e);
+    if (event == LV_EVENT_VALUE_CHANGED) {
+        lv_obj_t *ta = lv_event_get_target_obj(e);
+        if (!g_updateTask || g_updateTask->obj != ta) {
+            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
+            int32_t value = lv_spinbox_get_step(ta);
+            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Step in Spinbox widget");
+        }
+    }
+}
+
 void flow_event_checked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     lv_obj_t *ta = lv_event_get_target_obj(e);
@@ -788,6 +812,14 @@ void doUpdateTasks() {
             }
             uint32_t cur_val = lv_led_get_brightness(updateTask.obj);
             if (new_val != cur_val) lv_led_set_brightness(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_VALUE) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Spinbox widget");
+            int32_t cur_val = lv_spinbox_get_value(updateTask.obj);
+            if (new_val != cur_val) lv_spinbox_set_value(updateTask.obj, new_val);
+        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_STEP) {
+            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Spinbox widget");
+            int32_t cur_val = lv_spinbox_get_step(updateTask.obj);
+            if (new_val != cur_val) lv_spinbox_set_step(updateTask.obj, new_val);
         }
         g_updateTask = nullptr;
     }
