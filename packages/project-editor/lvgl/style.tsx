@@ -582,7 +582,6 @@ export const LVGLSelectedStyleEditor = observer(
                         width={this.runtime.displayWidth}
                         height={this.runtime.displayHeight}
                         style={{
-                            imageRendering: "pixelated",
                             maxWidth: "100%",
                             maxHeight: "100%"
                         }}

@@ -46,6 +46,12 @@ import {
     LVGLStylePropCode,
     LV_ANIM_OFF
 } from "project-editor/lvgl//lvgl-constants";
+import {
+    pad_bottom_property_info,
+    pad_left_property_info,
+    pad_right_property_info,
+    pad_top_property_info
+} from "./style-catalog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -742,12 +748,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                             left: 0,
                             leftUnit: "px",
                             top: 0,
-                            topUnit: "px",
-                            width: LVGLStylesEditorRuntime.PREVIEW_WIDTH,
-                            widthUnit: "px",
-                            height: LVGLStylesEditorRuntime.PREVIEW_HEIGHT,
-                            heightUnit: "px",
-                            localStyles: {}
+                            topUnit: "px"
                         }
                     )
                 )
@@ -762,6 +763,36 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
         super(page);
 
         const lvglScreenWidget = page.lvglScreenWidget!;
+
+        lvglScreenWidget.localStyles.definition =
+            lvglScreenWidget.localStyles.addPropertyToDefinition(
+                pad_top_property_info,
+                "MAIN",
+                "DEFAULT",
+                10
+            );
+        lvglScreenWidget.localStyles.definition =
+            lvglScreenWidget.localStyles.addPropertyToDefinition(
+                pad_bottom_property_info,
+                "MAIN",
+                "DEFAULT",
+                10
+            );
+        lvglScreenWidget.localStyles.definition =
+            lvglScreenWidget.localStyles.addPropertyToDefinition(
+                pad_left_property_info,
+                "MAIN",
+                "DEFAULT",
+                10
+            );
+        lvglScreenWidget.localStyles.definition =
+            lvglScreenWidget.localStyles.addPropertyToDefinition(
+                pad_right_property_info,
+                "MAIN",
+                "DEFAULT",
+                10
+            );
+
         for (const component of lvglScreenWidget.children) {
             this.lvglWidgetsMap.set(component.type, component);
         }
