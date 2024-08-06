@@ -6,7 +6,8 @@ import {
     reaction,
     IReactionDisposer,
     IObservableValue,
-    makeObservable
+    makeObservable,
+    runInAction
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -269,6 +270,10 @@ export const StylesTreeNavigation = observer(
                 );
                 return;
             }
+
+            runInAction(() => {
+                this.context.navigationStore.selectedStyleObject.set(object);
+            });
         };
 
         onDoubleClickItem = (object: IEezObject) => {
