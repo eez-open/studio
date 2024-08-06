@@ -732,10 +732,16 @@
                 },
                 "articles": [
                     {
-                        "content": "Container.html",
+                        "content": "Container (Dashboard).html",
                         "status": "publish",
                         "id": 12081,
                         "sha256": "f1a094dcec4603cc3ecb7fcc2368557e0cd422100fee77a728155b54511367e5"
+                    },
+                    {
+                        "content": "Container (LVGL).html",
+                        "status": "publish",
+                        "id": 12710,
+                        "sha256": "d846df492a970b9061d86ac424fbbc347a91228c2d8680ed304596080236a8e8"
                     },
                     {
                         "content": "Grid.html",
@@ -851,7 +857,7 @@
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12583,
-                        "sha256": "fa1c77e104d0bf9c3c309895a04b5be7271db97f6d1502bbfad9cdfc76010dd9"
+                        "sha256": "55d7ae7ad2d9775f0de4ae3fdf0fb142365dac8a8379a326ef0c811a15938b21"
                     },
                     {
                         "content": "Slider (Dashboard).html",
@@ -1311,6 +1317,18 @@
             "id": 12593,
             "source_url": "https://dev.envox.eu/wp-content/uploads/7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517-scpi_terminal.png",
             "sha256": "7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517"
+        },
+        {
+            "fileName": "lvgl_tabview_conf1.png",
+            "id": 12708,
+            "source_url": "https://dev.envox.eu/wp-content/uploads/12af3ed008fd01a9c88f590b2140412461c9bfde344d234a15c22bda2ae40153-lvgl_tabview_conf1.png",
+            "sha256": "12af3ed008fd01a9c88f590b2140412461c9bfde344d234a15c22bda2ae40153"
+        },
+        {
+            "fileName": "lvgl_tabview_conf2.png",
+            "id": 12709,
+            "source_url": "https://dev.envox.eu/wp-content/uploads/dbad060764d04a61cdb2c056e6878abe5708179aea142c38b96b3324e75a0683-lvgl_tabview_conf2.png",
+            "sha256": "dbad060764d04a61cdb2c056e6878abe5708179aea142c38b96b3324e75a0683"
         }
     ]
 }

@@ -244,6 +244,11 @@ class ScrapbookStore {
     }
 
     async load(filePath: string) {
+        // make sure scrapbooks folder exists
+        await fs.promises.mkdir(getUserDataPath(`scrapbooks`), {
+            recursive: true
+        });
+
         let db = new Database(filePath);
         db.defaultSafeIntegers();
 
@@ -255,10 +260,6 @@ class ScrapbookStore {
                 )
                 .all();
         } catch (err) {
-            await fs.promises.mkdir(getUserDataPath(`scrapbooks`), {
-                recursive: true
-            });
-
             db.exec(`CREATE TABLE items${DB_VERSION}(
                     id TEXT PRIMARY KEY NOT NULL UNIQUE,
                     name TEXT NOT NULL,

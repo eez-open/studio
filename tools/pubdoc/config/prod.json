@@ -601,7 +601,7 @@
                         "content": "Arc.html",
                         "status": "publish",
                         "id": 12211,
-                        "sha256": "1805fbda3253b4fbecca120ab0eba2be055544435317da087365a490afd436e9"
+                        "sha256": "da778da5b6a59964439e75651b40403bc7f1d6150f13603ffb99505eb50285ad"
                     },
                     {
                         "content": "Bitmap (Dashboard).html",
@@ -631,7 +631,7 @@
                         "content": "Button (LVGL).html",
                         "status": "publish",
                         "id": 12216,
-                        "sha256": "4636039477e97a66b901875807a32740e97e4689c54f731334959c7ed58bcefe"
+                        "sha256": "5764c166f78129556b5f6f1667223df8cb3606ef7689daf8f31d64a3608dabf9"
                     },
                     {
                         "content": "ButtonGroup.html",
@@ -649,13 +649,13 @@
                         "content": "Image.html",
                         "status": "publish",
                         "id": 12219,
-                        "sha256": "16b426fca09293d7d846521065917e1629858ff5b66abdd3348d426b170a6190"
+                        "sha256": "08fbe12d11de8ea451d58409288dfc4843db6843aef7f625e1b8319e7a55914d"
                     },
                     {
                         "content": "Label.html",
                         "status": "publish",
                         "id": 12220,
-                        "sha256": "586928bc4db616b2de5a0cfaa3ddc6135860524d3543830c07d4c39776bbc032"
+                        "sha256": "bcc896aa0c3cefdb7845bc169a57ec13259fa2cf4e23783a4e871b8a800e2a5b"
                     },
                     {
                         "content": "Markdown.html",
@@ -673,7 +673,7 @@
                         "content": "Panel.html",
                         "status": "publish",
                         "id": 12223,
-                        "sha256": "6bd4f4748cb5bbcacb6b556d95f3c8e6feab1b4284cd29768fb722b0785c175e"
+                        "sha256": "7abff02cbf9c33ae663785f3e5d0b357ddf1e66c66f8eb40d3eb18c0e1d3edfb"
                     },
                     {
                         "content": "Rectangle (Dashboard).html",
@@ -709,7 +709,7 @@
                         "content": "Textarea.html",
                         "status": "publish",
                         "id": 12229,
-                        "sha256": "c4dcaeceb4ceb9522aac0fb6d756b22371d0923d6293703917bb3e98db190aa9"
+                        "sha256": "18beec8b24616c47cfb950755afd5316c70cf93b14da3e6f10db4a591d44552e"
                     },
                     {
                         "content": "ToggleButton.html",
@@ -732,10 +732,16 @@
                 },
                 "articles": [
                     {
-                        "content": "Container.html",
+                        "content": "Container (Dashboard).html",
                         "status": "publish",
                         "id": 12231,
-                        "sha256": "38429e9327df528fe898de828f8c74d83e4d58ea2a42c79f4649652f834c7b7a"
+                        "sha256": "f9020dd588e2065327fb7b6c762f2ffeec25df72535e010a26ed3b0882f3c048"
+                    },
+                    {
+                        "content": "Container (LVGL).html",
+                        "status": "publish",
+                        "id": 13120,
+                        "sha256": "d846df492a970b9061d86ac424fbbc347a91228c2d8680ed304596080236a8e8"
                     },
                     {
                         "content": "Grid.html",
@@ -767,7 +773,7 @@
                         "content": "Calendar.html",
                         "status": "publish",
                         "id": 12235,
-                        "sha256": "4482a32ff99b511aea6f8e5055b456af5eea1d5fa1e5d45814f25f85255b6ae2"
+                        "sha256": "a2e6428535c405728e1cc7399c361f651cc8af9b54d1b9cfa703c60943c931c7"
                     },
                     {
                         "content": "Checkbox (Dashboard).html",
@@ -779,13 +785,13 @@
                         "content": "Checkbox (LVGL).html",
                         "status": "publish",
                         "id": 12237,
-                        "sha256": "d280b04b246e88122e92ceb277e0c5a49d58176a0a4c01ae2ed0c27249b113a9"
+                        "sha256": "328add6ae76ff4d2899064c26fd211729b41186ed3824cc981832603fa08e662"
                     },
                     {
                         "content": "Colorwheel.html",
                         "status": "publish",
                         "id": 12238,
-                        "sha256": "4e95f11bff9c95fc37f7324371980c8b5aa40a45a9bb4fd50f7565f56e3ac787"
+                        "sha256": "618b857086d990f5876dc2dfc9d72ace9e68f94b9115d56f6d811644fef62a75"
                     },
                     {
                         "content": "Dropdown (Dashboard).html",
@@ -803,13 +809,13 @@
                         "content": "Dropdown (LVGL).html",
                         "status": "publish",
                         "id": 12241,
-                        "sha256": "f43517d75cb3bd81b7d13006e66a3e2fc79d07c51ec69b508811c4fd4b0683d1"
+                        "sha256": "82b163d8b82955a0b8bd21f4ae0dbe9b2a94002e5aad8c4503e51a9c2f729ba6"
                     },
                     {
                         "content": "Imgbutton.html",
                         "status": "publish",
                         "id": 12242,
-                        "sha256": "9e5120593f99ffe5c1d80c8620724e489352b01477a1a9c955b79f8d20ce77e0"
+                        "sha256": "a03ee9540826d8981b46719a904c3bf59f16f4ccd97a0a554a2cff59062a7e11"
                     },
                     {
                         "content": "Input (EEZ-GUI).html",
@@ -821,7 +827,7 @@
                         "content": "Keyboard.html",
                         "status": "publish",
                         "id": 12244,
-                        "sha256": "9f73ca2aa5521246446897786b76ebfa58a11456c19a404de5a563dd2f1f3003"
+                        "sha256": "ca7e749bfa10def91be656bf1ef85bc01a5561d6c2094fcad70a18bdcebeda2f"
                     },
                     {
                         "content": "NumberInput.html",
@@ -845,13 +851,13 @@
                         "content": "Roller (LVGL).html",
                         "status": "publish",
                         "id": 12246,
-                        "sha256": "55efbb3827439f15801a3c078d2f7c5d6c8d7a0f80ed513d0d4ef32720da8687"
+                        "sha256": "07ca0880a4211b647463ec10e18bd7f3e150da73bb75aa4ab52db6f0b85c58a1"
                     },
                     {
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12630,
-                        "sha256": "fa1c77e104d0bf9c3c309895a04b5be7271db97f6d1502bbfad9cdfc76010dd9"
+                        "sha256": "55d7ae7ad2d9775f0de4ae3fdf0fb142365dac8a8379a326ef0c811a15938b21"
                     },
                     {
                         "content": "Slider (Dashboard).html",
@@ -869,7 +875,7 @@
                         "content": "Slider (LVGL).html",
                         "status": "publish",
                         "id": 12249,
-                        "sha256": "a2581e36d84f330b03cf23da3a1082d2eb27c56061ec3295f0174bd22a6add7b"
+                        "sha256": "ffd2b1fd737d6d512db4afbc4d47ca1e069d2c473d2796d8857de85dcab0ce3f"
                     },
                     {
                         "content": "Switch (Dashboard).html",
@@ -887,7 +893,7 @@
                         "content": "Switch (LVGL).html",
                         "status": "publish",
                         "id": 12252,
-                        "sha256": "5e460b61797e015f8149cb0f75dc1a866ae0939a02ae5500f072156b0a314d94"
+                        "sha256": "e438dd57d487e38ec3a660a15f258ba11ff0dcd99c6611124531aac984f9af47"
                     },
                     {
                         "content": "Terminal.html",
@@ -919,7 +925,7 @@
                         "content": "Bar.html",
                         "status": "publish",
                         "id": 12256,
-                        "sha256": "08da91fb8f41060113cfa1e923897a09ea80d938c6f38292c13568c6a4f0cead"
+                        "sha256": "3f3c969e8dde27e0544d274b85ab597bf9f7785abe22f1ed0bed0e18def0af91"
                     },
                     {
                         "content": "BarGraph.html",
@@ -931,7 +937,7 @@
                         "content": "Chart.html",
                         "status": "publish",
                         "id": 12258,
-                        "sha256": "c592d0c30e8e2404c870111ec37156f2694e7c95b3d5e924f1a43707d1439a0a"
+                        "sha256": "09ba25447ba8890547abe8a2170927fe66c0a9a88ae838508f42dc5affcb1e4b"
                     },
                     {
                         "content": "EEZChart.html",
@@ -967,7 +973,7 @@
                         "content": "Meter.html",
                         "status": "publish",
                         "id": 12264,
-                        "sha256": "9ec3f8feed21972745073a07fcdd4de27f1efbd01c2fd292fd55183133edac39"
+                        "sha256": "2b34193f43ec39501ba2dc3dbc5a78f14799a6ddb2bb068128d15dfc8edb9f8a"
                     },
                     {
                         "content": "Plotly.html",
@@ -1009,7 +1015,7 @@
                         "content": "Spinner (LVGL).html",
                         "status": "publish",
                         "id": 12270,
-                        "sha256": "e8d71fb6d9eaa492d2674843aea4cfbaa22794c9d4eab0f797f1d4f0e32ee8b2"
+                        "sha256": "6bfbdc4719617d2e8e60c080d1eacfc772bddcf1e16779df663818b8367c80e1"
                     },
                     {
                         "content": "Tabulator.html",
@@ -1311,6 +1317,18 @@
             "id": 12660,
             "source_url": "https://www.envox.eu/wp-content/uploads/7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517-scpi_terminal.png",
             "sha256": "7b11dce0332ee685520503d9946ec7ae30258b4c30f3fdc16d303151f2263517"
+        },
+        {
+            "fileName": "lvgl_tabview_conf1.png",
+            "id": 13111,
+            "source_url": "https://www.envox.eu/wp-content/uploads/12af3ed008fd01a9c88f590b2140412461c9bfde344d234a15c22bda2ae40153-lvgl_tabview_conf1.png",
+            "sha256": "12af3ed008fd01a9c88f590b2140412461c9bfde344d234a15c22bda2ae40153"
+        },
+        {
+            "fileName": "lvgl_tabview_conf2.png",
+            "id": 13112,
+            "source_url": "https://www.envox.eu/wp-content/uploads/dbad060764d04a61cdb2c056e6878abe5708179aea142c38b96b3324e75a0683-lvgl_tabview_conf2.png",
+            "sha256": "dbad060764d04a61cdb2c056e6878abe5708179aea142c38b96b3324e75a0683"
         }
     ]
 }
