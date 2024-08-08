@@ -15,7 +15,8 @@ import type {
     getFlow,
     getProject,
     Project,
-    ImportDirective
+    ImportDirective,
+    BuildFile
 } from "project-editor/project/project";
 import type { Page } from "project-editor/features/page/page";
 import type {
@@ -180,6 +181,7 @@ export interface IProjectEditor {
     evalProperty: typeof evalProperty;
     conditionalStyleConditionProperty: PropertyInfo;
     FlowTabStateClass: typeof FlowTabState;
+    BuildFileClass: typeof BuildFile;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

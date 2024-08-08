@@ -969,18 +969,18 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1035528: ($0) => { startToDebuggerMessage($0); },  
- 1035560: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1035635: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1035710: ($0) => { finishToDebuggerMessage($0); },  
- 1035743: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1035796: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1035902: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1035938: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1035975: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1036015: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1036072: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1036131: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1035944: ($0) => { startToDebuggerMessage($0); },  
+ 1035976: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036051: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036126: ($0) => { finishToDebuggerMessage($0); },  
+ 1036159: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1036212: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1036318: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1036354: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1036391: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1036431: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1036488: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1036547: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4244,6 +4244,48 @@ var ASM_CONSTS = {
 
   var _emscripten_date_now = () => Date.now();
 
+  
+  var runtimeKeepaliveCounter = 0;
+  var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
+  
+  var _proc_exit = (code) => {
+      EXITSTATUS = code;
+      if (!keepRuntimeAlive()) {
+        if (Module['onExit']) Module['onExit'](code);
+        ABORT = true;
+      }
+      quit_(code, new ExitStatus(code));
+    };
+  
+  /** @suppress {duplicate } */
+  /** @param {boolean|number=} implicit */
+  var exitJS = (status, implicit) => {
+      EXITSTATUS = status;
+  
+      checkUnflushedContent();
+  
+      // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
+      if (keepRuntimeAlive() && !implicit) {
+        var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
+        err(msg);
+      }
+  
+      _proc_exit(status);
+    };
+  var _exit = exitJS;
+  
+  var __emscripten_runtime_keepalive_clear = () => {
+      noExitRuntime = false;
+      runtimeKeepaliveCounter = 0;
+    };
+  
+  
+  var _emscripten_force_exit = (status) => {
+      warnOnce('emscripten_force_exit cannot actually shut down the runtime, as the build does not have EXIT_RUNTIME set');
+      __emscripten_runtime_keepalive_clear();
+      _exit(status);
+    };
+
   var _emscripten_get_now;
       // Modern environment where performance.now() is supported:
       // N.B. a shorter form "_emscripten_get_now = performance.now;" is
@@ -4643,6 +4685,8 @@ var wasmImports = {
   /** @export */
   emscripten_date_now: _emscripten_date_now,
   /** @export */
+  emscripten_force_exit: _emscripten_force_exit,
+  /** @export */
   emscripten_get_now: _emscripten_get_now,
   /** @export */
   emscripten_memcpy_js: _emscripten_memcpy_js,
@@ -4807,7 +4851,6 @@ var missingLibrarySymbols = [
   'readI53FromU64',
   'convertI32PairToI53',
   'convertU32PairToI53',
-  'exitJS',
   'isLeapYear',
   'ydayFromDate',
   'arraySum',
@@ -4832,7 +4875,6 @@ var missingLibrarySymbols = [
   'getDynCaller',
   'dynCall',
   'handleException',
-  'keepRuntimeAlive',
   'runtimeKeepalivePush',
   'runtimeKeepalivePop',
   'callUserCallback',
@@ -4994,6 +5036,7 @@ var unexportedSymbols = [
   'convertI32PairToI53Checked',
   'ptrToString',
   'zeroMemory',
+  'exitJS',
   'getHeapMax',
   'growMemory',
   'ENV',
@@ -5015,6 +5058,7 @@ var unexportedSymbols = [
   'readEmAsmArgsArray',
   'readEmAsmArgs',
   'runEmAsmFunction',
+  'keepRuntimeAlive',
   'asyncLoad',
   'alignMemory',
   'mmapAlloc',

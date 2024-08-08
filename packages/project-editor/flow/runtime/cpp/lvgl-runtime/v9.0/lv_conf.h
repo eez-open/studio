@@ -238,7 +238,8 @@
 
 /*Add a custom handler when assert happens e.g. to restart the MCU*/
 #define LV_ASSERT_HANDLER_INCLUDE <stdint.h>
-#define LV_ASSERT_HANDLER while(1);   /*Halt by default*/
+
+#define LV_ASSERT_HANDLER extern void emscripten_force_exit(int); emscripten_force_exit(1);
 
 /*-------------
  * Debug

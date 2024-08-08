@@ -3235,12 +3235,18 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
         {
             name: "scale",
             lvglName: "scale",
-            lvglStylePropName: "TRANSFORM_ZOOM"
+            lvglStylePropName:
+                build.project.settings.general.lvglVersion == "9.0"
+                    ? "TRANSFORM_SCALE_X"
+                    : "TRANSFORM_ZOOM"
         },
         {
             name: "rotate",
             lvglName: "rotate",
-            lvglStylePropName: "TRANSFORM_ANGLE",
+            lvglStylePropName:
+                build.project.settings.general.lvglVersion == "9.0"
+                    ? "TRANSFORM_ROTATION"
+                    : "TRANSFORM_ANGLE",
             lvglFromValue: (value: string) => value,
             lvglToValue: (value: string) => value
         }
@@ -3561,6 +3567,15 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                                 build.line(
                                     `lv_obj_set_local_style_prop(obj, LV_STYLE_${keyframeProperty.lvglStylePropName}, value, LV_PART_MAIN);`
                                 );
+
+                                if (
+                                    keyframeProperty.lvglStylePropName ==
+                                    "TRANSFORM_SCALE_X"
+                                ) {
+                                    build.line(
+                                        `lv_obj_set_local_style_prop(obj, LV_STYLE_TRANSFORM_SCALE_Y, value, LV_PART_MAIN);`
+                                    );
+                                }
                             }
 
                             build.unindent();
@@ -3572,6 +3587,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                 build.unindent();
             }
             build.line(`}`);
+            build.unindent();
         }
         build.line(`}`);
     }

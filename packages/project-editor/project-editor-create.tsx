@@ -19,7 +19,8 @@ import {
     Project,
     checkObjectReference,
     checkAssetId,
-    ImportDirective
+    ImportDirective,
+    BuildFile
 } from "project-editor/project/project";
 
 import {
@@ -227,7 +228,8 @@ export async function createProjectEditor(
         makeExpressionProperty,
         evalProperty,
         conditionalStyleConditionProperty,
-        FlowTabStateClass: FlowTabState
+        FlowTabStateClass: FlowTabState,
+        BuildFileClass: BuildFile
     };
 
     ConditionalStyle.classInfo.properties.push(

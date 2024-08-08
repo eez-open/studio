@@ -84,6 +84,7 @@ export class LVGLRollerWidget extends LVGLWidget {
             height: 100,
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
+            optionsType: "literal",
             selected: 0,
             selectedType: "literal",
             mode: "NORMAL"
@@ -177,7 +178,13 @@ export class LVGLRollerWidget extends LVGLWidget {
             rect.height,
 
             runtime.wasm.allocateUTF8(
-                optionsExpr ? "" : unescapeCString(this.options)
+                optionsExpr
+                    ? ""
+                    : unescapeCString(
+                          this.optionsType == "expression"
+                              ? `${this.options}\n${this.options}\n${this.options}`
+                              : this.options
+                      )
             ),
             selectedExpr ? 0 : (this.selected as number),
             ROLLER_MODES[this.mode]

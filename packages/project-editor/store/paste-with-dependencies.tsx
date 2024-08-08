@@ -1870,6 +1870,20 @@ export function canPasteWithDependencies(
         return false;
     }
 
+    if (serializedData.object) {
+        if (serializedData.object instanceof ProjectEditor.BuildFileClass) {
+            return false;
+        }
+    } else if (serializedData.objects) {
+        if (
+            !serializedData.objects.find(
+                object => !(object instanceof ProjectEditor.BuildFileClass)
+            )
+        ) {
+            return false;
+        }
+    }
+
     if (
         serializedData.originProjectFilePath == destinationProjectStore.filePath
     ) {

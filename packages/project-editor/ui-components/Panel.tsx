@@ -10,6 +10,8 @@ export const Panel = observer(
         buttons?: JSX.Element[];
         body: JSX.Element | undefined;
         style?: React.CSSProperties;
+        tabIndex?: number;
+        onFocus?: () => void;
     }> {
         render() {
             let title: JSX.Element;
@@ -27,6 +29,8 @@ export const Panel = observer(
                 <div
                     className="EezStudio_PanelContainer"
                     style={this.props.style}
+                    tabIndex={this.props.tabIndex}
+                    onFocus={this.props.onFocus}
                 >
                     <div className="EezStudio_PanelHeader">
                         <span className="EezStudio_ProjectEditorPanelTitle">

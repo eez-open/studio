@@ -12,6 +12,7 @@ import {
     canAdd,
     createObject,
     getAncestorOfType,
+    IPanel,
     LayoutModels
 } from "project-editor/store";
 
@@ -482,9 +483,12 @@ export const SettingsContent = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export const SettingsNavigation = observer(
-    class SettingsNavigation extends React.Component<{
-        selectedObject: IEezObject | undefined;
-    }> {
+    class SettingsNavigation
+        extends React.Component<{
+            selectedObject: IEezObject | undefined;
+        }>
+        implements IPanel
+    {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -499,6 +503,8 @@ export const SettingsNavigation = observer(
 
         componentDidMount() {
             this.treeAdapter.selectItem(this.treeAdapter.allRows[0].item);
+
+            this.context.navigationStore.mountPanel(this);
         }
 
         static navigationTreeFilter(object: IEezObject) {
@@ -508,8 +514,12 @@ export const SettingsNavigation = observer(
             return true;
         }
 
+        componentWillUnmount() {
+            this.context.navigationStore.unmountPanel(this);
+        }
+
         onFocus() {
-            this.context.navigationStore.setSelectedPanel(undefined);
+            this.context.navigationStore.setSelectedPanel(this);
         }
 
         onClick = (object: IEezObject) => {
@@ -538,6 +548,43 @@ export const SettingsNavigation = observer(
                 "none",
                 undefined,
                 this.onClick
+            );
+        }
+
+        // interface IPanel implementation
+        get selectedObject() {
+            return this.treeAdapter.rootItem.selectedObject;
+        }
+        get selectedObjects() {
+            return this.treeAdapter.rootItem.selectedObjects;
+        }
+        canCut() {
+            return this.treeAdapter.canCut();
+        }
+        cutSelection() {
+            this.treeAdapter.cutSelection();
+        }
+        canCopy() {
+            return this.treeAdapter.canCopy();
+        }
+        copySelection() {
+            this.treeAdapter.copySelection();
+        }
+        canPaste() {
+            return this.treeAdapter.canPaste();
+        }
+        pasteSelection() {
+            this.treeAdapter.pasteSelection();
+        }
+        canDelete() {
+            return this.treeAdapter.canDelete();
+        }
+        deleteSelection() {
+            this.treeAdapter.deleteSelection();
+        }
+        selectAll() {
+            this.treeAdapter.selectItems(
+                this.treeAdapter.allRows.map(row => row.item)
             );
         }
 
@@ -574,6 +621,8 @@ export const SettingsNavigation = observer(
                         />
                     }
                     style={{ overflow: "hidden" }}
+                    tabIndex={0}
+                    onFocus={this.onFocus.bind(this)}
                 />
             );
         }

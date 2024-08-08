@@ -70,6 +70,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
             heightUnit: "content",
             clickableFlag: true,
             options: "Option 1\nOption 2\nOption 3",
+            optionsType: "literal",
             selected: 0,
             selectedType: "literal"
         },

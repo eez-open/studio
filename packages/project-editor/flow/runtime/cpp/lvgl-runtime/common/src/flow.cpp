@@ -201,10 +201,11 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
 #if LVGL_VERSION_MAJOR >= 9
         // TODO LVGL 9.0
         widgetTimeline.scale = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_SCALE_X).num;
+        widgetTimeline.rotate = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ROTATION).num;
 #else
         widgetTimeline.scale = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ZOOM).num;
-#endif
         widgetTimeline.rotate = lv_obj_get_style_prop(widgetTimeline.obj, LV_PART_MAIN, LV_STYLE_TRANSFORM_ANGLE).num;
+#endif
 
         widgetTimeline.lastTimelinePosition = 0;
     }
@@ -213,6 +214,8 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
         return;
     }
 
+    widgetTimeline.lastTimelinePosition = timelinePosition;
+
     float x = widgetTimeline.x;
     float y = widgetTimeline.y;
     float w = widgetTimeline.width;
@@ -220,6 +223,14 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
     float opacity = widgetTimeline.opacity;
     float scale = widgetTimeline.scale;
     float rotate = widgetTimeline.rotate;
+
+    bool setX = false;
+    bool setY = false;
+    bool setWidth = false;
+    bool setHeight = false;
+    bool setOPA = false;
+    bool setScale = false;
+    bool setRotate = false;
 
     for (auto itKeyframe = widgetTimeline.timeline.begin(); itKeyframe != widgetTimeline.timeline.end(); itKeyframe++) {
         TimelineKeyframe &keyframe = *itKeyframe;
@@ -261,10 +272,14 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
                     auto p2 = keyframe.x;
                     x = (1 - t2) * p1 + t2 * p2;
                 }
+
+                setX = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_WIDTH) {
                 w += eez::g_easingFuncs[keyframe.widthEasingFunc](t) * (keyframe.width - w);
+
+                setWidth = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_Y) {
@@ -293,22 +308,32 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
                     auto p2 = keyframe.y;
                     y = (1 - t2) * p1 + t2 * p2;
                 }
+
+                setY = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_HEIGHT) {
                 h += eez::g_easingFuncs[keyframe.heightEasingFunc](t) * (keyframe.height - h);
+
+                setHeight = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_OPACITY) {
                 opacity += eez::g_easingFuncs[keyframe.opacityEasingFunc](t) * (keyframe.opacity - opacity);
+
+                setOPA = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_SCALE) {
                 scale += eez::g_easingFuncs[keyframe.scaleEasingFunc](t) * (keyframe.scale - scale);
+
+                setScale = true;
             }
 
             if (keyframe.enabledProperties & WIDGET_TIMELINE_PROPERTY_ROTATE) {
                 rotate += eez::g_easingFuncs[keyframe.rotateEasingFunc](t) * (keyframe.rotate - rotate);
+
+                setRotate = true;
             }
 
             break;
@@ -342,33 +367,49 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
 
     lv_style_value_t value;
 
-    value.num = (int16_t)roundf(x);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_X, value, LV_PART_MAIN);
+    if (setX) {
+        value.num = (int16_t)roundf(x);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_X, value, LV_PART_MAIN);
+    }
 
-    value.num = (int16_t)roundf(y);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_Y, value, LV_PART_MAIN);
+    if (setY) {
+        value.num = (int16_t)roundf(y);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_Y, value, LV_PART_MAIN);
+    }
 
-    value.num = (int16_t)roundf(w);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_WIDTH, value, LV_PART_MAIN);
+    if (setWidth) {
+        value.num = (int16_t)roundf(w);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_WIDTH, value, LV_PART_MAIN);
+    }
 
-    value.num = (int16_t)roundf(h);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_HEIGHT, value, LV_PART_MAIN);
+    if (setHeight) {
+        value.num = (int16_t)roundf(h);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_HEIGHT, value, LV_PART_MAIN);
+    }
 
-    value.num = (int32_t)roundf(opacity * 255.0f);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
+    if (setOPA) {
+        value.num = (int32_t)roundf(opacity * 255.0f);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
+    }
 
-    value.num = (int32_t)roundf(scale);
+    if (setScale) {
+        value.num = (int32_t)roundf(scale);
 #if LVGL_VERSION_MAJOR >= 9
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_X, value, LV_PART_MAIN);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_Y, value, LV_PART_MAIN);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_X, value, LV_PART_MAIN);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_SCALE_Y, value, LV_PART_MAIN);
 #else
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ZOOM, value, LV_PART_MAIN);
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ZOOM, value, LV_PART_MAIN);
 #endif
+    }
 
-    value.num = (int32_t)roundf(rotate);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ANGLE, value, LV_PART_MAIN);
-
-    lv_obj_update_layout(widgetTimeline.obj);
+    if (setRotate) {
+        value.num = (int32_t)roundf(rotate);
+#if LVGL_VERSION_MAJOR >= 9
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ROTATION, value, LV_PART_MAIN);
+#else
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_TRANSFORM_ANGLE, value, LV_PART_MAIN);
+#endif
+    }
 }
 
 void doAnimateFlowState(eez::flow::FlowState *flowState) {

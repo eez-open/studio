@@ -311,70 +311,83 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         this.dispose2 = undefined;
                     }
 
-                    // set all _lvglObj to undefined
-                    runInAction(() => {
-                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
-                            widget => (widget._lvglObj = undefined)
-                        );
-                    });
-
-                    this.wasm._lvglClearTimeline();
-
-                    this.freeStrings();
-
-                    const pageObj = this.page.lvglCreate(this, 0);
-                    if (!pageObj) {
-                        console.error("pageObj is undefined");
-                    }
-
-                    const editor = getProjectStore(
-                        this.page
-                    ).editorsStore.getEditorByObject(this.page);
-                    if (editor) {
-                        const pageTabState = editor.state as PageTabState;
-                        if (pageTabState?.timeline?.isEditorActive) {
-                            this.wasm._lvglSetTimelinePosition(
-                                pageTabState.timeline.position
+                    try {
+                        // set all _lvglObj to undefined
+                        runInAction(() => {
+                            this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                                widget => (widget._lvglObj = undefined)
                             );
+                        });
+
+                        this.wasm._lvglClearTimeline();
+
+                        this.freeStrings();
+
+                        const pageObj = this.page.lvglCreate(this, 0);
+                        if (!pageObj) {
+                            console.error("pageObj is undefined");
                         }
-                    }
 
-                    this.wasm._lvglScreenLoad(-1, pageObj);
-
-                    runInAction(() => {
-                        if (this.page._lvglObj != undefined) {
-                            this.wasm._lvglDeleteObject(this.page._lvglObj);
+                        const editor = getProjectStore(
+                            this.page
+                        ).editorsStore.getEditorByObject(this.page);
+                        if (editor) {
+                            const pageTabState = editor.state as PageTabState;
+                            if (pageTabState?.timeline?.isEditorActive) {
+                                this.wasm._lvglSetTimelinePosition(
+                                    pageTabState.timeline.position
+                                );
+                            }
                         }
-                        this.page._lvglObj = pageObj;
-                    });
 
-                    this.dispose2 = autorun(() => {
-                        for (const objectAdapter of this.flowContext.viewState
-                            .selectedObjects) {
-                            const tabWidget = getAncestorOfType<LVGLTabWidget>(
-                                objectAdapter.object,
-                                ProjectEditor.LVGLTabWidgetClass.classInfo
-                            );
-                            if (tabWidget) {
-                                const tabviewWidget = tabWidget.tabview;
-                                if (tabviewWidget && tabviewWidget._lvglObj) {
-                                    const tabIndex = tabWidget.tabIndex;
+                        this.wasm._lvglScreenLoad(-1, pageObj);
 
-                                    if (tabIndex != -1) {
-                                        this.wasm._lvglTabviewSetActive(
-                                            tabviewWidget._lvglObj,
-                                            tabWidget.tabIndex,
-                                            LV_ANIM_OFF
-                                        );
+                        runInAction(() => {
+                            if (this.page._lvglObj != undefined) {
+                                this.wasm._lvglDeleteObject(this.page._lvglObj);
+                            }
+                            this.page._lvglObj = pageObj;
+                        });
 
-                                        runInAction(() => {
-                                            tabWidget._refreshRelativePosition++;
-                                        });
+                        this.dispose2 = autorun(() => {
+                            for (const objectAdapter of this.flowContext
+                                .viewState.selectedObjects) {
+                                const tabWidget =
+                                    getAncestorOfType<LVGLTabWidget>(
+                                        objectAdapter.object,
+                                        ProjectEditor.LVGLTabWidgetClass
+                                            .classInfo
+                                    );
+                                if (tabWidget) {
+                                    const tabviewWidget = tabWidget.tabview;
+                                    if (
+                                        tabviewWidget &&
+                                        tabviewWidget._lvglObj
+                                    ) {
+                                        const tabIndex = tabWidget.tabIndex;
+
+                                        if (tabIndex != -1) {
+                                            this.wasm._lvglTabviewSetActive(
+                                                tabviewWidget._lvglObj,
+                                                tabWidget.tabIndex,
+                                                LV_ANIM_OFF
+                                            );
+
+                                            runInAction(() => {
+                                                tabWidget._refreshRelativePosition++;
+                                            });
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
+                    } catch (e) {
+                        console.error(e);
+                        setTimeout(() => {
+                            this.unmount();
+                            this.mount();
+                        });
+                    }
                 });
             }
         );
@@ -1222,12 +1235,14 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
     }
 }
 
-let versionReflected = new Set<string>();
+// let versionReflected = new Set<string>();
 
 export function reflectLvglVersion(project: Project) {
+    /*
     if (versionReflected.has(project.settings.general.lvglVersion)) {
         return;
     }
     versionReflected.add(project.settings.general.lvglVersion);
     new LVGLReflectEditorRuntime(project);
+    */
 }
