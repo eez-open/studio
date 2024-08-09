@@ -14,6 +14,7 @@ import { isSelectionMoveable } from "project-editor/flow/editor/mouse-handler";
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { DragAndDropManager } from "project-editor/core/dd";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +68,11 @@ export const Selection = observer(
         },
         {}
     > {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        selectionNodeRef = React.createRef<HTMLDivElement>();
+
         requestAnimationFrameId: any;
 
         _selectedObjectRects: Rect[] = [];
@@ -189,6 +195,8 @@ export const Selection = observer(
                 runInAction(() => {
                     this._selectedObjectRects = selectedObjectRects;
                 });
+
+                this.showSelection();
             }
 
             const selectedObjectsParentRect = getSelectedObjectsParentRect();
@@ -201,6 +209,8 @@ export const Selection = observer(
                 runInAction(() => {
                     this._selectedObjectsParentRect = selectedObjectsParentRect;
                 });
+
+                this.showSelection();
             }
 
             this.requestAnimationFrameId = requestAnimationFrame(this.getRects);
@@ -212,6 +222,24 @@ export const Selection = observer(
 
         componentWillUnmount() {
             cancelAnimationFrame(this.requestAnimationFrameId);
+        }
+
+        showSelectionTimeoutId: any;
+        showSelection() {
+            if (this.context.projectTypeTraits.isDashboard) {
+                return;
+            }
+
+            if (this.showSelectionTimeoutId) {
+                clearTimeout(this.showSelectionTimeoutId);
+            }
+
+            this.showSelectionTimeoutId = setTimeout(() => {
+                this.showSelectionTimeoutId = undefined;
+                if (this.selectionNodeRef.current) {
+                    this.selectionNodeRef.current.style.display = "block";
+                }
+            }, 50);
         }
 
         get selectedObjects() {
@@ -383,7 +411,10 @@ export const Selection = observer(
                     {isSelectionVisible && (
                         <React.Fragment>
                             {selectedObjectsParentElement}
-                            <div className="EezStudio_FlowEditorSelection_Draggable">
+                            <div
+                                className="EezStudio_FlowEditorSelection_Draggable"
+                                ref={this.selectionNodeRef}
+                            >
                                 {selectedObjectRectsElement}
                                 {selectedObjectsBoundingRectElement}
                                 {resizeHandlersElement}

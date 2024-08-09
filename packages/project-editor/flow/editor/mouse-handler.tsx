@@ -468,7 +468,8 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
         if (!context.projectStore.projectTypeTraits.isDashboard) {
             if (this.selectionNode) {
-                this.selectionNode.style.transform = ``;
+                this.selectionNode.style.transform = "";
+                this.selectionNode.style.display = "none";
             }
         }
 

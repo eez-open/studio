@@ -105,6 +105,34 @@ export abstract class LVGLPageRuntime {
         return getLvglStylePropCode(this.page, code) ?? 0;
     }
 
+    async preloadImages() {
+        const startTime = new Date().getTime();
+        const TIMEOUT = 1000;
+
+        const projectStore = getProjectStore(this.page);
+        const bitmapObjects =
+            projectStore.project._assets.maps.name.getAllObjectsOfType(
+                "bitmaps"
+            );
+        bitmapObjects.forEach(
+            bitmapObject => (bitmapObject.object as Bitmap).imageElement
+        );
+
+        while (true) {
+            let loaded = !bitmapObjects.find(
+                bitmapObject =>
+                    (bitmapObject.object as Bitmap).imageElement == undefined
+            );
+
+            if (loaded || new Date().getTime() - startTime > TIMEOUT) {
+                break;
+            }
+
+            // wait for a while
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+    }
+
     getBitmapPtrByName(bitmapName: string) {
         const bitmap = findBitmap(
             ProjectEditor.getProjectStore(this.page).project,
@@ -276,6 +304,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
         const wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
             async () => {
+                await this.preloadImages();
+
                 if (this.wasm != wasm) {
                     return;
                 }
