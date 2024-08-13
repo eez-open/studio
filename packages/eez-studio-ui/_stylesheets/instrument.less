@@ -329,39 +329,6 @@
     color: @historyItemDateColor!important;
 }
 
-.EezStudio_SessionHistoryItem {
-    &:extend(.EezStudio_HistoryItem all);
-
-    &.EezStudio_HistoryItem_SessionStart {
-        margin-top: 10px;
-        padding-top: 10px;
-        padding-bottom: 40px;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
-        background: @sessionHistoryItemSessionStartBackground;
-    }
-
-    &.EezStudio_HistoryItem_SessionClose {
-        margin-bottom: 10px;
-        padding-top: 40px;
-        padding-bottom: 10px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-        background: @sessionHistoryItemSessionStopBackground;
-    }
-
-    .EezStudio_HistoryItemDate {
-        color: #333 !important;
-    }
-
-    .EezStudio_HistoryItem_SessionName {
-        padding-left: 10px;
-        color: #333;
-        font-size: 110%;
-        font-weight: bold;
-    }
-}
-
 .EezStudio_AnswerHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 
@@ -608,10 +575,6 @@
         border: 2px solid @selectionBackgroundColor;
     }
 
-    &.EezStudio_HistoryItemEnclosure_Session {
-        width: 100%;
-    }
-
     &.disablePreview .EezStudio_ItemPreview {
         pointer-events: none;
     }
@@ -790,18 +753,14 @@
 
         td {
             position: relative;
+            padding: 2px 5px;
         }
 
         td:nth-child(1) {
-            padding-right: 10px;
-            white-space: nowrap;
-        }
-
-        td:nth-child(2) {
             width: 100%;
         }
 
-        td:nth-child(3) {
+        td:nth-child(2) {
             white-space: nowrap;
         }
 
@@ -811,6 +770,13 @@
 
         &:hover .EezStudio_Icon {
             visibility: visible;
+        }
+    }
+
+    tbody > tr.session_free_mode {
+        td:nth-child(1) {
+            font-style: italic;
+            text-transform: uppercase;
         }
     }
 }
@@ -1672,5 +1638,11 @@
 .EezStudio_InstrumentTools {
     .dropdown {
         margin-right: 0;
+    }
+}
+
+.EezStudio_SessionList {
+    .EezStudio_ToolbarHeader {
+        background-color: @panelHeaderColor;
     }
 }

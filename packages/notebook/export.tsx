@@ -403,19 +403,15 @@ function addToExistingNotebook(store: IStore, items: IActivityLogEntry[]) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function exportTool(controller: IActivityLogController) {
-    let items: IActivityLogEntry[] = [];
-
-    // check if there is at least 1 item that is not "activity-log/session" item ...
-    let i;
-    for (i = 0; i < controller.selection.length; ++i) {
-        if (!controller.selection[i].type.startsWith("activity-log/session")) {
-            items.push(controller.selection[i]);
-        }
-    }
-
-    if (items.length === 0) {
+    if (controller.selection.length === 0) {
         // ... if not then there is nothing to export
         return null;
+    }
+
+    let items: IActivityLogEntry[] = [];
+
+    for (let i = 0; i < controller.selection.length; ++i) {
+        items.push(controller.selection[i]);
     }
 
     const referencedItemIds = flatten(

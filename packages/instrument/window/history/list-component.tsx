@@ -105,8 +105,6 @@ export const HistoryItems = observer(
                 let className = classNames(
                     `EezStudio_HistoryItemEnclosure EezStudio_HistoryItem_${historyItem.id}`,
                     {
-                        EezStudio_HistoryItemEnclosure_Session:
-                            historyItem.type.startsWith("activity-log/session"),
                         selected:
                             !this.props.selectHistoryItemsSpecification &&
                             historyItem.selected,

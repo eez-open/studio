@@ -13,7 +13,6 @@ import type { IAppStore, History } from "instrument/window/history/history";
 import type { IHistoryItem } from "instrument/window/history/item";
 
 export class Filters {
-    session: boolean = true;
     connectsAndDisconnects: boolean = true;
     scpi: boolean = true;
     downloadedFiles: boolean = true;
@@ -27,7 +26,6 @@ export class Filters {
 
     constructor() {
         makeObservable(this, {
-            session: observable,
             connectsAndDisconnects: observable,
             scpi: observable,
             downloadedFiles: observable,
@@ -42,12 +40,6 @@ export class Filters {
     }
 
     filterActivityLogEntry(activityLogEntry: IActivityLogEntry): boolean {
-        if (this.session) {
-            if (activityLogEntry.type.startsWith("activity-log/session")) {
-                return true;
-            }
-        }
-
         if (this.connectsAndDisconnects) {
             if (
                 [
@@ -127,14 +119,26 @@ export class Filters {
         return false;
     }
 
+    get allSelected() {
+        return (
+            this.connectsAndDisconnects &&
+            this.scpi &&
+            this.downloadedFiles &&
+            this.uploadedFiles &&
+            this.attachedFiles &&
+            this.charts &&
+            this.lists &&
+            this.notes &&
+            this.launchedScripts &&
+            this.tabulators
+        );
+    }
+
     getFilter() {
         const types: string[] = [];
 
-        if (this.session) {
-            types.push(
-                "activity-log/session-start",
-                "activity-log/session-close"
-            );
+        if (this.allSelected) {
+            return "1";
         }
 
         if (this.connectsAndDisconnects) {
@@ -246,13 +250,6 @@ export class FilterStats {
     add(type: string, amount: number) {
         if (
             [
-                "activity-log/session-start",
-                "activity-log/session-close"
-            ].indexOf(type) !== -1
-        ) {
-            this.session += amount;
-        } else if (
-            [
                 "instrument/created",
                 "instrument/restored",
                 "instrument/connected",
@@ -305,15 +302,6 @@ export const FiltersComponent = observer(
             return (
                 <div className="EezStudio_FiltersComponentContainer">
                     <PropertyList>
-                        <BooleanProperty
-                            name={`Session start and close (${filterStats.session})`}
-                            value={this.props.appStore.filters.session}
-                            onChange={action(
-                                (value: boolean) =>
-                                    (this.props.appStore.filters.session =
-                                        value)
-                            )}
-                        />
                         <BooleanProperty
                             name={`Connects and disconnects (${filterStats.connectsAndDisconnects})`}
                             value={

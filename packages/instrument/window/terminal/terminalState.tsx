@@ -7,7 +7,6 @@ import {
     computed
 } from "mobx";
 
-import type { ISession } from "instrument/window/history/session/store";
 import { CommandsTree } from "instrument/window/terminal/commands-tree";
 import type { InstrumentObject } from "instrument/instrument-object";
 import { parseIdentifier } from "project-editor/flow/expression";
@@ -21,7 +20,6 @@ export class TerminalState {
         observable.box<boolean>();
 
     _command: string = "";
-    selectedSession: ISession | undefined;
     searchText: string;
 
     selectedNode: ICommandNode | undefined;
@@ -29,7 +27,6 @@ export class TerminalState {
     constructor(public instrument: InstrumentObject | undefined) {
         makeObservable(this, {
             _command: observable,
-            selectedSession: observable,
             searchText: observable,
             instrument: observable,
             selectedNode: observable,

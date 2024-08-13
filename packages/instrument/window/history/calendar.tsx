@@ -177,24 +177,48 @@ export const Month = observer(
 
 export const Calendar = observer(
     class Calendar extends React.Component<{ history: History }> {
+        monthHasActivity(month: Date) {
+            let start = -getDayOfWeek(month);
+
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const i = start + row * 7 + col;
+                    const day = new Date(month);
+                    day.setDate(day.getDate() + i);
+
+                    if (day.getMonth() === month.getMonth()) {
+                        if (this.props.history.calendar.getActivityCount(day)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
         render() {
             var months = [];
 
             var startMonth = new Date(this.props.history.calendar.minDate);
             startMonth.setDate(1);
+            startMonth.setHours(0, 0, 0, 0);
 
             var endMonth = new Date(this.props.history.calendar.maxDate);
             endMonth.setDate(1);
+            endMonth.setHours(0, 0, 0, 0);
 
             var month = new Date(startMonth);
             while (month <= endMonth) {
-                months.push(
-                    <Month
-                        key={month.toString()}
-                        history={this.props.history}
-                        month={new Date(month)}
-                    />
-                );
+                if (!(month < endMonth) || this.monthHasActivity(month)) {
+                    months.push(
+                        <Month
+                            key={month.toString()}
+                            history={this.props.history}
+                            month={new Date(month)}
+                        />
+                    );
+                }
 
                 month.setMonth(month.getMonth() + 1);
             }

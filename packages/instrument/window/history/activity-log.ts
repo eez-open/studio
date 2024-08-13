@@ -1,5 +1,3 @@
-import { observable, runInAction, makeObservable } from "mobx";
-
 import { db } from "eez-studio-shared/db-path";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
@@ -13,6 +11,7 @@ import {
 import { createHistoryItem } from "instrument/window/history/item-factory";
 
 import { isArray } from "eez-studio-shared/util";
+import { getActiveSession } from "instrument/window/history/session/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -285,7 +284,16 @@ export const activityLogStore = createStore({
 
         // version 16
         `ALTER TABLE activityLog ADD COLUMN temporary BOOLEAN;
-        UPDATE versions SET version = 16 WHERE tableName = 'activityLog';`
+        UPDATE versions SET version = 16 WHERE tableName = 'activityLog';`,
+
+        // version 17
+        `CREATE INDEX activityLog_sid ON activityLog(sid);
+        CREATE INDEX activityLog_sid_and_date ON activityLog(sid, date);
+        INSERT INTO "history/sessions"(id, name, folder, isActive, deleted)
+            SELECT id AS id, json_extract(message, '$.sessionName') AS name, '' AS folder, 0 AS isActive, 0 AS deleted FROM activityLog WHERE type = 'activity-log/session-start';
+        DELETE FROM activityLog WHERE type = 'activity-log/session-start';
+        DELETE FROM activityLog WHERE type = 'activity-log/session-close';
+        UPDATE versions SET version = 17 WHERE tableName = 'activityLog';`
     ],
 
     properties: {
@@ -418,7 +426,10 @@ export function log(
     }
 
     if (store === activityLogStore) {
-        activityLogEntry.sid = activeSession.id;
+        const activeSession = getActiveSession();
+        if (activeSession) {
+            activityLogEntry.sid = activeSession.id;
+        }
     }
 
     if (!activityLogEntry.message) {
@@ -511,84 +522,6 @@ export function loadData(store: IStore, id: string) {
 export function logGet(store: IStore, id: string) {
     return store.findById(id);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-class ActiveSession {
-    id: string | undefined;
-    message: string | undefined;
-
-    constructor() {
-        makeObservable(this, {
-            id: observable,
-            message: observable
-        });
-
-        activityLogStore.watch(
-            {
-                createObject: (object: any) => {
-                    if (object.type === "activity-log/session-start") {
-                        runInAction(() => {
-                            this.id = object.id;
-                            this.message = object.message;
-                        });
-                    }
-                },
-                updateObject: (changes: any) => {
-                    if (
-                        changes.id === this.id &&
-                        changes.message !== undefined
-                    ) {
-                        try {
-                            const message = JSON.parse(changes.message);
-                            if (message.sessionCloseId) {
-                                runInAction(() => {
-                                    this.id = undefined;
-                                    this.message = undefined;
-                                });
-                            } else {
-                                runInAction(() => {
-                                    this.message = changes.message;
-                                });
-                            }
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    }
-                },
-                deleteObject: (object: any) => {
-                    if (object.id === this.id) {
-                        runInAction(() => {
-                            this.id = undefined;
-                            this.message = undefined;
-                        });
-                    }
-                }
-            },
-            {
-                skipInitialQuery: true
-            }
-        );
-
-        const result = db
-            .prepare(
-                `SELECT
-                    id
-                FROM
-                    activityLog
-                WHERE
-                    type = 'activity-log/session-start' AND
-                    json_extract(message, '$.sessionCloseId') IS NULL
-                ORDER BY date DESC
-                LIMIT 1`
-            )
-            .get();
-
-        this.id = result && result.id.toString();
-    }
-}
-
-export const activeSession = new ActiveSession();
 
 export function getHistoryItemById(store: IStore, id: string) {
     const activityLogEntry = store.findById(id);

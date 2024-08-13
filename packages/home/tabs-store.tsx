@@ -394,6 +394,11 @@ export class InstrumentTab implements IHomeTab {
         }
         return true;
     }
+
+    showSessionsList() {
+        const editor = this.object.getEditor();
+        editor.navigationStore.navigateToSessionsList();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1225,11 +1230,15 @@ export class Tabs {
     }
 
     navigateToSessionsList() {
-        this.openTabById("history", true);
-        this.viewDeletedHistory = false;
-        const { showSessionsList } =
-            require("instrument/window/history/history-view") as typeof HistoryViewModule;
-        showSessionsList(this);
+        if (this.activeTab instanceof InstrumentTab) {
+            this.activeTab.showSessionsList();
+        } else {
+            this.openTabById("history", true);
+            this.viewDeletedHistory = false;
+            const { showSessionsList } =
+                require("instrument/window/history/history-view") as typeof HistoryViewModule;
+            showSessionsList(this);
+        }
     }
 
     mainHistoryView: HistoryViewComponent | undefined;

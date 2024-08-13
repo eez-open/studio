@@ -10,7 +10,6 @@ import type * as DlogWaveformModule from "instrument/window/waveform/dlog";
 
 import type { IHistoryItem, HistoryItem } from "instrument/window/history/item";
 
-import type * as SessionHistoryItemModule from "instrument/window/history/items/session";
 import type * as CreatedHistoryItemModule from "instrument/window/history/items/created";
 import type * as ConnectedHistoryItemModule from "instrument/window/history/items/connected";
 import type * as ConnectFailedHistoryItemModule from "instrument/window/history/items/connect-failed";
@@ -62,12 +61,6 @@ export function createHistoryItem(
     store: IStore,
     activityLogEntry: IActivityLogEntry
 ): HistoryItem {
-    if (activityLogEntry.type.startsWith("activity-log/session")) {
-        const { SessionHistoryItem } =
-            require("instrument/window/history/items/session") as typeof SessionHistoryItemModule;
-        return new SessionHistoryItem(store, activityLogEntry);
-    }
-
     if (
         activityLogEntry.type === "instrument/created" ||
         activityLogEntry.type === "instrument/deleted" ||
