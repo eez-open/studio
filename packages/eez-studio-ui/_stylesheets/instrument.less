@@ -729,54 +729,58 @@
 .EezStudio_SessionListTableContainer {
     padding: 5px;
 
-    tbody > tr {
-        cursor: pointer;
-        font-size: 90%;
+    table {
+        width: 100%;
 
-        &.selected {
-            background-color: @selectionBackgroundColor;
-            color: @selectionColor;
-            .text-muted {
-                color: #ccc !important;
+        tbody > tr {
+            cursor: pointer;
+            font-size: 90%;
+
+            &.selected {
+                background-color: @selectionBackgroundColor;
+                color: @selectionColor;
+                .text-muted {
+                    color: #ccc !important;
+                }
+                .EezStudio_Action {
+                    color: white;
+                }
+                .EezStudio_Action:hover {
+                    color: #aaa;
+                }
             }
-            .EezStudio_Action {
-                color: white;
+
+            table {
+                width: 100%;
             }
-            .EezStudio_Action:hover {
-                color: #aaa;
+
+            td {
+                position: relative;
+                padding: 2px 5px;
+            }
+
+            td:nth-child(1) {
+                width: 100%;
+            }
+
+            td:nth-child(2) {
+                white-space: nowrap;
+            }
+
+            .EezStudio_Icon {
+                visibility: hidden;
+            }
+
+            &:hover .EezStudio_Icon {
+                visibility: visible;
             }
         }
 
-        table {
-            width: 100%;
-        }
-
-        td {
-            position: relative;
-            padding: 2px 5px;
-        }
-
-        td:nth-child(1) {
-            width: 100%;
-        }
-
-        td:nth-child(2) {
-            white-space: nowrap;
-        }
-
-        .EezStudio_Icon {
-            visibility: hidden;
-        }
-
-        &:hover .EezStudio_Icon {
-            visibility: visible;
-        }
-    }
-
-    tbody > tr.session_free_mode {
-        td:nth-child(1) {
-            font-style: italic;
-            text-transform: uppercase;
+        tbody > tr.session_free_mode {
+            td:nth-child(1) {
+                font-style: italic;
+                text-transform: uppercase;
+            }
         }
     }
 }

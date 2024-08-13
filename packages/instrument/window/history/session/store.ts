@@ -1,4 +1,10 @@
-import { observable, makeObservable, computed, values } from "mobx";
+import {
+    observable,
+    makeObservable,
+    computed,
+    values,
+    runInAction
+} from "mobx";
 
 import {
     beginTransaction,
@@ -7,6 +13,7 @@ import {
     createStoreObjectsCollection,
     types
 } from "eez-studio-shared/store";
+import { db } from "eez-studio-shared/db-path";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,6 +64,13 @@ const sessionsCollection = createStoreObjectsCollection<IHistorySession>();
 historySessionsStore.watch(sessionsCollection);
 export const sessions = sessionsCollection.objects;
 
+const deletedSessionsCollection =
+    createStoreObjectsCollection<IHistorySession>();
+historySessionsStore.watch(deletedSessionsCollection, {
+    deletedOption: "only"
+});
+export const deletedSessions = deletedSessionsCollection.objects;
+
 export function getActiveSession() {
     return values(sessions).find(session => session.isActive);
 }
@@ -64,20 +78,27 @@ export function getActiveSession() {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistorySessions {
+    selectedDeletedSession: IHistorySession | undefined = undefined;
+
     constructor() {
         makeObservable(this, {
+            selectedDeletedSession: observable,
             sessions: computed,
+            deletedSessions: computed,
             activeSessionId: computed
         });
     }
 
     get sessions() {
         const list = [...values(sessions)];
-
         list.sort((a, b) => a.name.localeCompare(b.name));
-
         list.unshift(SESSION_FREE);
+        return list;
+    }
 
+    get deletedSessions() {
+        const list = [...values(deletedSessions)];
+        list.sort((a, b) => a.name.localeCompare(b.name));
         return list;
     }
 
@@ -162,6 +183,38 @@ class HistorySessions {
 
         commitTransaction();
     }
+
+    emptyTrash() {
+        if (!this.selectedDeletedSession) {
+            return;
+        }
+
+        historySessionsStore.deleteObject(this.selectedDeletedSession, {
+            deletePermanently: true
+        });
+
+        db.prepare(
+            `DELETE FROM activityLog WHERE sid=${this.selectedDeletedSession.id}`
+        ).run();
+
+        runInAction(() => {
+            this.selectedDeletedSession = undefined;
+        });
+    }
+
+    restoreSession = () => {
+        if (!this.selectedDeletedSession) {
+            return;
+        }
+
+        historySessionsStore.undeleteObject(this.selectedDeletedSession);
+
+        this.activateSession(this.selectedDeletedSession.id);
+
+        runInAction(() => {
+            this.selectedDeletedSession = undefined;
+        });
+    };
 }
 
 export const historySessions = new HistorySessions();
