@@ -34,7 +34,7 @@ import {
     setParent
 } from "project-editor/core/object";
 import type { LVGLStyle } from "project-editor/lvgl/style";
-import { PageTabState } from "project-editor/features/page/PageEditor";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 import {
     getLvglBitmapPtr,
     getLvglFlagCodes,

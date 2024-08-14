@@ -1,4 +1,5 @@
 import React from "react";
+import { action } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -19,14 +20,6 @@ import {
     IHistorySession,
     SESSION_FREE_ID
 } from "instrument/window/history/session/store";
-import {
-    action,
-    autorun,
-    IReactionDisposer,
-    makeObservable,
-    observable,
-    runInAction
-} from "mobx";
 
 export function showEditSessionNameDialog(
     session: IHistorySession | undefined,
@@ -89,26 +82,8 @@ export const SessionList = observer(
     }> {
         ref = React.createRef<HTMLDivElement>();
 
-        showDeleted = false;
-        dispose: IReactionDisposer;
-
         constructor(props: any) {
             super(props);
-
-            makeObservable(this, {
-                showDeleted: observable
-            });
-
-            this.dispose = autorun(() => {
-                if (
-                    this.showDeleted &&
-                    historySessions.deletedSessions.length == 0
-                ) {
-                    runInAction(() => {
-                        this.showDeleted = false;
-                    });
-                }
-            });
         }
 
         componentDidMount() {
@@ -117,10 +92,6 @@ export const SessionList = observer(
 
         componentDidUpdate() {
             this.ensureSelectedVisible();
-        }
-
-        componentWillUnmount(): void {
-            this.dispose();
         }
 
         ensureSelectedVisible() {
@@ -137,31 +108,31 @@ export const SessionList = observer(
         };
 
         handleEditSessionName = () => {
-            const activeSession = historySessions.activeSession;
-            if (activeSession) {
-                showEditSessionNameDialog(activeSession, name => {
-                    historySessions.updateSessionName(activeSession, name);
+            const selectedSession = historySessions.selectedSession;
+            if (selectedSession) {
+                showEditSessionNameDialog(selectedSession, name => {
+                    historySessions.updateSessionName(selectedSession, name);
                 });
             }
         };
 
         handleDeleteSession = () => {
-            const activeSession = historySessions.activeSession;
-            if (activeSession) {
+            const selectedSession = historySessions.selectedSession;
+            if (selectedSession) {
                 confirm("Are you sure?", undefined, () => {
-                    historySessions.deleteSession(activeSession);
+                    historySessions.deleteSession(selectedSession);
                 });
             }
         };
 
         handleDeleteForeverSession = () => {
-            const session = historySessions.selectedDeletedSession;
+            const session = historySessions.selectedSession;
             if (session) {
                 confirm(
                     "Are you sure?",
                     "This will irrevocably delete the selected session and all history items belonging to the session.",
                     () => {
-                        historySessions.emptyTrash();
+                        historySessions.deleteForeverSession(session);
                     }
                 );
             }
@@ -171,7 +142,7 @@ export const SessionList = observer(
             return (
                 <VerticalHeaderWithBody className="EezStudio_SessionList">
                     <ToolbarHeader>
-                        {this.showDeleted ? (
+                        {historySessions.showDeleted ? (
                             <>
                                 <IconAction
                                     key="restore"
@@ -181,10 +152,10 @@ export const SessionList = observer(
                                 />
                                 <IconAction
                                     icon="material:delete_forever"
-                                    title="Delete session"
+                                    title="Delete forever session"
                                     onClick={this.handleDeleteForeverSession}
                                     enabled={
-                                        historySessions.selectedDeletedSession !=
+                                        historySessions.selectedSession !=
                                         undefined
                                     }
                                 />
@@ -193,9 +164,9 @@ export const SessionList = observer(
                                     icon="material:arrow_back"
                                     text="Back"
                                     title={"Go back to the sessions list"}
-                                    onClick={action(() => {
-                                        this.showDeleted = false;
-                                    })}
+                                    onClick={() =>
+                                        historySessions.setShowDeleted(false)
+                                    }
                                     className="btn-secondary btn-sm"
                                 />
                             </>
@@ -211,7 +182,7 @@ export const SessionList = observer(
                                     title="Edit session name"
                                     onClick={this.handleEditSessionName}
                                     enabled={
-                                        historySessions.activeSessionId !==
+                                        historySessions.selectedSession.id !==
                                         SESSION_FREE_ID
                                     }
                                 />
@@ -220,7 +191,7 @@ export const SessionList = observer(
                                     title="Delete session"
                                     onClick={this.handleDeleteSession}
                                     enabled={
-                                        historySessions.activeSessionId !==
+                                        historySessions.selectedSession.id !==
                                         SESSION_FREE_ID
                                     }
                                 />
@@ -229,9 +200,9 @@ export const SessionList = observer(
                                         text={`Deleted Sessions (${historySessions.deletedSessions.length})`}
                                         icon="material:delete"
                                         title="Show deleted sessions"
-                                        onClick={action(() => {
-                                            this.showDeleted = true;
-                                        })}
+                                        onClick={() =>
+                                            historySessions.setShowDeleted(true)
+                                        }
                                         className="btn-secondary btn-sm"
                                         style={{ marginLeft: 20 }}
                                     />
@@ -246,7 +217,7 @@ export const SessionList = observer(
                         >
                             <table>
                                 <tbody>
-                                    {(this.showDeleted
+                                    {(historySessions.showDeleted
                                         ? historySessions.deletedSessions
                                         : historySessions.sessions
                                     ).map(session => (
@@ -257,16 +228,16 @@ export const SessionList = observer(
                                             session={session}
                                             isSelected={
                                                 session.id ==
-                                                (this.showDeleted
-                                                    ? historySessions
-                                                          .selectedDeletedSession
-                                                          ?.id
-                                                    : historySessions.activeSessionId)
+                                                historySessions.selectedSession
+                                                    .id
                                             }
                                             onSelect={action(() => {
-                                                if (this.showDeleted) {
-                                                    historySessions.selectedDeletedSession =
-                                                        session;
+                                                if (
+                                                    historySessions.showDeleted
+                                                ) {
+                                                    historySessions.selectSession(
+                                                        session
+                                                    );
                                                 } else {
                                                     historySessions.activateSession(
                                                         session.id

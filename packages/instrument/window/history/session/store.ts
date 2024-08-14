@@ -3,7 +3,8 @@ import {
     makeObservable,
     computed,
     values,
-    runInAction
+    runInAction,
+    autorun
 } from "mobx";
 
 import {
@@ -14,6 +15,8 @@ import {
     types
 } from "eez-studio-shared/store";
 import { db } from "eez-studio-shared/db-path";
+
+import * as notification from "eez-studio-ui/notification";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,14 +81,23 @@ export function getActiveSession() {
 ////////////////////////////////////////////////////////////////////////////////
 
 class HistorySessions {
-    selectedDeletedSession: IHistorySession | undefined = undefined;
+    _selectedSession: IHistorySession | undefined = undefined;
+    showDeleted = false;
 
     constructor() {
         makeObservable(this, {
-            selectedDeletedSession: observable,
+            _selectedSession: observable,
+            showDeleted: observable,
             sessions: computed,
             deletedSessions: computed,
-            activeSessionId: computed
+            selectedSession: computed,
+            activeSession: computed
+        });
+
+        autorun(() => {
+            if (this.showDeleted && this.deletedSessions.length == 0) {
+                this.setShowDeleted(false);
+            }
         });
     }
 
@@ -102,8 +114,8 @@ class HistorySessions {
         return list;
     }
 
-    get activeSessionId() {
-        return this.activeSession?.id ?? SESSION_FREE_ID;
+    get selectedSession() {
+        return this._selectedSession || this.activeSession;
     }
 
     get activeSession() {
@@ -111,23 +123,19 @@ class HistorySessions {
     }
 
     activateSession(sessionId: string | undefined) {
-        if (sessionId === this.activeSessionId) {
+        if (sessionId === this.activeSession.id) {
             return;
         }
 
         if (
-            (this.activeSessionId &&
-                this.activeSessionId !== SESSION_FREE_ID) ||
+            this.activeSession.id !== SESSION_FREE_ID ||
             (sessionId && sessionId !== SESSION_FREE_ID)
         ) {
             beginTransaction("Activate session");
 
-            if (
-                this.activeSessionId &&
-                this.activeSessionId !== SESSION_FREE_ID
-            ) {
+            if (this.activeSession.id !== SESSION_FREE_ID) {
                 historySessionsStore.updateObject({
-                    id: this.activeSessionId,
+                    id: this.activeSession.id,
                     isActive: false
                 });
             }
@@ -142,6 +150,30 @@ class HistorySessions {
             commitTransaction();
         }
     }
+
+    selectSession(session: IHistorySession | undefined) {
+        runInAction(() => {
+            this._selectedSession = session;
+        });
+    }
+
+    setShowDeleted = (showDeleted: boolean) => {
+        if (showDeleted == this.showDeleted) {
+            return;
+        }
+
+        if (showDeleted) {
+            runInAction(() => {
+                this.showDeleted = true;
+                this._selectedSession = this.deletedSessions[0];
+            });
+        } else {
+            runInAction(() => {
+                this.showDeleted = false;
+                this._selectedSession = undefined;
+            });
+        }
+    };
 
     createNewSession = (name: string) => {
         beginTransaction("Create session");
@@ -184,37 +216,77 @@ class HistorySessions {
         commitTransaction();
     }
 
-    emptyTrash() {
-        if (!this.selectedDeletedSession) {
-            return;
+    restoreSession = (session: IHistorySession) => {
+        historySessionsStore.undeleteObject(session);
+
+        this.activateSession(session.id);
+
+        runInAction(() => {
+            this._selectedSession = undefined;
+        });
+    };
+
+    async deleteForeverSession(session: IHistorySession) {
+        const { activityLogStore, logDelete } = await import(
+            "instrument/window/history/activity-log"
+        );
+
+        let progressToastId = notification.info(
+            "Deleting session history items ...",
+            {
+                autoClose: false,
+                closeButton: false,
+                closeOnClick: false,
+                hideProgressBar: false,
+                progressStyle: {
+                    transition: "none"
+                }
+            }
+        );
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const logs = db
+            .prepare(`SELECT * FROM activityLog WHERE sid=${session.id}`)
+            .all();
+        for (let i = 0; i < logs.length; i++) {
+            const log = logs[i];
+            logDelete(activityLogStore, log, {
+                deletePermanently: true
+            });
+
+            const progress = (i + 1) / logs.length;
+
+            notification.update(progressToastId, {
+                progress
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
 
-        historySessionsStore.deleteObject(this.selectedDeletedSession, {
+        notification.dismiss(progressToastId);
+
+        historySessionsStore.deleteObject(session, {
             deletePermanently: true
         });
 
-        db.prepare(
-            `DELETE FROM activityLog WHERE sid=${this.selectedDeletedSession.id}`
-        ).run();
-
+        // select next session
+        let i = this.deletedSessions.findIndex(
+            deletedSession => deletedSession.id == session.id
+        );
+        if (i == -1) {
+            i = 0;
+        } else {
+            if (i + 1 < this.deletedSessions.length) {
+                i++;
+            } else {
+                i--;
+            }
+        }
         runInAction(() => {
-            this.selectedDeletedSession = undefined;
+            this._selectedSession = this.deletedSessions[i];
         });
     }
-
-    restoreSession = () => {
-        if (!this.selectedDeletedSession) {
-            return;
-        }
-
-        historySessionsStore.undeleteObject(this.selectedDeletedSession);
-
-        this.activateSession(this.selectedDeletedSession.id);
-
-        runInAction(() => {
-            this.selectedDeletedSession = undefined;
-        });
-    };
 }
 
 export const historySessions = new HistorySessions();

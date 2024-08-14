@@ -55,6 +55,7 @@ import {
     isScrapbookItemFilePath,
     model as scrapbookModel
 } from "project-editor/store/scrapbook";
+import { historySessions } from "instrument/window/history/session/store";
 
 const MODIFED_MARK = "\u002A ";
 
@@ -1215,6 +1216,8 @@ export class Tabs {
         if (this.activeTab) {
             this.activeTab.active = true;
         }
+
+        historySessions.setShowDeleted(false);
     }
 
     viewDeletedHistory = false;

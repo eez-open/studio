@@ -1037,7 +1037,7 @@ export class History {
             () => ({
                 filter: this.getFilter(),
                 selectedSession: this.isSessionsSupported
-                    ? historySessions.activeSessionId
+                    ? historySessions.selectedSession
                     : undefined
             }),
             () => {
@@ -1105,9 +1105,8 @@ export class History {
 
     get sessionCond() {
         return this.isSessionsSupported &&
-            historySessions.activeSessionId &&
-            historySessions.activeSessionId != SESSION_FREE_ID
-            ? `(sid = ${historySessions.activeSessionId})`
+            historySessions.selectedSession.id != SESSION_FREE_ID
+            ? `(sid = ${historySessions.selectedSession.id})`
             : "1";
     }
 
