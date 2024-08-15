@@ -12,6 +12,7 @@ import { createHistoryItem } from "instrument/window/history/item-factory";
 
 import { isArray } from "eez-studio-shared/util";
 import { getActiveSession } from "instrument/window/history/session/store";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -293,7 +294,25 @@ export const activityLogStore = createStore({
             SELECT id AS id, json_extract(message, '$.sessionName') AS name, '' AS folder, 0 AS isActive, 0 AS deleted FROM activityLog WHERE type = 'activity-log/session-start';
         DELETE FROM activityLog WHERE type = 'activity-log/session-start';
         DELETE FROM activityLog WHERE type = 'activity-log/session-close';
-        UPDATE versions SET version = 17 WHERE tableName = 'activityLog';`
+        UPDATE versions SET version = 17 WHERE tableName = 'activityLog';`,
+
+        // version 18
+        () => {
+            const sessions = db
+                .prepare(`SELECT * FROM "history/sessions"`)
+                .all();
+            for (const session of sessions) {
+                db.exec(
+                    `UPDATE "history/sessions" set uuid='${guid()}' WHERE id=${
+                        session.id
+                    }`
+                );
+            }
+
+            db.exec(
+                `UPDATE versions SET version = 18 WHERE tableName = 'activityLog'`
+            );
+        }
     ],
 
     properties: {

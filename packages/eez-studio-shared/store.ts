@@ -213,7 +213,7 @@ export function createStore({
               tableName: string;
           }
     )[];
-    versions: string[];
+    versions: (string | (() => void))[];
     properties: { [propertyName: string]: IType };
     create?: (props: any) => any;
     filterMessage?: (
@@ -709,7 +709,12 @@ export function createStore({
         }
 
         while (version < versions.length) {
-            db.exec(versions[version++]);
+            const versionSQL = versions[version++];
+            if (typeof versionSQL === "function") {
+                versionSQL();
+            } else {
+                db.exec(versionSQL);
+            }
         }
 
         if (onInit) {

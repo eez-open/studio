@@ -17,6 +17,7 @@ import {
 import { db } from "eez-studio-shared/db-path";
 
 import * as notification from "eez-studio-ui/notification";
+import { guid } from "eez-studio-shared/guid";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +25,7 @@ export const SESSION_FREE_ID = "free";
 
 const SESSION_FREE: IHistorySession = observable({
     id: SESSION_FREE_ID,
+    uuid: "e06929d6-b97e-4d65-bcb0-0c9f00058dd6",
     name: "Free mode",
     folder: "",
     isActive: false,
@@ -34,6 +36,7 @@ const SESSION_FREE: IHistorySession = observable({
 
 export interface IHistorySession {
     id: string;
+    uuid: string;
     name: string;
     folder: string;
     isActive: boolean;
@@ -52,10 +55,15 @@ export const historySessionsStore = createStore({
             isActive BOOLEAN NOT NULL,
             deleted BOOLEAN NOT NULL
         );
-        INSERT INTO versions(tableName, version) VALUES ('history/sessions', 1)`
+        INSERT INTO versions(tableName, version) VALUES ('history/sessions', 1)`,
+
+        // version 2
+        `ALTER TABLE "history/sessions" ADD COLUMN uuid TEXT;
+        UPDATE versions SET version = 2 WHERE tableName = 'history/sessions';`
     ],
     properties: {
         id: types.id,
+        uuid: types.string,
         name: types.string,
         folder: types.string,
         isActive: types.boolean,
@@ -179,6 +187,7 @@ class HistorySessions {
         beginTransaction("Create session");
 
         const sessionId = historySessionsStore.createObject({
+            uuid: guid(),
             name,
             folder: "",
             isActive: false
