@@ -55,6 +55,7 @@ export const historySessionsStore = createStore({
             isActive BOOLEAN NOT NULL,
             deleted BOOLEAN NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS versions(tableName TEXT PRIMARY KEY, version INT NOT NULL);
         INSERT INTO versions(tableName, version) VALUES ('history/sessions', 1)`,
 
         // version 2
