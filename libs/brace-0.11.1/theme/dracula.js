@@ -33,10 +33,10 @@ margin: -1px 0 0 -1px;\
 border: 1px solid #3B3A32\
 }\
 .ace-dracula .ace_marker-layer .ace_active-line {\
-background: #44475a\
+background: #1b1c24\
 }\
 .ace-dracula .ace_gutter-active-line {\
-background-color: #44475a\
+background-color: #1b1c24\
 }\
 .ace-dracula .ace_marker-layer .ace_selected-word {\
 border: 1px solid #44475a\
