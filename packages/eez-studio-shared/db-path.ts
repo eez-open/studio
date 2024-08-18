@@ -6,20 +6,25 @@ import type * as MainSettingsModule from "main/settings";
 
 import { ipcRenderer } from "electron";
 
-export let getDbPath: () => string;
-export let setDbPath: (dbPath: string) => void;
+export let getActiveDbPath: () => string;
+export let getDbPaths: () => MainSettingsModule.IDbPath[];
+export let setDbPaths: (dbPaths: MainSettingsModule.IDbPath[]) => void;
 if (isRenderer()) {
-    getDbPath = function () {
-        return ipcRenderer.sendSync("getDbPath");
+    getActiveDbPath = function () {
+        return ipcRenderer.sendSync("getActiveDbPath");
     };
 
-    setDbPath = function (dbPath: string) {
-        ipcRenderer.send("setDbPath", dbPath);
+    getDbPaths = function () {
+        return ipcRenderer.sendSync("getDbPaths");
+    };
+
+    setDbPaths = function (dbPaths: MainSettingsModule.IDbPath[]) {
+        ipcRenderer.send("setDbPaths", dbPaths);
     };
 } else {
-    ({ getDbPath, setDbPath } =
+    ({ getActiveDbPath, getDbPaths, setDbPaths } =
         require("main/settings") as typeof MainSettingsModule);
 }
 
-export let db = new Database(getDbPath());
+export let db = new Database(getActiveDbPath());
 db.defaultSafeIntegers();

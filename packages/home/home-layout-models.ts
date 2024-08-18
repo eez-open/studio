@@ -98,8 +98,8 @@ export class LayoutModels extends AbstractLayoutModels {
     }
 
     extensionManager: FlexLayout.Model;
-
     documentationBrowser: FlexLayout.Model;
+    databaseSettings: FlexLayout.Model;
 
     get models(): ILayoutModel[] {
         const global = {
@@ -143,6 +143,53 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.documentationBrowser,
                 set: action(model => (this.documentationBrowser = model))
+            },
+            {
+                name: "databaseSettings",
+                version: 5,
+                json: {
+                    global,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 33,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "list",
+                                        component: "list"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                enableTabStrip: false,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                weight: 67,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "details",
+                                        component: "details"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.databaseSettings,
+                set: action(model => (this.databaseSettings = model))
             }
         ];
     }

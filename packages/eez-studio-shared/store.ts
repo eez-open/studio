@@ -1,6 +1,7 @@
 import type * as ElectronModule from "electron";
 import { observable, computed, action, toJS, makeObservable } from "mobx";
 import { each, map, keys, pickBy } from "lodash";
+import type { Database } from "better-sqlite3";
 
 import { db } from "eez-studio-shared/db-path";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
@@ -213,7 +214,7 @@ export function createStore({
               tableName: string;
           }
     )[];
-    versions: (string | (() => void))[];
+    versions: (string | ((db: Database) => void))[];
     properties: { [propertyName: string]: IType };
     create?: (props: any) => any;
     filterMessage?: (
@@ -711,7 +712,7 @@ export function createStore({
         while (version < versions.length) {
             const versionSQL = versions[version++];
             if (typeof versionSQL === "function") {
-                versionSQL();
+                versionSQL(db);
             } else {
                 db.exec(versionSQL);
             }
@@ -887,8 +888,18 @@ export function createStore({
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    allStores.push({
+        store,
+        versions
+    });
+
     return store;
 }
+
+export const allStores: {
+    store: IStore;
+    versions: (string | ((db: Database) => void))[];
+}[] = [];
 
 ////////////////////////////////////////////////////////////////////////////////
 

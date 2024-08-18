@@ -23,6 +23,12 @@ interface WindowState {
     isFullScreen?: boolean;
 }
 
+export interface IDbPath {
+    filePath: string;
+    isActive: boolean;
+    timeOfLastDatabaseCompactOperation: number;
+}
+
 export interface IMruItem {
     filePath: string;
     projectType: string;
@@ -30,15 +36,15 @@ export interface IMruItem {
 }
 
 class Settings {
-    firstTime: boolean = true;
-
     mru: IMruItem[] = [];
 
     windowStates: {
         [key: string]: WindowState;
     } = {};
 
-    dbPath: string = "";
+    activeDbPath: string = "";
+
+    dbPaths: IDbPath[] = [];
 
     locale: string = "";
     dateFormat: string = "";
@@ -77,7 +83,8 @@ class Settings {
         makeObservable(this, {
             mru: observable,
             windowStates: observable,
-            dbPath: observable,
+            activeDbPath: observable,
+            dbPaths: observable,
             locale: observable,
             dateFormat: observable,
             timeFormat: observable,
@@ -108,10 +115,6 @@ class Settings {
     }
 
     async readSettings(settingsJs: Partial<Settings>) {
-        if (settingsJs.firstTime != undefined) {
-            this.firstTime = settingsJs.firstTime;
-        }
-
         if (settingsJs.mru != undefined) {
             const mru = settingsJs.mru.filter((mruItem: IMruItem) =>
                 fs.existsSync(mruItem.filePath)
@@ -137,8 +140,26 @@ class Settings {
             this.windowStates = settingsJs.windowStates;
         }
 
-        if (settingsJs.dbPath != undefined) {
-            this.dbPath = settingsJs.dbPath;
+        if ((settingsJs as any).dbPath != undefined) {
+            this.activeDbPath = (settingsJs as any).dbPath;
+            this.dbPaths = [
+                {
+                    filePath: this.activeDbPath,
+                    isActive: true,
+                    timeOfLastDatabaseCompactOperation: Date.now()
+                }
+            ];
+        } else if (settingsJs.dbPaths != undefined) {
+            this.dbPaths = settingsJs.dbPaths;
+
+            this.dbPaths.forEach(dbPath => {
+                if (dbPath.timeOfLastDatabaseCompactOperation == undefined) {
+                    dbPath.timeOfLastDatabaseCompactOperation = Date.now();
+                }
+            });
+
+            this.activeDbPath =
+                this.dbPaths.find(dbPath => dbPath.isActive)?.filePath ?? "";
         }
 
         if (settingsJs.locale != undefined) {
@@ -168,24 +189,6 @@ export const settings = new Settings();
 export async function loadSettings() {
     settings.loadSettings();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export function getFirstTime() {
-    return settings.firstTime;
-}
-
-export function setFirstTime(value: boolean) {
-    runInAction(() => (settings.firstTime = value));
-}
-
-ipcMain.on("getFirstTime", function (event: any) {
-    event.returnValue = getFirstTime();
-});
-
-ipcMain.on("setFirstTime", function (event: any, value: boolean) {
-    setFirstTime(value);
-});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -361,24 +364,32 @@ function isValidDbPath(dbPath: string) {
     }
 }
 
-export function getDbPath() {
-    if (settings.dbPath && isValidDbPath(settings.dbPath)) {
-        return settings.dbPath;
+export function getActiveDbPath() {
+    if (settings.activeDbPath && isValidDbPath(settings.activeDbPath)) {
+        return settings.activeDbPath;
     }
 
     return getUserDataPath(DEFAULT_DB_NAME);
 }
 
-export function setDbPath(dbPath: string) {
-    runInAction(() => (settings.dbPath = dbPath));
+export function getDbPaths() {
+    return toJS(settings.dbPaths);
 }
 
-ipcMain.on("getDbPath", function (event: any) {
-    event.returnValue = getDbPath();
+export function setDbPaths(dbPaths: IDbPath[]) {
+    runInAction(() => (settings.dbPaths = dbPaths));
+}
+
+ipcMain.on("getActiveDbPath", function (event: any) {
+    event.returnValue = getActiveDbPath();
 });
 
-ipcMain.on("setDbPath", function (event: any, dbPath: string) {
-    setDbPath(dbPath);
+ipcMain.on("getDbPaths", function (event: any) {
+    event.returnValue = getDbPaths();
+});
+
+ipcMain.on("setDbPaths", function (event: any, dbPaths: IDbPath[]) {
+    setDbPaths(dbPaths);
 });
 
 ////////////////////////////////////////////////////////////////////////////////

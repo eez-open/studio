@@ -1024,17 +1024,101 @@
     padding: 6px;
 }
 
-.EezStudio_DatabaseCompactDiv {
-    margin-top: 10px;
+.EezStudio_Settings_Databases {
+    position: relative;
+    width: 640px;
+    height: 480px;
     border: 1px solid @borderColor;
-    padding: 5px;
 
-    &.databaseCompactIsAdvisable {
-        background-color: @warningBackgroundColor;
-        color: @warningColor;
+    .EezStudio_Settings_Databases_List {
+        .EezStudio_ToolbarHeader {
+            background-color: @panelHeaderColor;
+        }
+
+        .EezStudio_Settings_Databases_List_Body {
+            padding: 5px;
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            table {
+                width: 100%;
+
+                tbody > tr {
+                    cursor: pointer;
+                    font-size: 90%;
+
+                    &.selected {
+                        background-color: @selectionBackgroundColor;
+                        color: @selectionColor;
+                        .text-muted {
+                            color: #ccc !important;
+                        }
+                        .EezStudio_Action {
+                            color: white;
+                        }
+                        .EezStudio_Action:hover {
+                            color: #aaa;
+                        }
+                    }
+
+                    table {
+                        width: 100%;
+                    }
+
+                    td {
+                        position: relative;
+                        padding: 2px 5px;
+                    }
+
+                    td:nth-child(1) {
+                        width: 100%;
+                    }
+
+                    td:nth-child(2) {
+                        white-space: nowrap;
+                    }
+
+                    .EezStudio_Icon {
+                        visibility: hidden;
+                    }
+
+                    &:hover .EezStudio_Icon {
+                        visibility: visible;
+                    }
+                }
+
+                tbody > tr.session_free_mode {
+                    td:nth-child(1) {
+                        font-style: italic;
+                        text-transform: uppercase;
+                    }
+                }
+            }
+        }
     }
 
-    & > div {
-        margin-bottom: 5px;
+    .EezStudio_Settings_Database_Details {
+        padding: 10px;
+
+        & > div {
+            margin-bottom: 20px;
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        .EezStudio_DatabaseCompactDiv {
+            &.databaseCompactIsAdvisable {
+                margin-top: 10px;
+                border: 1px solid @borderColor;
+                padding: 5px;
+                background-color: @warningBackgroundColor;
+                color: @warningColor;
+            }
+
+            & > div {
+                margin-bottom: 5px;
+            }
+        }
     }
 }

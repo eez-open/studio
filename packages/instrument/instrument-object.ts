@@ -9,6 +9,7 @@ import {
     IReactionDisposer
 } from "mobx";
 import { defer } from "lodash";
+import type { Database } from "better-sqlite3";
 
 import {
     createStore,
@@ -1123,7 +1124,7 @@ export const store = createStore({
         UPDATE versions SET version = 9 WHERE tableName = 'instrument';`,
 
         // version 10
-        () => {
+        (db: Database) => {
             db.exec(`ALTER TABLE instrument ADD COLUMN uuid TEXT`);
 
             const instruments = db.prepare(`SELECT * FROM instrument`).all();

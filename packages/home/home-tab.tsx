@@ -230,7 +230,8 @@ export const Home = observer(
                                     icon={"material:settings"}
                                     size={32}
                                     attention={
-                                        settingsController.isCompactDatabaseAdvisable
+                                        settingsController.activeDatabase
+                                            ?.isCompactDatabaseAdvisable
                                     }
                                 />
                                 Settings

@@ -61,7 +61,7 @@ export const SessionListItem = observer(
         onSelect: () => void;
     }> {
         render() {
-            let className = classNames("EezStudio_SessionListItem", {
+            let className = classNames({
                 selected: this.props.isSelected,
                 session_free_mode: this.props.session.id == SESSION_FREE_ID
             });
@@ -81,10 +81,6 @@ export const SessionList = observer(
         history: History;
     }> {
         ref = React.createRef<HTMLDivElement>();
-
-        constructor(props: any) {
-            super(props);
-        }
 
         componentDidMount() {
             this.ensureSelectedVisible();

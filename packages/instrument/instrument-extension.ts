@@ -20,12 +20,10 @@ import type * as DlogModule from "instrument/window/waveform/dlog";
 
 import "instrument/instrument-object";
 
-if (!isRenderer()) {
-    const { createInstrumentListStore } =
-        require("instrument/window/lists/store") as typeof import("instrument/window/lists/store");
+const { createInstrumentListStore } =
+    require("instrument/window/lists/store") as typeof import("instrument/window/lists/store");
 
-    createInstrumentListStore(null);
-}
+createInstrumentListStore(null);
 
 export interface IInstrumentExtensionProperties extends IExtensionProperties {
     properties: IInstrumentProperties;
