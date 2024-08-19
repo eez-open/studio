@@ -5,7 +5,7 @@ import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
 
-import { Settings, settingsController } from "home/settings";
+import { Settings } from "home/settings";
 import {
     NewProjectWizard,
     wizardModelTemplates,
@@ -18,6 +18,7 @@ import {
 import { Projects } from "home/open-projects";
 import { Instruments, defaultInstrumentsStore } from "home/instruments";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
+import { instrumentDatabases } from "eez-studio-shared/db";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -230,7 +231,7 @@ export const Home = observer(
                                     icon={"material:settings"}
                                     size={32}
                                     attention={
-                                        settingsController.activeDatabase
+                                        instrumentDatabases.activeDatabase
                                             ?.isCompactDatabaseAdvisable
                                     }
                                 />

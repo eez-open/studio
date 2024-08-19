@@ -8,7 +8,7 @@ import React from "react";
 import { values } from "mobx";
 
 import { stringCompare } from "eez-studio-shared/string";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 import { IStore } from "eez-studio-shared/store";
 
 import { DropdownIconAction, DropdownItem } from "eez-studio-ui/action";

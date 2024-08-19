@@ -1,7 +1,6 @@
 import { ipcRenderer, shell, clipboard } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import path from "path";
-import fs from "fs";
 import React from "react";
 import {
     observable,
@@ -9,8 +8,7 @@ import {
     action,
     runInAction,
     toJS,
-    makeObservable,
-    reaction
+    makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -19,10 +17,10 @@ import * as FlexLayout from "flexlayout-react";
 import { app, createEmptyFile } from "eez-studio-shared/util-electron";
 import { stringCompare } from "eez-studio-shared/string";
 import {
-    getActiveDbPath,
-    getDbPaths,
-    setDbPaths
-} from "eez-studio-shared/db-path";
+    initInstrumentDatabase,
+    InstrumentDatabase,
+    instrumentDatabases
+} from "eez-studio-shared/db";
 import {
     LOCALES,
     getLocale,
@@ -53,18 +51,14 @@ import {
 
 import dbVacuum from "db-services/vacuum";
 import { getMoment } from "eez-studio-shared/util";
-import type { IDbPath, IMruItem } from "main/settings";
+import type { IMruItem } from "main/settings";
 import { IconAction } from "eez-studio-ui/action";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { homeLayoutModels } from "./home-layout-models";
-import { allStores } from "eez-studio-shared/store";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// after this period we should advise user to compact database
-const CONF_DATABASE_COMPACT_ADVISE_PERIOD = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export const COMPACT_DATABASE_MESSAGE =
     "It is recommended to compact the database every 30 days.";
@@ -116,102 +110,12 @@ ipcRenderer.on("mru-changed", async (sender: any, mru: IMruItem[]) => {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class Database implements IDbPath {
-    filePath: string;
-    isActive: boolean;
-    timeOfLastDatabaseCompactOperation: number;
-
-    databaseSize: number;
-    description: string = "";
-
-    constructor(
-        filePath: string,
-        isActive: boolean,
-        timeOfLastDatabaseCompactOperation: number | undefined
-    ) {
-        this.filePath = filePath;
-        this.isActive = isActive;
-        this.timeOfLastDatabaseCompactOperation =
-            timeOfLastDatabaseCompactOperation ?? Date.now();
-
-        let db;
-        try {
-            const Database = require("better-sqlite3");
-            db = new Database(this.filePath);
-            const result = db.prepare("SELECT description FROM settings").get();
-            console.log(result);
-            if (result != undefined) {
-                this.description = result.description;
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            db?.close();
-        }
-
-        makeObservable(this, {
-            filePath: observable,
-            isActive: observable,
-            timeOfLastDatabaseCompactOperation: observable,
-            description: observable
-        });
-
-        try {
-            this.databaseSize = fs.statSync(this.filePath).size;
-        } catch (error) {
-            this.databaseSize = 0;
-        }
-    }
-
-    get isCompactDatabaseAdvisable() {
-        return (
-            Date.now() - this.timeOfLastDatabaseCompactOperation >
-            CONF_DATABASE_COMPACT_ADVISE_PERIOD
-        );
-    }
-
-    storeDescription() {
-        let db;
-        try {
-            const Database = require("better-sqlite3");
-            db = new Database(this.filePath);
-
-            db.exec(`CREATE TABLE IF NOT EXISTS settings(description TEXT)`);
-
-            if (db.prepare("SELECT * FROM settings").get() == undefined) {
-                db.prepare(`INSERT INTO settings(description) VALUES (?)`).run([
-                    this.description
-                ]);
-            } else {
-                db.prepare(`UPDATE settings SET description=?`).run([
-                    this.description
-                ]);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            db?.close();
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 class SettingsController {
-    activeDatabasePath = getActiveDbPath();
     activetLocale = getLocale();
     activeDateFormat = getDateFormat();
     activeTimeFormat = getTimeFormat();
 
-    databases: Database[] = getDbPaths().map(
-        dbPath =>
-            new Database(
-                dbPath.filePath,
-                dbPath.isActive,
-                dbPath.timeOfLastDatabaseCompactOperation
-            )
-    );
-    selectedDatabase: Database | undefined;
+    selectedDatabase: InstrumentDatabase | undefined;
 
     locale: string = getLocale();
     dateFormat: string = getDateFormat();
@@ -220,10 +124,9 @@ class SettingsController {
     mru: IMruItem[] = getMRU();
 
     constructor() {
-        this.selectedDatabase = this.databases.find(db => db.isActive);
+        this.selectedDatabase = instrumentDatabases.activeDatabase;
 
         makeObservable(this, {
-            databases: observable,
             selectedDatabase: observable,
             locale: observable,
             dateFormat: observable,
@@ -239,22 +142,12 @@ class SettingsController {
         });
 
         this.onThemeSwitched();
-
-        reaction(
-            () => toJS(this.databases),
-            databases => {
-                setDbPaths(databases);
-            }
-        );
-    }
-
-    get activeDatabase() {
-        return this.databases.find(database => database.isActive);
     }
 
     get restartRequired() {
         return (
-            this.activeDatabase?.filePath !== this.activeDatabasePath ||
+            instrumentDatabases.activeDatabase?.filePath !==
+                instrumentDatabases.activeDatabasePath ||
             this.locale !== this.activetLocale ||
             this.dateFormat !== this.activeDateFormat ||
             this.timeFormat !== this.activeTimeFormat
@@ -326,22 +219,6 @@ class SettingsController {
         }
     }
 
-    addDatabase = action((filePath: string, isActive: boolean) => {
-        if (isActive && this.activeDatabase) {
-            this.activeDatabase.isActive = false;
-        }
-
-        const database = this.databases.find(
-            database => database.filePath == filePath
-        );
-
-        if (database) {
-            database.isActive = isActive;
-        } else {
-            this.databases.push(new Database(filePath, isActive, Date.now()));
-        }
-    });
-
     createNewDatabase = async () => {
         let defaultPath = window.localStorage.getItem("lastDatabaseSavePath");
 
@@ -359,10 +236,10 @@ class SettingsController {
             try {
                 createEmptyFile(filePath);
 
-                initDb(filePath);
+                initInstrumentDatabase(filePath);
 
                 const onFinish = action((isActive: boolean) => {
-                    this.addDatabase(filePath, isActive);
+                    instrumentDatabases.addDatabase(filePath, isActive);
 
                     window.localStorage.setItem(
                         "lastDatabaseSavePath",
@@ -400,7 +277,7 @@ class SettingsController {
             const filePath = filePaths[0];
 
             const onFinish = action((isActive: boolean) => {
-                this.addDatabase(filePath, isActive);
+                instrumentDatabases.addDatabase(filePath, isActive);
 
                 window.localStorage.setItem(
                     "lastDatabaseOpenPath",
@@ -418,27 +295,14 @@ class SettingsController {
     };
 
     setAsActiveDatabase = action(() => {
-        if (
-            this.selectedDatabase &&
-            this.selectedDatabase != this.activeDatabase
-        ) {
-            if (this.activeDatabase) {
-                this.activeDatabase.isActive = false;
-            }
-            this.selectedDatabase.isActive = true;
+        if (this.selectedDatabase) {
+            instrumentDatabases.setAsActiveDatabase(this.selectedDatabase);
         }
     });
 
     deleteDatabase = () => {
-        if (!this.selectedDatabase || this.selectedDatabase.isActive) {
-            return;
-        }
-
-        const i = this.databases.indexOf(this.selectedDatabase);
-        if (i != -1) {
-            runInAction(() => {
-                this.databases.splice(i, 1);
-            });
+        if (this.selectedDatabase) {
+            instrumentDatabases.removeDatabase(this.selectedDatabase);
         }
     };
 
@@ -467,7 +331,7 @@ export const settingsController = new SettingsController();
 
 const CompactDatabaseDialog = observer(
     class CompactDatabaseDialog extends React.Component<{
-        database: Database;
+        database: InstrumentDatabase;
     }> {
         sizeBefore: number;
         sizeAfter: number | undefined;
@@ -499,7 +363,7 @@ const CompactDatabaseDialog = observer(
                     var fs = require("fs");
 
                     this.sizeAfter = fs.statSync(
-                        settingsController.activeDatabasePath
+                        this.props.database.filePath
                     ).size;
 
                     this.props.database.databaseSize = this.sizeAfter!;
@@ -570,7 +434,7 @@ const CompactDatabaseDialog = observer(
 
 const DatabaseListItem = observer(
     class DbPathListItem extends React.Component<{
-        database: Database;
+        database: InstrumentDatabase;
         isSelected: boolean;
         onSelect: () => void;
     }> {
@@ -755,7 +619,7 @@ const DatatabaseList = observer(
                         >
                             <table>
                                 <tbody>
-                                    {settingsController.databases.map(
+                                    {instrumentDatabases.databases.map(
                                         database => (
                                             <DatabaseListItem
                                                 key={database.filePath}
@@ -908,26 +772,3 @@ export const Settings = observer(
 );
 
 ////////////////////////////////////////////////////////////////////////////////
-
-export function initDb(filePath: string) {
-    const Database = require("better-sqlite3");
-    const db = new Database(filePath);
-
-    db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
-
-    for (const store of allStores) {
-        for (let version = 0; version < store.versions.length; version++) {
-            const versionSQL = store.versions[version];
-
-            if (typeof versionSQL === "function") {
-                versionSQL(db);
-            } else {
-                db.exec(versionSQL);
-            }
-        }
-    }
-
-    db.exec(`COMMIT TRANSACTION`);
-
-    db.close();
-}

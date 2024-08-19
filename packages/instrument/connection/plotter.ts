@@ -7,7 +7,7 @@ import {
 } from "instrument/window/history/activity-log";
 import { LongOperation } from "instrument/connection/connection-base";
 
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 
 import type { Connection } from "instrument/connection/connection-main";
 import {

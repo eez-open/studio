@@ -9,7 +9,7 @@ import {
 } from "mobx";
 
 import { formatTransferSpeed, formatDate } from "eez-studio-shared/util";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 import { dbQuery } from "eez-studio-shared/db-query";
 import {
     IStore,

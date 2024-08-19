@@ -1,6 +1,6 @@
 import { service } from "eez-studio-shared/service";
 
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 
 interface Params {
     query: string;

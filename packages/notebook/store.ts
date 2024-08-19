@@ -1,5 +1,5 @@
 import { isRenderer } from "eez-studio-shared/util-electron";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 import {
     createStore,
     types,

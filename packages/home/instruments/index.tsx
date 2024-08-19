@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron";
-import { Menu, MenuItem } from "@electron/remote";
+import { Menu, MenuItem, dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
     computed,
@@ -31,6 +31,7 @@ import {
 import { ConnectionParameters } from "instrument/connection/interface";
 import { Loader } from "eez-studio-ui/loader";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { instrumentDatabases } from "eez-studio-shared/db";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -304,7 +305,15 @@ const Toolbar = observer(
         instrumentsStore: InstrumentsStore;
     }> {
         render() {
-            let buttons = [
+            let buttons: {
+                id: string;
+                label: string;
+                icon?: any;
+                title: string;
+                className: string;
+                onClick: () => void;
+                enabled?: boolean;
+            }[] = [
                 {
                     id: "instrument-add",
                     label: "Add Instrument",
@@ -338,6 +347,73 @@ const Toolbar = observer(
                 });
             }
 
+            buttons.push({
+                id: "export-instrument",
+                label: "Export Instrument",
+                title: "Expert selected instrument",
+                className: "btn-secondary",
+                onClick: async () => {
+                    let defaultPath = window.localStorage.getItem(
+                        "lastDatabaseSavePath"
+                    );
+
+                    const result = await dialog.showSaveDialog(
+                        getCurrentWindow(),
+                        {
+                            filters: [
+                                { name: "DB files", extensions: ["db"] },
+                                { name: "All Files", extensions: ["*"] }
+                            ],
+                            defaultPath: defaultPath ?? undefined
+                        }
+                    );
+
+                    const filePath = result.filePath;
+
+                    if (filePath) {
+                        instrumentDatabases.exportInstrumentToDatabase(
+                            this.props.instrumentsStore.selectedInstrumentId!,
+                            filePath
+                        );
+                    }
+                },
+                enabled: !!this.props.instrumentsStore.selectedInstrumentId
+            });
+
+            buttons.push({
+                id: "import-instrument",
+                label: "Import Instrument",
+                title: "Import instrument",
+                className: "btn-secondary",
+                onClick: async () => {
+                    let defaultPath = window.localStorage.getItem(
+                        "lastDatabaseOpenPath"
+                    );
+
+                    const result = await dialog.showOpenDialog(
+                        getCurrentWindow(),
+                        {
+                            properties: ["openFile"],
+                            filters: [
+                                { name: "DB files", extensions: ["db"] },
+                                { name: "All Files", extensions: ["*"] }
+                            ],
+                            defaultPath: defaultPath ?? undefined
+                        }
+                    );
+
+                    const filePaths = result.filePaths;
+
+                    if (filePaths && filePaths[0]) {
+                        const filePath = filePaths[0];
+                        instrumentDatabases.importInstrumentFromDatabase(
+                            filePath
+                        );
+                    }
+                },
+                enabled: !!this.props.instrumentsStore.selectedInstrumentId
+            });
+
             return (
                 <ToolbarHeader>
                     {buttons.map((button, i) => (
@@ -345,11 +421,13 @@ const Toolbar = observer(
                             key={button.id}
                             text={button.label}
                             title={button.title}
+                            icon={button.icon}
                             className={button.className}
                             onClick={button.onClick}
                             style={{
                                 marginRight: buttons.length - 1 == i ? 20 : 10
                             }}
+                            enabled={button.enabled}
                         />
                     ))}
                     {!this.props.instrumentsStore.selectInstrument &&

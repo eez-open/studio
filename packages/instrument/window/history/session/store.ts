@@ -14,7 +14,7 @@ import {
     createStoreObjectsCollection,
     types
 } from "eez-studio-shared/store";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 
 import * as notification from "eez-studio-ui/notification";
 import { guid } from "eez-studio-shared/guid";

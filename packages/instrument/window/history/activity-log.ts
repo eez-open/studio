@@ -1,4 +1,4 @@
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 import { IStore } from "eez-studio-shared/store";
 import { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
 

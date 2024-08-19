@@ -30,7 +30,7 @@ import {
 import { objectEqual } from "eez-studio-shared/util";
 import { isRenderer } from "eez-studio-shared/util-electron";
 import type { IUnit } from "eez-studio-shared/units";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 
 import type * as MainWindowModule from "main/window";
 

@@ -8,7 +8,7 @@ import {
     readBinaryFile,
     fileExists
 } from "eez-studio-shared/util-electron";
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { confirm } from "eez-studio-ui/dialog-electron";

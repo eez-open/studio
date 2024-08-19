@@ -3,7 +3,7 @@ import { observable, computed, action, toJS, makeObservable } from "mobx";
 import { each, map, keys, pickBy } from "lodash";
 import type { Database } from "better-sqlite3";
 
-import { db } from "eez-studio-shared/db-path";
+import { db } from "eez-studio-shared/db";
 import { watch, sendMessage, registerSource } from "eez-studio-shared/notify";
 import { isRenderer } from "eez-studio-shared/util-electron";
 
