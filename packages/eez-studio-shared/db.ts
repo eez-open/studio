@@ -1,6 +1,6 @@
 import fs from "fs";
-import { ipcRenderer } from "electron";
-import Database from "better-sqlite3";
+import { ipcRenderer, shell } from "electron";
+import DatabaseConstructor, { type Database } from "better-sqlite3";
 import {
     computed,
     makeObservable,
@@ -10,7 +10,7 @@ import {
     toJS
 } from "mobx";
 
-import { isRenderer } from "eez-studio-shared/util-electron";
+import { createEmptyFile, isRenderer } from "eez-studio-shared/util-electron";
 
 import type * as MainSettingsModule from "main/settings";
 import { allStores } from "eez-studio-shared/store";
@@ -37,7 +37,7 @@ if (isRenderer()) {
         require("main/settings") as typeof MainSettingsModule);
 }
 
-export let db = new Database(getActiveDbPath());
+export let db = new DatabaseConstructor(getActiveDbPath());
 db.defaultSafeIntegers();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +90,7 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
     getDescription() {
         let db;
         try {
-            const Database = require("better-sqlite3");
-            db = new Database(this.filePath);
+            db = new DatabaseConstructor(this.filePath);
 
             const result = db.prepare("SELECT description FROM settings").get();
 
@@ -99,7 +98,7 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
                 return result.description;
             }
         } catch (err) {
-            console.error(err);
+            //console.error(err);
         } finally {
             db?.close();
         }
@@ -109,8 +108,7 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
     storeDescription() {
         let db;
         try {
-            const Database = require("better-sqlite3");
-            db = new Database(this.filePath);
+            db = new DatabaseConstructor(this.filePath);
 
             db.exec(`CREATE TABLE IF NOT EXISTS settings(description TEXT)`);
 
@@ -133,14 +131,28 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function initInstrumentDatabase(filePath: string) {
-    const Database = require("better-sqlite3");
-    const db = new Database(filePath);
-
+function createTables(db: Database) {
     db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
     for (const store of allStores) {
-        for (let version = 0; version < store.versions.length; version++) {
+        let version;
+
+        try {
+            const versionRow = db
+                .prepare(
+                    `SELECT * FROM versions WHERE tableName = '${store.store.storeName}'`
+                )
+                .get();
+            if (versionRow !== undefined) {
+                version = versionRow.version;
+            }
+        } catch (err) {}
+
+        if (version === undefined) {
+            version = 0;
+        }
+
+        for (; version < store.versions.length; version++) {
             const versionSQL = store.versions[version];
 
             if (typeof versionSQL === "function") {
@@ -152,8 +164,16 @@ export function initInstrumentDatabase(filePath: string) {
     }
 
     db.exec(`COMMIT TRANSACTION`);
+}
 
-    db.close();
+export function initInstrumentDatabase(filePath: string) {
+    let db;
+    try {
+        db = new DatabaseConstructor(filePath);
+        createTables(db);
+    } finally {
+        db?.close();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,16 +257,193 @@ class InstrumentDatabases {
         }
     }
 
-    exportInstrumentToDatabase(instrumentId: string, filePath: string) {
-        const result1 = db
-            .prepare("SELECT * FROM instrument WHERE id = ?")
-            .get([instrumentId]);
-        console.log(result1);
+    async exportInstrumentToDatabase(instrumentId: string, filePath: string) {
+        const notification = await import("eez-studio-ui/notification");
 
-        const result2 = db
-            .prepare("SELECT count(*) as count FROM activityLog WHERE oid = ?")
-            .get([instrumentId]);
-        console.log(result2);
+        let progressToastId = notification.info("Exporting ...", {
+            autoClose: false,
+            closeButton: false,
+            closeOnClick: false,
+            hideProgressBar: false,
+            progressStyle: {
+                transition: "none"
+            }
+        });
+
+        const sourceDb = db;
+        let destDb;
+
+        try {
+            createEmptyFile(filePath);
+            destDb = new DatabaseConstructor(filePath);
+            createTables(destDb);
+
+            // get source instrument
+            const sourceInstrument = sourceDb
+                .prepare("SELECT * FROM instrument WHERE id = ?")
+                .get([instrumentId]);
+
+            const logsCountRow = sourceDb
+                .prepare(
+                    "SELECT count(*) as count FROM activityLog WHERE oid = ?"
+                )
+                .get([instrumentId]);
+
+            // get source sessions
+            const sourceSessions = sourceDb
+                .prepare(
+                    `select * FROM "history/sessions" WHERE id IN (select DISTINCT(sid) from activityLog where oid = ?);`
+                )
+                .all([instrumentId]);
+
+            // get source shortcuts
+            const sourceShortcuts = sourceDb
+                .prepare(
+                    `select * FROM "shortcuts/shortcuts" WHERE "groupName" = ?;`
+                )
+                .all(["__instrument__" + instrumentId]);
+
+            // insert destination instrument
+            const instrumentColumns = Object.keys(sourceInstrument).filter(
+                column => column != "id"
+            );
+
+            const result = destDb
+                .prepare(
+                    `INSERT INTO instrument (${instrumentColumns.join(
+                        ","
+                    )}) VALUES (${instrumentColumns.map(() => "?").join(",")})`
+                )
+                .run(instrumentColumns.map(column => sourceInstrument[column]));
+            const destInstrumentId = result.lastInsertRowid;
+
+            // insert destination sessions
+            const mapSourceSessionToDestSessionId = new Map<bigint, bigint>();
+            if (sourceSessions.length > 0) {
+                const sessionColumns = Object.keys(sourceSessions[0]).filter(
+                    column => column != "id"
+                );
+
+                for (const sourceSession of sourceSessions) {
+                    const result = destDb
+                        .prepare(
+                            `INSERT INTO "history/sessions" (${sessionColumns.join(
+                                ","
+                            )}) VALUES (${sessionColumns
+                                .map(() => "?")
+                                .join(",")})`
+                        )
+                        .run(
+                            sessionColumns.map(column => sourceSession[column])
+                        );
+                    const destSessionId = result.lastInsertRowid as bigint;
+                    mapSourceSessionToDestSessionId.set(
+                        sourceSession.id,
+                        destSessionId
+                    );
+                }
+            }
+
+            // insert destination shortcuts
+            if (sourceShortcuts.length > 0) {
+                const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
+                    column => column != "id"
+                );
+
+                for (const sourceShortcut of sourceShortcuts) {
+                    destDb
+                        .prepare(
+                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
+                                ","
+                            )}) VALUES (${shortcutColumns
+                                .map(() => "?")
+                                .join(",")})`
+                        )
+                        .run(
+                            shortcutColumns.map(
+                                column => sourceShortcut[column]
+                            )
+                        );
+                }
+            }
+
+            // insert destination logs in chunks
+            const CHUNK = 100;
+            let offset = 0;
+            let logColumns: string[] | undefined;
+            while (true) {
+                const logs = sourceDb
+                    .prepare(
+                        `SELECT * FROM activityLog WHERE oid = ${instrumentId} ORDER BY date ASC limit ${CHUNK} offset ${offset}`
+                    )
+                    .all();
+
+                if (logs.length == 0) {
+                    break;
+                }
+
+                if (!logColumns) {
+                    logColumns = Object.keys(logs[0]).filter(
+                        column =>
+                            column != "id" && column != "oid" && column != "sid"
+                    );
+                }
+
+                destDb
+                    .prepare(
+                        `INSERT INTO activityLog (oid, sid, ${logColumns.join(
+                            ","
+                        )}) VALUES ${logs.map(
+                            log =>
+                                `(${destInstrumentId}, ?, ${logColumns!
+                                    .map(() => "?")
+                                    .join(",")})`
+                        )}`
+                    )
+                    .run(
+                        logs.reduce(
+                            (arr, log) => [
+                                ...arr,
+                                mapSourceSessionToDestSessionId.get(log.sid),
+                                ...logColumns!.map(column => log[column])
+                            ],
+                            []
+                        )
+                    );
+
+                // update notification progress bar
+                offset += logs.length;
+                const progress = offset / Number(logsCountRow.count);
+                notification.update(progressToastId, {
+                    progress
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 0));
+
+                if (logs.length < CHUNK) {
+                    break;
+                }
+            }
+
+            notification.update(progressToastId, {
+                autoClose: 1000,
+                render: "Exported successfully",
+                progress: undefined,
+                closeOnClick: true,
+                type: notification.SUCCESS
+            });
+
+            shell.showItemInFolder(filePath);
+        } catch (err) {
+            notification.update(progressToastId, {
+                render: "Exported failed: " + err,
+                progress: 1,
+                closeOnClick: true,
+                type: notification.ERROR
+            });
+        } finally {
+            destDb?.close();
+        }
     }
 
     importInstrumentFromDatabase(filePath: string) {}

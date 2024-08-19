@@ -14,7 +14,7 @@ import {
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import classNames from "classnames";
-import Database from "better-sqlite3";
+import DatabaseConstructor from "better-sqlite3";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
@@ -229,7 +229,7 @@ class ScrapbookUndoManager {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ScrapbookStore {
-    db: Database.Database;
+    db: DatabaseConstructor.Database;
     filePath: string;
     project: ScrapbookProject = new ScrapbookProject();
 
@@ -249,7 +249,7 @@ class ScrapbookStore {
             recursive: true
         });
 
-        let db = new Database(filePath);
+        let db = new DatabaseConstructor(filePath);
         db.defaultSafeIntegers();
 
         let dbItems: any;

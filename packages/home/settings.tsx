@@ -297,6 +297,12 @@ class SettingsController {
     setAsActiveDatabase = action(() => {
         if (this.selectedDatabase) {
             instrumentDatabases.setAsActiveDatabase(this.selectedDatabase);
+
+            confirm(
+                "Do you want to restart the application?",
+                "Restart is required to finish activation of new database.",
+                this.restart
+            );
         }
     });
 

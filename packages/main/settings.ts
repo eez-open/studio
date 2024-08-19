@@ -9,6 +9,7 @@ import {
     makeObservable,
     reaction
 } from "mobx";
+import DatabaseConstructor from "better-sqlite3";
 
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { SETTINGS_FILE_NAME, DEFAULT_DB_NAME } from "eez-studio-shared/conf";
@@ -354,8 +355,7 @@ export function settingsRegisterWindow(
 
 function isValidDbPath(dbPath: string) {
     try {
-        const Database = require("better-sqlite3");
-        const db = new Database(dbPath);
+        const db = new DatabaseConstructor(dbPath);
         db.close();
         return true;
     } catch (err) {

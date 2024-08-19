@@ -311,6 +311,7 @@ const Toolbar = observer(
                 icon?: any;
                 title: string;
                 className: string;
+                style?: React.CSSProperties;
                 onClick: () => void;
                 enabled?: boolean;
             }[] = [
@@ -339,6 +340,7 @@ const Toolbar = observer(
                     label: "Deleted Instruments",
                     title: "Show deleted instruments",
                     className: "btn-secondary",
+                    style: { marginRight: 20 },
                     onClick: () => {
                         showDeletedInstrumentsDialog(
                             this.props.instrumentsStore
@@ -349,12 +351,17 @@ const Toolbar = observer(
 
             buttons.push({
                 id: "export-instrument",
-                label: "Export Instrument",
-                title: "Expert selected instrument",
+                label: "Export",
+                icon: (
+                    <svg viewBox="0 0 24 24" fill="currentcolor">
+                        <path d="M8.71 7.71 11 5.41V15a1 1 0 0 0 2 0V5.41l2.29 2.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42l-4-4a1 1 0 0 0-.33-.21 1 1 0 0 0-.76 0 1 1 0 0 0-.33.21l-4 4a1 1 0 1 0 1.42 1.42M21 14a1 1 0 0 0-1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 0-2 0v4a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-4a1 1 0 0 0-1-1" />
+                    </svg>
+                ),
+                title: "Expert selected instrument to database",
                 className: "btn-secondary",
                 onClick: async () => {
                     let defaultPath = window.localStorage.getItem(
-                        "lastDatabaseSavePath"
+                        "lastExportDatabasePath"
                     );
 
                     const result = await dialog.showSaveDialog(
@@ -382,8 +389,13 @@ const Toolbar = observer(
 
             buttons.push({
                 id: "import-instrument",
-                label: "Import Instrument",
-                title: "Import instrument",
+                label: "Import",
+                icon: (
+                    <svg viewBox="0 0 24 24" fill="currentcolor">
+                        <path d="M21 14a1 1 0 0 0-1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 0-2 0v4a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-4a1 1 0 0 0-1-1m-9.71 1.71a1 1 0 0 0 .33.21.94.94 0 0 0 .76 0 1 1 0 0 0 .33-.21l4-4a1 1 0 0 0-1.42-1.42L13 12.59V3a1 1 0 0 0-2 0v9.59l-2.29-2.3a1 1 0 1 0-1.42 1.42Z" />
+                    </svg>
+                ),
+                title: "Import from database",
                 className: "btn-secondary",
                 onClick: async () => {
                     let defaultPath = window.localStorage.getItem(
@@ -410,8 +422,7 @@ const Toolbar = observer(
                             filePath
                         );
                     }
-                },
-                enabled: !!this.props.instrumentsStore.selectedInstrumentId
+                }
             });
 
             return (
@@ -424,9 +435,13 @@ const Toolbar = observer(
                             icon={button.icon}
                             className={button.className}
                             onClick={button.onClick}
-                            style={{
-                                marginRight: buttons.length - 1 == i ? 20 : 10
-                            }}
+                            style={Object.assign(
+                                {
+                                    marginRight:
+                                        buttons.length - 1 == i ? 20 : 10
+                                },
+                                button.style
+                            )}
                             enabled={button.enabled}
                         />
                     ))}
