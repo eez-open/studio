@@ -322,6 +322,12 @@ const Toolbar = observer(
                     label: "Add Instrument",
                     title: "Add instrument",
                     className: "btn-success",
+                    style:
+                        deletedInstruments.size == 0
+                            ? {
+                                  marginRight: 20
+                              }
+                            : undefined,
                     onClick: () => {
                         const { showAddInstrumentDialog } =
                             require("instrument/add-instrument-dialog") as typeof import("instrument/add-instrument-dialog");

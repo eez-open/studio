@@ -219,6 +219,16 @@ class SettingsController {
         }
     }
 
+    addDatabase(filePath: string, isActive: boolean) {
+        instrumentDatabases.addDatabase(filePath, isActive);
+
+        runInAction(() => {
+            this.selectedDatabase = instrumentDatabases.databases.find(
+                database => database.filePath == filePath
+            );
+        });
+    }
+
     createNewDatabase = async () => {
         let defaultPath = window.localStorage.getItem("lastDatabaseSavePath");
 
@@ -239,7 +249,7 @@ class SettingsController {
                 initInstrumentDatabase(filePath);
 
                 const onFinish = action((isActive: boolean) => {
-                    instrumentDatabases.addDatabase(filePath, isActive);
+                    this.addDatabase(filePath, isActive);
 
                     window.localStorage.setItem(
                         "lastDatabaseSavePath",
@@ -281,7 +291,7 @@ class SettingsController {
             const filePath = filePaths[0];
 
             const onFinish = action((isActive: boolean) => {
-                instrumentDatabases.addDatabase(filePath, isActive);
+                this.addDatabase(filePath, isActive);
 
                 window.localStorage.setItem(
                     "lastDatabaseOpenPath",
