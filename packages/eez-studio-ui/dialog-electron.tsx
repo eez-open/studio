@@ -45,6 +45,26 @@ export async function confirm(
     }
 }
 
+export async function confirmPromise(
+    message: string,
+    detail: string | undefined
+) {
+    const result = await dialog.showMessageBox(getCurrentWindow(), {
+        type: "question",
+        title: "EEZ Studio",
+        message: message,
+        detail: detail,
+        noLink: true,
+        buttons: ["Yes", "No"],
+        cancelId: 1
+    });
+    const buttonIndex = result.response;
+    if (buttonIndex == 0) {
+        return true;
+    }
+    return false;
+}
+
 export async function confirmWithButtons(
     message: string,
     detail: string | undefined,

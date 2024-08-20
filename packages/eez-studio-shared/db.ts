@@ -292,14 +292,14 @@ class InstrumentDatabases {
             // get source sessions
             const sourceSessions = sourceDb
                 .prepare(
-                    `select * FROM "history/sessions" WHERE id IN (select DISTINCT(sid) from activityLog where oid = ?);`
+                    `select * FROM "history/sessions" WHERE id IN (select DISTINCT(sid) from activityLog where oid = ?)`
                 )
                 .all([instrumentId]);
 
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(
-                    `select * FROM "shortcuts/shortcuts" WHERE "groupName" = ?;`
+                    `select * FROM "shortcuts/shortcuts" WHERE "groupName" = ?`
                 )
                 .all(["__instrument__" + instrumentId]);
 
@@ -338,8 +338,8 @@ class InstrumentDatabases {
                         );
                     const destSessionId = result.lastInsertRowid as bigint;
                     mapSourceSessionToDestSessionId.set(
-                        sourceSession.id,
-                        destSessionId
+                        BigInt(sourceSession.id),
+                        BigInt(destSessionId)
                     );
                 }
             }
@@ -347,23 +347,26 @@ class InstrumentDatabases {
             // insert destination shortcuts
             if (sourceShortcuts.length > 0) {
                 const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
-                    column => column != "id"
+                    column => column != "id" && column != "groupName"
                 );
 
                 for (const sourceShortcut of sourceShortcuts) {
+                    const groupName = "__instrument__" + destInstrumentId;
+
                     destDb
                         .prepare(
-                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
+                            `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
                                 ","
-                            )}) VALUES (${shortcutColumns
+                            )}) VALUES (?, ${shortcutColumns
                                 .map(() => "?")
                                 .join(",")})`
                         )
-                        .run(
-                            shortcutColumns.map(
+                        .run([
+                            groupName,
+                            ...shortcutColumns.map(
                                 column => sourceShortcut[column]
                             )
-                        );
+                        ]);
                 }
             }
 
@@ -404,7 +407,11 @@ class InstrumentDatabases {
                         logs.reduce(
                             (arr, log) => [
                                 ...arr,
-                                mapSourceSessionToDestSessionId.get(log.sid),
+                                log.sid
+                                    ? mapSourceSessionToDestSessionId.get(
+                                          BigInt(log.sid)
+                                      )
+                                    : null,
                                 ...logColumns!.map(column => log[column])
                             ],
                             []
@@ -446,7 +453,297 @@ class InstrumentDatabases {
         }
     }
 
-    importInstrumentFromDatabase(filePath: string) {}
+    async importInstrumentFromDatabase(filePath: string) {
+        const notification = await import("eez-studio-ui/notification");
+
+        let progressToastId = notification.info("Importing ...", {
+            autoClose: false,
+            closeButton: false,
+            closeOnClick: false,
+            hideProgressBar: false,
+            progressStyle: {
+                transition: "none"
+            }
+        });
+
+        const destDb = db;
+
+        db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
+
+        let sourceDb;
+        try {
+            sourceDb = new DatabaseConstructor(filePath);
+
+            // get source instrument
+            const sourceInstruments = sourceDb
+                .prepare("SELECT * FROM instrument")
+                .all();
+
+            for (const sourceInstrument of sourceInstruments) {
+                const destinationInstrument = destDb
+                    .prepare("SELECT * FROM instrument WHERE uuid = ?")
+                    .get([sourceInstrument.uuid]);
+                if (destinationInstrument) {
+                    notification.update(progressToastId, {
+                        render: "Import failed, instrument already exists!",
+                        progress: 1,
+                        closeOnClick: true,
+                        type: notification.ERROR
+                    });
+
+                    db.exec(`ROLLBACK TRANSACTION`);
+                    return;
+                }
+            }
+
+            const logsCountRow = sourceDb
+                .prepare("SELECT count(*) as count FROM activityLog")
+                .get();
+
+            // get source sessions
+            const sourceSessions = sourceDb
+                .prepare(`select * FROM "history/sessions"`)
+                .all();
+
+            // get source shortcuts
+            const sourceShortcuts = sourceDb
+                .prepare(`select * FROM "shortcuts/shortcuts"`)
+                .all();
+
+            // insert destination instrument
+            const destInstrumentIds = [];
+            const mapSourceInstrumentToDestInstrumentId = new Map<
+                bigint,
+                bigint
+            >();
+            if (sourceInstruments.length > 0) {
+                const instrumentColumns = Object.keys(
+                    sourceInstruments[0]
+                ).filter(column => column != "id");
+
+                for (const sourceInstrument of sourceInstruments) {
+                    const result = destDb
+                        .prepare(
+                            `INSERT INTO instrument (${instrumentColumns.join(
+                                ","
+                            )}) VALUES (${instrumentColumns
+                                .map(() => "?")
+                                .join(",")})`
+                        )
+                        .run(
+                            instrumentColumns.map(
+                                column => sourceInstrument[column]
+                            )
+                        );
+                    const destInstrumentId = result.lastInsertRowid as bigint;
+                    mapSourceInstrumentToDestInstrumentId.set(
+                        BigInt(sourceInstrument.id),
+                        BigInt(destInstrumentId)
+                    );
+                    destInstrumentIds.push(destInstrumentId);
+                }
+            }
+
+            // insert destination sessions
+            const mapSourceSessionToDestSessionId = new Map<bigint, bigint>();
+            const destSessionIds = [];
+            if (sourceSessions.length > 0) {
+                const sessionColumns = Object.keys(sourceSessions[0]).filter(
+                    column => column != "id"
+                );
+
+                for (const sourceSession of sourceSessions) {
+                    const destinationSession = destDb
+                        .prepare(
+                            `SELECT * FROM "history/sessions" WHERE uuid = ?`
+                        )
+                        .get([sourceSession.uuid]);
+                    if (destinationSession) {
+                        mapSourceSessionToDestSessionId.set(
+                            BigInt(sourceSession.id),
+                            BigInt(destinationSession.id)
+                        );
+                    } else {
+                        const result = destDb
+                            .prepare(
+                                `INSERT INTO "history/sessions" (${sessionColumns.join(
+                                    ","
+                                )}) VALUES (${sessionColumns
+                                    .map(() => "?")
+                                    .join(",")})`
+                            )
+                            .run(
+                                sessionColumns.map(
+                                    column => sourceSession[column]
+                                )
+                            );
+                        const destSessionId = result.lastInsertRowid as bigint;
+                        mapSourceSessionToDestSessionId.set(
+                            BigInt(sourceSession.id),
+                            BigInt(destSessionId)
+                        );
+                        destSessionIds.push(destSessionId);
+                    }
+                }
+            }
+
+            // insert destination shortcuts
+            const destShortcutIds = [];
+            if (sourceShortcuts.length > 0) {
+                const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
+                    column => column != "id" && column != "groupName"
+                );
+
+                for (const sourceShortcut of sourceShortcuts) {
+                    const sourceInstrumentId = BigInt(
+                        sourceShortcut.groupName.substr("__instrument__".length)
+                    );
+
+                    const groupName =
+                        "__instrument__" +
+                        mapSourceInstrumentToDestInstrumentId.get(
+                            sourceInstrumentId
+                        );
+
+                    const result = destDb
+                        .prepare(
+                            `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
+                                ","
+                            )}) VALUES (?, ${shortcutColumns
+                                .map(() => "?")
+                                .join(",")})`
+                        )
+                        .run([
+                            groupName,
+                            ...shortcutColumns.map(
+                                column => sourceShortcut[column]
+                            )
+                        ]);
+                    const destShortcutId = result.lastInsertRowid as bigint;
+                    destShortcutIds.push(destShortcutId);
+                }
+            }
+
+            // insert destination logs in chunks
+            const CHUNK = 100;
+            let offset = 0;
+            let logColumns: string[] | undefined;
+            while (true) {
+                const logs = sourceDb
+                    .prepare(
+                        `SELECT * FROM activityLog ORDER BY date ASC limit ${CHUNK} offset ${offset}`
+                    )
+                    .all();
+
+                if (logs.length == 0) {
+                    break;
+                }
+
+                if (!logColumns) {
+                    logColumns = Object.keys(logs[0]).filter(
+                        column =>
+                            column != "id" && column != "oid" && column != "sid"
+                    );
+                }
+
+                destDb
+                    .prepare(
+                        `INSERT INTO activityLog (oid, sid, ${logColumns.join(
+                            ","
+                        )}) VALUES ${logs.map(
+                            log =>
+                                `(?, ?, ${logColumns!
+                                    .map(() => "?")
+                                    .join(",")})`
+                        )}`
+                    )
+                    .run(
+                        logs.reduce(
+                            (arr, log) => [
+                                ...arr,
+                                mapSourceInstrumentToDestInstrumentId.get(
+                                    BigInt(log.oid)
+                                ),
+                                log.sid
+                                    ? mapSourceSessionToDestSessionId.get(
+                                          BigInt(log.sid)
+                                      )
+                                    : null,
+                                ...logColumns!.map(column => log[column])
+                            ],
+                            []
+                        )
+                    );
+
+                // update notification progress bar
+                offset += logs.length;
+                const progress = offset / Number(logsCountRow.count);
+                notification.update(progressToastId, {
+                    progress
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 0));
+
+                if (logs.length < CHUNK) {
+                    break;
+                }
+            }
+
+            db.exec(`COMMIT TRANSACTION`);
+
+            // notify renderer process to update stores
+            const { ipcRenderer } = await import("electron");
+
+            for (const objectId of destInstrumentIds) {
+                ipcRenderer.send(
+                    "shared/store/create-object-notify/" + "instrument",
+                    {
+                        objectId
+                    }
+                );
+            }
+
+            for (const objectId of destSessionIds) {
+                ipcRenderer.send(
+                    "shared/store/create-object-notify/" + "history/sessions",
+                    {
+                        objectId
+                    }
+                );
+            }
+
+            for (const objectId of destShortcutIds) {
+                ipcRenderer.send(
+                    "shared/store/create-object-notify/" +
+                        "shortcuts/shortcuts",
+                    {
+                        objectId
+                    }
+                );
+            }
+
+            notification.update(progressToastId, {
+                autoClose: 1000,
+                render: "Imported successfully",
+                progress: undefined,
+                closeOnClick: true,
+                type: notification.SUCCESS
+            });
+
+            shell.showItemInFolder(filePath);
+        } catch (err) {
+            db.exec(`ROLLBACK TRANSACTION`);
+
+            notification.update(progressToastId, {
+                render: "Import failed: " + err,
+                progress: 1,
+                closeOnClick: true,
+                type: notification.ERROR
+            });
+        } finally {
+            sourceDb?.close();
+        }
+    }
 }
 
 export const instrumentDatabases = new InstrumentDatabases();

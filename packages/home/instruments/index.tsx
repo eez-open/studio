@@ -1,3 +1,4 @@
+import path from "path";
 import { ipcRenderer } from "electron";
 import { Menu, MenuItem, dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
@@ -32,6 +33,7 @@ import { ConnectionParameters } from "instrument/connection/interface";
 import { Loader } from "eez-studio-ui/loader";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { instrumentDatabases } from "eez-studio-shared/db";
+import { getValidFileNameFromFileName } from "eez-studio-shared/util-electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -360,8 +362,17 @@ const Toolbar = observer(
                 title: "Expert selected instrument to database",
                 className: "btn-secondary",
                 onClick: async () => {
+                    const selectedInstrument =
+                        this.props.instrumentsStore.selectedInstrument;
+                    if (!selectedInstrument) {
+                        return;
+                    }
                     let defaultPath = window.localStorage.getItem(
                         "lastExportDatabasePath"
+                    );
+
+                    const fileName = getValidFileNameFromFileName(
+                        selectedInstrument.name + ".db"
                     );
 
                     const result = await dialog.showSaveDialog(
@@ -371,13 +382,20 @@ const Toolbar = observer(
                                 { name: "DB files", extensions: ["db"] },
                                 { name: "All Files", extensions: ["*"] }
                             ],
-                            defaultPath: defaultPath ?? undefined
+                            defaultPath: defaultPath
+                                ? defaultPath + path.sep + fileName
+                                : fileName
                         }
                     );
 
                     const filePath = result.filePath;
 
                     if (filePath) {
+                        window.localStorage.setItem(
+                            "lastExportDatabasePath",
+                            path.dirname(filePath)
+                        );
+
                         instrumentDatabases.exportInstrumentToDatabase(
                             this.props.instrumentsStore.selectedInstrumentId!,
                             filePath

@@ -1,5 +1,6 @@
 import { ipcRenderer, shell, clipboard } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
+import { confirm } from "eez-studio-ui/dialog-electron";
 import path from "path";
 import React from "react";
 import {
@@ -54,7 +55,6 @@ import { getMoment } from "eez-studio-shared/util";
 import type { IMruItem } from "main/settings";
 import { IconAction } from "eez-studio-ui/action";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
-import { confirm } from "eez-studio-ui/dialog-electron";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { homeLayoutModels } from "./home-layout-models";
 
@@ -245,6 +245,10 @@ class SettingsController {
                         "lastDatabaseSavePath",
                         path.dirname(filePath)
                     );
+
+                    if (isActive) {
+                        this.askForRestart();
+                    }
                 });
 
                 confirm(
@@ -283,6 +287,10 @@ class SettingsController {
                     "lastDatabaseOpenPath",
                     path.dirname(filePath)
                 );
+
+                if (isActive) {
+                    this.askForRestart();
+                }
             });
 
             confirm(
@@ -294,15 +302,30 @@ class SettingsController {
         }
     };
 
-    setAsActiveDatabase = action(() => {
-        if (this.selectedDatabase) {
-            instrumentDatabases.setAsActiveDatabase(this.selectedDatabase);
-
+    askForRestart = () => {
+        if (
+            instrumentDatabases.activeDatabase &&
+            instrumentDatabases.activeDatabase.filePath !=
+                instrumentDatabases.activeDatabasePath
+        ) {
             confirm(
                 "Do you want to restart the application?",
                 "Restart is required to finish activation of new database.",
                 this.restart
             );
+        }
+    };
+
+    restart = () => {
+        app.relaunch();
+        app.exit();
+    };
+
+    setAsActiveDatabase = action(() => {
+        if (this.selectedDatabase) {
+            instrumentDatabases.setAsActiveDatabase(this.selectedDatabase);
+
+            this.askForRestart();
         }
     });
 
@@ -316,11 +339,6 @@ class SettingsController {
         if (this.selectedDatabase) {
             shell.showItemInFolder(this.selectedDatabase.filePath);
         }
-    };
-
-    restart = () => {
-        app.relaunch();
-        app.exit();
     };
 
     compactDatabase() {

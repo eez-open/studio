@@ -295,6 +295,17 @@ export function createStore({
         return object.id;
     }
 
+    function notifyCreateObject(objectId: string) {
+        const object = findById(objectId);
+
+        const notifyArg = {
+            op: "create",
+            object,
+            options: {}
+        };
+        sendMessage(store.notifySource, notifyArg);
+    }
+
     function execUpdateObject(object: any, options?: IStoreOperationOptions) {
         const changedProperties = pickBy(
             object,
@@ -514,6 +525,13 @@ export function createStore({
             "shared/store/create-object/" + storeName,
             (event: any, arg: any) => {
                 event.returnValue = execCreateObject(arg.object, arg.options);
+            }
+        );
+
+        ipcMain.on(
+            "shared/store/create-object-notify/" + storeName,
+            (event: any, arg: any) => {
+                notifyCreateObject(arg.objectId);
             }
         );
 
