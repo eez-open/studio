@@ -131,7 +131,7 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function createTables(db: Database) {
+async function createTables(db: Database) {
     db.exec(`BEGIN EXCLUSIVE TRANSACTION`);
 
     for (const store of allStores) {
@@ -160,6 +160,8 @@ function createTables(db: Database) {
             } else {
                 db.exec(versionSQL);
             }
+
+            await new Promise(resolve => setTimeout(resolve, 0));
         }
     }
 
@@ -274,20 +276,31 @@ class InstrumentDatabases {
         let destDb;
 
         try {
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             createEmptyFile(filePath);
+
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             destDb = new DatabaseConstructor(filePath);
-            createTables(destDb);
+            await createTables(destDb);
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // get source instrument
             const sourceInstrument = sourceDb
                 .prepare("SELECT * FROM instrument WHERE id = ?")
                 .get([instrumentId]);
 
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             const logsCountRow = sourceDb
                 .prepare(
                     "SELECT count(*) as count FROM activityLog WHERE oid = ?"
                 )
                 .get([instrumentId]);
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // get source sessions
             const sourceSessions = sourceDb
@@ -296,12 +309,16 @@ class InstrumentDatabases {
                 )
                 .all([instrumentId]);
 
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(
                     `select * FROM "shortcuts/shortcuts" WHERE "groupName" = ?`
                 )
                 .all(["__instrument__" + instrumentId]);
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // insert destination instrument
             const instrumentColumns = Object.keys(sourceInstrument).filter(
@@ -316,6 +333,8 @@ class InstrumentDatabases {
                 )
                 .run(instrumentColumns.map(column => sourceInstrument[column]));
             const destInstrumentId = result.lastInsertRowid;
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // insert destination sessions
             const mapSourceSessionToDestSessionId = new Map<bigint, bigint>();
@@ -341,6 +360,8 @@ class InstrumentDatabases {
                         BigInt(sourceSession.id),
                         BigInt(destSessionId)
                     );
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
 
@@ -367,6 +388,8 @@ class InstrumentDatabases {
                                 column => sourceShortcut[column]
                             )
                         ]);
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
 
@@ -474,10 +497,14 @@ class InstrumentDatabases {
         try {
             sourceDb = new DatabaseConstructor(filePath);
 
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             // get source instrument
             const sourceInstruments = sourceDb
                 .prepare("SELECT * FROM instrument")
                 .all();
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             for (const sourceInstrument of sourceInstruments) {
                 const destinationInstrument = destDb
@@ -494,21 +521,29 @@ class InstrumentDatabases {
                     db.exec(`ROLLBACK TRANSACTION`);
                     return;
                 }
+
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             const logsCountRow = sourceDb
                 .prepare("SELECT count(*) as count FROM activityLog")
                 .get();
 
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             // get source sessions
             const sourceSessions = sourceDb
                 .prepare(`select * FROM "history/sessions"`)
                 .all();
 
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(`select * FROM "shortcuts/shortcuts"`)
                 .all();
+
+            await new Promise(resolve => setTimeout(resolve, 0));
 
             // insert destination instrument
             const destInstrumentIds = [];
@@ -541,6 +576,8 @@ class InstrumentDatabases {
                         BigInt(destInstrumentId)
                     );
                     destInstrumentIds.push(destInstrumentId);
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
 
@@ -584,6 +621,8 @@ class InstrumentDatabases {
                         );
                         destSessionIds.push(destSessionId);
                     }
+
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
 
@@ -622,6 +661,8 @@ class InstrumentDatabases {
                     const destShortcutId = result.lastInsertRowid as bigint;
                     destShortcutIds.push(destShortcutId);
                 }
+
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             // insert destination logs in chunks
@@ -701,6 +742,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             for (const objectId of destSessionIds) {
@@ -710,6 +752,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             for (const objectId of destShortcutIds) {
@@ -720,6 +763,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
+                await new Promise(resolve => setTimeout(resolve, 0));
             }
 
             notification.update(progressToastId, {
