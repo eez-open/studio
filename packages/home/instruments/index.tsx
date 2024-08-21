@@ -34,6 +34,7 @@ import { Loader } from "eez-studio-ui/loader";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { instrumentDatabases } from "eez-studio-shared/db";
 import { getValidFileNameFromFileName } from "eez-studio-shared/util-electron";
+import { showExportDialog } from "./export-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -367,46 +368,55 @@ const Toolbar = observer(
                 ),
                 title: "Expert selected instrument to database",
                 className: "btn-secondary",
-                onClick: async () => {
-                    const selectedInstrument =
-                        this.props.instrumentsStore.selectedInstrument;
-                    if (!selectedInstrument) {
-                        return;
-                    }
-                    let defaultPath = window.localStorage.getItem(
-                        "lastExportDatabasePath"
-                    );
+                onClick: () => {
+                    showExportDialog(
+                        this.props.instrumentsStore,
+                        async exportModel => {
+                            const selectedInstrument =
+                                this.props.instrumentsStore.selectedInstrument;
+                            if (!selectedInstrument) {
+                                return;
+                            }
+                            let defaultPath = window.localStorage.getItem(
+                                "lastExportDatabasePath"
+                            );
 
-                    const fileName = getValidFileNameFromFileName(
-                        selectedInstrument.name + ".db"
-                    );
+                            const fileName = getValidFileNameFromFileName(
+                                selectedInstrument.name + ".db"
+                            );
 
-                    const result = await dialog.showSaveDialog(
-                        getCurrentWindow(),
-                        {
-                            filters: [
-                                { name: "DB files", extensions: ["db"] },
-                                { name: "All Files", extensions: ["*"] }
-                            ],
-                            defaultPath: defaultPath
-                                ? defaultPath + path.sep + fileName
-                                : fileName
+                            const result = await dialog.showSaveDialog(
+                                getCurrentWindow(),
+                                {
+                                    filters: [
+                                        {
+                                            name: "DB files",
+                                            extensions: ["db"]
+                                        },
+                                        { name: "All Files", extensions: ["*"] }
+                                    ],
+                                    defaultPath: defaultPath
+                                        ? defaultPath + path.sep + fileName
+                                        : fileName
+                                }
+                            );
+
+                            const filePath = result.filePath;
+
+                            if (filePath) {
+                                window.localStorage.setItem(
+                                    "lastExportDatabasePath",
+                                    path.dirname(filePath)
+                                );
+
+                                instrumentDatabases.exportInstrumentToDatabase(
+                                    this.props.instrumentsStore
+                                        .selectedInstrumentId!,
+                                    filePath
+                                );
+                            }
                         }
                     );
-
-                    const filePath = result.filePath;
-
-                    if (filePath) {
-                        window.localStorage.setItem(
-                            "lastExportDatabasePath",
-                            path.dirname(filePath)
-                        );
-
-                        instrumentDatabases.exportInstrumentToDatabase(
-                            this.props.instrumentsStore.selectedInstrumentId!,
-                            filePath
-                        );
-                    }
                 },
                 enabled: !!this.props.instrumentsStore.selectedInstrumentId
             });

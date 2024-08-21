@@ -246,7 +246,7 @@ class SettingsController {
             try {
                 createEmptyFile(filePath);
 
-                initInstrumentDatabase(filePath);
+                await initInstrumentDatabase(filePath);
 
                 const onFinish = action((isActive: boolean) => {
                     this.addDatabase(filePath, isActive);

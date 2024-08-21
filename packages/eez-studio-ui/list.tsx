@@ -92,20 +92,28 @@ export const List = observer(
                     <div
                         key={node.id}
                         className={className}
-                        onClick={(e: any) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (this.props.selectNode) {
-                                this.props.selectNode(node);
-                            }
-                        }}
-                        onDoubleClick={(e: any) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (this.props.onDoubleClick) {
-                                this.props.onDoubleClick(node);
-                            }
-                        }}
+                        onClick={
+                            this.props.selectNode
+                                ? (e: any) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (this.props.selectNode) {
+                                          this.props.selectNode(node);
+                                      }
+                                  }
+                                : undefined
+                        }
+                        onDoubleClick={
+                            this.props.onDoubleClick
+                                ? (e: any) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      if (this.props.onDoubleClick) {
+                                          this.props.onDoubleClick(node);
+                                      }
+                                  }
+                                : undefined
+                        }
                         onContextMenu={
                             this.props.onContextMenu
                                 ? (event: React.MouseEvent<HTMLDivElement>) => {
