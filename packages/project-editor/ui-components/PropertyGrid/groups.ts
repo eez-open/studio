@@ -49,7 +49,8 @@ export const geometryGroup: IPropertyGridGroupDefinition = {
     position: (object: IEezObject) =>
         object instanceof ProjectEditor.ActionComponentClass
             ? 3
-            : object instanceof ProjectEditor.LVGLWidgetClass
+            : object instanceof ProjectEditor.LVGLWidgetClass ||
+              object instanceof ProjectEditor.PageClass
             ? 2
             : 0
 };

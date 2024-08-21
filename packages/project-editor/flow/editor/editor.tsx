@@ -23,7 +23,7 @@ import { Draggable } from "eez-studio-ui/draggable";
 
 import { settingsController } from "home/settings";
 
-import { setParent, getId } from "project-editor/core/object";
+import { setParent, getId, getParent } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { DragAndDropManager } from "project-editor/core/dd";
 
@@ -61,7 +61,8 @@ import {
     DragMouseHandler,
     isSelectionMoveable,
     ResizeMouseHandler,
-    RubberBandSelectionMouseHandler
+    RubberBandSelectionMouseHandler,
+    LVGLPanMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
 import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
 import { ConnectionLines } from "project-editor/flow/connection-line/ConnectionLineComponent";
@@ -316,14 +317,76 @@ export const Canvas = observer(
                 return;
             }
 
-            if (this.mouseHandler instanceof PanMouseHandler) {
+            if (
+                this.mouseHandler instanceof PanMouseHandler ||
+                this.mouseHandler instanceof LVGLPanMouseHandler
+            ) {
                 return;
             }
 
             const transform =
                 this.props.flowContext.viewState.transform.clone();
 
-            if (event.ctrlKey) {
+            const flowContext = this.props.flowContext;
+
+            if (
+                event.altKey &&
+                flowContext.projectStore.projectTypeTraits.isLVGL
+            ) {
+                let point =
+                    flowContext.viewState.transform.pointerEventToPagePoint(
+                        event
+                    );
+                const object = flowContext.document.objectFromPoint(point);
+                if (object) {
+                    const objectAdapter = flowContext.document.findObjectById(
+                        object.id
+                    );
+                    if (objectAdapter) {
+                        let object = objectAdapter.object;
+                        while (true) {
+                            if (
+                                object instanceof ProjectEditor.LVGLWidgetClass
+                            ) {
+                                const lvglWidget = object;
+                                if (
+                                    lvglWidget.widgetFlags.indexOf(
+                                        "SCROLLABLE"
+                                    ) != -1 &&
+                                    lvglWidget.children.length > 0
+                                ) {
+                                    const deltaX =
+                                        Math.abs(event.deltaX) < 10
+                                            ? event.deltaX
+                                            : event.deltaX / 5;
+                                    const deltaY =
+                                        Math.abs(event.deltaY) < 10
+                                            ? event.deltaY
+                                            : event.deltaY / 5;
+
+                                    let xScroll =
+                                        lvglWidget._xScroll2 +
+                                        (event.shiftKey ? deltaY : deltaX);
+
+                                    let yScroll =
+                                        lvglWidget._yScroll2 +
+                                        (event.shiftKey ? deltaX : deltaY);
+
+                                    runInAction(() => {
+                                        lvglWidget._xScroll =
+                                            lvglWidget._xScroll2 = xScroll;
+                                        lvglWidget._yScroll =
+                                            lvglWidget._yScroll2 = yScroll;
+                                    });
+
+                                    break;
+                                }
+                            }
+                            object = getParent(object);
+                        }
+                    }
+                }
+            } else if (event.ctrlKey) {
                 this.deltaY += event.deltaY;
                 if (Math.abs(this.deltaY) > 10) {
                     let scale: number;
@@ -516,7 +579,47 @@ export const Canvas = observer(
             }
 
             if (event.buttons && event.buttons !== 1) {
-                this.mouseHandler = new PanMouseHandler();
+                const flowContext = this.props.flowContext;
+                if (
+                    event.altKey &&
+                    flowContext.projectStore.projectTypeTraits.isLVGL
+                ) {
+                    let point =
+                        flowContext.viewState.transform.pointerEventToPagePoint(
+                            event
+                        );
+                    const object = flowContext.document.objectFromPoint(point);
+                    if (object) {
+                        const objectAdapter =
+                            flowContext.document.findObjectById(object.id);
+                        if (objectAdapter) {
+                            let object = objectAdapter.object;
+                            while (true) {
+                                if (
+                                    object instanceof
+                                    ProjectEditor.LVGLWidgetClass
+                                ) {
+                                    const lvglWidget = object;
+                                    if (
+                                        lvglWidget.widgetFlags.indexOf(
+                                            "SCROLLABLE"
+                                        ) != -1 &&
+                                        lvglWidget.children.length > 0
+                                    ) {
+                                        this.mouseHandler =
+                                            new LVGLPanMouseHandler(lvglWidget);
+                                        break;
+                                    }
+                                }
+                                object = getParent(object);
+                            }
+                        }
+                    }
+                }
+
+                if (!this.mouseHandler) {
+                    this.mouseHandler = new PanMouseHandler();
+                }
             } else {
                 this.mouseHandler = this.createMouseHandler(event);
             }
@@ -568,6 +671,8 @@ export const Canvas = observer(
                     if (pointDistance(this.mouseHandler.totalMovement) > 10) {
                         preventContextMenu = true;
                     }
+                } else if (this.mouseHandler instanceof LVGLPanMouseHandler) {
+                    preventContextMenu = true;
                 }
 
                 this.mouseHandler = undefined;

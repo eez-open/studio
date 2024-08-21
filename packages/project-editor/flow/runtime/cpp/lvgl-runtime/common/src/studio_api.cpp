@@ -1079,4 +1079,16 @@ EM_PORT_API(void) lvglLineSetYInvert(lv_obj_t *obj, bool y_invert) {
     lv_obj_update_layout(obj);
 }
 
+EM_PORT_API(void) lvglScrollTo(lv_obj_t *obj, lv_coord_t x, lv_coord_t y, bool anim_en) {
+    lv_obj_scroll_to(obj, x, y, anim_en ? LV_ANIM_ON : LV_ANIM_OFF);
+}
+
+EM_PORT_API(lv_coord_t) lvglGetScrollX(lv_obj_t *obj) {
+    return lv_obj_get_scroll_x(obj);
+}
+
+EM_PORT_API(lv_coord_t) lvglGetScrollY(lv_obj_t *obj) {
+    return lv_obj_get_scroll_y(obj);
+}
+
 ////////////////////////////////////////////////////////////////////////////////

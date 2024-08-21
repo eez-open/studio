@@ -26,6 +26,7 @@ import type { ConnectionLine } from "project-editor/flow/connection-line";
 import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import type { LVGLWidget } from "project-editor/lvgl/widgets/Base";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,6 +201,25 @@ export class PanMouseHandler extends MouseHandler {
         context.viewState.transform.translateBy(this.movement);
         this.totalMovement.x += this.movement.x;
         this.totalMovement.y += this.movement.y;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLPanMouseHandler extends MouseHandler {
+    constructor(public lvglWidget: LVGLWidget) {
+        super();
+    }
+
+    move(context: IFlowContext, event: IPointerEvent) {
+        super.move(context, event);
+
+        runInAction(() => {
+            this.lvglWidget._xScroll = this.lvglWidget._xScroll2 =
+                this.lvglWidget._xScroll2 - this.movement.x;
+            this.lvglWidget._yScroll = this.lvglWidget._yScroll2 =
+                this.lvglWidget._yScroll2 - this.movement.y;
+        });
     }
 }
 

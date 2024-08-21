@@ -730,6 +730,9 @@ export interface IWasmFlowRuntime {
     _lvglTabviewGetTabContent(obj: number, index: number);
     _lvglLineSetPoints(obj: number, point_values: number, point_num: number);
     _lvglLineSetYInvert(obj: number, y_invert: boolean);
+    _lvglScrollTo(obj: number, x: number, y: number, anim_en: boolean);
+    _lvglGetScrollX(obj: number): number;
+    _lvglGetScrollY(obj: number): number;
 }
 
 export interface IDashboardComponentContext {

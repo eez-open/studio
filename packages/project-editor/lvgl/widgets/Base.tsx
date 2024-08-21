@@ -253,6 +253,11 @@ export class LVGLWidget extends Widget {
     _lvglObj: number | undefined;
     _refreshRelativePosition: number = 0;
 
+    _xScroll: number = 0;
+    _yScroll: number = 0;
+    _xScroll2: number = 0;
+    _yScroll2: number = 0;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
@@ -998,7 +1003,9 @@ export class LVGLWidget extends Widget {
             useStyle: observable,
             localStyles: observable,
             _lvglObj: observable,
-            _refreshRelativePosition: observable
+            _refreshRelativePosition: observable,
+            _xScroll: observable,
+            _yScroll: observable
         });
     }
 
@@ -1425,6 +1432,18 @@ export class LVGLWidget extends Widget {
             this.children.map((widget: LVGLWidget) =>
                 widget.lvglCreate(runtime, obj)
             );
+        }
+
+        if (runtime.isEditor) {
+            runtime.wasm._lvglScrollTo(
+                obj,
+                this._xScroll,
+                this._yScroll,
+                false
+            );
+
+            this._xScroll2 = runtime.wasm._lvglGetScrollX(obj);
+            this._yScroll2 = runtime.wasm._lvglGetScrollY(obj);
         }
 
         return obj;

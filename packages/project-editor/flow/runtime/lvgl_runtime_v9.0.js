@@ -4819,6 +4819,9 @@ var _lvglTabviewGetTabBar = Module['_lvglTabviewGetTabBar'] = createExportWrappe
 var _lvglTabviewGetTabContent = Module['_lvglTabviewGetTabContent'] = createExportWrapper('lvglTabviewGetTabContent');
 var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints');
 var _lvglLineSetYInvert = Module['_lvglLineSetYInvert'] = createExportWrapper('lvglLineSetYInvert');
+var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo');
+var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
+var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');
