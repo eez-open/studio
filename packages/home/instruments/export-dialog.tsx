@@ -297,7 +297,7 @@ const SessionList = observer(
         }
 
         get sessions() {
-            return historySessions.sessions.map(session => ({
+            return historySessions.sessions.slice(1).map(session => ({
                 id: session.id,
                 data: session,
                 selected: false
@@ -445,7 +445,7 @@ const ExportDialog = observer(
                 this.archiveExportModel.sessionsOption = "all";
                 this.archiveExportModel.historyOption = "older-then";
                 this.archiveExportModel.historyOdlerThenYears = 1;
-                this.archiveExportModel.removeHistoryAfterExport = true;
+                this.archiveExportModel.removeHistoryAfterExport = false;
             });
 
             makeObservable(this, {

@@ -697,7 +697,11 @@ export class FileHistoryItem extends HistoryItem {
     }
 
     get fileState(): FileState {
-        return this.message ? JSON.parse(this.message) : {};
+        try {
+            return this.message ? JSON.parse(this.message) : {};
+        } catch (err) {
+            return {} as FileState;
+        }
     }
 
     get fileLength() {

@@ -162,18 +162,25 @@ function detectCSV(data: string | Buffer) {
 }
 
 export function checkMime(message: string, list: string[]) {
-    const fileState: FileState = JSON.parse(message);
-    if (fileState.state !== "success" && fileState.state !== "upload-finish") {
+    try {
+        const fileState: FileState = JSON.parse(message);
+        if (
+            fileState.state !== "success" &&
+            fileState.state !== "upload-finish"
+        ) {
+            return false;
+        }
+
+        const mime =
+            fileState &&
+            (typeof fileState.fileType === "string"
+                ? fileState.fileType
+                : fileState.fileType && fileState.fileType.mime);
+
+        return list.indexOf(mime) !== -1;
+    } catch (err) {
         return false;
     }
-
-    const mime =
-        fileState &&
-        (typeof fileState.fileType === "string"
-            ? fileState.fileType
-            : fileState.fileType && fileState.fileType.mime);
-
-    return list.indexOf(mime) !== -1;
 }
 
 function recognizeXAxisUnit(xAxisUnit: string): {

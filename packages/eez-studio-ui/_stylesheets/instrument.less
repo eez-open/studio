@@ -329,6 +329,12 @@
     color: @historyItemDateColor!important;
 }
 
+.EezStudio_UnknownHistoryItem {
+    &:extend(.EezStudio_HistoryItem all);
+
+    background-color: @unknownHistoryItemBackgroundColor;
+}
+
 .EezStudio_AnswerHistoryItem {
     &:extend(.EezStudio_HistoryItem all);
 

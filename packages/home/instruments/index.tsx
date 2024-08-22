@@ -368,8 +368,7 @@ const Toolbar = observer(
                 className: "btn-secondary",
                 onClick: () => {
                     showExportDialog(this.props.instrumentsStore);
-                },
-                enabled: !!this.props.instrumentsStore.selectedInstrumentId
+                }
             });
 
             buttons.push({
