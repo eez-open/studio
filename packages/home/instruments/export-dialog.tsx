@@ -1,3 +1,5 @@
+import path from "path";
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import { findDOMNode } from "react-dom";
 import {
@@ -22,7 +24,7 @@ import {
     historySessions,
     type IHistorySession
 } from "instrument/window/history/session/store";
-import { db } from "eez-studio-shared/db";
+import { db, instrumentDatabases } from "eez-studio-shared/db";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -411,8 +413,7 @@ const ExportDialog = observer(
     }> {
         element: Element;
 
-        option: "instruments" | "sessions" | "archive" | "custom" =
-            "instruments";
+        mode: "instruments" | "sessions" | "archive" | "custom" = "instruments";
 
         instrumentsExportModel = new ExportModel();
         sessionExportModel = new ExportModel();
@@ -448,17 +449,16 @@ const ExportDialog = observer(
             });
 
             makeObservable(this, {
-                option: observable,
+                mode: observable,
                 error: observable,
                 exportModel: computed
             });
         }
 
         get exportModel() {
-            if (this.option == "instruments")
-                return this.instrumentsExportModel;
-            if (this.option == "sessions") return this.sessionExportModel;
-            if (this.option == "archive") return this.archiveExportModel;
+            if (this.mode == "instruments") return this.instrumentsExportModel;
+            if (this.mode == "sessions") return this.sessionExportModel;
+            if (this.mode == "archive") return this.archiveExportModel;
             return this.customExportModel;
         }
 
@@ -481,19 +481,70 @@ const ExportDialog = observer(
         );
 
         onOK = action(() => {
-            if (this.option == "instruments") {
+            if (this.mode == "instruments") {
                 if (this.exportModel.selectedInstruments.size == 0) {
                     this.error = "At least one instrument must be selected.";
                     return false;
                 }
             }
 
-            if (this.option == "sessions") {
+            if (this.mode == "sessions") {
                 if (this.exportModel.selectedSessions.size == 0) {
                     this.error = "At least one session must be selected.";
                     return false;
                 }
             }
+
+            (async () => {
+                let defaultPath = window.localStorage.getItem(
+                    "lastExportDatabasePath"
+                );
+
+                const fileName = "export.db";
+
+                const result = await dialog.showSaveDialog(getCurrentWindow(), {
+                    filters: [
+                        {
+                            name: "DB files",
+                            extensions: ["db"]
+                        },
+                        { name: "All Files", extensions: ["*"] }
+                    ],
+                    defaultPath: defaultPath
+                        ? defaultPath + path.sep + fileName
+                        : fileName
+                });
+
+                const filePath = result.filePath;
+
+                if (filePath) {
+                    window.localStorage.setItem(
+                        "lastExportDatabasePath",
+                        path.dirname(filePath)
+                    );
+
+                    instrumentDatabases.exportDatabase(db, filePath, {
+                        mode: this.mode,
+                        instrumentsOption: this.exportModel.instrumentsOption,
+                        selectedInstruments: Array.from(
+                            this.exportModel.selectedInstruments
+                        ),
+                        sessionsOption: this.exportModel.sessionsOption,
+                        selectedSessions: Array.from(
+                            this.exportModel.selectedSessions
+                        ),
+                        historyOption: this.exportModel.historyOption,
+                        historyOdlerThenYears:
+                            this.exportModel.historyOdlerThenYears,
+                        historyOdlerThenMonths:
+                            this.exportModel.historyOdlerThenMonths,
+                        historyOdlerThenDays:
+                            this.exportModel.historyOdlerThenDays,
+                        removeHistoryAfterExport:
+                            this.exportModel.removeHistoryAfterExport
+                    });
+                }
+            })();
 
             return true;
         });
@@ -517,12 +568,12 @@ const ExportDialog = observer(
                         <li className="nav-item">
                             <a
                                 className={classNames("nav-link", {
-                                    active: this.option == "instruments"
+                                    active: this.mode == "instruments"
                                 })}
                                 href="#"
                                 onClick={action(event => {
                                     event.preventDefault();
-                                    this.option = "instruments";
+                                    this.mode = "instruments";
                                 })}
                             >
                                 Instruments
@@ -531,12 +582,12 @@ const ExportDialog = observer(
                         <li className="nav-item">
                             <a
                                 className={classNames("nav-link", {
-                                    active: this.option == "sessions"
+                                    active: this.mode == "sessions"
                                 })}
                                 href="#"
                                 onClick={action(event => {
                                     event.preventDefault();
-                                    this.option = "sessions";
+                                    this.mode = "sessions";
                                 })}
                             >
                                 Sessions
@@ -545,12 +596,12 @@ const ExportDialog = observer(
                         <li className="nav-item">
                             <a
                                 className={classNames("nav-link", {
-                                    active: this.option == "archive"
+                                    active: this.mode == "archive"
                                 })}
                                 href="#"
                                 onClick={action(event => {
                                     event.preventDefault();
-                                    this.option = "archive";
+                                    this.mode = "archive";
                                 })}
                             >
                                 Archive
@@ -559,12 +610,12 @@ const ExportDialog = observer(
                         <li className="nav-item">
                             <a
                                 className={classNames("nav-link", {
-                                    active: this.option == "custom"
+                                    active: this.mode == "custom"
                                 })}
                                 href="#"
                                 onClick={action(event => {
                                     event.preventDefault();
-                                    this.option = "custom";
+                                    this.mode = "custom";
                                 })}
                             >
                                 Custom
@@ -572,21 +623,21 @@ const ExportDialog = observer(
                         </li>
                     </ul>
 
-                    {this.option == "instruments" && (
+                    {this.mode == "instruments" && (
                         <InstrumentList
                             instrumentsStore={this.props.instrumentsStore}
                             exportModel={this.exportModel}
                         />
                     )}
 
-                    {this.option == "sessions" && (
+                    {this.mode == "sessions" && (
                         <SessionList
                             instrumentsStore={this.props.instrumentsStore}
                             exportModel={this.exportModel}
                         />
                     )}
 
-                    {this.option == "archive" && (
+                    {this.mode == "archive" && (
                         <div>
                             <div style={{ marginBottom: 10 }}>
                                 Archive history items older then:
@@ -597,7 +648,7 @@ const ExportDialog = observer(
                         </div>
                     )}
 
-                    {this.option == "custom" && (
+                    {this.mode == "custom" && (
                         <>
                             <Section title="INSTRUMENTS">
                                 <div className="form-check">
@@ -778,9 +829,6 @@ const ExportDialog = observer(
     }
 );
 
-export function showExportDialog(
-    instrumentsStore: InstrumentsStore,
-    callback: (exportModel: ExportModel) => void
-) {
+export function showExportDialog(instrumentsStore: InstrumentsStore) {
     showDialog(<ExportDialog instrumentsStore={instrumentsStore} />);
 }

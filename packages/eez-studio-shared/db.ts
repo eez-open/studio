@@ -161,7 +161,7 @@ async function createTables(db: Database) {
                 db.exec(versionSQL);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
         }
     }
 
@@ -276,23 +276,23 @@ class InstrumentDatabases {
         let destDb;
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             createEmptyFile(filePath);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             destDb = new DatabaseConstructor(filePath);
             await createTables(destDb);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source instrument
             const sourceInstrument = sourceDb
                 .prepare("SELECT * FROM instrument WHERE id = ?")
                 .get([instrumentId]);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             const logsCountRow = sourceDb
                 .prepare(
@@ -300,7 +300,7 @@ class InstrumentDatabases {
                 )
                 .get([instrumentId]);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source sessions
             const sourceSessions = sourceDb
@@ -309,7 +309,7 @@ class InstrumentDatabases {
                 )
                 .all([instrumentId]);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source shortcuts
             const sourceShortcuts = sourceDb
@@ -318,7 +318,7 @@ class InstrumentDatabases {
                 )
                 .all(["__instrument__" + instrumentId]);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // insert destination instrument
             const instrumentColumns = Object.keys(sourceInstrument).filter(
@@ -334,7 +334,7 @@ class InstrumentDatabases {
                 .run(instrumentColumns.map(column => sourceInstrument[column]));
             const destInstrumentId = result.lastInsertRowid;
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // insert destination sessions
             const mapSourceSessionToDestSessionId = new Map<bigint, bigint>();
@@ -361,7 +361,7 @@ class InstrumentDatabases {
                         BigInt(destSessionId)
                     );
 
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                    await pause();
                 }
             }
 
@@ -389,7 +389,7 @@ class InstrumentDatabases {
                             )
                         ]);
 
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                    await pause();
                 }
             }
 
@@ -448,7 +448,7 @@ class InstrumentDatabases {
                     progress
                 });
 
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
 
                 if (logs.length < CHUNK) {
                     break;
@@ -497,14 +497,14 @@ class InstrumentDatabases {
         try {
             sourceDb = new DatabaseConstructor(filePath);
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source instrument
             const sourceInstruments = sourceDb
                 .prepare("SELECT * FROM instrument")
                 .all();
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             for (const sourceInstrument of sourceInstruments) {
                 const destinationInstrument = destDb
@@ -522,28 +522,28 @@ class InstrumentDatabases {
                     return;
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
             }
 
             const logsCountRow = sourceDb
                 .prepare("SELECT count(*) as count FROM activityLog")
                 .get();
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source sessions
             const sourceSessions = sourceDb
                 .prepare(`select * FROM "history/sessions"`)
                 .all();
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(`select * FROM "shortcuts/shortcuts"`)
                 .all();
 
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await pause();
 
             // insert destination instrument
             const destInstrumentIds = [];
@@ -577,7 +577,7 @@ class InstrumentDatabases {
                     );
                     destInstrumentIds.push(destInstrumentId);
 
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                    await pause();
                 }
             }
 
@@ -622,7 +622,7 @@ class InstrumentDatabases {
                         destSessionIds.push(destSessionId);
                     }
 
-                    await new Promise(resolve => setTimeout(resolve, 0));
+                    await pause();
                 }
             }
 
@@ -662,7 +662,7 @@ class InstrumentDatabases {
                     destShortcutIds.push(destShortcutId);
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
             }
 
             // insert destination logs in chunks
@@ -723,7 +723,7 @@ class InstrumentDatabases {
                     progress
                 });
 
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
 
                 if (logs.length < CHUNK) {
                     break;
@@ -742,7 +742,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
             }
 
             for (const objectId of destSessionIds) {
@@ -752,7 +752,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
             }
 
             for (const objectId of destShortcutIds) {
@@ -763,7 +763,7 @@ class InstrumentDatabases {
                         objectId
                     }
                 );
-                await new Promise(resolve => setTimeout(resolve, 0));
+                await pause();
             }
 
             notification.update(progressToastId, {
@@ -788,6 +788,129 @@ class InstrumentDatabases {
             sourceDb?.close();
         }
     }
+
+    async exportDatabase(
+        source: Database | string,
+        destination: Database | string,
+        conf: {
+            mode: "instruments" | "sessions" | "archive" | "custom";
+
+            instrumentsOption: "all" | "selected";
+            selectedInstruments: string[];
+
+            sessionsOption: "all" | "selected";
+            selectedSessions: string[];
+
+            historyOption: "all" | "older-then";
+            historyOdlerThenYears: number;
+            historyOdlerThenMonths: number;
+            historyOdlerThenDays: number;
+
+            removeHistoryAfterExport: boolean;
+        }
+    ) {
+        const notification = await import("eez-studio-ui/notification");
+
+        let progressToastId = notification.info("Exporting ...", {
+            autoClose: false,
+            closeButton: false,
+            closeOnClick: false,
+            hideProgressBar: false,
+            progressStyle: {
+                transition: "none"
+            }
+        });
+
+        let sourceDb;
+        let destDb;
+
+        try {
+            if (typeof source === "string") {
+                sourceDb = new DatabaseConstructor(source);
+            } else {
+                sourceDb = source;
+            }
+
+            if (typeof destination == "string") {
+                createEmptyFile(destination);
+
+                await pause();
+
+                destDb = new DatabaseConstructor(destination);
+                await createTables(destDb);
+
+                await pause();
+            } else {
+                destDb = destination;
+            }
+
+            let sourceInstruments;
+            if (conf.historyOption == "all") {
+                if (conf.instrumentsOption == "all") {
+                    sourceInstruments = sourceDb
+                        .prepare("SELECT * FROM instrument WHERE NOT deleted")
+                        .all();
+                } else {
+                    const mandatoryInstruments = sourceDb
+                        .prepare(
+                            "SELECT DISTINCT(oid) as oid FROM activityLog WHERE NOT deleted"
+                        )
+                        .all();
+
+                    const instrumentIds = [
+                        ...conf.selectedInstruments,
+                        ...mandatoryInstruments
+                            .filter(m => m.oid != null)
+                            .map(m => m.oid.toString())
+                    ];
+
+                    if (instrumentIds.length > 0) {
+                        sourceInstruments = sourceDb
+                            .prepare(
+                                `SELECT * FROM instrument WHERE id IN (${instrumentIds.join(
+                                    ","
+                                )}) AND NOT deleted`
+                            )
+                            .all();
+                    } else {
+                        sourceInstruments = [];
+                    }
+                }
+
+                console.log("sourceInstruments", sourceInstruments);
+            } else {
+            }
+
+            notification.update(progressToastId, {
+                autoClose: 1000,
+                render: "Exported successfully",
+                progress: undefined,
+                closeOnClick: true,
+                type: notification.SUCCESS
+            });
+        } catch (err) {
+            notification.update(progressToastId, {
+                render: "Exported failed: " + err,
+                progress: 1,
+                closeOnClick: true,
+                type: notification.ERROR
+            });
+        } finally {
+            if (typeof source === "string") {
+                sourceDb?.close();
+            }
+
+            if (typeof destination === "string") {
+                destDb?.close();
+            }
+        }
+    }
 }
 
 export const instrumentDatabases = new InstrumentDatabases();
+
+////////////////////////////////////////////////////////////////////////////////
+
+async function pause() {
+    await new Promise(resolve => setTimeout(resolve, 0));
+}
