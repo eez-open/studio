@@ -854,6 +854,7 @@ class InstrumentDatabases {
                 offset += logs.length;
                 const progress = offset / Number(logsCountRow.count);
                 notification.update(progressToastId, {
+                    render: `Importing ${Math.round(progress * 100)}%`,
                     progress
                 });
 

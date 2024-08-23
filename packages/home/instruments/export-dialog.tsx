@@ -602,7 +602,7 @@ const ExportDialog = observer(
                                     this.mode = "archive";
                                 })}
                             >
-                                Archive
+                                Archive History
                             </a>
                         </li>
                         {/*
