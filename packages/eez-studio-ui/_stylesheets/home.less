@@ -1145,8 +1145,48 @@
     }
 
     .EezStudio_ListContainer {
-        min-height: 160px;
-        max-height: 240px;
+        height: 240px;
         overflow-x: hidden;
+        border-radius: 4px;
+    }
+
+    .EezStudio_ExportDialog_ArchiveMode {
+        border: 1px solid @borderColor;
+        padding: 10px;
+        height: 240px;
+
+        .EezStudio_ExportDialog_ArchiveOlderThen {
+            margin-left: 10px;
+            input {
+                margin-top: 5px;
+            }
+        }
+
+        .EezStudio_ExportDialog_RemoveHistoryAfterExport {
+            margin-top: 20px;
+        }
+    }
+}
+
+.EezStudio_ImportDialog {
+    .modal-body {
+        & > div:nth-child(1) {
+            margin-bottom: 5px;
+        }
+        & > div:nth-child(2) {
+            border: 2px solid @borderColor;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        & > div:nth-child(3) {
+            margin-bottom: 5px;
+        }
+        & > div:nth-child(4) {
+            border: 1px solid @borderColor;
+            border-radius: 4px;
+            padding: 10px;
+            min-height: 72px;
+        }
     }
 }

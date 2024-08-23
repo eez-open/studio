@@ -1,5 +1,5 @@
 import fs from "fs";
-import { ipcRenderer, shell } from "electron";
+import { ipcRenderer } from "electron";
 import DatabaseConstructor, { type Database } from "better-sqlite3";
 import {
     computed,
@@ -109,23 +109,24 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
         let db;
         try {
             db = new DatabaseConstructor(this.filePath);
-
-            db.exec(`CREATE TABLE IF NOT EXISTS settings(description TEXT)`);
-
-            if (db.prepare("SELECT * FROM settings").get() == undefined) {
-                db.prepare(`INSERT INTO settings(description) VALUES (?)`).run([
-                    this.description
-                ]);
-            } else {
-                db.prepare(`UPDATE settings SET description=?`).run([
-                    this.description
-                ]);
-            }
+            storeDescription(db, this.description);
         } catch (err) {
             console.error(err);
         } finally {
             db?.close();
         }
+    }
+}
+
+export function storeDescription(db: Database, description: string) {
+    db.exec(`CREATE TABLE IF NOT EXISTS settings(description TEXT)`);
+
+    if (db.prepare("SELECT * FROM settings").get() == undefined) {
+        db.prepare(`INSERT INTO settings(description) VALUES (?)`).run([
+            description
+        ]);
+    } else {
+        db.prepare(`UPDATE settings SET description=?`).run([description]);
     }
 }
 
@@ -259,7 +260,27 @@ class InstrumentDatabases {
         }
     }
 
-    async exportInstrumentToDatabase(instrumentId: string, filePath: string) {
+    async exportDatabase(
+        destination: string,
+        conf: {
+            mode: "instruments" | "sessions" | "archive" | "custom";
+
+            instrumentsOption: "all" | "selected";
+            selectedInstruments: string[];
+
+            sessionsOption: "all" | "selected";
+            selectedSessions: string[];
+
+            historyOption: "all" | "older-then";
+            historyOdlerThenYears: number;
+            historyOdlerThenMonths: number;
+            historyOdlerThenDays: number;
+
+            removeHistoryAfterExport: boolean;
+
+            description: string;
+        }
+    ) {
         const notification = await import("eez-studio-ui/notification");
 
         let progressToastId = notification.info("Exporting ...", {
@@ -272,109 +293,205 @@ class InstrumentDatabases {
             }
         });
 
-        const sourceDb = db;
+        await pause();
+
+        let sourceDb = db;
         let destDb;
 
         try {
-            await pause();
-
-            createEmptyFile(filePath);
+            createEmptyFile(destination);
 
             await pause();
 
-            destDb = new DatabaseConstructor(filePath);
+            destDb = new DatabaseConstructor(destination);
             await createTables(destDb);
 
             await pause();
 
-            // get source instrument
-            const sourceInstrument = sourceDb
-                .prepare("SELECT * FROM instrument WHERE id = ?")
-                .get([instrumentId]);
+            //
+            let logsQueryCondition;
+            if (conf.mode == "instruments") {
+                logsQueryCondition = `WHERE oid IN (${conf.selectedInstruments.join(
+                    ","
+                )})`;
+            } else if (conf.mode == "sessions") {
+                logsQueryCondition = `WHERE sid IN (${conf.selectedSessions.join(
+                    ","
+                )})`;
+            } else if (conf.mode == "archive") {
+                logsQueryCondition = `WHERE "date" < unixepoch(date('now','-${conf.historyOdlerThenYears} year','-${conf.historyOdlerThenMonths} month','-${conf.historyOdlerThenDays} day')) * 1000`;
+            } else {
+                throw "custom mode not implemented";
+            }
+            logsQueryCondition += " AND NOT deleted";
 
-            await pause();
-
-            const logsCountRow = sourceDb
+            // get source instruments
+            let instrumentIds: string[];
+            if (conf.mode == "instruments") {
+                instrumentIds = conf.selectedInstruments;
+            } else if (conf.mode == "sessions" || conf.mode == "archive") {
+                instrumentIds = sourceDb
+                    .prepare(
+                        `SELECT DISTINCT(oid) AS oid FROM activityLog ${logsQueryCondition}`
+                    )
+                    .all()
+                    .filter(row => row.oid != null)
+                    .map(row => row.oid.toString());
+            } else {
+                throw "custom mode not implemented";
+            }
+            const sourceInstruments = sourceDb
                 .prepare(
-                    "SELECT count(*) as count FROM activityLog WHERE oid = ?"
+                    `SELECT * FROM instrument WHERE id IN (${instrumentIds.join(
+                        ","
+                    )})`
                 )
-                .get([instrumentId]);
-
-            await pause();
+                .all();
 
             // get source sessions
+            let sessionIds: string[];
+            if (conf.mode == "sessions") {
+                sessionIds = conf.selectedSessions;
+            } else if (conf.mode == "instruments" || conf.mode == "archive") {
+                sessionIds = sourceDb
+                    .prepare(
+                        `SELECT DISTINCT(sid) AS sid FROM activityLog ${logsQueryCondition}`
+                    )
+                    .all()
+                    .filter(row => row.sid != null)
+                    .map(row => row.sid.toString());
+            } else {
+                throw "custom mode not implemented";
+            }
             const sourceSessions = sourceDb
                 .prepare(
-                    `select * FROM "history/sessions" WHERE id IN (select DISTINCT(sid) from activityLog where oid = ?)`
+                    `SELECT * FROM "history/sessions" WHERE id IN (${sessionIds.join(
+                        ","
+                    )})`
                 )
-                .all([instrumentId]);
-
-            await pause();
+                .all();
 
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(
-                    `select * FROM "shortcuts/shortcuts" WHERE "groupName" = ?`
+                    `SELECT * FROM "shortcuts/shortcuts" WHERE "groupName" IN (${instrumentIds
+                        .map(id => `'__instrument__${id}'`)
+                        .join(",")})`
                 )
-                .all(["__instrument__" + instrumentId]);
-
-            await pause();
+                .all();
 
             // insert destination instrument
-            const instrumentColumns = Object.keys(sourceInstrument).filter(
-                column => column != "id"
-            );
+            const destInstrumentIds = [];
+            const mapSourceInstrumentToDestInstrumentId = new Map<
+                bigint,
+                bigint
+            >();
+            if (sourceInstruments.length > 0) {
+                const instrumentColumns = Object.keys(
+                    sourceInstruments[0]
+                ).filter(column => column != "id");
 
-            const result = destDb
-                .prepare(
-                    `INSERT INTO instrument (${instrumentColumns.join(
-                        ","
-                    )}) VALUES (${instrumentColumns.map(() => "?").join(",")})`
-                )
-                .run(instrumentColumns.map(column => sourceInstrument[column]));
-            const destInstrumentId = result.lastInsertRowid;
+                for (const sourceInstrument of sourceInstruments) {
+                    const result = destDb
+                        .prepare(
+                            `INSERT INTO instrument (${instrumentColumns.join(
+                                ","
+                            )}) VALUES (${instrumentColumns
+                                .map(() => "?")
+                                .join(",")})`
+                        )
+                        .run(
+                            instrumentColumns.map(
+                                column => sourceInstrument[column]
+                            )
+                        );
+                    const destInstrumentId = result.lastInsertRowid as bigint;
+                    mapSourceInstrumentToDestInstrumentId.set(
+                        BigInt(sourceInstrument.id),
+                        BigInt(destInstrumentId)
+                    );
+                    destInstrumentIds.push(destInstrumentId);
 
-            await pause();
+                    await pause();
+                }
+            }
+            for (const instrumentId of instrumentIds) {
+                if (
+                    !mapSourceInstrumentToDestInstrumentId.get(
+                        BigInt(instrumentId)
+                    )
+                ) {
+                    mapSourceInstrumentToDestInstrumentId.set(
+                        BigInt(instrumentId),
+                        BigInt(0)
+                    );
+                }
+            }
 
             // insert destination sessions
             const mapSourceSessionToDestSessionId = new Map<bigint, bigint>();
+            const destSessionIds = [];
             if (sourceSessions.length > 0) {
                 const sessionColumns = Object.keys(sourceSessions[0]).filter(
                     column => column != "id"
                 );
 
                 for (const sourceSession of sourceSessions) {
-                    const result = destDb
+                    const destinationSession = destDb
                         .prepare(
-                            `INSERT INTO "history/sessions" (${sessionColumns.join(
-                                ","
-                            )}) VALUES (${sessionColumns
-                                .map(() => "?")
-                                .join(",")})`
+                            `SELECT * FROM "history/sessions" WHERE uuid = ?`
                         )
-                        .run(
-                            sessionColumns.map(column => sourceSession[column])
+                        .get([sourceSession.uuid]);
+                    if (destinationSession) {
+                        mapSourceSessionToDestSessionId.set(
+                            BigInt(sourceSession.id),
+                            BigInt(destinationSession.id)
                         );
-                    const destSessionId = result.lastInsertRowid as bigint;
-                    mapSourceSessionToDestSessionId.set(
-                        BigInt(sourceSession.id),
-                        BigInt(destSessionId)
-                    );
+                    } else {
+                        const result = destDb
+                            .prepare(
+                                `INSERT INTO "history/sessions" (${sessionColumns.join(
+                                    ","
+                                )}) VALUES (${sessionColumns
+                                    .map(() => "?")
+                                    .join(",")})`
+                            )
+                            .run(
+                                sessionColumns.map(
+                                    column => sourceSession[column]
+                                )
+                            );
+                        const destSessionId = result.lastInsertRowid as bigint;
+                        mapSourceSessionToDestSessionId.set(
+                            BigInt(sourceSession.id),
+                            BigInt(destSessionId)
+                        );
+                        destSessionIds.push(destSessionId);
+                    }
 
                     await pause();
                 }
             }
 
             // insert destination shortcuts
+            const destShortcutIds = [];
             if (sourceShortcuts.length > 0) {
                 const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
                     column => column != "id" && column != "groupName"
                 );
 
                 for (const sourceShortcut of sourceShortcuts) {
-                    const groupName = "__instrument__" + destInstrumentId;
+                    const sourceInstrumentId = BigInt(
+                        sourceShortcut.groupName.substr("__instrument__".length)
+                    );
 
-                    destDb
+                    const groupName =
+                        "__instrument__" +
+                        mapSourceInstrumentToDestInstrumentId.get(
+                            sourceInstrumentId
+                        );
+
+                    const result = destDb
                         .prepare(
                             `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
                                 ","
@@ -388,19 +505,27 @@ class InstrumentDatabases {
                                 column => sourceShortcut[column]
                             )
                         ]);
-
-                    await pause();
+                    const destShortcutId = result.lastInsertRowid as bigint;
+                    destShortcutIds.push(destShortcutId);
                 }
+
+                await pause();
             }
 
             // insert destination logs in chunks
+            const logsCountRow = sourceDb
+                .prepare(
+                    `SELECT count(*) as count FROM activityLog ${logsQueryCondition}`
+                )
+                .get();
+
             const CHUNK = 100;
             let offset = 0;
             let logColumns: string[] | undefined;
             while (true) {
                 const logs = sourceDb
                     .prepare(
-                        `SELECT * FROM activityLog WHERE oid = ${instrumentId} ORDER BY date ASC limit ${CHUNK} offset ${offset}`
+                        `SELECT * FROM activityLog ${logsQueryCondition} limit ${CHUNK} offset ${offset}`
                     )
                     .all();
 
@@ -421,7 +546,7 @@ class InstrumentDatabases {
                             ","
                         )}) VALUES ${logs.map(
                             log =>
-                                `(${destInstrumentId}, ?, ${logColumns!
+                                `(?, ?, ${logColumns!
                                     .map(() => "?")
                                     .join(",")})`
                         )}`
@@ -430,6 +555,9 @@ class InstrumentDatabases {
                         logs.reduce(
                             (arr, log) => [
                                 ...arr,
+                                mapSourceInstrumentToDestInstrumentId.get(
+                                    BigInt(log.oid)
+                                ),
                                 log.sid
                                     ? mapSourceSessionToDestSessionId.get(
                                           BigInt(log.sid)
@@ -445,6 +573,7 @@ class InstrumentDatabases {
                 offset += logs.length;
                 const progress = offset / Number(logsCountRow.count);
                 notification.update(progressToastId, {
+                    render: `Exporting ${Math.round(progress * 100)}%`,
                     progress
                 });
 
@@ -455,6 +584,13 @@ class InstrumentDatabases {
                 }
             }
 
+            storeDescription(destDb, conf.description);
+
+            // delete source logs
+            if (conf.removeHistoryAfterExport) {
+                sourceDb.exec(`DELETE FROM activityLog ${logsQueryCondition}`);
+            }
+
             notification.update(progressToastId, {
                 autoClose: 1000,
                 render: "Exported successfully",
@@ -462,11 +598,9 @@ class InstrumentDatabases {
                 closeOnClick: true,
                 type: notification.SUCCESS
             });
-
-            shell.showItemInFolder(filePath);
         } catch (err) {
             notification.update(progressToastId, {
-                render: "Exported failed: " + err,
+                render: "Export failed: " + err,
                 progress: 1,
                 closeOnClick: true,
                 type: notification.ERROR
@@ -476,7 +610,7 @@ class InstrumentDatabases {
         }
     }
 
-    async importInstrumentFromDatabase(filePath: string) {
+    async importDatabase(filePath: string) {
         const notification = await import("eez-studio-ui/notification");
 
         let progressToastId = notification.info("Importing ...", {
@@ -773,8 +907,6 @@ class InstrumentDatabases {
                 closeOnClick: true,
                 type: notification.SUCCESS
             });
-
-            shell.showItemInFolder(filePath);
         } catch (err) {
             db.exec(`ROLLBACK TRANSACTION`);
 
@@ -786,428 +918,6 @@ class InstrumentDatabases {
             });
         } finally {
             sourceDb?.close();
-        }
-    }
-
-    async exportDatabase(
-        source: Database | string,
-        destination: Database | string,
-        conf: {
-            mode: "instruments" | "sessions" | "archive" | "custom";
-
-            instrumentsOption: "all" | "selected";
-            selectedInstruments: string[];
-
-            sessionsOption: "all" | "selected";
-            selectedSessions: string[];
-
-            historyOption: "all" | "older-then";
-            historyOdlerThenYears: number;
-            historyOdlerThenMonths: number;
-            historyOdlerThenDays: number;
-
-            removeHistoryAfterExport: boolean;
-        }
-    ) {
-        const notification = await import("eez-studio-ui/notification");
-
-        let progressToastId = notification.info("Exporting ...", {
-            autoClose: false,
-            closeButton: false,
-            closeOnClick: false,
-            hideProgressBar: false,
-            progressStyle: {
-                transition: "none"
-            }
-        });
-
-        let sourceDb;
-        let destDb;
-
-        try {
-            if (typeof source === "string") {
-                sourceDb = new DatabaseConstructor(source);
-            } else {
-                sourceDb = source;
-            }
-
-            if (typeof destination == "string") {
-                createEmptyFile(destination);
-
-                await pause();
-
-                destDb = new DatabaseConstructor(destination);
-                await createTables(destDb);
-
-                await pause();
-            } else {
-                destDb = destination;
-            }
-
-            try {
-                destDb.exec(`BEGIN EXCLUSIVE TRANSACTION`);
-
-                //
-                let logsQueryCondition;
-                if (conf.mode == "instruments") {
-                    logsQueryCondition = `WHERE oid IN (${conf.selectedInstruments.join(
-                        ","
-                    )})`;
-                } else if (conf.mode == "sessions") {
-                    logsQueryCondition = `WHERE sid IN (${conf.selectedSessions.join(
-                        ","
-                    )})`;
-                } else if (conf.mode == "archive") {
-                    logsQueryCondition = `WHERE "date" < unixepoch(date('now','-${conf.historyOdlerThenYears} year','-${conf.historyOdlerThenMonths} month','-${conf.historyOdlerThenDays} day')) * 1000`;
-                } else {
-                    throw "custom mode not implemented";
-                }
-                logsQueryCondition += " AND NOT deleted";
-
-                // get source instruments
-                let instrumentIds: string[];
-                if (conf.mode == "instruments") {
-                    instrumentIds = conf.selectedInstruments;
-                } else if (conf.mode == "sessions" || conf.mode == "archive") {
-                    instrumentIds = sourceDb
-                        .prepare(
-                            `SELECT DISTINCT(oid) AS oid FROM activityLog ${logsQueryCondition}`
-                        )
-                        .all()
-                        .filter(row => row.oid != null)
-                        .map(row => row.oid.toString());
-                } else {
-                    throw "custom mode not implemented";
-                }
-                const sourceInstruments = sourceDb
-                    .prepare(
-                        `SELECT * FROM instrument WHERE id IN (${instrumentIds.join(
-                            ","
-                        )})`
-                    )
-                    .all();
-
-                // get source sessions
-                let sessionIds: string[];
-                if (conf.mode == "sessions") {
-                    sessionIds = conf.selectedSessions;
-                } else if (
-                    conf.mode == "instruments" ||
-                    conf.mode == "archive"
-                ) {
-                    sessionIds = sourceDb
-                        .prepare(
-                            `SELECT DISTINCT(sid) AS sid FROM activityLog ${logsQueryCondition}`
-                        )
-                        .all()
-                        .filter(row => row.sid != null)
-                        .map(row => row.sid.toString());
-                } else {
-                    throw "custom mode not implemented";
-                }
-                const sourceSessions = sourceDb
-                    .prepare(
-                        `SELECT * FROM "history/sessions" WHERE id IN (${sessionIds.join(
-                            ","
-                        )})`
-                    )
-                    .all();
-
-                // get source shortcuts
-                const sourceShortcuts = sourceDb
-                    .prepare(
-                        `SELECT * FROM "shortcuts/shortcuts" WHERE "groupName" IN (${instrumentIds
-                            .map(id => `'__instrument__${id}'`)
-                            .join(",")})`
-                    )
-                    .all();
-
-                // insert destination instrument
-                const destInstrumentIds = [];
-                const mapSourceInstrumentToDestInstrumentId = new Map<
-                    bigint,
-                    bigint
-                >();
-                if (sourceInstruments.length > 0) {
-                    const instrumentColumns = Object.keys(
-                        sourceInstruments[0]
-                    ).filter(column => column != "id");
-
-                    for (const sourceInstrument of sourceInstruments) {
-                        const result = destDb
-                            .prepare(
-                                `INSERT INTO instrument (${instrumentColumns.join(
-                                    ","
-                                )}) VALUES (${instrumentColumns
-                                    .map(() => "?")
-                                    .join(",")})`
-                            )
-                            .run(
-                                instrumentColumns.map(
-                                    column => sourceInstrument[column]
-                                )
-                            );
-                        const destInstrumentId =
-                            result.lastInsertRowid as bigint;
-                        mapSourceInstrumentToDestInstrumentId.set(
-                            BigInt(sourceInstrument.id),
-                            BigInt(destInstrumentId)
-                        );
-                        destInstrumentIds.push(destInstrumentId);
-
-                        await pause();
-                    }
-                }
-                for (const instrumentId of instrumentIds) {
-                    if (
-                        !mapSourceInstrumentToDestInstrumentId.get(
-                            BigInt(instrumentId)
-                        )
-                    ) {
-                        mapSourceInstrumentToDestInstrumentId.set(
-                            BigInt(instrumentId),
-                            BigInt(0)
-                        );
-                    }
-                }
-
-                // insert destination sessions
-                const mapSourceSessionToDestSessionId = new Map<
-                    bigint,
-                    bigint
-                >();
-                const destSessionIds = [];
-                if (sourceSessions.length > 0) {
-                    const sessionColumns = Object.keys(
-                        sourceSessions[0]
-                    ).filter(column => column != "id");
-
-                    for (const sourceSession of sourceSessions) {
-                        const destinationSession = destDb
-                            .prepare(
-                                `SELECT * FROM "history/sessions" WHERE uuid = ?`
-                            )
-                            .get([sourceSession.uuid]);
-                        if (destinationSession) {
-                            mapSourceSessionToDestSessionId.set(
-                                BigInt(sourceSession.id),
-                                BigInt(destinationSession.id)
-                            );
-                        } else {
-                            const result = destDb
-                                .prepare(
-                                    `INSERT INTO "history/sessions" (${sessionColumns.join(
-                                        ","
-                                    )}) VALUES (${sessionColumns
-                                        .map(() => "?")
-                                        .join(",")})`
-                                )
-                                .run(
-                                    sessionColumns.map(
-                                        column => sourceSession[column]
-                                    )
-                                );
-                            const destSessionId =
-                                result.lastInsertRowid as bigint;
-                            mapSourceSessionToDestSessionId.set(
-                                BigInt(sourceSession.id),
-                                BigInt(destSessionId)
-                            );
-                            destSessionIds.push(destSessionId);
-                        }
-
-                        await pause();
-                    }
-                }
-
-                // insert destination shortcuts
-                const destShortcutIds = [];
-                if (sourceShortcuts.length > 0) {
-                    const shortcutColumns = Object.keys(
-                        sourceShortcuts[0]
-                    ).filter(column => column != "id" && column != "groupName");
-
-                    for (const sourceShortcut of sourceShortcuts) {
-                        const sourceInstrumentId = BigInt(
-                            sourceShortcut.groupName.substr(
-                                "__instrument__".length
-                            )
-                        );
-
-                        const groupName =
-                            "__instrument__" +
-                            mapSourceInstrumentToDestInstrumentId.get(
-                                sourceInstrumentId
-                            );
-
-                        const result = destDb
-                            .prepare(
-                                `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
-                                    ","
-                                )}) VALUES (?, ${shortcutColumns
-                                    .map(() => "?")
-                                    .join(",")})`
-                            )
-                            .run([
-                                groupName,
-                                ...shortcutColumns.map(
-                                    column => sourceShortcut[column]
-                                )
-                            ]);
-                        const destShortcutId = result.lastInsertRowid as bigint;
-                        destShortcutIds.push(destShortcutId);
-                    }
-
-                    await pause();
-                }
-
-                // insert destination logs in chunks
-                const logsCountRow = sourceDb
-                    .prepare(
-                        `SELECT count(*) as count FROM activityLog ${logsQueryCondition}`
-                    )
-                    .get();
-
-                const CHUNK = 100;
-                let offset = 0;
-                let logColumns: string[] | undefined;
-                while (true) {
-                    const logs = sourceDb
-                        .prepare(
-                            //`SELECT * FROM activityLog ${logsQueryCondition} ORDER BY date ASC limit ${CHUNK} offset ${offset}`
-                            `SELECT * FROM activityLog ${logsQueryCondition} limit ${CHUNK} offset ${offset}`
-                        )
-                        .all();
-
-                    if (logs.length == 0) {
-                        break;
-                    }
-
-                    if (!logColumns) {
-                        logColumns = Object.keys(logs[0]).filter(
-                            column =>
-                                column != "id" &&
-                                column != "oid" &&
-                                column != "sid"
-                        );
-                    }
-
-                    destDb
-                        .prepare(
-                            `INSERT INTO activityLog (oid, sid, ${logColumns.join(
-                                ","
-                            )}) VALUES ${logs.map(
-                                log =>
-                                    `(?, ?, ${logColumns!
-                                        .map(() => "?")
-                                        .join(",")})`
-                            )}`
-                        )
-                        .run(
-                            logs.reduce(
-                                (arr, log) => [
-                                    ...arr,
-                                    mapSourceInstrumentToDestInstrumentId.get(
-                                        BigInt(log.oid)
-                                    ),
-                                    log.sid
-                                        ? mapSourceSessionToDestSessionId.get(
-                                              BigInt(log.sid)
-                                          )
-                                        : null,
-                                    ...logColumns!.map(column => log[column])
-                                ],
-                                []
-                            )
-                        );
-
-                    // update notification progress bar
-                    offset += logs.length;
-                    const progress = offset / Number(logsCountRow.count);
-                    notification.update(progressToastId, {
-                        render: `Exporting ${Math.round(progress * 100)}%`,
-                        progress
-                    });
-
-                    await pause();
-
-                    if (logs.length < CHUNK) {
-                        break;
-                    }
-                }
-
-                destDb.exec(`COMMIT TRANSACTION`);
-
-                // delete source logs
-                if (conf.removeHistoryAfterExport) {
-                    sourceDb.exec(
-                        `DELETE FROM activityLog ${logsQueryCondition}`
-                    );
-                }
-
-                if (destDb == db) {
-                    // notify renderer process to update stores
-                    const { ipcRenderer } = await import("electron");
-
-                    for (const objectId of destInstrumentIds) {
-                        ipcRenderer.send(
-                            "shared/store/create-object-notify/" + "instrument",
-                            {
-                                objectId
-                            }
-                        );
-                        await pause();
-                    }
-
-                    for (const objectId of destSessionIds) {
-                        ipcRenderer.send(
-                            "shared/store/create-object-notify/" +
-                                "history/sessions",
-                            {
-                                objectId
-                            }
-                        );
-                        await pause();
-                    }
-
-                    for (const objectId of destShortcutIds) {
-                        ipcRenderer.send(
-                            "shared/store/create-object-notify/" +
-                                "shortcuts/shortcuts",
-                            {
-                                objectId
-                            }
-                        );
-                        await pause();
-                    }
-                }
-
-                notification.update(progressToastId, {
-                    autoClose: 1000,
-                    render: "Exported successfully",
-                    progress: undefined,
-                    closeOnClick: true,
-                    type: notification.SUCCESS
-                });
-            } catch (err) {
-                destDb.exec(`ROLLBACK TRANSACTION`);
-                throw err;
-            }
-        } catch (err) {
-            notification.update(progressToastId, {
-                render: "Export failed: " + err,
-                progress: 1,
-                closeOnClick: true,
-                type: notification.ERROR
-            });
-        } finally {
-            if (typeof source === "string") {
-                sourceDb?.close();
-            }
-
-            if (typeof destination === "string") {
-                destDb?.close();
-            }
         }
     }
 }

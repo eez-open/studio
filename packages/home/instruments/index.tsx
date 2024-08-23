@@ -31,8 +31,8 @@ import {
 import { ConnectionParameters } from "instrument/connection/interface";
 import { Loader } from "eez-studio-ui/loader";
 import { SearchInput } from "eez-studio-ui/search-input";
-import { instrumentDatabases } from "eez-studio-shared/db";
 import { showExportDialog } from "./export-dialog";
+import { showImportDialog } from "./import-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -402,9 +402,7 @@ const Toolbar = observer(
 
                     if (filePaths && filePaths[0]) {
                         const filePath = filePaths[0];
-                        instrumentDatabases.importInstrumentFromDatabase(
-                            filePath
-                        );
+                        showImportDialog(this.props.instrumentsStore, filePath);
                     }
                 }
             });

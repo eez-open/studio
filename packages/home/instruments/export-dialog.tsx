@@ -1,7 +1,6 @@
 import path from "path";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import { findDOMNode } from "react-dom";
 import {
     action,
     autorun,
@@ -339,7 +338,7 @@ const HistoryExportSettings = observer(
 
             return (
                 <div style={this.props.style}>
-                    <div className="d-flex align-items-center">
+                    <div className="EezStudio_ExportDialog_ArchiveOlderThen d-flex align-items-center">
                         <label className="form-label">
                             Years
                             <input
@@ -384,7 +383,7 @@ const HistoryExportSettings = observer(
                             />
                         </label>
                     </div>
-                    <div>
+                    <div className="EezStudio_ExportDialog_RemoveHistoryAfterExport">
                         <label
                             className="form-check-label d-flex align-items-center"
                             style={{ gap: 5 }}
@@ -398,7 +397,7 @@ const HistoryExportSettings = observer(
                                         event.target.checked;
                                 })}
                             />
-                            Remove history after export
+                            Delete history after export
                         </label>
                     </div>
                 </div>
@@ -411,14 +410,14 @@ const ExportDialog = observer(
     class ExportDialog extends React.Component<{
         instrumentsStore: InstrumentsStore;
     }> {
-        element: Element;
-
         mode: "instruments" | "sessions" | "archive" | "custom" = "instruments";
 
         instrumentsExportModel = new ExportModel();
         sessionExportModel = new ExportModel();
         archiveExportModel = new ExportModel();
         customExportModel = new ExportModel();
+
+        description: string = "";
 
         error: string | undefined;
 
@@ -427,11 +426,6 @@ const ExportDialog = observer(
 
             runInAction(() => {
                 this.instrumentsExportModel.instrumentsOption = "selected";
-                if (this.props.instrumentsStore.selectedInstrumentId) {
-                    this.instrumentsExportModel.selectedInstruments.add(
-                        this.props.instrumentsStore.selectedInstrumentId
-                    );
-                }
                 this.instrumentsExportModel.sessionsOption = "all";
                 this.instrumentsExportModel.historyOption = "all";
                 this.instrumentsExportModel.removeHistoryAfterExport = false;
@@ -450,6 +444,7 @@ const ExportDialog = observer(
 
             makeObservable(this, {
                 mode: observable,
+                description: observable,
                 error: observable,
                 exportModel: computed
             });
@@ -495,6 +490,11 @@ const ExportDialog = observer(
                 }
             }
 
+            if (this.description.trim() == "") {
+                this.error = "Description is required.";
+                return false;
+            }
+
             (async () => {
                 let defaultPath = window.localStorage.getItem(
                     "lastExportDatabasePath"
@@ -523,7 +523,7 @@ const ExportDialog = observer(
                         path.dirname(filePath)
                     );
 
-                    instrumentDatabases.exportDatabase(db, filePath, {
+                    instrumentDatabases.exportDatabase(filePath, {
                         mode: this.mode,
                         instrumentsOption: this.exportModel.instrumentsOption,
                         selectedInstruments: Array.from(
@@ -541,7 +541,8 @@ const ExportDialog = observer(
                         historyOdlerThenDays:
                             this.exportModel.historyOdlerThenDays,
                         removeHistoryAfterExport:
-                            this.exportModel.removeHistoryAfterExport
+                            this.exportModel.removeHistoryAfterExport,
+                        description: this.description
                     });
                 }
             })();
@@ -552,9 +553,6 @@ const ExportDialog = observer(
         render() {
             return (
                 <Dialog
-                    ref={(ref: any) => {
-                        this.element = findDOMNode(ref) as Element;
-                    }}
                     className="EezStudio_ExportDialog"
                     title="Export"
                     onOk={this.onOK}
@@ -576,7 +574,7 @@ const ExportDialog = observer(
                                     this.mode = "instruments";
                                 })}
                             >
-                                Instruments
+                                Export Instruments
                             </a>
                         </li>
                         <li className="nav-item">
@@ -590,7 +588,7 @@ const ExportDialog = observer(
                                     this.mode = "sessions";
                                 })}
                             >
-                                Sessions
+                                Export Sessions
                             </a>
                         </li>
                         <li className="nav-item">
@@ -607,20 +605,22 @@ const ExportDialog = observer(
                                 Archive
                             </a>
                         </li>
-                        <li className="nav-item">
-                            <a
-                                className={classNames("nav-link", {
-                                    active: this.mode == "custom"
-                                })}
-                                href="#"
-                                onClick={action(event => {
-                                    event.preventDefault();
-                                    this.mode = "custom";
-                                })}
-                            >
-                                Custom
-                            </a>
-                        </li>
+                        {/*
+                            <li className="nav-item">
+                                <a
+                                    className={classNames("nav-link", {
+                                        active: this.mode == "custom"
+                                    })}
+                                    href="#"
+                                    onClick={action(event => {
+                                        event.preventDefault();
+                                        this.mode = "custom";
+                                    })}
+                                >
+                                    Custom
+                                </a>
+                            </li>
+                        */}
                     </ul>
 
                     {this.mode == "instruments" && (
@@ -638,7 +638,7 @@ const ExportDialog = observer(
                     )}
 
                     {this.mode == "archive" && (
-                        <div>
+                        <div className="EezStudio_ExportDialog_ArchiveMode">
                             <div style={{ marginBottom: 10 }}>
                                 Archive history items older then:
                             </div>
@@ -823,6 +823,23 @@ const ExportDialog = observer(
                             </Section>
                         </>
                     )}
+                    <div style={{ marginTop: 20 }}>
+                        <label
+                            htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
+                            className="form-label"
+                        >
+                            Description:
+                        </label>
+                        <textarea
+                            className="form-control"
+                            id="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
+                            rows={3}
+                            value={this.description}
+                            onChange={action(event => {
+                                this.description = event.target.value;
+                            })}
+                        ></textarea>
+                    </div>
                 </Dialog>
             );
         }
