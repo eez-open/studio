@@ -3,7 +3,6 @@ import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import {
     action,
-    autorun,
     computed,
     makeObservable,
     observable,
@@ -23,7 +22,7 @@ import {
     historySessions,
     type IHistorySession
 } from "instrument/window/history/session/store";
-import { db, instrumentDatabases } from "eez-studio-shared/db";
+import { instrumentDatabases } from "eez-studio-shared/db";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +32,6 @@ class ExportModel {
 
     sessionsOption: "all" | "selected" = "all";
     selectedSessions: Set<string> = new Set();
-    manadatorySelectedSessions: Set<string> = new Set();
 
     historyOption: "all" | "older-then" = "all";
     historyOdlerThenYears: number = 0;
@@ -42,8 +40,6 @@ class ExportModel {
 
     removeHistoryAfterExport: boolean = false;
 
-    numHistoryItems: number = 0;
-
     constructor() {
         makeObservable(this, {
             instrumentsOption: observable,
@@ -51,92 +47,16 @@ class ExportModel {
 
             sessionsOption: observable,
             selectedSessions: observable,
-            manadatorySelectedSessions: observable,
 
             historyOption: observable,
             historyOdlerThenYears: observable,
             historyOdlerThenMonths: observable,
             historyOdlerThenDays: observable,
 
-            removeHistoryAfterExport: observable,
-
-            numHistoryItems: observable
-        });
-
-        autorun(() => {
-            let condition = "";
-
-            if (this.instrumentsOption == "selected") {
-                const oids = Array.from(this.selectedInstruments)
-                    .map(oid => `'${oid}'`)
-                    .join(",");
-                if (oids.length > 0) {
-                    condition = ` WHERE oid IN (${oids})`;
-                } else {
-                    condition = ` WHERE 0`;
-                }
-            }
-
-            if (this.historyOption == "older-then") {
-                if (condition == "") {
-                    condition += " WHERE ";
-                } else {
-                    condition += " AND ";
-                }
-                condition += `"date" < unixepoch(date('now','-${this.historyOdlerThenYears} year','-${this.historyOdlerThenMonths} month','-${this.historyOdlerThenDays} day')) * 1000`;
-            }
-
-            let numHistoryItems = db
-                .prepare(
-                    "SELECT count(*) as count FROM activityLog" + condition
-                )
-                .get().count;
-
-            let sessions = db
-                .prepare(
-                    "SELECT DISTINCT(sid) as id FROM activityLog" + condition
-                )
-                .all();
-
-            sessions = sessions.filter(session => session.id != null);
-
-            runInAction(() => {
-                this.manadatorySelectedSessions.clear();
-                sessions.forEach((session: any) => {
-                    if (session.id != null) {
-                        this.manadatorySelectedSessions.add(
-                            session.id.toString()
-                        );
-                    }
-                });
-
-                this.numHistoryItems = numHistoryItems;
-            });
+            removeHistoryAfterExport: observable
         });
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const Section = observer(
-    class Section extends React.Component<{
-        title: string;
-        children: React.ReactNode;
-    }> {
-        render() {
-            return (
-                <div className="EezStudio_ExportDialog_Section">
-                    <div className="EezStudio_ExportDialog_SectionTitle">
-                        {this.props.title}
-                    </div>
-                    <div className="EezStudio_ExportDialog_SectionContent">
-                        {this.props.children}
-                    </div>
-                </div>
-            );
-        }
-    }
-);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -250,14 +170,9 @@ const SessionNode = observer(
                                 className="form-check-input"
                                 type="checkbox"
                                 id={`EezStudio_ExportDialog_Session_${session.id}`}
-                                checked={
-                                    exportModel.selectedSessions.has(
-                                        session.id
-                                    ) ||
-                                    exportModel.manadatorySelectedSessions.has(
-                                        session.id
-                                    )
-                                }
+                                checked={exportModel.selectedSessions.has(
+                                    session.id
+                                )}
                                 onChange={action(event => {
                                     if (event.target.checked) {
                                         exportModel.selectedSessions.add(
@@ -269,9 +184,6 @@ const SessionNode = observer(
                                         );
                                     }
                                 })}
-                                disabled={exportModel.manadatorySelectedSessions.has(
-                                    session.id
-                                )}
                             />
                             {session.name}
                         </label>
@@ -331,13 +243,12 @@ const SessionList = observer(
 const HistoryExportSettings = observer(
     class HistoryExportSettings extends React.Component<{
         exportModel: ExportModel;
-        style?: React.CSSProperties;
     }> {
         render() {
             const { exportModel } = this.props;
 
             return (
-                <div style={this.props.style}>
+                <div>
                     <div className="EezStudio_ExportDialog_ArchiveOlderThen d-flex align-items-center">
                         <label className="form-label">
                             Years
@@ -410,12 +321,11 @@ const ExportDialog = observer(
     class ExportDialog extends React.Component<{
         instrumentsStore: InstrumentsStore;
     }> {
-        mode: "instruments" | "sessions" | "archive" | "custom" = "instruments";
+        mode: "instruments" | "sessions" | "archive" = "instruments";
 
         instrumentsExportModel = new ExportModel();
         sessionExportModel = new ExportModel();
         archiveExportModel = new ExportModel();
-        customExportModel = new ExportModel();
 
         description: string = "";
 
@@ -453,8 +363,7 @@ const ExportDialog = observer(
         get exportModel() {
             if (this.mode == "instruments") return this.instrumentsExportModel;
             if (this.mode == "sessions") return this.sessionExportModel;
-            if (this.mode == "archive") return this.archiveExportModel;
-            return this.customExportModel;
+            return this.archiveExportModel;
         }
 
         onInstrumentsOptionChange = action(
@@ -605,22 +514,6 @@ const ExportDialog = observer(
                                 Archive History
                             </a>
                         </li>
-                        {/*
-                            <li className="nav-item">
-                                <a
-                                    className={classNames("nav-link", {
-                                        active: this.mode == "custom"
-                                    })}
-                                    href="#"
-                                    onClick={action(event => {
-                                        event.preventDefault();
-                                        this.mode = "custom";
-                                    })}
-                                >
-                                    Custom
-                                </a>
-                            </li>
-                        */}
                     </ul>
 
                     {this.mode == "instruments" && (
@@ -648,181 +541,6 @@ const ExportDialog = observer(
                         </div>
                     )}
 
-                    {this.mode == "custom" && (
-                        <>
-                            <Section title="INSTRUMENTS">
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_AllInstruments"
-                                        value="all"
-                                        checked={
-                                            this.exportModel
-                                                .instrumentsOption == "all"
-                                        }
-                                        onChange={
-                                            this.onInstrumentsOptionChange
-                                        }
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_AllInstruments"
-                                    >
-                                        All instruments
-                                    </label>
-                                </div>
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_SelectedInstruments"
-                                        value="selected"
-                                        checked={
-                                            this.exportModel
-                                                .instrumentsOption == "selected"
-                                        }
-                                        onChange={
-                                            this.onInstrumentsOptionChange
-                                        }
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_SelectedInstruments"
-                                    >
-                                        Selected instruments
-                                    </label>
-                                </div>
-
-                                {this.exportModel.instrumentsOption ==
-                                    "selected" && (
-                                    <InstrumentList
-                                        instrumentsStore={
-                                            this.props.instrumentsStore
-                                        }
-                                        exportModel={this.exportModel}
-                                    />
-                                )}
-                            </Section>
-
-                            <Section title="SESSIONS">
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_AllSessions"
-                                        value="all"
-                                        checked={
-                                            this.exportModel.sessionsOption ==
-                                            "all"
-                                        }
-                                        onChange={this.onSessionsOptionChange}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_AllSessions"
-                                    >
-                                        All sessions
-                                    </label>
-                                </div>
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_SelectedSessions"
-                                        value="selected"
-                                        checked={
-                                            this.exportModel.sessionsOption ==
-                                            "selected"
-                                        }
-                                        onChange={this.onSessionsOptionChange}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_SelectedSessions"
-                                    >
-                                        Selected sessions
-                                        {this.exportModel.sessionsOption ==
-                                        "selected"
-                                            ? ` (${
-                                                  this.exportModel
-                                                      .manadatorySelectedSessions
-                                                      .size +
-                                                  this.exportModel
-                                                      .selectedSessions.size
-                                              } selected)`
-                                            : ""}
-                                    </label>
-                                </div>
-
-                                {this.exportModel.sessionsOption ==
-                                    "selected" && (
-                                    <SessionList
-                                        instrumentsStore={
-                                            this.props.instrumentsStore
-                                        }
-                                        exportModel={this.exportModel}
-                                    />
-                                )}
-                            </Section>
-
-                            <Section
-                                title={`HISTORY (${
-                                    this.exportModel.numHistoryItems == 1
-                                        ? "1 item"
-                                        : `${this.exportModel.numHistoryItems} items`
-                                })`}
-                            >
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_AllHistory"
-                                        value="all"
-                                        checked={
-                                            this.exportModel.historyOption ==
-                                            "all"
-                                        }
-                                        onChange={this.onHistoryOptionChange}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_AllHistory"
-                                    >
-                                        All history
-                                    </label>
-                                </div>
-
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        id="EezStudio_ExportDialog_OlderThenHistory"
-                                        value="older-then"
-                                        checked={
-                                            this.exportModel.historyOption ==
-                                            "older-then"
-                                        }
-                                        onChange={this.onHistoryOptionChange}
-                                    />
-                                    <label
-                                        className="form-check-label"
-                                        htmlFor="EezStudio_ExportDialog_OlderThenHistory"
-                                    >
-                                        Older then
-                                    </label>
-                                </div>
-
-                                {this.exportModel.historyOption ==
-                                    "older-then" && (
-                                    <HistoryExportSettings
-                                        exportModel={this.exportModel}
-                                        style={{ marginLeft: 20 }}
-                                    />
-                                )}
-                            </Section>
-                        </>
-                    )}
                     <div style={{ marginTop: 20 }}>
                         <label
                             htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"

@@ -263,7 +263,7 @@ class InstrumentDatabases {
     async exportDatabase(
         destination: string,
         conf: {
-            mode: "instruments" | "sessions" | "archive" | "custom";
+            mode: "instruments" | "sessions" | "archive";
 
             instrumentsOption: "all" | "selected";
             selectedInstruments: string[];
@@ -321,7 +321,7 @@ class InstrumentDatabases {
             } else if (conf.mode == "archive") {
                 logsQueryCondition = `WHERE "date" < unixepoch(date('now','-${conf.historyOdlerThenYears} year','-${conf.historyOdlerThenMonths} month','-${conf.historyOdlerThenDays} day')) * 1000`;
             } else {
-                throw "custom mode not implemented";
+                throw "this mode not implemented";
             }
             logsQueryCondition += " AND NOT deleted";
 
@@ -338,7 +338,7 @@ class InstrumentDatabases {
                     .filter(row => row.oid != null)
                     .map(row => row.oid.toString());
             } else {
-                throw "custom mode not implemented";
+                throw "this mode not implemented";
             }
             const sourceInstruments = sourceDb
                 .prepare(
@@ -361,7 +361,7 @@ class InstrumentDatabases {
                     .filter(row => row.sid != null)
                     .map(row => row.sid.toString());
             } else {
-                throw "custom mode not implemented";
+                throw "this mode not implemented";
             }
             const sourceSessions = sourceDb
                 .prepare(
