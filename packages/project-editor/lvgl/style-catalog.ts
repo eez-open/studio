@@ -395,7 +395,7 @@ export const transform_scale_x_property_info: LVGLPropertyInfo = {
 
 export const transform_scale_y_property_info: LVGLPropertyInfo = {
     name: "transform_scale_y",
-    displayName: "Transform scale X",
+    displayName: "Transform scale Y",
     type: PropertyType.Number,
     lvglStyleProp: {
         code: LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_SCALE_Y,
