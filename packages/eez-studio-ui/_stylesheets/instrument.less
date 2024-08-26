@@ -733,59 +733,72 @@
 }
 
 .EezStudio_SessionListTableContainer {
-    padding: 5px;
-
     table {
         width: 100%;
+
+        thead {
+            tr {
+                border-bottom: 1px solid @borderColor;
+
+                th {
+                    background-color: @panelHeaderColor;
+                    font-weight: bold;
+                    position: sticky;
+                    top: 0px;
+                    padding-left: 4px;
+
+                    &:first-child {
+                        border-right: 1px solid @borderColor;
+                    }
+
+                    &.sort-enabled {
+                        background-repeat: no-repeat;
+                        background-position: center left;
+                        background-image: url("../_images/col_sort_enabled.png");
+                        padding-left: 20px;
+                        cursor: pointer;
+                    }
+
+                    &.sort-asc {
+                        background-image: url("../_images/col_sort_asc.png");
+                    }
+
+                    &.sort-desc {
+                        background-image: url("../_images/col_sort_desc.png");
+                    }
+                }
+            }
+        }
 
         tbody > tr {
             cursor: pointer;
             font-size: 90%;
 
+            border-bottom: 1px solid @borderColor;
+
             &.selected {
                 background-color: @selectionBackgroundColor;
                 color: @selectionColor;
-                .text-muted {
-                    color: #ccc !important;
-                }
-                .EezStudio_Action {
-                    color: white;
-                }
-                .EezStudio_Action:hover {
-                    color: #aaa;
-                }
-            }
-
-            table {
-                width: 100%;
             }
 
             td {
-                position: relative;
-                padding: 2px 5px;
+                padding-left: 4px;
             }
 
             td:nth-child(1) {
                 width: 100%;
+                border-right: 1px solid @borderColor;
             }
 
             td:nth-child(2) {
                 white-space: nowrap;
             }
 
-            .EezStudio_Icon {
-                visibility: hidden;
-            }
-
-            &:hover .EezStudio_Icon {
-                visibility: visible;
-            }
-        }
-
-        tbody > tr.session_free_mode {
-            td:nth-child(1) {
-                font-style: italic;
-                text-transform: uppercase;
+            &.session_free_mode {
+                td:nth-child(1) {
+                    font-style: italic;
+                    text-transform: uppercase;
+                }
             }
         }
     }

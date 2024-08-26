@@ -1,5 +1,5 @@
 import React from "react";
-import { action } from "mobx";
+import { action, autorun, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -60,6 +60,13 @@ export const SessionListItem = observer(
         isSelected: boolean;
         onSelect: () => void;
     }> {
+        get lastActivity() {
+            const lastActivity = historySessions.getLastActivity(
+                this.props.session
+            );
+            return lastActivity ? lastActivity.toLocaleString() : "";
+        }
+
         render() {
             let className = classNames({
                 selected: this.props.isSelected,
@@ -69,6 +76,7 @@ export const SessionListItem = observer(
             return (
                 <tr className={className} onClick={this.props.onSelect}>
                     <td>{this.props.session.name}</td>
+                    <td>{this.lastActivity}</td>
                 </tr>
             );
         }
@@ -82,6 +90,69 @@ export const SessionList = observer(
     }> {
         ref = React.createRef<HTMLDivElement>();
 
+        sortBy: string = "name-asc";
+
+        constructor(props: any) {
+            super(props);
+
+            this.sortBy =
+                window.localStorage.getItem("session-list-sort") ?? "name-asc";
+
+            makeObservable(this, {
+                sortBy: observable
+            });
+
+            autorun(() => {
+                window.localStorage.setItem("session-list-sort", this.sortBy);
+            });
+        }
+
+        get sessions() {
+            const sessions = (
+                historySessions.showDeleted
+                    ? historySessions.deletedSessions
+                    : historySessions.sessions
+            ).slice();
+
+            const sortedSessions = sessions.slice(1);
+
+            sortedSessions.sort((a, b) => {
+                let result;
+
+                if (this.sortBy.startsWith("name")) {
+                    result = b.name
+                        .toLowerCase()
+                        .localeCompare(a.name.toLowerCase());
+                } else {
+                    const aLastActivity = historySessions.getLastActivity(a);
+                    const bLastActivity = historySessions.getLastActivity(b);
+
+                    if (!aLastActivity && !bLastActivity) {
+                        result = 0;
+                    } else if (!aLastActivity) {
+                        result = this.sortBy.endsWith("asc") ? -1 : 1;
+                    } else if (!bLastActivity) {
+                        result = this.sortBy.endsWith("asc") ? 1 : -1;
+                    } else {
+                        result =
+                            aLastActivity < bLastActivity
+                                ? 1
+                                : aLastActivity > bLastActivity
+                                ? -1
+                                : 0;
+                    }
+                }
+
+                if (this.sortBy.endsWith("asc")) {
+                    result = -result;
+                }
+
+                return result;
+            });
+
+            return [sessions[0], ...sortedSessions];
+        }
+
         componentDidMount() {
             this.ensureSelectedVisible();
         }
@@ -91,9 +162,30 @@ export const SessionList = observer(
         }
 
         ensureSelectedVisible() {
-            const selected = this.ref.current?.querySelector(".selected");
-            if (selected) {
-                selected.scrollIntoView({ block: "nearest" });
+            const container = this.ref.current;
+            if (container) {
+                const selected = container.querySelector(".selected");
+                if (selected) {
+                    const rectSelected = selected.getBoundingClientRect();
+                    const rectContainer = container.getBoundingClientRect();
+
+                    const margin = 2 * rectSelected.height;
+
+                    let y = rectSelected.y - rectContainer.y;
+
+                    const scrollTop = container.parentElement!.scrollTop;
+                    const height = container.parentElement!.clientHeight;
+
+                    if (scrollTop > y - margin) {
+                        container.parentElement!.scrollTop = y - margin;
+                    } else if (
+                        scrollTop + height <
+                        y + rectSelected.height + margin
+                    ) {
+                        container.parentElement!.scrollTop =
+                            y + rectSelected.height + margin - height;
+                    }
+                }
             }
         }
 
@@ -212,11 +304,61 @@ export const SessionList = observer(
                             ref={this.ref}
                         >
                             <table>
+                                <thead>
+                                    <tr>
+                                        <th
+                                            className={classNames(
+                                                "sort-enabled",
+                                                {
+                                                    "sort-asc":
+                                                        this.sortBy ==
+                                                        "name-asc",
+                                                    "sort-desc":
+                                                        this.sortBy ==
+                                                        "name-desc"
+                                                }
+                                            )}
+                                            onClick={action(() => {
+                                                if (this.sortBy == "name-asc") {
+                                                    this.sortBy = "name-desc";
+                                                } else {
+                                                    this.sortBy = "name-asc";
+                                                }
+                                            })}
+                                        >
+                                            Name
+                                        </th>
+                                        <th
+                                            className={classNames(
+                                                "sort-enabled",
+                                                {
+                                                    "sort-asc":
+                                                        this.sortBy ==
+                                                        "last-activity-asc",
+                                                    "sort-desc":
+                                                        this.sortBy ==
+                                                        "last-activity-desc"
+                                                }
+                                            )}
+                                            onClick={action(() => {
+                                                if (
+                                                    this.sortBy ==
+                                                    "last-activity-asc"
+                                                ) {
+                                                    this.sortBy =
+                                                        "last-activity-desc";
+                                                } else {
+                                                    this.sortBy =
+                                                        "last-activity-asc";
+                                                }
+                                            })}
+                                        >
+                                            Last Activity
+                                        </th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    {(historySessions.showDeleted
-                                        ? historySessions.deletedSessions
-                                        : historySessions.sessions
-                                    ).map(session => (
+                                    {this.sessions.map(session => (
                                         <SessionListItem
                                             appStore={this.props.appStore}
                                             key={session.id}

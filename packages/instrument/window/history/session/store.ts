@@ -297,6 +297,29 @@ class HistorySessions {
             this._selectedSession = this.deletedSessions[i];
         });
     }
+
+    getLastActivity(session: IHistorySession) {
+        let row;
+        if (session.id == SESSION_FREE_ID) {
+            row = db
+                .prepare(
+                    "SELECT date FROM activityLog ORDER BY date DESC LIMIT 1"
+                )
+                .get();
+        } else {
+            row = db
+                .prepare(
+                    "SELECT date FROM activityLog WHERE sid = ? ORDER BY date DESC LIMIT 1"
+                )
+                .get([session.id]);
+        }
+
+        if (!row) {
+            return null;
+        }
+
+        return new Date(Number(row.date));
+    }
 }
 
 export const historySessions = new HistorySessions();

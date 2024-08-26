@@ -141,16 +141,7 @@ class Settings {
             this.windowStates = settingsJs.windowStates;
         }
 
-        if ((settingsJs as any).dbPath != undefined) {
-            this.activeDbPath = (settingsJs as any).dbPath;
-            this.dbPaths = [
-                {
-                    filePath: this.activeDbPath,
-                    isActive: true,
-                    timeOfLastDatabaseCompactOperation: Date.now()
-                }
-            ];
-        } else if (settingsJs.dbPaths != undefined) {
+        if (settingsJs.dbPaths != undefined) {
             this.dbPaths = settingsJs.dbPaths;
 
             this.dbPaths.forEach(dbPath => {
@@ -161,6 +152,15 @@ class Settings {
 
             this.activeDbPath =
                 this.dbPaths.find(dbPath => dbPath.isActive)?.filePath ?? "";
+        } else {
+            this.activeDbPath = (settingsJs as any).dbPath;
+            this.dbPaths = [
+                {
+                    filePath: this.activeDbPath,
+                    isActive: true,
+                    timeOfLastDatabaseCompactOperation: Date.now()
+                }
+            ];
         }
 
         if (settingsJs.locale != undefined) {
