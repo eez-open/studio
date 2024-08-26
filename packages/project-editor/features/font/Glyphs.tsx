@@ -17,6 +17,7 @@ import { SearchInput } from "eez-studio-ui/search-input";
 
 import { Font, Glyph } from "project-editor/features/font/font";
 import { ProjectContext } from "project-editor/project/context";
+import { settingsController } from "home/settings";
 
 export const Glyphs = observer(
     class Glyphs
@@ -236,8 +237,15 @@ export const GlyphComponent = observer(
         canvas.width = (glyph.glyphBitmap && glyph.glyphBitmap.width) || 1;
         canvas.height = glyph.font.height || 1;
         let ctx = canvas.getContext("2d")!;
-        setColor("black");
-        setBackColor("white");
+
+        if (settingsController.isDarkTheme) {
+            setColor("white");
+            setBackColor("black");
+        } else {
+            setColor("black");
+            setBackColor("white");
+        }
+
         drawGlyph(ctx, -glyph.x, 0, glyph.encoding, glyph.font);
 
         React.useEffect(() => {

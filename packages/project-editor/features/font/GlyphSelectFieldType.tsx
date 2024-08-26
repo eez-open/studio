@@ -28,6 +28,7 @@ import {
     setColor
 } from "project-editor/flow/editor/eez-gui-draw";
 import { formatEncoding } from "project-editor/features/font/utils";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -396,8 +397,14 @@ export const Glyph = observer(
 
         const encoding = data.fontExtract.allEncodings[index];
 
-        setColor("black");
-        setBackColor("white");
+        if (settingsController.isDarkTheme) {
+            setColor("white");
+            setBackColor("black");
+        } else {
+            setColor("black");
+            setBackColor("white");
+        }
+
         const canvas = drawGlyph2(encoding, data.fontExtract);
 
         return (

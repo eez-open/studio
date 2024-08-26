@@ -68,6 +68,7 @@ import {
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { getLvglDefaultFontBpp } from "project-editor/lvgl/lvgl-versions";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -453,7 +454,7 @@ export class Glyph extends EezObject {
         if (this.glyphBitmap) {
             const project = ProjectEditor.getProject(this);
 
-            ctx.fillStyle = "black";
+            ctx.fillStyle = settingsController.isDarkTheme ? "white" : "black";
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const pixelValue = getPixel(
