@@ -32,6 +32,9 @@ interface LVGLIdentifier {
 export class LVGLIdentifiers {
     constructor(public store: ProjectStore) {
         makeObservable(this, {
+            pages: computed,
+            actions: computed,
+            styles: computed,
             identifiersMap: computed,
             identifiersArray: computed,
             maxWidgetIndex: computed
@@ -41,8 +44,8 @@ export class LVGLIdentifiers {
     get pages() {
         const pages = [];
 
-        for (const externalProject of this.store.openProjectsManager.projects) {
-            pages.push(...externalProject.pages);
+        for (const project of this.store.openProjectsManager.projects) {
+            pages.push(...project.pages);
         }
 
         return pages;
@@ -51,11 +54,41 @@ export class LVGLIdentifiers {
     get actions() {
         const actions = [];
 
-        for (const externalProject of this.store.openProjectsManager.projects) {
-            actions.push(...externalProject.actions);
+        for (const project of this.store.openProjectsManager.projects) {
+            actions.push(...project.actions);
         }
 
         return actions;
+    }
+
+    get styles() {
+        const styles = [];
+
+        for (const project of this.store.openProjectsManager.projects) {
+            styles.push(...project.lvglStyles.allStyles);
+        }
+
+        return styles;
+    }
+
+    get fonts() {
+        const styles = [];
+
+        for (const project of this.store.openProjectsManager.projects) {
+            styles.push(...project.fonts);
+        }
+
+        return styles;
+    }
+
+    get bitmaps() {
+        const styles = [];
+
+        for (const project of this.store.openProjectsManager.projects) {
+            styles.push(...project.bitmaps);
+        }
+
+        return styles;
     }
 
     get identifiersMap(): Map<Flow, Map<LVGLWidget | Page, LVGLIdentifier>> {

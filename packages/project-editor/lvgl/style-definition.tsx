@@ -128,6 +128,13 @@ export class LVGLStylesDefinition extends EezObject {
         state: string,
         value: any
     ) {
+        console.log(
+            "addPropertyToDefinition",
+            propertyInfo,
+            part,
+            state,
+            value
+        );
         let def = this.definition;
         return {
             ...(def || {}),
@@ -560,6 +567,86 @@ export class LVGLStylesDefinition extends EezObject {
                 );
             });
         });
+    }
+
+    lvglBuildStyle(build: LVGLBuild, part: string, state: string) {
+        Object.keys(this.definition?.[part]?.[state] ?? {}).forEach(
+            propertyName => {
+                const propertyInfo = lvglPropertiesMap.get(propertyName);
+                if (!propertyInfo) {
+                    return;
+                }
+
+                const value = this.definition[part][state][propertyName];
+
+                if (propertyInfo.type == PropertyType.ThemedColor) {
+                    build.line(
+                        `lv_style_set_${build.getStylePropName(
+                            propertyInfo.name
+                        )}(style, lv_color_hex(${colorRgbToHexNumStr(
+                            this.definition[part][state][propertyName]
+                        )}));`
+                    );
+                } else if (
+                    propertyInfo.type == PropertyType.Number ||
+                    propertyInfo.type == PropertyType.Enum
+                ) {
+                    if (propertyInfo == text_font_property_info) {
+                        const index = BUILT_IN_FONTS.indexOf(value);
+                        if (index != -1) {
+                            build.line(
+                                `lv_style_set_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(style, &lv_font_${(
+                                    value as string
+                                ).toLowerCase()});`
+                            );
+                        } else {
+                            const font = findFont(
+                                ProjectEditor.getProject(this),
+                                value
+                            );
+                            if (font) {
+                                build.line(
+                                    `lv_style_set_${build.getStylePropName(
+                                        propertyInfo.name
+                                    )}(style, &${build.getFontVariableName(
+                                        font
+                                    )});`
+                                );
+                            }
+                        }
+                    } else {
+                        const numValue = propertyInfo.lvglStyleProp.valueBuild
+                            ? propertyInfo.lvglStyleProp.valueBuild(value)
+                            : value;
+
+                        build.line(
+                            `lv_style_set_${build.getStylePropName(
+                                propertyInfo.name
+                            )}(style, ${numValue});`
+                        );
+                    }
+                } else if (propertyInfo.type == PropertyType.Boolean) {
+                    const numValue = value ? "true" : "false";
+
+                    build.line(
+                        `lv_style_set_${build.getStylePropName(
+                            propertyInfo.name
+                        )}(style, ${numValue});`
+                    );
+                } else if (
+                    propertyInfo.type == PropertyType.ObjectReference &&
+                    propertyInfo.referencedObjectCollectionPath == "bitmaps"
+                ) {
+                    build.line(
+                        `lv_style_set_${build.getStylePropName(
+                            propertyInfo.name
+                        )}(style, &${build.getImageVariableName(value)});`
+                    );
+                }
+            }
+        );
     }
 
     get hasModifications() {

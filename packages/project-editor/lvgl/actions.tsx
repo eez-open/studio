@@ -34,7 +34,8 @@ import {
     getProject,
     ProjectType,
     findPage,
-    findBitmap
+    findBitmap,
+    findLvglStyle
 } from "project-editor/project/project";
 import { Page } from "project-editor/features/page/page";
 import { Assets, DataBuffer } from "project-editor/build/assets";
@@ -65,7 +66,9 @@ import { escapeCString } from "./widget-common";
 const LVGL_ACTIONS = {
     CHANGE_SCREEN: 0,
     PLAY_ANIMATION: 1,
-    SET_PROPERTY: 2
+    SET_PROPERTY: 2,
+    ADD_STYLE: 3,
+    REMOVE_STYLE: 4
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +82,11 @@ export class LVGLActionType extends EezObject {
                 return LVGLChangeScreenActionType;
             else if (jsObject.action == "PLAY_ANIMATION")
                 return LVGLPlayAnimationActionType;
-            return LVGLSetPropertyActionType;
+            else if (jsObject.action == "SET_PROPERTY")
+                return LVGLSetPropertyActionType;
+            else if (jsObject.action == "ADD_STYLE")
+                return LVGLAddStyleActionType;
+            else return LVGLRemoveStyleActionType;
         },
 
         properties: [
@@ -1031,6 +1038,260 @@ export class LVGLSetPropertyActionType extends LVGLActionType {
 }
 
 registerClass("LVGLSetPropertyActionType", LVGLSetPropertyActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLAddStyleActionType extends LVGLActionType {
+    target: string;
+    style: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            style: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLAddStyleActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "allLvglStyles"
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLAddStyleActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Add style";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.style} to {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Add style {action.style} to {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLAddStyleActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+
+            if (object.style) {
+                const lvglStyle = findLvglStyle(
+                    projectStore.project,
+                    object.style
+                );
+
+                if (!lvglStyle) {
+                    messages.push(propertyNotFoundMessage(object, "style"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "style"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            ProjectEditor.getProjectStore(
+                this
+            ).lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // style
+        if (this.style) {
+            const lvglStyle = findLvglStyle(
+                assets.projectStore.project,
+                this.style
+            );
+
+            if (lvglStyle) {
+                dataBuffer.writeInt32(
+                    assets.projectStore.lvglIdentifiers.styles.indexOf(
+                        lvglStyle
+                    )
+                );
+            } else {
+                dataBuffer.writeInt32(-1);
+            }
+        } else {
+            dataBuffer.writeInt32(-1);
+        }
+    }
+}
+
+registerClass("LVGLAddStyleActionType", LVGLAddStyleActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLRemoveStyleActionType extends LVGLActionType {
+    target: string;
+    style: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            style: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLRemoveStyleActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "style",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "allLvglStyles"
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLRemoveStyleActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Remove style";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.style} from {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Remove style {action.style} from {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLRemoveStyleActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+
+            if (object.style) {
+                const lvglStyle = findLvglStyle(
+                    projectStore.project,
+                    object.style
+                );
+
+                if (!lvglStyle) {
+                    messages.push(propertyNotFoundMessage(object, "style"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "style"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // style
+        if (this.style) {
+            const lvglStyle = findLvglStyle(
+                assets.projectStore.project,
+                this.style
+            );
+
+            if (lvglStyle) {
+                dataBuffer.writeInt32(
+                    assets.projectStore.lvglIdentifiers.styles.indexOf(
+                        lvglStyle
+                    )
+                );
+            } else {
+                dataBuffer.writeInt32(-1);
+            }
+        } else {
+            dataBuffer.writeInt32(-1);
+        }
+    }
+}
+
+registerClass("LVGLRemoveStyleActionType", LVGLRemoveStyleActionType);
 
 ////////////////////////////////////////////////////////////////////////////////
 

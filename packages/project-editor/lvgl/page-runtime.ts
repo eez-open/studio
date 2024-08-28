@@ -18,8 +18,7 @@ import {
     getAncestorOfType,
     getClassInfo,
     getObjectPathAsString,
-    getProjectStore,
-    ProjectStore
+    getProjectStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import type { LVGLTabWidget, LVGLWidget } from "project-editor/lvgl/widgets";
@@ -45,13 +44,14 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     LVGLStylePropCode,
     LV_ANIM_OFF
-} from "project-editor/lvgl//lvgl-constants";
+} from "project-editor/lvgl/lvgl-constants";
 import {
     pad_bottom_property_info,
     pad_left_property_info,
     pad_right_property_info,
     pad_top_property_info
 } from "./style-catalog";
+import type { LVGLStyleObjects } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -89,9 +89,20 @@ export abstract class LVGLPageRuntime {
     };
 
     constructor(public page: Page) {
-        this.lvglVersion = getProjectStore(
-            this.page
-        ).project.settings.general.lvglVersion;
+        this.lvglVersion = this.project.settings.general.lvglVersion;
+
+        makeObservable(this, {
+            projectStore: computed,
+            project: computed
+        });
+    }
+
+    get projectStore() {
+        return getProjectStore(this.page);
+    }
+
+    get project() {
+        return this.projectStore.project;
     }
 
     abstract get isEditor(): boolean;
@@ -109,11 +120,8 @@ export abstract class LVGLPageRuntime {
         const startTime = new Date().getTime();
         const TIMEOUT = 1000;
 
-        const projectStore = getProjectStore(this.page);
         const bitmapObjects =
-            projectStore.project._assets.maps.name.getAllObjectsOfType(
-                "bitmaps"
-            );
+            this.project._assets.maps.name.getAllObjectsOfType("bitmaps");
         bitmapObjects.forEach(
             bitmapObject => (bitmapObject.object as Bitmap).imageElement
         );
@@ -134,10 +142,7 @@ export abstract class LVGLPageRuntime {
     }
 
     getBitmapPtrByName(bitmapName: string) {
-        const bitmap = findBitmap(
-            ProjectEditor.getProjectStore(this.page).project,
-            bitmapName
-        );
+        const bitmap = findBitmap(this.project, bitmapName);
         if (!bitmap) {
             return 0;
         }
@@ -255,6 +260,37 @@ export abstract class LVGLPageRuntime {
     get isV9() {
         return this.lvglVersion == "9.0";
     }
+
+    styleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
+
+    createStyles() {
+        for (const style of this.projectStore.lvglIdentifiers.styles) {
+            const lvglStyleObjects = style.lvglCreateStyles(this);
+            this.styleObjMap.set(style, lvglStyleObjects);
+        }
+    }
+
+    deleteStyles() {
+        for (const [style, lvglStyleObjects] of this.styleObjMap.entries()) {
+            style.lvglDeleteStyles(this, lvglStyleObjects);
+        }
+
+        this.styleObjMap.clear();
+    }
+
+    addStyle(targetObj: number, styleIndex: number) {
+        const lvglStyle = this.projectStore.lvglIdentifiers.styles[styleIndex];
+        if (lvglStyle) {
+            lvglStyle.lvglAddStyleToObject(this, targetObj);
+        }
+    }
+
+    removeStyle(targetObj: number, styleIndex: number) {
+        const lvglStyle = this.projectStore.lvglIdentifiers.styles[styleIndex];
+        if (lvglStyle) {
+            lvglStyle.lvglRemoveStyleFromObject(this, targetObj);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,8 +358,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
-                    getProjectStore(this.page).project.settings.general
-                        .darkTheme,
+                    this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
@@ -353,14 +388,19 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.freeStrings();
 
+                        this.deleteStyles();
+
+                        this.createStyles();
+
                         const pageObj = this.page.lvglCreate(this, 0);
                         if (!pageObj) {
                             console.error("pageObj is undefined");
                         }
 
-                        const editor = getProjectStore(
-                            this.page
-                        ).editorsStore.getEditorByObject(this.page);
+                        const editor =
+                            this.projectStore.editorsStore.getEditorByObject(
+                                this.page
+                            );
                         if (editor) {
                             const pageTabState = editor.state as PageTabState;
                             if (pageTabState?.timeline?.isEditorActive) {
@@ -494,7 +534,6 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
     requestAnimationFrameId: number | undefined;
 
     constructor(
-        public projectStore: ProjectStore,
         page: Page,
         public displayWidth: number,
         public displayHeight: number,
@@ -522,14 +561,15 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     0,
                     this.page.width,
                     this.page.height,
-                    getProjectStore(this.page).project.settings.general
-                        .darkTheme,
+                    this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
                     this.tick
                 );
+
+                this.createStyles();
 
                 const pageObj = this.page.lvglCreate(this, 0);
                 this.wasm._lvglScreenLoad(-1, pageObj);
@@ -707,6 +747,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             flowState: this.wasm._lvglGetFlowState(0, pageIndex)
         };
 
+        this.createStyles();
+
         const pageObj = this.page.lvglCreate(this, 0);
 
         this.wasm._lvglScreenLoad(pageIndex, pageObj);
@@ -763,7 +805,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
     canvas: HTMLCanvasElement | null = null;
 
-    constructor(public project: Project) {
+    constructor(project: Project) {
         const widgets = getClassesDerivedFrom(
             project._store,
             ProjectEditor.LVGLWidgetClass
@@ -883,8 +925,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
-                    getProjectStore(this.page).project.settings.general
-                        .darkTheme,
+                    this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
@@ -908,7 +949,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     this.project._store.uiStateStore.lvglState;
 
                     // set all flags to HIDDEN, except selected widget
-                    // also, set useStyle
+                    // also, set _useStyleForStylePreview
                     runInAction(() => {
                         for (const lvglWidget of this.lvglWidgetsMap.values()) {
                             const flags =
@@ -927,7 +968,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                                 lvglWidget.type ==
                                     this.selectedStyle.forWidgetType
                             ) {
-                                lvglWidget.useStyle = this.selectedStyle.name;
+                                lvglWidget._useStyleForStylePreview =
+                                    this.selectedStyle.name;
 
                                 // "DEFAULT",
                                 // "CHECKED",
@@ -938,7 +980,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                                 lvglWidget.states =
                                     this.project._store.uiStateStore.lvglState;
                             } else {
-                                lvglWidget.useStyle = "";
+                                lvglWidget._useStyleForStylePreview = "";
                                 lvglWidget.states = "";
 
                                 flags.push("HIDDEN");
@@ -954,11 +996,12 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                             lvglScreenWidget.type ==
                                 this.selectedStyle.forWidgetType
                         ) {
-                            lvglScreenWidget.useStyle = this.selectedStyle.name;
+                            lvglScreenWidget._useStyleForStylePreview =
+                                this.selectedStyle.name;
                             lvglScreenWidget.states =
                                 this.project._store.uiStateStore.lvglState;
                         } else {
-                            lvglScreenWidget.useStyle = "";
+                            lvglScreenWidget._useStyleForStylePreview = "";
                             lvglScreenWidget.states = "";
                         }
                     });
@@ -1100,7 +1143,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
 
     foundDifferences = false;
 
-    constructor(public project: Project) {
+    constructor(project: Project) {
         const widgets = getClassesDerivedFrom(
             project._store,
             ProjectEditor.LVGLWidgetClass
@@ -1177,8 +1220,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     0,
                     this.displayWidth,
                     this.displayHeight,
-                    getProjectStore(this.page).project.settings.general
-                        .darkTheme,
+                    this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 

@@ -248,6 +248,7 @@ export class LVGLWidget extends Widget {
     states: string;
 
     useStyle: string;
+    _useStyleForStylePreview: string | undefined;
     localStyles: LVGLStylesDefinition;
 
     _lvglObj: number | undefined;
@@ -1205,6 +1206,9 @@ export class LVGLWidget extends Widget {
     }
 
     get styleTemplate() {
+        if (this._useStyleForStylePreview) {
+            return undefined;
+        }
         if (this.useStyle) {
             return this.useStyle;
         }
@@ -1424,9 +1428,20 @@ export class LVGLWidget extends Widget {
             if (useStyle) {
                 const lvglStyle = findLvglStyle(project, useStyle);
                 if (lvglStyle) {
-                    lvglStyle.lvglCreate(runtime, this, obj);
+                    lvglStyle.lvglAddStyleToObject(runtime, obj);
                 }
             }
+
+            if (this._useStyleForStylePreview) {
+                const lvglStyle = findLvglStyle(
+                    project,
+                    this._useStyleForStylePreview
+                );
+                if (lvglStyle) {
+                    lvglStyle.lvglCreateLocalStyles(runtime, this, obj);
+                }
+            }
+
             this.localStyles.lvglCreate(runtime, this, obj);
 
             this.children.map((widget: LVGLWidget) =>
@@ -1638,7 +1653,7 @@ export class LVGLWidget extends Widget {
             );
             if (style) {
                 build.assets.markLvglStyleUsed(style);
-                build.line(`${build.getStyleFunctionName(style)}(obj);`);
+                build.line(`${build.getAddStyleFunctionName(style)}(obj);`);
             }
         }
         this.localStyles.lvglBuild(build);

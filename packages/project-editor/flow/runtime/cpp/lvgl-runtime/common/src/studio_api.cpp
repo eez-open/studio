@@ -716,6 +716,59 @@ EM_PORT_API(void) lvglObjSetLocalStylePropBuiltInFont(lv_obj_t *obj, lv_style_pr
     lv_obj_update_layout(obj);
 }
 
+EM_PORT_API(lv_style_t *) lvglStyleCreate() {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_style_t *style = (lv_style_t *)lv_malloc(sizeof(lv_style_t));
+#else
+    lv_style_t *style = (lv_style_t *)lv_mem_alloc(sizeof(lv_style_t));
+#endif
+    lv_style_init(style);
+    return style;
+}
+
+EM_PORT_API(void) lvglStyleSetPropColor(lv_style_t *obj, lv_style_prop_t prop, uint32_t color) {
+    lv_style_value_t value;
+    value.color = lv_color_hex(color);
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglSetStylePropBuiltInFont(lv_style_t *obj, lv_style_prop_t prop, int font_index) {
+    lv_style_value_t value;
+    value.ptr = BUILT_IN_FONTS[font_index];
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglSetStylePropPtr(lv_style_t *obj, lv_style_prop_t prop, const void *ptr) {
+        lv_style_value_t value;
+    value.ptr = ptr;
+    lv_style_set_prop(obj, prop, value);
+
+}
+
+EM_PORT_API(void) lvglSetStylePropNum(lv_style_t *obj, lv_style_prop_t prop, int32_t num) {
+    lv_style_value_t value;
+    value.num = num;
+    lv_style_set_prop(obj, prop, value);
+}
+
+EM_PORT_API(void) lvglStyleDelete(lv_style_t *obj) {
+#if LVGL_VERSION_MAJOR >= 9
+    lv_free(obj);
+#else
+    lv_mem_free(obj);
+#endif
+}
+
+EM_PORT_API(void) lvglObjAddStyle(lv_obj_t *obj, lv_style_t *style, lv_style_selector_t selector) {
+    lv_obj_add_style(obj, style, selector);
+    lv_obj_update_layout(obj);
+}
+
+EM_PORT_API(void) lvglObjRemoveStyle(lv_obj_t *obj, lv_style_t *style, lv_style_selector_t selector) {
+    lv_obj_remove_style(obj, style, selector);
+    lv_obj_update_layout(obj);
+}
+
 EM_PORT_API(int16_t) lvglGetObjRelX(lv_obj_t *obj) {
     lv_obj_t *parent = lv_obj_get_parent(obj);
     if (parent) {

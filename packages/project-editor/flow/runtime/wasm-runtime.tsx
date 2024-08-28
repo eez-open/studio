@@ -353,6 +353,16 @@ export class WasmRuntime extends RemoteRuntime {
                     workerToRenderMessage.getLvglImageByName.name
                 ) ?? 0
             );
+        } else if (workerToRenderMessage.lvglObjAddStyle) {
+            this.lgvlPageRuntime?.addStyle(
+                workerToRenderMessage.lvglObjAddStyle.targetObj,
+                workerToRenderMessage.lvglObjAddStyle.styleIndex
+            );
+        } else if (workerToRenderMessage.lvglObjRemoveStyle) {
+            this.lgvlPageRuntime?.removeStyle(
+                workerToRenderMessage.lvglObjRemoveStyle.targetObj,
+                workerToRenderMessage.lvglObjRemoveStyle.styleIndex
+            );
         }
         this.onWorkerMessageAsync(workerToRenderMessage);
         return undefined;

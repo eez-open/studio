@@ -21,19 +21,13 @@ import {
     getLvglStylePropName
 } from "project-editor/lvgl/lvgl-versions";
 import { sourceRootDir } from "eez-studio-shared/util";
+import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
 
 export class LVGLBuild extends Build {
     project: Project;
 
-    pages: Page[];
-
-    styles: LVGLStyle[];
     styleNames = new Map<string, string>();
-
-    fonts: Font[];
     fontNames = new Map<string, string>();
-
-    bitmaps: Bitmap[];
     bitmapNames = new Map<string, string>();
 
     constructor(public assets: Assets) {
@@ -41,16 +35,25 @@ export class LVGLBuild extends Build {
 
         this.project = assets.projectStore.project;
 
-        this.enumPages();
-
-        this.enumStyles();
         this.buildStyleNames();
-
-        this.enumFonts();
         this.buildFontNames();
-
-        this.enumBitmaps();
         this.buildBitmapNames();
+    }
+
+    get pages() {
+        return this.project._store.lvglIdentifiers.pages;
+    }
+
+    get styles() {
+        return this.project._store.lvglIdentifiers.styles;
+    }
+
+    get fonts() {
+        return this.project._store.lvglIdentifiers.fonts;
+    }
+
+    get bitmaps() {
+        return this.project._store.lvglIdentifiers.bitmaps;
     }
 
     get isV9() {
@@ -59,28 +62,6 @@ export class LVGLBuild extends Build {
 
     getStylePropName(stylePropName: string) {
         return getLvglStylePropName(this.project, stylePropName);
-    }
-
-    enumPages() {
-        const pages: Page[] = [];
-
-        for (const project of this.project._store.openProjectsManager
-            .projects) {
-            pages.push(...project.pages);
-        }
-
-        this.pages = pages;
-    }
-
-    enumStyles() {
-        const styles: LVGLStyle[] = [];
-
-        for (const project of this.project._store.openProjectsManager
-            .projects) {
-            styles.push(...project.lvglStyles.allStyles);
-        }
-
-        this.styles = styles;
     }
 
     buildStyleNames() {
@@ -105,17 +86,6 @@ export class LVGLBuild extends Build {
         }
     }
 
-    enumFonts() {
-        const fonts: Font[] = [];
-
-        for (const project of this.project._store.openProjectsManager
-            .projects) {
-            fonts.push(...project.fonts);
-        }
-
-        this.fonts = fonts;
-    }
-
     buildFontNames() {
         const names = new Set<string>();
 
@@ -136,17 +106,6 @@ export class LVGLBuild extends Build {
             this.fontNames.set(font.objID, name);
             names.add(name);
         }
-    }
-
-    enumBitmaps() {
-        const bitmaps: Bitmap[] = [];
-
-        for (const project of this.project._store.openProjectsManager
-            .projects) {
-            bitmaps.push(...project.bitmaps);
-        }
-
-        this.bitmaps = bitmaps;
     }
 
     buildBitmapNames() {
@@ -284,8 +243,34 @@ export class LVGLBuild extends Build {
         return "ui_font_" + this.fontNames.get(font.objID)!;
     }
 
-    getStyleFunctionName(style: LVGLStyle) {
-        return "apply_style_" + this.styleNames.get(style.objID)!;
+    getAddStyleFunctionName(style: LVGLStyle) {
+        return "add_style_" + this.styleNames.get(style.objID)!;
+    }
+
+    getRemoveStyleFunctionName(style: LVGLStyle) {
+        return "remove_style_" + this.styleNames.get(style.objID)!;
+    }
+
+    getInitStyleFunctionName(style: LVGLStyle, part: string, state: string) {
+        return (
+            "init_style_" +
+            this.styleNames.get(style.objID)! +
+            "_" +
+            part +
+            "_" +
+            state
+        );
+    }
+
+    getGetStyleFunctionName(style: LVGLStyle, part: string, state: string) {
+        return (
+            "get_style_" +
+            this.styleNames.get(style.objID)! +
+            "_" +
+            part +
+            "_" +
+            state
+        );
     }
 
     async buildScreensDecl() {
@@ -358,6 +343,9 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
+        build.line(`#include <string.h>`);
+        build.line("");
+
         build.line(`objects_t objects;`);
         build.line(`lv_obj_t *tick_value_change_obj;`);
         build.line("");
@@ -375,7 +363,9 @@ export class LVGLBuild extends Build {
                     build.line(`lv_event_code_t event = lv_event_get_code(e);`);
 
                     if (this.project.projectTypeTraits.hasFlowSupport) {
-                        build.line(`void *flowState = e->user_data;`);
+                        build.line(
+                            `void *flowState = lv_event_get_user_data(e);`
+                        );
                     }
 
                     for (const eventHandler of widget.eventHandlers) {
@@ -553,8 +543,18 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
+        build.line("extern void add_style(lv_obj_t *obj, int32_t styleIndex);");
+        build.line(
+            "extern void remove_style(lv_obj_t *obj, int32_t styleIndex);"
+        );
+        build.line("");
+
         build.line("void create_screens() {");
         build.indent();
+        if (this.styles.length > 0) {
+            build.line("eez_flow_init_styles(add_style, remove_style);");
+            build.line("");
+        }
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
             `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
@@ -802,10 +802,16 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 
         for (const lvglStyle of this.styles) {
             build.line(
-                `extern void ${this.getStyleFunctionName(
+                `void ${this.getAddStyleFunctionName(
                     lvglStyle
                 )}(lv_obj_t *obj);`
             );
+            build.line(
+                `void ${this.getRemoveStyleFunctionName(
+                    lvglStyle
+                )}(lv_obj_t *obj);`
+            );
+            build.line("");
         }
 
         return this.result;
@@ -815,22 +821,192 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         this.startBuild();
         const build = this;
 
-        for (const lvglStyle of this.styles) {
-            build.line(
-                `void ${this.getStyleFunctionName(lvglStyle)}(lv_obj_t *obj) {`
-            );
-            build.indent();
+        if (this.styles.length > 0) {
+            for (const lvglStyle of this.styles) {
+                build.line("//");
+                build.line("// Style: " + lvglStyle.name);
+                build.line("//");
+                build.line("");
 
-            if (lvglStyle.parentStyle) {
+                const definition = lvglStyle.fullDefinition;
+                if (definition) {
+                    Object.keys(definition).forEach(part => {
+                        Object.keys(definition[part]).forEach(state => {
+                            // build style init function
+                            build.line(
+                                `void ${this.getInitStyleFunctionName(
+                                    lvglStyle,
+                                    part,
+                                    state
+                                )}(lv_style_t *style) {`
+                            );
+                            build.indent();
+
+                            if (
+                                lvglStyle.parentStyle?.fullDefinition?.[part]?.[
+                                    state
+                                ]
+                            ) {
+                                build.line(
+                                    `${this.getInitStyleFunctionName(
+                                        lvglStyle.parentStyle,
+                                        part,
+                                        state
+                                    )}(style);`
+                                );
+                                build.line("");
+                            }
+
+                            if (lvglStyle.definition) {
+                                lvglStyle.definition.lvglBuildStyle(
+                                    build,
+                                    part,
+                                    state
+                                );
+                            }
+
+                            build.unindent();
+                            build.line("};");
+                            build.line("");
+
+                            // build style get function
+                            build.line(
+                                `lv_style_t *${this.getGetStyleFunctionName(
+                                    lvglStyle,
+                                    part,
+                                    state
+                                )}() {`
+                            );
+                            build.indent();
+
+                            build.line("static lv_style_t *style;");
+
+                            build.line(`if (!style) {`);
+                            build.indent();
+                            {
+                                build.line(
+                                    `style = lv_mem_alloc(sizeof(lv_style_t));`
+                                );
+
+                                build.line(`lv_style_init(style);`);
+
+                                build.line(
+                                    `${this.getInitStyleFunctionName(
+                                        lvglStyle,
+                                        part,
+                                        state
+                                    )}(style);`
+                                );
+                            }
+                            build.unindent();
+                            build.line("}");
+
+                            build.line(`return style;`);
+
+                            build.unindent();
+                            build.line("};");
+                            build.line("");
+                        });
+                    });
+                }
+
+                // build style add function
                 build.line(
-                    `${build.getStyleFunctionName(lvglStyle.parentStyle)}(obj);`
+                    `void ${this.getAddStyleFunctionName(
+                        lvglStyle
+                    )}(lv_obj_t *obj) {`
                 );
+                build.indent();
+
+                if (definition) {
+                    Object.keys(definition).forEach(part => {
+                        Object.keys(definition[part]).forEach(state => {
+                            const selectorCode = getSelectorBuildCode(
+                                part,
+                                state
+                            );
+                            build.line(
+                                `lv_obj_add_style(obj, ${this.getGetStyleFunctionName(
+                                    lvglStyle,
+                                    part,
+                                    state
+                                )}(), ${selectorCode});`
+                            );
+                        });
+                    });
+                }
+
+                build.unindent();
+                build.line("};");
+                build.line("");
+
+                // build style remove function
+                build.line(
+                    `void ${this.getRemoveStyleFunctionName(
+                        lvglStyle
+                    )}(lv_obj_t *obj) {`
+                );
+                build.indent();
+
+                if (definition) {
+                    Object.keys(definition).forEach(part => {
+                        Object.keys(definition[part]).forEach(state => {
+                            const selectorCode = getSelectorBuildCode(
+                                part,
+                                state
+                            );
+                            build.line(
+                                `lv_obj_remove_style(obj, ${this.getGetStyleFunctionName(
+                                    lvglStyle,
+                                    part,
+                                    state
+                                )}(), ${selectorCode});`
+                            );
+                        });
+                    });
+                }
+
+                build.unindent();
+                build.line("};");
+                build.line("");
             }
 
-            lvglStyle.definition.lvglBuild(build);
+            build.line("//");
+            build.line("//");
+            build.line("//");
+            build.line("");
 
+            build.line("void add_style(lv_obj_t *obj, int32_t styleIndex) {");
+            build.indent();
+            build.line("typedef void (*AddStyleFunc)(lv_obj_t *obj);");
+            build.line("static const AddStyleFunc add_style_funcs[] = {");
+            build.indent();
+            for (const lvglStyle of this.styles) {
+                build.line(`${this.getAddStyleFunctionName(lvglStyle)},`);
+            }
             build.unindent();
             build.line("};");
+            build.line("add_style_funcs[styleIndex](obj);");
+            build.unindent();
+            build.line("}");
+
+            build.line("");
+
+            build.line(
+                "void remove_style(lv_obj_t *obj, int32_t styleIndex) {"
+            );
+            build.indent();
+            build.line("typedef void (*RemoveStyleFunc)(lv_obj_t *obj);");
+            build.line("static const RemoveStyleFunc remove_style_funcs[] = {");
+            build.indent();
+            for (const lvglStyle of this.styles) {
+                build.line(`${this.getRemoveStyleFunctionName(lvglStyle)},`);
+            }
+            build.unindent();
+            build.line("};");
+            build.line("remove_style_funcs[styleIndex](obj);");
+            build.unindent();
+            build.line("}");
         }
 
         return this.result;

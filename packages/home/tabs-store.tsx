@@ -1269,7 +1269,7 @@ export class Tabs {
             tab =>
                 tab instanceof ProjectEditorTab &&
                 tab.filePath == filePath &&
-                (tab.runMode ?? false) == runMode
+                (tab.runMode ?? false) == (runMode ?? false)
         ) as ProjectEditorTab | undefined;
     }
 

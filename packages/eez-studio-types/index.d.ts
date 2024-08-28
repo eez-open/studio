@@ -361,6 +361,16 @@ export interface WorkerToRenderMessage {
     getLvglImageByName?: {
         name: string;
     };
+
+    lvglObjAddStyle?: {
+        targetObj: number;
+        styleIndex: number;
+    };
+
+    lvglObjRemoveStyle?: {
+        targetObj: number;
+        styleIndex: number;
+    };
 }
 
 interface IField {
@@ -668,6 +678,17 @@ export interface IWasmFlowRuntime {
     _lvglObjGetStylePropBuiltInFont(obj: number, part: number, prop: number): number;
     _lvglObjGetStylePropFontAddr(obj: number, part: number, prop: number): number;
     _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, font_index: number, selector: number): void;
+
+    _lvglStyleCreate(): number;
+    _lvglStyleSetPropColor(obj: number, prop: number, color: number): void;
+    _lvglSetStylePropBuiltInFont(obj: number, prop: number, font_index: number): void
+    _lvglSetStylePropPtr(obj: number, prop: number, ptr: number): void;
+    _lvglSetStylePropNum(obj: number, prop: number, num: number): void;
+    _lvglStyleDelete(obj: number): void;
+
+    _lvglObjAddStyle(obj: number, style: number, selector: number): void;
+    _lvglObjRemoveStyle(obj: number, style: number, selector: number): void;
+
     _lvglGetObjRelX(obj: number): number;
     _lvglGetObjRelY(obj: number): number;
     _lvglGetObjWidth(obj: number): number;

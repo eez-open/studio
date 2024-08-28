@@ -25,7 +25,6 @@ export const LVGLPage = observer(
         createPageRuntime() {
             if (this.context.runtime) {
                 this.runtime = new LVGLNonActivePageViewerRuntime(
-                    this.context,
                     this.props.page,
                     this.props.page.width,
                     this.props.page.height,

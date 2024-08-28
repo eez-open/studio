@@ -953,6 +953,20 @@ static const void *getLvglImageByName(const char *name) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void lvglObjAddStyle(lv_obj_t *obj, int32_t styleIndex) {
+    return EM_ASM({
+        lvglObjAddStyle($0, $1, $2);
+    }, eez::flow::g_wasmModuleId, obj, styleIndex);
+}
+
+static void lvglObjRemoveStyle(lv_obj_t *obj, int32_t styleIndex) {
+    return EM_ASM({
+        lvglObjRemoveStyle($0, $1, $2);
+    }, eez::flow::g_wasmModuleId, obj, styleIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
@@ -975,6 +989,8 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
+    eez::flow::lvglObjAddStyleHook = lvglObjAddStyle;
+    eez::flow::lvglObjRemoveStyleHook = lvglObjRemoveStyle;
 
     eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();

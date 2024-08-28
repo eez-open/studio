@@ -471,6 +471,36 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
     });
 }
 
+function lvglObjAddStyle(
+    wasmModuleId: number,
+    targetObj: number,
+    styleIndex: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglObjAddStyle: { targetObj, styleIndex }
+    });
+}
+
+function lvglObjRemoveStyle(
+    wasmModuleId: number,
+    targetObj: number,
+    styleIndex: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglObjRemoveStyle: { targetObj, styleIndex }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
@@ -496,6 +526,8 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
 (global as any).getBitmapAsDataURL = getBitmapAsDataURL;
 (global as any).executeScpi = executeScpi;
 (global as any).getLvglImageByName = getLvglImageByName;
+(global as any).lvglObjAddStyle = lvglObjAddStyle;
+(global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;
 
 ////////////////////////////////////////////////////////////////////////////////
 
