@@ -97,12 +97,15 @@ const LVGLPageCanvas = observer(
 
             if (
                 this.props.flowContext.projectStore.project.settings.general
-                    .circularDisplay
+                    .circularDisplay ||
+                this.props.flowContext.projectStore.project.settings.general
+                    .displayBorderRadius != 0
             ) {
-                style.borderRadius = Math.min(
-                    this.props.width,
-                    this.props.height
-                );
+                style.borderRadius = this.props.flowContext.projectStore.project
+                    .settings.general.circularDisplay
+                    ? Math.min(this.props.width, this.props.height)
+                    : this.props.flowContext.projectStore.project.settings
+                          .general.displayBorderRadius;
 
                 style.border = `1px solid ${
                     settingsController.isDarkTheme ? "#444" : "#eee"

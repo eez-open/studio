@@ -1433,6 +1433,13 @@ export const WasmCanvas = observer(
                                       wasmRuntime.displayWidth
                                   )
                               }
+                            : this.context.project.settings.general
+                                  .displayBorderRadius != 0
+                            ? {
+                                  borderRadius:
+                                      this.context.project.settings.general
+                                          .displayBorderRadius
+                              }
                             : undefined
                     }
                 />

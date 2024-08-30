@@ -691,6 +691,7 @@ export class General extends EezObject {
     displayWidth: number;
     displayHeight: number;
     circularDisplay: boolean;
+    displayBorderRadius: number;
     darkTheme: boolean;
     colorFormat: string;
     //css: string;
@@ -877,6 +878,12 @@ export class General extends EezObject {
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
                 disabled: isNotLVGLProject
+            },
+            {
+                name: "displayBorderRadius",
+                type: PropertyType.Number,
+                disabled: (general: General) =>
+                    isNotLVGLProject(general) || general.circularDisplay
             },
             {
                 name: "darkTheme",
@@ -1092,6 +1099,10 @@ export class General extends EezObject {
                     jsObject.commandsProtocol = "SCPI";
                 }
             }
+
+            if (jsObject.displayBorderRadius == undefined) {
+                jsObject.displayBorderRadius = 0;
+            }
         },
 
         updateObjectValueHook: (general: General, values: Partial<General>) => {
@@ -1125,6 +1136,7 @@ export class General extends EezObject {
             displayWidth: observable,
             displayHeight: observable,
             circularDisplay: observable,
+            displayBorderRadius: observable,
             darkTheme: observable,
             colorFormat: observable,
             description: observable,
