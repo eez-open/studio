@@ -464,33 +464,8 @@ static UpdateTask *g_updateTask;
 
 void flow_event_callback(lv_event_t *e) {
     FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_GESTURE) {
-#if LVGL_VERSION_MAJOR >= 9
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));
-#else
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, (int32_t)lv_indev_get_gesture_dir(lv_indev_get_act()));
-#endif
-    } else if (event == LV_EVENT_KEY) {
-        flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index,  lv_event_get_key(e));
-#if LVGL_VERSION_MAJOR >= 9
-    } else if (event == LV_EVENT_ROTARY) {
-        flowPropagateValueInt32(data->flow_state, data->component_index, data->output_or_property_index, lv_event_get_rotary_diff(e));
-#endif
-    } else if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-#if LVGL_VERSION_MAJOR >= 9
-        if (lv_obj_check_type(ta, &lv_buttonmatrix_class)) {
-#else
-        if (lv_obj_check_type(ta, &lv_btnmatrix_class)) {
-#endif
-            flowPropagateValueUint32(data->flow_state, data->component_index, data->output_or_property_index, *(uint32_t *)lv_event_get_param(e));
-        } else {
-            flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
-        }
-    } else {
-        flowPropagateValue(data->flow_state, data->component_index, data->output_or_property_index);
-    }
+    e->user_data = (void *)data->user_data;
+    flowPropagateValueLVGLEvent(data->flow_state, data->component_index, data->output_or_property_index, e);
 }
 
 void flow_event_textarea_text_changed_callback(lv_event_t *e) {

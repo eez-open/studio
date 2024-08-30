@@ -477,14 +477,16 @@ export function lvglAddObjectFlowCallback(
     obj: number,
     filter: number,
     component_index: number,
-    output_or_property_index: number
+    output_or_property_index: number,
+    userDataValuePtr: number
 ) {
     runtime.wasm._lvglAddObjectFlowCallback(
         obj,
         filter,
         getFlowStateAddressIndex(runtime),
         component_index,
-        output_or_property_index
+        output_or_property_index,
+        userDataValuePtr
     );
 }
 

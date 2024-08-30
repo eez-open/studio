@@ -1254,7 +1254,8 @@ export class LVGLWidget extends Widget {
                                     obj,
                                     eventHandler.eventCode,
                                     componentIndex,
-                                    outputIndex
+                                    outputIndex,
+                                    eventHandler.userData
                                 );
                             }
                         }
@@ -1269,7 +1270,8 @@ export class LVGLWidget extends Widget {
                                 obj,
                                 eventHandler.eventCode,
                                 -1,
-                                actionFlowIndex
+                                actionFlowIndex,
+                                eventHandler.userData
                             );
                         }
                     }
@@ -1485,7 +1487,8 @@ export class LVGLWidget extends Widget {
                 obj,
                 LV_EVENT_CHECKED_STATE_CHANGED,
                 checkedStateExpr.componentIndex,
-                checkedStateExpr.propertyIndex
+                checkedStateExpr.propertyIndex,
+                0
             );
         }
 

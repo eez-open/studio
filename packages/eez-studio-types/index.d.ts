@@ -13,6 +13,7 @@ export type BasicType =
     | "stream"
     | "widget"
     | "json"
+    | "event"
     | "any";
 
 export type OtherBasicType =
@@ -695,7 +696,7 @@ export interface IWasmFlowRuntime {
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number): number;
     _lvglFreeFont(font_ptr: number): void;
-    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number): void;
+    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
     _lvglMeterAddScale(obj: number,

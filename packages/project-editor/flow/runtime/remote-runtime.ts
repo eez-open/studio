@@ -725,6 +725,16 @@ export abstract class DebuggerConnectionBase {
             return `json (id=${Number.parseInt(str.substring(1))})`;
         }
 
+        if (str[0] == "*") {
+            return str[1] == "p"
+                ? `widget (${str.substring(2)})`
+                : `widget (id=${Number.parseInt(str.substring(2))})`;
+        }
+
+        if (str[0] == "!") {
+            return `event (${str.substring(1)})`;
+        }
+
         function parseFloat(str: string) {
             const buf = Buffer.alloc(8);
 

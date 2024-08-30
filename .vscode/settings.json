@@ -99,5 +99,5 @@
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
     "editor.formatOnSave": true,
-    "C_Cpp.formatting": "Disabled"
+    "C_Cpp.formatting": "disabled"
 }

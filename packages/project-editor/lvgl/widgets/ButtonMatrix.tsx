@@ -263,9 +263,9 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             widget: LVGLButtonMatrixWidget,
             eventName: string
         ) => {
-            if (eventName == "VALUE_CHANGED") {
-                return "integer";
-            }
+            // if (eventName == "VALUE_CHANGED") {
+            //     return "integer";
+            // }
             return undefined;
         }
     });

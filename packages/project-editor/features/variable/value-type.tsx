@@ -67,6 +67,7 @@ export const BASIC_TYPE_NAMES = [
     "stream",
     "widget",
     "json",
+    "event",
     "any"
 ];
 
@@ -96,6 +97,8 @@ export const LVGL_FLOW_BASIC_TYPE_NAMES = [
     "boolean",
     "string",
     "date",
+    "widget",
+    "event",
     "any"
 ];
 

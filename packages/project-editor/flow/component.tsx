@@ -51,6 +51,7 @@ import {
 import {
     isLVGLProject,
     isNotDashboardProject,
+    isNotLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
 import { objectToJS } from "project-editor/store";
@@ -2447,6 +2448,7 @@ export class EventHandler extends EezObject {
     eventName: string;
     handlerType: "flow" | "action";
     action: string;
+    userData: number;
 
     override makeEditable() {
         super.makeEditable();
@@ -2454,7 +2456,8 @@ export class EventHandler extends EezObject {
         makeObservable(this, {
             eventName: observable,
             handlerType: observable,
-            action: observable
+            action: observable,
+            userData: observable
         });
     }
 
@@ -2491,6 +2494,11 @@ export class EventHandler extends EezObject {
                 disabled: (eventHandler: EventHandler) => {
                     return eventHandler.handlerType != "action";
                 }
+            },
+            {
+                name: "userData",
+                type: PropertyType.Number,
+                disabled: isNotLVGLProject
             }
         ],
 
@@ -2558,6 +2566,10 @@ export class EventHandler extends EezObject {
             if (jsObject.trigger) {
                 jsObject.eventName = jsObject.trigger;
                 delete jsObject.trigger;
+            }
+
+            if (jsObject.userData == undefined) {
+                jsObject.userData = 0;
             }
         },
 

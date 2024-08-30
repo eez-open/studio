@@ -242,7 +242,8 @@ export class LVGLSliderWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_SLIDER_VALUE_CHANGED,
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                0
             );
         }
 
@@ -256,7 +257,8 @@ export class LVGLSliderWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
                 valueLeftExpr.componentIndex,
-                valueLeftExpr.propertyIndex
+                valueLeftExpr.propertyIndex,
+                0
             );
         }
     }

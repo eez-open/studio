@@ -224,7 +224,8 @@ export class LVGLRollerWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_ROLLER_SELECTED_CHANGED,
                 selectedExpr.componentIndex,
-                selectedExpr.propertyIndex
+                selectedExpr.propertyIndex,
+                0
             );
         }
     }

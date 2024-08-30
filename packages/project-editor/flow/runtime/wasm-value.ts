@@ -33,7 +33,8 @@ import {
     FLOW_VALUE_TYPE_POINTER,
     FLOW_VALUE_TYPE_ERROR,
     FLOW_VALUE_TYPE_WIDGET,
-    FLOW_VALUE_TYPE_JSON
+    FLOW_VALUE_TYPE_JSON,
+    FLOW_VALUE_TYPE_EVENT
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
@@ -447,6 +448,11 @@ export function getValue(
                 WasmFlowRuntime.wasmModuleId
             ),
             valueType: "json"
+        };
+    } else if (type == FLOW_VALUE_TYPE_EVENT) {
+        return {
+            value: WasmFlowRuntime.HEAPU32[offset >> 2],
+            valueType: "widget"
         };
     }
 

@@ -1462,7 +1462,8 @@ export class LVGLMeterWidget extends LVGLWidget {
                         obj,
                         LV_EVENT_METER_TICK_LABEL_EVENT,
                         labelExpr.componentIndex,
-                        labelExpr.propertyIndex
+                        labelExpr.propertyIndex,
+                        0
                     );
                 }
             }

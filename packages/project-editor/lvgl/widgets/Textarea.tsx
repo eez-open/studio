@@ -197,7 +197,8 @@ export class LVGLTextareaWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_TEXTAREA_TEXT_CHANGED,
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                0
             );
         }
     }

@@ -57,6 +57,7 @@ struct FlowEventCallbackData {
     void *flow_state;
     unsigned component_index;
     unsigned output_or_property_index;
+    int32_t user_data;
 };
 
 void flow_event_callback(lv_event_t *e);

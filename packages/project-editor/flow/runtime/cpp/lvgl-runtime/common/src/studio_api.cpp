@@ -810,7 +810,7 @@ EM_PORT_API(void) lvglFreeFont(lv_font_t *font) {
 #endif
 }
 
-EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, void *flow_state, unsigned component_index, unsigned output_or_property_index) {
+EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filter, void *flow_state, unsigned component_index, unsigned output_or_property_index, int32_t user_data) {
 #if LVGL_VERSION_MAJOR >= 9
     FlowEventCallbackData *data = (FlowEventCallbackData *)lv_malloc(sizeof(FlowEventCallbackData));
 #else
@@ -820,6 +820,7 @@ EM_PORT_API(void) lvglAddObjectFlowCallback(lv_obj_t *obj, lv_event_code_t filte
     data->flow_state = flow_state;
     data->component_index = component_index;
     data->output_or_property_index = output_or_property_index;
+    data->user_data = user_data;
 
     if (filter == LV_EVENT_METER_TICK_LABEL_EVENT) {
 #if LVGL_VERSION_MAJOR >= 9

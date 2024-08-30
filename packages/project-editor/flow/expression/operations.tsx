@@ -1293,6 +1293,104 @@ export const builtInFunctions: {
         enabled: projectStore => projectStore.projectTypeTraits.isDashboard
     },
 
+    "Event.getCode": {
+        operationIndex: 81,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getCurrentTarget": {
+        operationIndex: 82,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "widget";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getTarget": {
+        operationIndex: 83,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "widget";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getUserData": {
+        operationIndex: 84,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "any";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getKey": {
+        operationIndex: 85,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getGestureDir": {
+        operationIndex: 86,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "Event.getRotaryDiff": {
+        operationIndex: 87,
+        arity: 1,
+        args: ["event"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
     "LVGL.MeterTickIndex": {
         operationIndex: 69,
         arity: 0,

@@ -37,6 +37,7 @@ export const FLOW_VALUE_TYPE_YT_DATA_GET_VALUE_FUNCTION_POINTER = 33;
 export const FLOW_VALUE_TYPE_WIDGET = 34;
 export const FLOW_VALUE_TYPE_JSON = 35;
 export const FLOW_VALUE_TYPE_JSON_MEMBER_VALUE = 36;
+export const FLOW_VALUE_TYPE_EVENT = 37;
 
 export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED: 0
@@ -75,5 +76,6 @@ export const basicFlowValueTypes: ValueType[] = [
     "_t12" as any, // FLOW_VALUE_TYPE_YT_DATA_GET_VALUE_FUNCTION_POINTER: 33
     "widget", // FLOW_VALUE_TYPE_WIDGET: 34
     "json", // FLOW_VALUE_TYPE_JSON: 35
-    "_t13" as any // FLOW_VALUE_TYPE_JSON_MEMBER_VALUE: 36
+    "_t13" as any, // FLOW_VALUE_TYPE_JSON_MEMBER_VALUE: 36
+    "event" // FLOW_VALUE_TYPE_EVENT: 37
 ];

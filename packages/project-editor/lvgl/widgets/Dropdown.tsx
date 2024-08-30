@@ -188,7 +188,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_DROPDOWN_SELECTED_CHANGED,
                 selectedExpr.componentIndex,
-                selectedExpr.propertyIndex
+                selectedExpr.propertyIndex,
+                0
             );
         }
     }

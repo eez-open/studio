@@ -396,6 +396,11 @@ export class LVGLBuild extends Build {
                         }
 
                         build.indent();
+
+                        build.line(
+                            `e->user_data = (void *)${eventHandler.userData};`
+                        );
+
                         if (eventHandler.handlerType == "action") {
                             const action = findAction(
                                 this.project,
@@ -416,7 +421,7 @@ export class LVGLBuild extends Build {
                                     let actionFlowIndex =
                                         build.assets.getFlowIndex(action);
                                     build.line(
-                                        `flowPropagateValue(flowState, -1, ${actionFlowIndex});`
+                                        `flowPropagateValueLVGLEvent(flowState, -1, ${actionFlowIndex}, e);`
                                     );
                                 }
                             }
@@ -429,37 +434,9 @@ export class LVGLBuild extends Build {
                                     eventHandler.eventName
                                 );
 
-                            if (eventHandler.eventName == "GESTURE") {
-                                if (build.isV9) {
-                                    build.line(
-                                        `flowPropagateValueUnt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_active()));`
-                                    );
-                                } else {
-                                    build.line(
-                                        `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, (int32_t)lv_indev_get_gesture_dir(lv_indev_get_act()));`
-                                    );
-                                }
-                            } else if (eventHandler.eventName == "KEY") {
-                                build.line(
-                                    `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_key(e));`
-                                );
-                            } else if (eventHandler.eventName == "ROTARY") {
-                                build.line(
-                                    `flowPropagateValueInt32(flowState, ${componentIndex}, ${outputIndex}, lv_event_get_rotary_diff(e));`
-                                );
-                            } else if (
-                                eventHandler.eventName == "VALUE_CHANGED" &&
-                                widget instanceof
-                                    ProjectEditor.LVGLButtonMatrixWidgetClass
-                            ) {
-                                build.line(
-                                    `flowPropagateValueUint32(flowState, ${componentIndex}, ${outputIndex}, *(uint32_t *)lv_event_get_param(e));`
-                                );
-                            } else {
-                                build.line(
-                                    `flowPropagateValue(flowState, ${componentIndex}, ${outputIndex});`
-                                );
-                            }
+                            build.line(
+                                `flowPropagateValueLVGLEvent(flowState, ${componentIndex}, ${outputIndex}, e);`
+                            );
                         }
                         build.unindent();
                         build.line("}");

@@ -17,6 +17,7 @@ import {
     FLOW_VALUE_TYPE_BOOLEAN,
     FLOW_VALUE_TYPE_DATE,
     FLOW_VALUE_TYPE_DOUBLE,
+    FLOW_VALUE_TYPE_EVENT,
     FLOW_VALUE_TYPE_FLOAT,
     FLOW_VALUE_TYPE_INT32,
     FLOW_VALUE_TYPE_JSON,
@@ -56,6 +57,8 @@ export function getValueType(valueType: ValueType) {
         return FLOW_VALUE_TYPE_WIDGET;
     } else if (valueType == "json") {
         return FLOW_VALUE_TYPE_JSON;
+    } else if (valueType == "event") {
+        return FLOW_VALUE_TYPE_EVENT;
     } else if (isEnumType(valueType)) {
         return FLOW_VALUE_TYPE_INT32;
     } else if (isArrayType(valueType) || isStructType(valueType)) {

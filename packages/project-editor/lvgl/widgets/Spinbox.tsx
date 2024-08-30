@@ -255,7 +255,8 @@ export class LVGLSpinboxWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_SPINBOX_STEP_CHANGED,
                 stepExpr.componentIndex,
-                stepExpr.propertyIndex
+                stepExpr.propertyIndex,
+                0
             );
         }
 
@@ -266,7 +267,8 @@ export class LVGLSpinboxWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_SPINBOX_VALUE_CHANGED,
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                0
             );
         }
     }

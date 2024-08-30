@@ -259,7 +259,8 @@ export class LVGLArcWidget extends LVGLWidget {
                 obj,
                 LV_EVENT_ARC_VALUE_CHANGED,
                 valueExpr.componentIndex,
-                valueExpr.propertyIndex
+                valueExpr.propertyIndex,
+                0
             );
         }
     }
