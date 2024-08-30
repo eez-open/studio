@@ -221,7 +221,7 @@ export class LVGLLineWidget extends LVGLWidget {
         }
 
         if (this.invertY) {
-            build.line(`lv_line_set_y_invert(obj, true)`);
+            build.line(`lv_line_set_y_invert(obj, true);`);
         }
     }
 
