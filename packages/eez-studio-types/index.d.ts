@@ -628,7 +628,7 @@ export interface IWasmFlowRuntime {
     _lvglCreateRoller(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, mode: number): number;
     _lvglCreateSwitch(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateBar(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
-    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number): number;
+    _lvglCreateDropdown(parentObj: number, index: number, x: number, y: number, w: number, h: number, options: number, selected: number, direction: number): number;
     _lvglCreateArc(parentObj: number, index: number, x: number, y: number, w: number, h: number, range_min: number, range_max: number, value: number, bg_start_angle: number, bg_end_angle: number, mode: number, rotation: number): number;
     _lvglCreateSpinner(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateCheckbox(parentObj: number, index: number, x: number, y: number, w: number, h: number, text: number): number;

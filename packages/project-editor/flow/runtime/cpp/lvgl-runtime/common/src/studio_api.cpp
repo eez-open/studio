@@ -217,13 +217,14 @@ EM_PORT_API(lv_obj_t *) lvglCreateBar(lv_obj_t *parentObj, int32_t index, lv_coo
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected) {
+EM_PORT_API(lv_obj_t *) lvglCreateDropdown(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, char *options, uint16_t selected, lv_dir_t direction) {
     lv_obj_t *obj = lv_dropdown_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
     lv_dropdown_set_options(obj, options);
     lv_dropdown_set_selected(obj, selected);
     free(options);
+    lv_dropdown_set_dir(obj, direction);
     lv_obj_update_layout(obj);
     setObjectIndex(obj, index);
     return obj;

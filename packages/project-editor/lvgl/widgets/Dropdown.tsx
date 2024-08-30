@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
-import { makeDerivedClassInfo } from "project-editor/core/object";
+import { makeDerivedClassInfo, PropertyType } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
@@ -9,7 +9,13 @@ import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups"
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
-import { LV_EVENT_DROPDOWN_SELECTED_CHANGED } from "project-editor/lvgl/lvgl-constants";
+import {
+    LV_DIR_TOP,
+    LV_DIR_LEFT,
+    LV_DIR_BOTTOM,
+    LV_DIR_RIGHT,
+    LV_EVENT_DROPDOWN_SELECTED_CHANGED
+} from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
@@ -28,12 +34,21 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LVGL_DROPDOWN_DIRECTION: { [key: string]: number } = {
+    top: LV_DIR_TOP,
+    left: LV_DIR_LEFT,
+    bottom: LV_DIR_BOTTOM,
+    right: LV_DIR_RIGHT
+};
+
 export class LVGLDropdownWidget extends LVGLWidget {
     options: string;
     optionsType: LVGLPropertyType;
 
     selected: number | string;
     selectedType: LVGLPropertyType;
+
+    direction: string;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -59,7 +74,31 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 {
                     propertyGridGroup: specificGroup
                 }
-            )
+            ),
+            {
+                name: "direction",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "top",
+                        label: "TOP"
+                    },
+                    {
+                        id: "left",
+                        label: "LEFT"
+                    },
+                    {
+                        id: "bottom",
+                        label: "BOTTOM"
+                    },
+                    {
+                        id: "right",
+                        label: "RIGHT"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            }
         ],
 
         defaultValue: {
@@ -72,7 +111,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
             options: "Option 1\nOption 2\nOption 3",
             optionsType: "literal",
             selected: 0,
-            selectedType: "literal"
+            selectedType: "literal",
+            direction: "bottom"
         },
 
         beforeLoadHook: (
@@ -86,6 +126,10 @@ export class LVGLDropdownWidget extends LVGLWidget {
             if (jsObject.selected == undefined) {
                 jsObject.selected = 0;
                 jsObject.selectedType = "literal";
+            }
+
+            if (jsObject.direction == undefined) {
+                jsObject.direction = "bottom";
             }
         },
 
@@ -114,7 +158,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
             options: observable,
             optionsType: observable,
             selected: observable,
-            selectedType: observable
+            selectedType: observable,
+            direction: observable
         });
     }
 
@@ -152,7 +197,9 @@ export class LVGLDropdownWidget extends LVGLWidget {
             runtime.wasm.allocateUTF8(
                 optionsExpr ? "" : unescapeCString(this.options)
             ),
-            selectedExpr ? 0 : (this.selected as number)
+            selectedExpr ? 0 : (this.selected as number),
+
+            LVGL_DROPDOWN_DIRECTION[this.direction]
         );
 
         if (optionsExpr) {
@@ -213,6 +260,12 @@ export class LVGLDropdownWidget extends LVGLWidget {
             );
         } else {
             build.line(`lv_dropdown_set_options(obj, "");`);
+        }
+
+        if (this.direction != "bottom") {
+            build.line(
+                `lv_dropdown_set_dir(obj, LV_DIR_${this.direction.toUpperCase()});`
+            );
         }
 
         if (this.selectedType == "literal") {
