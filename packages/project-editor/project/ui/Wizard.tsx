@@ -2064,8 +2064,8 @@ const ProjectTypeComponent = observer(
                                           (projectType.id == "LVGL" ||
                                               projectType.id ==
                                                   "LVGL with EEZ Flow")
-                                            ? "8.3 | 9.0"
-                                            : "8.3"
+                                            ? "8.x | 9.x"
+                                            : "8.x"
                                         : undefined
                             }}
                         />
@@ -2204,8 +2204,8 @@ const ProjectProperties = observer(
                                             )}
                                             value={wizardModel.lvglVersion}
                                         >
-                                            <option value="8.3">8.3</option>
-                                            <option value="9.0">9.0</option>
+                                            <option value="8.3">8.x</option>
+                                            <option value="9.0">9.x</option>
                                         </select>
                                     </div>
                                 )}

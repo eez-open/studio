@@ -794,8 +794,8 @@ export class General extends EezObject {
                 displayName: "LVGL version",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "8.3", label: "8.3" },
-                    { id: "9.0", label: "9.0" }
+                    { id: "8.3", label: "8.x" },
+                    { id: "9.0", label: "9.x" }
                 ],
                 enumDisallowUndefined: true,
                 disabled: (general: General) =>
