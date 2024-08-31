@@ -73,7 +73,7 @@ export interface IHomeTab extends ITab {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class HomeTab implements IHomeTab {
+export class HomeTab implements IHomeTab {
     constructor(public tabs: Tabs) {
         makeObservable(this, {
             active: observable,
