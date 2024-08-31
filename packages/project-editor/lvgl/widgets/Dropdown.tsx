@@ -143,7 +143,6 @@ export class LVGLDropdownWidget extends LVGLWidget {
             parts: ["MAIN", "SELECTED"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
 
             oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             oldDefaultFlags:

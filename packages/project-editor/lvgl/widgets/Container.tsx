@@ -11,10 +11,7 @@ import { ProjectType } from "project-editor/project/project";
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
-import {
-    LVGL_STATE_CODES,
-    LVGLParts
-} from "project-editor/lvgl/lvgl-constants";
+import { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
 import { getTabview } from "../widget-common";
@@ -104,9 +101,6 @@ export class LVGLContainerWidget extends LVGLWidget {
                 Object.keys(getLvglParts(widget)) as LVGLParts[],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-            states: Object.keys(
-                LVGL_STATE_CODES
-            ) as (keyof typeof LVGL_STATE_CODES)[],
 
             oldInitFlags:
                 "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN",

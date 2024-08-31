@@ -210,17 +210,6 @@ function flagEnabledInWidget(
     return component instanceof LVGLWidget && flags.indexOf(flag) != -1;
 }
 
-function stateEnabledInWidget(
-    component: Component,
-    state: keyof typeof LVGL_STATE_CODES
-) {
-    const lvglvglClassInfoProperties = getClassInfoLvglProperties(component);
-    return (
-        component instanceof LVGLWidget &&
-        lvglvglClassInfoProperties.states.indexOf(state) != -1
-    );
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLWidget extends Widget {
@@ -483,9 +472,7 @@ export class LVGLWidget extends Widget {
                 ["literal", "expression"],
                 {
                     displayName: "Checked",
-                    propertyGridGroup: statesGroup,
-                    disabled: (widget: LVGLWidget) =>
-                        !stateEnabledInWidget(widget, "CHECKED")
+                    propertyGridGroup: statesGroup
                 }
             ),
             ...makeLvglExpressionProperty(
@@ -495,9 +482,7 @@ export class LVGLWidget extends Widget {
                 ["literal", "expression"],
                 {
                     displayName: "Disabled",
-                    propertyGridGroup: statesGroup,
-                    disabled: (widget: LVGLWidget) =>
-                        !stateEnabledInWidget(widget, "DISABLED")
+                    propertyGridGroup: statesGroup
                 }
             ),
             {
@@ -1154,17 +1139,6 @@ export class LVGLWidget extends Widget {
                         states.push(state);
                     }
                 }
-            } else {
-                const lvglClassInfoProperties =
-                    getClassInfoLvglProperties(this);
-                if (
-                    state in
-                    (lvglClassInfoProperties.defaultStates ?? "").split("|")
-                ) {
-                    if (states.indexOf(state) == -1) {
-                        states.push(state);
-                    }
-                }
             }
         });
 
@@ -1363,28 +1337,17 @@ export class LVGLWidget extends Widget {
 
         // add/clear states
         {
-            const { added, cleared } = changes(
-                lvglClassInfoProperties.defaultStates &&
-                    lvglClassInfoProperties.defaultStates.trim() != ""
-                    ? lvglClassInfoProperties.defaultStates.split("|")
-                    : [],
+            const added =
                 this.allStates.trim() != ""
                     ? (this.allStates.split(
                           "|"
                       ) as (keyof typeof LVGL_STATE_CODES)[])
-                    : []
-            );
+                    : [];
 
             if (added.length > 0) {
                 runtime.wasm._lvglObjAddState(
                     obj,
                     getCode(added, LVGL_STATE_CODES)
-                );
-            }
-            if (cleared.length > 0) {
-                runtime.wasm._lvglObjClearState(
-                    obj,
-                    getCode(cleared, LVGL_STATE_CODES)
                 );
             }
 
@@ -1619,29 +1582,16 @@ export class LVGLWidget extends Widget {
 
         // add/clear states
         {
-            const { added, cleared } = changes(
-                lvglClassInfoProperties.defaultStates &&
-                    lvglClassInfoProperties.defaultStates.trim() != ""
-                    ? lvglClassInfoProperties.defaultStates.split("|")
-                    : [],
+            const added =
                 this.allStates.trim() != ""
                     ? (this.allStates.split(
                           "|"
                       ) as (keyof typeof LVGL_STATE_CODES)[])
-                    : []
-            );
+                    : [];
 
             if (added.length > 0) {
                 build.line(
                     `lv_obj_add_state(obj, ${added
-                        .map(state => "LV_STATE_" + state)
-                        .join("|")});`
-                );
-            }
-
-            if (cleared.length > 0) {
-                build.line(
-                    `lv_obj_clear_state(obj, ${cleared
                         .map(state => "LV_STATE_" + state)
                         .join("|")});`
                 );

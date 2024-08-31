@@ -304,7 +304,7 @@ export const LVGL_STATE_CODES = {
     CHECKED: 0x0001,
     DISABLED: 0x0080,
     FOCUSED: 0x0002,
-    // FOCUS_KEY: 0x0004,
+    FOCUS_KEY: 0x0004,
     PRESSED: 0x0020
 };
 
@@ -319,8 +319,8 @@ export const LVGL_STYLE_STATES = [
     "PRESSED",
     "CHECKED|PRESSED",
     "DISABLED",
-    "FOCUSED"
-    // "FOCUS_KEY"
+    "FOCUSED",
+    "FOCUS_KEY"
 ];
 
 ////////////////////////////////////////////////////////////////////////////////

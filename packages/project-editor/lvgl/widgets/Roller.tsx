@@ -126,7 +126,6 @@ export class LVGLRollerWidget extends LVGLWidget {
             parts: ["MAIN", "SELECTED"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
 
             oldInitFlags: "PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE",
             oldDefaultFlags:

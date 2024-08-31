@@ -19,10 +19,7 @@ import type { ValueType } from "project-editor/features/variable/value-type";
 import type { Project } from "project-editor/project/project";
 
 import { isArray, objectClone } from "eez-studio-shared/util";
-import {
-    LVGL_STATE_CODES,
-    LVGLParts
-} from "project-editor/lvgl/lvgl-constants";
+import { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -296,8 +293,6 @@ export interface SerializedData {
 interface LVGLClassInfoProperties {
     parts: LVGLParts[] | ((object: IEezObject) => LVGLParts[]);
     defaultFlags: string;
-    states: (keyof typeof LVGL_STATE_CODES)[];
-    defaultStates?: string;
 
     oldInitFlags?: string;
     oldDefaultFlags?: string;
@@ -978,7 +973,6 @@ export function getClassInfoLvglProperties(object: IEezObject) {
         return {
             parts: [],
             defaultFlags: "",
-            states: [],
             oldInitFlags: "",
             oldDefaultFlags: ""
         };

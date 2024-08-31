@@ -46,7 +46,6 @@ export class LVGLSpinnerWidget extends LVGLWidget {
             parts: ["MAIN", "INDICATOR"],
             defaultFlags:
                 "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-            states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
 
             oldInitFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN",
             oldDefaultFlags: "GESTURE_BUBBLE|SNAPPABLE|SCROLL_CHAIN"

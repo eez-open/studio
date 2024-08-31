@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 
 import {
-    getClassInfoLvglProperties,
     getParent,
     getProperty,
     IEezObject,
@@ -198,9 +197,9 @@ export const LVGLWidgetStatesProperty = observer(
             const stateNames: (keyof typeof LVGL_STATE_CODES)[] = [];
 
             this.props.objects.map((widget: LVGLWidget) => {
-                const lvglClassInfoProperties =
-                    getClassInfoLvglProperties(widget);
-                for (const stateName of lvglClassInfoProperties.states) {
+                for (const stateName of Object.keys(
+                    LVGL_STATE_CODES
+                ) as (keyof typeof LVGL_STATE_CODES)[]) {
                     if (
                         stateNames.indexOf(stateName) == -1 &&
                         LVGL_REACTIVE_STATES.indexOf(stateName) == -1
@@ -250,18 +249,6 @@ export const LVGLWidgetStatesProperty = observer(
                                     if (value) {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const lvglClassInfoProperties =
-                                                    getClassInfoLvglProperties(
-                                                        widget
-                                                    );
-                                                if (
-                                                    lvglClassInfoProperties.states.indexOf(
-                                                        stateName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
                                                 const statesArr =
                                                     widget.states.trim() != ""
                                                         ? widget.states.split(
@@ -288,18 +275,6 @@ export const LVGLWidgetStatesProperty = observer(
                                     } else {
                                         this.props.objects.forEach(
                                             (widget: LVGLWidget) => {
-                                                const lvglClassInfoProperties =
-                                                    getClassInfoLvglProperties(
-                                                        widget
-                                                    );
-                                                if (
-                                                    lvglClassInfoProperties.states.indexOf(
-                                                        stateName
-                                                    ) == -1
-                                                ) {
-                                                    return;
-                                                }
-
                                                 const statesArr = (
                                                     widget.states || ""
                                                 ).split("|");
