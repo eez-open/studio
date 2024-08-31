@@ -358,9 +358,9 @@ export class NavigationStore {
     }
 
     unmountPanel(panel: IPanel) {
-        if (this.selectedPanel === panel) {
-            this.setSelectedPanel(undefined);
-        }
+        // if (this.selectedPanel === panel) {
+        //     this.setSelectedPanel(undefined);
+        // }
     }
 
     setSelectedPanel(selectedPanel: IPanel | undefined) {
