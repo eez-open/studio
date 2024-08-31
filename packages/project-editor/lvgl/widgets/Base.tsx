@@ -1142,7 +1142,7 @@ export class LVGLWidget extends Widget {
             }
         });
 
-        return states.join("|");
+        return states.filter(state => state.trim() != "").join("|");
     }
 
     get allFlags() {

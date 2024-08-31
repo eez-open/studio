@@ -520,7 +520,10 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
-        if (this.styles.length > 0) {
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.styles.length > 0
+        ) {
             build.line(
                 "extern void add_style(lv_obj_t *obj, int32_t styleIndex);"
             );
@@ -532,7 +535,10 @@ export class LVGLBuild extends Build {
 
         build.line("void create_screens() {");
         build.indent();
-        if (this.styles.length > 0) {
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.styles.length > 0
+        ) {
             build.line("eez_flow_init_styles(add_style, remove_style);");
             build.line("");
         }
