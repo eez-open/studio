@@ -22,10 +22,14 @@ The zero-based index of the selected option.
 
 Select between `Literal` and `Assignable`. If `Assignable` is selected then `Options` can be variable in which the zero-based index of the selected option will be stored.
 
+## Direction
+
+The list can be created on any side. If the list would be vertically out of the screen, it will be aligned to the edge.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]
 
 # EXAMPLES
 
-* _Dashboard Widgets Demo_
+-   _Dashboard Widgets Demo_

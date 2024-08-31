@@ -166,6 +166,10 @@ Here we can choose whether the `Disabled` state will be calculated from the Expr
 
 Focused via keypad or encoder or clicked via touchpad/mouse.
 
+## Focus key
+
+Focused via keypad or encoder but not via touchpad/mouse
+
 ## Pressed
 
 Being pressed.
