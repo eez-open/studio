@@ -1048,6 +1048,7 @@ export class History {
                     this.reactionTimeout = undefined;
                     this.calendar.load();
                     this.calendar.update();
+                    this.filterStats.update();
                     this.search.update();
                 }, 10);
             }

@@ -1,5 +1,5 @@
 import React from "react";
-import { observable, action, makeObservable } from "mobx";
+import { observable, action, makeObservable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import { dbQuery } from "eez-studio-shared/db-query";
@@ -200,7 +200,6 @@ export class Filters {
 }
 
 export class FilterStats {
-    session = 0;
     connectsAndDisconnects = 0;
     scpi = 0;
     downloadedFiles = 0;
@@ -214,7 +213,6 @@ export class FilterStats {
 
     constructor(public history: History) {
         makeObservable(this, {
-            session: observable,
             connectsAndDisconnects: observable,
             scpi: observable,
             downloadedFiles: observable,
@@ -228,13 +226,30 @@ export class FilterStats {
             add: action
         });
 
+        this.update();
+    }
+
+    update() {
+        runInAction(() => {
+            this.connectsAndDisconnects = 0;
+            this.scpi = 0;
+            this.downloadedFiles = 0;
+            this.uploadedFiles = 0;
+            this.attachedFiles = 0;
+            this.charts = 0;
+            this.lists = 0;
+            this.notes = 0;
+            this.launchedScripts = 0;
+            this.tabulators = 0;
+        });
+
         scheduleTask("Get filter stats", Priority.Lowest, async () => {
             const rows = await dbQuery(
                 "Get filter stats",
                 `SELECT
                             type, count(*) AS count
                         FROM
-                            ${history.table} AS T1
+                            ${this.history.table} AS T1
                         WHERE
                             ${this.history.oidWhereClause} AND NOT deleted
                         GROUP BY
