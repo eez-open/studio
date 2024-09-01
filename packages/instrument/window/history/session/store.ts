@@ -229,7 +229,7 @@ class HistorySessions {
     restoreSession = (session: IHistorySession) => {
         historySessionsStore.undeleteObject(session);
 
-        this.activateSession(session.id);
+        //this.activateSession(session.id);
 
         runInAction(() => {
             this._selectedSession = undefined;

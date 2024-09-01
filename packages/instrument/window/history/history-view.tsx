@@ -560,10 +560,7 @@ export class HistoryViewComponent extends React.Component<{
                         display: "flex"
                     }}
                 >
-                    <SessionList
-                        appStore={appStore}
-                        history={appStore.history}
-                    />
+                    <SessionList appStore={appStore} />
                 </div>
             );
         } else if (component === "Scrapbook") {

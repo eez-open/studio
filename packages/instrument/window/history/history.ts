@@ -453,7 +453,7 @@ class HistorySearch {
     }
 
     update() {
-        this.search("");
+        this.search(this.searchText ?? "");
     }
 
     search(searchText: string) {

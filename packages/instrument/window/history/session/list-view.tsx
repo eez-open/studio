@@ -14,7 +14,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 import { confirm } from "eez-studio-ui/dialog-electron";
 
-import type { IAppStore, History } from "instrument/window/history/history";
+import type { IAppStore } from "instrument/window/history/history";
 import {
     historySessions,
     IHistorySession,
@@ -55,7 +55,6 @@ export function showEditSessionNameDialog(
 export const SessionListItem = observer(
     class SessionListItem extends React.Component<{
         appStore: IAppStore;
-        history: History;
         session: IHistorySession;
         isSelected: boolean;
         onSelect: () => void;
@@ -86,7 +85,6 @@ export const SessionListItem = observer(
 export const SessionList = observer(
     class SessionList extends React.Component<{
         appStore: IAppStore;
-        history: History;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -236,7 +234,15 @@ export const SessionList = observer(
                                     key="restore"
                                     icon="material:restore"
                                     title="Restore selected session"
-                                    onClick={historySessions.restoreSession}
+                                    onClick={() =>
+                                        historySessions.restoreSession(
+                                            historySessions.selectedSession
+                                        )
+                                    }
+                                    enabled={
+                                        historySessions.selectedSession !=
+                                        undefined
+                                    }
                                 />
                                 <IconAction
                                     icon="material:delete_forever"
@@ -362,7 +368,6 @@ export const SessionList = observer(
                                         <SessionListItem
                                             appStore={this.props.appStore}
                                             key={session.id}
-                                            history={this.props.history}
                                             session={session}
                                             isSelected={
                                                 session.id ==
