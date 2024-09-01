@@ -13,6 +13,7 @@ import type {
     SelectHistoryItemsSpecification
 } from "instrument/window/history/history";
 import type { IHistoryItem } from "instrument/window/history/item";
+import { historySessions, SESSION_FREE_ID } from "./session/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -225,7 +226,20 @@ export const HistoryItems = observer(
                                     })
                                 );
                             } else {
-                                if (this.props.showInHistory) {
+                                console.log(
+                                    historyItem.sid,
+                                    historySessions.selectedSession.id
+                                );
+
+                                if (
+                                    (this.props.showInHistory &&
+                                        historyItem.sid ==
+                                            historySessions.selectedSession
+                                                .id) ||
+                                    (historyItem.sid == null &&
+                                        historySessions.selectedSession.id ==
+                                            SESSION_FREE_ID)
+                                ) {
                                     menu.append(
                                         new MenuItem({
                                             label: "Show in History",
