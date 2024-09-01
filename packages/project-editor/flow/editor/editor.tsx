@@ -346,7 +346,7 @@ export const Canvas = observer(
                     );
                     if (objectAdapter) {
                         let object = objectAdapter.object;
-                        while (true) {
+                        while (object) {
                             if (
                                 object instanceof ProjectEditor.LVGLWidgetClass
                             ) {
