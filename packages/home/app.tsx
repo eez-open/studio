@@ -13,7 +13,7 @@ import {
 import { TabsView } from "eez-studio-ui/tabs";
 import { makeLazyComponent } from "eez-studio-ui/lazy-component";
 
-import { IHomeTab, tabs } from "home/tabs-store";
+import { HomeTab, IHomeTab, InstrumentTab, tabs } from "home/tabs-store";
 import "home/home-tab";
 
 import type { InstrumentObject } from "instrument/instrument-object";
@@ -24,6 +24,7 @@ import {
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { layoutModels } from "eez-studio-ui/side-dock";
 import { Icon } from "eez-studio-ui/icon";
+import { homeTabStore } from "home/home-tab";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +49,11 @@ const MainContent = observer(
                                 }
                             )}
                         />
-                        <SessionInfoContainer />
+                        {((tabs.activeTab instanceof HomeTab &&
+                            homeTabStore.activeTab == "instruments") ||
+                            tabs.activeTab instanceof InstrumentTab) && (
+                            <SessionInfoContainer />
+                        )}
                     </Header>
                     <Body>
                         <Tabs />
