@@ -2428,9 +2428,10 @@ function getWidgetEvents(object: IEezObject) {
 
 function getEventEnumItems(
     eventHandlers: EventHandler[],
-    eventHandler: EventHandler | undefined
+    eventHandler: EventHandler
 ) {
     const existingEventNames: string[] = eventHandlers
+        .filter(eh => eh.handlerType == eventHandler?.handlerType)
         .filter(eh => eh != eventHandler)
         .map(eventHandler => eventHandler.eventName);
 
@@ -2576,9 +2577,15 @@ export class EventHandler extends EezObject {
         newItem: async (eventHandlers: EventHandler[]) => {
             const project = ProjectEditor.getProject(eventHandlers);
 
-            const eventEnumItems = getEventEnumItems(eventHandlers, undefined);
-
-            if (eventEnumItems.length == 0) {
+            if (
+                getEventEnumItems(eventHandlers, {
+                    handlerType: "action"
+                } as any).length +
+                    getEventEnumItems(eventHandlers, {
+                        handlerType: "flow"
+                    } as any).length ==
+                0
+            ) {
                 notification.info("All event handlers are already defined");
                 return;
             }
@@ -2591,7 +2598,8 @@ export class EventHandler extends EezObject {
                             name: "eventName",
                             displayName: "Event",
                             type: "enum",
-                            enumItems: eventEnumItems
+                            enumItems: (values: any) =>
+                                getEventEnumItems(eventHandlers, values)
                         },
                         {
                             name: "handlerType",
