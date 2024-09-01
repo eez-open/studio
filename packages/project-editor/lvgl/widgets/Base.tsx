@@ -358,7 +358,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
-                hideInPropertyGrid: true,
+                //hideInPropertyGrid: true,
                 disabled: object => object instanceof LVGLScreenWidget
             },
             {

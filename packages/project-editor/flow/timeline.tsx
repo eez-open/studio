@@ -1605,25 +1605,28 @@ class WidgetTimelinePath {
     }
 
     get offsetToCenter() {
-        let {
-            left: left1,
-            top: top1,
-            width,
-            height
-        } = this.widget.getTimelineRect(this.timelinePosition);
+        let timeLineRect = this.widget.getTimelineRect(this.timelinePosition);
 
         let x;
         let y;
 
         if (this.widget instanceof ProjectEditor.LVGLWidgetClass) {
             // For the LVGL widget, the relative position changes when the timeline position changes.
-            let { left: left2, top: top2 } = this.widget.relativePosition;
+            // const relativePosition = this.widget.relativePosition;
+            // x =
+            //     relativePosition.left -
+            //     timeLineRect.left +
+            //     timeLineRect.width / 2;
+            // y =
+            //     relativePosition.top -
+            //     timeLineRect.top +
+            //     timeLineRect.height / 2;
 
-            x = left2 - left1 + width / 2;
-            y = top2 - top1 + height / 2;
+            x = timeLineRect.width / 2;
+            y = timeLineRect.height / 2;
         } else {
-            x = width / 2;
-            y = height / 2;
+            x = timeLineRect.width / 2;
+            y = timeLineRect.height / 2;
         }
 
         const parent = ProjectEditor.getWidgetParent(this.widget);
@@ -1748,7 +1751,7 @@ class WidgetTimelinePath {
 }
 
 export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
-    static CLASS_NAME = "widget-timeline-path-editor-ha ndle";
+    static CLASS_NAME = "widget-timeline-path-editor-handle";
     static DATA_ATTR_NAME = "data-handle-id";
 
     cursor: string = "grabbing";
