@@ -245,7 +245,7 @@ export abstract class LVGLPageRuntime {
             }
 
             if (page._lvglObj != undefined) {
-                runtime.wasm._lvglDeleteObject(page._lvglObj);
+                //runtime.wasm._lvglDeleteObject(page._lvglObj);
                 page._lvglObj = undefined;
 
                 page._lvglWidgetsIncludingUserWidgets.forEach(
