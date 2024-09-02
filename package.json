@@ -3,7 +3,7 @@
     "author": "Envox <eez@envox.hr>",
     "description": "Cross-platform visual development tool and SCPI instrument controller",
     "homepage": "https://www.envox.hr/eez/studio/studio-introduction.html",
-    "version": "0.16.0",
+    "version": "0.17.0",
     "revision": "1",
     "license": "GPL-3.0-only",
     "repository": "https://github.com/eez-open/studio",
