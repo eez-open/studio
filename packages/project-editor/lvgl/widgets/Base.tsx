@@ -1538,19 +1538,23 @@ export class LVGLWidget extends Widget {
                     build.line(
                         `lv_obj_add_event_cb(obj, ${build.getCheckedEventHandlerCallbackName(
                             this
-                        )}, LV_EVENT_VALUE_CHANGED, ${eventHandler.userData});`
+                        )}, LV_EVENT_VALUE_CHANGED, (void *)${
+                            eventHandler.userData
+                        });`
                     );
                 } else if (eventHandler.eventName == "UNCHECKED") {
                     build.line(
                         `lv_obj_add_event_cb(obj, ${build.getUncheckedEventHandlerCallbackName(
                             this
-                        )}, LV_EVENT_VALUE_CHANGED, ${eventHandler.userData});`
+                        )}, LV_EVENT_VALUE_CHANGED, (void *)${
+                            eventHandler.userData
+                        });`
                     );
                 } else {
                     build.line(
                         `lv_obj_add_event_cb(obj, ${build.getActionFunctionName(
                             eventHandler.action
-                        )}, LV_EVENT_${eventHandler.eventName}, ${
+                        )}, LV_EVENT_${eventHandler.eventName}, (void *)${
                             eventHandler.userData
                         });`
                     );
