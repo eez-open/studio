@@ -1524,16 +1524,46 @@ export class LVGLWidget extends Widget {
 
         this.lvglBuildSpecific(build);
 
-        if (this.eventHandlers.length > 0 || this.hasEventHandler) {
-            build.line(
-                `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                    this
-                )}, LV_EVENT_ALL, ${
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                        ? "flowState"
-                        : 0
-                });`
-            );
+        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.eventHandlers.length > 0 || this.hasEventHandler) {
+                build.line(
+                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                        this
+                    )}, LV_EVENT_ALL, flowState);`
+                );
+            }
+        } else {
+            for (const eventHandler of this.eventHandlers) {
+                if (eventHandler.eventName == "CHECKED") {
+                    build.line(
+                        `lv_obj_add_event_cb(obj, ${build.getCheckedEventHandlerCallbackName(
+                            this
+                        )}, LV_EVENT_VALUE_CHANGED, ${eventHandler.userData});`
+                    );
+                } else if (eventHandler.eventName == "UNCHECKED") {
+                    build.line(
+                        `lv_obj_add_event_cb(obj, ${build.getUncheckedEventHandlerCallbackName(
+                            this
+                        )}, LV_EVENT_VALUE_CHANGED, ${eventHandler.userData});`
+                    );
+                } else {
+                    build.line(
+                        `lv_obj_add_event_cb(obj, ${build.getActionFunctionName(
+                            eventHandler.action
+                        )}, LV_EVENT_${eventHandler.eventName}, ${
+                            eventHandler.userData
+                        });`
+                    );
+                }
+            }
+
+            if (this.hasEventHandler) {
+                build.line(
+                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
+                        this
+                    )}, LV_EVENT_ALL, 0);`
+                );
+            }
         }
 
         const lvglClassInfoProperties = getClassInfoLvglProperties(this);

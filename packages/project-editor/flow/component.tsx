@@ -2621,13 +2621,21 @@ export class EventHandler extends EezObject {
                             visible: (values: any) => {
                                 return values.handlerType == "action";
                             }
+                        },
+                        {
+                            name: "userData",
+                            type: "number",
+                            visible: (values: any) => {
+                                return project.projectTypeTraits.isLVGL;
+                            }
                         }
                     ]
                 },
                 values: {
                     handlerType: project.projectTypeTraits.hasFlowSupport
                         ? "flow"
-                        : "action"
+                        : "action",
+                    userData: 0
                 },
                 dialogContext: project
             });
@@ -2637,6 +2645,10 @@ export class EventHandler extends EezObject {
                 handlerType: result.values.handlerType,
                 action: result.values.action
             };
+
+            if (project.projectTypeTraits.isLVGL) {
+                properties.userData = result.values.userData;
+            }
 
             const eventHandler = createObject<EventHandler>(
                 project._store,

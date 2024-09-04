@@ -7,7 +7,8 @@
         "node_modules": true,
         "libs": false,
         "build": false,
-        "dist": true
+        "dist": true,
+        "resources/eez-framework-amalgamation": true
     },
     "typescript.reportStyleChecksAsWarnings": false,
     "typescript.suggest.autoImports": true,

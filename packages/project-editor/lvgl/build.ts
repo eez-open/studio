@@ -238,6 +238,26 @@ export class LVGLBuild extends Build {
         )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
+    getCheckedEventHandlerCallbackName(widget: LVGLWidget) {
+        const page = getAncestorOfType(
+            widget,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        return `event_handler_checked_cb_${this.getScreenIdentifier(
+            page
+        )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
+    }
+
+    getUncheckedEventHandlerCallbackName(widget: LVGLWidget) {
+        const page = getAncestorOfType(
+            widget,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+        return `event_handler_unchecked_cb_${this.getScreenIdentifier(
+            page
+        )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
+    }
+
     getFontVariableName(font: Font) {
         this.assets.markFontUsed(font);
         return "ui_font_" + this.fontNames.get(font.objID)!;
@@ -350,107 +370,205 @@ export class LVGLBuild extends Build {
         build.line(`lv_obj_t *tick_value_change_obj;`);
         build.line("");
 
-        for (const page of this.pages) {
-            page._lvglWidgets.forEach(widget => {
-                if (widget.eventHandlers.length > 0 || widget.hasEventHandler) {
-                    build.line(
-                        `static void ${build.getEventHandlerCallbackName(
-                            widget
-                        )}(lv_event_t *e) {`
-                    );
-                    build.indent();
-
-                    build.line(`lv_event_code_t event = lv_event_get_code(e);`);
-
-                    if (this.project.projectTypeTraits.hasFlowSupport) {
+        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            for (const page of this.pages) {
+                page._lvglWidgets.forEach(widget => {
+                    if (
+                        widget.eventHandlers.length > 0 ||
+                        widget.hasEventHandler
+                    ) {
                         build.line(
-                            `void *flowState = lv_event_get_user_data(e);`
+                            `static void ${build.getEventHandlerCallbackName(
+                                widget
+                            )}(lv_event_t *e) {`
                         );
-                    }
-
-                    for (const eventHandler of widget.eventHandlers) {
-                        if (
-                            eventHandler.eventName == "CHECKED" ||
-                            eventHandler.eventName == "UNCHECKED"
-                        ) {
-                            build.line(
-                                `lv_obj_t *ta = lv_event_get_target(e);`
-                            );
-                            break;
-                        }
-                    }
-
-                    for (const eventHandler of widget.eventHandlers) {
-                        if (eventHandler.eventName == "CHECKED") {
-                            build.line(
-                                `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                            );
-                        } else if (eventHandler.eventName == "UNCHECKED") {
-                            build.line(
-                                `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                            );
-                        } else {
-                            build.line(
-                                `if (event == LV_EVENT_${eventHandler.eventName}) {`
-                            );
-                        }
-
                         build.indent();
 
                         build.line(
-                            `e->user_data = (void *)${eventHandler.userData};`
+                            `lv_event_code_t event = lv_event_get_code(e);`
                         );
 
-                        if (eventHandler.handlerType == "action") {
+                        build.line(
+                            `void *flowState = lv_event_get_user_data(e);`
+                        );
+
+                        for (const eventHandler of widget.eventHandlers) {
+                            if (
+                                eventHandler.eventName == "CHECKED" ||
+                                eventHandler.eventName == "UNCHECKED"
+                            ) {
+                                build.line(
+                                    `lv_obj_t *ta = lv_event_get_target(e);`
+                                );
+                                break;
+                            }
+                        }
+
+                        for (const eventHandler of widget.eventHandlers) {
+                            if (eventHandler.eventName == "CHECKED") {
+                                build.line(
+                                    `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                                );
+                            } else if (eventHandler.eventName == "UNCHECKED") {
+                                build.line(
+                                    `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                                );
+                            } else {
+                                build.line(
+                                    `if (event == LV_EVENT_${eventHandler.eventName}) {`
+                                );
+                            }
+
+                            build.indent();
+
+                            build.line(
+                                `e->user_data = (void *)${eventHandler.userData};`
+                            );
+
+                            if (eventHandler.handlerType == "action") {
+                                const action = findAction(
+                                    this.project,
+                                    eventHandler.action
+                                );
+                                if (action) {
+                                    if (action.implementationType == "native") {
+                                        build.line(
+                                            `${this.getActionFunctionName(
+                                                eventHandler.action
+                                            )}(e);`
+                                        );
+                                    } else {
+                                        let actionFlowIndex =
+                                            build.assets.getFlowIndex(action);
+                                        build.line(
+                                            `flowPropagateValueLVGLEvent(flowState, -1, ${actionFlowIndex}, e);`
+                                        );
+                                    }
+                                }
+                            } else {
+                                let componentIndex =
+                                    build.assets.getComponentIndex(widget);
+                                const outputIndex =
+                                    build.assets.getComponentOutputIndex(
+                                        widget,
+                                        eventHandler.eventName
+                                    );
+
+                                build.line(
+                                    `flowPropagateValueLVGLEvent(flowState, ${componentIndex}, ${outputIndex}, e);`
+                                );
+                            }
+                            build.unindent();
+                            build.line("}");
+                        }
+
+                        if (widget.hasEventHandler) {
+                            widget.buildEventHandler(build);
+                        }
+
+                        build.unindent();
+                        build.line("}");
+                        build.line("");
+                    }
+                });
+            }
+        } else {
+            for (const page of this.pages) {
+                page._lvglWidgets.forEach(widget => {
+                    for (const eventHandler of widget.eventHandlers) {
+                        if (eventHandler.eventName == "CHECKED") {
+                            build.line(
+                                `static void ${build.getCheckedEventHandlerCallbackName(
+                                    widget
+                                )}(lv_event_t *e) {`
+                            );
+                            build.indent();
+
+                            build.line(
+                                `lv_obj_t *ta = lv_event_get_target(e);`
+                            );
+
+                            build.line(
+                                `if (lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                            );
+                            build.indent();
+
                             const action = findAction(
                                 this.project,
                                 eventHandler.action
                             );
                             if (action) {
-                                if (
-                                    action.implementationType == "native" ||
-                                    !this.project.projectTypeTraits
-                                        .hasFlowSupport
-                                ) {
-                                    build.line(
-                                        `${this.getActionFunctionName(
-                                            eventHandler.action
-                                        )}(e);`
-                                    );
-                                } else {
-                                    let actionFlowIndex =
-                                        build.assets.getFlowIndex(action);
-                                    build.line(
-                                        `flowPropagateValueLVGLEvent(flowState, -1, ${actionFlowIndex}, e);`
-                                    );
-                                }
-                            }
-                        } else {
-                            let componentIndex =
-                                build.assets.getComponentIndex(widget);
-                            const outputIndex =
-                                build.assets.getComponentOutputIndex(
-                                    widget,
-                                    eventHandler.eventName
+                                build.line(
+                                    `${this.getActionFunctionName(
+                                        eventHandler.action
+                                    )}(e);`
                                 );
+                            }
+
+                            build.unindent();
+                            build.line("}");
+
+                            build.unindent();
+                            build.line("}");
+                            build.line("");
+                        } else if (eventHandler.eventName == "UNCHECKED") {
+                            build.line(
+                                `static void ${build.getUncheckedEventHandlerCallbackName(
+                                    widget
+                                )}(lv_event_t *e) {`
+                            );
+                            build.indent();
 
                             build.line(
-                                `flowPropagateValueLVGLEvent(flowState, ${componentIndex}, ${outputIndex}, e);`
+                                `lv_obj_t *ta = lv_event_get_target(e);`
                             );
+
+                            build.line(
+                                `if (!lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
+                            );
+                            build.indent();
+
+                            const action = findAction(
+                                this.project,
+                                eventHandler.action
+                            );
+                            if (action) {
+                                build.line(
+                                    `${this.getActionFunctionName(
+                                        eventHandler.action
+                                    )}(e);`
+                                );
+                            }
+
+                            build.unindent();
+                            build.line("}");
+
+                            build.unindent();
+                            build.line("}");
+                            build.line("");
                         }
-                        build.unindent();
-                        build.line("}");
                     }
 
                     if (widget.hasEventHandler) {
-                        widget.buildEventHandler(build);
-                    }
+                        build.line(
+                            `static void ${build.getEventHandlerCallbackName(
+                                widget
+                            )}(lv_event_t *e) {`
+                        );
+                        build.indent();
 
-                    build.unindent();
-                    build.line("}");
-                    build.line("");
-                }
-            });
+                        build.line(
+                            `lv_event_code_t event = lv_event_get_code(e);`
+                        );
+
+                        widget.buildEventHandler(build);
+
+                        build.unindent();
+                        build.line("}");
+                        build.line("");
+                    }
+                });
+            }
         }
 
         for (const page of this.pages) {
