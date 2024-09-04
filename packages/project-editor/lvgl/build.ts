@@ -278,7 +278,7 @@ export class LVGLBuild extends Build {
             "_" +
             part +
             "_" +
-            state
+            (state == "CHECKED|PRESSED" ? "CHECKED_PRESSED" : state)
         );
     }
 
@@ -289,7 +289,7 @@ export class LVGLBuild extends Build {
             "_" +
             part +
             "_" +
-            state
+            (state == "CHECKED|PRESSED" ? "CHECKED_PRESSED" : state)
         );
     }
 
