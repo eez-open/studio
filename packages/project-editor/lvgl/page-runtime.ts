@@ -703,15 +703,15 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     async mount() {
+        for (const page of this.pages) {
+            this.lvglCreate(page);
+        }
+
         this.reactionDispose = autorun(() => {
             const selectedPage = this.runtime.selectedPage;
             const pageState = this.pageStates.get(selectedPage)!;
-            if (pageState.activeObjects) {
-                setObjects(selectedPage, this, pageState.activeObjects!);
-                this.wasm._lvglScreenLoad(-1, selectedPage._lvglObj!);
-            } else {
-                this.lvglCreate(selectedPage);
-            }
+            setObjects(selectedPage, this, pageState.activeObjects!);
+            this.wasm._lvglScreenLoad(-1, selectedPage._lvglObj!);
         });
 
         this.isMounted = true;
