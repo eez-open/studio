@@ -34,6 +34,7 @@ import { getValueLabel } from "project-editor/features/variable/value-type";
 import { stringCompare } from "eez-studio-shared/string";
 
 import { isArray } from "eez-studio-shared/util";
+import type { UserProperty } from "project-editor/flow/user-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -437,7 +438,10 @@ const WatchTable = observer(
             });
         }
 
-        getVariableTreeNodes = (id: string, variables: Variable[]) => {
+        getVariableTreeNodes = (
+            id: string,
+            variables: (Variable | UserProperty)[]
+        ) => {
             variables = variables.slice();
             variables.sort((a, b) => stringCompare(a.fullName, b.fullName));
             return variables.map(variable => {
@@ -502,7 +506,11 @@ const WatchTable = observer(
 
         get localVariables() {
             const flowState = this.props.runtime.selectedFlowState;
-            if (!flowState || flowState.flow.localVariables.length == 0) {
+            if (!flowState) {
+                return undefined;
+            }
+
+            if (flowState.flow.userPropertiesAndLocalVariables.length == 0) {
                 return undefined;
             }
 
@@ -514,7 +522,7 @@ const WatchTable = observer(
                 children: () =>
                     this.getVariableTreeNodes(
                         "local-variables",
-                        flowState.flow.localVariables
+                        flowState.flow.userPropertiesAndLocalVariables
                     ),
                 selected: false,
                 expanded: this.expanded("local-variables", true)

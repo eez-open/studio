@@ -448,6 +448,12 @@ const SelectItemDialog = observer(
             );
         }
 
+        get userProperties() {
+            const vars = [...this.flow.userProperties];
+            vars.sort((a, b) => stringCompare(a.name, b.name));
+            return vars;
+        }
+
         get localVariables() {
             const vars = [...this.flow.localVariables];
             vars.sort((a, b) => stringCompare(a.name, b.name));
@@ -679,6 +685,31 @@ const SelectItemDialog = observer(
                         selected: this.selection == componentInput.name,
                         expanded: true,
                         data: componentInput.name
+                    })),
+                    selected: false,
+                    expanded: true
+                });
+            }
+
+            if (this.userProperties.length) {
+                children.push({
+                    id: "user-properties",
+                    label: "User properties",
+                    children: this.userProperties.map(userProperty => ({
+                        id: userProperty.name,
+                        label: (
+                            <VariableLabel
+                                name={userProperty.name}
+                                type={userProperty.type}
+                            />
+                        ),
+                        children: this.getTypeChildren(
+                            userProperty.type,
+                            userProperty.name
+                        ),
+                        selected: this.selection == userProperty.name,
+                        expanded: true,
+                        data: userProperty.name
                     })),
                     selected: false,
                     expanded: true

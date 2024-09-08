@@ -362,7 +362,7 @@ export class EditorFlowContext implements IFlowContext {
 
         this.dataContext =
             this.document.projectStore.dataContext.createWithLocalVariables(
-                this.flow.localVariables
+                this.flow.userPropertiesAndLocalVariables
             );
     }
 }

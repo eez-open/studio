@@ -129,6 +129,11 @@ import {
     FLOW_EVENT_KEYDOWN
 } from "project-editor/flow/runtime/flow-events";
 import { DashboardComponentContext } from "project-editor/flow/runtime/worker-dashboard-component-context";
+import {
+    getAdditionalFlowPropertiesForUserProperties,
+    UserPropertyValues,
+    userPropertyValuesProperty
+} from "project-editor/flow/user-property";
 
 const NOT_NAMED_LABEL = "";
 
@@ -2070,8 +2075,11 @@ export class CallActionActionComponent extends ActionComponent {
                     propertyGridGroup: specificGroup
                 },
                 "string"
-            )
+            ),
+            userPropertyValuesProperty
         ],
+        getAdditionalFlowProperties:
+            getAdditionalFlowPropertiesForUserProperties,
         label: (component: CallActionActionComponent) => {
             if (!component.action) {
                 return "CallAction";
@@ -2119,11 +2127,14 @@ export class CallActionActionComponent extends ActionComponent {
 
     action: string;
 
+    userPropertyValues: UserPropertyValues;
+
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            action: observable
+            action: observable,
+            userPropertyValues: observable
         });
     }
 
@@ -2221,6 +2232,35 @@ export class CallActionActionComponent extends ActionComponent {
                 false
             );
         }
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        const action = findAction(
+            flowContext.projectStore.project,
+            this.action
+        );
+        if (!action) {
+            return null;
+        }
+
+        if (action.userProperties.length == 0) {
+            return null;
+        }
+
+        return (
+            <div className="body">
+                {action.userProperties.map(userProperty => (
+                    <pre key={userProperty.name}>
+                        <>
+                            {userProperty.displayName || userProperty.name}
+                            <LeftArrow />
+                            {this.userPropertyValues.values[userProperty.id] ||
+                                ""}
+                        </>
+                    </pre>
+                ))}
+            </div>
+        );
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {

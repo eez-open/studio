@@ -205,7 +205,7 @@ function buildExpressionNode(
         }
 
         const flow = ProjectEditor.getFlow(component);
-        let localVariableIndex = flow.localVariables.findIndex(
+        let localVariableIndex = flow.userPropertiesAndLocalVariables.findIndex(
             localVariable => localVariable.name == node.name
         );
         if (localVariableIndex != -1) {

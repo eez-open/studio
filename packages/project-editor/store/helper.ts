@@ -182,16 +182,31 @@ export function objectToString(object: IEezObject) {
 
     if (isValue(object)) {
         const parent = getParent(object);
-        const propertyName = getKey(object);
+        const propertyKey = getKey(object);
         const propertyInfo = findPropertyByNameInClassInfo(
             getClassInfo(parent),
-            propertyName
+            propertyKey
         );
-        label = `${
-            propertyInfo
-                ? getObjectPropertyDisplayName(parent, propertyInfo)
-                : humanize(propertyName)
-        }: ${getProperty(parent, propertyName)}`;
+
+        let propertyName;
+
+        if (propertyInfo) {
+            propertyName = getObjectPropertyDisplayName(parent, propertyInfo);
+        } else {
+            const classInfo = getClassInfo(parent);
+            if (classInfo.getPropertyDisplayName) {
+                propertyName = classInfo.getPropertyDisplayName(
+                    parent,
+                    propertyKey
+                );
+            }
+        }
+
+        if (!propertyName) {
+            propertyName = humanize(propertyKey);
+        }
+
+        label = `${propertyName}: ${getProperty(parent, propertyKey)}`;
     } else if (isArray(object)) {
         let propertyInfo = findPropertyByNameInObject(
             getParent(object),
@@ -542,7 +557,7 @@ export function getCommonProperties(
                 propertyInfo.type !== PropertyType.Array &&
                 !(
                     propertyInfo.type === PropertyType.String &&
-                    propertyInfo.unique === true
+                    (propertyInfo.unique || propertyInfo.uniqueIdentifier)
                 )
         );
 

@@ -776,11 +776,36 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                 !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
                 action.implementationType === "native"
             ) {
+                if (action.userProperties.length > 0) {
+                    build.line("");
+                    build.line(`enum {`);
+                    build.indent();
+                    for (let i = 0; i < this.pages.length; i++) {
+                        build.line(
+                            `ACTION_${getName(
+                                "",
+                                action.name,
+                                NamingConvention.UnderscoreUpperCase
+                            )}_PROPERTY_${getName(
+                                "",
+                                action.userProperties[i].name,
+                                NamingConvention.UnderscoreUpperCase
+                            )},`
+                        );
+                    }
+                    build.unindent();
+                    build.line(`};`);
+                }
+
                 build.line(
                     `extern void ${this.getActionFunctionName(
                         action.name
                     )}(lv_event_t * e);`
                 );
+
+                if (action.userProperties.length > 0) {
+                    build.line("");
+                }
             }
         }
 

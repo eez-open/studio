@@ -29,6 +29,7 @@ import {
 } from "project-editor/build/value-types";
 import { Project } from "project-editor/project/project";
 import { isArray } from "eez-studio-shared/util";
+import type { UserProperty } from "project-editor/flow/user-property";
 
 export interface FlowValue {
     type: number;
@@ -68,7 +69,10 @@ export function getValueType(valueType: ValueType) {
     }
 }
 
-function getVariableFlowValue(assets: Assets, variable: Variable): FlowValue {
+function getVariableFlowValue(
+    assets: Assets,
+    variable: Variable | UserProperty
+): FlowValue {
     let type;
 
     if (variable.type) {
@@ -163,7 +167,7 @@ export function getDefaultValueForType(project: Project, type: ValueType): any {
 export function buildVariableFlowValue(
     assets: Assets,
     dataBuffer: DataBuffer,
-    variable: Variable
+    variable: Variable | UserProperty
 ) {
     buildFlowValue(assets, dataBuffer, getVariableFlowValue(assets, variable));
 }

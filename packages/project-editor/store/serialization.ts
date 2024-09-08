@@ -365,7 +365,10 @@ function generateObjId(
                     property => property.name === "name"
                 );
 
-                if (nameProperty && nameProperty.unique) {
+                if (
+                    nameProperty &&
+                    (nameProperty.unique || nameProperty.uniqueIdentifier)
+                ) {
                     id = jsObject ? jsObject.name : (object as any).name;
                 }
 

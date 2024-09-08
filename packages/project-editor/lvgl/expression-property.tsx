@@ -17,7 +17,7 @@ import { getClassInfo } from "project-editor/store";
 import { findBitmap } from "project-editor/project/project";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
-import type { LVGLLabelWidget, LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import { ValueType } from "eez-studio-types";
@@ -177,13 +177,17 @@ export function makeLvglExpressionProperty(
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "variables/globalVariables",
                 propertyGridColumnComponent: LVGLProperty,
-                flowProperty: (widget: LVGLLabelWidget | undefined) => {
+                flowProperty: (widget: LVGLWidget | undefined) => {
                     if (widget == undefined) {
                         return flowProperty;
                     }
+
                     return (widget as any)[name + "Type"] == "expression"
                         ? flowProperty
                         : undefined;
+                },
+                isFlowPropertyBuildable: (widget: LVGLWidget | undefined) => {
+                    return (widget as any)[name + "Type"] == "expression";
                 },
                 expressionType,
                 disableSpellcheck: true

@@ -108,6 +108,11 @@ import { showDialog } from "eez-studio-ui/dialog";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ProjectContext } from "project-editor/project/context";
+import {
+    userPropertyValuesProperty,
+    getAdditionalFlowPropertiesForUserProperties,
+    UserPropertyValues
+} from "project-editor/flow/user-property";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -1639,6 +1644,7 @@ const UserWidgetPropertyGridUI = observer(
 
 export class UserWidgetWidget extends Widget {
     userWidgetPageName: string;
+    userPropertyValues: UserPropertyValues;
     context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -1650,6 +1656,7 @@ export class UserWidgetWidget extends Widget {
         flowComponentId: WIDGET_TYPE_USER_WIDGET,
 
         properties: [
+            makeDataPropertyInfo("context"),
             {
                 name: "userWidgetPageName",
                 displayName: "User widget",
@@ -1657,7 +1664,7 @@ export class UserWidgetWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "userWidgets"
             },
-            makeDataPropertyInfo("context"),
+            userPropertyValuesProperty,
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -1684,6 +1691,9 @@ export class UserWidgetWidget extends Widget {
                 }
             }
         ],
+
+        getAdditionalFlowProperties:
+            getAdditionalFlowPropertiesForUserProperties,
 
         beforeLoadHook: (
             widget: UserWidgetWidget,
@@ -1828,6 +1838,7 @@ export class UserWidgetWidget extends Widget {
 
         makeObservable(this, {
             userWidgetPageName: observable,
+            userPropertyValues: observable,
             context: observable
         });
     }

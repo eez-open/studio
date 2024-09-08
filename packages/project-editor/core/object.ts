@@ -190,6 +190,7 @@ export interface PropertyInfo {
     propertyGridGroup?: IPropertyGridGroupDefinition;
     propertyGridRowComponent?: React.ComponentType<PropertyProps>;
     propertyGridColumnComponent?: React.ComponentType<PropertyProps>;
+    propertyGridFullRowComponent?: React.ComponentType<PropertyProps>;
     propertyGridCollapsable?: boolean;
     propertyGridCollapsableDefaultPropertyName?: string;
     propertyGridCollapsableEnabled?: (object: IEezObject) => boolean;
@@ -205,6 +206,16 @@ export interface PropertyInfo {
     nonInheritable?: boolean;
     propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
     unique?:
+        | boolean
+        | ((
+              object: IEezObject,
+              parent: IEezObject,
+              propertyInfo: PropertyInfo
+          ) => (
+              object: any,
+              ruleName: string
+          ) => Promise<string | null> | string | null);
+    uniqueIdentifier?:
         | boolean
         | ((
               object: IEezObject,
@@ -237,6 +248,11 @@ export interface PropertyInfo {
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+
+    isFlowPropertyBuildable?: (
+        object: IEezObject,
+        propertyInfo: PropertyInfo
+    ) => boolean;
 
     monospaceFont?: boolean;
     disableSpellcheck?: boolean;
@@ -435,6 +451,11 @@ export interface ClassInfo {
         object: IEezObject,
         eventName: string
     ) => ValueType | undefined;
+
+    getPropertyDisplayName?: (
+        object: IEezObject,
+        propertyKey: string
+    ) => string | undefined;
 }
 
 export function makeDerivedClassInfo(
@@ -790,12 +811,12 @@ export function findPropertyByNameInClassInfo(
             classInfo,
             propertyName.substring(0, i)
         );
-        if (!propertyInfo) {
+        if (!propertyInfo || !propertyInfo.typeClass) {
             return undefined;
         }
 
         return findPropertyByNameInClassInfo(
-            propertyInfo.typeClass!.classInfo,
+            propertyInfo.typeClass.classInfo,
             propertyName.substring(i + 1)
         );
     }
@@ -1024,6 +1045,17 @@ export function getDefaultValue(
         }
     }
     return defaultValue;
+}
+
+export function isFlowPropertyBuildable(
+    object: IEezObject,
+    propertyInfo: PropertyInfo
+) {
+    if (propertyInfo.isFlowPropertyBuildable) {
+        return propertyInfo.isFlowPropertyBuildable(object, propertyInfo);
+    }
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

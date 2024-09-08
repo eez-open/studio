@@ -148,6 +148,7 @@ export const PropertyGrid = observer(
                     ) ||
                         !propertyInfo.propertyGridCollapsableDefaultPropertyName)) ||
                 propertyInfo.propertyGridRowComponent ||
+                propertyInfo.propertyGridFullRowComponent ||
                 propertyInfo.type === PropertyType.Array;
 
             const propertyReadOnly = isAnyPropertyReadOnly(
@@ -189,25 +190,31 @@ export const PropertyGrid = observer(
 
             let property;
             if (colSpan) {
-                property = (
-                    <td
-                        className={classNames({
-                            "embedded-property-cell":
-                                propertyInfo.type === PropertyType.Object
-                        })}
-                        colSpan={propertyInfo.propertyGridCollapsable ? 3 : 2}
-                        style={
-                            propertyInfo.type === PropertyType.Array ||
-                            propertyInfo.type === PropertyType.Any
-                                ? {
-                                      width: "100%"
-                                  }
-                                : undefined
-                        }
-                    >
-                        <Property {...propertyProps} />
-                    </td>
-                );
+                if (propertyInfo.propertyGridFullRowComponent) {
+                    property = <Property {...propertyProps} />;
+                } else {
+                    property = (
+                        <td
+                            className={classNames({
+                                "embedded-property-cell":
+                                    propertyInfo.type === PropertyType.Object
+                            })}
+                            colSpan={
+                                propertyInfo.propertyGridCollapsable ? 3 : 2
+                            }
+                            style={
+                                propertyInfo.type === PropertyType.Array ||
+                                propertyInfo.type === PropertyType.Any
+                                    ? {
+                                          width: "100%"
+                                      }
+                                    : undefined
+                            }
+                        >
+                            <Property {...propertyProps} />
+                        </td>
+                    );
+                }
             } else {
                 if (propertyInfo.propertyNameAbove) {
                     property = (

@@ -45,6 +45,10 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ConnectionLine } from "project-editor/flow/connection-line";
+import {
+    userPropertiesProperty,
+    UserProperty
+} from "project-editor/flow/user-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +72,8 @@ export abstract class Flow extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Variable,
                 hideInPropertyGrid: true
-            }
+            },
+            userPropertiesProperty
         ],
 
         findPastePlaceInside: (
@@ -142,12 +147,21 @@ export abstract class Flow extends EezObject {
                     }
                 }
             }
+
+            if (!jsObject.userProperties) {
+                jsObject.userProperties = [];
+            }
         }
     };
 
     components: Component[] = [];
     connectionLines: ConnectionLine[] = [];
     localVariables: Variable[] = [];
+    userProperties: UserProperty[];
+
+    get userPropertiesAndLocalVariables() {
+        return [...this.userProperties, ...this.localVariables];
+    }
 
     constructor() {
         super();
@@ -157,7 +171,8 @@ export abstract class Flow extends EezObject {
             startComponent: computed,
             endComponent: computed,
             inputComponents: computed,
-            outputComponents: computed
+            outputComponents: computed,
+            userPropertiesAndLocalVariables: computed
         });
     }
 
@@ -167,7 +182,8 @@ export abstract class Flow extends EezObject {
         makeObservable(this, {
             components: observable,
             connectionLines: observable,
-            localVariables: observable
+            localVariables: observable,
+            userProperties: observable
         });
     }
 

@@ -104,6 +104,9 @@ function removeFlowSupport(project: Project) {
             // remove all local variables
             projectStore.deleteObjects(action.localVariables);
 
+            // remove all user properties
+            projectStore.deleteObjects(action.userProperties);
+
             // set as native
             projectStore.updateObject(action, {
                 implementationType: "native"
@@ -125,6 +128,9 @@ function removeFlowSupport(project: Project) {
 
         // remove all local variables
         projectStore.deleteObjects(page.localVariables);
+
+        // remove all user properties
+        projectStore.deleteObjects(page.userProperties);
 
         if (projectStore.projectTypeTraits.isLVGL) {
             // set all event handlers for LVGL widgets to "action"

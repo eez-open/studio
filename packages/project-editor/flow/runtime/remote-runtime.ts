@@ -1062,7 +1062,7 @@ export abstract class DebuggerConnectionBase {
                         }
 
                         const localVariable =
-                            flowState.flow.localVariables.find(
+                            flowState.flow.userPropertiesAndLocalVariables.find(
                                 localVariable =>
                                     localVariable.name ==
                                     localVariableInAssetsMap.name

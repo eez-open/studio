@@ -58,6 +58,11 @@ import {
     pad_top_property_info
 } from "../style-catalog";
 import { Assets, DataBuffer } from "project-editor/build/assets";
+import {
+    userPropertyValuesProperty,
+    getAdditionalFlowPropertiesForUserProperties,
+    UserPropertyValues
+} from "project-editor/flow/user-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,6 +105,7 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
 
 export class LVGLUserWidgetWidget extends LVGLWidget {
     userWidgetPageName: string;
+    userPropertyValues: UserPropertyValues;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -131,6 +137,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "userWidgets"
             },
+            userPropertyValuesProperty,
             {
                 name: "customUI",
                 type: PropertyType.Any,
@@ -157,6 +164,9 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 }
             }
         ],
+
+        getAdditionalFlowProperties:
+            getAdditionalFlowPropertiesForUserProperties,
 
         defaultValue: {
             left: 0,
@@ -233,7 +243,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         super.makeEditable();
 
         makeObservable(this, {
-            userWidgetPageName: observable
+            userWidgetPageName: observable,
+            userPropertyValues: observable
         });
     }
 

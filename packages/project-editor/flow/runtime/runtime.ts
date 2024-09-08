@@ -875,7 +875,7 @@ export class FlowState {
 
         this.dataContext =
             this.runtime.projectStore.dataContext.createWithLocalVariables(
-                flow.localVariables
+                flow.userPropertiesAndLocalVariables
             );
     }
 

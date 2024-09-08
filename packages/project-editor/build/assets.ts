@@ -1066,13 +1066,27 @@ export class Assets {
     getComponentProperties(component: Component) {
         const classInfo = getClassInfo(component);
 
-        const properties = classInfo.properties.filter(propertyInfo =>
-            isFlowProperty(component, propertyInfo, [
-                "input",
-                "template-literal",
-                "assignable"
-            ])
-        );
+        let properties;
+
+        if (component instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+            // Always build all the properties for the LVGLUserWidgetWidget,
+            // so that user properties always start at the LVGL_USER_WIDGET_WIDGET_USER_PROPERTIES_START
+            properties = classInfo.properties.filter(propertyInfo =>
+                isFlowProperty(undefined, propertyInfo, [
+                    "input",
+                    "template-literal",
+                    "assignable"
+                ])
+            );
+        } else {
+            properties = classInfo.properties.filter(propertyInfo =>
+                isFlowProperty(component, propertyInfo, [
+                    "input",
+                    "template-literal",
+                    "assignable"
+                ])
+            );
+        }
 
         if (classInfo.getAdditionalFlowProperties) {
             return [

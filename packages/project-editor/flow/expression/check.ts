@@ -144,9 +144,10 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
             }
 
             const flow = ProjectEditor.getFlow(component);
-            let localVariableIndex = flow.localVariables.findIndex(
-                localVariable => localVariable.name == node.name
-            );
+            let localVariableIndex =
+                flow.userPropertiesAndLocalVariables.findIndex(
+                    localVariable => localVariable.name == node.name
+                );
             if (localVariableIndex != -1) {
                 return;
             }
@@ -452,9 +453,10 @@ function checkAssignableExpressionNode(
             }
 
             const flow = ProjectEditor.getFlow(component);
-            let localVariableIndex = flow.localVariables.findIndex(
-                localVariable => localVariable.name == node.name
-            );
+            let localVariableIndex =
+                flow.userPropertiesAndLocalVariables.findIndex(
+                    localVariable => localVariable.name == node.name
+                );
             if (localVariableIndex != -1) {
                 return;
             }

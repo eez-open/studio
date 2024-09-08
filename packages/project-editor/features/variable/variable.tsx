@@ -19,14 +19,17 @@ import {
     EezObject,
     PropertyType,
     MessageType,
-    IMessage
+    IMessage,
+    PropertyInfo,
+    getProperty
 } from "project-editor/core/object";
 import {
     getChildOfObject,
     Message,
     propertyNotSetMessage,
     createObject,
-    isEezObjectArray
+    isEezObjectArray,
+    getAncestorOfType
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -65,15 +68,59 @@ import {
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { parseIdentifier } from "project-editor/flow/expression/helper";
 import { RenderVariableStatusPropertyUI } from "project-editor/features/variable/global-variable-status";
 import { VARIABLE_ICON } from "project-editor/ui-components/icons";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import type { UserProperty } from "project-editor/flow/user-property";
+import type { Flow } from "project-editor/flow/flow";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 function isGlobalVariable(object: IEezObject) {
     return !ProjectEditor.getFlow(object);
+}
+
+export function uniqueForVariableAndUserProperty(
+    object: Variable | UserProperty,
+    parent: IEezObject,
+    propertyInfo?: PropertyInfo
+) {
+    const flow = getAncestorOfType(
+        parent,
+        ProjectEditor.FlowClass.classInfo
+    ) as Flow;
+    if (!flow) {
+        return validators.unique(object, parent);
+    }
+
+    const oldIdentifier =
+        object && propertyInfo
+            ? getProperty(object, propertyInfo.name)
+            : undefined;
+
+    return (object: any, ruleName: string) => {
+        const newIdentifer = object[ruleName];
+        if (oldIdentifier != undefined && newIdentifer == oldIdentifier) {
+            return null;
+        }
+
+        const userPropertyOrLocalVariable =
+            flow.userPropertiesAndLocalVariables.find(
+                userPropertyOrLocalVariable =>
+                    userPropertyOrLocalVariable != object &&
+                    userPropertyOrLocalVariable.name === newIdentifer
+            );
+
+        if (!userPropertyOrLocalVariable) {
+            return null;
+        }
+
+        if (userPropertyOrLocalVariable instanceof Variable) {
+            return "Local variable with this name already exists";
+        } else {
+            return "User property with this name already exists";
+        }
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +180,7 @@ export class Variable extends EezObject {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                uniqueIdentifier: uniqueForVariableAndUserProperty
             },
             {
                 name: "description",
@@ -255,8 +302,11 @@ export class Variable extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                identifierValidator,
-                                validators.unique({}, parent)
+                                validators.identifierValidator,
+                                uniqueForVariableAndUserProperty(
+                                    {} as any,
+                                    parent
+                                )
                             ]
                         },
                         {
@@ -808,7 +858,7 @@ export class StructureField extends EezObject implements IStructureField {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                uniqueIdentifier: true
             },
             variableTypeProperty
         ],
@@ -861,7 +911,7 @@ export class StructureField extends EezObject implements IStructureField {
                             type: "string",
                             validators: [
                                 validators.required,
-                                identifierValidator,
+                                validators.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -922,7 +972,7 @@ export class Structure extends EezObject implements IStructure {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                uniqueIdentifier: true
             },
             {
                 name: "fields",
@@ -943,7 +993,7 @@ export class Structure extends EezObject implements IStructure {
                             type: "string",
                             validators: [
                                 validators.required,
-                                identifierValidator,
+                                validators.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1015,7 +1065,7 @@ export class EnumMember extends EezObject implements IEnumMember {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                uniqueIdentifier: true
             },
             {
                 name: "value",
@@ -1044,7 +1094,7 @@ export class EnumMember extends EezObject implements IEnumMember {
                             type: "string",
                             validators: [
                                 validators.required,
-                                identifierValidator,
+                                validators.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1102,7 +1152,7 @@ export class Enum extends EezObject implements IEnum {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                uniqueIdentifier: true
             },
             {
                 name: "members",
@@ -1147,7 +1197,7 @@ export class Enum extends EezObject implements IEnum {
                             type: "string",
                             validators: [
                                 validators.required,
-                                identifierValidator,
+                                validators.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1324,16 +1374,3 @@ const feature: ProjectEditorFeature = {
 };
 
 export default feature;
-
-////////////////////////////////////////////////////////////////////////////////
-
-const VALIDATION_MESSAGE_INVALID_IDENTIFIER =
-    "Not a valid identifier. Identifier starts with a letter or an underscore (_), followed by zero or more letters, digits, or underscores. Spaces are not allowed.";
-
-export const identifierValidator = (object: any, ruleName: string) => {
-    const value = object[ruleName];
-    if (!parseIdentifier(value) || value.startsWith("$")) {
-        return VALIDATION_MESSAGE_INVALID_IDENTIFIER;
-    }
-    return null;
-};

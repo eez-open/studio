@@ -40,6 +40,10 @@ export const PropertyEnclosure = observer(
                     isHighlightedProperty(objects[0], propertyInfo)
             });
 
+            if (propertyInfo.propertyGridFullRowComponent) {
+                return property;
+            }
+
             return (
                 <tr className={className} style={this.props.style}>
                     {property}

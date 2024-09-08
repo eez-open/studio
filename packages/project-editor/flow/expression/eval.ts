@@ -613,7 +613,7 @@ function evalAssignableExpressionWithContext(
             }
 
             const flow = ProjectEditor.getFlow(component);
-            let localVariable = flow.localVariables.find(
+            let localVariable = flow.userPropertiesAndLocalVariables.find(
                 localVariable => localVariable.name == node.name
             );
             if (localVariable) {

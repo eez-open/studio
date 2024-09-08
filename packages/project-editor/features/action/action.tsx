@@ -26,7 +26,10 @@ import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
+import {
+    generalGroup,
+    specificGroup
+} from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,11 +68,13 @@ export class Action extends Flow {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "description",
-                type: PropertyType.MultilineText
+                type: PropertyType.MultilineText,
+                propertyGridGroup: generalGroup
             },
             {
                 name: "implementationType",
@@ -83,6 +88,7 @@ export class Action extends Flow {
                     }
                 ],
                 enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
                 disabled: (action: Action) => {
                     return isNotV1Project(action) && !hasFlowSupport(action);
                 }
@@ -90,12 +96,14 @@ export class Action extends Flow {
             {
                 name: "implementation",
                 type: PropertyType.CPP,
+                propertyGridGroup: specificGroup,
                 disabled: isNotV1Project
             },
             {
                 name: "usedIn",
                 type: PropertyType.ConfigurationReference,
                 referencedObjectCollectionPath: "settings/build/configurations",
+                propertyGridGroup: generalGroup,
                 disabled: object =>
                     isDashboardProject(object) ||
                     isLVGLProject(object) ||
