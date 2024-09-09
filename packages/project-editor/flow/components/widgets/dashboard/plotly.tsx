@@ -393,7 +393,7 @@ export class PlotlyWidget extends Widget {
             makeExpressionProperty(
                 {
                     name: "config",
-                    displayName: "Configurtion options",
+                    displayName: "Configuration options",
                     formText: () => (
                         <span>
                             Plotly configuration options are set via JSON value,

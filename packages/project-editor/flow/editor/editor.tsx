@@ -129,59 +129,69 @@ const AllConnectionLines = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function CenterLines({ flowContext }: { flowContext: EditorFlowContext }) {
-    const transform = flowContext.viewState.transform;
+const CenterLines = observer(
+    class CenterLines extends React.Component<{
+        flowContext: EditorFlowContext;
+    }> {
+        render() {
+            const { flowContext } = this.props;
 
-    const CENTER_LINES_COLOR = settingsController.isDarkTheme ? "#444" : "#eee";
-    const CENTER_LINES_WIDTH = 1 / transform.scale;
+            const transform = flowContext.viewState.transform;
 
-    const centerLineStyle = {
-        fill: "url(#page-background)",
-        stroke: CENTER_LINES_COLOR,
-        strokeWidth: CENTER_LINES_WIDTH
-    };
+            const CENTER_LINES_COLOR = settingsController.isDarkTheme
+                ? "#444"
+                : "#eee";
+            const CENTER_LINES_WIDTH = 1 / transform.scale;
 
-    const center = flowContext.editorOptions.center!;
+            const centerLineStyle = {
+                fill: "url(#page-background)",
+                stroke: CENTER_LINES_COLOR,
+                strokeWidth: CENTER_LINES_WIDTH
+            };
 
-    const pageRect = transform.clientToPageRect(transform.clientRect);
+            const center = flowContext.editorOptions.center!;
 
-    let pageFlowRect;
-    if (flowContext.flow instanceof ProjectEditor.PageClass) {
-        pageFlowRect = flowContext.flow.pageRect;
-    }
+            const pageRect = transform.clientToPageRect(transform.clientRect);
 
-    return (
-        <Svg flowContext={flowContext}>
-            {pageFlowRect &&
-                !flowContext.projectStore.project.settings.general
-                    .circularDisplay &&
-                flowContext.projectStore.project.settings.general
-                    .displayBorderRadius == 0 && (
-                    <rect
-                        x={pageFlowRect.left}
-                        y={pageFlowRect.top}
-                        width={pageFlowRect.width}
-                        height={pageFlowRect.height}
+            let pageFlowRect;
+            if (flowContext.flow instanceof ProjectEditor.PageClass) {
+                pageFlowRect = flowContext.flow.pageRect;
+            }
+
+            return (
+                <Svg flowContext={flowContext}>
+                    {pageFlowRect &&
+                        !flowContext.projectStore.project.settings.general
+                            .circularDisplay &&
+                        flowContext.projectStore.project.settings.general
+                            .displayBorderRadius == 0 && (
+                            <rect
+                                x={pageFlowRect.left}
+                                y={pageFlowRect.top}
+                                width={pageFlowRect.width}
+                                height={pageFlowRect.height}
+                                style={centerLineStyle}
+                            />
+                        )}
+                    <line
+                        x1={pageRect.left}
+                        y1={center.y}
+                        x2={pageRect.left + pageRect.width}
+                        y2={center.y}
                         style={centerLineStyle}
                     />
-                )}
-            <line
-                x1={pageRect.left}
-                y1={center.y}
-                x2={pageRect.left + pageRect.width}
-                y2={center.y}
-                style={centerLineStyle}
-            />
-            <line
-                x1={center.x}
-                y1={pageRect.top}
-                x2={center.x}
-                y2={pageRect.top + pageRect.height}
-                style={centerLineStyle}
-            />
-        </Svg>
-    );
-}
+                    <line
+                        x1={center.x}
+                        y1={pageRect.top}
+                        x2={center.x}
+                        y2={pageRect.top + pageRect.height}
+                        style={centerLineStyle}
+                    />
+                </Svg>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
