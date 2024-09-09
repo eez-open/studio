@@ -671,13 +671,13 @@ export interface IWasmFlowRuntime {
     _lvglObjHasFlag(obj: number, f: number): boolean;
     _lvglObjAddState(obj: number, s: number): void;
     _lvglObjClearState(obj: number, s: number): void;
-    _lvglObjGetStylePropColor(obj: number, part: number, prop: number): number;
-    _lvglObjGetStylePropNum(obj: number, part: number, prop: number): number;
+    _lvglObjGetStylePropColor(obj: number, part: number, state: number, prop: number): number;
+    _lvglObjGetStylePropNum(obj: number, part: number, state: number, prop: number): number;
     _lvglObjSetLocalStylePropColor(obj: number, prop: number, color: number, selector: number): void;
     _lvglObjSetLocalStylePropNum(obj: number, prop: number, num: number, selector: number): void;
     _lvglObjSetLocalStylePropPtr(obj: number, prop: number, ptr: number, selector: number): void;
-    _lvglObjGetStylePropBuiltInFont(obj: number, part: number, prop: number): number;
-    _lvglObjGetStylePropFontAddr(obj: number, part: number, prop: number): number;
+    _lvglObjGetStylePropBuiltInFont(obj: number, part: number, state: number, prop: number): number;
+    _lvglObjGetStylePropFontAddr(obj: number, part: number, state: number, prop: number): number;
     _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, font_index: number, selector: number): void;
 
     _lvglStyleCreate(): number;

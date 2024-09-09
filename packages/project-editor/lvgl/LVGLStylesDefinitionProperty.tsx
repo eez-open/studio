@@ -495,6 +495,7 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                               runtime,
                                               lvglObj,
                                               part,
+                                              state,
                                               propertyInfo
                                           );
                                 }

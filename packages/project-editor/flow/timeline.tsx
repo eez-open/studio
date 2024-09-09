@@ -2945,6 +2945,7 @@ export function getTimelineProperty(
                     page._lvglRuntime,
                     widget._lvglObj,
                     "MAIN",
+                    "DEFAULT",
                     stylePropertyInfo
                 ) as number;
             }

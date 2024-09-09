@@ -636,8 +636,16 @@ EM_PORT_API(void) lvglObjClearState(lv_obj_t *obj, lv_obj_flag_t s) {
     lv_obj_update_layout(obj);
 }
 
-EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv_state_t state, lv_style_prop_t prop) {
+    lv_state_t saved_state = lv_obj_get_state(obj);
+    lv_obj_clear_state(obj, saved_state);
+    lv_obj_add_state(obj, state);
+
     lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+
+    lv_obj_clear_state(obj, state);
+    lv_obj_add_state(obj, saved_state);
+
 #if LVGL_VERSION_MAJOR >= 9
     return (value.color.red << 16) | (value.color.green << 8) | value.color.blue;
 #else
@@ -645,8 +653,16 @@ EM_PORT_API(uint32_t) lvglObjGetStylePropColor(lv_obj_t *obj, lv_part_t part, lv
 #endif
 }
 
-EM_PORT_API(int32_t) lvglObjGetStylePropNum(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+EM_PORT_API(int32_t) lvglObjGetStylePropNum(lv_obj_t *obj, lv_part_t part, lv_state_t state, lv_style_prop_t prop) {
+    lv_state_t saved_state = lv_obj_get_state(obj);
+    lv_obj_clear_state(obj, saved_state);
+    lv_obj_add_state(obj, state);
+
     lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+
+    lv_obj_clear_state(obj, state);
+    lv_obj_add_state(obj, saved_state);
+
     return value.num;
 }
 
@@ -695,18 +711,35 @@ static const lv_font_t *BUILT_IN_FONTS[] = {
     &lv_font_montserrat_48
 };
 
-EM_PORT_API(int32_t) lvglObjGetStylePropBuiltInFont(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+EM_PORT_API(int32_t) lvglObjGetStylePropBuiltInFont(lv_obj_t *obj, lv_part_t part, lv_state_t state, lv_style_prop_t prop) {
+    lv_state_t saved_state = lv_obj_get_state(obj);
+    lv_obj_clear_state(obj, saved_state);
+    lv_obj_add_state(obj, state);
+
     lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+
+    lv_obj_clear_state(obj, state);
+    lv_obj_add_state(obj, saved_state);
+
     for (uint32_t fontIndex = 0; fontIndex < sizeof(BUILT_IN_FONTS) / sizeof(lv_font_t *); fontIndex++) {
         if (value.ptr == BUILT_IN_FONTS[fontIndex]) {
             return (int32_t)fontIndex;
         }
     }
+
     return -1;
 }
 
-EM_PORT_API(const void *) lvglObjGetStylePropFontAddr(lv_obj_t *obj, lv_part_t part, lv_style_prop_t prop) {
+EM_PORT_API(const void *) lvglObjGetStylePropFontAddr(lv_obj_t *obj, lv_part_t part, lv_state_t state, lv_style_prop_t prop) {
+    lv_state_t saved_state = lv_obj_get_state(obj);
+    lv_obj_clear_state(obj, saved_state);
+    lv_obj_add_state(obj, state);
+
     lv_style_value_t value = lv_obj_get_style_prop(obj, part, prop);
+
+    lv_obj_clear_state(obj, state);
+    lv_obj_add_state(obj, saved_state);
+
     return value.ptr;
 }
 
