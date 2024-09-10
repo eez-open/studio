@@ -1929,7 +1929,7 @@ export class UserWidgetWidget extends Widget {
                 name: "@seqin",
                 type: "null",
                 isSequenceInput: true,
-                isOptionalInput: true
+                isOptionalInput: false
             }));
 
         const inputComponents: ComponentInput[] = page.components

@@ -731,10 +731,6 @@ export abstract class DebuggerConnectionBase {
                 : `widget (id=${Number.parseInt(str.substring(2))})`;
         }
 
-        if (str[0] == "!") {
-            return `event (${str.substring(1)})`;
-        }
-
         function parseFloat(str: string) {
             const buf = Buffer.alloc(8);
 
@@ -750,8 +746,12 @@ export abstract class DebuggerConnectionBase {
         }
 
         if (str[0] == "!") {
-            const time = parseFloat(str.substring(2));
-            return new Date(time);
+            if (str[1] == "!") {
+                return `event (${str.substring(2)})`;
+            } else {
+                const time = parseFloat(str.substring(1));
+                return new Date(time);
+            }
         }
 
         if (str[0] == "H") {
