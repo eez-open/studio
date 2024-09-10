@@ -7,6 +7,7 @@ import { dialog } from "@electron/remote";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { validators, filterNumber } from "eez-studio-shared/validation";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
 
@@ -428,7 +429,9 @@ export const Property = observer(
                                 )
                                 .concat(
                                     this.props.propertyInfo.uniqueIdentifier
-                                        ? [validators.identifierValidator]
+                                        ? [
+                                              validatorsRenderer.identifierValidator
+                                          ]
                                         : []
                                 )
                         }

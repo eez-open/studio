@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import classNames from "classnames";
 
 import {
@@ -158,7 +159,7 @@ export class UserProperty extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 uniqueForVariableAndUserProperty(
                                     {} as any,
                                     userProperties

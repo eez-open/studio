@@ -58,7 +58,10 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { MenuItem } from "@electron/remote";
 import type { ProjectEditorFeature } from "project-editor/store/features";
-import type { Widget } from "project-editor/flow/component";
+import {
+    makeExpressionProperty,
+    type Widget
+} from "project-editor/flow/component";
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 
@@ -805,6 +808,30 @@ const cssProperty: PropertyInfo = {
     disabled: isNotDashboardProject
 };
 
+export const dynamicCssProperty = makeExpressionProperty(
+    {
+        name: "dynamicCSS",
+        displayName: "Dynamic CSS",
+        propertyNameAbove: true,
+        type: PropertyType.MultilineText,
+        disabled: (object: IEezObject, propertyInfo: PropertyInfo) => {
+            if (isNotDashboardProject(object)) {
+                return true;
+            }
+            if (
+                !getAncestorOfType(
+                    object,
+                    ProjectEditor.ComponentClass.classInfo
+                )
+            ) {
+                return true;
+            }
+            return false;
+        }
+    },
+    "string"
+);
+
 const cssPreviewProperty: PropertyInfo = {
     name: "cssPreview",
     displayName: "CSS preview",
@@ -856,6 +883,7 @@ const properties = [
     boxShadowProperty,
     blinkProperty,
     cssProperty,
+    dynamicCssProperty,
     cssPreviewProperty,
     alwaysBuildProperty
 ];
@@ -904,6 +932,7 @@ export class Style extends EezObject {
     blink?: boolean;
 
     css?: string;
+    dynamicCSS?: string;
 
     _transientId: number;
 
@@ -1203,6 +1232,26 @@ export class Style extends EezObject {
                     !findStyle(projectStore.project, style.useStyle)
                 ) {
                     messages.push(propertyNotFoundMessage(style, "useStyle"));
+                }
+
+                if (style.dynamicCSS) {
+                    const widget = getAncestorOfType<Widget>(
+                        style,
+                        ProjectEditor.WidgetClass.classInfo
+                    );
+                    if (widget) {
+                        try {
+                            checkExpression(widget, style.dynamicCSS);
+                        } catch (err) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `Invalid Dynamic CSS expression: ${err}`,
+                                    getChildOfObject(style, "dynamicCSS")
+                                )
+                            );
+                        }
+                    }
                 }
 
                 // TODO
@@ -2179,6 +2228,37 @@ export class Style extends EezObject {
             }
         }
         return classNames;
+    }
+
+    getDynamicCSSClassName(flowContext: IFlowContext) {
+        if (this.dynamicCSS) {
+            const widget = getAncestorOfType<Widget>(
+                this,
+                ProjectEditor.WidgetClass.classInfo
+            );
+            if (widget) {
+                let value = ProjectEditor.evalProperty(
+                    flowContext,
+                    widget,
+                    `${getKey(this)}.${dynamicCssProperty.name}`
+                );
+
+                if (!value) {
+                    return undefined;
+                }
+
+                const { css } =
+                    require("@emotion/css") as typeof import("@emotion/css");
+
+                return css`
+                    &&&&& {
+                        ${value}
+                    }
+                `;
+            }
+        }
+
+        return undefined;
     }
 
     render() {

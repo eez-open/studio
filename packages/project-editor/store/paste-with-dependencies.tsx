@@ -69,10 +69,8 @@ import {
     getInputDisplayName,
     getOutputDisplayName
 } from "project-editor/flow/helper";
-import {
-    VALIDATION_MESSAGE_REQUIRED,
-    validators
-} from "eez-studio-shared/validation";
+import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import type { Style } from "project-editor/features/style/style";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
@@ -265,7 +263,7 @@ class PasteObject {
         }
 
         if (this.object instanceof ProjectEditor.VariableClass) {
-            const errorMessage = validators.identifierValidator(
+            const errorMessage = validatorsRenderer.identifierValidator(
                 this,
                 "conflictResolutionName"
             );

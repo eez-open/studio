@@ -76,6 +76,7 @@ import type {
 } from "project-editor/features/page/page";
 import {
     conditionalStylesProperty,
+    dynamicCssProperty,
     Style
 } from "project-editor/features/style/style";
 import type {
@@ -437,9 +438,13 @@ export function makeExpressionProperty(
                           let menuItems: Electron.MenuItem[] = [];
 
                           if (props.objects.length == 1) {
-                              const component = props.objects[0] as Component;
+                              const component = getAncestorOfType<Component>(
+                                  props.objects[0],
+                                  Component.classInfo
+                              );
 
                               if (
+                                  component &&
                                   !getProperty(
                                       component,
                                       props.propertyInfo.name
@@ -3186,6 +3191,18 @@ export class Widget extends Component {
                             );
                         }
                     }
+
+                    if (style.dynamicCSS) {
+                        additionalProperties.push(
+                            Object.assign(
+                                {},
+                                ProjectEditor.conditionalStyleConditionProperty,
+                                {
+                                    name: `${propertyInfo.name}.${dynamicCssProperty.name}`
+                                }
+                            )
+                        );
+                    }
                 }
             }
 
@@ -3770,7 +3787,8 @@ export class Widget extends Component {
             "eez-widget",
             this.type,
             this.style.classNames,
-            this.style.getConditionalClassNames(flowContext)
+            this.style.getConditionalClassNames(flowContext),
+            this.style.getDynamicCSSClassName(flowContext)
         );
     }
 

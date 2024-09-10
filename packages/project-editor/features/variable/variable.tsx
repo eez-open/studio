@@ -9,6 +9,7 @@ import {
 } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
+import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -302,7 +303,7 @@ export class Variable extends EezObject {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 uniqueForVariableAndUserProperty(
                                     {} as any,
                                     parent
@@ -911,7 +912,7 @@ export class StructureField extends EezObject implements IStructureField {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         },
@@ -993,7 +994,7 @@ export class Structure extends EezObject implements IStructure {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1094,7 +1095,7 @@ export class EnumMember extends EezObject implements IEnumMember {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
@@ -1197,7 +1198,7 @@ export class Enum extends EezObject implements IEnum {
                             type: "string",
                             validators: [
                                 validators.required,
-                                validators.identifierValidator,
+                                validatorsRenderer.identifierValidator,
                                 validators.unique({}, parent)
                             ]
                         }
