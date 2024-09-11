@@ -751,8 +751,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         const pageObj = this.page.lvglCreate(this, 0);
 
-        this.wasm._lvglScreenLoad(pageIndex, pageObj);
-
         runInAction(() => {
             this.page._lvglObj = pageObj;
         });
