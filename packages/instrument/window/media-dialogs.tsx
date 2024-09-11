@@ -196,12 +196,17 @@ const AudioDialog = observer(
 
                 canvasCtx.beginPath();
 
-                let sliceWidth = ((WIDTH - 40) * 1.0) / bufferLength;
-                let x = 20;
+                const HORZ_PADDING = 20;
+                const VERT_PADDING = -80;
+
+                let sliceWidth =
+                    ((WIDTH - 2 * HORZ_PADDING) * 1.0) / bufferLength;
+                let x = HORZ_PADDING;
 
                 for (let i = 0; i < bufferLength; i++) {
                     let v = dataArray[i] / 128.0;
-                    let y = (v * HEIGHT) / 2;
+                    let y =
+                        VERT_PADDING + (v * (HEIGHT - 2 * VERT_PADDING)) / 2;
 
                     if (i === 0) {
                         canvasCtx.moveTo(x, y);
@@ -212,7 +217,7 @@ const AudioDialog = observer(
                     x += sliceWidth;
                 }
 
-                canvasCtx.lineTo(WIDTH - 20, canvas.height / 2);
+                canvasCtx.lineTo(WIDTH - HORZ_PADDING, HEIGHT / 2);
                 canvasCtx.stroke();
             };
 
