@@ -1048,7 +1048,7 @@ export class History {
                     this.reactionTimeout = undefined;
                     this.calendar.load();
                     this.calendar.update();
-                    this.filterStats.update();
+                    //this.filterStats.update();
                     this.search.update();
                 }, 10);
             }
@@ -1160,7 +1160,7 @@ export class History {
     }
 
     getFilter() {
-        let filter = "AND NOT deleted AND " + this.appStore.filters.getFilter();
+        let filter = "AND NOT deleted AND " + this.appStore.filters.sqlFilter;
 
         if (
             this.appStore.selectHistoryItemsSpecification &&

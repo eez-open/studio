@@ -1,5 +1,11 @@
 import React from "react";
-import { observable, action, makeObservable, runInAction } from "mobx";
+import {
+    observable,
+    action,
+    makeObservable,
+    runInAction,
+    computed
+} from "mobx";
 import { observer } from "mobx-react";
 
 import { dbQuery } from "eez-studio-shared/db-query";
@@ -37,7 +43,9 @@ export class Filters {
             notes: observable,
             launchedScripts: observable,
             tabulators: observable,
-            media: observable
+            media: observable,
+
+            sqlFilter: computed
         });
     }
 
@@ -143,7 +151,7 @@ export class Filters {
         );
     }
 
-    getFilter() {
+    get sqlFilter() {
         const types: string[] = [];
 
         if (this.allSelected) {
@@ -198,7 +206,7 @@ export class Filters {
             types.push("instrument/tabulator");
         }
 
-        if (this.tabulators) {
+        if (this.media) {
             types.push("activity-log/media");
         }
 
