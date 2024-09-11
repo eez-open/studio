@@ -163,6 +163,7 @@ export interface IFilterSpecification {
 export interface IStoreOperationOptions {
     undoable?: boolean;
     deletePermanently?: boolean;
+    transaction?: string;
 }
 
 export interface IStore {

@@ -1,5 +1,9 @@
 import { db } from "eez-studio-shared/db";
-import { IStore } from "eez-studio-shared/store";
+import {
+    beginTransaction,
+    commitTransaction,
+    IStore
+} from "eez-studio-shared/store";
 import { IActivityLogEntry } from "instrument/window/history/activity-log-interfaces";
 
 import {
@@ -472,7 +476,15 @@ export function log(
         }
     }
 
+    if (options.transaction) {
+        beginTransaction(options.transaction);
+    }
+
     const newActivityLogEntry = store.createObject(activityLogEntry, options);
+
+    if (options.transaction) {
+        commitTransaction();
+    }
 
     // remove temporary logs, keep LAST_N
     const LAST_N = 50;

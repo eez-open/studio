@@ -23,6 +23,7 @@ export class Filters {
     notes: boolean = true;
     launchedScripts: boolean = true;
     tabulators: boolean = true;
+    media: boolean = true;
 
     constructor() {
         makeObservable(this, {
@@ -35,7 +36,8 @@ export class Filters {
             lists: observable,
             notes: observable,
             launchedScripts: observable,
-            tabulators: observable
+            tabulators: observable,
+            media: observable
         });
     }
 
@@ -116,6 +118,12 @@ export class Filters {
             }
         }
 
+        if (this.media) {
+            if (activityLogEntry.type === "activity-log/media") {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -130,7 +138,8 @@ export class Filters {
             this.lists &&
             this.notes &&
             this.launchedScripts &&
-            this.tabulators
+            this.tabulators &&
+            this.media
         );
     }
 
@@ -189,6 +198,10 @@ export class Filters {
             types.push("instrument/tabulator");
         }
 
+        if (this.tabulators) {
+            types.push("activity-log/media");
+        }
+
         if (types.length > 0) {
             return (
                 "(" + types.map(type => `type == '${type}'`).join(" OR ") + ")"
@@ -210,6 +223,7 @@ export class FilterStats {
     notes = 0;
     launchedScripts = 0;
     tabulators = 0;
+    media = 0;
 
     constructor(public history: History) {
         makeObservable(this, {
@@ -223,6 +237,7 @@ export class FilterStats {
             notes: observable,
             launchedScripts: observable,
             tabulators: observable,
+            media: observable,
             add: action
         });
 
@@ -241,6 +256,7 @@ export class FilterStats {
             this.notes = 0;
             this.launchedScripts = 0;
             this.tabulators = 0;
+            this.media = 0;
         });
 
         scheduleTask("Get filter stats", Priority.Lowest, async () => {
@@ -297,6 +313,8 @@ export class FilterStats {
             this.launchedScripts += amount;
         } else if (type === "instrument/tabulator") {
             this.tabulators += amount;
+        } else if (type === "activity-log/media") {
+            this.media += amount;
         }
     }
 
@@ -410,6 +428,15 @@ export const FiltersComponent = observer(
                                 (value: boolean) =>
                                     (this.props.appStore.filters.tabulators =
                                         value)
+                            )}
+                        />
+
+                        <BooleanProperty
+                            name={`Audio and video (${filterStats.media})`}
+                            value={this.props.appStore.filters.media}
+                            onChange={action(
+                                (value: boolean) =>
+                                    (this.props.appStore.filters.media = value)
                             )}
                         />
                     </PropertyList>

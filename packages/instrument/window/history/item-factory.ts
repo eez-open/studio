@@ -23,6 +23,7 @@ import type * as PlotterHistoryItemModule from "instrument/window/history/items/
 import type * as PlotlyHistoryItemModule from "instrument/window/history/items/plotly";
 import type * as ScriptHistoryItemModule from "instrument/window/history/items/script";
 import type * as TabulatorHistoryItemModule from "instrument/window/history/items/tabulator";
+import type * as MediaHistoryItemModule from "instrument/window/history/items/media";
 import type * as UnknownHistoryItemModule from "instrument/window/history/items/unknown";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +158,12 @@ export function createHistoryItem(
         const { TabulatorHistoryItem } =
             require("instrument/window/history/items/tabulator") as typeof TabulatorHistoryItemModule;
         return new TabulatorHistoryItem(store, activityLogEntry);
+    }
+
+    if (activityLogEntry.type === "activity-log/media") {
+        const { MediaHistoryItem } =
+            require("instrument/window/history/items/media") as typeof MediaHistoryItemModule;
+        return new MediaHistoryItem(store, activityLogEntry);
     }
 
     const { UnknownHistoryItem } =

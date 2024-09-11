@@ -19,11 +19,7 @@ import {
     IUnit
 } from "eez-studio-shared/units";
 import { Point } from "eez-studio-shared/geometry";
-import {
-    beginTransaction,
-    commitTransaction,
-    IStore
-} from "eez-studio-shared/store";
+import { IStore } from "eez-studio-shared/store";
 import { readBinaryFile } from "eez-studio-shared/util-electron";
 
 import {
@@ -941,8 +937,6 @@ export async function importDlog(
         return false;
     }
 
-    beginTransaction("Add DLOG chart");
-
     log(
         appStore.history.options.store,
         {
@@ -963,11 +957,10 @@ export async function importDlog(
             data
         },
         {
-            undoable: true
+            undoable: true,
+            transaction: "Add DLOG chart"
         }
     );
-
-    commitTransaction();
 
     appStore.navigationStore.navigateToHistory();
 
