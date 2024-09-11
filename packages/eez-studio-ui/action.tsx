@@ -122,6 +122,7 @@ export const ButtonAction = observer(
         text: React.ReactNode;
         icon?: string | JSX.Element;
         iconSize?: number;
+        iconStyle?: React.CSSProperties;
         title: string;
         onClick?: (event: any) => void;
         selected?: boolean;
@@ -143,7 +144,9 @@ export const ButtonAction = observer(
                         <Icon
                             icon={icon}
                             size={iconSize}
-                            style={{ marginRight: 5 }}
+                            style={Object.assign(this.props.iconStyle || {}, {
+                                marginRight: 5
+                            })}
                             attention={this.props.attention}
                         />
                     )}

@@ -5,6 +5,9 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ButtonAction } from "eez-studio-ui/action";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { Toolbar } from "eez-studio-ui/toolbar";
+import { formatDuration } from "eez-studio-shared/util";
+import { settingsController } from "home/settings";
+import classNames from "classnames";
 
 interface IMedia {
     message: string;
@@ -20,17 +23,26 @@ const AudioDialog = observer(
         mediaRecorder: MediaRecorder | undefined;
 
         recording: boolean = false;
+        paused: boolean = false;
+
+        duration: number = 0;
 
         chunks: BlobPart[];
         blob: Blob | undefined;
         audioURL: string | undefined;
 
+        error: string | undefined;
+
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
+                mediaRecorder: observable,
                 recording: observable,
-                audioURL: observable
+                paused: observable,
+                duration: observable,
+                audioURL: observable,
+                error: observable
             });
         }
 
@@ -40,9 +52,86 @@ const AudioDialog = observer(
             let onSuccess = (stream: MediaStream) => {
                 const mediaRecorder = new MediaRecorder(stream);
 
-                this.mediaRecorder = mediaRecorder;
+                runInAction(() => {
+                    this.mediaRecorder = mediaRecorder;
+                });
+
+                let previousTime = Date.now();
+                let timeout: NodeJS.Timeout | undefined;
+                let wasPaused = false;
+                const UPDATE_TIMEOUT = 10;
+                const updateDuration = (action: string) => {
+                    const currentTime = Date.now();
+
+                    if (action === "onStart") {
+                        runInAction(() => {
+                            this.duration = 0;
+                        });
+                        previousTime = currentTime;
+                        wasPaused = false;
+
+                        timeout = setTimeout(
+                            () => updateDuration(""),
+                            UPDATE_TIMEOUT
+                        );
+                    } else if (action == "onPause") {
+                        if (timeout) {
+                            clearTimeout(timeout);
+                            timeout = undefined;
+                        }
+
+                        runInAction(() => {
+                            this.duration += currentTime - previousTime;
+                        });
+
+                        wasPaused = true;
+                    } else if (action == "onResume") {
+                        previousTime = currentTime;
+                        wasPaused = false;
+
+                        timeout = setTimeout(
+                            () => updateDuration(""),
+                            UPDATE_TIMEOUT
+                        );
+                    } else if (action == "onStop") {
+                        if (timeout) {
+                            clearTimeout(timeout);
+                            timeout = undefined;
+                        }
+
+                        if (!wasPaused) {
+                            runInAction(() => {
+                                this.duration += currentTime - previousTime;
+                            });
+                        }
+                    } else {
+                        runInAction(() => {
+                            this.duration += currentTime - previousTime;
+                        });
+                        previousTime = currentTime;
+
+                        timeout = setTimeout(
+                            () => updateDuration(""),
+                            UPDATE_TIMEOUT
+                        );
+                    }
+                };
+
+                mediaRecorder.onstart = e => {
+                    updateDuration("onStart");
+                };
+
+                mediaRecorder.onpause = e => {
+                    updateDuration("onPause");
+                };
+
+                mediaRecorder.onresume = e => {
+                    updateDuration("onResume");
+                };
 
                 mediaRecorder.onstop = e => {
+                    updateDuration("onStop");
+
                     const blob = new Blob(this.chunks, {
                         type: mediaRecorder!.mimeType
                     });
@@ -54,7 +143,7 @@ const AudioDialog = observer(
                     });
                 };
 
-                this.mediaRecorder.ondataavailable = e => {
+                mediaRecorder.ondataavailable = e => {
                     this.chunks.push(e.data);
                 };
 
@@ -62,7 +151,7 @@ const AudioDialog = observer(
             };
 
             let onError = (err: any) => {
-                console.log("The following error occured: " + err);
+                this.error = "The following error occured: " + err;
             };
 
             navigator.mediaDevices
@@ -95,16 +184,20 @@ const AudioDialog = observer(
 
                 analyser.getByteTimeDomainData(dataArray);
 
-                canvasCtx.fillStyle = "rgb(255, 255, 255)";
+                canvasCtx.fillStyle = settingsController.isDarkTheme
+                    ? "rgb(56, 57, 57)"
+                    : "rgb(241, 243, 244)";
                 canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
 
                 canvasCtx.lineWidth = 2;
-                canvasCtx.strokeStyle = "rgb(0, 0, 0)";
+                canvasCtx.strokeStyle = settingsController.isDarkTheme
+                    ? "rgb(241, 243, 244)"
+                    : "rgb(56, 57, 57)";
 
                 canvasCtx.beginPath();
 
-                let sliceWidth = (WIDTH * 1.0) / bufferLength;
-                let x = 0;
+                let sliceWidth = ((WIDTH - 40) * 1.0) / bufferLength;
+                let x = 20;
 
                 for (let i = 0; i < bufferLength; i++) {
                     let v = dataArray[i] / 128.0;
@@ -119,7 +212,7 @@ const AudioDialog = observer(
                     x += sliceWidth;
                 }
 
-                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.lineTo(WIDTH - 20, canvas.height / 2);
                 canvasCtx.stroke();
             };
 
@@ -135,6 +228,27 @@ const AudioDialog = observer(
                 this.mediaRecorder.start();
 
                 this.recording = true;
+                this.paused = false;
+            }
+        });
+
+        pauseRecording = action(() => {
+            if (this.recording && !this.paused) {
+                if (this.mediaRecorder) {
+                    this.mediaRecorder.pause();
+                }
+
+                this.paused = true;
+            }
+        });
+
+        resumeRecording = action(() => {
+            if (this.recording && this.paused) {
+                if (this.mediaRecorder) {
+                    this.mediaRecorder.resume();
+                }
+
+                this.paused = false;
             }
         });
 
@@ -170,6 +284,10 @@ const AudioDialog = observer(
         };
 
         render() {
+            const btnClassName = classNames("btn", {
+                "btn-dark": settingsController.isDarkTheme,
+                "btn-light": !settingsController.isDarkTheme
+            });
             return (
                 <Dialog
                     title="Record Audio"
@@ -177,31 +295,75 @@ const AudioDialog = observer(
                     onOk={this.handleSubmit}
                     okEnabled={() => this.blob != undefined}
                 >
-                    <Toolbar>
-                        <ButtonAction
-                            text="Start"
-                            icon="material:radio_button_checked"
-                            title="Start recording"
-                            className="btn-success"
-                            onClick={this.startRecording}
-                            enabled={this.mediaRecorder && !this.recording}
-                        />
-                        <ButtonAction
-                            text="Stop"
-                            icon="material:stop"
-                            title="Stop recording"
-                            className="btn-danger"
-                            onClick={this.stopRecording}
-                            enabled={this.recording}
-                        />
-                        <canvas ref={this.refCanvas} height="36px"></canvas>
-                    </Toolbar>
-                    {this.audioURL && (
-                        <audio
-                            controls
-                            src={this.audioURL}
-                            style={{ width: "100%", marginTop: 10 }}
-                        ></audio>
+                    {this.error ? (
+                        <div className="alert alert-danger">{this.error}</div>
+                    ) : (
+                        <div className="EezStudio_AudioRecordingDialog">
+                            <canvas
+                                ref={this.refCanvas}
+                                width="466px"
+                                height="54px"
+                            ></canvas>
+
+                            <Toolbar style={{ justifyContent: "center" }}>
+                                {!this.recording && (
+                                    <ButtonAction
+                                        text="Start"
+                                        icon="material:radio_button_checked"
+                                        iconStyle={{ color: "red" }}
+                                        title="Start recording"
+                                        className={btnClassName}
+                                        onClick={this.startRecording}
+                                    />
+                                )}
+                                {this.recording && !this.paused && (
+                                    <ButtonAction
+                                        text="Pause"
+                                        icon="material:pause"
+                                        title="Pause recording"
+                                        className={btnClassName}
+                                        onClick={this.pauseRecording}
+                                    />
+                                )}
+                                {this.recording && this.paused && (
+                                    <ButtonAction
+                                        text="Resume"
+                                        icon="material:play_circle_filled"
+                                        iconStyle={{ color: "red" }}
+                                        title="Resume recording"
+                                        className={btnClassName}
+                                        onClick={this.resumeRecording}
+                                    />
+                                )}
+                                {this.recording && (
+                                    <ButtonAction
+                                        text="Stop"
+                                        icon="material:stop"
+                                        title="Stop recording"
+                                        className={btnClassName}
+                                        onClick={this.stopRecording}
+                                    />
+                                )}
+                            </Toolbar>
+                            {this.recording && (
+                                <div
+                                    style={{
+                                        marginTop: 10,
+                                        display: "flex",
+                                        justifyContent: "center"
+                                    }}
+                                >
+                                    {formatDuration(this.duration)}
+                                </div>
+                            )}
+                            {this.audioURL && (
+                                <audio
+                                    controls
+                                    src={this.audioURL}
+                                    style={{ width: "100%", marginTop: 10 }}
+                                ></audio>
+                            )}
+                        </div>
                     )}
                 </Dialog>
             );
