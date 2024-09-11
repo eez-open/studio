@@ -5,7 +5,7 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ButtonAction } from "eez-studio-ui/action";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { formatDuration } from "eez-studio-shared/util";
+import { formatDuration2 } from "eez-studio-shared/util";
 import { settingsController } from "home/settings";
 import classNames from "classnames";
 
@@ -108,6 +108,11 @@ const AudioDialog = observer(
                         runInAction(() => {
                             this.duration += currentTime - previousTime;
                         });
+
+                        if (this.duration >= 60 * 60 * 1000) {
+                            this.stopRecording();
+                        }
+
                         previousTime = currentTime;
 
                         timeout = setTimeout(
@@ -321,6 +326,15 @@ const AudioDialog = observer(
                                         onClick={this.startRecording}
                                     />
                                 )}
+                                {this.recording && (
+                                    <ButtonAction
+                                        text="Stop"
+                                        icon="material:stop"
+                                        title="Stop recording"
+                                        className={btnClassName}
+                                        onClick={this.stopRecording}
+                                    />
+                                )}
                                 {this.recording && !this.paused && (
                                     <ButtonAction
                                         text="Pause"
@@ -340,15 +354,6 @@ const AudioDialog = observer(
                                         onClick={this.resumeRecording}
                                     />
                                 )}
-                                {this.recording && (
-                                    <ButtonAction
-                                        text="Stop"
-                                        icon="material:stop"
-                                        title="Stop recording"
-                                        className={btnClassName}
-                                        onClick={this.stopRecording}
-                                    />
-                                )}
                             </Toolbar>
                             {this.recording && (
                                 <div
@@ -358,7 +363,7 @@ const AudioDialog = observer(
                                         justifyContent: "center"
                                     }}
                                 >
-                                    {formatDuration(this.duration)}
+                                    {formatDuration2(this.duration)}
                                 </div>
                             )}
                             {this.audioURL && (
