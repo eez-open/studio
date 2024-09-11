@@ -304,6 +304,7 @@ const AudioDialog = observer(
                     modal={true}
                     onOk={this.handleSubmit}
                     okEnabled={() => this.blob != undefined}
+                    okButtonText="Add"
                 >
                     {this.error ? (
                         <div className="alert alert-danger">{this.error}</div>
