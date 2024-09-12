@@ -1195,6 +1195,20 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             const output = "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
             try {
+                let source = await getLvglBitmapSourceFile(
+                    bitmap,
+                    this.getImageVariableName(bitmap)
+                );
+
+                source = `#ifdef __has_include
+    #if __has_include("lvgl.h")
+        #ifndef LV_LVGL_H_INCLUDE_SIMPLE
+            #define LV_LVGL_H_INCLUDE_SIMPLE
+        #endif
+    #endif
+#endif
+${source}`;
+
                 await writeTextFile(
                     this.project._store.getAbsoluteFilePath(
                         this.project.settings.build.destinationFolder
@@ -1202,10 +1216,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                         "/" +
                         output +
                         ".c",
-                    await getLvglBitmapSourceFile(
-                        bitmap,
-                        this.getImageVariableName(bitmap)
-                    )
+                    source
                 );
             } catch (err) {
                 this.project._store.outputSectionsStore.write(
