@@ -1,7 +1,10 @@
 import React from "react";
 
 export function PreventDraggable(
-    props: React.PropsWithChildren<{ tag: keyof JSX.IntrinsicElements; className?: string }>
+    props: React.PropsWithChildren<{
+        tag: keyof JSX.IntrinsicElements;
+        className?: string;
+    }>
 ) {
     return (
         <props.tag

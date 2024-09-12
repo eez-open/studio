@@ -5,7 +5,7 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ButtonAction } from "eez-studio-ui/action";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { Toolbar } from "eez-studio-ui/toolbar";
-import { formatDuration2 } from "eez-studio-shared/util";
+import { formatDurationWithParam } from "eez-studio-shared/util";
 import { settingsController } from "home/settings";
 import classNames from "classnames";
 
@@ -14,11 +14,16 @@ interface IMedia {
     data: any;
 }
 
-const AudioDialog = observer(
-    class AudioDialog extends React.Component<{
+const MAX_AUDIO_DURATION = 60 * 60 * 1000;
+const MAX_VIDEO_DURATION = 60 * 1000;
+
+const MediaDialog = observer(
+    class MediaDialog extends React.Component<{
         callback: (media: IMedia) => void;
+        video: boolean;
     }> {
         refCanvas = React.createRef<HTMLCanvasElement>();
+        refVideo = React.createRef<HTMLVideoElement>();
         audioCtx: AudioContext | undefined;
         mediaRecorder: MediaRecorder | undefined;
 
@@ -29,7 +34,7 @@ const AudioDialog = observer(
 
         chunks: BlobPart[];
         blob: Blob | undefined;
-        audioURL: string | undefined;
+        mediaURL: string | undefined;
 
         error: string | undefined;
 
@@ -41,15 +46,19 @@ const AudioDialog = observer(
                 recording: observable,
                 paused: observable,
                 duration: observable,
-                audioURL: observable,
+                mediaURL: observable,
                 error: observable
             });
         }
 
         componentDidMount(): void {
-            const constraints = { audio: true };
+            const constraints = { audio: true, video: this.props.video };
 
             let onSuccess = (stream: MediaStream) => {
+                if (this.refVideo.current) {
+                    this.refVideo.current.srcObject = stream;
+                }
+
                 const mediaRecorder = new MediaRecorder(stream);
 
                 runInAction(() => {
@@ -109,7 +118,12 @@ const AudioDialog = observer(
                             this.duration += currentTime - previousTime;
                         });
 
-                        if (this.duration >= 60 * 60 * 1000) {
+                        if (
+                            this.duration >=
+                            (this.props.video
+                                ? MAX_VIDEO_DURATION
+                                : MAX_AUDIO_DURATION)
+                        ) {
                             this.stopRecording();
                         }
 
@@ -144,7 +158,7 @@ const AudioDialog = observer(
                     this.blob = blob;
 
                     runInAction(() => {
-                        this.audioURL = window.URL.createObjectURL(blob);
+                        this.mediaURL = window.URL.createObjectURL(blob);
                     });
                 };
 
@@ -233,7 +247,7 @@ const AudioDialog = observer(
             if (this.mediaRecorder) {
                 this.chunks = [];
                 this.blob = undefined;
-                this.audioURL = undefined;
+                this.mediaURL = undefined;
 
                 this.mediaRecorder.start();
 
@@ -300,7 +314,7 @@ const AudioDialog = observer(
             });
             return (
                 <Dialog
-                    title="Record Audio"
+                    title={this.props.video ? "Record Video" : "Record Audio"}
                     modal={true}
                     onOk={this.handleSubmit}
                     okEnabled={() => this.blob != undefined}
@@ -315,6 +329,15 @@ const AudioDialog = observer(
                                 width="466px"
                                 height="54px"
                             ></canvas>
+
+                            {this.props.video && (
+                                <video
+                                    ref={this.refVideo}
+                                    autoPlay
+                                    muted
+                                    style={{ width: "100%", marginBottom: 10 }}
+                                ></video>
+                            )}
 
                             <Toolbar style={{ justifyContent: "center" }}>
                                 {!this.recording && (
@@ -364,16 +387,30 @@ const AudioDialog = observer(
                                         justifyContent: "center"
                                     }}
                                 >
-                                    {formatDuration2(this.duration)}
+                                    {formatDurationWithParam(
+                                        this.duration,
+                                        this.props.video ? "ss.SS" : "mm:ss.SS"
+                                    )}
                                 </div>
                             )}
-                            {this.audioURL && (
-                                <audio
-                                    controls
-                                    src={this.audioURL}
-                                    style={{ width: "100%", marginTop: 10 }}
-                                ></audio>
-                            )}
+                            {this.mediaURL ? (
+                                this.props.video ? (
+                                    <video
+                                        controls
+                                        src={this.mediaURL}
+                                        style={{
+                                            width: "100%",
+                                            marginTop: 10
+                                        }}
+                                    ></video>
+                                ) : (
+                                    <audio
+                                        controls
+                                        src={this.mediaURL}
+                                        style={{ width: "100%", marginTop: 10 }}
+                                    ></audio>
+                                )
+                            ) : null}
                         </div>
                     )}
                 </Dialog>
@@ -383,7 +420,9 @@ const AudioDialog = observer(
 );
 
 export function showAddAudioDialog(callback: (media: IMedia) => void) {
-    showDialog(<AudioDialog callback={callback} />);
+    showDialog(<MediaDialog callback={callback} video={false} />);
 }
 
-export function showAddVideoDialog(callback: (media: IMedia) => void) {}
+export function showAddVideoDialog(callback: (media: IMedia) => void) {
+    showDialog(<MediaDialog callback={callback} video={true} />);
+}

@@ -135,9 +135,9 @@ export function formatDuration(duration: number) {
     });
 }
 
-export function formatDuration2(duration: number) {
+export function formatDurationWithParam(duration: number, format: string) {
     return getMoment().duration(duration, "milliseconds").format({
-        template: "mm:ss.SS",
+        template: format,
         trim: false
     });
 }

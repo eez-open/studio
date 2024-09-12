@@ -262,6 +262,14 @@ export const HistoryItems = observer(
                         }}
                         draggable={true}
                         onDragStart={event => {
+                            console.log(event);
+                            if (
+                                event.target instanceof HTMLVideoElement ||
+                                event.target instanceof HTMLAudioElement
+                            ) {
+                                return;
+                            }
+
                             event.stopPropagation();
                             event.dataTransfer.effectAllowed = "copy";
                             event.dataTransfer.setData(

@@ -9,6 +9,7 @@ import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { formatDateTimeLong } from "eez-studio-shared/util";
 import { RECORD_AUDIO_ICON } from "project-editor/ui-components/icons";
 import { formatBytes } from "eez-studio-shared/formatBytes";
+import { PreventDraggable } from "../helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +69,29 @@ export const MediaHistoryItemComponent = observer(
                             {this.message.mimeType}:{" "}
                             {formatBytes(this.data.length)}
                         </div>
-                        <audio controls src={this.src}></audio>
+                        <PreventDraggable tag="div">
+                            {this.message.mimeType.startsWith("video") ? (
+                                <video
+                                    controls
+                                    src={this.src}
+                                    draggable="true"
+                                    onDragStart={event => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                    }}
+                                ></video>
+                            ) : (
+                                <audio
+                                    controls
+                                    src={this.src}
+                                    draggable="true"
+                                    onDragStart={event => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                    }}
+                                ></audio>
+                            )}
+                        </PreventDraggable>
                     </div>
                 </div>
             );
