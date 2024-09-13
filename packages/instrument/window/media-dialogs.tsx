@@ -21,7 +21,7 @@ interface IMedia {
 }
 
 const MAX_AUDIO_DURATION = 60 * 60 * 1000;
-const MAX_VIDEO_DURATION = 60 * 1000;
+const MAX_VIDEO_DURATION = 5 * 60 * 1000;
 
 const MediaDialog = observer(
     class MediaDialog extends React.Component<{
@@ -511,7 +511,7 @@ const MediaDialog = observer(
                                 >
                                     {formatDurationWithParam(
                                         this.duration,
-                                        this.props.video ? "ss.SS" : "mm:ss.SS"
+                                        /*this.props.video ? "ss.SS" : */ "mm:ss.SS"
                                     )}
                                 </div>
                             )}
