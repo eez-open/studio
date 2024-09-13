@@ -110,8 +110,6 @@ const MediaDialog = observer(
                     this.devices = devices;
                     this.selectedDeviceId = selectedDeviceId;
                 });
-
-                console.log(devices, selectedDeviceId);
             });
         }
 
