@@ -5,33 +5,16 @@ import { observer } from "mobx-react";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 
-import {
-    beginTransaction,
-    commitTransaction,
-    IStore
-} from "eez-studio-shared/store";
-
-import { Balloon } from "eez-studio-ui/balloon";
-import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
 
-import {
-    IActivityLogEntry,
-    logUpdate
-} from "instrument/window/history/activity-log";
-
-import {
-    showAddNoteDialog,
-    showEditNoteDialog
-} from "instrument/window/note-dialog";
+import { logUpdate } from "instrument/window/history/activity-log";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
-import { PreventDraggable } from "instrument/window/history/helper";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { PLOTTER_ICON } from "project-editor/ui-components/icons";
 
@@ -45,7 +28,6 @@ interface IPlotlyHistoryItemMessage {
     data: any;
     layout: any;
     config: any;
-    note: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,30 +59,6 @@ export const PlotterHistoryItemComponent = observer(
 
         toggleZoom = () => {
             runInAction(() => (this.zoom = !this.zoom));
-        };
-
-        onAddNote = () => {
-            showAddNoteDialog(note => {
-                beginTransaction("Add file note");
-                this.props.historyItem.setNote(this.props.appStore, note);
-                commitTransaction();
-            });
-        };
-
-        onEditNote = () => {
-            showEditNoteDialog(this.props.historyItem.note!, note => {
-                if (this.props.historyItem.note !== note) {
-                    beginTransaction("Edit file note");
-                    this.props.historyItem.setNote(this.props.appStore, note);
-                    commitTransaction();
-                }
-            });
-        };
-
-        onDeleteNote = () => {
-            beginTransaction("Delete file note");
-            this.props.historyItem.setNote(this.props.appStore, undefined);
-            commitTransaction();
         };
 
         get data() {
@@ -346,13 +304,6 @@ export const PlotterHistoryItemComponent = observer(
 
             const actions = (
                 <Toolbar>
-                    {!this.props.historyItem.plotlyMessage.note && (
-                        <IconAction
-                            icon="material:comment"
-                            title="Add note"
-                            onClick={this.onAddNote}
-                        />
-                    )}
                     <IconAction
                         icon="material:save"
                         title="Save as CSV file"
@@ -378,40 +329,14 @@ export const PlotterHistoryItemComponent = observer(
                         style={{ marginLeft: 5 }}
                         enabled={!this.actionInProgress}
                     />
+                    {this.props.historyItem.renderAddNoteAction(
+                        this.props.appStore
+                    )}
+                    {this.props.historyItem.renderAddMediaNoteAction(
+                        this.props.appStore
+                    )}
                 </Toolbar>
             );
-
-            let note;
-            if (this.props.historyItem.note) {
-                note = (
-                    <div
-                        className="EezStudio_HistoryItem_Note"
-                        onDoubleClick={this.onEditNote}
-                    >
-                        <Balloon>
-                            <PreventDraggable tag="div">
-                                <PropertyList>
-                                    <StaticRichTextProperty
-                                        value={this.props.historyItem.note}
-                                    />
-                                </PropertyList>
-                            </PreventDraggable>
-                        </Balloon>
-                        <Toolbar>
-                            <IconAction
-                                icon="material:edit"
-                                title="Edit note"
-                                onClick={this.onEditNote}
-                            />
-                            <IconAction
-                                icon="material:delete"
-                                title="Delete note"
-                                onClick={this.onDeleteNote}
-                            />
-                        </Toolbar>
-                    </div>
-                );
-            }
 
             return (
                 <div className="EezStudio_PlotlyHistoryItem">
@@ -442,7 +367,10 @@ export const PlotterHistoryItemComponent = observer(
                         </HistoryItemPreview>
 
                         {actions}
-                        {note}
+                        {this.props.historyItem.renderNote(this.props.appStore)}
+                        {this.props.historyItem.renderMediaNote(
+                            this.props.appStore
+                        )}
                     </div>
                 </div>
             );
@@ -451,38 +379,8 @@ export const PlotterHistoryItemComponent = observer(
 );
 
 export class PlotlyHistoryItem extends HistoryItem {
-    constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {
-        super(store, activityLogEntry);
-
-        makeObservable(this, {
-            plotlyMessage: computed
-        });
-    }
-
     get plotlyMessage() {
-        return JSON.parse(this.message) as IPlotlyHistoryItemMessage;
-    }
-
-    get note() {
-        return this.plotlyMessage.note;
-    }
-
-    setNote(appStore: IAppStore, value: string | undefined) {
-        let plotlyMessage = JSON.parse(this.message);
-
-        plotlyMessage.note = value;
-
-        logUpdate(
-            this.store,
-            {
-                id: this.id,
-                oid: appStore.history.oid,
-                message: JSON.stringify(plotlyMessage)
-            },
-            {
-                undoable: true
-            }
-        );
+        return this.messageObject as IPlotlyHistoryItemMessage;
     }
 
     updatePlotly(appStore: IAppStore, data: any, layout: any, config: any) {

@@ -294,8 +294,6 @@ const MediaDialog = observer(
             (async () => {
                 const data = await blob.arrayBuffer();
 
-                console.log(data.byteLength);
-
                 this.props.callback({
                     message: JSON.stringify({
                         mimeType: blob.type

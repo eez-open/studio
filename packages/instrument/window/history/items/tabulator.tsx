@@ -1,6 +1,6 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import { computed, makeObservable, observable, runInAction } from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
 
 import type * as TabulatorModule from "tabulator-tables";
@@ -8,33 +8,16 @@ import type * as LuxonModule from "luxon";
 
 import { formatDateTimeLong } from "eez-studio-shared/util";
 
-import {
-    beginTransaction,
-    commitTransaction,
-    IStore
-} from "eez-studio-shared/store";
-
-import { Balloon } from "eez-studio-ui/balloon";
-import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 import * as notification from "eez-studio-ui/notification";
 
-import {
-    IActivityLogEntry,
-    logUpdate
-} from "instrument/window/history/activity-log";
-
-import {
-    showAddNoteDialog,
-    showEditNoteDialog
-} from "instrument/window/note-dialog";
+import { logUpdate } from "instrument/window/history/activity-log";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 
-import { PreventDraggable } from "instrument/window/history/helper";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { TABULATOR_ICON } from "project-editor/ui-components/icons";
 
@@ -46,7 +29,6 @@ import { readTextFile, writeTextFile } from "eez-studio-shared/util-electron";
 interface ITabulatorHistoryItemMessage {
     options: any;
     persistance: any;
-    note: string;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,30 +75,6 @@ export const TabulatorHistoryItemComponent = observer(
 
         toggleZoom = () => {
             runInAction(() => (this.zoom = !this.zoom));
-        };
-
-        onAddNote = () => {
-            showAddNoteDialog(note => {
-                beginTransaction("Add file note");
-                this.props.historyItem.setNote(this.props.appStore, note);
-                commitTransaction();
-            });
-        };
-
-        onEditNote = () => {
-            showEditNoteDialog(this.props.historyItem.note!, note => {
-                if (this.props.historyItem.note !== note) {
-                    beginTransaction("Edit file note");
-                    this.props.historyItem.setNote(this.props.appStore, note);
-                    commitTransaction();
-                }
-            });
-        };
-
-        onDeleteNote = () => {
-            beginTransaction("Delete file note");
-            this.props.historyItem.setNote(this.props.appStore, undefined);
-            commitTransaction();
         };
 
         get options() {
@@ -285,13 +243,6 @@ export const TabulatorHistoryItemComponent = observer(
 
             const actions = (
                 <Toolbar>
-                    {!this.props.historyItem.tabulatorMessage.note && (
-                        <IconAction
-                            icon="material:comment"
-                            title="Add note"
-                            onClick={this.onAddNote}
-                        />
-                    )}
                     <IconAction
                         icon="material:save"
                         title="Save as CSV file"
@@ -317,40 +268,14 @@ export const TabulatorHistoryItemComponent = observer(
                         style={{ marginLeft: 5 }}
                         enabled={!this.actionInProgress}
                     />
+                    {this.props.historyItem.renderAddNoteAction(
+                        this.props.appStore
+                    )}
+                    {this.props.historyItem.renderAddMediaNoteAction(
+                        this.props.appStore
+                    )}
                 </Toolbar>
             );
-
-            let note;
-            if (this.props.historyItem.note) {
-                note = (
-                    <div
-                        className="EezStudio_HistoryItem_Note"
-                        onDoubleClick={this.onEditNote}
-                    >
-                        <Balloon>
-                            <PreventDraggable tag="div">
-                                <PropertyList>
-                                    <StaticRichTextProperty
-                                        value={this.props.historyItem.note}
-                                    />
-                                </PropertyList>
-                            </PreventDraggable>
-                        </Balloon>
-                        <Toolbar>
-                            <IconAction
-                                icon="material:edit"
-                                title="Edit note"
-                                onClick={this.onEditNote}
-                            />
-                            <IconAction
-                                icon="material:delete"
-                                title="Delete note"
-                                onClick={this.onDeleteNote}
-                            />
-                        </Toolbar>
-                    </div>
-                );
-            }
 
             return (
                 <div className="EezStudio_TabulatorHistoryItem">
@@ -381,7 +306,10 @@ export const TabulatorHistoryItemComponent = observer(
                         </HistoryItemPreview>
 
                         {actions}
-                        {note}
+                        {this.props.historyItem.renderNote(this.props.appStore)}
+                        {this.props.historyItem.renderMediaNote(
+                            this.props.appStore
+                        )}
                     </div>
                 </div>
             );
@@ -390,38 +318,8 @@ export const TabulatorHistoryItemComponent = observer(
 );
 
 export class TabulatorHistoryItem extends HistoryItem {
-    constructor(public store: IStore, activityLogEntry: IActivityLogEntry) {
-        super(store, activityLogEntry);
-
-        makeObservable(this, {
-            tabulatorMessage: computed
-        });
-    }
-
     get tabulatorMessage() {
-        return JSON.parse(this.message) as ITabulatorHistoryItemMessage;
-    }
-
-    get note() {
-        return this.tabulatorMessage.note;
-    }
-
-    setNote(appStore: IAppStore, value: string | undefined) {
-        let tabulatorMessage = JSON.parse(this.message);
-
-        tabulatorMessage.note = value;
-
-        logUpdate(
-            this.store,
-            {
-                id: this.id,
-                oid: appStore.history.oid,
-                message: JSON.stringify(tabulatorMessage)
-            },
-            {
-                undoable: true
-            }
-        );
+        return this.messageObject as ITabulatorHistoryItemMessage;
     }
 
     updateTabulator(appStore: IAppStore, options: any, persistance: any) {

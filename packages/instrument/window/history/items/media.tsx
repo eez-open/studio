@@ -7,9 +7,13 @@ import { computed, makeObservable } from "mobx";
 import { Icon } from "eez-studio-ui/icon";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { formatDateTimeLong } from "eez-studio-shared/util";
-import { RECORD_AUDIO_ICON } from "project-editor/ui-components/icons";
+import {
+    RECORD_AUDIO_ICON,
+    RECORD_VIDEO_ICON
+} from "project-editor/ui-components/icons";
 import { formatBytes } from "eez-studio-shared/formatBytes";
 import { PreventDraggable } from "../helper";
+import { Toolbar } from "eez-studio-ui/toolbar";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,14 +29,9 @@ export const MediaHistoryItemComponent = observer(
             super(props);
 
             makeObservable(this, {
-                message: computed,
                 blob: computed,
                 src: computed
             });
-        }
-
-        get message() {
-            return JSON.parse(this.props.historyItem.message);
         }
 
         get data() {
@@ -41,7 +40,7 @@ export const MediaHistoryItemComponent = observer(
 
         get blob() {
             return new Blob([this.data], {
-                type: this.message.mimeType
+                type: this.props.historyItem.mediaHistoryItemMessage.mimeType
             });
         }
 
@@ -50,9 +49,18 @@ export const MediaHistoryItemComponent = observer(
         }
 
         render() {
+            const isVideo =
+                this.props.historyItem.mediaHistoryItemMessage.mimeType.startsWith(
+                    "video"
+                );
+
             return (
                 <div className="EezStudio_FileHistoryItem">
-                    <Icon className="me-3" icon={RECORD_AUDIO_ICON} size={48} />
+                    <Icon
+                        className="me-3"
+                        icon={isVideo ? RECORD_VIDEO_ICON : RECORD_AUDIO_ICON}
+                        size={48}
+                    />
                     <div>
                         <p>
                             <HistoryItemInstrumentInfo
@@ -66,11 +74,14 @@ export const MediaHistoryItemComponent = observer(
                             </small>
                         </p>
                         <div className="mb-1">
-                            {this.message.mimeType}:{" "}
-                            {formatBytes(this.data.length)}
+                            {
+                                this.props.historyItem.mediaHistoryItemMessage
+                                    .mimeType
+                            }
+                            : {formatBytes(this.data.length)}
                         </div>
                         <PreventDraggable tag="div">
-                            {this.message.mimeType.startsWith("video") ? (
+                            {isVideo ? (
                                 <video
                                     controls
                                     src={this.src}
@@ -92,6 +103,12 @@ export const MediaHistoryItemComponent = observer(
                                 ></audio>
                             )}
                         </PreventDraggable>
+                        <Toolbar>
+                            {this.props.historyItem.renderAddNoteAction(
+                                this.props.appStore
+                            )}
+                        </Toolbar>
+                        {this.props.historyItem.renderNote(this.props.appStore)}
                     </div>
                 </div>
             );
@@ -99,7 +116,15 @@ export const MediaHistoryItemComponent = observer(
     }
 );
 
+interface MediaHistoryItemMessage {
+    mimeType: string;
+}
+
 export class MediaHistoryItem extends HistoryItem {
+    get mediaHistoryItemMessage() {
+        return this.messageObject as MediaHistoryItemMessage;
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <MediaHistoryItemComponent appStore={appStore} historyItem={this} />

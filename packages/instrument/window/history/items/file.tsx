@@ -25,40 +25,23 @@ import { formatBytes } from "eez-studio-shared/formatBytes";
 
 import * as notification from "eez-studio-ui/notification";
 
-import {
-    beginTransaction,
-    commitTransaction,
-    IStore
-} from "eez-studio-shared/store";
+import type { IStore } from "eez-studio-shared/store";
 import { SAMPLING_RATE_UNIT } from "eez-studio-shared/units";
 
-import type * as UiPropertiesModule from "eez-studio-ui/properties";
-import { Balloon } from "eez-studio-ui/balloon";
-import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
-import type * as UiBalloonModule from "eez-studio-ui/balloon";
 
 import pdfToPng from "pdf-services/pdf-to-png";
 
-import {
-    IActivityLogEntry,
-    logUpdate
-} from "instrument/window/history/activity-log";
+import { IActivityLogEntry } from "instrument/window/history/activity-log";
 
 import { FileState } from "instrument/connection/file-state";
-
-import {
-    showAddNoteDialog,
-    showEditNoteDialog
-} from "instrument/window/note-dialog";
 
 import type { IAppStore } from "instrument/window/history/history";
 import { HistoryItem } from "instrument/window/history/item";
 import { HistoryItemPreview } from "instrument/window/history/item-preview";
 
-import { PreventDraggable } from "instrument/window/history/helper";
 import { HistoryItemInstrumentInfo } from "../HistoryItemInstrumentInfo";
 import { PLOTTER_ICON } from "project-editor/ui-components/icons";
 
@@ -224,30 +207,6 @@ export const FileHistoryItemComponent = observer(
 
         onAbortFileTransfer = () => {
             this.props.appStore.instrument.connection.abortLongOperation();
-        };
-
-        onAddNote = () => {
-            showAddNoteDialog(note => {
-                beginTransaction("Add file note");
-                this.props.historyItem.setNote(this.props.appStore, note);
-                commitTransaction();
-            });
-        };
-
-        onEditNote = () => {
-            showEditNoteDialog(this.props.historyItem.note!, note => {
-                if (this.props.historyItem.note !== note) {
-                    beginTransaction("Edit file note");
-                    this.props.historyItem.setNote(this.props.appStore, note);
-                    commitTransaction();
-                }
-            });
-        };
-
-        onDeleteNote = () => {
-            beginTransaction("Delete file note");
-            this.props.historyItem.setNote(this.props.appStore, undefined);
-            commitTransaction();
         };
 
         onSave = async () => {
@@ -486,48 +445,15 @@ export const FileHistoryItemComponent = observer(
                                         onClick={this.onCopy}
                                     />
                                 )}
-                                {!this.props.historyItem.note && (
-                                    <IconAction
-                                        icon="material:comment"
-                                        title="Add note"
-                                        onClick={this.onAddNote}
-                                    />
+                                {this.props.historyItem.renderAddNoteAction(
+                                    this.props.appStore
+                                )}
+                                {this.props.historyItem.renderAddMediaNoteAction(
+                                    this.props.appStore
                                 )}
                             </Toolbar>
                         );
                     }
-                }
-
-                let note;
-                if (this.props.historyItem.note) {
-                    note = (
-                        <div
-                            className="EezStudio_HistoryItem_Note"
-                            onDoubleClick={this.onEditNote}
-                        >
-                            <Balloon>
-                                <PreventDraggable tag="div">
-                                    <PropertyList>
-                                        <StaticRichTextProperty
-                                            value={this.props.historyItem.note}
-                                        />
-                                    </PropertyList>
-                                </PreventDraggable>
-                            </Balloon>
-                            <Toolbar>
-                                <IconAction
-                                    icon="material:edit"
-                                    title="Edit note"
-                                    onClick={this.onEditNote}
-                                />
-                                <IconAction
-                                    icon="material:delete"
-                                    title="Delete note"
-                                    onClick={this.onDeleteNote}
-                                />
-                            </Toolbar>
-                        </div>
-                    );
                 }
 
                 body = (
@@ -570,7 +496,10 @@ export const FileHistoryItemComponent = observer(
                         </div>
                         {preview}
                         {actions}
-                        {note}
+                        {this.props.historyItem.renderNote(this.props.appStore)}
+                        {this.props.historyItem.renderMediaNote(
+                            this.props.appStore
+                        )}
                     </div>
                 );
             } else {
@@ -623,7 +552,6 @@ export class FileHistoryItem extends HistoryItem {
         makeObservable(this, {
             fileState: computed,
             fileLength: computed,
-            note: computed,
             fileType: computed,
             fileTypeAsDisplayString: computed,
             sourceFilePath: computed,
@@ -643,23 +571,6 @@ export class FileHistoryItem extends HistoryItem {
     }
 
     get info() {
-        let note;
-        if (this.note) {
-            const { PropertyList, StaticRichTextProperty } =
-                require("eez-studio-ui/properties") as typeof UiPropertiesModule;
-
-            const { Balloon } =
-                require("eez-studio-ui/balloon") as typeof UiBalloonModule;
-
-            note = (
-                <Balloon>
-                    <PropertyList>
-                        <StaticRichTextProperty value={this.note} />
-                    </PropertyList>
-                </Balloon>
-            );
-        }
-
         return (
             <React.Fragment>
                 {this.fileTypeAsDisplayString && (
@@ -667,7 +578,7 @@ export class FileHistoryItem extends HistoryItem {
                         {this.fileTypeAsDisplayString + " file"}
                     </div>
                 )}
-                {note}
+                {this.renderNoteInfo()}
             </React.Fragment>
         );
     }
@@ -696,12 +607,8 @@ export class FileHistoryItem extends HistoryItem {
         return null;
     }
 
-    get fileState(): FileState {
-        try {
-            return this.message ? JSON.parse(this.message) : {};
-        } catch (err) {
-            return {} as FileState;
-        }
+    get fileState() {
+        return this.messageObject as FileState;
     }
 
     get fileLength() {
@@ -714,28 +621,6 @@ export class FileHistoryItem extends HistoryItem {
         }
 
         return 0;
-    }
-
-    get note() {
-        return this.fileState.note;
-    }
-
-    setNote(appStore: IAppStore, value: string | undefined) {
-        let fileState = JSON.parse(this.message);
-
-        fileState.note = value;
-
-        logUpdate(
-            this.store,
-            {
-                id: this.id,
-                oid: appStore.history.oid,
-                message: JSON.stringify(fileState)
-            },
-            {
-                undoable: true
-            }
-        );
     }
 
     get fileType() {
