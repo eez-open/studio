@@ -3,7 +3,13 @@ import { observer } from "mobx-react";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ButtonAction } from "eez-studio-ui/action";
-import { action, makeObservable, observable, runInAction } from "mobx";
+import {
+    action,
+    makeObservable,
+    observable,
+    reaction,
+    runInAction
+} from "mobx";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { formatDurationWithParam } from "eez-studio-shared/util";
 import { settingsController } from "home/settings";
@@ -38,6 +44,11 @@ const MediaDialog = observer(
 
         error: string | undefined;
 
+        devices: MediaDeviceInfo[] = [];
+        selectedDeviceId: string = "";
+
+        animationFrameRequest: number | undefined;
+
         constructor(props: any) {
             super(props);
 
@@ -47,12 +58,98 @@ const MediaDialog = observer(
                 paused: observable,
                 duration: observable,
                 mediaURL: observable,
-                error: observable
+                error: observable,
+                devices: observable,
+                selectedDeviceId: observable
             });
         }
 
         componentDidMount(): void {
-            const constraints = { audio: true, video: this.props.video };
+            reaction(
+                () => this.selectedDeviceId,
+                selectedDeviceId => {
+                    if (selectedDeviceId) {
+                        window.localStorage.setItem(
+                            `selected_${
+                                this.props.video ? "video" : "audio"
+                            }_device`,
+                            selectedDeviceId
+                        );
+                    }
+
+                    this.onDeviceChange();
+                }
+            );
+
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices = devices.filter(
+                    d =>
+                        d.kind ===
+                        (this.props.video ? "videoinput" : "audioinput")
+                );
+
+                let selectedDeviceId =
+                    window.localStorage.getItem(
+                        `selected_${
+                            this.props.video ? "video" : "audio"
+                        }_device`
+                    ) || "";
+
+                if (selectedDeviceId) {
+                    if (!devices.find(d => d.deviceId === selectedDeviceId)) {
+                        selectedDeviceId = "";
+                    }
+                }
+
+                if (!selectedDeviceId) {
+                    selectedDeviceId =
+                        devices.length > 0 ? devices[0].deviceId : "";
+                }
+
+                runInAction(() => {
+                    this.devices = devices;
+                    this.selectedDeviceId = selectedDeviceId;
+                });
+
+                console.log(devices, selectedDeviceId);
+            });
+        }
+
+        onDeviceChange() {
+            if (this.refVideo.current) {
+                this.refVideo.current.srcObject = null;
+            }
+
+            if (this.animationFrameRequest !== undefined) {
+                cancelAnimationFrame(this.animationFrameRequest);
+                this.animationFrameRequest = undefined;
+            }
+
+            if (this.mediaRecorder) {
+                this.mediaRecorder.onstart = null;
+                this.mediaRecorder.onpause = null;
+                this.mediaRecorder.onresume = null;
+                this.mediaRecorder.onstop = null;
+                this.mediaRecorder.ondataavailable = null;
+                this.mediaRecorder = undefined;
+            }
+
+            const constraints = this.props.video
+                ? {
+                      audio: true,
+                      video: {
+                          deviceId: this.selectedDeviceId
+                              ? { exact: this.selectedDeviceId }
+                              : undefined
+                      }
+                  }
+                : {
+                      audio: {
+                          deviceId: this.selectedDeviceId
+                              ? { exact: this.selectedDeviceId }
+                              : undefined
+                      }
+                  };
 
             let onSuccess = (stream: MediaStream) => {
                 if (this.refVideo.current) {
@@ -60,7 +157,6 @@ const MediaDialog = observer(
                 }
 
                 const mediaRecorder = new MediaRecorder(stream);
-
                 runInAction(() => {
                     this.mediaRecorder = mediaRecorder;
                 });
@@ -170,7 +266,9 @@ const MediaDialog = observer(
             };
 
             let onError = (err: any) => {
-                this.error = "The following error occured: " + err;
+                runInAction(() => {
+                    this.error = "The following error occured: " + err;
+                });
             };
 
             navigator.mediaDevices
@@ -192,14 +290,20 @@ const MediaDialog = observer(
 
             source.connect(analyser);
 
-            const canvas = this.refCanvas.current!;
-            const canvasCtx = canvas.getContext("2d")!;
-
             const draw = () => {
+                this.animationFrameRequest = requestAnimationFrame(draw);
+
+                const canvas = this.refCanvas.current!;
+                if (!canvas) {
+                    return;
+                }
+                const canvasCtx = canvas.getContext("2d");
+                if (!canvasCtx) {
+                    return;
+                }
+
                 const WIDTH = canvas.width;
                 const HEIGHT = canvas.height;
-
-                requestAnimationFrame(draw);
 
                 analyser.getByteTimeDomainData(dataArray);
 
@@ -318,6 +422,28 @@ const MediaDialog = observer(
                     okEnabled={() => this.blob != undefined}
                     okButtonText="Add"
                 >
+                    <div>
+                        <select
+                            className="form-select"
+                            value={this.selectedDeviceId}
+                            onChange={event => {
+                                runInAction(() => {
+                                    this.selectedDeviceId = event.target.value;
+                                });
+                            }}
+                            style={{ marginBottom: 10 }}
+                            disabled={this.recording}
+                        >
+                            {this.devices.map(device => (
+                                <option
+                                    key={device.deviceId}
+                                    value={device.deviceId}
+                                >
+                                    {device.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     {this.error ? (
                         <div className="alert alert-danger">{this.error}</div>
                     ) : (

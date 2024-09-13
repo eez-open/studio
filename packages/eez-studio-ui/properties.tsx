@@ -909,6 +909,8 @@ export const ButtonProperty = observer(
         {
             name?: string;
             onChange: (value: number) => void;
+            className?: string;
+            disabled?: boolean;
         },
         {}
     > {
@@ -917,7 +919,11 @@ export const ButtonProperty = observer(
                 <tr>
                     <td />
                     <td>
-                        <button onClick={value => this.props.onChange(1)}>
+                        <button
+                            className={classNames("btn", this.props.className)}
+                            onClick={value => this.props.onChange(1)}
+                            disabled={this.props.disabled}
+                        >
                             {this.props.name}
                         </button>
                     </td>
