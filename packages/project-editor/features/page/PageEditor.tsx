@@ -92,7 +92,7 @@ export class PageTabState extends FlowTabState {
         this._timeline = value;
     }
 
-    constructor(object: IEezObject) {
+    constructor(object: IEezObject, transform?: Transform) {
         super(object as Flow);
 
         makeObservable(this, {
@@ -110,7 +110,11 @@ export class PageTabState extends FlowTabState {
             false
         );
 
-        this.resetTransform(this.transform);
+        if (transform) {
+            this._transform = transform;
+        } else {
+            this.resetTransform(this.transform);
+        }
 
         this.timeline = new PageTimelineEditorState(this);
 

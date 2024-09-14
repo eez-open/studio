@@ -144,6 +144,8 @@ export const Canvas = observer(
                         clientRect.height !== transform.clientRect.height)
                 ) {
                     if (
+                        this.props.flowContext.projectStore.projectTypeTraits
+                            .isDashboard &&
                         this.props.flowContext.projectStore.runtime &&
                         !this.props.flowContext.projectStore.runtime
                             .isDebuggerActive

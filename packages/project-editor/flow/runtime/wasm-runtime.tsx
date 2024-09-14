@@ -551,7 +551,6 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelDeltaY = 0;
         this.wheelClicked = 0;
         this.pointerEvents = [];
-        //this.screen = undefined;
     };
 
     setCanvasContext(ctx: CanvasRenderingContext2D) {
@@ -1375,9 +1374,6 @@ export const WasmCanvas = observer(
             const canvas = canvasElement;
 
             const wasmRuntime = this.context.runtime as WasmRuntime;
-
-            canvas.width = wasmRuntime.displayWidth;
-            canvas.height = wasmRuntime.displayHeight;
 
             wasmRuntime.setCanvasContext(canvas.getContext("2d")!);
 

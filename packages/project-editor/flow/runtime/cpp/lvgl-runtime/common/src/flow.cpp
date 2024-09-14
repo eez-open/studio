@@ -971,6 +971,8 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::onDebuggerClientConnected();
 
     eez::flow::start(eez::g_mainAssets);
+
+    g_currentScreen = 0;
 }
 
 extern "C" bool flowTick() {

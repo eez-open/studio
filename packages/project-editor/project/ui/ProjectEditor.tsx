@@ -94,6 +94,8 @@ const Content = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        _prevPageTabState: PageTabState | undefined;
+
         componentDidMount(): void {
             this.context.editorsStore?.openInitialEditors();
             this.context.editorsStore?.refresh(true);
@@ -426,6 +428,18 @@ const Content = observer(
                 this.context.runtime &&
                 !this.context.runtime.isDebuggerActive
             ) {
+                const pageTabState = new PageTabState(
+                    this.context.runtime.selectedPage,
+                    this._prevPageTabState
+                        ? this._prevPageTabState._transform
+                        : undefined
+                );
+
+                if (this.context.projectTypeTraits.isLVGL) {
+                    // prevent flickering when changing selected page
+                    this._prevPageTabState = pageTabState;
+                }
+
                 return (
                     <PageEditor
                         editor={
@@ -434,9 +448,7 @@ const Content = observer(
                                 this.context.runtime.selectedPage,
                                 undefined,
                                 undefined,
-                                new PageTabState(
-                                    this.context.runtime.selectedPage
-                                )
+                                pageTabState
                             )
                         }
                     ></PageEditor>
