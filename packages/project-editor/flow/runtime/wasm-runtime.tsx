@@ -69,7 +69,6 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { FLOW_ITERATOR_INDEXES_VARIABLE } from "project-editor/features/variable/defs";
 import type {
     IObjectVariableType,
-    IObjectVariableValueConstructorParams,
     IVariable,
     ValueType
 } from "eez-studio-types";
@@ -280,6 +279,10 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async doStopRuntime(notifyUser: boolean) {
+        if (this.worker?.wasm?._flowCleanup) {
+            this.worker.wasm._flowCleanup();
+        }
+
         if (this.projectStore.context.type == "instrument-dashboard") {
             notifyUser = false;
         }
@@ -329,7 +332,7 @@ export class WasmRuntime extends RemoteRuntime {
 
     onDebuggerActiveChanged() {
         if (this.isDebuggerActive) {
-            this.worker.wasm._setDebuggerMessageSubsciptionFilter(0xffffffff);
+            this.worker?.wasm._setDebuggerMessageSubsciptionFilter(0xffffffff);
         }
 
         super.onDebuggerActiveChanged();
@@ -338,7 +341,33 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     onWorkerMessage = (workerToRenderMessage: WorkerToRenderMessage) => {
-        if (workerToRenderMessage.getBitmapAsDataURL) {
+        if (workerToRenderMessage.getObjectVariableMemberValue) {
+            const arrayValue = getValue(
+                this.worker.wasm,
+                workerToRenderMessage.getObjectVariableMemberValue.arrayValuePtr
+            );
+
+            let result = undefined;
+
+            const objectVariableType = getObjectVariableTypeFromType(
+                this.projectStore,
+                arrayValue.valueType
+            );
+            if (objectVariableType) {
+                const objectValue = objectVariableType.getValue(
+                    arrayValue.value
+                );
+                if (objectValue) {
+                    result =
+                        objectVariableType.valueFieldDescriptions[
+                            workerToRenderMessage.getObjectVariableMemberValue
+                                .memberIndex
+                        ].getFieldValue(objectValue);
+                }
+            }
+
+            return result;
+        } else if (workerToRenderMessage.getBitmapAsDataURL) {
             const bitmap = findBitmap(
                 this.projectStore.project,
                 workerToRenderMessage.getBitmapAsDataURL.name
@@ -426,10 +455,10 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             if (workerToRenderMessage.freeArrayValue) {
-                // console.log(
-                //     "freeArrayValue",
-                //     workerToRenderMessage.freeArrayValue
-                // );
+                console.log(
+                    "freeArrayValue",
+                    workerToRenderMessage.freeArrayValue
+                );
 
                 const valueType =
                     workerToRenderMessage.freeArrayValue.valueType;
@@ -443,18 +472,9 @@ export class WasmRuntime extends RemoteRuntime {
                         valueType
                     );
                     if (objectVariableType) {
-                        let value;
-                        if (objectVariableType.getValue) {
-                            value = objectVariableType.getValue(
-                                workerToRenderMessage.freeArrayValue.value
-                            );
-                        } else {
-                            value = objectVariableType.createValue(
-                                workerToRenderMessage.freeArrayValue
-                                    .value as IObjectVariableValueConstructorParams,
-                                true
-                            );
-                        }
+                        let value = objectVariableType.getValue(
+                            workerToRenderMessage.freeArrayValue.value
+                        );
                         if (value) {
                             objectVariableType.destroyValue(value);
                         }
@@ -742,116 +762,27 @@ export class WasmRuntime extends RemoteRuntime {
     getUpdatedObjectGlobalVariableValues(): IGlobalVariable[] {
         const updatedGlobalVariableValues: IGlobalVariable[] = [];
 
-        function isDifferent(
-            oldArrayValue: ArrayValue | null,
-            newArrayValue: ArrayValue | null
-        ) {
-            if (oldArrayValue == null) {
-                return newArrayValue != null;
-            }
-
-            if (newArrayValue == null) {
-                return oldArrayValue != null;
-            }
-
-            for (let i = 0; i < oldArrayValue.values.length; i++) {
-                const oldValue = oldArrayValue.values[i];
-                const newValue = newArrayValue.values[i];
-                if (oldValue != null && typeof oldValue == "object") {
-                    if (isDifferent(oldValue, newValue as ArrayValue)) {
-                        return true;
-                    }
-                } else {
-                    if (oldValue != newValue) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         for (const globalVariable of this.globalVariables) {
             const engineValuePtr = this.worker.wasm._getGlobalVariable(
                 globalVariable.globalVariableIndex
             );
 
-            const engineValueWithType = getValue(
-                this.worker.wasm,
-                engineValuePtr
-            );
-
-            if (globalVariable.kind == "object") {
-                if (globalVariable.studioModified) {
-                    updatedGlobalVariableValues.push({
-                        kind: "array",
-                        globalVariableIndex: globalVariable.globalVariableIndex,
-                        value: globalVariable.value
-                    });
-                    globalVariable.studioModified = false;
-                    continue;
-                }
-
-                let oldArrayValue;
-                let objectVariableValue;
-
-                const engineArrayValue = createJsArrayValue(
-                    +this.assetsMap.typeIndexes[engineValueWithType.valueType],
-                    engineValueWithType.value,
-                    this.assetsMap,
-                    undefined
-                );
-
-                const objectVariableType = getObjectVariableTypeFromType(
-                    this.projectStore,
-                    globalVariable.variable.type
-                );
-
-                if (
-                    engineArrayValue &&
-                    objectVariableType &&
-                    objectVariableType.getValue
-                ) {
-                    oldArrayValue = engineArrayValue;
-                    objectVariableValue = objectVariableType.getValue(
-                        engineValueWithType.value
-                    );
-                    if (!objectVariableValue) {
-                        continue;
-                    }
-                    globalVariable.objectVariableValue = objectVariableValue;
-                } else {
-                    oldArrayValue = globalVariable.value;
-                    objectVariableValue = globalVariable.objectVariableValue;
-                }
-
-                const newArrayValue = createJsArrayValue(
-                    +this.assetsMap.typeIndexes[globalVariable.variable.type],
-                    objectVariableValue,
-                    this.assetsMap,
-                    (type: string) => {
-                        return getObjectVariableTypeFromType(
-                            this.projectStore,
-                            type
-                        );
-                    }
-                );
-
-                if (isDifferent(oldArrayValue, newArrayValue)) {
-                    // console.log(
-                    //     "object global variable updated",
-                    //     oldArrayValue,
-                    //     newArrayValue
-                    // );
-
-                    updatedGlobalVariableValues.push({
-                        kind: "array",
-                        globalVariableIndex: globalVariable.globalVariableIndex,
-                        value: newArrayValue
-                    });
-
-                    globalVariable.value = newArrayValue;
-                }
+            if (
+                globalVariable.kind == "object" &&
+                globalVariable.studioModified
+            ) {
+                updatedGlobalVariableValues.push({
+                    kind: "array",
+                    globalVariableIndex: globalVariable.globalVariableIndex,
+                    value: globalVariable.value
+                });
+                globalVariable.studioModified = false;
             } else {
+                const engineValueWithType = getValue(
+                    this.worker.wasm,
+                    engineValuePtr
+                );
+
                 this.projectStore.dataContext.set(
                     globalVariable.variable.name,
                     engineValueWithType.value
@@ -891,13 +822,27 @@ export class WasmRuntime extends RemoteRuntime {
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
-            if (
-                globalVariable.kind == "object" &&
-                globalVariable.objectVariableValue
-            ) {
-                globalVariable.objectVariableType.destroyValue(
-                    globalVariable.objectVariableValue
+            if (globalVariable.kind == "object") {
+                const engineValuePtr = this.worker.wasm._getGlobalVariable(
+                    globalVariable.globalVariableIndex
                 );
+
+                const engineValueWithType = getValue(
+                    this.worker.wasm,
+                    engineValuePtr
+                );
+
+                if (typeof engineValueWithType.value == "object") {
+                    let objectValue =
+                        globalVariable.objectVariableType.getValue(
+                            engineValueWithType.value
+                        );
+                    if (objectValue) {
+                        globalVariable.objectVariableType.destroyValue(
+                            objectValue
+                        );
+                    }
+                }
             }
         }
     }
@@ -1210,7 +1155,10 @@ export class WasmRuntime extends RemoteRuntime {
             }
         }
 
-        if (e.target instanceof HTMLSelectElement) {
+        if (
+            e.target instanceof HTMLSelectElement ||
+            e.target instanceof HTMLTextAreaElement
+        ) {
             return;
         }
 

@@ -43,11 +43,16 @@ export const Toolbar = observer(
                     variable.type
                 );
                 if (objectVariableType) {
-                    const objectVariableValue:
-                        | IObjectVariableValue
-                        | undefined = this.context.dataContext.get(
-                        variable.fullName
-                    );
+                    let objectVariableValue: IObjectVariableValue | undefined =
+                        this.context.dataContext.get(variable.fullName);
+
+                    if (objectVariableValue) {
+                        const managedValue =
+                            objectVariableType.getValue(objectVariableValue);
+                        if (managedValue) {
+                            objectVariableValue = managedValue;
+                        }
+                    }
 
                     globalVariablesStatus.push(
                         <RenderVariableStatus

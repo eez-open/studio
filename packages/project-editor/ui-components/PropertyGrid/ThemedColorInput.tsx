@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
-import type * as ReactColorModule from "react-color";
+import { SketchPicker } from "react-color";
 
 import { isDark, isValid } from "eez-studio-shared/color";
 
@@ -166,9 +166,6 @@ export const ThemedColorInput = observer(
             if (!isValid(color)) {
                 color = settingsController.isDarkTheme ? "black" : "white";
             }
-
-            const { SketchPicker } =
-                require("react-color") as typeof ReactColorModule;
 
             const portal = ReactDOM.createPortal(
                 <div

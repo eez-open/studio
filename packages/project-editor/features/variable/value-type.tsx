@@ -959,28 +959,35 @@ export const variableTypeProperty: PropertyInfo = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function migrateType(objectJS: any) {
-    if (!objectJS.type) {
+export function migrateType(objectJS: any, propName?: string) {
+    if (!propName) {
+        propName = "type";
+    }
+
+    if (!objectJS[propName]) {
         return;
     }
-    if (objectJS.type == "list") {
-        objectJS.type = "array";
-    } else if (objectJS.type.startsWith("custom:")) {
-        objectJS.type = `object:${objectJS.type.substring("custom:".length)}`;
-    } else if (objectJS.type == "struct") {
-        objectJS.type = `struct:${objectJS.structure}`;
+
+    if (objectJS[propName] == "list") {
+        objectJS[propName] = "array";
+    } else if (objectJS[propName].startsWith("custom:")) {
+        objectJS[propName] = `object:${objectJS[propName].substring(
+            "custom:".length
+        )}`;
+    } else if (objectJS[propName] == "struct") {
+        objectJS[propName] = `struct:${objectJS.structure}`;
         delete objectJS.structure;
-    } else if (objectJS.type == "enum") {
-        objectJS.type = `enum:${objectJS.enum}`;
+    } else if (objectJS[propName] == "enum") {
+        objectJS[propName] = `enum:${objectJS.enum}`;
         delete objectJS.enum;
-    } else if (objectJS.type == "struct:$ActionParams") {
-        objectJS.type = "struct:$ClickEvent";
-    } else if (objectJS.type == "struct:$CheckboxActionParams") {
-        objectJS.type = "struct:$CheckboxChangeEvent";
-    } else if (objectJS.type == "struct:$TextInputActionParams") {
-        objectJS.type = "struct:$TextInputChangeEvent";
-    } else if (objectJS.type == "struct:$DropDownListActionParams") {
-        objectJS.type = "struct:$DropDownListChangeEvent";
+    } else if (objectJS[propName] == "struct:$ActionParams") {
+        objectJS[propName] = "struct:$ClickEvent";
+    } else if (objectJS[propName] == "struct:$CheckboxActionParams") {
+        objectJS[propName] = "struct:$CheckboxChangeEvent";
+    } else if (objectJS[propName] == "struct:$TextInputActionParams") {
+        objectJS[propName] = "struct:$TextInputChangeEvent";
+    } else if (objectJS[propName] == "struct:$DropDownListActionParams") {
+        objectJS[propName] = "struct:$DropDownListChangeEvent";
     }
 }
 

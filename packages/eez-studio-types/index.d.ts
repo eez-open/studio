@@ -204,7 +204,7 @@ export interface IObjectVariableType {
         newValue?: IObjectVariableValue
     ): void;
 
-    getValue?(variableValue: any): IObjectVariableValue | null;
+    getValue(variableValue: any): IObjectVariableValue | null;
 
     valueFieldDescriptions: IObjectVariableValueFieldDescription[];
 }
@@ -354,6 +354,11 @@ export interface WorkerToRenderMessage {
     propertyValues?: IPropertyValue[];
 
     freeArrayValue?: ObjectOrArrayValueWithType;
+
+    getObjectVariableMemberValue?: {
+        arrayValuePtr: number;
+        memberIndex: number;
+    };
 
     getBitmapAsDataURL?: {
         name: string;
@@ -610,6 +615,8 @@ export interface IWasmFlowRuntime {
     _setDebuggerMessageSubsciptionFilter(filter: number): void;
 
     _onMqttEvent(handle: number, eventType: number, eventDataPtr1: number, eventDataPtr2: number): void;
+
+    _flowCleanup() : void;
 
     // LVGL API
     _lvglCreateScreen(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;

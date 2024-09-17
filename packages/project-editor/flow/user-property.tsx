@@ -38,6 +38,7 @@ import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups"
 import {
     getDefaultValueForType,
     isValidType,
+    migrateType,
     ValueType,
     VariableTypeFieldComponent,
     variableTypeProperty
@@ -142,6 +143,8 @@ export class UserProperty extends EezObject {
         defaultValue: {},
 
         beforeLoadHook(object, jsObject) {
+            migrateType(jsObject);
+
             if (jsObject.id == undefined) {
                 jsObject.id = jsObject.objID;
             }

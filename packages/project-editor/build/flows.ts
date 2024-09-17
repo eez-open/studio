@@ -652,17 +652,32 @@ export function buildFlowDefs(assets: Assets) {
 
     // enum object types
     const objectTypeEnumItems = [];
+    let valueTypeIndex = 0;
     for (const [objectTypeName, _] of objectVariableTypes) {
+        valueTypeIndex = assets.projectStore.typesStore.getValueTypeIndex(
+            `object:${objectTypeName}`
+        )!;
+
+        if (objectTypeEnumItems.length == 0) {
+            objectTypeEnumItems.push(
+                `${TAB}FIRST_OBJECT_TYPE = ${valueTypeIndex}`
+            );
+        }
+
         objectTypeEnumItems.push(
             `${TAB}${getName(
                 "OBJECT_TYPE_",
                 objectTypeName,
                 NamingConvention.UnderscoreUpperCase
-            )} = ${assets.projectStore.typesStore.getValueTypeIndex(
-                `object:${objectTypeName}`
-            )}`
+            )} = ${valueTypeIndex}`
         );
     }
+
+    if (objectTypeEnumItems.length == 0) {
+        objectTypeEnumItems.push(`${TAB}FIRST_OBJECT_TYPE = ${valueTypeIndex}`);
+    }
+
+    objectTypeEnumItems.push(`${TAB}LAST_OBJECT_TYPE = ${valueTypeIndex}`);
 
     defs.push(`enum ObjectTypes {\n${objectTypeEnumItems.join(",\n")}\n};`);
 

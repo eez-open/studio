@@ -37,7 +37,16 @@ export function getDashboardState<T>(
 }
 
 export function releaseRuntimeDashboardStates(wasmModuleId: number) {
-    wasmModuleExecutionStates.delete(wasmModuleId);
+    let executionStates = wasmModuleExecutionStates.get(wasmModuleId);
+    if (!executionStates) {
+        return;
+    }
+
+    for (const dashboardState of executionStates.dasboardStateToWasmState.keys()) {
+        if (dashboardState.onDestroy) {
+            dashboardState.onDestroy();
+        }
+    }
 }
 
 function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
@@ -49,6 +58,10 @@ function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
     const dashboardState =
         executionStates.wasmStateToDashboardState.get(wasmState);
     if (dashboardState) {
+        if (dashboardState && dashboardState.onDestroy) {
+            dashboardState.onDestroy();
+        }
+
         executionStates.wasmStateToDashboardState.delete(wasmState);
         executionStates.dasboardStateToWasmState.delete(dashboardState);
     }

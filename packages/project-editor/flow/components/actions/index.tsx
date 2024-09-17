@@ -73,6 +73,7 @@ import {
 import { calcComponentGeometry } from "project-editor/flow/editor/render";
 import {
     getStructureFromType,
+    migrateType,
     ValueType,
     VariableTypeUI
 } from "project-editor/features/variable/value-type";
@@ -211,6 +212,9 @@ export class InputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        beforeLoadHook: (object: InputActionComponent, objectJS: any) => {
+            migrateType(objectJS, "inputType");
+        },
         check: (
             inputActionComponent: InputActionComponent,
             messages: IMessage[]
@@ -298,6 +302,9 @@ export class OutputActionComponent extends ActionComponent {
                 propertyGridGroup: specificGroup
             }
         ],
+        beforeLoadHook: (object: OutputActionComponent, objectJS: any) => {
+            migrateType(objectJS, "outputType");
+        },
         check: (
             outputActionComponent: OutputActionComponent,
             messages: IMessage[]
@@ -826,7 +833,7 @@ export class SetVariableActionComponent extends ActionComponent {
         ),
         componentHeaderColor: "#A6BBCF",
         defaultValue: {
-            entries: []
+            entries: [{}]
         }
     });
 
@@ -1049,7 +1056,9 @@ export class SwitchActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#AAAA66",
-        defaultValue: {}
+        defaultValue: {
+            tests: [{}]
+        }
     });
 
     tests: SwitchTest[];

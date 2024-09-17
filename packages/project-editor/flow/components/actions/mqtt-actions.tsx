@@ -1015,35 +1015,35 @@ registerObjectVariableType("MQTTConnection", {
             name: "protocol",
             valueType: "string",
             getFieldValue: (value: MQTTConnection): string => {
-                return value.constructorParams.protocol;
+                return value.protocol;
             }
         },
         {
             name: "host",
             valueType: "string",
             getFieldValue: (value: MQTTConnection): string => {
-                return value.constructorParams.host;
+                return value.host;
             }
         },
         {
             name: "port",
             valueType: "integer",
             getFieldValue: (value: MQTTConnection): number => {
-                return value.constructorParams.port;
+                return value.port;
             }
         },
         {
             name: "userName",
             valueType: "string",
             getFieldValue: (value: MQTTConnection): string => {
-                return value.constructorParams.userName;
+                return value.userName;
             }
         },
         {
             name: "password",
             valueType: "string",
             getFieldValue: (value: MQTTConnection): string => {
-                return value.constructorParams.password;
+                return value.password;
             }
         },
         {
@@ -1195,6 +1195,23 @@ class MQTTConnection {
     client: mqtt.MqttClient | undefined;
     isConnected: boolean = false;
     error: string | undefined = undefined;
+
+    get protocol() {
+        return this.constructorParams.protocol;
+    }
+    get host() {
+        return this.constructorParams.host;
+    }
+    get port() {
+        return this.constructorParams.port;
+    }
+    get userName() {
+        return this.constructorParams.userName;
+    }
+
+    get password() {
+        return this.constructorParams.password;
+    }
 
     get status() {
         return {

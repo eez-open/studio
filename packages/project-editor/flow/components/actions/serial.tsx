@@ -461,35 +461,35 @@ registerObjectVariableType("SerialConnection", {
             name: "port",
             valueType: "string",
             getFieldValue: (value: SerialConnection): string => {
-                return value.constructorParams.port;
+                return value.port;
             }
         },
         {
             name: "baudRate",
             valueType: "integer",
             getFieldValue: (value: SerialConnection): number => {
-                return value.constructorParams.baudRate;
+                return value.baudRate;
             }
         },
         {
             name: "dataBits",
             valueType: "integer",
             getFieldValue: (value: SerialConnection): number => {
-                return value.constructorParams.dataBits;
+                return value.dataBits;
             }
         },
         {
             name: "stopBits",
             valueType: "integer",
             getFieldValue: (value: SerialConnection): number => {
-                return value.constructorParams.stopBits;
+                return value.stopBits;
             }
         },
         {
             name: "parity",
             valueType: "string",
             getFieldValue: (value: SerialConnection): string => {
-                return value.constructorParams.parity;
+                return value.parity;
             }
         },
         {
@@ -640,6 +640,22 @@ export class SerialConnection implements SerialConnectionCallbacks {
     receivedData: string | undefined;
 
     isConnected: boolean = false;
+
+    get port() {
+        return this.constructorParams.port;
+    }
+    get baudRate() {
+        return this.constructorParams.baudRate;
+    }
+    get dataBits() {
+        return this.constructorParams.dataBits;
+    }
+    get stopBits() {
+        return this.constructorParams.stopBits;
+    }
+    get parity() {
+        return this.constructorParams.parity;
+    }
 
     onRead: ((data: any) => void) | undefined;
 

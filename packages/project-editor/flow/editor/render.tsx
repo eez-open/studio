@@ -240,10 +240,13 @@ export const ComponentEnclosure = observer(
             const { component, flowContext, left, top, visible } = this.props;
 
             // force calling calcComponentGeometry when clientRect changes
-            flowContext.viewState.transform.clientRect.left;
-            flowContext.viewState.transform.clientRect.top;
-            flowContext.viewState.transform.clientRect.width;
-            flowContext.viewState.transform.clientRect.height;
+
+            if (!flowContext.projectStore.projectTypeTraits.isFirmware) {
+                flowContext.viewState.transform.clientRect.left;
+                flowContext.viewState.transform.clientRect.top;
+                flowContext.viewState.transform.clientRect.width;
+                flowContext.viewState.transform.clientRect.height;
+            }
 
             if (component instanceof ProjectEditor.WidgetClass) {
                 if (flowContext.flowState) {
