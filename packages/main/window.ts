@@ -166,9 +166,7 @@ export function findWindowByParams(params: IWindowParams) {
     return windows.find(win => win.url === params.url);
 }
 
-export function findWindowByBrowserWindow(
-    browserWindow: Electron.BrowserWindow
-) {
+export function findWindowByBrowserWindow(browserWindow: Electron.BaseWindow) {
     return windows.find(win => win.browserWindow === browserWindow);
 }
 

@@ -1,6 +1,13 @@
 import os from "os";
 import fs from "fs";
-import { app, dialog, Menu, ipcMain, BrowserWindow } from "electron";
+import {
+    app,
+    dialog,
+    Menu,
+    ipcMain,
+    BrowserWindow,
+    BaseWindow
+} from "electron";
 import { autorun, runInAction } from "mobx";
 
 import {
@@ -44,7 +51,7 @@ function enableMenuItem(
     }
 }
 
-async function openProjectWithFileDialog(focusedWindow: BrowserWindow) {
+async function openProjectWithFileDialog(focusedWindow: BaseWindow) {
     const result = await dialog.showOpenDialog({
         properties: ["openFile"],
         filters: [
@@ -469,7 +476,7 @@ function buildEditMenu(win: IWindow | undefined) {
                     if (focusedWindow) {
                         const win = findWindowByBrowserWindow(focusedWindow);
                         if (win !== undefined && win.state.undo != null) {
-                            focusedWindow.webContents.send("undo");
+                            win.browserWindow.webContents.send("undo");
                             return;
                         }
                     }
@@ -486,7 +493,7 @@ function buildEditMenu(win: IWindow | undefined) {
                     if (focusedWindow) {
                         const win = findWindowByBrowserWindow(focusedWindow);
                         if (win !== undefined && win.state.redo != null) {
-                            focusedWindow.webContents.send("redo");
+                            win.browserWindow.webContents.send("redo");
                             return;
                         }
                     }
@@ -501,9 +508,9 @@ function buildEditMenu(win: IWindow | undefined) {
                 label: "Cut",
                 accelerator: "CmdOrCtrl+X",
                 role: isMacOs() ? "cut" : undefined,
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("cut");
+                click: function (item) {
+                    if (win) {
+                        win.browserWindow.webContents.send("cut");
                     }
                 }
             },
@@ -511,9 +518,9 @@ function buildEditMenu(win: IWindow | undefined) {
                 label: "Copy",
                 accelerator: "CmdOrCtrl+C",
                 role: isMacOs() ? "copy" : undefined,
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("copy");
+                click: function (item) {
+                    if (win) {
+                        win.browserWindow.webContents.send("copy");
                     }
                 }
             },
@@ -521,9 +528,9 @@ function buildEditMenu(win: IWindow | undefined) {
                 label: "Paste",
                 accelerator: "CmdOrCtrl+V",
                 role: isMacOs() ? "paste" : undefined,
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("paste");
+                click: function (item) {
+                    if (win) {
+                        win.browserWindow.webContents.send("paste");
                     }
                 }
             },
@@ -531,9 +538,9 @@ function buildEditMenu(win: IWindow | undefined) {
                 label: "Delete",
                 accelerator: "Delete",
                 role: isMacOs() ? "delete" : undefined,
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("delete");
+                click: function (item) {
+                    if (win) {
+                        win.browserWindow.webContents.send("delete");
                     }
                 }
             },
@@ -544,9 +551,9 @@ function buildEditMenu(win: IWindow | undefined) {
                 label: "Select All",
                 accelerator: isMacOs() ? "CmdOrCtrl+A" : undefined,
                 role: isMacOs() ? "selectAll" : undefined,
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        focusedWindow.webContents.send("select-all");
+                click: function (item) {
+                    if (win) {
+                        win.browserWindow.webContents.send("select-all");
                     }
                 }
             }
@@ -580,25 +587,25 @@ function buildViewMenu(win: IWindow | undefined) {
     viewSubmenu.push(
         {
             label: "Home",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "home");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("openTab", "home");
                 }
             }
         },
         {
             label: "History",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "history");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("openTab", "history");
                 }
             }
         },
         {
             label: "Shortcuts and Groups",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send(
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send(
                         "openTab",
                         "shortcutsAndGroups"
                     );
@@ -607,9 +614,9 @@ function buildViewMenu(win: IWindow | undefined) {
         },
         {
             label: "Noteboooks",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send(
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send(
                         "openTab",
                         "homeSection_notebooks"
                     );
@@ -618,17 +625,17 @@ function buildViewMenu(win: IWindow | undefined) {
         },
         {
             label: "Extensions",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "extensions");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("openTab", "extensions");
                 }
             }
         },
         {
             label: "Settings",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("openTab", "settings");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("openTab", "settings");
                 }
             }
         },
@@ -637,9 +644,9 @@ function buildViewMenu(win: IWindow | undefined) {
         },
         {
             label: "Scrapbook for Project Editor",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("showScrapbookManager");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("showScrapbookManager");
                 }
             }
         },
@@ -723,9 +730,9 @@ function buildViewMenu(win: IWindow | undefined) {
 
         viewSubmenu.push({
             label: "Reset Layout",
-            click: function (item, focusedWindow) {
-                if (focusedWindow) {
-                    focusedWindow.webContents.send("resetLayoutModels");
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("resetLayoutModels");
                 }
             }
         });
@@ -738,9 +745,9 @@ function buildViewMenu(win: IWindow | undefined) {
     viewSubmenu.push({
         label: "Reload",
         accelerator: "CmdOrCtrl+R",
-        click: function (item, focusedWindow) {
-            if (focusedWindow) {
-                focusedWindow.webContents.send("reload");
+        click: function (item) {
+            if (win) {
+                win.browserWindow.webContents.send("reload");
                 //focusedWindow.webContents.reload();
                 //focusedWindow.webContents.clearHistory();
             }
