@@ -516,7 +516,7 @@ export function setupMarkdownWatcher() {
         return;
     }
 
-    watcher = watch([...markdownFiles.values()]);
+    watcher = watch([...markdownFiles.values()], {});
 
     watcher.on("change", () => {
         console.log("Markdown file changed.");

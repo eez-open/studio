@@ -391,7 +391,7 @@ export class OpenProjectsManager {
     }
 
     _watch(openProject: OpenProject) {
-        openProject.watcher = watch(openProject.filePath);
+        openProject.watcher = watch(openProject.filePath, {});
 
         openProject.watcher.on("change", () => {
             console.log("project file changed", openProject.filePath);
