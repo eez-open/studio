@@ -12,7 +12,7 @@ Check [Plotly documentation](https://plotly.com/javascript/reference/index/) for
 
 Check [Plotly documentation](https://plotly.com/javascript/reference/layout/) for more informations.
 
-## Configurtion options
+## Configuration options
 
 Check [Plotly documentation](https://plotly.com/javascript/configuration-options/) for more informations.
 
