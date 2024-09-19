@@ -39,7 +39,7 @@ import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-wor
 import { isArray } from "eez-studio-shared/util";
 import {
     tcpSockets,
-    TCPSocket
+    type TCPSocket
 } from "project-editor/flow/components/actions/tcp";
 
 ////////////////////////////////////////////////////////////////////////////////

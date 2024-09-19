@@ -772,7 +772,7 @@ class TCPListenExecutionState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const tcpSockets = new Map<number, TCPSocket>();
+export const tcpSockets = new Map<number, TCPSocket>();
 let nextTCPSocketId = 0;
 
 registerObjectVariableType("TCPSocket", {
@@ -838,7 +838,7 @@ interface TCPSocketConstructorParams {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TCPSocket {
+export class TCPSocket {
     constructor(
         public type: "server" | "client",
         public id: number,
