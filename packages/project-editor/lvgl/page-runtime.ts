@@ -261,9 +261,16 @@ export abstract class LVGLPageRuntime {
         return this.lvglVersion == "9.0";
     }
 
+    oldStyleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
     styleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
 
     createStyles() {
+        for (const [style, lvglStyleObjects] of this.styleObjMap.entries()) {
+            this.oldStyleObjMap.set(style, lvglStyleObjects);
+        }
+
+        this.styleObjMap.clear();
+
         for (const style of this.projectStore.lvglIdentifiers.styles) {
             const lvglStyleObjects = style.lvglCreateStyles(this);
             this.styleObjMap.set(style, lvglStyleObjects);
@@ -271,11 +278,11 @@ export abstract class LVGLPageRuntime {
     }
 
     deleteStyles() {
-        for (const [style, lvglStyleObjects] of this.styleObjMap.entries()) {
+        for (const [style, lvglStyleObjects] of this.oldStyleObjMap.entries()) {
             style.lvglDeleteStyles(this, lvglStyleObjects);
         }
 
-        this.styleObjMap.clear();
+        this.oldStyleObjMap.clear();
     }
 
     addStyle(targetObj: number, styleIndex: number) {
@@ -388,8 +395,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.freeStrings();
 
-                        this.deleteStyles();
-
                         this.createStyles();
 
                         const pageObj = this.page.lvglCreate(this, 0);
@@ -418,6 +423,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             }
                             this.page._lvglObj = pageObj;
                         });
+
+                        this.deleteStyles();
 
                         this.dispose2 = autorun(() => {
                             for (const objectAdapter of this.flowContext
