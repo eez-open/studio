@@ -242,7 +242,8 @@ export class Variable extends EezObject {
                         !getObjectVariableTypeFromType(
                             ProjectEditor.getProjectStore(variable),
                             variable.type
-                        )?.editConstructorParams)
+                        )?.editConstructorParams) ||
+                    variable.type == "object:TCPConnection"
             },
             {
                 name: "persistedValue",
@@ -253,7 +254,8 @@ export class Variable extends EezObject {
                 hideInPropertyGrid: (variable: Variable) =>
                     isLVGLProject(variable) ||
                     !variable.persistent ||
-                    !isGlobalVariable(variable)
+                    !isGlobalVariable(variable) ||
+                    variable.type == "object:TCPConnection"
             }
         ],
         icon: VARIABLE_ICON,
@@ -336,7 +338,8 @@ export class Variable extends EezObject {
 
             let persistent =
                 !ProjectEditor.getFlow(parent) &&
-                isObjectType(result.values.type);
+                isObjectType(result.values.type) &&
+                result.values.type != "object:TCPConnection";
 
             const variableProperties: Partial<Variable> = {
                 name: result.values.name,

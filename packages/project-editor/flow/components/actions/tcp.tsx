@@ -24,11 +24,7 @@ import type {
     IVariable
 } from "eez-studio-types";
 import { registerObjectVariableType } from "project-editor/features/variable/value-type";
-import {
-    GenericDialogResult,
-    showGenericDialog
-} from "eez-studio-ui/generic-dialog";
-import { validators } from "eez-studio-shared/validation";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     EezObject,
@@ -97,7 +93,11 @@ registerActionComponents("TCP", [
             };
 
             const id = nextTCPConnectionId++;
-            let tcpConnection = new TCPConnection(id, constructorParams);
+            let tcpConnection = new TCPConnection(
+                "client",
+                id,
+                constructorParams
+            );
             tcpConnections.set(id, tcpConnection);
 
             context.assignProperty(
@@ -716,15 +716,10 @@ class TCPListenExecutionState {
 
         server.on("close", () => {
             this.server = undefined;
-            context.setComponentExecutionState(undefined);
 
-            let executionState =
-                context.getComponentExecutionState<TCPListenExecutionState>();
-            if (executionState) {
-                context.setComponentExecutionState(undefined);
-                context.propagateValue("close", null);
-                context.endAsyncExecution();
-            }
+            context.setComponentExecutionState(undefined);
+            context.propagateValue("close", null);
+            context.endAsyncExecution();
         });
 
         server.on("connection", socket => {
@@ -734,7 +729,11 @@ class TCPListenExecutionState {
             };
 
             const id = nextTCPConnectionId++;
-            let tcpConnection = new TCPConnection(id, constructorParams);
+            let tcpConnection = new TCPConnection(
+                "server",
+                id,
+                constructorParams
+            );
             tcpConnections.set(id, tcpConnection);
 
             tcpConnection.setSocket(socket);
@@ -785,14 +784,14 @@ registerObjectVariableType("TCPConnection", {
         variable: IVariable,
         constructorParams?: TCPConnectionConstructorParams
     ): Promise<TCPConnectionConstructorParams | undefined> => {
-        return await showConnectDialog(variable, constructorParams);
+        return undefined;
     },
 
     createValue: (constructorParams: TCPConnectionConstructorParams) => {
-        const id = nextTCPConnectionId++;
-        const tcpConnection = new TCPConnection(id, constructorParams);
-        tcpConnections.set(id, tcpConnection);
-        return tcpConnection;
+        return {
+            constructorParams,
+            status: {}
+        };
     },
     destroyValue: (objectVariable: IObjectVariableValue & { id: number }) => {
         const tcpConnection = tcpConnections.get(objectVariable.id);
@@ -845,6 +844,7 @@ interface TCPConnectionConstructorParams {
 
 export class TCPConnection {
     constructor(
+        public type: "server" | "client",
         public id: number,
         public constructorParams: TCPConnectionConstructorParams
     ) {
@@ -924,25 +924,19 @@ export class TCPConnection {
         this.isConnected = true;
         this.socket = socket;
 
-        socket.on("ready", () => {});
-
         socket.on("error", err => {
-            console.log("server connection error", err);
             this.destroy();
         });
 
         socket.on("close", () => {
-            console.log("server connection close");
             this.destroy();
         });
 
         socket.on("end", () => {
-            console.log("server connection end");
             this.destroy();
         });
 
         socket.on("timeout", () => {
-            console.log("server connection timeout");
             this.destroy();
         });
     }
@@ -973,55 +967,6 @@ export class TCPConnection {
         if (this.socket) {
             this.socket.write(data);
         }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-async function showConnectDialog(
-    variable: IVariable,
-    values: TCPConnectionConstructorParams | undefined
-) {
-    try {
-        const result = await showGenericDialog({
-            dialogDefinition: {
-                title: variable.description || variable.fullName,
-                size: "medium",
-                fields: [
-                    {
-                        name: "ipAddress",
-                        displayName: "IP Address",
-                        type: "string"
-                    },
-                    {
-                        name: "port",
-                        type: "number",
-                        validators: [validators.integer]
-                    }
-                ],
-                error: undefined
-            },
-            values: values || {},
-            okButtonText: "Connect",
-            onOk: async (result: GenericDialogResult) => {
-                return new Promise<boolean>(async resolve => {
-                    const tcpConnection = new TCPConnection(0, result.values);
-                    result.onProgress("info", "Connecting...");
-                    try {
-                        await tcpConnection.connect();
-                        tcpConnection.disconnect();
-                        resolve(true);
-                    } catch (err) {
-                        result.onProgress("error", err);
-                        resolve(false);
-                    }
-                });
-            }
-        });
-
-        return result.values;
-    } catch (err) {
-        return undefined;
     }
 }
 

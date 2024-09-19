@@ -25,6 +25,7 @@ import { TERMINAL_WIDGET_ICON } from "project-editor/ui-components/icons";
 ////////////////////////////////////////////////////////////////////////////////
 
 class ExecutionState {
+    data: string = "";
     onData: ((value: string) => void) | undefined = undefined;
 }
 
@@ -64,6 +65,8 @@ export class TerminalWidget extends Widget {
 
                 if (executionState.onData) {
                     executionState.onData(data);
+                } else {
+                    executionState.data += data;
                 }
             } else if (data instanceof Readable || data instanceof Duplex) {
                 data.on("data", (chunk: Buffer) => {
@@ -193,6 +196,10 @@ const TerminalElement = observer(
                     executionState.onData = data => {
                         this.terminal.write(data);
                     };
+                    if (executionState.data) {
+                        this.terminal.write(executionState.data);
+                        executionState.data = "";
+                    }
                 }
             }
         }
