@@ -19,6 +19,7 @@ import {
 } from "project-editor/ui-components/icons";
 
 import type {
+    IActionComponent,
     IDashboardComponentContext,
     IObjectVariableValue,
     IVariable
@@ -28,6 +29,7 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     ClassInfo,
     EezObject,
+    IEezObject,
     IMessage,
     makeDerivedClassInfo,
     PropertyType,
@@ -50,14 +52,14 @@ registerActionComponents("TCP", [
         name: "TCPConnect",
         icon: TCP_CONNECT_ICON as any,
         componentHeaderColor,
-        bodyPropertyName: "connection",
+        bodyPropertyName: "socket",
         inputs: [],
         outputs: [],
         properties: [
             {
-                name: "connection",
+                name: "socket",
                 type: "assignable-expression",
-                valueType: "object:TCPConnection"
+                valueType: "object:TCPSocket"
             },
 
             {
@@ -74,6 +76,12 @@ registerActionComponents("TCP", [
             }
         ],
         defaults: {},
+        migrateProperties: (component: IActionComponent) => {
+            if (component.connection) {
+                component.socket = component.connection;
+                delete component.connection;
+            }
+        },
         execute: async (context: IDashboardComponentContext) => {
             const ipAddress = context.evalProperty<string>("ipAddress");
             if (!ipAddress || typeof ipAddress != "string") {
@@ -87,54 +95,27 @@ registerActionComponents("TCP", [
                 return;
             }
 
-            const constructorParams: TCPConnectionConstructorParams = {
+            const constructorParams: TCPSocketConstructorParams = {
                 ipAddress,
                 port
             };
 
-            const id = nextTCPConnectionId++;
-            let tcpConnection = new TCPConnection(
-                "client",
-                id,
-                constructorParams
-            );
-            tcpConnections.set(id, tcpConnection);
+            const id = nextTCPSocketId++;
+            let tcpSocket = new TCPSocket("client", id, constructorParams);
+            tcpSockets.set(id, tcpSocket);
 
             context.assignProperty(
-                "connection",
+                "socket",
                 {
-                    id: tcpConnection.id,
-                    status: tcpConnection.status
+                    id: tcpSocket.id,
+                    status: tcpSocket.status
                 },
                 undefined
             );
 
             context.propagateValueThroughSeqout();
 
-            tcpConnection.connect();
-
-            /*
-            context = context.startAsyncExecution();
-
-            try {
-                tcpConnection.connect();
-
-                context.assignProperty(
-                    "connection",
-                    {
-                        id: tcpConnection.id,
-                        status: tcpConnection.status
-                    },
-                    undefined
-                );
-
-                context.propagateValueThroughSeqout();
-            } catch (err) {
-                context.throwError(`Failed to connect ${err.code}`);
-            } finally {
-                context.endAsyncExecution();
-            }
-            */
+            tcpSocket.connect();
         }
     },
     {
@@ -154,7 +135,7 @@ registerActionComponents("TCP", [
         outputs: [
             {
                 name: "connection",
-                type: "object:TCPConnection",
+                type: "object:TCPSocket",
                 isSequenceOutput: false,
                 isOptionalOutput: false
             },
@@ -243,7 +224,7 @@ registerActionComponents("TCP", [
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const TCP_CONNECTION_EVENTS = [
+const TCP_SOCKET_EVENTS = [
     { id: "ready", label: "Ready", paramExpressionType: "null" },
     { id: "data", label: "Data", paramExpressionType: "string" },
     { id: "close", label: "Close", paramExpressionType: "null" },
@@ -280,7 +261,7 @@ class EventHandler extends EezObject {
                             TCPEventActionComponent.classInfo
                         )!;
 
-                    const eventEnumItems = TCP_CONNECTION_EVENTS.filter(
+                    const eventEnumItems = TCP_SOCKET_EVENTS.filter(
                         event =>
                             event.id == eventHandler.eventName ||
                             !component.eventHandlers.find(
@@ -382,7 +363,7 @@ class EventHandler extends EezObject {
         newItem: async (eventHandlers: EventHandler[]) => {
             const project = ProjectEditor.getProject(eventHandlers);
 
-            const eventEnumItems = TCP_CONNECTION_EVENTS.filter(
+            const eventEnumItems = TCP_SOCKET_EVENTS.filter(
                 event =>
                     !eventHandlers.find(
                         eventHandler => eventHandler.eventName == event.id
@@ -472,11 +453,11 @@ export class TCPEventActionComponent extends ActionComponent {
         properties: [
             makeExpressionProperty(
                 {
-                    name: "connection",
+                    name: "socket",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
-                "object:TCPConnection"
+                "object:TCPSocket"
             ),
             {
                 name: "eventHandlers",
@@ -492,37 +473,44 @@ export class TCPEventActionComponent extends ActionComponent {
         componentHeaderColor,
         componentPaletteGroupName: "TCP",
 
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            if (jsObject.connection) {
+                jsObject.socket = jsObject.connection;
+                delete jsObject.connection;
+            }
+        },
+
         execute: (context: IDashboardComponentContext) => {
-            const tcpConnectionObject = context.evalProperty("connection");
-            if (!tcpConnectionObject) {
-                context.throwError(`invalid connection`);
+            const tcpSocketObject = context.evalProperty("socket");
+            if (!tcpSocketObject) {
+                context.throwError(`invalid Socket property`);
                 return;
             }
 
-            const tcpConnection = tcpConnections.get(tcpConnectionObject.id);
+            const tcpSocket = tcpSockets.get(tcpSocketObject.id);
 
-            if (tcpConnection) {
-                if (tcpConnection.socket) {
+            if (tcpSocket) {
+                if (tcpSocket.socket) {
                     context.startAsyncExecution();
-                    for (let i = 0; i < TCP_CONNECTION_EVENTS.length; i++) {
+                    for (let i = 0; i < TCP_SOCKET_EVENTS.length; i++) {
                         const outputIndex = context.getUint32Param(i * 4);
                         if (outputIndex != -1) {
-                            tcpConnection.socket.on(
-                                TCP_CONNECTION_EVENTS[i].id,
+                            tcpSocket.socket.on(
+                                TCP_SOCKET_EVENTS[i].id,
                                 value => {
-                                    if (TCP_CONNECTION_EVENTS[i].id == "data") {
+                                    if (TCP_SOCKET_EVENTS[i].id == "data") {
                                         value = value.toString();
                                     } else if (
-                                        TCP_CONNECTION_EVENTS[i].id == "error"
+                                        TCP_SOCKET_EVENTS[i].id == "error"
                                     ) {
                                         value = value.toString();
                                     }
                                     context.propagateValue(
-                                        TCP_CONNECTION_EVENTS[i].id,
+                                        TCP_SOCKET_EVENTS[i].id,
                                         value
                                     );
 
-                                    if (!tcpConnection.socket) {
+                                    if (!tcpSocket.socket) {
                                         context.endAsyncExecution();
                                     }
                                 }
@@ -530,24 +518,24 @@ export class TCPEventActionComponent extends ActionComponent {
                         }
                     }
                 } else {
-                    context.throwError("tcp connection is not connected");
+                    context.throwError("tcp socket is not connected");
                 }
 
                 context.propagateValueThroughSeqout();
             } else {
-                context.throwError("tcp connection not found");
+                context.throwError("tcp socket not found");
             }
         }
     });
 
-    connection: string;
+    scoket: string;
     eventHandlers: EventHandler[];
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            connection: observable,
+            scoket: observable,
             eventHandlers: observable
         });
     }
@@ -576,7 +564,7 @@ export class TCPEventActionComponent extends ActionComponent {
                 .filter(eventHandler => eventHandler.handlerType == "flow")
                 .map(eventHandler => ({
                     name: eventHandler.eventName,
-                    type: TCP_CONNECTION_EVENTS.find(
+                    type: TCP_SOCKET_EVENTS.find(
                         event => event.id == eventHandler.eventName
                     )!.paramExpressionType as any,
                     isOptionalOutput: false,
@@ -588,16 +576,16 @@ export class TCPEventActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            this.connection && (
+            this.scoket && (
                 <div className="body">
-                    <pre>{this.connection}</pre>
+                    <pre>{this.scoket}</pre>
                 </div>
             )
         );
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        for (const eventHandler of TCP_CONNECTION_EVENTS) {
+        for (const eventHandler of TCP_SOCKET_EVENTS) {
             dataBuffer.writeInt32(
                 assets.getComponentOutputIndex(this, eventHandler.id)
             );
@@ -614,18 +602,18 @@ registerActionComponents("TCP", [
         name: "TCPWrite",
         icon: TCP_WRITE_ICON as any,
         componentHeaderColor,
-        bodyPropertyCallback: (connection, data) => (
+        bodyPropertyCallback: (socket, data) => (
             <pre>
-                {connection} <LeftArrow /> {data}
+                {socket} <LeftArrow /> {data}
             </pre>
         ),
         inputs: [],
         outputs: [],
         properties: [
             {
-                name: "connection",
+                name: "socket",
                 type: "expression",
-                valueType: "object:TCPConnection"
+                valueType: "object:TCPSocket"
             },
             {
                 name: "data",
@@ -634,26 +622,32 @@ registerActionComponents("TCP", [
             }
         ],
         defaults: {},
+        migrateProperties: (component: IActionComponent) => {
+            if (component.connection) {
+                component.socket = component.connection;
+                delete component.connection;
+            }
+        },
         execute: (context: IDashboardComponentContext) => {
-            const tcpConnectionObject = context.evalProperty("connection");
-            if (!tcpConnectionObject) {
-                context.throwError(`invalid connection`);
+            const tcpSocketObject = context.evalProperty("socket");
+            if (!tcpSocketObject) {
+                context.throwError(`invalid Socket property`);
                 return;
             }
 
             const data = context.evalProperty("data");
             if (data == undefined || typeof data != "string") {
-                context.throwError(`invalid data`);
+                context.throwError(`invalid Data property`);
                 return;
             }
 
-            const tcpConnection = tcpConnections.get(tcpConnectionObject.id);
+            const tcpSocket = tcpSockets.get(tcpSocketObject.id);
 
-            if (tcpConnection) {
-                tcpConnection.write(data);
+            if (tcpSocket) {
+                tcpSocket.write(data);
                 context.propagateValueThroughSeqout();
             } else {
-                context.throwError("tcp connection not found");
+                context.throwError("TCP socket not found");
             }
         }
     },
@@ -661,38 +655,44 @@ registerActionComponents("TCP", [
         name: "TCPDisconnect",
         icon: TCP_DISCONNECT_ICON as any,
         componentHeaderColor,
-        bodyPropertyName: "connection",
+        bodyPropertyName: "socket",
         inputs: [],
         outputs: [],
         properties: [
             {
-                name: "connection",
+                name: "socket",
                 type: "expression",
-                valueType: "object:TCPConnection"
+                valueType: "object:TCPSocket"
             }
         ],
         defaults: {},
+        migrateProperties: (component: IActionComponent) => {
+            if (component.connection) {
+                component.socket = component.connection;
+                delete component.connection;
+            }
+        },
         execute: (context: IDashboardComponentContext) => {
-            const tcpConnection = context.evalProperty("connection");
-            if (!tcpConnection) {
-                context.throwError(`invalid connection`);
+            const tcpSocket = context.evalProperty("socket");
+            if (!tcpSocket) {
+                context.throwError(`invalid Socket property`);
                 return;
             }
 
             context = context.startAsyncExecution();
 
-            (async (tcpConnectionId: number) => {
-                const tcpConnection = tcpConnections.get(tcpConnectionId);
+            (async (tcpSocketId: number) => {
+                const tcpSocket = tcpSockets.get(tcpSocketId);
 
-                if (tcpConnection) {
-                    tcpConnection.disconnect();
+                if (tcpSocket) {
+                    tcpSocket.disconnect();
                     context.propagateValueThroughSeqout();
                 } else {
-                    context.throwError("tcp connection not found");
+                    context.throwError("TCP socket not found");
                 }
 
                 context.endAsyncExecution();
-            })(tcpConnection.id);
+            })(tcpSocket.id);
         }
     }
 ]);
@@ -723,24 +723,20 @@ class TCPListenExecutionState {
         });
 
         server.on("connection", socket => {
-            const constructorParams: TCPConnectionConstructorParams = {
+            const constructorParams: TCPSocketConstructorParams = {
                 ipAddress: (socket.address() as net.AddressInfo).address ?? "",
                 port: (socket.address() as net.AddressInfo).port ?? 0
             };
 
-            const id = nextTCPConnectionId++;
-            let tcpConnection = new TCPConnection(
-                "server",
-                id,
-                constructorParams
-            );
-            tcpConnections.set(id, tcpConnection);
+            const id = nextTCPSocketId++;
+            let tcpSocket = new TCPSocket("server", id, constructorParams);
+            tcpSockets.set(id, tcpSocket);
 
-            tcpConnection.setSocket(socket);
+            tcpSocket.setSocket(socket);
 
             context.propagateValue("connection", {
-                id: tcpConnection.id,
-                status: tcpConnection.status
+                id: tcpSocket.id,
+                status: tcpSocket.status
             });
         });
 
@@ -776,77 +772,77 @@ class TCPListenExecutionState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const tcpConnections = new Map<number, TCPConnection>();
-let nextTCPConnectionId = 0;
+export const tcpSockets = new Map<number, TCPSocket>();
+let nextTCPSocketId = 0;
 
-registerObjectVariableType("TCPConnection", {
+registerObjectVariableType("TCPSocket", {
     editConstructorParams: async (
         variable: IVariable,
-        constructorParams?: TCPConnectionConstructorParams
-    ): Promise<TCPConnectionConstructorParams | undefined> => {
+        constructorParams?: TCPSocketConstructorParams
+    ): Promise<TCPSocketConstructorParams | undefined> => {
         return undefined;
     },
 
-    createValue: (constructorParams: TCPConnectionConstructorParams) => {
+    createValue: (constructorParams: TCPSocketConstructorParams) => {
         return {
             constructorParams,
             status: {}
         };
     },
     destroyValue: (objectVariable: IObjectVariableValue & { id: number }) => {
-        const tcpConnection = tcpConnections.get(objectVariable.id);
-        if (tcpConnection) {
-            tcpConnection.disconnect();
-            tcpConnections.delete(tcpConnection.id);
+        const tcpCocket = tcpSockets.get(objectVariable.id);
+        if (tcpCocket) {
+            tcpCocket.disconnect();
+            tcpSockets.delete(tcpCocket.id);
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {
-        return tcpConnections.get(variableValue.id) ?? null;
+        return tcpSockets.get(variableValue.id) ?? null;
     },
     valueFieldDescriptions: [
         {
             name: "ipAddress",
             valueType: "string",
-            getFieldValue: (value: TCPConnection): string => {
+            getFieldValue: (value: TCPSocket): string => {
                 return value.constructorParams.ipAddress;
             }
         },
         {
             name: "port",
             valueType: "integer",
-            getFieldValue: (value: TCPConnection): number => {
+            getFieldValue: (value: TCPSocket): number => {
                 return value.constructorParams.port;
             }
         },
         {
             name: "isConnected",
             valueType: "boolean",
-            getFieldValue: (value: TCPConnection): boolean => {
+            getFieldValue: (value: TCPSocket): boolean => {
                 return value.isConnected;
             }
         },
         {
             name: "id",
             valueType: "integer",
-            getFieldValue: (value: TCPConnection): number => {
+            getFieldValue: (value: TCPSocket): number => {
                 return value.id;
             }
         }
     ]
 });
 
-interface TCPConnectionConstructorParams {
+interface TCPSocketConstructorParams {
     ipAddress: string;
     port: number;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class TCPConnection {
+export class TCPSocket {
     constructor(
         public type: "server" | "client",
         public id: number,
-        public constructorParams: TCPConnectionConstructorParams
+        public constructorParams: TCPSocketConstructorParams
     ) {
         makeObservable(this, {
             isConnected: observable

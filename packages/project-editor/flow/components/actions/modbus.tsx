@@ -38,8 +38,8 @@ import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-wor
 
 import { isArray } from "eez-studio-shared/util";
 import {
-    tcpConnections,
-    TCPConnection
+    tcpSockets,
+    TCPSocket
 } from "project-editor/flow/components/actions/tcp";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -213,14 +213,11 @@ export class ModbusActionComponent extends ActionComponent {
             }
 
             function getModbusClient() {
-                let connectionObject:
-                    | SerialConnection
-                    | TCPConnection
-                    | undefined;
+                let connectionObject: SerialConnection | TCPSocket | undefined;
 
                 connectionObject = serialConnections.get(connection.id);
                 if (!connectionObject) {
-                    connectionObject = tcpConnections.get(connection.id);
+                    connectionObject = tcpSockets.get(connection.id);
                 }
 
                 if (!connectionObject) {

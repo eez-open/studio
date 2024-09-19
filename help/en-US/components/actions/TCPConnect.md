@@ -6,7 +6,7 @@ Connects to the TCP server.
 
 ## Connection
 
-Connection object of type `object:TCPConnection` to be created and initialized.
+Connection object of type `object:TCPSocket` to be created and initialized.
 
 ## IP Address
 

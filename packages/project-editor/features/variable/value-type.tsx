@@ -968,6 +968,8 @@ export function migrateType(objectJS: any, propName?: string) {
         return;
     }
 
+    console.log("migrateType", objectJS, propName, objectJS[propName]);
+
     if (objectJS[propName] == "list") {
         objectJS[propName] = "array";
     } else if (objectJS[propName].startsWith("custom:")) {
@@ -988,6 +990,8 @@ export function migrateType(objectJS: any, propName?: string) {
         objectJS[propName] = "struct:$TextInputChangeEvent";
     } else if (objectJS[propName] == "struct:$DropDownListActionParams") {
         objectJS[propName] = "struct:$DropDownListChangeEvent";
+    } else if (objectJS[propName] == "object:TCPConnection") {
+        objectJS[propName] = "object:TCPSocket";
     }
 }
 
