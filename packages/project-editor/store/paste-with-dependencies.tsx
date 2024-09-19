@@ -435,12 +435,16 @@ class PasteWithDependenciesModel {
             object instanceof ProjectEditor.StyleClass ||
             object instanceof ProjectEditor.LVGLStyleClass
         ) {
-            const parentObject = getParent(getParent(object));
-            if (
-                parentObject instanceof ProjectEditor.StyleClass ||
-                parentObject instanceof ProjectEditor.LVGLStyleClass
-            ) {
-                parentStyleObject = parentObject;
+            const collection = getParent(object);
+            if (collection) {
+                const parentObject = getParent(collection);
+                if (
+                    parentObject &&
+                    (parentObject instanceof ProjectEditor.StyleClass ||
+                        parentObject instanceof ProjectEditor.LVGLStyleClass)
+                ) {
+                    parentStyleObject = parentObject;
+                }
             }
         }
 
