@@ -772,7 +772,7 @@ class TCPListenExecutionState {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const tcpSockets = new Map<number, TCPSocket>();
+const tcpSockets = new Map<number, TCPSocket>();
 let nextTCPSocketId = 0;
 
 registerObjectVariableType("TCPSocket", {
@@ -790,10 +790,10 @@ registerObjectVariableType("TCPSocket", {
         };
     },
     destroyValue: (objectVariable: IObjectVariableValue & { id: number }) => {
-        const tcpCocket = tcpSockets.get(objectVariable.id);
-        if (tcpCocket) {
-            tcpCocket.disconnect();
-            tcpSockets.delete(tcpCocket.id);
+        const tcpSocket = tcpSockets.get(objectVariable.id);
+        if (tcpSocket) {
+            tcpSocket.disconnect();
+            tcpSockets.delete(tcpSocket.id);
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {
@@ -838,7 +838,7 @@ interface TCPSocketConstructorParams {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class TCPSocket {
+class TCPSocket {
     constructor(
         public type: "server" | "client",
         public id: number,
