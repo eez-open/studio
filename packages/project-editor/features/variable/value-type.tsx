@@ -968,8 +968,6 @@ export function migrateType(objectJS: any, propName?: string) {
         return;
     }
 
-    console.log("migrateType", objectJS, propName, objectJS[propName]);
-
     if (objectJS[propName] == "list") {
         objectJS[propName] = "array";
     } else if (objectJS[propName].startsWith("custom:")) {
