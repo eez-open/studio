@@ -1,8 +1,12 @@
+export interface IComponentExecutionState {
+    onDestroy?: () => void;
+}
+
 const wasmModuleExecutionStates = new Map<
     number,
     {
-        wasmStateToDashboardState: Map<number, any>;
-        dasboardStateToWasmState: Map<any, number>;
+        wasmStateToDashboardState: Map<number, IComponentExecutionState>;
+        dasboardStateToWasmState: Map<IComponentExecutionState, number>;
     }
 >();
 
@@ -24,10 +28,7 @@ export function registerDashboardState<T>(
     executionStates.dasboardStateToWasmState.set(dashboardState, wasmState);
 }
 
-export function getDashboardState<T>(
-    wasmModuleId: number,
-    wasmState: number
-): T | undefined {
+export function getDashboardState(wasmModuleId: number, wasmState: number) {
     let executionStates = wasmModuleExecutionStates.get(wasmModuleId);
     if (!executionStates) {
         return undefined;
@@ -58,7 +59,7 @@ function freeComponentExecutionState(wasmModuleId: number, wasmState: number) {
     const dashboardState =
         executionStates.wasmStateToDashboardState.get(wasmState);
     if (dashboardState) {
-        if (dashboardState && dashboardState.onDestroy) {
+        if (dashboardState.onDestroy) {
             dashboardState.onDestroy();
         }
 

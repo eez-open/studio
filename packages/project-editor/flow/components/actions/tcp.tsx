@@ -44,6 +44,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/build/assets";
+import type { IComponentExecutionState } from "project-editor/flow/runtime/component-execution-states";
 
 const componentHeaderColor = "#cca3ba";
 
@@ -699,7 +700,7 @@ registerActionComponents("TCP", [
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class TCPListenExecutionState {
+class TCPListenExecutionState implements IComponentExecutionState {
     constructor(
         public port: number,
         public ipAddress: string | undefined,

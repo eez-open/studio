@@ -206,7 +206,9 @@ export function createWasmArrayValue(
             typeof value == "number" ||
             typeof value == "boolean" ||
             typeof value == "string" ||
-            value instanceof Date
+            value instanceof Date ||
+            value instanceof Buffer ||
+            value instanceof Uint8Array
         ) {
             valuePtr = createWasmValue(WasmFlowRuntime, value);
         } else {

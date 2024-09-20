@@ -1089,7 +1089,19 @@ export const builtInFunctions: {
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
-        ) => (window as any).d3.format(args[0])(args[1]),
+        ) => {
+            if (
+                !expressionContext?.projectStore.projectTypeTraits.isDashboard
+            ) {
+                if (args[0].startsWith("%")) {
+                    return (window as any).d3.format(args[0].slice(1))(args[1]);
+                } else {
+                    return (window as any).d3.format(args[0])(args[1]);
+                }
+            } else {
+                (window as any).d3.format(args[0])(args[1]);
+            }
+        },
         getValueType: (...args: ValueType[]) => {
             return "string";
         }
@@ -1263,6 +1275,20 @@ export const builtInFunctions: {
         getValueType: (...args: ValueType[]) => {
             return "blob";
         }
+    },
+
+    "Blob.toString": {
+        operationIndex: 88,
+        arity: 1,
+        args: ["blob"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => args[1].toString("utf8"),
+        getValueType: (...args: ValueType[]) => {
+            return "string";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isDashboard
     },
 
     "JSON.get": {

@@ -40,10 +40,10 @@ export class DashboardComponentContext implements IDashboardComponentContext {
             this.flowStateIndex,
             this.componentIndex
         );
-        return getDashboardState<T>(
+        return getDashboardState(
             this.WasmFlowRuntime.wasmModuleId,
             wasmState
-        );
+        ) as T | undefined;
     }
 
     setComponentExecutionState<T>(state: T | undefined) {

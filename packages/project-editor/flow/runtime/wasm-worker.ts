@@ -436,6 +436,25 @@ function getObjectVariableMemberValue(
     return createWasmValue(WasmFlowRuntime, value);
 }
 
+function operationBlobToString(
+    wasmModuleId: number,
+    blobPtr: number,
+    len: number
+) {
+    let value = undefined;
+
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        value = Buffer.from(
+            WasmFlowRuntime.HEAP8.buffer,
+            blobPtr,
+            len
+        ).toString("utf8");
+    }
+
+    return createWasmValue(WasmFlowRuntime, value);
+}
+
 function dashboardObjectValueIncRef(wasmModuleId: number, jsObjectID: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (WasmFlowRuntime) {
@@ -540,6 +559,7 @@ function lvglObjRemoveStyle(
 (global as any).convertFromJson = convertFromJson;
 (global as any).convertToJson = convertToJson;
 (global as any).getObjectVariableMemberValue = getObjectVariableMemberValue;
+(global as any).operationBlobToString = operationBlobToString;
 (global as any).dashboardObjectValueIncRef = dashboardObjectValueIncRef;
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
