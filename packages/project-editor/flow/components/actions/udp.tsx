@@ -30,7 +30,7 @@ registerSystemStructure({
     name: UDP_MESSAGE_STRUCT_NAME,
     fields: [
         {
-            name: "data",
+            name: "payload",
             type: "blob"
         },
         {
@@ -153,13 +153,13 @@ export class UDPInActionComponent extends ActionComponent {
             let group: string | undefined;
             let iface: string | undefined;
             if (multicast) {
-                group = context.evalProperty<string>("data");
+                group = context.evalProperty<string>("group");
                 if (group == undefined || typeof group != "string") {
                     context.throwError(`invalid Group property`);
                     return;
                 }
 
-                iface = context.evalProperty<string>("data");
+                iface = context.evalProperty<string>("iface");
                 if (iface == undefined || typeof iface != "string") {
                     context.throwError(`invalid Local interface property`);
                     return;
@@ -265,7 +265,7 @@ export class UDPInActionComponent extends ActionComponent {
                 // node.send(msg);
 
                 context.propagateValue("message", {
-                    data: message,
+                    payload: message,
                     address: remote.address,
                     port: remote.port
                 });
@@ -430,6 +430,14 @@ export class UDPOutActionComponent extends ActionComponent {
                         object.outportType !== "fixed"
                 },
                 "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "payload",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
             )
         ],
         icon: UDP_OUT_ICON,
@@ -454,13 +462,13 @@ export class UDPOutActionComponent extends ActionComponent {
             let group: string | undefined;
             let iface: string | undefined;
             if (multicast) {
-                group = context.evalProperty<string>("data");
+                group = context.evalProperty<string>("group");
                 if (group == undefined || typeof group != "string") {
                     context.throwError(`invalid Group property`);
                     return;
                 }
 
-                iface = context.evalProperty<string>("data");
+                iface = context.evalProperty<string>("iface");
                 if (iface == undefined || typeof iface != "string") {
                     context.throwError(`invalid Local interface property`);
                     return;
@@ -485,6 +493,12 @@ export class UDPOutActionComponent extends ActionComponent {
                     context.throwError(`invalid Outport property`);
                     return;
                 }
+            }
+
+            const payload = context.evalProperty<string>("payload");
+            if (payload == undefined || typeof payload != "string") {
+                context.throwError(`invalid Payload property`);
+                return;
             }
 
             if (iface && iface.indexOf(".") === -1) {
@@ -521,68 +535,64 @@ export class UDPOutActionComponent extends ActionComponent {
 
             var p = outport || port || 0;
 
-            // node.tout =
-
-            setTimeout(function () {
-                if (p != 0 && udpInputPortsInUse[p]) {
-                    sock = udpInputPortsInUse[p];
-                    if (multicast != 0) {
-                        sock.setBroadcast(true);
-                        sock.setMulticastLoopback(false);
-                    }
-                    // node.log(RED._("udp.status.re-use",{outport:node.outport,host:node.addr,port:node.port}));
-                    // if (iface) {
-                    //     node.status({text:n.iface+" : "+node.iface});
-                    // }
-                } else {
-                    sock = dgram.createSocket(opts); // default to udp4
-                    if (multicast != 0) {
-                        sock.bind(outport, function () {
-                            // have to bind before you can enable broadcast...
-                            sock.setBroadcast(true); // turn on broadcast
-                            sock.setMulticastLoopback(false); // turn off loopback
-                            if (multicast == 1 && group) {
-                                try {
-                                    sock.setMulticastTTL(128);
-                                    sock.addMembership(group, iface); // Add to the multicast group
-                                    // if (iface) {
-                                    //     node.status({text:n.iface+" : "+node.iface});
-                                    // }
-                                    // node.log(RED._("udp.status.mc-ready",{iface:node.iface,outport:node.outport,host:node.addr,port:node.port}));
-                                } catch (e) {
-                                    // if (e.errno == "EINVAL") {
-                                    //     node.error(RED._("udp.errors.bad-mcaddress"));
-                                    // } else if (e.errno == "ENODEV") {
-                                    //     node.error(RED._("udp.errors.interface"));
-                                    // } else {
-                                    //     node.error(RED._("udp.errors.error",{error:e.errno}));
-                                    // }
-                                    context.throwError(e.toString());
-                                }
-                            } else {
-                                // node.log(RED._("udp.status.bc-ready",{outport:node.outport,host:node.addr,port:node.port}));
-                            }
-                        });
-                    } else if (
-                        outport !== undefined &&
-                        !udpInputPortsInUse[outport]
-                    ) {
-                        sock.bind(outport);
-                        // node.log(RED._("udp.status.ready",{outport:node.outport,host:node.addr,port:node.port}));
-                    } else {
-                        // node.log(RED._("udp.status.ready-nolocal",{host:node.addr,port:node.port}));
-                    }
-
-                    sock.on("error", function (err) {
-                        // Any async error will also get reported in the sock.send call.
-                        // This handler is needed to ensure the error marked as handled to
-                        // prevent it going to the global error handler and shutting node-red
-                        // down.
-                    });
-
-                    udpInputPortsInUse[p] = sock;
+            if (p != 0 && udpInputPortsInUse[p]) {
+                sock = udpInputPortsInUse[p];
+                if (multicast != 0) {
+                    sock.setBroadcast(true);
+                    sock.setMulticastLoopback(false);
                 }
-            });
+                // node.log(RED._("udp.status.re-use",{outport:node.outport,host:node.addr,port:node.port}));
+                // if (iface) {
+                //     node.status({text:n.iface+" : "+node.iface});
+                // }
+            } else {
+                sock = dgram.createSocket(opts); // default to udp4
+                if (multicast != 0) {
+                    sock.bind(outport, function () {
+                        // have to bind before you can enable broadcast...
+                        sock.setBroadcast(true); // turn on broadcast
+                        sock.setMulticastLoopback(false); // turn off loopback
+                        if (multicast == 1 && group) {
+                            try {
+                                sock.setMulticastTTL(128);
+                                sock.addMembership(group, iface); // Add to the multicast group
+                                // if (iface) {
+                                //     node.status({text:n.iface+" : "+node.iface});
+                                // }
+                                // node.log(RED._("udp.status.mc-ready",{iface:node.iface,outport:node.outport,host:node.addr,port:node.port}));
+                            } catch (e) {
+                                // if (e.errno == "EINVAL") {
+                                //     node.error(RED._("udp.errors.bad-mcaddress"));
+                                // } else if (e.errno == "ENODEV") {
+                                //     node.error(RED._("udp.errors.interface"));
+                                // } else {
+                                //     node.error(RED._("udp.errors.error",{error:e.errno}));
+                                // }
+                                context.throwError(e.toString());
+                            }
+                        } else {
+                            // node.log(RED._("udp.status.bc-ready",{outport:node.outport,host:node.addr,port:node.port}));
+                        }
+                    });
+                } else if (
+                    outport !== undefined &&
+                    !udpInputPortsInUse[outport]
+                ) {
+                    sock.bind(outport);
+                    // node.log(RED._("udp.status.ready",{outport:node.outport,host:node.addr,port:node.port}));
+                } else {
+                    // node.log(RED._("udp.status.ready-nolocal",{host:node.addr,port:node.port}));
+                }
+
+                sock.on("error", function (err) {
+                    // Any async error will also get reported in the sock.send call.
+                    // This handler is needed to ensure the error marked as handled to
+                    // prevent it going to the global error handler and shutting node-red
+                    // down.
+                });
+
+                udpInputPortsInUse[p] = sock;
+            }
 
             // node.on("input", function(msg, nodeSend, nodeDone) {
             //     if (msg.hasOwnProperty("payload")) {
@@ -616,6 +626,22 @@ export class UDPOutActionComponent extends ActionComponent {
             //         }
             //     }
             // });
+
+            context.startAsyncExecution();
+
+            sock.send(
+                payload,
+                0,
+                payload.length,
+                port,
+                group,
+                function (err, bytes) {
+                    if (err) {
+                        context.throwError(err.toString());
+                    }
+                    context.endAsyncExecution();
+                }
+            );
         }
     });
 
@@ -626,6 +652,7 @@ export class UDPOutActionComponent extends ActionComponent {
     ipv: string;
     outportType: string;
     outport: string;
+    payload: string;
 
     override makeEditable() {
         super.makeEditable();
@@ -637,7 +664,8 @@ export class UDPOutActionComponent extends ActionComponent {
             port: observable,
             ipv: observable,
             outportType: observable,
-            outport: observable
+            outport: observable,
+            payload: observable
         });
     }
 
@@ -648,7 +676,8 @@ export class UDPOutActionComponent extends ActionComponent {
                 type: "any" as const,
                 isSequenceInput: true,
                 isOptionalInput: true
-            }
+            },
+            ...super.getInputs()
         ];
     }
 
@@ -659,7 +688,8 @@ export class UDPOutActionComponent extends ActionComponent {
                 type: "null" as const,
                 isSequenceOutput: true,
                 isOptionalOutput: true
-            }
+            },
+            ...super.getOutputs()
         ];
     }
 
