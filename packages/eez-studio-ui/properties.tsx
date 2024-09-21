@@ -2,6 +2,7 @@ import React from "react";
 import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { dialog } from "@electron/remote";
 
 import { formatBytes } from "eez-studio-shared/formatBytes";
 import { guid } from "eez-studio-shared/guid";
@@ -55,20 +56,24 @@ export const PropertyEnclosure = observer(
 );
 
 export const StaticProperty = observer(
-    class StaticProperty extends React.Component<
-        {
-            name: string;
-            value: string;
-        },
-        {}
-    > {
+    class StaticProperty extends React.Component<{
+        name: string;
+        value: string;
+        className?: string;
+    }> {
         render() {
             const value =
                 (this.props.value && this.props.value.toString()) || "";
             return (
                 <PropertyEnclosure>
                     <td className="PropertyName">{this.props.name}</td>
-                    <td className="StaticPropertyValue" title={value}>
+                    <td
+                        className={classNames(
+                            "StaticPropertyValue",
+                            this.props.className
+                        )}
+                        title={value}
+                    >
                         {value}
                     </td>
                 </PropertyEnclosure>
@@ -932,3 +937,43 @@ export const ButtonProperty = observer(
         }
     }
 );
+
+export class AbsoluteFileInputProperty extends React.Component<
+    {
+        name?: string;
+        value: string;
+        onChange: (value: string) => void;
+    },
+    {}
+> {
+    async onSelect() {
+        const result = await dialog.showOpenDialog({
+            properties: ["openFile"],
+            filters: [{ name: "All Files", extensions: ["*"] }]
+        });
+
+        if (result.filePaths && result.filePaths[0]) {
+            this.props.onChange(result.filePaths[0]);
+        }
+    }
+
+    render() {
+        return (
+            <InputProperty
+                name={this.props.name}
+                value={this.props.value}
+                onChange={this.props.onChange}
+                type="text"
+                inputGroupButton={
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onSelect.bind(this)}
+                    >
+                        &hellip;
+                    </button>
+                }
+            />
+        );
+    }
+}
