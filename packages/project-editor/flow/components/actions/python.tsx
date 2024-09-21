@@ -14,6 +14,7 @@ import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-wor
 
 import { registerActionComponents } from "project-editor/flow/component";
 import { PYTHON_ICON, RightArrow } from "project-editor/ui-components/icons";
+import { settingsController } from "home/settings";
 
 const componentHeaderColor = "#BBE4E0";
 
@@ -145,8 +146,15 @@ registerActionComponents("Python", [
                 scriptFilePath = scriptSource;
             }
 
+            let pythonPath = context.evalProperty<string>("pythonPath");
+            if (!pythonPath) {
+                if (settingsController.pythonUseCustomPath) {
+                    pythonPath = settingsController.pythonCustomPath;
+                }
+            }
+
             const options: Options = {
-                pythonPath: context.evalProperty<string>("pythonPath")
+                pythonPath
             };
             const { PythonShell } =
                 require("python-shell") as typeof import("python-shell");

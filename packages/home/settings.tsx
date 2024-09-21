@@ -9,7 +9,8 @@ import {
     action,
     runInAction,
     toJS,
-    makeObservable
+    makeObservable,
+    reaction
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -38,9 +39,11 @@ import { formatBytes } from "eez-studio-shared/formatBytes";
 import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 import {
+    AbsoluteFileInputProperty,
     BooleanProperty,
     PropertyList,
-    SelectProperty
+    SelectProperty,
+    StaticProperty
 } from "eez-studio-ui/properties";
 import * as notification from "eez-studio-ui/notification";
 import {
@@ -123,7 +126,17 @@ class SettingsController {
     isDarkTheme: boolean = getIsDarkTheme();
     mru: IMruItem[] = getMRU();
 
+    pythonUseCustomPath: boolean = false;
+    pythonCustomPath: string = "";
+
     constructor() {
+        this.pythonUseCustomPath =
+            window.localStorage.getItem("pythonUseCustomPath") == "1"
+                ? true
+                : false;
+        this.pythonCustomPath =
+            window.localStorage.getItem("pythonCustomPath") ?? "";
+
         this.selectedDatabase = instrumentDatabases.activeDatabase;
 
         makeObservable(this, {
@@ -138,10 +151,29 @@ class SettingsController {
             onDateFormatChanged: action.bound,
             onTimeFormatChanged: action.bound,
             switchTheme: action.bound,
-            removeItemFromMRU: action
+            removeItemFromMRU: action,
+            pythonUseCustomPath: observable,
+            pythonCustomPath: observable
         });
 
         this.onThemeSwitched();
+
+        reaction(
+            () => ({
+                setCustomPath: this.pythonUseCustomPath,
+                customPythonPath: this.pythonCustomPath
+            }),
+            ({ setCustomPath, customPythonPath }) => {
+                window.localStorage.setItem(
+                    "pythonUseCustomPath",
+                    setCustomPath ? "1" : "0"
+                );
+                window.localStorage.setItem(
+                    "pythonCustomPath",
+                    customPythonPath
+                );
+            }
+        );
     }
 
     get restartRequired() {
@@ -722,6 +754,83 @@ const Databases = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const PythonSettings = observer(
+    class PythonSettings extends React.Component {
+        constructor(props: any) {
+            super(props);
+
+            const { PythonShell } =
+                require("python-shell") as typeof import("python-shell");
+
+            PythonShell.runString(
+                "import sys;print(sys.executable)",
+                undefined,
+                action((err, output) => {
+                    if (err) {
+                        console.log(err);
+                        this.pythonPathError = true;
+                    } else if (!output) {
+                        this.pythonPathError = true;
+                    } else {
+                        this.pythonPath = output[0];
+                    }
+                })
+            );
+
+            makeObservable(this, {
+                pythonPath: observable,
+                pythonPathError: observable
+            });
+        }
+
+        pythonPath: string = "";
+        pythonPathError: boolean = false;
+
+        render() {
+            return (
+                <tr>
+                    <td>Python</td>
+                    <td>
+                        <PropertyList>
+                            <StaticProperty
+                                name="Default path"
+                                value={
+                                    this.pythonPathError
+                                        ? "Python not found"
+                                        : this.pythonPath
+                                }
+                                className="StaticPropertyValueWrap"
+                            />
+                            <BooleanProperty
+                                name={`Set custom path`}
+                                value={settingsController.pythonUseCustomPath}
+                                onChange={action(
+                                    value =>
+                                        (settingsController.pythonUseCustomPath =
+                                            value)
+                                )}
+                                checkboxStyleSwitch={true}
+                            />
+                            {settingsController.pythonUseCustomPath && (
+                                <AbsoluteFileInputProperty
+                                    name="Python path"
+                                    value={settingsController.pythonCustomPath}
+                                    onChange={action(value => {
+                                        settingsController.pythonCustomPath =
+                                            value;
+                                    })}
+                                />
+                            )}
+                        </PropertyList>
+                    </td>
+                </tr>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const Settings = observer(
     class Settings extends React.Component {
         render() {
@@ -780,6 +889,7 @@ export const Settings = observer(
                                 </option>
                             ))}
                         </SelectProperty>
+                        <PythonSettings />
                         <BooleanProperty
                             name={`Dark theme`}
                             value={settingsController.isDarkTheme}

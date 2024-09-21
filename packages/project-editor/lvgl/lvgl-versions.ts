@@ -33,6 +33,7 @@ import {
     LVGL_PARTS_8,
     LVGL_PARTS_9
 } from "project-editor/lvgl/lvgl-constants";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -276,6 +277,9 @@ const versions = {
                     mode: "text",
                     pythonOptions: ["-u"], // get print results in real-time
                     scriptPath: lvglImageScriptPath,
+                    pythonPath: settingsController.pythonUseCustomPath
+                        ? settingsController.pythonCustomPath
+                        : undefined,
                     args: [
                         "--ofmt",
                         "C",
