@@ -8,7 +8,10 @@ import {
 } from "project-editor/flow/component";
 import { UDP_IN_ICON, UDP_OUT_ICON } from "project-editor/ui-components/icons";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
+import type {
+    IDashboardComponentContext,
+    IWasmFlowRuntime
+} from "eez-studio-types";
 import {
     makeDerivedClassInfo,
     PropertyType,
@@ -17,10 +20,24 @@ import {
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Assets, DataBuffer } from "project-editor/build/assets";
-import type { IComponentExecutionState } from "project-editor/flow/runtime/component-execution-states";
 import { registerSystemStructure } from "project-editor/features/variable/value-type";
+import { onWasmFlowRuntimeTerminate } from "project-editor/flow/runtime/wasm-worker";
+
+////////////////////////////////////////////////////////////////////////////////
 
 const componentHeaderColor = "#cca3ba";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const MODE_UDP = 0;
+const MODE_MULTICAST = 1;
+const MODE_BROADCAST = 2;
+
+const IPV4 = 0;
+const IPV6 = 1;
+
+const OUTPORT_TYPE_FIXED = 0;
+const OUTPORT_TYPE_RANDOM = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,33 +63,33 @@ registerSystemStructure({
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const udpInputPortsInUse: { [port: number]: Socket } = {};
-
-class UDPInExecutionState implements IComponentExecutionState {
-    constructor(
-        public context: IDashboardComponentContext,
-        public server: Socket,
-        public port: number,
-        public group: string | undefined
-    ) {}
-
-    onDestroy() {
-        try {
-            if (this.group) {
-                this.server.dropMembership(this.group);
-            }
-            this.server.close();
-        } catch (err) {
-            //node.error(err);
-        }
-
-        if (udpInputPortsInUse.hasOwnProperty(this.port)) {
-            delete udpInputPortsInUse[this.port];
-        }
-
-        this.context.endAsyncExecution();
-    }
+interface IPortInUse {
+    wasmModuleId: number;
+    port: number;
+    server: Socket;
+    group: string | undefined;
 }
+
+const udpInputPortsInUse = new Map<number, IPortInUse>();
+
+onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
+    for (const port of udpInputPortsInUse.keys()) {
+        const { server, group } = udpInputPortsInUse.get(port)!;
+        try {
+            if (group) {
+                server.dropMembership(group);
+            }
+            server.close();
+        } catch (err) {
+            console.error(
+                `Free UDP input port in use ${port}: ${err.toString()}`
+            );
+        }
+        udpInputPortsInUse.delete(port);
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class UDPInActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
@@ -107,6 +124,7 @@ export class UDPInActionComponent extends ActionComponent {
                     displayName: "Local interface",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
+                    isOptional: true,
                     disabled: (object: UDPInActionComponent) =>
                         object.multicast !== "multicast"
                 },
@@ -115,6 +133,7 @@ export class UDPInActionComponent extends ActionComponent {
             makeExpressionProperty(
                 {
                     name: "port",
+                    displayName: "On port",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup
                 },
@@ -122,7 +141,7 @@ export class UDPInActionComponent extends ActionComponent {
             ),
             {
                 name: "ipv",
-                displayName: "IPv",
+                displayName: "Using",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "udp4", label: "IPv4" },
@@ -134,7 +153,7 @@ export class UDPInActionComponent extends ActionComponent {
         ],
         icon: UDP_IN_ICON,
         componentHeaderColor,
-        componentPaletteGroupName: "UDP",
+        componentPaletteGroupName: "Network",
 
         defaultValue: {
             multicast: "udp",
@@ -148,11 +167,11 @@ export class UDPInActionComponent extends ActionComponent {
             var os = require("os") as typeof import("os");
             var dgram = require("dgram") as typeof import("dgram");
 
-            const multicast = context.getUint8Param(0) == 1;
+            const multicast = context.getUint8Param(0);
 
             let group: string | undefined;
             let iface: string | undefined;
-            if (multicast) {
+            if (multicast == MODE_MULTICAST) {
                 group = context.evalProperty<string>("group");
                 if (group == undefined || typeof group != "string") {
                     context.throwError(`invalid Group property`);
@@ -160,7 +179,7 @@ export class UDPInActionComponent extends ActionComponent {
                 }
 
                 iface = context.evalProperty<string>("iface");
-                if (iface == undefined || typeof iface != "string") {
+                if (iface != undefined && typeof iface != "string") {
                     context.throwError(`invalid Local interface property`);
                     return;
                 }
@@ -173,7 +192,7 @@ export class UDPInActionComponent extends ActionComponent {
             }
 
             const ipv: SocketType =
-                context.getUint8Param(1) == 1 ? "udp6" : "udp4";
+                context.getUint8Param(1) == IPV6 ? "udp6" : "udp4";
 
             if (iface && iface.indexOf(".") === -1) {
                 const networkInterface = os.networkInterfaces()[iface];
@@ -194,76 +213,52 @@ export class UDPInActionComponent extends ActionComponent {
                             }
                         }
                     } catch (e) {
-                        // node.warn(RED._("udp.errors.ifnotfound",{iface:node.iface}));
-                        // context.throwError(`invalid Local interface property`);
                         iface = undefined;
                     }
                 } else {
-                    // node.warn(RED._("udp.errors.ifnotfound",{iface:node.iface}));
-                    // context.throwError(`invalid Local interface property`);
                     iface = undefined;
                 }
             }
 
-            context.startAsyncExecution();
-
             var opts = { type: ipv, reuseAddr: true };
             var server: Socket;
 
-            if (!udpInputPortsInUse.hasOwnProperty(port)) {
+            const portInUse = udpInputPortsInUse.get(port);
+
+            context.startAsyncExecution();
+
+            if (!portInUse) {
                 server = dgram.createSocket(opts);
+
                 server.bind(port, function () {
-                    if (multicast && group) {
+                    if (multicast == MODE_MULTICAST && group) {
                         server.setBroadcast(true);
                         server.setMulticastLoopback(false);
-                        // if (node.iface) { node.status({text:n.iface+" : "+node.iface}); }
-                        // node.log(RED._("udp.status.mc-group",{group:node.group}));
                         try {
                             server.setMulticastTTL(128);
                             server.addMembership(group, iface);
                         } catch (err) {
-                            // if (e.errno == "EINVAL") {
-                            //     node.error(RED._("udp.errors.bad-mcaddress"));
-                            // } else if (e.errno == "ENODEV") {
-                            //     node.error(RED._("udp.errors.interface"));
-                            // } else {
-                            //     node.error(RED._("udp.errors.error",{error:e.errno}));
-                            // }
                             context.throwError(err.toString());
                         }
                     }
                 });
-                udpInputPortsInUse[port] = server;
+
+                udpInputPortsInUse.set(port, {
+                    wasmModuleId: context.WasmFlowRuntime.wasmModuleId,
+                    port,
+                    server,
+                    group
+                });
             } else {
-                // node.log(RED._("udp.errors.alreadyused",{port:node.port}));
-                server = udpInputPortsInUse[port]; // re-use existing
-                // if (node.iface) { node.status({text:n.iface+" : "+node.iface}); }
+                server = portInUse.server; // re-use existing
             }
 
             server.on("error", function (err) {
-                // if ((err.code == "EACCES") && (node.port < 1024)) {
-                //     node.error(RED._("udp.errors.access-error"));
-                // } else {
-                //     node.error(RED._("udp.errors.error",{error:err.code}));
-                // }
-
                 context.throwError(err.toString());
-                server.close();
-
                 context.endAsyncExecution();
             });
 
             server.on("message", function (message, remote) {
-                // var msg;
-                // if (node.datatype =="base64") {
-                //     msg = { payload:message.toString('base64'), fromip:remote.address+':'+remote.port, ip:remote.address, port:remote.port };
-                // } else if (node.datatype =="utf8") {
-                //     msg = { payload:message.toString('utf8'), fromip:remote.address+':'+remote.port, ip:remote.address, port:remote.port };
-                // } else {
-                //     msg = { payload:message, fromip:remote.address+':'+remote.port, ip:remote.address, port:remote.port };
-                // }
-                // node.send(msg);
-
                 context.propagateValue("message", {
                     payload: message,
                     address: remote.address,
@@ -272,20 +267,8 @@ export class UDPInActionComponent extends ActionComponent {
             });
 
             server.on("listening", function () {
-                // var address = server.address();
-                // node.log(RED._("udp.status.listener-at",{host:node.iface||address.address,port:address.port}));
-
-                var address = server.address();
-                console.log(iface, address);
+                context.propagateValueThroughSeqout();
             });
-
-            const executionState = new UDPInExecutionState(
-                context,
-                server,
-                port,
-                group
-            );
-            context.setComponentExecutionState(executionState);
         }
     });
 
@@ -336,12 +319,30 @@ export class UDPInActionComponent extends ActionComponent {
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
-        return null;
+        return (
+            <div className="body">
+                <pre>
+                    {`Listen for ${
+                        this.multicast == "udp"
+                            ? "UDP messages"
+                            : `Multicast messages\nIn group: ${this.group}${
+                                  this.iface
+                                      ? `\nOn local interface: ${this.iface}`
+                                      : ""
+                              }`
+                    }\nOn port: ${this.port}\nUsing: ${
+                        this.ipv == "udp4" ? "IPv4" : "IPv6"
+                    }`}
+                </pre>
+            </div>
+        );
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        dataBuffer.writeUint8(this.multicast == "multicast" ? 1 : 0);
-        dataBuffer.writeUint8(this.ipv == "udp6" ? 1 : 0);
+        dataBuffer.writeUint8(
+            this.multicast == "multicast" ? MODE_MULTICAST : MODE_UDP
+        );
+        dataBuffer.writeUint8(this.ipv == "udp6" ? IPV6 : IPV4);
     }
 }
 
@@ -369,9 +370,24 @@ export class UDPOutActionComponent extends ActionComponent {
             },
             makeExpressionProperty(
                 {
+                    name: "port",
+                    displayName: "To port",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "integer"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "address",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            ),
+            makeExpressionProperty(
+                {
                     name: "group",
-                    displayName: (object: UDPOutActionComponent) =>
-                        object.multicast == "multicast" ? "Group" : "Address",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     disabled: (object: UDPOutActionComponent) =>
@@ -385,22 +401,14 @@ export class UDPOutActionComponent extends ActionComponent {
                     displayName: "Local interface",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
+                    isOptional: true,
                     disabled: (object: UDPOutActionComponent) =>
                         object.multicast !== "multicast"
                 },
                 "string"
             ),
-            makeExpressionProperty(
-                {
-                    name: "port",
-                    type: PropertyType.MultilineText,
-                    propertyGridGroup: specificGroup
-                },
-                "integer"
-            ),
             {
                 name: "ipv",
-                displayName: "IPv",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "udp4", label: "IPv4" },
@@ -422,7 +430,7 @@ export class UDPOutActionComponent extends ActionComponent {
             },
             makeExpressionProperty(
                 {
-                    name: "localPort",
+                    name: "outport",
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     enumDisallowUndefined: true,
@@ -442,15 +450,17 @@ export class UDPOutActionComponent extends ActionComponent {
         ],
         icon: UDP_OUT_ICON,
         componentHeaderColor,
-        componentPaletteGroupName: "UDP",
+        componentPaletteGroupName: "Network",
 
         defaultValue: {
             multicast: "udp",
+            address: "",
             group: "",
             iface: "",
             port: "",
             ipv: "udp4",
-            outportType: "random"
+            outportType: "random",
+            outport: ""
         },
 
         execute: (context: IDashboardComponentContext) => {
@@ -459,17 +469,24 @@ export class UDPOutActionComponent extends ActionComponent {
 
             const multicast = context.getUint8Param(0);
 
+            let address: string | undefined;
+
             let group: string | undefined;
             let iface: string | undefined;
-            if (multicast) {
+
+            if (multicast != MODE_MULTICAST) {
+                address = context.evalProperty<string>("address");
+                if (address == undefined || typeof address != "string") {
+                    context.throwError(`invalid Address property`);
+                }
+            } else {
                 group = context.evalProperty<string>("group");
                 if (group == undefined || typeof group != "string") {
                     context.throwError(`invalid Group property`);
-                    return;
                 }
 
                 iface = context.evalProperty<string>("iface");
-                if (iface == undefined || typeof iface != "string") {
+                if (iface != undefined && typeof iface != "string") {
                     context.throwError(`invalid Local interface property`);
                     return;
                 }
@@ -482,12 +499,12 @@ export class UDPOutActionComponent extends ActionComponent {
             }
 
             const ipv: SocketType =
-                context.getUint8Param(1) == 1 ? "udp6" : "udp4";
+                context.getUint8Param(1) == IPV6 ? "udp6" : "udp4";
 
-            const fixedOutport = context.getUint8Param(2) == 0;
+            const outportType = context.getUint8Param(2);
 
             let outport: number | undefined;
-            if (fixedOutport) {
+            if (outportType == OUTPORT_TYPE_FIXED) {
                 outport = context.evalProperty<number>("outport");
                 if (outport == undefined || typeof outport != "number") {
                     context.throwError(`invalid Outport property`);
@@ -520,11 +537,9 @@ export class UDPOutActionComponent extends ActionComponent {
                             }
                         }
                     } catch (e) {
-                        // node.warn(RED._("udp.errors.ifnotfound",{iface:node.iface}));
                         iface = undefined;
                     }
                 } else {
-                    // node.warn(RED._("udp.errors.ifnotfound",{iface:node.iface}));
                     iface = undefined;
                 }
             }
@@ -535,110 +550,62 @@ export class UDPOutActionComponent extends ActionComponent {
 
             var p = outport || port || 0;
 
-            if (p != 0 && udpInputPortsInUse[p]) {
-                sock = udpInputPortsInUse[p];
-                if (multicast != 0) {
+            context.startAsyncExecution();
+
+            if (p != 0 && udpInputPortsInUse.has(p)) {
+                sock = udpInputPortsInUse.get(p)!.server;
+                if (multicast != MODE_UDP) {
                     sock.setBroadcast(true);
                     sock.setMulticastLoopback(false);
                 }
-                // node.log(RED._("udp.status.re-use",{outport:node.outport,host:node.addr,port:node.port}));
-                // if (iface) {
-                //     node.status({text:n.iface+" : "+node.iface});
-                // }
             } else {
-                sock = dgram.createSocket(opts); // default to udp4
-                if (multicast != 0) {
+                sock = dgram.createSocket(opts);
+                if (multicast != MODE_UDP) {
                     sock.bind(outport, function () {
                         // have to bind before you can enable broadcast...
                         sock.setBroadcast(true); // turn on broadcast
                         sock.setMulticastLoopback(false); // turn off loopback
-                        if (multicast == 1 && group) {
+                        if (multicast == MODE_MULTICAST && group) {
                             try {
                                 sock.setMulticastTTL(128);
                                 sock.addMembership(group, iface); // Add to the multicast group
-                                // if (iface) {
-                                //     node.status({text:n.iface+" : "+node.iface});
-                                // }
-                                // node.log(RED._("udp.status.mc-ready",{iface:node.iface,outport:node.outport,host:node.addr,port:node.port}));
                             } catch (e) {
-                                // if (e.errno == "EINVAL") {
-                                //     node.error(RED._("udp.errors.bad-mcaddress"));
-                                // } else if (e.errno == "ENODEV") {
-                                //     node.error(RED._("udp.errors.interface"));
-                                // } else {
-                                //     node.error(RED._("udp.errors.error",{error:e.errno}));
-                                // }
                                 context.throwError(e.toString());
+                                context.endAsyncExecution();
                             }
-                        } else {
-                            // node.log(RED._("udp.status.bc-ready",{outport:node.outport,host:node.addr,port:node.port}));
                         }
                     });
                 } else if (
                     outport !== undefined &&
-                    !udpInputPortsInUse[outport]
+                    !udpInputPortsInUse.has(outport)
                 ) {
                     sock.bind(outport);
-                    // node.log(RED._("udp.status.ready",{outport:node.outport,host:node.addr,port:node.port}));
-                } else {
-                    // node.log(RED._("udp.status.ready-nolocal",{host:node.addr,port:node.port}));
                 }
 
                 sock.on("error", function (err) {
-                    // Any async error will also get reported in the sock.send call.
-                    // This handler is needed to ensure the error marked as handled to
-                    // prevent it going to the global error handler and shutting node-red
-                    // down.
+                    context.throwError(err.toString());
+                    context.endAsyncExecution();
                 });
 
-                udpInputPortsInUse[p] = sock;
+                udpInputPortsInUse.set(p, {
+                    wasmModuleId: context.WasmFlowRuntime.wasmModuleId,
+                    port: p,
+                    server: sock,
+                    group
+                });
             }
-
-            // node.on("input", function(msg, nodeSend, nodeDone) {
-            //     if (msg.hasOwnProperty("payload")) {
-            //         var add = node.addr || msg.ip || "";
-            //         var por = node.port || msg.port || 0;
-            //         if (add === "") {
-            //             node.warn(RED._("udp.errors.ip-notset"));
-            //             nodeDone();
-            //         } else if (por === 0) {
-            //             node.warn(RED._("udp.errors.port-notset"));
-            //             nodeDone();
-            //         } else if (isNaN(por) || (por < 1) || (por > 65535)) {
-            //             node.warn(RED._("udp.errors.port-invalid"));
-            //             nodeDone();
-            //         } else {
-            //             var message;
-            //             if (node.base64) {
-            //                 message = Buffer.from(msg.payload, 'base64');
-            //             } else if (msg.payload instanceof Buffer) {
-            //                 message = msg.payload;
-            //             } else {
-            //                 message = Buffer.from(""+msg.payload);
-            //             }
-            //             sock.send(message, 0, message.length, por, add, function(err, bytes) {
-            //                 if (err) {
-            //                     node.error("udp : "+err,msg);
-            //                 }
-            //                 message = null;
-            //                 nodeDone();
-            //             });
-            //         }
-            //     }
-            // });
-
-            context.startAsyncExecution();
 
             sock.send(
                 payload,
                 0,
                 payload.length,
                 port,
-                group,
+                multicast != MODE_MULTICAST ? address : group,
                 function (err, bytes) {
                     if (err) {
                         context.throwError(err.toString());
                     }
+                    context.propagateValueThroughSeqout();
                     context.endAsyncExecution();
                 }
             );
@@ -646,6 +613,7 @@ export class UDPOutActionComponent extends ActionComponent {
     });
 
     multicast: string;
+    address: string;
     group: string;
     iface: string;
     port: string;
@@ -659,6 +627,7 @@ export class UDPOutActionComponent extends ActionComponent {
 
         makeObservable(this, {
             multicast: observable,
+            address: observable,
             group: observable,
             iface: observable,
             port: observable,
@@ -694,19 +663,47 @@ export class UDPOutActionComponent extends ActionComponent {
     }
 
     getBody(flowContext: IFlowContext): React.ReactNode {
-        return null;
+        return (
+            <div className="body">
+                <pre>
+                    {`Send a ${
+                        this.multicast == "udp"
+                            ? `UDP message: ${this.payload}\nTo address: ${this.address}`
+                            : this.multicast == `broadcast`
+                            ? `Broadcast message: ${this.payload}\nTo address: ${this.address}`
+                            : `Multicast message: ${this.payload}\nTo group: ${
+                                  this.group
+                              }${
+                                  this.iface
+                                      ? `\nOn local interface: ${this.iface}`
+                                      : ""
+                              }`
+                    }\nOn port: ${this.port}\nUsing: ${
+                        this.ipv == "udp4" ? "IPv4" : "IPv6"
+                    }\nBind to ${
+                        this.outportType == "random"
+                            ? "random local port"
+                            : `fixed local port: ${this.outport}`
+                    }`}
+                </pre>
+            </div>
+        );
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(
             this.multicast == "broadcast"
-                ? 2
+                ? MODE_BROADCAST
                 : this.multicast == "multicast"
-                ? 1
-                : 0
+                ? MODE_MULTICAST
+                : MODE_UDP
         );
-        dataBuffer.writeUint8(this.ipv == "udp6" ? 1 : 0);
-        dataBuffer.writeUint8(this.outportType == "random" ? 1 : 0);
+        dataBuffer.writeUint8(this.ipv == "udp6" ? IPV6 : IPV4);
+        dataBuffer.writeUint8(
+            this.outportType == "random"
+                ? OUTPORT_TYPE_RANDOM
+                : OUTPORT_TYPE_FIXED
+        );
     }
 }
 
