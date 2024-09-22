@@ -263,13 +263,16 @@ class InstrumentDatabases {
     async exportDatabase(
         destination: string,
         conf: {
-            mode: "instruments" | "sessions" | "archive";
+            mode: "instruments" | "sessions" | "archive" | "shortcuts";
 
             instrumentsOption: "all" | "selected";
             selectedInstruments: string[];
 
             sessionsOption: "all" | "selected";
             selectedSessions: string[];
+
+            shortcutsOption: "all" | "selected";
+            selectedShortcuts: string[];
 
             historyOption: "all" | "older-then";
             historyOdlerThenYears: number;
@@ -320,6 +323,8 @@ class InstrumentDatabases {
                 )})`;
             } else if (conf.mode == "archive") {
                 logsQueryCondition = `WHERE "date" < unixepoch(date('now','-${conf.historyOdlerThenYears} year','-${conf.historyOdlerThenMonths} month','-${conf.historyOdlerThenDays} day')) * 1000`;
+            } else if (conf.mode == "shortcuts") {
+                logsQueryCondition = `WHERE 0`;
             } else {
                 throw "this mode not implemented";
             }
@@ -337,6 +342,8 @@ class InstrumentDatabases {
                     .all()
                     .filter(row => row.oid != null)
                     .map(row => row.oid.toString());
+            } else if (conf.mode == "shortcuts") {
+                instrumentIds = [];
             } else {
                 throw "this mode not implemented";
             }
@@ -360,6 +367,8 @@ class InstrumentDatabases {
                     .all()
                     .filter(row => row.sid != null)
                     .map(row => row.sid.toString());
+            } else if (conf.mode == "shortcuts") {
+                sessionIds = [];
             } else {
                 throw "this mode not implemented";
             }
@@ -372,13 +381,18 @@ class InstrumentDatabases {
                 .all();
 
             // get source shortcuts
-            const sourceShortcuts = sourceDb
-                .prepare(
-                    `SELECT * FROM "shortcuts/shortcuts" WHERE "groupName" IN (${instrumentIds
-                        .map(id => `'__instrument__${id}'`)
-                        .join(",")})`
-                )
-                .all();
+            let sourceShortcuts;
+            if (conf.mode == "shortcuts") {
+                sourceShortcuts = sourceDb
+                    .prepare(
+                        `SELECT * FROM "shortcuts/shortcuts" WHERE  id IN (${conf.selectedShortcuts.join(
+                            ","
+                        )})`
+                    )
+                    .all();
+            } else {
+                sourceShortcuts = [];
+            }
 
             // insert destination instrument
             const destInstrumentIds = [];
@@ -474,39 +488,25 @@ class InstrumentDatabases {
             }
 
             // insert destination shortcuts
-            const destShortcutIds = [];
             if (sourceShortcuts.length > 0) {
                 const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
-                    column => column != "id" && column != "groupName"
+                    column => column != "id"
                 );
 
                 for (const sourceShortcut of sourceShortcuts) {
-                    const sourceInstrumentId = BigInt(
-                        sourceShortcut.groupName.substr("__instrument__".length)
-                    );
-
-                    const groupName =
-                        "__instrument__" +
-                        mapSourceInstrumentToDestInstrumentId.get(
-                            sourceInstrumentId
-                        );
-
-                    const result = destDb
+                    destDb
                         .prepare(
-                            `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
+                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
                                 ","
-                            )}) VALUES (?, ${shortcutColumns
+                            )}) VALUES (${shortcutColumns
                                 .map(() => "?")
                                 .join(",")})`
                         )
                         .run([
-                            groupName,
                             ...shortcutColumns.map(
                                 column => sourceShortcut[column]
                             )
                         ]);
-                    const destShortcutId = result.lastInsertRowid as bigint;
-                    destShortcutIds.push(destShortcutId);
                 }
 
                 await pause();
@@ -764,30 +764,34 @@ class InstrumentDatabases {
             const destShortcutIds = [];
             if (sourceShortcuts.length > 0) {
                 const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
-                    column => column != "id" && column != "groupName"
+                    column => column != "id"
                 );
 
                 for (const sourceShortcut of sourceShortcuts) {
-                    const sourceInstrumentId = BigInt(
-                        sourceShortcut.groupName.substr("__instrument__".length)
-                    );
-
-                    const groupName =
-                        "__instrument__" +
-                        mapSourceInstrumentToDestInstrumentId.get(
-                            sourceInstrumentId
-                        );
+                    const groupName = sourceShortcut["groupName"];
+                    if (
+                        !destDb
+                            .prepare(
+                                `SELECT * FROM "shortcuts/groups" WHERE name = ?`
+                            )
+                            .get([groupName])
+                    ) {
+                        destDb
+                            .prepare(
+                                `INSERT INTO "shortcuts/groups" (name) VALUES (?)`
+                            )
+                            .run([groupName]);
+                    }
 
                     const result = destDb
                         .prepare(
-                            `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
+                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
                                 ","
-                            )}) VALUES (?, ${shortcutColumns
+                            )}) VALUES (${shortcutColumns
                                 .map(() => "?")
                                 .join(",")})`
                         )
                         .run([
-                            groupName,
                             ...shortcutColumns.map(
                                 column => sourceShortcut[column]
                             )

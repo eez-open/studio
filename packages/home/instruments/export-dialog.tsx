@@ -6,7 +6,8 @@ import {
     computed,
     makeObservable,
     observable,
-    runInAction
+    runInAction,
+    values
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
@@ -23,6 +24,8 @@ import {
     type IHistorySession
 } from "instrument/window/history/session/store";
 import { instrumentDatabases } from "eez-studio-shared/db";
+import { shortcuts } from "shortcuts/shortcuts-store";
+import { Shortcut } from "project-editor/features/shortcuts/project-shortcuts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +35,9 @@ class ExportModel {
 
     sessionsOption: "all" | "selected" = "all";
     selectedSessions: Set<string> = new Set();
+
+    shortcutsOption: "all" | "selected" = "all";
+    selectedShortcuts: Set<string> = new Set();
 
     historyOption: "all" | "older-then" = "all";
     historyOdlerThenYears: number = 0;
@@ -47,6 +53,9 @@ class ExportModel {
 
             sessionsOption: observable,
             selectedSessions: observable,
+
+            shortcutsOption: observable,
+            selectedShortcuts: observable,
 
             historyOption: observable,
             historyOdlerThenYears: observable,
@@ -240,6 +249,101 @@ const SessionList = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ShortcutNode = observer(
+    class ShortcutNode extends React.Component<{
+        exportModel: ExportModel;
+        shortcut: Shortcut;
+    }> {
+        render() {
+            const { exportModel, shortcut } = this.props;
+
+            return (
+                <ListItem
+                    label={
+                        <label
+                            className="form-check-label form-check d-flex align-items-center"
+                            style={{ gap: 5 }}
+                        >
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`EezStudio_ExportDialog_Session_${shortcut.id}`}
+                                checked={exportModel.selectedShortcuts.has(
+                                    shortcut.id
+                                )}
+                                onChange={action(event => {
+                                    if (event.target.checked) {
+                                        exportModel.selectedShortcuts.add(
+                                            shortcut.id
+                                        );
+                                    } else {
+                                        exportModel.selectedShortcuts.delete(
+                                            shortcut.id
+                                        );
+                                    }
+                                })}
+                            />
+                            {shortcut.name}
+                        </label>
+                    }
+                />
+            );
+        }
+    }
+);
+
+const ShortcutsList = observer(
+    class ShortcutsList extends React.Component<{
+        instrumentsStore: InstrumentsStore;
+        exportModel: ExportModel;
+    }> {
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                shortcuts: computed
+            });
+        }
+
+        get shortcuts() {
+            return values(shortcuts)
+                .filter(
+                    shortcut =>
+                        !shortcut.groupName.startsWith("__instrument__") &&
+                        !shortcut.groupName.startsWith("__extension__")
+                )
+                .map(shortcut => ({
+                    id: shortcut.id,
+                    data: shortcut,
+                    selected: false
+                }));
+        }
+
+        renderShortcutNode = (node: IListNode) => {
+            let shortcut = node.data as Shortcut;
+            return (
+                <ShortcutNode
+                    exportModel={this.props.exportModel}
+                    shortcut={shortcut}
+                />
+            );
+        };
+
+        render() {
+            return (
+                <ListContainer tabIndex={0}>
+                    <List
+                        nodes={this.shortcuts}
+                        renderNode={this.renderShortcutNode}
+                    />
+                </ListContainer>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const HistoryExportSettings = observer(
     class HistoryExportSettings extends React.Component<{
         exportModel: ExportModel;
@@ -321,10 +425,12 @@ const ExportDialog = observer(
     class ExportDialog extends React.Component<{
         instrumentsStore: InstrumentsStore;
     }> {
-        mode: "instruments" | "sessions" | "archive" = "instruments";
+        mode: "instruments" | "sessions" | "shortcuts" | "archive" =
+            "instruments";
 
         instrumentsExportModel = new ExportModel();
-        sessionExportModel = new ExportModel();
+        sessionsExportModel = new ExportModel();
+        shortcutsExportModel = new ExportModel();
         archiveExportModel = new ExportModel();
 
         description: string = "";
@@ -338,15 +444,24 @@ const ExportDialog = observer(
                 this.instrumentsExportModel.instrumentsOption = "selected";
                 this.instrumentsExportModel.sessionsOption = "all";
                 this.instrumentsExportModel.historyOption = "all";
+                this.instrumentsExportModel.shortcutsOption = "all";
                 this.instrumentsExportModel.removeHistoryAfterExport = false;
 
-                this.sessionExportModel.instrumentsOption = "selected";
-                this.sessionExportModel.sessionsOption = "selected";
-                this.sessionExportModel.historyOption = "all";
-                this.sessionExportModel.removeHistoryAfterExport = false;
+                this.sessionsExportModel.instrumentsOption = "selected";
+                this.sessionsExportModel.sessionsOption = "selected";
+                this.sessionsExportModel.shortcutsOption = "all";
+                this.sessionsExportModel.historyOption = "all";
+                this.sessionsExportModel.removeHistoryAfterExport = false;
+
+                this.shortcutsExportModel.instrumentsOption = "all";
+                this.shortcutsExportModel.sessionsOption = "all";
+                this.shortcutsExportModel.shortcutsOption = "selected";
+                this.shortcutsExportModel.historyOption = "all";
+                this.shortcutsExportModel.removeHistoryAfterExport = false;
 
                 this.archiveExportModel.instrumentsOption = "all";
                 this.archiveExportModel.sessionsOption = "all";
+                this.archiveExportModel.shortcutsOption = "all";
                 this.archiveExportModel.historyOption = "older-then";
                 this.archiveExportModel.historyOdlerThenYears = 1;
                 this.archiveExportModel.removeHistoryAfterExport = false;
@@ -362,7 +477,7 @@ const ExportDialog = observer(
 
         get exportModel() {
             if (this.mode == "instruments") return this.instrumentsExportModel;
-            if (this.mode == "sessions") return this.sessionExportModel;
+            if (this.mode == "sessions") return this.sessionsExportModel;
             return this.archiveExportModel;
         }
 
@@ -375,6 +490,12 @@ const ExportDialog = observer(
         onSessionsOptionChange = action(
             (e: React.ChangeEvent<HTMLInputElement>) => {
                 this.exportModel.sessionsOption = e.target.value as any;
+            }
+        );
+
+        onShortcutsOptionChange = action(
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                this.exportModel.shortcutsOption = e.target.value as any;
             }
         );
 
@@ -395,6 +516,13 @@ const ExportDialog = observer(
             if (this.mode == "sessions") {
                 if (this.exportModel.selectedSessions.size == 0) {
                     this.error = "At least one session must be selected.";
+                    return false;
+                }
+            }
+
+            if (this.mode == "shortcuts") {
+                if (this.exportModel.selectedShortcuts.size == 0) {
+                    this.error = "At least one shortcut must be selected.";
                     return false;
                 }
             }
@@ -442,6 +570,10 @@ const ExportDialog = observer(
                         selectedSessions: Array.from(
                             this.exportModel.selectedSessions
                         ),
+                        shortcutsOption: this.exportModel.shortcutsOption,
+                        selectedShortcuts: Array.from(
+                            this.exportModel.selectedShortcuts
+                        ),
                         historyOption: this.exportModel.historyOption,
                         historyOdlerThenYears:
                             this.exportModel.historyOdlerThenYears,
@@ -470,6 +602,7 @@ const ExportDialog = observer(
                             <div className="text-danger">{this.error}</div>
                         ) : undefined
                     }
+                    size="large"
                 >
                     <ul className="nav nav-pills">
                         <li className="nav-item">
@@ -503,6 +636,20 @@ const ExportDialog = observer(
                         <li className="nav-item">
                             <a
                                 className={classNames("nav-link", {
+                                    active: this.mode == "shortcuts"
+                                })}
+                                href="#"
+                                onClick={action(event => {
+                                    event.preventDefault();
+                                    this.mode = "shortcuts";
+                                })}
+                            >
+                                Export Shortcuts
+                            </a>
+                        </li>
+                        <li className="nav-item">
+                            <a
+                                className={classNames("nav-link", {
                                     active: this.mode == "archive"
                                 })}
                                 href="#"
@@ -525,6 +672,13 @@ const ExportDialog = observer(
 
                     {this.mode == "sessions" && (
                         <SessionList
+                            instrumentsStore={this.props.instrumentsStore}
+                            exportModel={this.exportModel}
+                        />
+                    )}
+
+                    {this.mode == "shortcuts" && (
+                        <ShortcutsList
                             instrumentsStore={this.props.instrumentsStore}
                             exportModel={this.exportModel}
                         />
