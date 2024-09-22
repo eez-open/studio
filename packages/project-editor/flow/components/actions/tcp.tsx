@@ -48,7 +48,7 @@ import type { IComponentExecutionState } from "project-editor/flow/runtime/compo
 
 const componentHeaderColor = "#cca3ba";
 
-registerActionComponents("TCP", [
+registerActionComponents("Network", [
     {
         name: "TCPConnect",
         icon: TCP_CONNECT_ICON as any,
@@ -472,7 +472,7 @@ export class TCPEventActionComponent extends ActionComponent {
         ],
         icon: TCP_EVENT_ICON,
         componentHeaderColor,
-        componentPaletteGroupName: "TCP",
+        componentPaletteGroupName: "Network",
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             if (jsObject.connection) {
@@ -598,7 +598,7 @@ registerClass("TCPEventActionComponent", TCPEventActionComponent);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerActionComponents("TCP", [
+registerActionComponents("Network", [
     {
         name: "TCPWrite",
         icon: TCP_WRITE_ICON as any,
