@@ -1317,16 +1317,10 @@ export class History {
             // this item was restored from undo buffer,
             this.addActivityLogEntry(activityLogEntry);
         } else {
-            // This is a new history item,
-            // add it to the bottom of history list...
-            if (this.navigator.hasNewer) {
-                await this.calendar.showRecent();
-            } else {
-                this.addActivityLogEntry(activityLogEntry);
-            }
-            // ... and scroll to the bottom of history list.
-            moveToBottomOfHistory(
-                this.appStore.navigationStore.mainHistoryView
+            const historyItem = this.addActivityLogEntry(activityLogEntry);
+            showHistoryItem(
+                this.appStore.navigationStore.mainHistoryView,
+                historyItem
             );
         }
     }

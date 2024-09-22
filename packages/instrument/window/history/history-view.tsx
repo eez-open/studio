@@ -63,12 +63,20 @@ export const HistoryTools = observer(
     class HistoryTools extends React.Component<{ appStore: IAppStore }, {}> {
         addNote = () => {
             showAddNoteDialog(note => {
+                const selectedItems = this.props.appStore.history.items.filter(
+                    item => item.selected
+                );
+
                 log(
                     this.props.appStore.history.options.store,
                     {
                         oid: this.props.appStore.history.oid,
                         type: "activity-log/note",
-                        message: note
+                        message: note,
+                        date:
+                            selectedItems.length == 1
+                                ? selectedItems[0].date
+                                : undefined
                     },
                     {
                         undoable: true,

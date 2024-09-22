@@ -399,7 +399,7 @@ export class HistoryListComponentClass extends React.Component<{
                 `.EezStudio_HistoryItem_${historyItem.id}`
             )[0];
             if (element) {
-                element.scrollIntoView({ block: "center" });
+                element.scrollIntoView({ block: "nearest" });
             }
             if (++c < 5) {
                 setTimeout(scrollIntoView, 10);
