@@ -571,7 +571,7 @@
             },
             {
                 "category": {
-                    "name": "Serial Port",
+                    "name": "Network",
                     "id": 225
                 },
                 "articles": [
@@ -579,13 +579,43 @@
                         "content": "TCPConnect.html",
                         "status": "publish",
                         "id": 12624,
-                        "sha256": "1a35cb227e9c68510bed611e3e37df467be01683f569eed5fb79fb91a3abce5d"
+                        "sha256": "32592b444170eef96ce254c54cf9e4ecf8b142749cdb382a7094b30e97e938df"
                     },
                     {
                         "content": "TCPDisconnect.html",
                         "status": "publish",
                         "id": 12625,
-                        "sha256": "fe5812ef71e40e3d73412424a0a36af37179216233ecebcd7059e878e3a28e64"
+                        "sha256": "dde5956efd0f940e43477af7cb3ab94b4199316f8ccc95f6aac0ffeb3b747855"
+                    },
+                    {
+                        "content": "TCPListen.html",
+                        "status": "publish",
+                        "id": 13509,
+                        "sha256": "588a0731a05a99d6f8c96de71d72455a32c4da2954ea1728add8e05828b3df9e"
+                    },
+                    {
+                        "content": "TCPEvent.html",
+                        "status": "publish",
+                        "id": 13510,
+                        "sha256": "d78b51b1468730055e0b3dea522446ea5abd82f548076140b7d013dff0e85fc9"
+                    },
+                    {
+                        "content": "TCPWrite.html",
+                        "status": "publish",
+                        "id": 13511,
+                        "sha256": "5d706b1a63ff2c580afe75c14c9bf1b2793e0a49008bb970bb713a2563bb200e"
+                    },
+                    {
+                        "content": "UDP In.html",
+                        "status": "publish",
+                        "id": 13512,
+                        "sha256": "848e26a0fa89462bdcf7a846c8852fc84cc058c1acbe7210c4e6cfe7c67f57a1"
+                    },
+                    {
+                        "content": "UDP Out.html",
+                        "status": "publish",
+                        "id": 13513,
+                        "sha256": "4cf05b2642fae22fba3a71a1cf3421bde546701cd4c43f4bee4f8275f12b9cdb"
                     }
                 ]
             }
@@ -1069,7 +1099,7 @@
                         "content": "Plotly.html",
                         "status": "publish",
                         "id": 12954,
-                        "sha256": "37571e0fbdb6d0aded4cdda9e40b93e69150c90e5ec61dc2e2a37173245af1de"
+                        "sha256": "2040744230c54acf471774ff6c695694e483cd5a8af716f358c9ee425f8e5966"
                     },
                     {
                         "content": "Progress (Dashboard).html",

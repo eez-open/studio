@@ -4,9 +4,9 @@ Connects to the TCP server.
 
 # PROPERTIES
 
-## Connection
+## Socket
 
-Connection object of type `object:TCPSocket` to be created and initialized.
+Socket object of type `object:TCPSocket` to be created and initialized.
 
 ## IP Address
 
@@ -28,4 +28,7 @@ A standard sequence input.
 
 A standard sequence output.
 
-# EXAMPLES [EMPTY]
+# EXAMPLES
+
+-   _TCP CLient_
+-   _TCP Server_

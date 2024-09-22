@@ -4,9 +4,9 @@ Performs disconnection from the TCP server, after which Flow execution continues
 
 # PROPERTIES
 
-## Connection
+## Socket
 
-The name of the connection that will be terminated.
+The socket object that will be disconnected.
 
 # INPUTS
 
@@ -20,4 +20,7 @@ A standard sequence input.
 
 A standard sequence output.
 
-# EXAMPLES [EMPTY]
+# EXAMPLES
+
+-   _TCP CLient_
+-   _TCP Server_
