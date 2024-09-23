@@ -709,6 +709,9 @@ export class General extends EezObject {
     minStudioVersion: string;
     resourceFiles: ResourceFile[];
 
+    lockedWidgetLinesOption: "visible" | "dimmed" | "hidden";
+    dimmedLinesOpacity: number;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -916,6 +919,35 @@ export class General extends EezObject {
                 }
             },
             {
+                name: "lockedWidgetLinesOption",
+                displayName: "Lines visibility for hidden widgets",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "visible", label: "Fully visible" },
+                    { id: "dimmed", label: "Dimmed" },
+                    { id: "hidden", label: "Hidden" }
+                ],
+                enumDisallowUndefined: true,
+                disabled: (general: General) => {
+                    return (
+                        !general.flowSupport &&
+                        general.projectType != ProjectType.DASHBOARD
+                    );
+                }
+            },
+            {
+                name: "dimmedLinesOpacity",
+                displayName: "Dimmed lines opacity (%)",
+                type: PropertyType.Number,
+                disabled: (general: General) => {
+                    return (
+                        (!general.flowSupport &&
+                            general.projectType != ProjectType.DASHBOARD) ||
+                        general.lockedWidgetLinesOption != "dimmed"
+                    );
+                }
+            },
+            {
                 name: "title",
                 type: PropertyType.String,
                 disabled: isNotDashboardProject
@@ -1103,6 +1135,14 @@ export class General extends EezObject {
             if (jsObject.displayBorderRadius == undefined) {
                 jsObject.displayBorderRadius = 0;
             }
+
+            if (jsObject.lockedWidgetLinesOption == undefined) {
+                jsObject.lockedWidgetLinesOption = "dimmed";
+            }
+
+            if (jsObject.dimmedLinesOpacity == undefined) {
+                jsObject.dimmedLinesOpacity = "20";
+            }
         },
 
         updateObjectValueHook: (general: General, values: Partial<General>) => {
@@ -1148,7 +1188,9 @@ export class General extends EezObject {
             authorLink: observable,
             minStudioVersion: observable,
             resourceFiles: observable,
-            commandsProtocol: observable
+            commandsProtocol: observable,
+            lockedWidgetLinesOption: observable,
+            dimmedLinesOpacity: observable
         });
     }
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { IEezObject } from "project-editor/core/object";
@@ -365,7 +365,27 @@ export const PageStructure = observer(
             return this.treeAdapter ? (
                 <VerticalHeaderWithBody className="EezStudio_PageStructure">
                     <ToolbarHeader>
-                        <Toolbar>
+                        <Toolbar style={{ minHeight: 38 }}>
+                            {this.isAnyHidden ? (
+                                <select
+                                    className="form-select"
+                                    value={
+                                        this.context.project.settings.general
+                                            .lockedWidgetLinesOption
+                                    }
+                                    onChange={action(event => {
+                                        this.context.project.settings.general.lockedWidgetLinesOption =
+                                            event.target.value as any;
+                                    })}
+                                    style={{ margin: "2px 10px 2px 0" }}
+                                >
+                                    <option value="visible">
+                                        Lines Visible
+                                    </option>
+                                    <option value="dimmed">Lines Dimmed</option>
+                                    <option value="hidden">Lines Hidden</option>
+                                </select>
+                            ) : null}
                             <IconAction
                                 title={
                                     this.isAnyLocked ? "Unlock All" : "Lock All"

@@ -45,14 +45,23 @@ export const ConnectionLines = observer(
     }) => {
         return (
             <>
-                {connectionLines.map(connectionLineAdapter => (
-                    <ConnectionLineShape
-                        key={connectionLineAdapter.id}
-                        connectionLineAdapter={connectionLineAdapter}
-                        context={context}
-                        selected={selected}
-                    />
-                ))}
+                {connectionLines
+                    .filter(
+                        connectionLineAdapter =>
+                            context.flowState ||
+                            context.projectStore.project.settings.general
+                                .lockedWidgetLinesOption != "hidden" ||
+                            (connectionLineAdapter.object as ConnectionLine)
+                                .isVisible
+                    )
+                    .map(connectionLineAdapter => (
+                        <ConnectionLineShape
+                            key={connectionLineAdapter.id}
+                            connectionLineAdapter={connectionLineAdapter}
+                            context={context}
+                            selected={selected}
+                        />
+                    ))}
             </>
         );
     }
@@ -118,7 +127,16 @@ export const ConnectionLineShape = observer(
                 style={{
                     filter: shadow
                         ? `drop-shadow(0px 0px 3px ${shadow.color})`
-                        : undefined
+                        : undefined,
+                    opacity:
+                        context.flowState ||
+                        context.projectStore.project.settings.general
+                            .lockedWidgetLinesOption == "visible" ||
+                        (connectionLineAdapter.object as ConnectionLine)
+                            .isVisible
+                            ? 1
+                            : context.projectStore.project.settings.general
+                                  .dimmedLinesOpacity / 100
                 }}
             >
                 <path

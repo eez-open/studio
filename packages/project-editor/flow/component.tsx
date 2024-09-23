@@ -3259,8 +3259,23 @@ export class Widget extends Component {
             hiddenInEditor: observable,
             timeline: observable,
             eventHandlers: observable,
-            outputWidgetHandle: observable
+            outputWidgetHandle: observable,
+
+            isHiddenInEditorDeep: computed
         });
+    }
+
+    get isHiddenInEditorDeep() {
+        if (this.hiddenInEditor) {
+            return true;
+        }
+
+        const parent = getWidgetParent(this);
+        if (parent instanceof Widget) {
+            return parent.hiddenInEditor;
+        }
+
+        return false;
     }
 
     get styleObject() {

@@ -217,7 +217,8 @@ export class ConnectionLine extends EezObject {
             output: observable,
             target: observable,
             input: observable,
-            _active: observable
+            _active: observable,
+            isVisible: computed
         });
     }
 
@@ -355,6 +356,15 @@ export class ConnectionLine extends EezObject {
 
     setActive() {
         activateConnectionLine(this);
+    }
+
+    get isVisible() {
+        return !(
+            (this.sourceComponent instanceof ProjectEditor.WidgetClass &&
+                this.sourceComponent.isHiddenInEditorDeep) ||
+            (this.targetComponent instanceof ProjectEditor.WidgetClass &&
+                this.targetComponent.isHiddenInEditorDeep)
+        );
     }
 }
 
