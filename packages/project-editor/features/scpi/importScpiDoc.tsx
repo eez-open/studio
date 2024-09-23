@@ -219,7 +219,7 @@ class FindChanges {
         // "MIN|MID|MAX (see also Section 8.1)" => ["MIN", "MID", "MAX"]
         // "0.5, 5, MIN|MAX|DEFault" => ["MIN", "MAX", "DEFault"]
         // etc
-        const matches = range.match(/(([A-Z][A-Za-z0-9]*)\|?)+/g);
+        const matches = range.match(/(([A-Za-z0-9]*)\|?)+/g);
         if (!matches) {
             return undefined;
         }

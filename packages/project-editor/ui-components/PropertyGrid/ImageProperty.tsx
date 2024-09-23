@@ -4,6 +4,7 @@ import React from "react";
 import { observer } from "mobx-react";
 import { makeObservable, observable, runInAction } from "mobx";
 import { dialog } from "@electron/remote";
+import { pathToFileURL } from "url";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -176,9 +177,11 @@ export const ImageProperty = observer(
                                     imageValue &&
                                     imageValue.startsWith("data:image/")
                                         ? imageValue
-                                        : this.context.getAbsoluteFilePath(
-                                              imageValue || ""
-                                          )
+                                        : pathToFileURL(
+                                              this.context.getAbsoluteFilePath(
+                                                  imageValue || ""
+                                              )
+                                          ).href
                                 }
                                 style={{
                                     display: "block",
