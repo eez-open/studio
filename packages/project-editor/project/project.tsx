@@ -709,7 +709,7 @@ export class General extends EezObject {
     minStudioVersion: string;
     resourceFiles: ResourceFile[];
 
-    lockedWidgetLinesOption: "visible" | "dimmed" | "hidden";
+    hiddenWidgetLines: "visible" | "dimmed" | "hidden";
     dimmedLinesOpacity: number;
 
     static classInfo: ClassInfo = {
@@ -919,8 +919,7 @@ export class General extends EezObject {
                 }
             },
             {
-                name: "lockedWidgetLinesOption",
-                displayName: "Lines visibility for hidden widgets",
+                name: "hiddenWidgetLines",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "visible", label: "Fully visible" },
@@ -943,7 +942,7 @@ export class General extends EezObject {
                     return (
                         (!general.flowSupport &&
                             general.projectType != ProjectType.DASHBOARD) ||
-                        general.lockedWidgetLinesOption != "dimmed"
+                        general.hiddenWidgetLines != "dimmed"
                     );
                 }
             },
@@ -1136,8 +1135,8 @@ export class General extends EezObject {
                 jsObject.displayBorderRadius = 0;
             }
 
-            if (jsObject.lockedWidgetLinesOption == undefined) {
-                jsObject.lockedWidgetLinesOption = "dimmed";
+            if (jsObject.hiddenWidgetLines == undefined) {
+                jsObject.hiddenWidgetLines = "dimmed";
             }
 
             if (jsObject.dimmedLinesOpacity == undefined) {
@@ -1189,7 +1188,7 @@ export class General extends EezObject {
             minStudioVersion: observable,
             resourceFiles: observable,
             commandsProtocol: observable,
-            lockedWidgetLinesOption: observable,
+            hiddenWidgetLines: observable,
             dimmedLinesOpacity: observable
         });
     }

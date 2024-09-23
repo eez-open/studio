@@ -367,24 +367,25 @@ export const PageStructure = observer(
                     <ToolbarHeader>
                         <Toolbar style={{ minHeight: 38 }}>
                             {this.isAnyHidden ? (
-                                <select
-                                    className="form-select"
-                                    value={
-                                        this.context.project.settings.general
-                                            .lockedWidgetLinesOption
-                                    }
-                                    onChange={action(event => {
-                                        this.context.project.settings.general.lockedWidgetLinesOption =
-                                            event.target.value as any;
-                                    })}
-                                    style={{ margin: "2px 10px 2px 0" }}
-                                >
-                                    <option value="visible">
-                                        Lines Visible
-                                    </option>
-                                    <option value="dimmed">Lines Dimmed</option>
-                                    <option value="hidden">Lines Hidden</option>
-                                </select>
+                                <label className="EezStudio_PageStructure_HiddenWidgetLines">
+                                    <span>Hidden widget lines</span>
+                                    <select
+                                        className="form-select"
+                                        value={
+                                            this.context.project.settings
+                                                .general.hiddenWidgetLines
+                                        }
+                                        onChange={action(event => {
+                                            this.context.project.settings.general.hiddenWidgetLines =
+                                                event.target.value as any;
+                                        })}
+                                        style={{ margin: "2px 10px 2px 5px" }}
+                                    >
+                                        <option value="visible">Visible</option>
+                                        <option value="dimmed">Dimmed</option>
+                                        <option value="hidden">Hidden</option>
+                                    </select>
+                                </label>
                             ) : null}
                             <IconAction
                                 title={

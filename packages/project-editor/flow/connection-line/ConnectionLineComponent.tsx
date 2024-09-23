@@ -50,7 +50,7 @@ export const ConnectionLines = observer(
                         connectionLineAdapter =>
                             context.flowState ||
                             context.projectStore.project.settings.general
-                                .lockedWidgetLinesOption != "hidden" ||
+                                .hiddenWidgetLines != "hidden" ||
                             (connectionLineAdapter.object as ConnectionLine)
                                 .isVisible
                     )
@@ -131,7 +131,7 @@ export const ConnectionLineShape = observer(
                     opacity:
                         context.flowState ||
                         context.projectStore.project.settings.general
-                            .lockedWidgetLinesOption == "visible" ||
+                            .hiddenWidgetLines == "visible" ||
                         (connectionLineAdapter.object as ConnectionLine)
                             .isVisible
                             ? 1
