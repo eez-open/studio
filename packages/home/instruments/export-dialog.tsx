@@ -18,7 +18,7 @@ import { Icon } from "eez-studio-ui/icon";
 
 import { InstrumentsStore } from "home/instruments";
 
-import { InstrumentObject } from "instrument/instrument-object";
+import { InstrumentObject, instruments } from "instrument/instrument-object";
 import {
     historySessions,
     type IHistorySession
@@ -254,6 +254,20 @@ const ShortcutNode = observer(
         exportModel: ExportModel;
         shortcut: Shortcut;
     }> {
+        get groupName() {
+            const shortcut = this.props.shortcut;
+            if (shortcut.groupName.startsWith("__instrument__")) {
+                const instrumentId = shortcut.groupName.slice(
+                    "__instrument__".length
+                );
+                const instrument = instruments.get(instrumentId);
+                if (instrument) {
+                    return `instrument "${instrument.name}"`;
+                }
+            }
+            return `group "${shortcut.groupName}"`;
+        }
+
         render() {
             const { exportModel, shortcut } = this.props;
 
@@ -283,7 +297,7 @@ const ShortcutNode = observer(
                                     }
                                 })}
                             />
-                            {shortcut.name}
+                            <b>{shortcut.name}</b> / <i>{this.groupName}</i>
                         </label>
                     }
                 />
@@ -308,9 +322,7 @@ const ShortcutsList = observer(
         get shortcuts() {
             return values(shortcuts)
                 .filter(
-                    shortcut =>
-                        !shortcut.groupName.startsWith("__instrument__") &&
-                        !shortcut.groupName.startsWith("__extension__")
+                    shortcut => !shortcut.groupName.startsWith("__extension__")
                 )
                 .map(shortcut => ({
                     id: shortcut.id,

@@ -391,7 +391,13 @@ class InstrumentDatabases {
                     )
                     .all();
             } else {
-                sourceShortcuts = [];
+                sourceShortcuts = sourceDb
+                    .prepare(
+                        `SELECT * FROM "shortcuts/shortcuts" WHERE "groupName" IN (${instrumentIds
+                            .map(id => `'__instrument__${id}'`)
+                            .join(",")})`
+                    )
+                    .all();
             }
 
             // insert destination instrument
@@ -488,28 +494,67 @@ class InstrumentDatabases {
             }
 
             // insert destination shortcuts
-            if (sourceShortcuts.length > 0) {
-                const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
-                    column => column != "id"
-                );
+            if (conf.mode == "shortcuts") {
+                if (sourceShortcuts.length > 0) {
+                    const shortcutColumns = Object.keys(
+                        sourceShortcuts[0]
+                    ).filter(column => column != "id");
 
-                for (const sourceShortcut of sourceShortcuts) {
-                    destDb
-                        .prepare(
-                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
-                                ","
-                            )}) VALUES (${shortcutColumns
-                                .map(() => "?")
-                                .join(",")})`
-                        )
-                        .run([
-                            ...shortcutColumns.map(
-                                column => sourceShortcut[column]
+                    for (const sourceShortcut of sourceShortcuts) {
+                        destDb
+                            .prepare(
+                                `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
+                                    ","
+                                )}) VALUES (${shortcutColumns
+                                    .map(() => "?")
+                                    .join(",")})`
                             )
-                        ]);
-                }
+                            .run([
+                                ...shortcutColumns.map(
+                                    column => sourceShortcut[column]
+                                )
+                            ]);
+                    }
 
-                await pause();
+                    await pause();
+                }
+            } else {
+                if (sourceShortcuts.length > 0) {
+                    const shortcutColumns = Object.keys(
+                        sourceShortcuts[0]
+                    ).filter(column => column != "id" && column != "groupName");
+
+                    for (const sourceShortcut of sourceShortcuts) {
+                        const sourceInstrumentId = BigInt(
+                            sourceShortcut.groupName.substr(
+                                "__instrument__".length
+                            )
+                        );
+
+                        const groupName =
+                            "__instrument__" +
+                            mapSourceInstrumentToDestInstrumentId.get(
+                                sourceInstrumentId
+                            );
+
+                        destDb
+                            .prepare(
+                                `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
+                                    ","
+                                )}) VALUES (?, ${shortcutColumns
+                                    .map(() => "?")
+                                    .join(",")})`
+                            )
+                            .run([
+                                groupName,
+                                ...shortcutColumns.map(
+                                    column => sourceShortcut[column]
+                                )
+                            ]);
+                    }
+
+                    await pause();
+                }
             }
 
             // insert destination logs in chunks
@@ -764,34 +809,72 @@ class InstrumentDatabases {
             const destShortcutIds = [];
             if (sourceShortcuts.length > 0) {
                 const shortcutColumns = Object.keys(sourceShortcuts[0]).filter(
-                    column => column != "id"
+                    column => column != "id" && column != "groupName"
                 );
 
                 for (const sourceShortcut of sourceShortcuts) {
-                    const groupName = sourceShortcut["groupName"];
-                    if (
-                        !destDb
-                            .prepare(
-                                `SELECT * FROM "shortcuts/groups" WHERE name = ?`
+                    let groupName = sourceShortcut["groupName"];
+
+                    if (groupName.startsWith("__instrument__")) {
+                        const sourceInstrumentId = BigInt(
+                            sourceShortcut.groupName.substr(
+                                "__instrument__".length
                             )
-                            .get([groupName])
-                    ) {
-                        destDb
-                            .prepare(
-                                `INSERT INTO "shortcuts/groups" (name) VALUES (?)`
-                            )
-                            .run([groupName]);
+                        );
+
+                        const destinationInstrumentId =
+                            mapSourceInstrumentToDestInstrumentId.get(
+                                sourceInstrumentId
+                            );
+
+                        if (destinationInstrumentId) {
+                            groupName =
+                                "__instrument__" +
+                                mapSourceInstrumentToDestInstrumentId.get(
+                                    sourceInstrumentId
+                                );
+                        } else {
+                            groupName = "Imported";
+                            if (
+                                !destDb
+                                    .prepare(
+                                        `SELECT * FROM "shortcuts/groups" WHERE name = ?`
+                                    )
+                                    .get([groupName])
+                            ) {
+                                destDb
+                                    .prepare(
+                                        `INSERT INTO "shortcuts/groups" (name) VALUES (?)`
+                                    )
+                                    .run([groupName]);
+                            }
+                        }
+                    } else {
+                        if (
+                            !destDb
+                                .prepare(
+                                    `SELECT * FROM "shortcuts/groups" WHERE name = ?`
+                                )
+                                .get([groupName])
+                        ) {
+                            destDb
+                                .prepare(
+                                    `INSERT INTO "shortcuts/groups" (name) VALUES (?)`
+                                )
+                                .run([groupName]);
+                        }
                     }
 
                     const result = destDb
                         .prepare(
-                            `INSERT INTO "shortcuts/shortcuts" (${shortcutColumns.join(
+                            `INSERT INTO "shortcuts/shortcuts" (groupName, ${shortcutColumns.join(
                                 ","
-                            )}) VALUES (${shortcutColumns
+                            )}) VALUES (?, ${shortcutColumns
                                 .map(() => "?")
                                 .join(",")})`
                         )
                         .run([
+                            groupName,
                             ...shortcutColumns.map(
                                 column => sourceShortcut[column]
                             )
