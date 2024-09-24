@@ -320,7 +320,8 @@ export const LVGL_STYLE_STATES = [
     "CHECKED|PRESSED",
     "DISABLED",
     "FOCUSED",
-    "FOCUS_KEY"
+    "FOCUS_KEY",
+    "SCROLLED"
 ];
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +334,7 @@ export const lvglStates = {
     EDITED: 0x0008, // LV_STATE_EDITED,
     HOVERED: 0x0010, // LV_STATE_HOVERED
     PRESSED: 0x0020, // LV_STATE_PRESSED
-    SCROLLEd: 0x0040, // LV_STATE_SCROLLED
+    SCROLLED: 0x0040, // LV_STATE_SCROLLED
     DISABLED: 0x0080, // LV_STATE_DISABLED
 
     USER_1: 0x1000, // LV_STATE_USER_1,

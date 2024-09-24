@@ -66,8 +66,7 @@ import {
     getCode,
     getExpressionPropertyData,
     getFlowStateAddressIndex,
-    getTabview,
-    isGeometryControlledByTabview,
+    isGeometryControlledByParent,
     lvglAddObjectFlowCallback
 } from "project-editor/lvgl/widget-common";
 import {
@@ -93,7 +92,7 @@ import {
 } from "project-editor/lvgl/lvgl-constants";
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
-import { LVGLScreenWidget, LVGLTabWidget } from "./internal";
+import { LVGLScreenWidget } from "./internal";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -276,7 +275,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
-                readOnlyInPropertyGrid: isGeometryControlledByTabview,
+                readOnlyInPropertyGrid: isGeometryControlledByParent,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using left from the Page
             },
             {
@@ -296,7 +295,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
-                readOnlyInPropertyGrid: isGeometryControlledByTabview,
+                readOnlyInPropertyGrid: isGeometryControlledByParent,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using top from the Page
             },
             {
@@ -316,7 +315,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
-                readOnlyInPropertyGrid: isGeometryControlledByTabview,
+                readOnlyInPropertyGrid: isGeometryControlledByParent,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using width from the Page
             },
             {
@@ -337,7 +336,7 @@ export class LVGLWidget extends Widget {
                 type: PropertyType.Number,
                 propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
-                readOnlyInPropertyGrid: isGeometryControlledByTabview,
+                readOnlyInPropertyGrid: isGeometryControlledByParent,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using height from the Page
             },
             {
@@ -1511,7 +1510,7 @@ export class LVGLWidget extends Widget {
 
             build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
             build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
-        } else if (this instanceof LVGLTabWidget || getTabview(this)) {
+        } else if (isGeometryControlledByParent(this)) {
             // skip
         } else {
             build.line(

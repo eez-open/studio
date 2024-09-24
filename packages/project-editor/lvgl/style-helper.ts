@@ -36,12 +36,18 @@ export function getPartBuildCode(part: string) {
 }
 
 export function getStateCode(state: string) {
-    const stateCode = (lvglStates as any)[state];
-    if (stateCode == undefined) {
-        console.error("UNEXPECTED!");
-        return 0;
-    }
-    return stateCode;
+    let result = 0;
+
+    state.split("|").forEach(stateStr => {
+        const stateCode = (lvglStates as any)[stateStr];
+        if (stateCode == undefined) {
+            console.error("UNEXPECTED!");
+            return;
+        }
+        result |= stateCode;
+    });
+
+    return result;
 }
 
 export function getStateBuildCode(state: string) {

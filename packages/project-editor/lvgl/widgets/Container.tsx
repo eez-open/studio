@@ -14,7 +14,7 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
-import { getTabview } from "../widget-common";
+import { getDropdown, getTabview } from "../widget-common";
 import { getProjectStore, Message } from "project-editor/store";
 import { getLvglParts } from "../lvgl-versions";
 import { Rect } from "eez-studio-shared/geometry";
@@ -45,6 +45,11 @@ export class LVGLContainerWidget extends LVGLWidget {
                 } else if (tabview.children.indexOf(widget) == 1) {
                     return "Content";
                 }
+            }
+
+            const dropdown = getDropdown(widget);
+            if (dropdown && dropdown.children.indexOf(widget) == 0) {
+                return "List";
             }
 
             return LVGLWidget.classInfo.label!(widget);
@@ -155,6 +160,11 @@ export class LVGLContainerWidget extends LVGLWidget {
             }
         }
 
+        const dropdown = getDropdown(this);
+        if (dropdown && dropdown.children.indexOf(this) == 0) {
+            return "both";
+        }
+
         return super.autoSize;
     }
 
@@ -196,6 +206,11 @@ export class LVGLContainerWidget extends LVGLWidget {
             }
         }
 
+        const dropdown = getDropdown(this);
+        if (dropdown && dropdown.children.indexOf(this) == 0) {
+            return [];
+        }
+
         return super.getResizeHandlers();
     }
 
@@ -218,6 +233,14 @@ export class LVGLContainerWidget extends LVGLWidget {
                     runtime.getWidgetIndex(this)
                 );
             }
+        }
+
+        const dropdown = getDropdown(this);
+        if (dropdown && dropdown.children.indexOf(this) == 0) {
+            return runtime.wasm._lvglDropdownGetList(
+                parentObj,
+                runtime.getWidgetIndex(this)
+            );
         }
 
         const rect = this.getLvglCreateRect();
@@ -257,10 +280,32 @@ export class LVGLContainerWidget extends LVGLWidget {
             }
         }
 
+        const dropdown = getDropdown(this);
+        if (dropdown && dropdown.children.indexOf(this) == 0) {
+            build.line(`lv_obj_t *obj = lv_dropdown_get_list(parent_obj);`);
+            return;
+        }
+
         build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
+        const tabview = getTabview(this);
+        if (tabview) {
+            if (tabview.children.indexOf(this) == 0) {
+                return;
+            }
+
+            if (tabview.children.indexOf(this) == 1) {
+                return;
+            }
+        }
+
+        const dropdown = getDropdown(this);
+        if (dropdown && dropdown.children.indexOf(this) == 0) {
+            return;
+        }
+
         this.buildStyleIfNotDefined(build, pad_left_property_info);
         this.buildStyleIfNotDefined(build, pad_top_property_info);
         this.buildStyleIfNotDefined(build, pad_right_property_info);

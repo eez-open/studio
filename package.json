@@ -107,7 +107,7 @@
         "jsdom": "^22.1.0",
         "json-to-pretty-yaml": "^1.2.2",
         "less": "^3.13.1",
-        "less-plugin-clean-css": "^1.5.1",
+        "less-plugin-clean-css": "^1.6.0",
         "madge": "^5.0.1",
         "pump": "^3.0.0",
         "request": "^2.88.2",

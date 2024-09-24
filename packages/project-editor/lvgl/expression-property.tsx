@@ -186,7 +186,14 @@ export function makeLvglExpressionProperty(
                         ? flowProperty
                         : undefined;
                 },
-                isFlowPropertyBuildable: (widget: LVGLWidget | undefined) => {
+                isFlowPropertyBuildable: (widget: LVGLWidget) => {
+                    if (
+                        !getClassInfo(widget).properties.find(
+                            p => p.name == name + "Type"
+                        )
+                    ) {
+                        return true;
+                    }
                     return (widget as any)[name + "Type"] == "expression";
                 },
                 expressionType,

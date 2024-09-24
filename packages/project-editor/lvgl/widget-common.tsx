@@ -17,6 +17,7 @@ import {
     Message
 } from "project-editor/store";
 import {
+    LVGLDropdownWidget,
     LVGLTabviewWidget,
     LVGLTabWidget,
     type LVGLWidget
@@ -493,8 +494,21 @@ export function getTabview(widget: LVGLWidget) {
     return undefined;
 }
 
-export function isGeometryControlledByTabview(widget: LVGLWidget) {
-    if (getTabview(widget) || widget instanceof LVGLTabWidget) {
+export function getDropdown(widget: LVGLWidget) {
+    const parentChildren = getParent(widget) as LVGLWidget[];
+    const parentWidget = getParent(parentChildren);
+    if (parentWidget instanceof LVGLDropdownWidget) {
+        return parentWidget;
+    }
+    return undefined;
+}
+
+export function isGeometryControlledByParent(widget: LVGLWidget) {
+    if (
+        getDropdown(widget) ||
+        getTabview(widget) ||
+        widget instanceof LVGLTabWidget
+    ) {
         return true;
     }
     return false;

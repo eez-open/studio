@@ -969,20 +969,20 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1036392: ($0) => { startToDebuggerMessage($0); },  
- 1036424: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036499: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036574: ($0) => { finishToDebuggerMessage($0); },  
- 1036607: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1036660: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1036693: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1036729: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1036835: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1036871: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1036908: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1036948: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1037005: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1037064: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1036408: ($0) => { startToDebuggerMessage($0); },  
+ 1036440: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036515: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036590: ($0) => { finishToDebuggerMessage($0); },  
+ 1036623: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1036676: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1036709: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1036745: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1036851: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1036887: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1036924: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1036964: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1037021: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1037080: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4732,6 +4732,7 @@ var _lvglCreateRoller = Module['_lvglCreateRoller'] = createExportWrapper('lvglC
 var _lvglCreateSwitch = Module['_lvglCreateSwitch'] = createExportWrapper('lvglCreateSwitch');
 var _lvglCreateBar = Module['_lvglCreateBar'] = createExportWrapper('lvglCreateBar');
 var _lvglCreateDropdown = Module['_lvglCreateDropdown'] = createExportWrapper('lvglCreateDropdown');
+var _lvglDropdownGetList = Module['_lvglDropdownGetList'] = createExportWrapper('lvglDropdownGetList');
 var _lvglCreateArc = Module['_lvglCreateArc'] = createExportWrapper('lvglCreateArc');
 var _lvglCreateSpinner = Module['_lvglCreateSpinner'] = createExportWrapper('lvglCreateSpinner');
 var _lvglCreateCheckbox = Module['_lvglCreateCheckbox'] = createExportWrapper('lvglCreateCheckbox');
