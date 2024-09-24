@@ -217,7 +217,13 @@ const SessionList = observer(
         }
 
         get sessions() {
-            return historySessions.sessions.slice(1).map(session => ({
+            let sessions = historySessions.sessions.slice(1);
+
+            sessions = sessions.sort((a, b) =>
+                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+            );
+
+            return sessions.map(session => ({
                 id: session.id,
                 data: session,
                 selected: false
@@ -320,15 +326,19 @@ const ShortcutsList = observer(
         }
 
         get shortcuts() {
-            return values(shortcuts)
-                .filter(
-                    shortcut => !shortcut.groupName.startsWith("__extension__")
-                )
-                .map(shortcut => ({
-                    id: shortcut.id,
-                    data: shortcut,
-                    selected: false
-                }));
+            let exportShortcuts = values(shortcuts).filter(
+                shortcut => !shortcut.groupName.startsWith("__extension__")
+            );
+
+            exportShortcuts = exportShortcuts.sort((a, b) =>
+                a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+            );
+
+            return exportShortcuts.map(shortcut => ({
+                id: shortcut.id,
+                data: shortcut,
+                selected: false
+            }));
         }
 
         renderShortcutNode = (node: IListNode) => {
