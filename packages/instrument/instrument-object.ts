@@ -186,7 +186,9 @@ export class InstrumentObject {
             (this.commandsProtocol == "SCPI" ? "newline" : "no-line-ending");
 
         if (!isRenderer()) {
-            this.initConnection();
+            setTimeout(() => {
+                this.initConnection();
+            });
         }
 
         this._autorunDispose = autorun(() => {
