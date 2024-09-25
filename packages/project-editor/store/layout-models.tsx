@@ -58,6 +58,7 @@ export class LayoutModels extends AbstractLayoutModels {
     static CHANGES_TAB_ID = "changes";
     static MICRO_PYTHON_TAB_ID = "micro-python";
     static README_TAB_ID = "readme";
+    static LVGL_GROUPS_TAB_ID = "lvgl-groups";
 
     static PAGES_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -174,6 +175,15 @@ export class LayoutModels extends AbstractLayoutModels {
         component: "breakpointsPanel"
     };
 
+    static LVGL_GROUPS_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Groups",
+        id: LayoutModels.LVGL_GROUPS_TAB_ID,
+        component: "lvgl-groups",
+        icon: "material:view_compact"
+    };
+
     static iconFactory = (node: FlexLayout.TabNode) => {
         let icon = node.getIcon();
         if (!icon || typeof icon != "string") {
@@ -235,8 +245,9 @@ export class LayoutModels extends AbstractLayoutModels {
                 LayoutModels.STYLES_TAB,
                 LayoutModels.FONTS_TAB,
                 LayoutModels.BITMAPS_TAB,
-                LayoutModels.BREAKPOINTS_TAB,
-                LayoutModels.THEMES_TAB
+                LayoutModels.THEMES_TAB,
+                LayoutModels.LVGL_GROUPS_TAB,
+                LayoutModels.BREAKPOINTS_TAB
             ]
         });
 
@@ -356,7 +367,7 @@ export class LayoutModels extends AbstractLayoutModels {
         return [
             {
                 name: "rootEditor",
-                version: 113,
+                version: 115,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,

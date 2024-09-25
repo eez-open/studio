@@ -3,6 +3,8 @@ import { makeObservable } from "mobx";
 
 import { IEezObject, makeDerivedClassInfo } from "project-editor/core/object";
 
+import { visitObjects } from "project-editor/core/search";
+
 import { ProjectType } from "project-editor/project/project";
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -110,6 +112,8 @@ export class LVGLScreenWidget extends LVGLWidget {
         return obj;
     }
 
+    override lvglPostBuild(build: LVGLBuild): void {}
+
     override lvglBuildObj(build: LVGLBuild) {
         const page = getAncestorOfType(
             this,
@@ -124,6 +128,71 @@ export class LVGLScreenWidget extends LVGLWidget {
                 build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
             }
             build.line(`lv_obj_t *obj = lv_obj_create(0);`);
+        }
+    }
+
+    override get hasEventHandler() {
+        return (
+            super.hasEventHandler ||
+            ProjectEditor.getProject(this).lvglGroups.groups.length > 0
+        );
+    }
+
+    getGroupWidgets(groupName: string) {
+        let widgets = [];
+
+        for (const widget of visitObjects(this)) {
+            if (widget instanceof LVGLWidget && widget.group == groupName) {
+                widgets.push(widget);
+            }
+        }
+
+        widgets.sort((a, b) => {
+            let aIndex = a.groupIndex;
+            let bIndex = b.groupIndex;
+
+            if (aIndex <= 0) {
+                if (bIndex > 0) {
+                    return 1;
+                }
+                aIndex = widgets.indexOf(a);
+                bIndex = widgets.indexOf(b);
+            } else if (bIndex <= 0) {
+                return -1;
+            }
+
+            return aIndex - bIndex;
+        });
+
+        return widgets;
+    }
+
+    override buildEventHandlerSpecific(build: LVGLBuild) {
+        const allGroups = ProjectEditor.getProject(this).lvglGroups.groups;
+        if (allGroups.length > 0) {
+            build.line("if (event == LV_EVENT_SCREEN_LOADED) {");
+            build.indent();
+
+            for (const group of allGroups) {
+                build.line(`// group: ${group.name}`);
+
+                const groupVariableName = build.getGroupVariableName(group);
+
+                build.line(`lv_group_remove_all_objs(${groupVariableName});`);
+
+                const widgets = this.getGroupWidgets(group.name);
+
+                widgets.forEach(widget => {
+                    build.line(
+                        `lv_group_add_obj(${groupVariableName}, ${build.getLvglObjectAccessor(
+                            widget
+                        )});`
+                    );
+                });
+            }
+
+            build.unindent();
+            build.line("}");
         }
     }
 }

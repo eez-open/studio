@@ -27,6 +27,7 @@ import textsFeature from "project-editor/features/texts";
 import readmeFeature from "project-editor/features/readme";
 import diffFeature from "project-editor/features/changes";
 import jsonStylesFeature from "project-editor/lvgl/style";
+import lvglGroupsFeature from "project-editor/lvgl/groups";
 
 export type BuildResult = { [key: string]: string };
 
@@ -76,7 +77,8 @@ let features: ProjectEditorFeature[] = [
     shortcutsFeature,
     microPythonFeature,
     diffFeature,
-    readmeFeature
+    readmeFeature,
+    lvglGroupsFeature
 ];
 
 export function getProjectFeatures() {

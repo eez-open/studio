@@ -539,6 +539,7 @@ export interface IWasmFlowRuntime {
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number): void;
     _onPointerEvent(x: number, y: number, pressed: number): void;
+    _onKeyPressed(key: number): void;
     _onMessageFromDebugger(messageData: number, messageDataSize: number): void;
 
     // eez flow API for Dashboard projects
@@ -765,6 +766,10 @@ export interface IWasmFlowRuntime {
     _lvglScrollTo(obj: number, x: number, y: number, anim_en: boolean);
     _lvglGetScrollX(obj: number): number;
     _lvglGetScrollY(obj: number): number;
+
+    _lvglAddScreenLoadedEventHandler(screenObj: number): void;
+    _lvglEncoderGroupAddObject(screenObj: number, obj: number): void;
+    _lvglKeyboardGroupAddObject(screenObj: number, obj: number): void;
 }
 
 export interface IDashboardComponentContext {

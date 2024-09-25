@@ -239,6 +239,9 @@ export class LVGLWidget extends Widget {
     _useStyleForStylePreview: string | undefined;
     localStyles: LVGLStylesDefinition;
 
+    group: string;
+    groupIndex: number;
+
     _lvglObj: number | undefined;
     _refreshRelativePosition: number = 0;
 
@@ -687,6 +690,21 @@ export class LVGLWidget extends Widget {
                 propertyGridCollapsable: true,
                 propertyGridRowComponent: LVGLStylesDefinitionProperty,
                 enumerable: false
+            },
+            {
+                name: "group",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "lvglGroups/groups",
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: (widget: LVGLWidget) =>
+                    ProjectEditor.getProject(widget).lvglGroups.groups.length ==
+                    0
+            },
+            {
+                name: "groupIndex",
+                type: PropertyType.Number,
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: (widget: LVGLWidget) => !widget.group
             }
         ],
 
@@ -846,6 +864,10 @@ export class LVGLWidget extends Widget {
                     (jsWidget as any)[propName + "Type"] = "literal";
                 }
             });
+
+            if (jsWidget.groupIndex == undefined) {
+                jsWidget.groupIndex = 0;
+            }
         },
 
         defaultValue: {
@@ -862,7 +884,9 @@ export class LVGLWidget extends Widget {
             hiddenFlagType: "literal",
             clickableFlagType: "literal",
             checkedStateType: "literal",
-            disabledStateType: "literal"
+            disabledStateType: "literal",
+            group: "",
+            groupIndex: 0
         },
 
         setRect: (widget: LVGLWidget, value: Partial<Rect>) => {
@@ -943,6 +967,15 @@ export class LVGLWidget extends Widget {
                 }
             }
 
+            if (
+                widget.group &&
+                !projectStore.project.lvglGroups.groups.find(
+                    group => group.name == widget.group
+                )
+            ) {
+                messages.push(propertyNotFoundMessage(widget, "group"));
+            }
+
             widget.localStyles.check(messages);
         },
 
@@ -987,6 +1020,8 @@ export class LVGLWidget extends Widget {
             states: observable,
             useStyle: observable,
             localStyles: observable,
+            group: observable,
+            groupIndex: observable,
             _lvglObj: observable,
             _refreshRelativePosition: observable,
             _xScroll: observable,
@@ -1481,6 +1516,10 @@ export class LVGLWidget extends Widget {
             this.hiddenFlagType == "expression" ||
             this.clickableFlagType == "expression"
         ) {
+            return true;
+        }
+
+        if (this.group) {
             return true;
         }
 

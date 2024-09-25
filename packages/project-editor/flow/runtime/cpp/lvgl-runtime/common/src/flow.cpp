@@ -920,6 +920,55 @@ static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern lv_group_t *g_encoderGroup;
+extern lv_group_t *g_keyboardGroup;
+
+static std::map<lv_obj_t *, std::vector<lv_obj_t *>> screenToEncoderGroupObjects;
+static std::map<lv_obj_t *, std::vector<lv_obj_t *>> screenToKeyboardGroupObjects;
+
+void screen_loaded_event_callback(lv_event_t *e) {
+    lv_obj_t *screenObj = lv_event_get_target_obj(e);
+
+    lv_group_remove_all_objs(g_encoderGroup);
+    {
+        auto itMap = screenToEncoderGroupObjects.find(screenObj);
+        std::vector<lv_obj_t *> &groupObjects = itMap->second;
+        for (auto it = groupObjects.begin(); it != groupObjects.end(); it++) {
+            lv_group_add_obj(g_encoderGroup, *it);
+        }
+    }
+
+    lv_group_remove_all_objs(g_keyboardGroup);
+    {
+        auto itMap = screenToKeyboardGroupObjects.find(screenObj);
+        std::vector<lv_obj_t *> &groupObjects = itMap->second;
+        for (auto it = groupObjects.begin(); it != groupObjects.end(); it++) {
+            lv_group_add_obj(g_keyboardGroup, *it);
+        }
+    }
+}
+
+EM_PORT_API(void) lvglAddScreenLoadedEventHandler(lv_obj_t *screenObj) {
+    screenToEncoderGroupObjects.insert(std::make_pair(screenObj, std::vector<lv_obj_t *>()));
+    screenToKeyboardGroupObjects.insert(std::make_pair(screenObj, std::vector<lv_obj_t *>()));
+
+    lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOADED, 0);
+}
+
+EM_PORT_API(void) lvglEncoderGroupAddObject(lv_obj_t *screenObj, lv_obj_t *obj) {
+    auto itMap = screenToEncoderGroupObjects.find(screenObj);
+    std::vector<lv_obj_t *> &groupObjects = itMap->second;
+    groupObjects.push_back(obj);
+}
+
+EM_PORT_API(void) lvglKeyboardGroupAddObject(lv_obj_t *screenObj, lv_obj_t *obj) {
+    auto itMap = screenToKeyboardGroupObjects.find(screenObj);
+    std::vector<lv_obj_t *> &groupObjects = itMap->second;
+    groupObjects.push_back(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static const void *getLvglImageByName(const char *name) {
     return (const void *)EM_ASM_INT({
         return getLvglImageByName($0, UTF8ToString($1));

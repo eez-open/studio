@@ -22,6 +22,7 @@ import {
 } from "project-editor/lvgl/lvgl-versions";
 import { sourceRootDir } from "eez-studio-shared/util";
 import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
+import type { LVGLGroup } from "./groups";
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -293,9 +294,22 @@ export class LVGLBuild extends Build {
         );
     }
 
+    getGroupVariableName(group: LVGLGroup) {
+        return group.name;
+    }
+
     async buildScreensDecl() {
         this.startBuild();
         const build = this;
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            this.project.lvglGroups.groups.forEach(group => {
+                build.line(
+                    `extern lv_group_t *${build.getGroupVariableName(group)};`
+                );
+            });
+            build.line("");
+        }
 
         build.line(`typedef struct _objects_t {`);
         build.indent();
@@ -365,6 +379,13 @@ export class LVGLBuild extends Build {
 
         build.line(`#include <string.h>`);
         build.line("");
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            this.project.lvglGroups.groups.forEach(group => {
+                build.line(`lv_group_t *${build.getGroupVariableName(group)};`);
+            });
+            build.line("");
+        }
 
         build.line(`objects_t objects;`);
         build.line(`lv_obj_t *tick_value_change_obj;`);
@@ -653,6 +674,16 @@ export class LVGLBuild extends Build {
 
         build.line("void create_screens() {");
         build.indent();
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            this.project.lvglGroups.groups.forEach(group => {
+                build.line(
+                    `${build.getGroupVariableName(group)} = lv_group_create();`
+                );
+            });
+            build.line("");
+        }
+
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             this.styles.length > 0
@@ -660,6 +691,7 @@ export class LVGLBuild extends Build {
             build.line("eez_flow_init_styles(add_style, remove_style);");
             build.line("");
         }
+
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
             `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${

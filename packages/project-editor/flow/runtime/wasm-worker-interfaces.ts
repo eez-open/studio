@@ -25,6 +25,9 @@ export interface RendererToWorkerMessage {
         pressed: number;
     }[];
 
+    // keyboard data from Canvas
+    keysPressed?: number[];
+
     updateGlobalVariableValues?: IGlobalVariable[];
 
     // request to worker to evaluate some property values

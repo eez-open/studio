@@ -46,6 +46,7 @@ import {
     downloadAndInstallExtension,
     extensionsManagerStore
 } from "home/extensions-manager/extensions-manager";
+import { LVGLGroupsTab } from "project-editor/lvgl/groups";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -270,6 +271,10 @@ const Content = observer(
                 }
 
                 return null;
+            }
+
+            if (component === "lvgl-groups") {
+                return <LVGLGroupsTab />;
             }
 
             return null;

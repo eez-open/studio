@@ -137,6 +137,7 @@ export class WasmRuntime extends RemoteRuntime {
     }[] = [];
     wheelDeltaY = 0;
     wheelClicked = 0;
+    keysPressed: number[] = [];
     screen: any;
     lastScreen: any;
 
@@ -561,6 +562,7 @@ export class WasmRuntime extends RemoteRuntime {
                       clicked: this.wheelClicked
                   },
             pointerEvents: this.isPaused ? undefined : this.pointerEvents,
+            keysPressed: this.isPaused ? undefined : this.keysPressed,
             updateGlobalVariableValues:
                 this.getUpdatedObjectGlobalVariableValues(),
             evalProperties: this.componentProperties.evalProperties
@@ -571,6 +573,7 @@ export class WasmRuntime extends RemoteRuntime {
         this.wheelDeltaY = 0;
         this.wheelClicked = 0;
         this.pointerEvents = [];
+        this.keysPressed = [];
     };
 
     setCanvasContext(ctx: CanvasRenderingContext2D) {
@@ -1272,6 +1275,9 @@ export const WasmCanvas = observer(
             if (!canvas) {
                 return;
             }
+
+            canvas.focus();
+
             const wasmRuntime = this.context.runtime as WasmRuntime;
             if (!wasmRuntime) {
                 return;
@@ -1307,11 +1313,71 @@ export const WasmCanvas = observer(
         };
 
         onWheel = (event: WheelEvent) => {
+            if (this.canvasRef.current) {
+                this.canvasRef.current.focus();
+            }
+
             const wasmRuntime = this.context.runtime as WasmRuntime;
             if (!wasmRuntime) {
                 return;
             }
             wasmRuntime.wheelDeltaY += -event.deltaY;
+        };
+
+        onKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (!wasmRuntime) {
+                return;
+            }
+
+            const LV_KEY_UP = 17; /*0x11*/
+            const LV_KEY_DOWN = 18; /*0x12*/
+            const LV_KEY_RIGHT = 19; /*0x13*/
+            const LV_KEY_LEFT = 20; /*0x14*/
+            const LV_KEY_ESC = 27; /*0x1B*/
+            const LV_KEY_DEL = 127; /*0x7F*/
+            const LV_KEY_BACKSPACE = 8; /*0x08*/
+            const LV_KEY_ENTER = 10; /*0x0A, '\n'*/
+            const LV_KEY_NEXT = 9; /*0x09, '\t'*/
+            const LV_KEY_PREV = 11; /*0x0B, '*/
+            const LV_KEY_HOME = 2; /*0x02, STX*/
+            const LV_KEY_END = 3; /*0x03, ETX*/
+
+            let key = 0;
+
+            if (event.key == "ArrowRight") {
+                key = LV_KEY_RIGHT;
+            } else if (event.key == "ArrowLeft") {
+                key = LV_KEY_LEFT;
+            } else if (event.key == "ArrowUp") {
+                key = LV_KEY_UP;
+            } else if (event.key == "ArrowDown") {
+                key = LV_KEY_DOWN;
+            } else if (event.key == "Escape") {
+                key = LV_KEY_ESC;
+            } else if (event.key == "Backspace") {
+                key = LV_KEY_BACKSPACE;
+            } else if (event.key == "Delete") {
+                key = LV_KEY_DEL;
+            } else if (event.key == "Enter") {
+                key = LV_KEY_ENTER;
+            } else if (event.key == "Tab") {
+                key = LV_KEY_NEXT;
+            } else if (event.key == "ShiftTab") {
+                key = LV_KEY_PREV;
+            } else if (event.key == "Home") {
+                key = LV_KEY_HOME;
+            } else if (event.key == "End") {
+                key = LV_KEY_END;
+            } else if (event.key.length == 1) {
+                key = event.key.charCodeAt(0);
+            }
+
+            if (key != 0) {
+                event.preventDefault();
+                event.stopPropagation();
+                wasmRuntime.keysPressed.push(key);
+            }
         };
 
         componentDidMount() {
@@ -1366,6 +1432,7 @@ export const WasmCanvas = observer(
 
             return (
                 <canvas
+                    tabIndex={0}
                     ref={this.canvasRef}
                     width={wasmRuntime.displayWidth}
                     height={wasmRuntime.displayHeight}
@@ -1386,6 +1453,7 @@ export const WasmCanvas = observer(
                               }
                             : undefined
                     }
+                    onKeyDown={this.onKeyDown}
                 />
             );
         }

@@ -61,6 +61,11 @@ static int mouse_x = 0;
 static int mouse_y = 0;
 static int mouse_pressed = 0;
 
+#define KEYBOARD_BUFFER_SIZE 1
+static uint32_t keyboard_buffer[KEYBOARD_BUFFER_SIZE];
+static uint32_t keyboard_buffer_index = 0;
+static bool keyboard_pressed = false;
+
 #if LVGL_VERSION_MAJOR >= 9
 void my_mouse_read(lv_indev_t * indev_drv, lv_indev_data_t * data) {
 #else
@@ -79,7 +84,19 @@ void my_keyboard_read(lv_indev_t * indev_drv, lv_indev_data_t * data) {
 #else
 void my_keyboard_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data) {
 #endif
-    (void) indev_drv;      /*Unused*/
+
+    if (keyboard_pressed) {
+        /*Send a release manually*/
+        keyboard_pressed = false;
+        data->state = LV_INDEV_STATE_RELEASED;
+    } else if (keyboard_buffer_index > 0) {
+        /*Send the pressed character*/
+        keyboard_pressed = true;
+        data->state = LV_INDEV_STATE_PRESSED;
+        data->key = keyboard_buffer[--keyboard_buffer_index];
+    }
+
+
 }
 
 static int mouse_wheel_delta = 0;
@@ -192,6 +209,9 @@ static void init_fs_driver() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+lv_group_t *g_encoderGroup = 0;
+lv_group_t *g_keyboardGroup = 0;
+
 static void hal_init() {
     // alloc memory for the display front buffer
     display_fb = (uint32_t *)malloc(sizeof(uint32_t) * hor_res * ver_res);
@@ -235,17 +255,15 @@ static void hal_init() {
         lv_indev_drv_register(&indev_drv_1);
 #endif
 
-        // lv_group_t * my_group = lv_group_create();
-        // lv_group_set_default(my_group);
-
         // keyboard init
+        g_keyboardGroup = lv_group_create();
 #if LVGL_VERSION_MAJOR >= 9
         lv_indev_t * indev2 = lv_indev_create();
         lv_indev_set_type(indev2, LV_INDEV_TYPE_KEYPAD);
         lv_indev_set_read_cb(indev2, my_keyboard_read);
         //lv_indev_set_mode(indev2, LV_INDEV_MODE_EVENT);
 
-        //lv_indev_set_group(indev2, my_group);
+        lv_indev_set_group(indev2, g_keyboardGroup);
 #else
         static lv_indev_drv_t indev_drv_2;
         lv_indev_drv_init(&indev_drv_2);
@@ -253,17 +271,18 @@ static void hal_init() {
         indev_drv_2.read_cb = my_keyboard_read;
         lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
 
-        //lv_indev_set_group(kb_indev, my_group);
+        lv_indev_set_group(kb_indev, g_keyboardGroup);
 #endif
 
         // mousewheel init
+        g_encoderGroup = lv_group_create();
 #if LVGL_VERSION_MAJOR >= 9
         lv_indev_t * indev3 = lv_indev_create();
         lv_indev_set_type(indev3, LV_INDEV_TYPE_ENCODER);
         lv_indev_set_read_cb(indev3, my_mousewheel_read);
         //lv_indev_set_mode(indev3, LV_INDEV_MODE_EVENT);
 
-        //lv_indev_set_group(indev3, my_group);
+        lv_indev_set_group(indev3, g_encoderGroup);
 #else
         static lv_indev_drv_t indev_drv_3;
         lv_indev_drv_init(&indev_drv_3);
@@ -271,7 +290,7 @@ static void hal_init() {
         indev_drv_3.read_cb = my_mousewheel_read;
         lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
 
-        //lv_indev_set_group(enc_indev, my_group);
+        lv_indev_set_group(enc_indev, g_encoderGroup);
 #endif
     }
 
@@ -365,6 +384,12 @@ EM_PORT_API(void) onMouseWheelEvent(double yMouseWheel, int clicked) {
     }
     mouse_wheel_delta = round(yMouseWheel);
     mouse_wheel_pressed = clicked;
+}
+
+EM_PORT_API(void) onKeyPressed(uint32_t key) {
+    if (keyboard_buffer_index < KEYBOARD_BUFFER_SIZE) {
+        keyboard_buffer[keyboard_buffer_index++] = key;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

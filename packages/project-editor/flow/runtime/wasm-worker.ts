@@ -861,6 +861,17 @@ export function createWasmWorker(
             }
         }
 
+        if (rendererToWorkerMessage.keysPressed) {
+            for (
+                let i = 0;
+                i < rendererToWorkerMessage.keysPressed.length;
+                i++
+            ) {
+                const key = rendererToWorkerMessage.keysPressed[i];
+                WasmFlowRuntime._onKeyPressed(key);
+            }
+        }
+
         if (rendererToWorkerMessage.updateGlobalVariableValues) {
             updateObjectGlobalVariableValues(
                 WasmFlowRuntime,

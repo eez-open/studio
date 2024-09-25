@@ -21,7 +21,11 @@ import {
     getProjectStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import type { LVGLTabWidget, LVGLWidget } from "project-editor/lvgl/widgets";
+import type {
+    LVGLScreenWidget,
+    LVGLTabWidget,
+    LVGLWidget
+} from "project-editor/lvgl/widgets";
 import {
     Project,
     ProjectType,
@@ -757,6 +761,44 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.createStyles();
 
         const pageObj = this.page.lvglCreate(this, 0);
+
+        this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
+
+        const encoderGroupName =
+            this.runtime.projectStore.project.lvglGroups
+                .defaultGroupForEncoderInSimulator;
+        if (encoderGroupName) {
+            const groupWidgets = (
+                this.page.lvglScreenWidget as LVGLScreenWidget
+            ).getGroupWidgets(encoderGroupName);
+
+            for (const widget of groupWidgets) {
+                if (widget._lvglObj) {
+                    this.wasm._lvglEncoderGroupAddObject(
+                        pageObj,
+                        widget._lvglObj
+                    );
+                }
+            }
+        }
+
+        const keyboardGroupName =
+            this.runtime.projectStore.project.lvglGroups
+                .defaultGroupForKeyboardInSimulator;
+        if (keyboardGroupName) {
+            const groupWidgets = (
+                this.page.lvglScreenWidget as LVGLScreenWidget
+            ).getGroupWidgets(keyboardGroupName);
+
+            for (const widget of groupWidgets) {
+                if (widget._lvglObj) {
+                    this.wasm._lvglKeyboardGroupAddObject(
+                        pageObj,
+                        widget._lvglObj
+                    );
+                }
+            }
+        }
 
         runInAction(() => {
             this.page._lvglObj = pageObj;

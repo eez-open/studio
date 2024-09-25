@@ -54,6 +54,7 @@ export class NavigationStore {
     selectedInstrumentCommandsObject = observable.box<IEezObject>();
     selectedTextResourceObject = observable.box<IEezObject>();
     selectedLanguageObject = observable.box<IEezObject>();
+    selectedLvglGroupObject = observable.box<IEezObject>();
 
     static VARIABLES_SUB_NAVIGATION_ID =
         "variables-tab/sub-navigation/selected-item";
@@ -244,6 +245,14 @@ export class NavigationStore {
                 );
             }
 
+            if (state.selectedLvglGroupObject) {
+                this.selectedLvglGroupObject.set(
+                    this.projectStore.getObjectFromStringPath(
+                        state.selectedLvglGroupObject
+                    )
+                );
+            }
+
             if (state.subnavigationSelectedItems) {
                 this.subnavigationSelectedItems =
                     state.subnavigationSelectedItems;
@@ -318,6 +327,9 @@ export class NavigationStore {
                 : undefined,
             selectedLanguageObject: this.selectedLanguageObject.get()
                 ? getObjectPathAsString(this.selectedLanguageObject.get())
+                : undefined,
+            selectedLvglGroupObject: this.selectedLvglGroupObject.get()
+                ? getObjectPathAsString(this.selectedLvglGroupObject.get())
                 : undefined,
 
             subnavigationSelectedItems: this.subnavigationSelectedItems
