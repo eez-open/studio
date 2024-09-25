@@ -211,6 +211,11 @@ static void init_fs_driver() {
 
 lv_group_t *g_encoderGroup = 0;
 lv_group_t *g_keyboardGroup = 0;
+lv_indev_t * kb_indev;
+
+EM_PORT_API(void) lvglSetKeyboardGroupSameAsEncoder() {
+    lv_indev_set_group(kb_indev, g_encoderGroup);
+}
 
 static void hal_init() {
     // alloc memory for the display front buffer
@@ -258,18 +263,18 @@ static void hal_init() {
         // keyboard init
         g_keyboardGroup = lv_group_create();
 #if LVGL_VERSION_MAJOR >= 9
-        lv_indev_t * indev2 = lv_indev_create();
-        lv_indev_set_type(indev2, LV_INDEV_TYPE_KEYPAD);
-        lv_indev_set_read_cb(indev2, my_keyboard_read);
-        //lv_indev_set_mode(indev2, LV_INDEV_MODE_EVENT);
+        kb_indev = lv_indev_create();
+        lv_indev_set_type(kb_indev, LV_INDEV_TYPE_KEYPAD);
+        lv_indev_set_read_cb(kb_indev, my_keyboard_read);
+        //lv_indev_set_mode(kb_indev, LV_INDEV_MODE_EVENT);
 
-        lv_indev_set_group(indev2, g_keyboardGroup);
+        lv_indev_set_group(kb_indev, g_keyboardGroup);
 #else
         static lv_indev_drv_t indev_drv_2;
         lv_indev_drv_init(&indev_drv_2);
         indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
         indev_drv_2.read_cb = my_keyboard_read;
-        lv_indev_t *kb_indev = lv_indev_drv_register(&indev_drv_2);
+        kb_indev = lv_indev_drv_register(&indev_drv_2);
 
         lv_indev_set_group(kb_indev, g_keyboardGroup);
 #endif

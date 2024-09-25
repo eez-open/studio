@@ -785,7 +785,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         const keyboardGroupName =
             this.runtime.projectStore.project.lvglGroups
                 .defaultGroupForKeyboardInSimulator;
-        if (keyboardGroupName) {
+        if (keyboardGroupName != encoderGroupName) {
             const groupWidgets = (
                 this.page.lvglScreenWidget as LVGLScreenWidget
             ).getGroupWidgets(keyboardGroupName);
@@ -798,6 +798,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                     );
                 }
             }
+        } else {
+            this.wasm._lvglSetKeyboardGroupSameAsEncoder();
         }
 
         runInAction(() => {

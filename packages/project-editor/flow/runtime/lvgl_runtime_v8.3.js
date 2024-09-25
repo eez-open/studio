@@ -4705,6 +4705,7 @@ var wasmImports = {
 };
 var wasmExports = createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
+var _lvglSetKeyboardGroupSameAsEncoder = Module['_lvglSetKeyboardGroupSameAsEncoder'] = createExportWrapper('lvglSetKeyboardGroupSameAsEncoder');
 var _init = Module['_init'] = createExportWrapper('init');
 var _malloc = Module['_malloc'] = createExportWrapper('malloc');
 var _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop');

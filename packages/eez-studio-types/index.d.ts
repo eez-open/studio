@@ -770,6 +770,7 @@ export interface IWasmFlowRuntime {
     _lvglAddScreenLoadedEventHandler(screenObj: number): void;
     _lvglEncoderGroupAddObject(screenObj: number, obj: number): void;
     _lvglKeyboardGroupAddObject(screenObj: number, obj: number): void;
+    _lvglSetKeyboardGroupSameAsEncoder(): void;
 }
 
 export interface IDashboardComponentContext {
