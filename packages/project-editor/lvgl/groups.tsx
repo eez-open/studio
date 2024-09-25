@@ -1,7 +1,9 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
+import * as FlexLayout from "flexlayout-react";
 
+import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import {
     registerClass,
     PropertyType,
@@ -16,8 +18,17 @@ import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
-import { createObject, getProjectStore } from "project-editor/store";
+import {
+    createObject,
+    getClassInfo,
+    getProjectStore,
+    objectToString
+} from "project-editor/store";
 import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { IListNode, List, ListItem } from "eez-studio-ui/list";
+import type { Widget } from "project-editor/flow/component";
+import type { LVGLScreenWidget } from "./widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -31,9 +42,21 @@ const DefaultGroupPropertyGridUI = observer(
         }
 
         onChange = (value: boolean) => {
-            this.context.updateObject(this.context.project.lvglGroups, {
-                [this.props.propertyInfo.name]: this.lvglGroup.name
-            });
+            if (value) {
+                this.context.updateObject(this.context.project.lvglGroups, {
+                    [this.props.propertyInfo.name]: this.lvglGroup.name
+                });
+            } else {
+                if (
+                    (this.context.project.lvglGroups as any)[
+                        this.props.propertyInfo.name
+                    ] === this.lvglGroup.name
+                ) {
+                    this.context.updateObject(this.context.project.lvglGroups, {
+                        [this.props.propertyInfo.name]: ""
+                    });
+                }
+            }
         };
 
         render() {
@@ -170,7 +193,7 @@ registerClass("LVGLGroups", LVGLGroups);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const LVGLGroupsTab = observer(
+const GroupsList = observer(
     class LVGLGroupsTab extends React.Component {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -183,6 +206,133 @@ export const LVGLGroupsTab = observer(
                     selectedObject={
                         this.context.navigationStore.selectedLvglGroupObject
                     }
+                />
+            );
+        }
+    }
+);
+
+const WidgetNode = observer(
+    class SessionNode extends React.Component<{
+        widget: Widget;
+    }> {
+        render() {
+            let label;
+            const classInfo = getClassInfo(this.props.widget);
+            if (classInfo.listLabel) {
+                label = classInfo.listLabel(this.props.widget, true);
+            } else {
+                label = objectToString(this.props.widget);
+            }
+
+            return <ListItem label={label} />;
+        }
+    }
+);
+
+const WidgetsInGroup = observer(
+    class LVGLGroupsTab extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        get selectedGroup() {
+            return this.context.navigationStore.selectedLvglGroupObject.get() as
+                | LVGLGroup
+                | undefined;
+        }
+
+        get selectedPage() {
+            const editor = this.context.editorsStore.activeEditor;
+            if (editor) {
+                const object = editor.object;
+                if (object instanceof ProjectEditor.PageClass) {
+                    return object;
+                }
+            }
+
+            return undefined;
+        }
+
+        get widgets() {
+            if (
+                this.selectedGroup &&
+                this.selectedPage &&
+                this.selectedPage.lvglScreenWidget
+            ) {
+                const editorState =
+                    this.context.editorsStore.activeEditor?.state;
+                if (editorState instanceof ProjectEditor.FlowTabStateClass) {
+                    const selectedObjects = editorState.selectedObjects;
+
+                    return (
+                        this.selectedPage.lvglScreenWidget as LVGLScreenWidget
+                    )
+                        .getGroupWidgets(this.selectedGroup.name)
+                        .map(widget => ({
+                            data: widget,
+                            id: widget.objID,
+                            selected: selectedObjects.includes(widget)
+                        }));
+                }
+            }
+
+            return [];
+        }
+
+        renderWidgetNode = (node: IListNode) => {
+            let widget = node.data as Widget;
+            return <WidgetNode widget={widget} />;
+        };
+
+        selectWidgetNode = (node: IListNode) => {
+            let widget = node.data as Widget;
+
+            const editorState = this.context.editorsStore.activeEditor?.state;
+            if (editorState instanceof ProjectEditor.FlowTabStateClass) {
+                editorState.selectObject(widget);
+            }
+        };
+
+        render() {
+            if (!this.selectedGroup || !this.selectedPage) {
+                return null;
+            }
+
+            return (
+                <List
+                    nodes={this.widgets}
+                    renderNode={this.renderWidgetNode}
+                    selectNode={this.selectWidgetNode}
+                />
+            );
+        }
+    }
+);
+
+export const LVGLGroupsTab = observer(
+    class LVGLGroupsTab extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        factory = (node: FlexLayout.TabNode) => {
+            var component = node.getComponent();
+
+            if (component === "groups") {
+                return <GroupsList />;
+            }
+
+            if (component === "order") {
+                return <WidgetsInGroup />;
+            }
+
+            return null;
+        };
+
+        render() {
+            return (
+                <FlexLayoutContainer
+                    model={this.context.layoutModels.lvglGroups}
+                    factory={this.factory}
                 />
             );
         }

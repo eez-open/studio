@@ -210,6 +210,7 @@ export class LayoutModels extends AbstractLayoutModels {
     themes: FlexLayout.Model;
     scpi: FlexLayout.Model;
     texts: FlexLayout.Model;
+    lvglGroups: FlexLayout.Model;
 
     constructor(public projectStore: ProjectStore) {
         super();
@@ -988,6 +989,58 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.texts,
                 set: action(model => (this.texts = model))
+            },
+            {
+                name: "lvglGroups",
+                version: 3,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: [],
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Groups",
+                                                component: "groups"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        weight: 50,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Group Widgets",
+                                                component: "order"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.lvglGroups,
+                set: action(model => (this.lvglGroups = model))
             }
         ];
     }

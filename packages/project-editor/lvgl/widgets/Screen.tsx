@@ -155,10 +155,13 @@ export class LVGLScreenWidget extends LVGLWidget {
                 if (bIndex > 0) {
                     return 1;
                 }
-                aIndex = widgets.indexOf(a);
-                bIndex = widgets.indexOf(b);
             } else if (bIndex <= 0) {
                 return -1;
+            }
+
+            if (aIndex == bIndex) {
+                aIndex = widgets.indexOf(a);
+                bIndex = widgets.indexOf(b);
             }
 
             return aIndex - bIndex;
