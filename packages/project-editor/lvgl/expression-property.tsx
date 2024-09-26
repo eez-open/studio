@@ -287,7 +287,10 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 return;
             }
         } else {
-            if (propertyInfo.expressionType == "string") {
+            if (
+                propertyInfo.expressionType == "string" ||
+                propertyInfo.expressionType == "array:string"
+            ) {
                 build.line(
                     `const char *new_val = ${build.getVariableGetterFunctionName(
                         (widget as any)[propName]
@@ -301,6 +304,8 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 );
             } else {
                 console.error("UNEXPECTED!");
+                build.unindent();
+                build.line(`}`);
                 return;
             }
         }
@@ -354,7 +359,10 @@ export function expressionPropertyBuildTickSpecific<T extends LVGLWidget>(
                 );
             }
 
-            if (widget instanceof ProjectEditor.LVGLRollerWidgetClass) {
+            if (
+                build.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+                widget instanceof ProjectEditor.LVGLRollerWidgetClass
+            ) {
                 build.line(
                     `if (compareRollerOptions((lv_roller_t *)${objectAccessor}, new_val, cur_val, LV_ROLLER_MODE_${widget.mode}) != 0) {`
                 );
