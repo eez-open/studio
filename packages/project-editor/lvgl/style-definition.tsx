@@ -128,13 +128,6 @@ export class LVGLStylesDefinition extends EezObject {
         state: string,
         value: any
     ) {
-        console.log(
-            "addPropertyToDefinition",
-            propertyInfo,
-            part,
-            state,
-            value
-        );
         let def = this.definition;
         return {
             ...(def || {}),

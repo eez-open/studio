@@ -1193,7 +1193,10 @@ function arrayCompareShallow(arr1: any, arr2: any) {
     return true;
 }
 
-function getEnumItems(objects: IEezObject[], propertyInfo: PropertyInfo) {
+export function getEnumItems(
+    objects: IEezObject[],
+    propertyInfo: PropertyInfo
+) {
     if (!propertyInfo.enumItems) {
         return [];
     }

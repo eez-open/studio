@@ -59,6 +59,7 @@
         "arrowParens": "avoid"
     },
     "devDependencies": {
+        "@electron/rebuild": "^3.6.0",
         "@types/adm-zip": "^0.5.5",
         "@types/archiver": "^2.1.2",
         "@types/better-sqlite3": "^7.6.3",
@@ -99,7 +100,6 @@
         "animate.css": "3.5.2",
         "electron": "^32.1.0",
         "electron-builder": "^25.0.5",
-        "@electron/rebuild": "^3.6.0",
         "globby": "^11.1.0",
         "gulp": "^4.0.2",
         "gulp-cli": "^2.2.0",
@@ -168,6 +168,7 @@
         "react": "^18.2.0",
         "react-color": "^2.19.3",
         "react-dom": "^18.2.0",
+        "react-select": "^5.8.1",
         "react-toastify": "^8.2.0",
         "react-virtualized-auto-sizer": "^1.0.7",
         "react-window": "^1.8.8",
