@@ -698,7 +698,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         const pages: Page[] = [];
 
         function enumInProject(project: Project) {
-            pages.push(...project.pages);
+            pages.push(...project.userPages);
             for (const importDirective of project.settings.general.imports) {
                 if (importDirective.project) {
                     enumInProject(importDirective.project);
@@ -757,9 +757,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             this.reactionDispose();
         }
 
-        const project = ProjectEditor.getProject(this.page);
-
-        for (const page of project.pages) {
+        for (const page of this.pages) {
             LVGLPageRuntime.detachRuntimeFromPage(page);
         }
 

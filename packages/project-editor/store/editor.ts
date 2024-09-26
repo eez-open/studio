@@ -224,10 +224,10 @@ export class EditorsStore {
             } else if (this.projectStore.project.readme) {
                 this.openEditor(this.projectStore.project.readme);
             } else if (
-                this.projectStore.project.pages &&
-                this.projectStore.project.pages.length > 0
+                this.projectStore.project.userPages &&
+                this.projectStore.project.userPages.length > 0
             ) {
-                this.openEditor(this.projectStore.project.pages[0]);
+                this.openEditor(this.projectStore.project.userPages[0]);
             } else {
                 this.openEditor(this.projectStore.project.settings);
             }
