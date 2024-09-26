@@ -767,10 +767,11 @@ export interface IWasmFlowRuntime {
     _lvglGetScrollX(obj: number): number;
     _lvglGetScrollY(obj: number): number;
 
+    _lvglCreateGroup(): number;
+    _lvglSetEncoderGroup(groupObj: number): void;
+    _lvglSetKeyboardGroup(groupObj: number): void;
     _lvglAddScreenLoadedEventHandler(screenObj: number): void;
-    _lvglEncoderGroupAddObject(screenObj: number, obj: number): void;
-    _lvglKeyboardGroupAddObject(screenObj: number, obj: number): void;
-    _lvglSetKeyboardGroupSameAsEncoder(): void;
+    _lvglGroupAddObject(screenObj: number, groupObj: number, obj: number): void;
 }
 
 export interface IDashboardComponentContext {

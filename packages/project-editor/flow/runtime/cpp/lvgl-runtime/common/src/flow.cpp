@@ -920,51 +920,72 @@ static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern lv_group_t *g_encoderGroup;
-extern lv_group_t *g_keyboardGroup;
-
-static std::map<lv_obj_t *, std::vector<lv_obj_t *>> screenToEncoderGroupObjects;
-static std::map<lv_obj_t *, std::vector<lv_obj_t *>> screenToKeyboardGroupObjects;
+static std::vector<lv_group_t *> groups;
+static std::map<lv_obj_t *, std::map<lv_group_t *, std::vector<lv_obj_t *>>> screenToGroupObjects;
 
 void screen_loaded_event_callback(lv_event_t *e) {
     lv_obj_t *screenObj = lv_event_get_target_obj(e);
 
-    lv_group_remove_all_objs(g_encoderGroup);
-    {
-        auto itMap = screenToEncoderGroupObjects.find(screenObj);
-        std::vector<lv_obj_t *> &groupObjects = itMap->second;
-        for (auto it = groupObjects.begin(); it != groupObjects.end(); it++) {
-            lv_group_add_obj(g_encoderGroup, *it);
-        }
-    }
+    for (auto itGroups = groups.begin(); itGroups != groups.end(); itGroups++) {
+        auto groupObj = *itGroups;
 
-    lv_group_remove_all_objs(g_keyboardGroup);
-    {
-        auto itMap = screenToKeyboardGroupObjects.find(screenObj);
-        std::vector<lv_obj_t *> &groupObjects = itMap->second;
-        for (auto it = groupObjects.begin(); it != groupObjects.end(); it++) {
-            lv_group_add_obj(g_keyboardGroup, *it);
+        lv_group_remove_all_objs(groupObj);
+
+        auto itScreenToGroupObjects = screenToGroupObjects.find(screenObj);
+        if (itScreenToGroupObjects != screenToGroupObjects.end()) {
+            auto itGroupObjects = itScreenToGroupObjects->second.find(groupObj);
+            if (itGroupObjects != itScreenToGroupObjects->second.end()) {
+                std::vector<lv_obj_t *> &groupObjects = itGroupObjects->second;
+                for (auto itObjects = groupObjects.begin(); itObjects != groupObjects.end(); itObjects++) {
+                    lv_group_add_obj(groupObj, *itObjects);
+                }
+            }
         }
     }
+}
+
+EM_PORT_API(lv_group_t *) lvglCreateGroup() {
+    lv_group_t *group = lv_group_create();
+    groups.push_back(group);
+    return group;
 }
 
 EM_PORT_API(void) lvglAddScreenLoadedEventHandler(lv_obj_t *screenObj) {
-    screenToEncoderGroupObjects.insert(std::make_pair(screenObj, std::vector<lv_obj_t *>()));
-    screenToKeyboardGroupObjects.insert(std::make_pair(screenObj, std::vector<lv_obj_t *>()));
-
-    lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOADED, 0);
+     lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOADED, 0);
 }
 
-EM_PORT_API(void) lvglEncoderGroupAddObject(lv_obj_t *screenObj, lv_obj_t *obj) {
-    auto itMap = screenToEncoderGroupObjects.find(screenObj);
-    std::vector<lv_obj_t *> &groupObjects = itMap->second;
+EM_PORT_API(void) lvglGroupAddObject(lv_obj_t *screenObj, lv_group_t *groupObj, lv_obj_t *obj) {
+    auto itScreenToGroupObjects = screenToGroupObjects.find(screenObj);
+
+    if (itScreenToGroupObjects == screenToGroupObjects.end()) {
+        std::vector<lv_obj_t *> groupObjects;
+        groupObjects.push_back(obj);
+
+        std::map<lv_group_t *, std::vector<lv_obj_t *>> groupMap;
+        groupMap.insert(std::make_pair(groupObj, groupObjects));
+
+        screenToGroupObjects.insert(std::make_pair(screenObj, groupMap));
+        return;
+    }
+
+    auto itGroupObjects = itScreenToGroupObjects->second.find(groupObj);
+    if (itGroupObjects == itScreenToGroupObjects->second.end()) {
+        std::vector<lv_obj_t *> groupObjects;
+        groupObjects.push_back(obj);
+
+        itScreenToGroupObjects->second.insert(std::make_pair(groupObj, groupObjects));
+        return;
+    }
+
+    std::vector<lv_obj_t *> &groupObjects = itGroupObjects->second;
     groupObjects.push_back(obj);
 }
 
-EM_PORT_API(void) lvglKeyboardGroupAddObject(lv_obj_t *screenObj, lv_obj_t *obj) {
-    auto itMap = screenToKeyboardGroupObjects.find(screenObj);
-    std::vector<lv_obj_t *> &groupObjects = itMap->second;
-    groupObjects.push_back(obj);
+static lv_group_t *getLvglGroupFromIndex(int32_t index) {
+    if (index >= 0 && index < groups.size()) {
+        return groups[index];
+    }
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1015,6 +1036,7 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
     eez::flow::lvglObjAddStyleHook = lvglObjAddStyle;
     eez::flow::lvglObjRemoveStyleHook = lvglObjRemoveStyle;
+    eez::flow::getLvglGroupFromIndexHook = getLvglGroupFromIndex;
 
     eez::flow::setDebuggerMessageSubsciptionFilter(debuggerMessageSubsciptionFilter);
     eez::flow::onDebuggerClientConnected();

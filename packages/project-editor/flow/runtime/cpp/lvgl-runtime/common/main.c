@@ -209,12 +209,15 @@ static void init_fs_driver() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-lv_group_t *g_encoderGroup = 0;
-lv_group_t *g_keyboardGroup = 0;
-lv_indev_t * kb_indev;
+lv_indev_t *encoder_indev;
+lv_indev_t *keyboard_indev;
 
-EM_PORT_API(void) lvglSetKeyboardGroupSameAsEncoder() {
-    lv_indev_set_group(kb_indev, g_encoderGroup);
+EM_PORT_API(void) lvglSetEncoderGroup(lv_group_t *group) {
+    lv_indev_set_group(encoder_indev, group);
+}
+
+EM_PORT_API(void) lvglSetKeyboardGroup(lv_group_t *group) {
+    lv_indev_set_group(keyboard_indev, group);
 }
 
 static void hal_init() {
@@ -261,41 +264,32 @@ static void hal_init() {
 #endif
 
         // keyboard init
-        g_keyboardGroup = lv_group_create();
 #if LVGL_VERSION_MAJOR >= 9
-        kb_indev = lv_indev_create();
-        lv_indev_set_type(kb_indev, LV_INDEV_TYPE_KEYPAD);
-        lv_indev_set_read_cb(kb_indev, my_keyboard_read);
-        //lv_indev_set_mode(kb_indev, LV_INDEV_MODE_EVENT);
-
-        lv_indev_set_group(kb_indev, g_keyboardGroup);
+        keyboard_indev = lv_indev_create();
+        lv_indev_set_type(keyboard_indev, LV_INDEV_TYPE_KEYPAD);
+        lv_indev_set_read_cb(keyboard_indev, my_keyboard_read);
+        //lv_indev_set_mode(keyboard_indev, LV_INDEV_MODE_EVENT);
 #else
         static lv_indev_drv_t indev_drv_2;
         lv_indev_drv_init(&indev_drv_2);
         indev_drv_2.type = LV_INDEV_TYPE_KEYPAD;
         indev_drv_2.read_cb = my_keyboard_read;
-        kb_indev = lv_indev_drv_register(&indev_drv_2);
-
-        lv_indev_set_group(kb_indev, g_keyboardGroup);
+        keyboard_indev = lv_indev_drv_register(&indev_drv_2);
 #endif
 
         // mousewheel init
-        g_encoderGroup = lv_group_create();
 #if LVGL_VERSION_MAJOR >= 9
-        lv_indev_t * indev3 = lv_indev_create();
-        lv_indev_set_type(indev3, LV_INDEV_TYPE_ENCODER);
-        lv_indev_set_read_cb(indev3, my_mousewheel_read);
-        //lv_indev_set_mode(indev3, LV_INDEV_MODE_EVENT);
+        encoder_indev = lv_indev_create();
+        lv_indev_set_type(encoder_indev, LV_INDEV_TYPE_ENCODER);
+        lv_indev_set_read_cb(encoder_indev, my_mousewheel_read);
+        //lv_indev_set_mode(encoder_indev, LV_INDEV_MODE_EVENT);
 
-        lv_indev_set_group(indev3, g_encoderGroup);
 #else
         static lv_indev_drv_t indev_drv_3;
         lv_indev_drv_init(&indev_drv_3);
         indev_drv_3.type = LV_INDEV_TYPE_ENCODER;
         indev_drv_3.read_cb = my_mousewheel_read;
-        lv_indev_t * enc_indev = lv_indev_drv_register(&indev_drv_3);
-
-        lv_indev_set_group(enc_indev, g_encoderGroup);
+        encoder_indev = lv_indev_drv_register(&indev_drv_3);
 #endif
     }
 

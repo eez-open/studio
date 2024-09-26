@@ -295,22 +295,30 @@ export class LVGLBuild extends Build {
     }
 
     getGroupVariableName(group: LVGLGroup) {
-        return group.name;
+        return `groups.${group.name}`;
     }
 
     async buildScreensDecl() {
         this.startBuild();
         const build = this;
 
+        // groups
         if (this.project.lvglGroups.groups.length > 0) {
+            build.line(`typedef struct _groups_t {`);
+            build.indent();
+
             this.project.lvglGroups.groups.forEach(group => {
-                build.line(
-                    `extern lv_group_t *${build.getGroupVariableName(group)};`
-                );
+                build.line(`lv_group_t *${group.name};`);
             });
+
+            build.unindent();
+            build.line(`} groups_t;`);
+            build.line("");
+            build.line(`extern groups_t groups;`);
             build.line("");
         }
 
+        // objects
         build.line(`typedef struct _objects_t {`);
         build.indent();
 
@@ -381,10 +389,7 @@ export class LVGLBuild extends Build {
         build.line("");
 
         if (this.project.lvglGroups.groups.length > 0) {
-            this.project.lvglGroups.groups.forEach(group => {
-                build.line(`lv_group_t *${build.getGroupVariableName(group)};`);
-            });
-            build.line("");
+            build.line(`groups_t groups;`);
         }
 
         build.line(`objects_t objects;`);
@@ -681,6 +686,9 @@ export class LVGLBuild extends Build {
                     `${build.getGroupVariableName(group)} = lv_group_create();`
                 );
             });
+            build.line(
+                "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
+            );
             build.line("");
         }
 

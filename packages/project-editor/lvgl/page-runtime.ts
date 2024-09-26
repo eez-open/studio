@@ -675,6 +675,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     widgetIndex: number;
 
+    lvglGroupObjects: number[] = [];
+
     constructor(private runtime: WasmRuntime) {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
@@ -714,6 +716,28 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     async mount() {
+        this.lvglGroupObjects = [];
+
+        for (const group of this.project.lvglGroups.groups) {
+            const groupObj = this.wasm._lvglCreateGroup();
+
+            this.lvglGroupObjects.push(groupObj);
+
+            if (
+                group.name ==
+                this.project.lvglGroups.defaultGroupForEncoderInSimulator
+            ) {
+                this.wasm._lvglSetEncoderGroup(groupObj);
+            }
+
+            if (
+                group.name ==
+                this.project.lvglGroups.defaultGroupForKeyboardInSimulator
+            ) {
+                this.wasm._lvglSetKeyboardGroup(groupObj);
+            }
+        }
+
         for (const page of this.pages) {
             this.lvglCreate(page);
         }
@@ -764,42 +788,22 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
 
-        const encoderGroupName =
-            this.runtime.projectStore.project.lvglGroups
-                .defaultGroupForEncoderInSimulator;
-        if (encoderGroupName) {
+        for (let i = 0; i < this.project.lvglGroups.groups.length; i++) {
+            const group = this.project.lvglGroups.groups[i];
+
             const groupWidgets = (
                 this.page.lvglScreenWidget as LVGLScreenWidget
-            ).getGroupWidgets(encoderGroupName);
+            ).getGroupWidgets(group.name);
 
             for (const widget of groupWidgets) {
                 if (widget._lvglObj) {
-                    this.wasm._lvglEncoderGroupAddObject(
+                    this.wasm._lvglGroupAddObject(
                         pageObj,
+                        this.lvglGroupObjects[i],
                         widget._lvglObj
                     );
                 }
             }
-        }
-
-        const keyboardGroupName =
-            this.runtime.projectStore.project.lvglGroups
-                .defaultGroupForKeyboardInSimulator;
-        if (keyboardGroupName != encoderGroupName) {
-            const groupWidgets = (
-                this.page.lvglScreenWidget as LVGLScreenWidget
-            ).getGroupWidgets(keyboardGroupName);
-
-            for (const widget of groupWidgets) {
-                if (widget._lvglObj) {
-                    this.wasm._lvglKeyboardGroupAddObject(
-                        pageObj,
-                        widget._lvglObj
-                    );
-                }
-            }
-        } else {
-            this.wasm._lvglSetKeyboardGroupSameAsEncoder();
         }
 
         runInAction(() => {

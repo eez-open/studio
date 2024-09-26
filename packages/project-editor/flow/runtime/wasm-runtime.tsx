@@ -1400,6 +1400,8 @@ export const WasmCanvas = observer(
                 true
             );
             document.addEventListener("wheel", this.onWheel, true);
+
+            canvas.focus();
         }
 
         componentWillUnmount() {

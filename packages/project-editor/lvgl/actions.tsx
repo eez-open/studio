@@ -68,7 +68,8 @@ const LVGL_ACTIONS = {
     PLAY_ANIMATION: 1,
     SET_PROPERTY: 2,
     ADD_STYLE: 3,
-    REMOVE_STYLE: 4
+    REMOVE_STYLE: 4,
+    GROUP: 5
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +87,9 @@ export class LVGLActionType extends EezObject {
                 return LVGLSetPropertyActionType;
             else if (jsObject.action == "ADD_STYLE")
                 return LVGLAddStyleActionType;
-            else return LVGLRemoveStyleActionType;
+            else if (jsObject.action == "REMOVE_STYLE")
+                return LVGLAddStyleActionType;
+            else return LVGLGroupActionType;
         },
 
         properties: [
@@ -1292,6 +1295,176 @@ export class LVGLRemoveStyleActionType extends LVGLActionType {
 }
 
 registerClass("LVGLRemoveStyleActionType", LVGLRemoveStyleActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const GROUP_ACTIONS = {
+    SET_WRAP: 0,
+    FOCUS_OBJ: 1,
+    FOCUS_NEXT: 2,
+    FOCUS_PREVIOUS: 3,
+    FOCUS_FREEZE: 4,
+    SET_EDITING: 5
+};
+
+export class LVGLGroupActionType extends LVGLActionType {
+    groupAction: keyof typeof GROUP_ACTIONS;
+    target: string;
+    enable: boolean;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            groupAction: observable,
+            target: observable,
+            enable: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "groupAction",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(GROUP_ACTIONS).map(id => ({
+                    id
+                })),
+                enumDisallowUndefined: true
+            },
+            {
+                name: "target",
+                displayName: (actionType: LVGLGroupActionType) =>
+                    actionType.groupAction == "FOCUS_OBJ"
+                        ? "Target widget"
+                        : "Target group",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLGroupActionType) => {
+                    const projectStore =
+                        ProjectEditor.getProjectStore(actionType);
+                    if (actionType.groupAction == "FOCUS_OBJ") {
+                        const lvglIdentifiers =
+                            projectStore.lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                                ProjectEditor.getFlow(actionType)
+                            );
+
+                        return lvglIdentifiers.map(lvglIdentifier => ({
+                            id: lvglIdentifier.identifier,
+                            label: lvglIdentifier.identifier
+                        }));
+                    } else {
+                        return projectStore.project.lvglGroups.groups.map(
+                            group => ({
+                                id: group.name,
+                                label: group.name
+                            })
+                        );
+                    }
+                }
+            },
+            {
+                name: "enable",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (actionType: LVGLGroupActionType) =>
+                    !(
+                        actionType.groupAction == "SET_WRAP" ||
+                        actionType.groupAction == "FOCUS_FREEZE" ||
+                        actionType.groupAction == "SET_EDITING"
+                    )
+            }
+        ],
+        defaultValue: {
+            groupAction: "SET_WRAP"
+        },
+        listLabel: (action: LVGLGroupActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Group";
+            }
+            if (action.groupAction == "SET_WRAP") {
+                return (
+                    <>
+                        Set wrap to {action.enable ? "ON" : "OFF"} for group "
+                        {action.target}"
+                    </>
+                );
+            } else if (action.groupAction == "FOCUS_OBJ") {
+                return <>Set focus to widget "{action.target}"</>;
+            } else if (action.groupAction == "FOCUS_NEXT") {
+                return <>Focus next for group "{action.target}"</>;
+            } else if (action.groupAction == "FOCUS_PREVIOUS") {
+                return <>Focus previous for group "{action.target}"</>;
+            } else if (action.groupAction == "FOCUS_FREEZE") {
+                return <>Freeze focus for group "{action.target}"</>;
+            } else {
+                return (
+                    <>
+                        Set editing to {action.enable ? "ON" : "OFF"} for group
+                        "{action.target}"
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLGroupActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                if (object.groupAction == "FOCUS_OBJ") {
+                    const lvglIdentifier =
+                        projectStore.lvglIdentifiers.getIdentifierByName(
+                            ProjectEditor.getFlow(object),
+                            object.target
+                        );
+
+                    if (lvglIdentifier == undefined) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "target")
+                        );
+                    }
+                } else {
+                    if (
+                        !projectStore.project.lvglGroups.groups.some(
+                            group => group.name == object.target
+                        )
+                    ) {
+                        messages.push(
+                            propertyNotFoundMessage(object, "target")
+                        );
+                    }
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // groupAction
+        dataBuffer.writeUint32(GROUP_ACTIONS[this.groupAction]);
+
+        // target
+        if (this.groupAction == "FOCUS_OBJ") {
+            dataBuffer.writeInt32(
+                assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(this),
+                    this.target
+                )?.index ?? -1
+            );
+        } else {
+            const index =
+                assets.projectStore.project.lvglGroups.groups.findIndex(
+                    group => group.name == this.target
+                );
+
+            dataBuffer.writeInt32(index);
+        }
+
+        // style
+        dataBuffer.writeUint32(this.enable ? 1 : 0);
+    }
+}
+
+registerClass("LVGLGroupActionType", LVGLGroupActionType);
 
 ////////////////////////////////////////////////////////////////////////////////
 
