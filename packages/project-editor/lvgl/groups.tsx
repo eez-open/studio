@@ -28,7 +28,6 @@ import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IListNode, List, ListItem } from "eez-studio-ui/list";
 import type { Widget } from "project-editor/flow/component";
-import type { LVGLScreenWidget } from "./widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,20 +253,15 @@ const WidgetsInGroup = observer(
         }
 
         get widgets() {
-            if (
-                this.selectedGroup &&
-                this.selectedPage &&
-                this.selectedPage.lvglScreenWidget
-            ) {
+            if (this.selectedGroup && this.selectedPage) {
                 const editorState =
                     this.context.editorsStore.activeEditor?.state;
                 if (editorState instanceof ProjectEditor.FlowTabStateClass) {
                     const selectedObjects = editorState.selectedObjects;
 
-                    return (
-                        this.selectedPage.lvglScreenWidget as LVGLScreenWidget
-                    )
-                        .getGroupWidgets(this.selectedGroup.name)
+                    return this.selectedPage
+
+                        .getLvglGroupWidgets(this.selectedGroup.name)
                         .map(widget => ({
                             data: widget,
                             id: widget.objID,

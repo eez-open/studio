@@ -21,11 +21,7 @@ import {
     getProjectStore
 } from "project-editor/store";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
-import type {
-    LVGLScreenWidget,
-    LVGLTabWidget,
-    LVGLWidget
-} from "project-editor/lvgl/widgets";
+import type { LVGLTabWidget, LVGLWidget } from "project-editor/lvgl/widgets";
 import {
     Project,
     ProjectType,
@@ -675,8 +671,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     widgetIndex: number;
 
-    lvglGroupObjects: number[] = [];
-
     constructor(private runtime: WasmRuntime) {
         super(runtime.selectedPage);
         this.wasm = runtime.worker.wasm;
@@ -716,12 +710,13 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     async mount() {
-        this.lvglGroupObjects = [];
+        const lvglGroupObjects = [];
 
+        // create groups
         for (const group of this.project.lvglGroups.groups) {
             const groupObj = this.wasm._lvglCreateGroup();
 
-            this.lvglGroupObjects.push(groupObj);
+            lvglGroupObjects.push(groupObj);
 
             if (
                 group.name ==
@@ -740,6 +735,34 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         for (const page of this.pages) {
             this.lvglCreate(page);
+        }
+
+        // add widgets to groups
+        for (const page of this.pages) {
+            if (page._lvglObj) {
+                this.wasm._lvglAddScreenLoadedEventHandler(page._lvglObj);
+                for (
+                    let i = 0;
+                    i < this.project.lvglGroups.groups.length;
+                    i++
+                ) {
+                    const group = this.project.lvglGroups.groups[i];
+
+                    const groupWidgets = page.getLvglGroupWidgets(group.name);
+
+                    for (const widget of groupWidgets) {
+                        if (widget._lvglObj) {
+                            this.wasm._lvglGroupAddObject(
+                                page._lvglObj,
+                                lvglGroupObjects[i],
+                                widget._lvglObj
+                            );
+                        }
+                    }
+                }
+            } else {
+                console.log("ajme majko");
+            }
         }
 
         this.reactionDispose = autorun(() => {
@@ -783,26 +806,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.createStyles();
 
         const pageObj = this.page.lvglCreate(this, 0);
-
-        this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
-
-        for (let i = 0; i < this.project.lvglGroups.groups.length; i++) {
-            const group = this.project.lvglGroups.groups[i];
-
-            const groupWidgets = (
-                this.page.lvglScreenWidget as LVGLScreenWidget
-            ).getGroupWidgets(group.name);
-
-            for (const widget of groupWidgets) {
-                if (widget._lvglObj) {
-                    this.wasm._lvglGroupAddObject(
-                        pageObj,
-                        this.lvglGroupObjects[i],
-                        widget._lvglObj
-                    );
-                }
-            }
-        }
 
         runInAction(() => {
             this.page._lvglObj = pageObj;

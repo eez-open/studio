@@ -3,6 +3,7 @@ import { map } from "lodash";
 import { formatNumber } from "eez-studio-shared/util";
 
 export const TAB = "    ";
+export const USER_WIDGET_IDENTIFIER_SEPARATOR = "__";
 
 export { NamingConvention, getName } from "project-editor/project/assets";
 

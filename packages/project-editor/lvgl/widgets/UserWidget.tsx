@@ -235,7 +235,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         makeObservable(this, {
             userWidgetPage: computed,
             isCycleDetected: computed,
-            userWidgetPageCopy: computed
+            userWidgetPageCopy: computed({ keepAlive: true })
         });
     }
 
@@ -347,6 +347,8 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                     this._userWidgetPageCopyIds.push(id);
                 }
             }
+
+            userWidgetPageCopy._lvglUserWidgetOfPageCopy = this;
         });
 
         return userWidgetPageCopy;
@@ -436,7 +438,9 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     ): number {
         const widgetIndex = runtime.getWidgetIndex(this);
 
-        if (!this.userWidgetPageCopy || this.isCycleDetected) {
+        const userWidgetPageCopy = this.userWidgetPageCopy;
+
+        if (!userWidgetPageCopy || this.isCycleDetected) {
             const rect = this.getLvglCreateRect();
 
             return runtime.wasm._lvglCreateUserWidget(
@@ -476,7 +480,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         const rect = this.getLvglCreateRect();
 
-        const obj = this.userWidgetPageCopy.lvglCreate(runtime, parentObj, {
+        const obj = userWidgetPageCopy.lvglCreate(runtime, parentObj, {
             widgetIndex,
             left: rect.left,
             top: rect.top,

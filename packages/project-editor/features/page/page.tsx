@@ -64,7 +64,10 @@ import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type {
+    LVGLUserWidgetWidget,
+    LVGLWidget
+} from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { PAGES_ICON } from "project-editor/ui-components/icons";
@@ -207,6 +210,7 @@ export class Page extends Flow {
 
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
+    _lvglUserWidgetOfPageCopy: LVGLUserWidgetWidget;
 
     constructor() {
         super();
@@ -1083,6 +1087,38 @@ export class Page extends Flow {
         }
     }
 
+    getLvglGroupWidgets(groupName: string) {
+        let widgets = [];
+
+        for (const widget of this._lvglWidgetsIncludingUserWidgets) {
+            if (widget.group == groupName) {
+                widgets.push(widget);
+            }
+        }
+
+        widgets.sort((a, b) => {
+            let aIndex = a.groupIndex;
+            let bIndex = b.groupIndex;
+
+            if (aIndex <= 0) {
+                if (bIndex > 0) {
+                    return 1;
+                }
+            } else if (bIndex <= 0) {
+                return -1;
+            }
+
+            if (aIndex == bIndex) {
+                aIndex = widgets.indexOf(a);
+                bIndex = widgets.indexOf(b);
+            }
+
+            return aIndex - bIndex;
+        });
+
+        return widgets;
+    }
+
     get _lvglWidgets() {
         const widgets: LVGLWidget[] = [];
 
@@ -1111,11 +1147,9 @@ export class Page extends Flow {
                         widget instanceof
                         ProjectEditor.LVGLUserWidgetWidgetClass
                     ) {
-                        if (
-                            widget.userWidgetPageCopy &&
-                            !widget.isCycleDetected
-                        ) {
-                            addWidgets(widget.userWidgetPageCopy);
+                        const userWidgetPageCopy = widget.userWidgetPageCopy;
+                        if (userWidgetPageCopy && !widget.isCycleDetected) {
+                            addWidgets(userWidgetPageCopy);
                         }
                     }
                 }

@@ -3,8 +3,6 @@ import { makeObservable } from "mobx";
 
 import { IEezObject, makeDerivedClassInfo } from "project-editor/core/object";
 
-import { visitObjects } from "project-editor/core/search";
-
 import { ProjectType } from "project-editor/project/project";
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -138,41 +136,14 @@ export class LVGLScreenWidget extends LVGLWidget {
         );
     }
 
-    getGroupWidgets(groupName: string) {
-        let widgets = [];
-
-        for (const widget of visitObjects(this)) {
-            if (widget instanceof LVGLWidget && widget.group == groupName) {
-                widgets.push(widget);
-            }
-        }
-
-        widgets.sort((a, b) => {
-            let aIndex = a.groupIndex;
-            let bIndex = b.groupIndex;
-
-            if (aIndex <= 0) {
-                if (bIndex > 0) {
-                    return 1;
-                }
-            } else if (bIndex <= 0) {
-                return -1;
-            }
-
-            if (aIndex == bIndex) {
-                aIndex = widgets.indexOf(a);
-                bIndex = widgets.indexOf(b);
-            }
-
-            return aIndex - bIndex;
-        });
-
-        return widgets;
-    }
-
     override buildEventHandlerSpecific(build: LVGLBuild) {
         const allGroups = ProjectEditor.getProject(this).lvglGroups.groups;
         if (allGroups.length > 0) {
+            const page = getAncestorOfType(
+                this,
+                ProjectEditor.PageClass.classInfo
+            ) as Page;
+
             build.line("if (event == LV_EVENT_SCREEN_LOADED) {");
             build.indent();
 
@@ -183,11 +154,11 @@ export class LVGLScreenWidget extends LVGLWidget {
 
                 build.line(`lv_group_remove_all_objs(${groupVariableName});`);
 
-                const widgets = this.getGroupWidgets(group.name);
+                const widgets = page.getLvglGroupWidgets(group.name);
 
                 widgets.forEach(widget => {
                     build.line(
-                        `lv_group_add_obj(${groupVariableName}, ${build.getLvglObjectAccessor(
+                        `lv_group_add_obj(${groupVariableName}, ${build.getLvglWidgetAccessorInEventHandler(
                             widget
                         )});`
                     );

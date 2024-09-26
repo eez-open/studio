@@ -1321,7 +1321,7 @@ export const WasmCanvas = observer(
             if (!wasmRuntime) {
                 return;
             }
-            wasmRuntime.wheelDeltaY += -event.deltaY;
+            wasmRuntime.wheelDeltaY += event.deltaY;
         };
 
         onKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {

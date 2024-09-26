@@ -88,7 +88,7 @@ export class LVGLActionType extends EezObject {
             else if (jsObject.action == "ADD_STYLE")
                 return LVGLAddStyleActionType;
             else if (jsObject.action == "REMOVE_STYLE")
-                return LVGLAddStyleActionType;
+                return LVGLRemoveStyleActionType;
             else return LVGLGroupActionType;
         },
 
@@ -159,7 +159,7 @@ export class LVGLActionType extends EezObject {
                     ),
                     LVGLPlayAnimationActionType
                 );
-            } else {
+            } else if (result.values.action == "SET_PROPERTY") {
                 actionTypeObject = createObject<LVGLSetPropertyActionType>(
                     project._store,
                     Object.assign(
@@ -167,6 +167,33 @@ export class LVGLActionType extends EezObject {
                         LVGLSetPropertyActionType.classInfo.defaultValue
                     ),
                     LVGLSetPropertyActionType
+                );
+            } else if (result.values.action == "ADD_STYLE") {
+                actionTypeObject = createObject<LVGLAddStyleActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLAddStyleActionType.classInfo.defaultValue
+                    ),
+                    LVGLAddStyleActionType
+                );
+            } else if (result.values.action == "REMOVE_STYLE") {
+                actionTypeObject = createObject<LVGLRemoveStyleActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLRemoveStyleActionType.classInfo.defaultValue
+                    ),
+                    LVGLRemoveStyleActionType
+                );
+            } else if (result.values.action == "GROUP") {
+                actionTypeObject = createObject<LVGLGroupActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLGroupActionType.classInfo.defaultValue
+                    ),
+                    LVGLGroupActionType
                 );
             }
 

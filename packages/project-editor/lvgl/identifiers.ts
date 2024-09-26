@@ -12,7 +12,11 @@ import type { Flow } from "project-editor/flow/flow";
 import { Page } from "project-editor/features/page/page";
 
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { NamingConvention, getName } from "project-editor/build/helper";
+import {
+    NamingConvention,
+    getName,
+    USER_WIDGET_IDENTIFIER_SEPARATOR
+} from "project-editor/build/helper";
 
 const GENERATED_NAME_PREFIX = "obj";
 
@@ -209,7 +213,8 @@ export class LVGLIdentifiers {
                     if (identifier.userWidgetIdentifiers) {
                         doFlatterMap(
                             identifier.userWidgetIdentifiers,
-                            identifier.identifier + "__"
+                            identifier.identifier +
+                                USER_WIDGET_IDENTIFIER_SEPARATOR
                         );
                     }
                 });

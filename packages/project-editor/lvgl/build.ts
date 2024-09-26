@@ -1,6 +1,11 @@
 import fs from "fs";
 import { resolve } from "path";
-import { NamingConvention, getName, Build } from "project-editor/build/helper";
+import {
+    NamingConvention,
+    getName,
+    Build,
+    USER_WIDGET_IDENTIFIER_SEPARATOR
+} from "project-editor/build/helper";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
@@ -227,6 +232,46 @@ export class LVGLBuild extends Build {
         }
 
         return `objects.${identifier}`;
+    }
+
+    getLvglWidgetAccessorInEventHandler(widget: LVGLWidget) {
+        let page = getAncestorOfType(
+            widget,
+            ProjectEditor.PageClass.classInfo
+        ) as Page;
+
+        if (page._lvglUserWidgetOfPageCopy) {
+            const identifiers = [
+                this.getLvglObjectIdentifierInSourceCode(widget)
+            ];
+
+            while (true) {
+                const userWidgetPage = getAncestorOfType(
+                    page._lvglUserWidgetOfPageCopy,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                if (!userWidgetPage._lvglUserWidgetOfPageCopy) {
+                    break;
+                }
+
+                identifiers.unshift(
+                    this.getLvglObjectIdentifierInSourceCode(
+                        page._lvglUserWidgetOfPageCopy
+                    )
+                );
+
+                page = userWidgetPage;
+            }
+
+            identifiers.unshift(
+                this.getLvglObjectAccessor(page._lvglUserWidgetOfPageCopy)
+            );
+
+            return identifiers.join(USER_WIDGET_IDENTIFIER_SEPARATOR);
+        } else {
+            return this.getLvglObjectAccessor(widget);
+        }
     }
 
     getEventHandlerCallbackName(widget: LVGLWidget) {
