@@ -201,7 +201,7 @@ export const Canvas = observer(
         }
 
         onWheel = (event: WheelEvent) => {
-            if (event.buttons === 4 || this.props.flowContext.frontFace) {
+            if (event.buttons === 4) {
                 // do nothing if mouse wheel is pressed, i.e. pan will be activated in onMouseDown
                 return;
             }
@@ -235,13 +235,20 @@ export const Canvas = observer(
                         ((y - transform.translate.y) * scale) / transform.scale;
 
                     transform.scale = scale;
-                    transform.translate = { x: tx, y: ty };
+
+                    if (!this.props.flowContext.frontFace) {
+                        transform.translate = { x: tx, y: ty };
+                    }
 
                     runInAction(() => {
                         this.props.flowContext.viewState.transform = transform;
                     });
                 }
             } else {
+                if (this.props.flowContext.frontFace) {
+                    return;
+                }
+
                 transform.translate = {
                     x:
                         transform.translate.x -
