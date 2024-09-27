@@ -235,6 +235,8 @@ export const Property = observer(
                 if (
                     this.props.propertyInfo.type == PropertyType.String ||
                     this.props.propertyInfo.type ==
+                        PropertyType.NumberArrayAsString ||
+                    this.props.propertyInfo.type ==
                         PropertyType.MultilineText ||
                     this.props.propertyInfo.type == PropertyType.ObjectReference
                 ) {
@@ -947,7 +949,10 @@ export const Property = observer(
                         )}
                     </div>
                 );
-            } else if (propertyInfo.type === PropertyType.String) {
+            } else if (
+                propertyInfo.type === PropertyType.String ||
+                propertyInfo.type == PropertyType.NumberArrayAsString
+            ) {
                 if (!readOnly && isOnSelectAvailable) {
                     return (
                         <div className="input-group" title={this._value || ""}>

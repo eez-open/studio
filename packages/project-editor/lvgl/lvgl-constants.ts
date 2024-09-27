@@ -187,6 +187,14 @@ export const LV_FLEX_ALIGN_SPACE_EVENLY = 3;
 export const LV_FLEX_ALIGN_SPACE_AROUND = 4;
 export const LV_FLEX_ALIGN_SPACE_BETWEEN = 5;
 
+export const LV_GRID_ALIGN_START = 0;
+export const LV_GRID_ALIGN_CENTER = 1;
+export const LV_GRID_ALIGN_END = 2;
+export const LV_GRID_ALIGN_STRETCH = 3;
+export const LV_GRID_ALIGN_SPACE_EVENLY = 4;
+export const LV_GRID_ALIGN_SPACE_AROUND = 5;
+export const LV_GRID_ALIGN_SPACE_BETWEEN = 6;
+
 const LV_SCROLLBAR_MODE_OFF = 0;
 const LV_SCROLLBAR_MODE_ON = 1;
 const LV_SCROLLBAR_MODE_ACTIVE = 2;

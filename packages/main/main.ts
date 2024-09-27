@@ -56,7 +56,6 @@ app.on("ready", async function () {
         const { bringHomeWindowToFocus } =
             require("main/home-window") as typeof HomeWindowModule;
         bringHomeWindowToFocus();
-
         const { openFile } = require("main/menu");
         openFile(commandLine[commandLine.length - 1]);
     });

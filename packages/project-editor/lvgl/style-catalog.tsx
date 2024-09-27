@@ -32,11 +32,20 @@ import {
     LV_FLEX_FLOW_ROW_REVERSE,
     LV_FLEX_FLOW_ROW_WRAP,
     LV_FLEX_FLOW_ROW_WRAP_REVERSE,
+    LV_GRID_ALIGN_CENTER,
+    LV_GRID_ALIGN_END,
+    LV_GRID_ALIGN_SPACE_AROUND,
+    LV_GRID_ALIGN_SPACE_BETWEEN,
+    LV_GRID_ALIGN_SPACE_EVENLY,
+    LV_GRID_ALIGN_START,
+    LV_GRID_ALIGN_STRETCH,
     LV_LAYOUT_FLEX,
+    LV_LAYOUT_GRID,
     LV_LAYOUT_NONE
 } from "project-editor/lvgl/lvgl-constants";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getEnumItems } from "project-editor/ui-components/PropertyGrid/Property";
+import type { LVGLPageRuntime } from "./page-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +83,7 @@ interface LVGLStyleProp {
     layout: boolean;
     extDraw: boolean;
     valueRead?: (value: number) => string;
-    valueToNum?: (value: string) => number;
+    valueToNum?: (value: string, runtime: LVGLPageRuntime) => number | number[];
     valueBuild?: (value: string) => string;
 }
 
@@ -525,7 +534,8 @@ const layout_property_info = makeEnumPropertyInfo(
     },
     {
         NONE: LV_LAYOUT_NONE, // No layout
-        FLEX: LV_LAYOUT_FLEX // Use flex layout
+        FLEX: LV_LAYOUT_FLEX, // Use flex layout
+        GRID: LV_LAYOUT_GRID // Use grid layout
     },
     "LV_LAYOUT_"
 );
@@ -633,6 +643,226 @@ const flex_grow_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
+
+const grid_column_align_property_info: LVGLPropertyInfo = makeEnumPropertyInfo(
+    "grid_column_align",
+    "Grid column align",
+    {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_COLUMN_ALIGN,
+        description: "Defines how to distribute the columns.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_GRID_ALIGN_START,
+        CENTER: LV_GRID_ALIGN_CENTER,
+        END: LV_GRID_ALIGN_END,
+        STRETCH: LV_GRID_ALIGN_STRETCH,
+        EVENLY: LV_GRID_ALIGN_SPACE_EVENLY,
+        AROUND: LV_GRID_ALIGN_SPACE_AROUND,
+        BETWEEN: LV_GRID_ALIGN_SPACE_BETWEEN
+    },
+    "LV_GRID_ALIGN_"
+);
+
+const grid_row_align_property_info: LVGLPropertyInfo = makeEnumPropertyInfo(
+    "grid_row_align",
+    "Grid row align",
+    {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_ROW_ALIGN,
+        description: "Defines how to distribute the columns.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_GRID_ALIGN_START,
+        CENTER: LV_GRID_ALIGN_CENTER,
+        END: LV_GRID_ALIGN_END,
+        STRETCH: LV_GRID_ALIGN_STRETCH,
+        EVENLY: LV_GRID_ALIGN_SPACE_EVENLY,
+        AROUND: LV_GRID_ALIGN_SPACE_AROUND,
+        BETWEEN: LV_GRID_ALIGN_SPACE_BETWEEN
+    },
+    "LV_GRID_ALIGN_"
+);
+
+function dscArrayValueRead(value: number) {
+    return "";
+}
+
+function getArrayFromValue(value: string, build: boolean = false) {
+    let arr;
+    if (value.indexOf(",") !== -1) {
+        arr = value.split(",").map(v => parseInt(v));
+    } else {
+        arr = value.split(" ").map(v => parseInt(v));
+    }
+    arr = arr.filter(v => !isNaN(v));
+
+    if (!build) {
+        for (let i = arr.length; i < 100; i++) {
+            arr.push(0);
+        }
+    }
+
+    return arr;
+}
+
+function dscArrayValueToNum(value: string) {
+    return getArrayFromValue(value);
+}
+
+function dscArrayValueBuild(value: string) {
+    return getArrayFromValue(value, true).join(", ");
+}
+
+export const grid_row_dsc_array_property_info: LVGLPropertyInfo = {
+    name: "grid_row_dsc_array",
+    displayName: "Grid row descriptor",
+    type: PropertyType.NumberArrayAsString,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_ROW_DSC_ARRAY,
+        description:
+            "An array to describe the rows of the grid. Should be LV_GRID_TEMPLATE_LAST terminated.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false,
+        valueRead: dscArrayValueRead,
+        valueToNum: dscArrayValueToNum,
+        valueBuild: dscArrayValueBuild
+    }
+};
+
+export const grid_column_dsc_array_property_info: LVGLPropertyInfo = {
+    name: "grid_column_dsc_array",
+    displayName: "Grid column descriptor",
+    type: PropertyType.NumberArrayAsString,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_COLUMN_DSC_ARRAY,
+        description:
+            "An array to describe the columns of the grid. Should be LV_GRID_TEMPLATE_LAST terminated.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false,
+        valueRead: dscArrayValueRead,
+        valueToNum: dscArrayValueToNum,
+        valueBuild: dscArrayValueBuild
+    }
+};
+
+const grid_cell_column_pos_property_info: LVGLPropertyInfo = {
+    name: "grid_cell_column_pos",
+    displayName: "Grid cell column pos",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_COLUMN_POS,
+        description: "Set the column in which the object should be placed.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false,
+        valueToNum: (value: string, runtime) =>
+            runtime.isV9 ? parseInt(value) : parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+    }
+};
+
+const grid_cell_column_span_property_info: LVGLPropertyInfo = {
+    name: "grid_cell_column_span",
+    displayName: "Grid cell column span",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_COLUMN_SPAN,
+        description:
+            "Set how many columns the object should span. Needs to be >= 1.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+
+const grid_cell_x_align_property_info: LVGLPropertyInfo = makeEnumPropertyInfo(
+    "grid_cell_x_align",
+    "Grid cell X align",
+    {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_X_ALIGN,
+        description: "Set how to align the object horizontally.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_GRID_ALIGN_START,
+        CENTER: LV_GRID_ALIGN_CENTER,
+        END: LV_GRID_ALIGN_END,
+        STRETCH: LV_GRID_ALIGN_STRETCH,
+        EVENLY: LV_GRID_ALIGN_SPACE_EVENLY,
+        AROUND: LV_GRID_ALIGN_SPACE_AROUND,
+        BETWEEN: LV_GRID_ALIGN_SPACE_BETWEEN
+    },
+    "LV_GRID_ALIGN_"
+);
+
+const grid_cell_row_pos_property_info: LVGLPropertyInfo = {
+    name: "grid_cell_row_pos",
+    displayName: "Grid cell row pos",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_ROW_POS,
+        description: "Set the row in which the object should be placed.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false,
+        valueToNum: (value: string, runtime) =>
+            runtime.isV9 ? parseInt(value) : parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+    }
+};
+
+const grid_cell_row_span_property_info: LVGLPropertyInfo = {
+    name: "grid_cell_row_span",
+    displayName: "Grid cell row span",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_ROW_SPAN,
+        description:
+            "Set how many rows the object should span. Needs to be >= 1",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    }
+};
+
+const grid_cell_y_align_property_info: LVGLPropertyInfo = makeEnumPropertyInfo(
+    "grid_cell_y_align",
+    "Grid cell Y align",
+    {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_CELL_Y_ALIGN,
+        description: "Set how to align the object vertically.",
+        defaultValue: "1",
+        inherited: false,
+        layout: true,
+        extDraw: false
+    },
+    {
+        START: LV_GRID_ALIGN_START,
+        CENTER: LV_GRID_ALIGN_CENTER,
+        END: LV_GRID_ALIGN_END,
+        STRETCH: LV_GRID_ALIGN_STRETCH,
+        EVENLY: LV_GRID_ALIGN_SPACE_EVENLY,
+        AROUND: LV_GRID_ALIGN_SPACE_AROUND,
+        BETWEEN: LV_GRID_ALIGN_SPACE_BETWEEN
+    },
+    "LV_GRID_ALIGN_"
+);
 
 //
 // PADDING
@@ -2172,11 +2402,23 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
         groupDescription: "Properties to describe layout.",
         properties: [
             layout_property_info,
+
             flex_flow_property_info,
             flex_main_place_property_info,
             flex_cross_place_property_info,
             flex_track_place_property_info,
-            flex_grow_property_info
+            flex_grow_property_info,
+
+            grid_column_align_property_info,
+            grid_row_align_property_info,
+            grid_row_dsc_array_property_info,
+            grid_column_dsc_array_property_info,
+            grid_cell_column_pos_property_info,
+            grid_cell_column_span_property_info,
+            grid_cell_x_align_property_info,
+            grid_cell_row_pos_property_info,
+            grid_cell_row_span_property_info,
+            grid_cell_y_align_property_info
         ]
     },
 
@@ -2374,5 +2616,6 @@ export function isLvglStylePropertySupported(
 ) {
     const lvglVersion =
         ProjectEditor.getProject(object).settings.general.lvglVersion;
+
     return propertyInfo.lvglStyleProp.code[lvglVersion] != undefined;
 }

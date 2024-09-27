@@ -131,21 +131,10 @@ export function getStylePropDefaultValue(
     state: string,
     propertyInfo: LVGLPropertyInfo
 ) {
-    if (runtime && lvglObj) {
-        if (propertyInfo.type == PropertyType.ThemedColor) {
-            let colorNum = runtime.wasm._lvglObjGetStylePropColor(
-                lvglObj,
-                getPartCode(runtime.page, part),
-                getStateCode(state),
-                runtime.getLvglStylePropCode(propertyInfo.lvglStyleProp.code)
-            );
-            return colorNumToRgb(colorNum);
-        } else if (
-            propertyInfo.type == PropertyType.Number ||
-            propertyInfo.type == PropertyType.Enum
-        ) {
-            if (propertyInfo == text_font_property_info) {
-                let fontIndex = runtime.wasm._lvglObjGetStylePropBuiltInFont(
+    try {
+        if (runtime && lvglObj) {
+            if (propertyInfo.type == PropertyType.ThemedColor) {
+                let colorNum = runtime.wasm._lvglObjGetStylePropColor(
                     lvglObj,
                     getPartCode(runtime.page, part),
                     getStateCode(state),
@@ -153,11 +142,42 @@ export function getStylePropDefaultValue(
                         propertyInfo.lvglStyleProp.code
                     )
                 );
+                return colorNumToRgb(colorNum);
+            } else if (
+                propertyInfo.type == PropertyType.Number ||
+                propertyInfo.type == PropertyType.Enum ||
+                propertyInfo.type == PropertyType.NumberArrayAsString
+            ) {
+                if (propertyInfo == text_font_property_info) {
+                    let fontIndex =
+                        runtime.wasm._lvglObjGetStylePropBuiltInFont(
+                            lvglObj,
+                            getPartCode(runtime.page, part),
+                            getStateCode(state),
+                            runtime.getLvglStylePropCode(
+                                propertyInfo.lvglStyleProp.code
+                            )
+                        );
 
-                if (fontIndex != -1) {
-                    return BUILT_IN_FONTS[fontIndex];
+                    if (fontIndex != -1) {
+                        return BUILT_IN_FONTS[fontIndex];
+                    } else {
+                        let fontAddr =
+                            runtime.wasm._lvglObjGetStylePropFontAddr(
+                                lvglObj,
+                                getPartCode(runtime.page, part),
+                                getStateCode(state),
+                                runtime.getLvglStylePropCode(
+                                    propertyInfo.lvglStyleProp.code
+                                )
+                            );
+                        const font = runtime.fontAddressToFont.get(fontAddr);
+                        if (font) {
+                            return font.name;
+                        }
+                    }
                 } else {
-                    let fontAddr = runtime.wasm._lvglObjGetStylePropFontAddr(
+                    let num = runtime.wasm._lvglObjGetStylePropNum(
                         lvglObj,
                         getPartCode(runtime.page, part),
                         getStateCode(state),
@@ -165,12 +185,11 @@ export function getStylePropDefaultValue(
                             propertyInfo.lvglStyleProp.code
                         )
                     );
-                    const font = runtime.fontAddressToFont.get(fontAddr);
-                    if (font) {
-                        return font.name;
-                    }
+                    return propertyInfo.lvglStyleProp.valueRead
+                        ? propertyInfo.lvglStyleProp.valueRead(num)
+                        : num;
                 }
-            } else {
+            } else if (propertyInfo.type == PropertyType.Boolean) {
                 let num = runtime.wasm._lvglObjGetStylePropNum(
                     lvglObj,
                     getPartCode(runtime.page, part),
@@ -179,19 +198,11 @@ export function getStylePropDefaultValue(
                         propertyInfo.lvglStyleProp.code
                     )
                 );
-                return propertyInfo.lvglStyleProp.valueRead
-                    ? propertyInfo.lvglStyleProp.valueRead(num)
-                    : num;
+                return num ? true : false;
             }
-        } else if (propertyInfo.type == PropertyType.Boolean) {
-            let num = runtime.wasm._lvglObjGetStylePropNum(
-                lvglObj,
-                getPartCode(runtime.page, part),
-                getStateCode(state),
-                runtime.getLvglStylePropCode(propertyInfo.lvglStyleProp.code)
-            );
-            return num ? true : false;
         }
+    } catch (e) {
+        return undefined;
     }
 
     return 0;

@@ -333,7 +333,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
 
     initialized = true;
 
-    // dump_custom_styles();
+    //dump_custom_styles();
 }
 
 EM_PORT_API(bool) mainLoop() {

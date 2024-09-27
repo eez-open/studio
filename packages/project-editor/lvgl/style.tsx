@@ -47,6 +47,7 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import { getLvglCoordTypeShift } from "./lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -540,7 +541,8 @@ export class LVGLStyle extends EezObject {
                                     const numValue = propertyInfo.lvglStyleProp
                                         .valueToNum
                                         ? propertyInfo.lvglStyleProp.valueToNum(
-                                              value
+                                              value,
+                                              runtime
                                           )
                                         : value;
 
@@ -552,6 +554,33 @@ export class LVGLStyle extends EezObject {
                                         numValue
                                     );
                                 }
+                            } else if (
+                                propertyInfo.type ==
+                                PropertyType.NumberArrayAsString
+                            ) {
+                                const arrValue: number[] = propertyInfo
+                                    .lvglStyleProp.valueToNum
+                                    ? propertyInfo.lvglStyleProp.valueToNum(
+                                          value,
+                                          runtime
+                                      )
+                                    : value;
+
+                                const _LV_COORD_TYPE_SHIFT =
+                                    getLvglCoordTypeShift(this);
+                                const LV_COORD_MAX =
+                                    (1 << _LV_COORD_TYPE_SHIFT) - 1;
+                                const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
+
+                                arrValue.push(LV_GRID_TEMPLATE_LAST);
+
+                                runtime.wasm._lvglSetStylePropPtr(
+                                    getStyleObj(),
+                                    runtime.getLvglStylePropCode(
+                                        propertyInfo.lvglStyleProp.code
+                                    ),
+                                    runtime.allocateInt32Array(arrValue, true)
+                                );
                             } else if (
                                 propertyInfo.type == PropertyType.Boolean
                             ) {

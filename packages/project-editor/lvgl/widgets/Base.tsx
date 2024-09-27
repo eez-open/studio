@@ -1106,10 +1106,16 @@ export class LVGLWidget extends Widget {
                 ProjectEditor.PageClass.classInfo
             ) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
-                this._relativePosition = {
-                    left: page._lvglRuntime.wasm._lvglGetObjRelX(this._lvglObj),
-                    top: page._lvglRuntime.wasm._lvglGetObjRelY(this._lvglObj)
-                };
+                try {
+                    this._relativePosition = {
+                        left: page._lvglRuntime.wasm._lvglGetObjRelX(
+                            this._lvglObj
+                        ),
+                        top: page._lvglRuntime.wasm._lvglGetObjRelY(
+                            this._lvglObj
+                        )
+                    };
+                } catch (e) {}
             }
         }
 

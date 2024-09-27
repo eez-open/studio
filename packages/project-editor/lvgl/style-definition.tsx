@@ -24,6 +24,8 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { LVGL_STYLE_PROP_CODES } from "project-editor/lvgl/lvgl-constants";
 import {
     BUILT_IN_FONTS,
+    grid_column_dsc_array_property_info,
+    grid_row_dsc_array_property_info,
     lvglPropertiesMap,
     LVGLPropertyInfo,
     text_font_property_info
@@ -34,6 +36,7 @@ import {
     getSelectorBuildCode,
     getSelectorCode
 } from "project-editor/lvgl/style-helper";
+import { getLvglCoordTypeShift } from "./lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,16 +132,56 @@ export class LVGLStylesDefinition extends EezObject {
         value: any
     ) {
         let def = this.definition;
-        return {
-            ...(def || {}),
-            [part]: {
-                ...(def || {})[part],
-                [state]: {
-                    ...((def || {})[part] || {})[state],
-                    [propertyInfo.name]: value
+
+        function add(
+            def: Definition | undefined,
+            propertyInfo: LVGLPropertyInfo,
+            part: string,
+            state: string,
+            value: any
+        ) {
+            return {
+                ...(def || {}),
+                [part]: {
+                    ...(def || {})[part],
+                    [state]: {
+                        ...((def || {})[part] || {})[state],
+                        [propertyInfo.name]: value
+                    }
                 }
+            };
+        }
+
+        if (propertyInfo.name == "layout" && value == "GRID") {
+            if (
+                def?.[part]?.[state]?.[grid_row_dsc_array_property_info.name] ==
+                undefined
+            ) {
+                def = add(
+                    def,
+                    grid_row_dsc_array_property_info,
+                    part,
+                    state,
+                    ""
+                );
             }
-        };
+
+            if (
+                def?.[part]?.[state]?.[
+                    grid_column_dsc_array_property_info.name
+                ] == undefined
+            ) {
+                def = add(
+                    def,
+                    grid_column_dsc_array_property_info,
+                    part,
+                    state,
+                    ""
+                );
+            }
+        }
+
+        return add(def, propertyInfo, part, state, value);
     }
 
     static combineDefinitions(
@@ -412,7 +455,8 @@ export class LVGLStylesDefinition extends EezObject {
                                 const numValue = propertyInfo.lvglStyleProp
                                     .valueToNum
                                     ? propertyInfo.lvglStyleProp.valueToNum(
-                                          value
+                                          value,
+                                          runtime
                                       )
                                     : value;
 
@@ -425,6 +469,34 @@ export class LVGLStylesDefinition extends EezObject {
                                     selectorCode
                                 );
                             }
+                        } else if (
+                            propertyInfo.type ==
+                            PropertyType.NumberArrayAsString
+                        ) {
+                            const arrValue: number[] = propertyInfo
+                                .lvglStyleProp.valueToNum
+                                ? propertyInfo.lvglStyleProp.valueToNum(
+                                      value,
+                                      runtime
+                                  )
+                                : value;
+
+                            const _LV_COORD_TYPE_SHIFT =
+                                getLvglCoordTypeShift(widget);
+                            const LV_COORD_MAX =
+                                (1 << _LV_COORD_TYPE_SHIFT) - 1;
+                            const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
+
+                            arrValue.push(LV_GRID_TEMPLATE_LAST);
+
+                            runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                obj,
+                                runtime.getLvglStylePropCode(
+                                    propertyInfo.lvglStyleProp.code
+                                ),
+                                runtime.allocateInt32Array(arrValue, true),
+                                selectorCode
+                            );
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? 1 : 0;
 
@@ -535,6 +607,32 @@ export class LVGLStylesDefinition extends EezObject {
                                     )}(obj, ${numValue}, ${selectorCode});`
                                 );
                             }
+                        } else if (
+                            propertyInfo.type ==
+                            PropertyType.NumberArrayAsString
+                        ) {
+                            let dsc = propertyInfo.lvglStyleProp.valueBuild
+                                ? propertyInfo.lvglStyleProp.valueBuild(value)
+                                : "";
+
+                            if (dsc) {
+                                dsc += ", ";
+                            }
+
+                            dsc += "LV_GRID_TEMPLATE_LAST";
+
+                            build.line("{");
+                            build.indent();
+                            build.line(`static lv_coord_t dsc[] = {${dsc}};`);
+
+                            build.line(
+                                `lv_obj_set_style_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(obj, dsc, ${selectorCode});`
+                            );
+
+                            build.unindent();
+                            build.line("}");
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? "true" : "false";
 
@@ -620,6 +718,31 @@ export class LVGLStylesDefinition extends EezObject {
                             )}(style, ${numValue});`
                         );
                     }
+                } else if (
+                    propertyInfo.type == PropertyType.NumberArrayAsString
+                ) {
+                    let dsc = propertyInfo.lvglStyleProp.valueBuild
+                        ? propertyInfo.lvglStyleProp.valueBuild(value)
+                        : "";
+
+                    if (dsc) {
+                        dsc += ", ";
+                    }
+
+                    dsc += "LV_GRID_TEMPLATE_LAST";
+
+                    build.line("{");
+                    build.indent();
+                    build.line(`static lv_coord_t dsc[] = {${dsc}};`);
+
+                    build.line(
+                        `lv_style_set_${build.getStylePropName(
+                            propertyInfo.name
+                        )}(style, dsc);`
+                    );
+
+                    build.unindent();
+                    build.line("}");
                 } else if (propertyInfo.type == PropertyType.Boolean) {
                     const numValue = value ? "true" : "false";
 

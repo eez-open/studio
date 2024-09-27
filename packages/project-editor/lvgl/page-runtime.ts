@@ -220,21 +220,30 @@ export abstract class LVGLPageRuntime {
         return cashedFont.fontPtr;
     }
 
-    strings: number[] = [];
+    pointers: number[] = [];
 
     allocateUTF8(str: string, free: boolean) {
         const stringPtr = this.wasm.allocateUTF8(str);
         if (free) {
-            this.strings.push(stringPtr);
+            this.pointers.push(stringPtr);
         }
         return stringPtr;
     }
 
-    freeStrings() {
-        for (const stringPtr of this.strings) {
-            this.wasm._free(stringPtr);
+    allocateInt32Array(arr: number[], free: boolean) {
+        const ptr = this.wasm._malloc(arr.length * 4);
+        if (free) {
+            this.pointers.push(ptr);
         }
-        this.strings = [];
+        this.wasm.HEAP32.set(arr, ptr / 4);
+        return ptr;
+    }
+
+    freePointers() {
+        for (const ptr of this.pointers) {
+            this.wasm._free(ptr);
+        }
+        this.pointers = [];
     }
 
     static detachRuntimeFromPage(page: Page) {
@@ -306,6 +315,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     dispose2: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
+    wasError: boolean = false;
 
     constructor(
         page: Page,
@@ -378,6 +388,17 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         return;
                     }
 
+                    this.project._store.lastRevision;
+
+                    if (this.wasError) {
+                        setTimeout(() => {
+                            this.unmount();
+                            this.wasError = false;
+                            this.mount();
+                        });
+                        return;
+                    }
+
                     if (this.dispose2) {
                         this.dispose2();
                         this.dispose2 = undefined;
@@ -393,7 +414,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.wasm._lvglClearTimeline();
 
-                        this.freeStrings();
+                        this.freePointers();
 
                         this.createStyles();
 
@@ -460,10 +481,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         });
                     } catch (e) {
                         console.error(e);
-                        setTimeout(() => {
-                            this.unmount();
-                            this.mount();
-                        });
+                        this.wasError = true;
                     }
                 });
             }
@@ -500,6 +518,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.displayWidth,
                 this.displayHeight
             );
+        } else {
+            if (this.wasError) {
+                this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
+            }
         }
 
         this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);

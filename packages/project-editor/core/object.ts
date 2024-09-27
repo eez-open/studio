@@ -50,6 +50,7 @@ export const enum PropertyType {
 
     GUID,
 
+    NumberArrayAsString,
     StringArray,
     ConfigurationReference,
     Any,
@@ -79,6 +80,7 @@ export const TYPE_NAMES: { [key in PropertyType]: string } = {
     [PropertyType.Python]: "Python",
     [PropertyType.CPP]: "CPP",
     [PropertyType.GUID]: "GUID",
+    [PropertyType.NumberArrayAsString]: "NumberArrayAsString",
     [PropertyType.StringArray]: "StringArray",
     [PropertyType.ConfigurationReference]: "ConfigurationReference",
     [PropertyType.Any]: "Any",
