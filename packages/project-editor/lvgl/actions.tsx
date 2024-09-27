@@ -60,6 +60,8 @@ import {
 } from "project-editor/lvgl/expression-property";
 import { buildExpression } from "project-editor/flow/expression";
 import { escapeCString } from "./widget-common";
+import { getLvglFlagCodes } from "./lvgl-versions";
+import { LVGL_FLAG_CODES } from "./lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +71,9 @@ const LVGL_ACTIONS = {
     SET_PROPERTY: 2,
     ADD_STYLE: 3,
     REMOVE_STYLE: 4,
-    GROUP: 5
+    ADD_FLAG: 5,
+    CLEAR_FLAG: 6,
+    GROUP: 7
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +93,10 @@ export class LVGLActionType extends EezObject {
                 return LVGLAddStyleActionType;
             else if (jsObject.action == "REMOVE_STYLE")
                 return LVGLRemoveStyleActionType;
+            else if (jsObject.action == "ADD_FLAG")
+                return LVGLAddFlagActionType;
+            else if (jsObject.action == "CLEAR_FLAG")
+                return LVGLClearFlagActionType;
             else return LVGLGroupActionType;
         },
 
@@ -185,6 +193,24 @@ export class LVGLActionType extends EezObject {
                         LVGLRemoveStyleActionType.classInfo.defaultValue
                     ),
                     LVGLRemoveStyleActionType
+                );
+            } else if (result.values.action == "ADD_FLAG") {
+                actionTypeObject = createObject<LVGLAddFlagActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLAddFlagActionType.classInfo.defaultValue
+                    ),
+                    LVGLAddFlagActionType
+                );
+            } else if (result.values.action == "CLEAR_FLAG") {
+                actionTypeObject = createObject<LVGLClearFlagActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLClearFlagActionType.classInfo.defaultValue
+                    ),
+                    LVGLClearFlagActionType
                 );
             } else if (result.values.action == "GROUP") {
                 actionTypeObject = createObject<LVGLGroupActionType>(
@@ -1322,6 +1348,212 @@ export class LVGLRemoveStyleActionType extends LVGLActionType {
 }
 
 registerClass("LVGLRemoveStyleActionType", LVGLRemoveStyleActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLAddFlagActionType extends LVGLActionType {
+    target: string;
+    flag: keyof typeof LVGL_FLAG_CODES;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            flag: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLAddFlagActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "flag",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLAddFlagActionType) => {
+                    return Object.keys(getLvglFlagCodes(actionType)).map(
+                        flag => ({
+                            id: flag,
+                            label: flag
+                        })
+                    );
+                }
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLAddFlagActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Add flag";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.flag} in {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Add flag {action.flag} in {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLAddFlagActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // flag
+        dataBuffer.writeUint32(getLvglFlagCodes(this)[this.flag] ?? 0);
+    }
+}
+
+registerClass("LVGLAddFlagActionType", LVGLAddFlagActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLClearFlagActionType extends LVGLActionType {
+    target: string;
+    flag: keyof typeof LVGL_FLAG_CODES;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            flag: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLClearFlagActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "flag",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLClearFlagActionType) => {
+                    return Object.keys(getLvglFlagCodes(actionType)).map(
+                        flag => ({
+                            id: flag,
+                            label: flag
+                        })
+                    );
+                }
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLClearFlagActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Clear flag";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.flag} in {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Clear flag {action.flag} in {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLClearFlagActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // flag
+        dataBuffer.writeUint32(getLvglFlagCodes(this)[this.flag] ?? 0);
+    }
+}
+
+registerClass("LVGLClearFlagActionType", LVGLClearFlagActionType);
 
 ////////////////////////////////////////////////////////////////////////////////
 
