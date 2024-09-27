@@ -247,6 +247,20 @@ export const LV_ANIM_ON = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const LV_SCROLL_SNAP_NONE = 0;
+const LV_SCROLL_SNAP_START = 1;
+const LV_SCROLL_SNAP_END = 2;
+const LV_SCROLL_SNAP_CENTER = 3;
+
+export const LVGL_SCROLL_SNAP: { [key: string]: number } = {
+    none: LV_SCROLL_SNAP_NONE,
+    start: LV_SCROLL_SNAP_START,
+    end: LV_SCROLL_SNAP_END,
+    center: LV_SCROLL_SNAP_CENTER
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const LVGL_FLAG_CODES = {
     HIDDEN: 1 << 0, // Make the object hidden. (Like it wasn't there at all)
     CLICKABLE: 1 << 1, // Make the object clickable by the input devices

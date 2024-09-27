@@ -756,8 +756,12 @@ export interface IWasmFlowRuntime {
     _lvglSetTimelinePosition(timelinePosition: number): void;
     _lvglClearTimeline(): void;
     _lvglGetFlowState(flowState: number, userWidgetComponentIndexOrPageIndex: number): number;
+
     _lvglSetScrollBarMode(obj: number, mode: number);
     _lvglSetScrollDir(obj: number, dir: number);
+    _lvglSetScrollSnapX(obj: number, align: number);
+    _lvglSetScrollSnapY(obj: number, align: number);
+
     _lvglTabviewSetActive(obj: number, tab_id: number, anim_en: number);
     _lvglTabviewGetTabBar(obj: number, index: number);
     _lvglTabviewGetTabContent(obj: number, index: number);

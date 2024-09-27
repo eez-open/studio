@@ -1120,6 +1120,14 @@ EM_PORT_API(void) lvglSetScrollDir(lv_obj_t *obj, lv_dir_t dir) {
     lv_obj_set_scroll_dir(obj, dir);
 }
 
+EM_PORT_API(void) lvglSetScrollSnapX(lv_obj_t *obj, lv_scroll_snap_t align) {
+    lv_obj_set_scroll_snap_x(obj, align);
+}
+
+EM_PORT_API(void) lvglSetScrollSnapY(lv_obj_t *obj, lv_scroll_snap_t align) {
+    lv_obj_set_scroll_snap_y(obj, align);
+}
+
 EM_PORT_API(void) lvglTabviewSetActive(lv_obj_t *obj, uint32_t tab_id, lv_anim_enable_t anim_en) {
 #if LVGL_VERSION_MAJOR >= 9
     lv_tabview_set_active(obj, tab_id, anim_en);

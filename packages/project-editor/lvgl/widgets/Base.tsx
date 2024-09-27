@@ -88,7 +88,8 @@ import {
     LVGL_STATE_CODES,
     LVGL_REACTIVE_STATES,
     LVGL_REACTIVE_FLAGS,
-    LV_EVENT_CHECKED_STATE_CHANGED
+    LV_EVENT_CHECKED_STATE_CHANGED,
+    LVGL_SCROLL_SNAP
 } from "project-editor/lvgl/lvgl-constants";
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
@@ -228,6 +229,8 @@ export class LVGLWidget extends Widget {
     widgetFlags: string;
     flagScrollbarMode: string;
     flagScrollDirection: string;
+    scrollSnapX: string;
+    scrollSnapY: string;
 
     checkedState: string | boolean;
     checkedStateType: LVGLPropertyType;
@@ -462,6 +465,56 @@ export class LVGLWidget extends Widget {
                     {
                         id: "all",
                         label: "ALL"
+                    }
+                ],
+                enumDisallowUndefined: false,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "scrollSnapX",
+                displayName: "Scroll snap X",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "none",
+                        label: "NONE"
+                    },
+                    {
+                        id: "start",
+                        label: "START"
+                    },
+                    {
+                        id: "end",
+                        label: "END"
+                    },
+                    {
+                        id: "center",
+                        label: "CENTER"
+                    }
+                ],
+                enumDisallowUndefined: false,
+                propertyGridGroup: flagsGroup
+            },
+            {
+                name: "scrollSnapY",
+                displayName: "Scroll snap Y",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "none",
+                        label: "NONE"
+                    },
+                    {
+                        id: "start",
+                        label: "START"
+                    },
+                    {
+                        id: "end",
+                        label: "END"
+                    },
+                    {
+                        id: "center",
+                        label: "CENTER"
                     }
                 ],
                 enumDisallowUndefined: false,
@@ -881,6 +934,8 @@ export class LVGLWidget extends Widget {
             heightUnit: "px",
             flagScrollbarMode: "",
             flagScrollDirection: "",
+            scrollSnapX: "",
+            scrollSnapY: "",
             hiddenFlagType: "literal",
             clickableFlagType: "literal",
             checkedStateType: "literal",
@@ -1013,6 +1068,8 @@ export class LVGLWidget extends Widget {
             clickableFlagType: observable,
             flagScrollbarMode: observable,
             flagScrollDirection: observable,
+            scrollSnapX: observable,
+            scrollSnapY: observable,
             checkedState: observable,
             checkedStateType: observable,
             disabledState: observable,
@@ -1369,6 +1426,20 @@ export class LVGLWidget extends Widget {
             );
         }
 
+        if (this.scrollSnapX) {
+            runtime.wasm._lvglSetScrollSnapX(
+                obj,
+                LVGL_SCROLL_SNAP[this.scrollSnapX]
+            );
+        }
+
+        if (this.scrollSnapY) {
+            runtime.wasm._lvglSetScrollSnapY(
+                obj,
+                LVGL_SCROLL_SNAP[this.scrollSnapY]
+            );
+        }
+
         // add/clear states
         {
             const added =
@@ -1648,7 +1719,19 @@ export class LVGLWidget extends Widget {
 
         if (this.flagScrollDirection) {
             build.line(
-                `lv_obj_set_scroll_dir(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
+                `lv_obj_set_scroll_snap_x(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
+            );
+        }
+
+        if (this.scrollSnapX) {
+            build.line(
+                `lv_obj_set_scroll_snap_x(obj, LV_SCROLL_SNAP_${this.scrollSnapX.toUpperCase()});`
+            );
+        }
+
+        if (this.scrollSnapY) {
+            build.line(
+                `lv_obj_set_scroll_snap_y(obj, LV_SCROLL_SNAP_${this.scrollSnapY.toUpperCase()});`
             );
         }
 
