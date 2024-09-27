@@ -146,6 +146,28 @@ Controls the direction in which scrolling happens. The following mode(s) exist:
 -   VER: only scroll vertically
 -   ALL: scroll any directions
 
+## Scroll snap X
+
+The children of an object can be snapped according to specific rules when scrolling ends.
+
+An object can align snapped children in four ways:
+
+-   NONE: Snapping is disabled. (default)
+-   START: Align the children to the left side of a scrolled object
+-   END: Align the children to the right side of a scrolled object
+-   CENTER: Align the children to the center of a scrolled object
+
+## Scroll snap Y
+
+The children of an object can be snapped according to specific rules when scrolling ends.
+
+An object can align snapped children in four ways:
+
+-   NONE: Snapping is disabled. (default)
+-   START: Align the children to the top side of a scrolled object
+-   END: Align the children to the bottom side of a scrolled object
+-   CENTER: Align the children to the center of a scrolled object
+
 ## Checked
 
 Toggled or checked state.
@@ -179,3 +201,14 @@ Being pressed.
 Here we can select one of the globally defined Styles so that the Widget uses that Style.
 
 ## Local styles [EMPTY]
+
+## Group
+
+The name of the input group this widget belongs to.
+
+## Group index
+
+Defines the order of widgets within group. This is similar to [tabindex](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/tabindex) in HTML:
+
+-   if "Group index" is 0 then group order is the same as in Widgets Structure
+-   if "Group index" is > 0 then widget is added to the group before any widget with "Group index" 0 and before any widget with the greater "Group index" value. That is, "Group index"=4 is added before "Group index"=5 and "Group index"=0, but after "Group index"=3. If multiple widgets share the same "Group index" value, their order relative to each other follows their position in the Widgets Structure.
