@@ -361,6 +361,8 @@ export class LVGLBuild extends Build {
             build.line("");
             build.line(`extern groups_t groups;`);
             build.line("");
+            build.line(`void ui_create_groups();`);
+            build.line("");
         }
 
         // objects
@@ -435,6 +437,8 @@ export class LVGLBuild extends Build {
 
         if (this.project.lvglGroups.groups.length > 0) {
             build.line(`groups_t groups;`);
+            build.line("static bool groups_created = false;");
+            build.line("");
         }
 
         build.line(`objects_t objects;`);
@@ -722,10 +726,13 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        build.line("void create_screens() {");
-        build.indent();
-
         if (this.project.lvglGroups.groups.length > 0) {
+            build.line("void ui_create_groups() {");
+            build.indent();
+
+            build.line("if (!groups_created) {");
+            build.indent();
+
             this.project.lvglGroups.groups.forEach(group => {
                 build.line(
                     `${build.getGroupVariableName(group)} = lv_group_create();`
@@ -734,6 +741,23 @@ export class LVGLBuild extends Build {
             build.line(
                 "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
             );
+
+            build.line("groups_created = true;");
+
+            build.unindent();
+            build.line("}");
+
+            build.unindent();
+            build.line("}");
+
+            build.line("");
+        }
+
+        build.line("void create_screens() {");
+        build.indent();
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            build.line("ui_create_groups();");
             build.line("");
         }
 
