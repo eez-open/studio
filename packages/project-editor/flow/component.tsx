@@ -2553,15 +2553,17 @@ export class EventHandler extends EezObject {
         },
 
         deleteObjectRefHook: (eventHandler: EventHandler) => {
-            const widget = getAncestorOfType<Widget>(
-                eventHandler,
-                ProjectEditor.WidgetClass.classInfo
-            )!;
+            if (eventHandler.handlerType == "flow") {
+                const widget = getAncestorOfType<Widget>(
+                    eventHandler,
+                    ProjectEditor.WidgetClass.classInfo
+                )!;
 
-            ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
-                widget,
-                eventHandler.eventName
-            );
+                ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
+                    widget,
+                    eventHandler.eventName
+                );
+            }
         },
 
         defaultValue: {
