@@ -33,7 +33,22 @@ export interface IPanel {
 }
 
 export class NavigationStore {
-    selectedPanel: IPanel | undefined;
+    selectedPanelForEdit: IPanel | undefined;
+    selectedPanelForRuntime: IPanel | undefined;
+
+    get selectedPanel() {
+        return this.projectStore.runtime
+            ? this.selectedPanelForRuntime
+            : this.selectedPanelForEdit;
+    }
+
+    set selectedPanel(panel: IPanel | undefined) {
+        if (this.projectStore.runtime) {
+            this.selectedPanelForRuntime = panel;
+        } else {
+            this.selectedPanelForEdit = panel;
+        }
+    }
 
     selectedUserPageObject = observable.box<IEezObject>();
     selectedUserWidgetObject = observable.box<IEezObject>();
@@ -83,7 +98,8 @@ export class NavigationStore {
 
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
-            selectedPanel: observable,
+            selectedPanelForEdit: observable,
+            selectedPanelForRuntime: observable,
             subnavigationSelectedItems: observable,
             propertyGridObjects: computed,
             setSelectedPanel: action,
