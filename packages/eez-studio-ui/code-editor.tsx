@@ -257,6 +257,10 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
 
     componentDidMount() {
         this.createEditor(this.props);
+
+        window.addEventListener("resize", () => {
+            setTimeout(() => this.resize(), 100);
+        });
     }
 
     componentDidUpdate(prevProps: any) {
@@ -273,6 +277,8 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
 
     componentWillUnmount() {
         this.destroyEditor(this.props);
+
+        window.removeEventListener("resize", this.resize);
     }
 
     render() {
