@@ -467,6 +467,19 @@ export class LVGLBuild extends Build {
                             `void *flowState = lv_event_get_user_data(e);`
                         );
 
+                        build.line("");
+
+                        if (widget.hasEventHandler) {
+                            widget.buildEventHandler(build);
+                        }
+
+                        if (
+                            widget.eventHandlers.length > 0 &&
+                            widget.hasEventHandler
+                        ) {
+                            build.line("");
+                        }
+
                         for (const eventHandler of widget.eventHandlers) {
                             if (
                                 eventHandler.eventName == "CHECKED" ||
@@ -535,10 +548,6 @@ export class LVGLBuild extends Build {
                             }
                             build.unindent();
                             build.line("}");
-                        }
-
-                        if (widget.hasEventHandler) {
-                            widget.buildEventHandler(build);
                         }
 
                         build.unindent();

@@ -751,7 +751,7 @@ export class LVGLWidget extends Widget {
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (widget: LVGLWidget) =>
                     ProjectEditor.getProject(widget).lvglGroups.groups.length ==
-                    0
+                        0 || widget instanceof LVGLScreenWidget
             },
             {
                 name: "groupIndex",

@@ -144,7 +144,7 @@ export class LVGLScreenWidget extends LVGLWidget {
                 ProjectEditor.PageClass.classInfo
             ) as Page;
 
-            build.line("if (event == LV_EVENT_SCREEN_LOADED) {");
+            build.line("if (event == LV_EVENT_SCREEN_LOAD_START) {");
             build.indent();
 
             for (const group of allGroups) {
