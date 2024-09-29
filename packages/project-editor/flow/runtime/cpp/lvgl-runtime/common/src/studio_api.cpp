@@ -128,7 +128,7 @@ EM_PORT_API(lv_obj_t *) lvglCreateUserWidget(lv_obj_t *parentObj, int32_t index,
     return obj;
 }
 
-EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
+EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, const void *img_src, bool setPivot, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
     lv_obj_t *obj = lv_img_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
@@ -138,7 +138,9 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
         lv_image_set_inner_align(obj, (lv_image_align_t)inner_align);
 #endif
     }
-    lv_img_set_pivot(obj, pivotX, pivotY);
+    if (setPivot) {
+        lv_img_set_pivot(obj, pivotX, pivotY);
+    }
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);
@@ -146,9 +148,11 @@ EM_PORT_API(lv_obj_t *) lvglCreateImage(lv_obj_t *parentObj, int32_t index, lv_c
     return obj;
 }
 
-EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
+EM_PORT_API(void) lvglSetImageSrc(lv_obj_t *obj, const void *img_src, bool setPivot, lv_coord_t pivotX, lv_coord_t pivotY, uint16_t zoom, int16_t angle, int inner_align) {
     lv_img_set_src(obj, img_src);
-    lv_img_set_pivot(obj, pivotX, pivotY);
+    if (setPivot) {
+        lv_img_set_pivot(obj, pivotX, pivotY);
+    }
     lv_img_set_zoom(obj, zoom);
     lv_img_set_angle(obj, angle);
     lv_obj_update_layout(obj);

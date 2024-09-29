@@ -24,6 +24,7 @@ import { LV_IMAGE_ALIGN } from "../lvgl-constants";
 
 export class LVGLImageWidget extends LVGLWidget {
     image: string;
+    setPivot: boolean;
     pivotX: number;
     pivotY: number;
     zoom: number;
@@ -58,16 +59,24 @@ export class LVGLImageWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup
             },
             {
+                name: "setPivot",
+                displayName: "Change pivot point (default is center)",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
                 name: "pivotX",
                 displayName: "Pivot X",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                disabled: (widget: LVGLImageWidget) => !widget.setPivot
             },
             {
                 name: "pivotY",
                 displayName: "Pivot Y",
                 type: PropertyType.Number,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                disabled: (widget: LVGLImageWidget) => !widget.setPivot
             },
             {
                 name: "zoom",
@@ -103,6 +112,7 @@ export class LVGLImageWidget extends LVGLWidget {
             height: 100,
             widthUnit: "content",
             heightUnit: "content",
+            setPivot: false,
             pivotX: 0,
             pivotY: 0,
             zoom: 256,
@@ -115,6 +125,10 @@ export class LVGLImageWidget extends LVGLWidget {
         ) => {
             if (jsObject.innerAlign == undefined) {
                 jsObject.innerAlign = "CENTER";
+            }
+
+            if (jsObject.setPivot == undefined) {
+                jsObject.setPivot = true;
             }
         },
 
@@ -165,6 +179,7 @@ export class LVGLImageWidget extends LVGLWidget {
 
         makeObservable(this, {
             image: observable,
+            setPivot: observable,
             pivotX: observable,
             pivotY: observable,
             zoom: observable,
@@ -189,6 +204,7 @@ export class LVGLImageWidget extends LVGLWidget {
             rect.height,
 
             0,
+            this.setPivot,
             this.pivotX,
             this.pivotY,
             this.zoom,
@@ -204,6 +220,7 @@ export class LVGLImageWidget extends LVGLWidget {
                 runtime.wasm._lvglSetImageSrc(
                     obj,
                     bitmapPtr,
+                    this.setPivot,
                     this.pivotX,
                     this.pivotY,
                     this.zoom,
@@ -236,7 +253,7 @@ export class LVGLImageWidget extends LVGLWidget {
             }
         }
 
-        if (this.pivotX != 0 || this.pivotY != 0) {
+        if (this.setPivot) {
             build.line(
                 `lv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
             );

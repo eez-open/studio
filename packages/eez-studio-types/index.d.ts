@@ -628,8 +628,8 @@ export interface IWasmFlowRuntime {
     _lvglCreatePanel(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateUserWidget(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
 
-    _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): number;
-    _lvglSetImageSrc(parentObj: number, img_src: number, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): void;
+    _lvglCreateImage(parentObj: number, index: number, x: number, y: number, w: number, h: number, img_src: number, setPivot: boolean, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): number;
+    _lvglSetImageSrc(parentObj: number, img_src: number, setPivot: boolean, pivotX: number, pivotY: number, zoom: number, angle: number, innerAlign: number): void;
 
     _lvglCreateLine(parentObj: number, index: number, x: number, y: number, w: number, h: number): number;
     _lvglCreateSlider(parentObj: number, index: number, x: number, y: number, w: number, h: number, min: number, max: number, mode: number, value: number, value_left: number): number;
