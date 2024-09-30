@@ -20,7 +20,7 @@ _The user owns the `.eez-project` file and all the source code generated from th
 
 ## Introduction
 
-EEZ Studio is a free and open source cross-platform low-code visual tool for desktop and embedded GUIs. Built-in EEZ Flow enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple devices and T&M equipment including [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and any other T&M devices that support [SCPI](https://www.ivifoundation.org/scpi/) from manufacturers such as Keysight, Rigol, Siglent, etc.
+EEZ Studio is a free and open source cross-platform low-code visual tool for desktop and embedded GUIs with [LVGL](https://lvgl.io/) support. Built-in _EEZ Flow_ enables the creation of complex scenarios for test and measurement automation, and the Instruments feature offers remote control of multiple devices and T&M equipment including [EEZ BB3](https://github.com/eez-open/modular-psu) T&M chassis and [EEZ H24005](https://github.com/eez-open/psu-hw) programmable power supply and any other T&M devices that support [SCPI](https://www.ivifoundation.org/scpi/) from manufacturers such as Keysight, Rigol, Siglent, etc.
 
 ### EEZ Studio _Project_
 
@@ -84,6 +84,7 @@ New functionality is under development thanks to the sponsorship of the [NGI0 PE
 -   [M20](https://github.com/eez-open/studio/releases/tag/v0.14.0) - Hybrid table/tree/grid widget
 -   [M21](https://github.com/eez-open/studio/releases/tag/v0.15.0) - Project scrapbook
 -   [M22](https://github.com/eez-open/studio/releases/tag/v0.16.0) - Improvement of session-centric work with instruments and data management
+-   [M23](https://github.com/eez-open/studio/releases/tag/v0.17.0) - Multimedia support / Support for networking / other Instruments related
 ---
 
 ## Installation
