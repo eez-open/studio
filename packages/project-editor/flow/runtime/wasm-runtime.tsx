@@ -1313,9 +1313,14 @@ export const WasmCanvas = observer(
         };
 
         onWheel = (event: WheelEvent) => {
-            if (this.canvasRef.current) {
-                this.canvasRef.current.focus();
+            if (!this.canvasRef.current) {
+                return;
             }
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            this.canvasRef.current.focus();
 
             const wasmRuntime = this.context.runtime as WasmRuntime;
             if (!wasmRuntime) {
@@ -1399,7 +1404,9 @@ export const WasmCanvas = observer(
                 this.onPointerCancel,
                 true
             );
-            document.addEventListener("wheel", this.onWheel, true);
+            canvas.addEventListener("wheel", this.onWheel, {
+                passive: false
+            });
 
             canvas.focus();
         }
@@ -1425,7 +1432,7 @@ export const WasmCanvas = observer(
                     this.onPointerCancel,
                     true
                 );
-                document.removeEventListener("wheel", this.onWheel, true);
+                canvas.removeEventListener("wheel", this.onWheel, false);
             }
         }
 
