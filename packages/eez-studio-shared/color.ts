@@ -72,6 +72,10 @@ export function isDark(color: string) {
     return tinycolor(color).isDark();
 }
 
+export function isLight(color: string) {
+    return tinycolor(color).isLight();
+}
+
 export function isValid(color: string) {
     return tinycolor(color).isValid();
 }
