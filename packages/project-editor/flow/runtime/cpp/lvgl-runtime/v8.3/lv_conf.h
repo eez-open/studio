@@ -1,4 +1,3 @@
-#include "lv_conf_8.3.h"
 /**
  * @file lv_conf.h
  * Configuration file for v8.0.0-dev

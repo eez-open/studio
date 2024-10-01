@@ -65,6 +65,7 @@ export interface PrimitiveType {
     json_type: "primitive_type";
 
     name: string;
+    quals?: "const"[];
 }
 
 export interface Enum {

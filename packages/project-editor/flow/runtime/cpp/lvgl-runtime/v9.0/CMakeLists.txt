@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 project(lvgl_runtime_v9.0)
 
+#get_filename_component(EXPORTED_FUNCTIONS_FILE_PATH exported-functions.txt ABSOLUTE)
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s INITIAL_MEMORY=83886080 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=@${EXPORTED_FUNCTIONS_FILE_PATH} -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --pre-js ${PROJECT_SOURCE_DIR}/../common/pre.js --post-js ${PROJECT_SOURCE_DIR}/../common/post.js")
+
 # release
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 --no-entry")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s INITIAL_MEMORY=83886080 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --pre-js ${PROJECT_SOURCE_DIR}/../common/pre.js --post-js ${PROJECT_SOURCE_DIR}/../common/post.js")
@@ -8,6 +11,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s D
 # debug:
 # set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry -g")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry -g")
+## set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s INITIAL_MEMORY=83886080 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=${EXPORTED_FUNCTIONS} -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --pre-js ${PROJECT_SOURCE_DIR}/../common/pre.js --post-js ${PROJECT_SOURCE_DIR}/../common/post.js")
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s INITIAL_MEMORY=83886080 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --pre-js ${PROJECT_SOURCE_DIR}/../common/pre.js --post-js ${PROJECT_SOURCE_DIR}/../common/post.js")
 # add_definitions(-DEMCC_DEBUG)
 include_directories(${PROJECT_SOURCE_DIR})
@@ -31,7 +35,8 @@ file(GLOB_RECURSE SOURCES
     ../common/src/*.c
 )
 
-add_executable(lvgl_runtime_v9.0 ${SOURCES} ../stub_api.c)
+#add_executable(lvgl_runtime_v9.0 ${SOURCES} ../stub_api.c)
+add_executable(lvgl_runtime_v9.0 ${SOURCES})
 
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
