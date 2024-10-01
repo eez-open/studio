@@ -61,7 +61,7 @@ import {
 import { buildExpression } from "project-editor/flow/expression";
 import { escapeCString } from "./widget-common";
 import { getLvglFlagCodes } from "./lvgl-versions";
-import { LVGL_FLAG_CODES } from "./lvgl-constants";
+import { LVGL_FLAG_CODES, LVGL_STATE_CODES } from "./lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +73,8 @@ const LVGL_ACTIONS = {
     REMOVE_STYLE: 4,
     ADD_FLAG: 5,
     CLEAR_FLAG: 6,
+    ADD_STATE: 8,
+    CLEAR_STATE: 9,
     GROUP: 7
 };
 
@@ -97,6 +99,10 @@ export class LVGLActionType extends EezObject {
                 return LVGLAddFlagActionType;
             else if (jsObject.action == "CLEAR_FLAG")
                 return LVGLClearFlagActionType;
+            else if (jsObject.action == "ADD_STATE")
+                return LVGLAddStateActionType;
+            else if (jsObject.action == "CLEAR_STATE")
+                return LVGLClearStateActionType;
             else return LVGLGroupActionType;
         },
 
@@ -211,6 +217,24 @@ export class LVGLActionType extends EezObject {
                         LVGLClearFlagActionType.classInfo.defaultValue
                     ),
                     LVGLClearFlagActionType
+                );
+            } else if (result.values.action == "ADD_STATE") {
+                actionTypeObject = createObject<LVGLAddStateActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLAddStateActionType.classInfo.defaultValue
+                    ),
+                    LVGLAddStateActionType
+                );
+            } else if (result.values.action == "CLEAR_STATE") {
+                actionTypeObject = createObject<LVGLClearStateActionType>(
+                    project._store,
+                    Object.assign(
+                        actionTypeProperties,
+                        LVGLClearStateActionType.classInfo.defaultValue
+                    ),
+                    LVGLClearStateActionType
                 );
             } else if (result.values.action == "GROUP") {
                 actionTypeObject = createObject<LVGLGroupActionType>(
@@ -1554,6 +1578,208 @@ export class LVGLClearFlagActionType extends LVGLActionType {
 }
 
 registerClass("LVGLClearFlagActionType", LVGLClearFlagActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLAddStateActionType extends LVGLActionType {
+    target: string;
+    state: keyof typeof LVGL_STATE_CODES;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            state: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLAddStateActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "state",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLAddStateActionType) => {
+                    return Object.keys(LVGL_STATE_CODES).map(state => ({
+                        id: state,
+                        label: state
+                    }));
+                }
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLAddStateActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Add state";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.state} in {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Add state {action.state} in {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLAddStateActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // state
+        dataBuffer.writeUint32(LVGL_STATE_CODES[this.state] ?? 0);
+    }
+}
+
+registerClass("LVGLAddStateActionType", LVGLAddStateActionType);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLClearStateActionType extends LVGLActionType {
+    target: string;
+    state: keyof typeof LVGL_STATE_CODES;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            target: observable,
+            state: observable
+        });
+    }
+
+    static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
+        properties: [
+            {
+                name: "target",
+                displayName: "Target",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLClearStateActionType) => {
+                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                        actionType
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(actionType)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
+                }
+            },
+            {
+                name: "state",
+                type: PropertyType.Enum,
+                enumItems: (actionType: LVGLClearStateActionType) => {
+                    return Object.keys(LVGL_STATE_CODES).map(state => ({
+                        id: state,
+                        label: state
+                    }));
+                }
+            }
+        ],
+        defaultValue: {},
+        listLabel: (action: LVGLClearStateActionType, collapsed: boolean) => {
+            if (!collapsed) {
+                return "Clear state";
+            }
+            let singleItem =
+                (getParent(action) as LVGLActionType[]).length == 1;
+            if (singleItem) {
+                return (
+                    <>
+                        {action.state} in {action.target}
+                    </>
+                );
+            } else {
+                return (
+                    <>
+                        Clear state {action.state} in {action.target}
+                    </>
+                );
+            }
+        },
+        check: (object: LVGLClearStateActionType, messages: IMessage[]) => {
+            const projectStore = ProjectEditor.getProjectStore(object);
+
+            if (object.target) {
+                const lvglIdentifier =
+                    projectStore.lvglIdentifiers.getIdentifierByName(
+                        ProjectEditor.getFlow(object),
+                        object.target
+                    );
+
+                if (lvglIdentifier == undefined) {
+                    messages.push(propertyNotFoundMessage(object, "target"));
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "target"));
+            }
+        }
+    });
+
+    override build(assets: Assets, dataBuffer: DataBuffer) {
+        // target
+        dataBuffer.writeInt32(
+            assets.projectStore.lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                this.target
+            )?.index ?? -1
+        );
+
+        // state
+        dataBuffer.writeUint32(LVGL_STATE_CODES[this.state] ?? 0);
+    }
+}
+
+registerClass("LVGLClearStateActionType", LVGLClearStateActionType);
 
 ////////////////////////////////////////////////////////////////////////////////
 

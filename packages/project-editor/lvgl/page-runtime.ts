@@ -762,7 +762,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         // add widgets to groups
         for (const page of this.pages) {
             if (page._lvglObj) {
-                this.wasm._lvglAddScreenLoadedEventHandler(page._lvglObj);
                 for (
                     let i = 0;
                     i < this.project.lvglGroups.groups.length;
@@ -828,6 +827,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.createStyles();
 
         const pageObj = this.page.lvglCreate(this, 0);
+
+        this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
 
         runInAction(() => {
             this.page._lvglObj = pageObj;

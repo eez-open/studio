@@ -951,7 +951,7 @@ EM_PORT_API(lv_group_t *) lvglCreateGroup() {
 }
 
 EM_PORT_API(void) lvglAddScreenLoadedEventHandler(lv_obj_t *screenObj) {
-     lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOADED, 0);
+     lv_obj_add_event_cb(screenObj, screen_loaded_event_callback, LV_EVENT_SCREEN_LOAD_START, 0);
 }
 
 EM_PORT_API(void) lvglGroupAddObject(lv_obj_t *screenObj, lv_group_t *groupObj, lv_obj_t *obj) {
