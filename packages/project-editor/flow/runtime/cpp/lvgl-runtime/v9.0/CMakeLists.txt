@@ -31,7 +31,7 @@ file(GLOB_RECURSE SOURCES
     ../common/src/*.c
 )
 
-add_executable(lvgl_runtime_v9.0 ${SOURCES})
+add_executable(lvgl_runtime_v9.0 ${SOURCES} ../stub_api.c)
 
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
