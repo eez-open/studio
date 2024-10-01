@@ -57,5 +57,6 @@ npm-module/resources
 
 tools/pubdoc/build
 tools/eez-framework-amalgamation/build
+tools/lvgl-api/build
 
 .env
