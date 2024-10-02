@@ -64,7 +64,8 @@ import type { browseGlyph } from "project-editor/features/font/FontEditor";
 import type { Variable } from "project-editor/features/variable/variable";
 import type {
     OutputActionComponent,
-    CallActionActionComponent
+    CallActionActionComponent,
+    CommentActionComponent
 } from "project-editor/flow/components/actions";
 import type {
     ContainerWidget,
@@ -123,6 +124,7 @@ export interface IProjectEditor {
     ActionClass: typeof Action;
     ComponentClass: typeof Component;
     ActionComponentClass: typeof ActionComponent;
+    CommentActionComponentClass: typeof CommentActionComponent;
     WidgetClass: typeof Widget;
     ConnectionLineClass: typeof ConnectionLine;
     UserWidgetWidgetClass: typeof UserWidgetWidget;

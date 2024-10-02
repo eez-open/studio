@@ -45,7 +45,8 @@ import { getObjectVariableTypeFromType } from "project-editor/features/variable/
 // ACTIONS
 import {
     OutputActionComponent,
-    CallActionActionComponent
+    CallActionActionComponent,
+    CommentActionComponent
 } from "project-editor/flow/components/actions";
 import "project-editor/flow/components/actions/execute-command";
 import "project-editor/flow/components/actions/stream";
@@ -174,6 +175,7 @@ export async function createProjectEditor(
         ActionClass: Action,
         ComponentClass: Component,
         ActionComponentClass: ActionComponent,
+        CommentActionComponentClass: CommentActionComponent,
         WidgetClass: Widget,
         ConnectionLineClass: ConnectionLine,
         UserWidgetWidgetClass: UserWidgetWidget,

@@ -396,6 +396,10 @@ export const ComponentEnclosure = observer(
                             // component description
                             component instanceof
                                 ProjectEditor.ActionComponentClass &&
+                                !(
+                                    component instanceof
+                                    ProjectEditor.CommentActionComponentClass
+                                ) &&
                                 component.description &&
                                 flowContext.projectStore.uiStateStore
                                     .showComponentDescriptions &&

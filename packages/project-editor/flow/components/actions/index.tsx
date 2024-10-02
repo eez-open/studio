@@ -4031,7 +4031,7 @@ export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COMMENT_ACTION,
 
-        label: () => "",
+        label: (object: CommentActionComponent) => object.description,
 
         properties: [
             {
@@ -4039,14 +4039,29 @@ export class CommentActionComponent extends ActionComponent {
                 type: PropertyType.String,
                 hideInPropertyGrid: true,
                 hideInDocumentation: "all"
+            },
+            {
+                name: "collapsed",
+                type: PropertyType.Boolean,
+                hideInPropertyGrid: true,
+                hideInDocumentation: "none"
+            },
+            {
+                name: "expandedWidth",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true,
+                hideInDocumentation: "none"
             }
         ],
         beforeLoadHook: (
             object: CommentActionComponent,
             jsObject: Partial<CommentActionComponent>
         ) => {
-            if (jsObject.description) {
-                delete jsObject.description;
+            if (jsObject.collapsed == undefined) {
+                jsObject.collapsed = false;
+            }
+            if (jsObject.expandedWidth == undefined) {
+                jsObject.expandedWidth = jsObject.width;
             }
         },
         icon: (
@@ -4063,37 +4078,59 @@ export class CommentActionComponent extends ActionComponent {
             left: 0,
             top: 0,
             width: 435,
-            height: 134
+            height: 134,
+            collapsed: false
+        },
+        open: (object: CommentActionComponent) => {
+            const collapsed = !object.collapsed;
+
+            if (collapsed) {
+                ProjectEditor.getProjectStore(object).updateObject(object, {
+                    collapsed: !object.collapsed,
+                    expandedWidth: object.width
+                });
+            } else {
+                ProjectEditor.getProjectStore(object).updateObject(object, {
+                    collapsed: !object.collapsed,
+                    width: object.expandedWidth
+                });
+            }
         }
     });
 
     text: string;
+    collapsed: boolean;
+    expandedWidth: number;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            text: observable
+            text: observable,
+            collapsed: observable,
+            expandedWidth: observable
         });
     }
 
     get autoSize(): AutoSize {
-        return "height";
+        return this.collapsed ? "both" : "height";
     }
 
     getResizeHandlers(): IResizeHandler[] | undefined | false {
-        return [
-            {
-                x: 0,
-                y: 50,
-                type: "w-resize"
-            },
-            {
-                x: 100,
-                y: 50,
-                type: "e-resize"
-            }
-        ];
+        return this.collapsed
+            ? []
+            : [
+                  {
+                      x: 0,
+                      y: 50,
+                      type: "w-resize"
+                  },
+                  {
+                      x: 100,
+                      y: 50,
+                      type: "e-resize"
+                  }
+              ];
     }
 
     getClassName(flowContext: IFlowContext) {
@@ -4105,17 +4142,19 @@ export class CommentActionComponent extends ActionComponent {
 
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
-            <TrixEditor
-                component={this}
-                flowContext={flowContext}
-                value={this.text}
-                setValue={action((value: string) => {
-                    const projectStore = getProjectStore(this);
-                    projectStore.updateObject(this, {
-                        text: value
-                    });
-                })}
-            ></TrixEditor>
+            !this.collapsed && (
+                <TrixEditor
+                    component={this}
+                    flowContext={flowContext}
+                    value={this.text}
+                    setValue={action((value: string) => {
+                        const projectStore = getProjectStore(this);
+                        projectStore.updateObject(this, {
+                            text: value
+                        });
+                    })}
+                ></TrixEditor>
+            )
         );
     }
 }

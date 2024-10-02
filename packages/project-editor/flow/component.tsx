@@ -4061,6 +4061,14 @@ function renderActionComponent(
                     {executionStateInfo}
                     <span className="title-text">{getLabel(actionNode)}</span>
                 </div>
+                {actionNode instanceof
+                    ProjectEditor.CommentActionComponentClass &&
+                    actionNode.collapsed && (
+                        <Icon
+                            icon="material:arrow_drop_down"
+                            style={{ opacity: 0.5 }}
+                        />
+                    )}
                 {seqOutputIndex != -1 && (
                     <ComponentOutputSpan
                         componentOutput={actionNode.outputs[seqOutputIndex]}
