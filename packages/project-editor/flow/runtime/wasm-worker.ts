@@ -498,6 +498,50 @@ function getBitmapAsDataURL(wasmModuleId: number, name: string) {
     return createWasmValue(WasmFlowRuntime, dataURL);
 }
 
+function getLvglScreenByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglScreenByName: { name }
+    });
+}
+
+function getLvglObjectByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglObjectByName: { name }
+    });
+}
+
+function getLvglGroupByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglGroupByName: { name }
+    });
+}
+
+function getLvglStyleByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglStyleByName: { name }
+    });
+}
+
 function getLvglImageByName(wasmModuleId: number, name: string) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -565,6 +609,10 @@ function lvglObjRemoveStyle(
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
 (global as any).getBitmapAsDataURL = getBitmapAsDataURL;
 (global as any).executeScpi = executeScpi;
+(global as any).getLvglScreenByName = getLvglScreenByName;
+(global as any).getLvglObjectByName = getLvglObjectByName;
+(global as any).getLvglGroupByName = getLvglGroupByName;
+(global as any).getLvglStyleByName = getLvglStyleByName;
 (global as any).getLvglImageByName = getLvglImageByName;
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;

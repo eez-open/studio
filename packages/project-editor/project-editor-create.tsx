@@ -30,7 +30,8 @@ import {
     CustomInput,
     CustomOutput,
     createActionComponentClass,
-    makeExpressionProperty
+    makeExpressionProperty,
+    checkProperty
 } from "project-editor/flow/component";
 
 import { Page } from "project-editor/features/page/page";
@@ -232,6 +233,7 @@ export async function createProjectEditor(
         createActionComponentClass,
         makeExpressionProperty,
         evalProperty,
+        checkProperty,
         conditionalStyleConditionProperty,
         FlowTabStateClass: FlowTabState,
         BuildFileClass: BuildFile

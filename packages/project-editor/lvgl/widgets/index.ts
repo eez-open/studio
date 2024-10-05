@@ -64,8 +64,29 @@ import {
     LV_KEY_PREV,
     LV_KEY_RIGHT,
     LV_KEY_UP,
+    LV_SCR_LOAD_ANIM_FADE_IN,
+    LV_SCR_LOAD_ANIM_FADE_OUT,
+    LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+    LV_SCR_LOAD_ANIM_MOVE_LEFT,
+    LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+    LV_SCR_LOAD_ANIM_MOVE_TOP,
+    LV_SCR_LOAD_ANIM_NONE,
+    LV_SCR_LOAD_ANIM_OUT_BOTTOM,
+    LV_SCR_LOAD_ANIM_OUT_LEFT,
+    LV_SCR_LOAD_ANIM_OUT_RIGHT,
+    LV_SCR_LOAD_ANIM_OUT_TOP,
+    LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+    LV_SCR_LOAD_ANIM_OVER_LEFT,
+    LV_SCR_LOAD_ANIM_OVER_RIGHT,
+    LV_SCR_LOAD_ANIM_OVER_TOP,
     LVGL_DIR_ENUM_NAME,
-    LVGL_KEY_ENUM_NAME
+    LVGL_FLAG_CODES,
+    LVGL_FLAG_CODES_90,
+    LVGL_KEY_ENUM_NAME,
+    LV_OBJ_FLAG_ENUM_NAME,
+    LV_SCR_LOAD_ANIM_ENUM_NAME,
+    LVGL_STATE_CODES,
+    LV_STATE_ENUM_NAME
 } from "../lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,96 +155,124 @@ registerClass("LVGLWindowWidget", LVGLWindowWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-registerSystemEnum({
-    name: LVGL_DIR_ENUM_NAME,
-    members: [
-        {
-            name: "None",
-            value: LV_DIR_NONE
-        },
-        {
-            name: "Left",
-            value: LV_DIR_LEFT
-        },
-        {
-            name: "Right",
-            value: LV_DIR_RIGHT
-        },
-        {
-            name: "Top",
-            value: LV_DIR_TOP
-        },
-        {
-            name: "Bottom",
-            value: LV_DIR_BOTTOM
-        },
-        {
-            name: "Hor",
-            value: LV_DIR_HOR
-        },
-        {
-            name: "Ver",
-            value: LV_DIR_VER
-        },
-        {
-            name: "All",
-            value: LV_DIR_ALL
-        }
-    ],
-    projectTypes: [ProjectType.LVGL]
+export function registerLvglEnum(
+    enumName: string,
+    members: { [key: string]: number },
+    lvglVersion?: "8.3" | "9.0"
+) {
+    registerSystemEnum({
+        name: enumName,
+        members: Object.keys(members).map(key => ({
+            name: key,
+            value: members[key]
+        })),
+        projectTypes: [ProjectType.LVGL],
+        lvglVersion
+    });
+}
+
+registerLvglEnum(LVGL_DIR_ENUM_NAME, {
+    None: LV_DIR_NONE,
+    Left: LV_DIR_LEFT,
+    Right: LV_DIR_RIGHT,
+    Top: LV_DIR_TOP,
+    Bottom: LV_DIR_BOTTOM,
+    Hor: LV_DIR_HOR,
+    Ver: LV_DIR_VER,
+    All: LV_DIR_ALL
 });
 
-registerSystemEnum({
-    name: LVGL_KEY_ENUM_NAME,
-    members: [
-        {
-            name: "Up",
-            value: LV_KEY_UP
-        },
-        {
-            name: "Down",
-            value: LV_KEY_DOWN
-        },
-        {
-            name: "Right",
-            value: LV_KEY_RIGHT
-        },
-        {
-            name: "Left",
-            value: LV_KEY_LEFT
-        },
-        {
-            name: "Esc",
-            value: LV_KEY_ESC
-        },
-        {
-            name: "Del",
-            value: LV_KEY_DEL
-        },
-        {
-            name: "Backspace",
-            value: LV_KEY_BACKSPACE
-        },
-        {
-            name: "Enter",
-            value: LV_KEY_ENTER
-        },
-        {
-            name: "Next",
-            value: LV_KEY_NEXT
-        },
-        {
-            name: "Prev",
-            value: LV_KEY_PREV
-        },
-        {
-            name: "Home",
-            value: LV_KEY_HOME
-        },
-        {
-            name: "End",
-            value: LV_KEY_END
-        }
-    ],
-    projectTypes: [ProjectType.LVGL]
+registerLvglEnum(LVGL_KEY_ENUM_NAME, {
+    Up: LV_KEY_UP,
+    Down: LV_KEY_DOWN,
+    Right: LV_KEY_RIGHT,
+    Left: LV_KEY_LEFT,
+    Esc: LV_KEY_ESC,
+    Del: LV_KEY_DEL,
+    Backspace: LV_KEY_BACKSPACE,
+    Enter: LV_KEY_ENTER,
+    Next: LV_KEY_NEXT,
+    Prev: LV_KEY_PREV,
+    Home: LV_KEY_HOME,
+    End: LV_KEY_END
+});
+
+registerLvglEnum(LV_SCR_LOAD_ANIM_ENUM_NAME, {
+    NONE: LV_SCR_LOAD_ANIM_NONE,
+    OVER_LEFT: LV_SCR_LOAD_ANIM_OVER_LEFT,
+    OVER_RIGHT: LV_SCR_LOAD_ANIM_OVER_RIGHT,
+    OVER_TOP: LV_SCR_LOAD_ANIM_OVER_TOP,
+    OVER_BOTTOM: LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+    MOVE_LEFT: LV_SCR_LOAD_ANIM_MOVE_LEFT,
+    MOVE_RIGHT: LV_SCR_LOAD_ANIM_MOVE_RIGHT,
+    MOVE_TOP: LV_SCR_LOAD_ANIM_MOVE_TOP,
+    MOVE_BOTTOM: LV_SCR_LOAD_ANIM_MOVE_BOTTOM,
+    FADE_IN: LV_SCR_LOAD_ANIM_FADE_IN,
+    FADE_OUT: LV_SCR_LOAD_ANIM_FADE_OUT,
+    OUT_LEFT: LV_SCR_LOAD_ANIM_OUT_LEFT,
+    OUT_RIGHT: LV_SCR_LOAD_ANIM_OUT_RIGHT,
+    OUT_TOP: LV_SCR_LOAD_ANIM_OUT_TOP,
+    OUT_BOTTOM: LV_SCR_LOAD_ANIM_OUT_BOTTOM
+});
+
+registerLvglEnum(
+    LV_OBJ_FLAG_ENUM_NAME,
+    {
+        HIDDEN: LVGL_FLAG_CODES.HIDDEN,
+        CLICKABLE: LVGL_FLAG_CODES.CLICKABLE,
+        CLICK_FOCUSABLE: LVGL_FLAG_CODES.CLICK_FOCUSABLE,
+        CHECKABLE: LVGL_FLAG_CODES.CHECKABLE,
+        SCROLLABLE: LVGL_FLAG_CODES.SCROLLABLE,
+        SCROLL_ELASTIC: LVGL_FLAG_CODES.SCROLL_ELASTIC,
+        SCROLL_MOMENTUM: LVGL_FLAG_CODES.SCROLL_MOMENTUM,
+        SCROLL_ONE: LVGL_FLAG_CODES.SCROLL_ONE,
+        SCROLL_CHAIN_HOR: LVGL_FLAG_CODES.SCROLL_CHAIN_HOR,
+        SCROLL_CHAIN_VER: LVGL_FLAG_CODES.SCROLL_CHAIN_VER,
+        SCROLL_ON_FOCUS: LVGL_FLAG_CODES.SCROLL_ON_FOCUS,
+        SCROLL_WITH_ARROW: LVGL_FLAG_CODES.SCROLL_WITH_ARROW,
+        SNAPPABLE: LVGL_FLAG_CODES.SNAPPABLE,
+        PRESS_LOCK: LVGL_FLAG_CODES.PRESS_LOCK,
+        EVENT_BUBBLE: LVGL_FLAG_CODES.EVENT_BUBBLE,
+        GESTURE_BUBBLE: LVGL_FLAG_CODES.GESTURE_BUBBLE,
+        ADV_HITTEST: LVGL_FLAG_CODES.ADV_HITTEST,
+        IGNORE_LAYOUT: LVGL_FLAG_CODES.IGNORE_LAYOUT,
+        FLOATING: LVGL_FLAG_CODES.FLOATING,
+        OVERFLOW_VISIBLE: LVGL_FLAG_CODES.OVERFLOW_VISIBLE
+    },
+    "8.3"
+);
+
+registerLvglEnum(
+    LV_OBJ_FLAG_ENUM_NAME,
+    {
+        HIDDEN: LVGL_FLAG_CODES_90.HIDDEN,
+        CLICKABLE: LVGL_FLAG_CODES_90.CLICKABLE,
+        CLICK_FOCUSABLE: LVGL_FLAG_CODES_90.CLICK_FOCUSABLE,
+        CHECKABLE: LVGL_FLAG_CODES_90.CHECKABLE,
+        SCROLLABLE: LVGL_FLAG_CODES_90.SCROLLABLE,
+        SCROLL_ELASTIC: LVGL_FLAG_CODES_90.SCROLL_ELASTIC,
+        SCROLL_MOMENTUM: LVGL_FLAG_CODES_90.SCROLL_MOMENTUM,
+        SCROLL_ONE: LVGL_FLAG_CODES_90.SCROLL_ONE,
+        SCROLL_CHAIN_HOR: LVGL_FLAG_CODES_90.SCROLL_CHAIN_HOR,
+        SCROLL_CHAIN_VER: LVGL_FLAG_CODES_90.SCROLL_CHAIN_VER,
+        SCROLL_ON_FOCUS: LVGL_FLAG_CODES_90.SCROLL_ON_FOCUS,
+        SCROLL_WITH_ARROW: LVGL_FLAG_CODES_90.SCROLL_WITH_ARROW,
+        SNAPPABLE: LVGL_FLAG_CODES_90.SNAPPABLE,
+        PRESS_LOCK: LVGL_FLAG_CODES_90.PRESS_LOCK,
+        EVENT_BUBBLE: LVGL_FLAG_CODES_90.EVENT_BUBBLE,
+        GESTURE_BUBBLE: LVGL_FLAG_CODES_90.GESTURE_BUBBLE,
+        ADV_HITTEST: LVGL_FLAG_CODES_90.ADV_HITTEST,
+        IGNORE_LAYOUT: LVGL_FLAG_CODES_90.IGNORE_LAYOUT,
+        FLOATING: LVGL_FLAG_CODES_90.FLOATING,
+        OVERFLOW_VISIBLE: LVGL_FLAG_CODES_90.OVERFLOW_VISIBLE
+    },
+    "9.0"
+);
+
+registerLvglEnum(LV_STATE_ENUM_NAME, {
+    CHECKED: LVGL_STATE_CODES.CHECKED,
+    DISABLED: LVGL_STATE_CODES.DISABLED,
+    FOCUSED: LVGL_STATE_CODES.FOCUSED,
+    FOCUS_KEY: LVGL_STATE_CODES.FOCUS_KEY,
+    PRESSED: LVGL_STATE_CODES.PRESSED
 });

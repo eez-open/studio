@@ -141,6 +141,39 @@ export abstract class LVGLPageRuntime {
         }
     }
 
+    getLvglScreenByName(screenName: string) {
+        return (
+            this.project._store.lvglIdentifiers.pages.findIndex(
+                page => page.name == screenName
+            ) + 1
+        );
+    }
+
+    getLvglObjectByName(objectName: string) {
+        return this.project._store.lvglIdentifiers.identifiersArray
+            .get(this.project.pages[0])!
+            .findIndex(lvglIdentifier => {
+                if (lvglIdentifier.object instanceof ProjectEditor.PageClass) {
+                    if (lvglIdentifier.object.name == objectName) {
+                        return true;
+                    }
+                }
+                return lvglIdentifier.identifier == objectName;
+            });
+    }
+
+    getLvglGroupByName(groupName: string) {
+        return this.project.lvglGroups.groups.findIndex(
+            group => group.name == groupName
+        );
+    }
+
+    getLvglStyleByName(styleName: string) {
+        return this.projectStore.lvglIdentifiers.styles.findIndex(
+            style => style.name == styleName
+        );
+    }
+
     getBitmapPtrByName(bitmapName: string) {
         const bitmap = findBitmap(this.project, bitmapName);
         if (!bitmap) {

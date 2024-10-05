@@ -27,7 +27,8 @@ import type {
     CustomInput,
     CustomOutput,
     createActionComponentClass,
-    makeExpressionProperty
+    makeExpressionProperty,
+    checkProperty
 } from "project-editor/flow/component";
 import type {
     Glyph,
@@ -181,6 +182,7 @@ export interface IProjectEditor {
     createActionComponentClass: typeof createActionComponentClass;
     makeExpressionProperty: typeof makeExpressionProperty;
     evalProperty: typeof evalProperty;
+    checkProperty: typeof checkProperty;
     conditionalStyleConditionProperty: PropertyInfo;
     FlowTabStateClass: typeof FlowTabState;
     BuildFileClass: typeof BuildFile;

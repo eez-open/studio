@@ -150,6 +150,18 @@ export type FlowPropertyType =
     | "template-literal"
     | "scpi-template-literal";
 
+export type LvglActionPropertyType =
+    | "boolean"
+    | "integer"
+    | "string"
+    | `enum:${string}`
+    | "screen"
+    | "widget"
+    | `widget:${string}`
+    | "group"
+    | "style"
+    | "image";
+
 export interface PropertyInfo {
     name: string;
     type: PropertyType;
@@ -286,6 +298,8 @@ export interface PropertyInfo {
     ) => React.ReactNode[];
 
     colorEditorForLiteral?: boolean;
+
+    lvglActionPropertyType?: LvglActionPropertyType;
 }
 
 export type InheritedValue =

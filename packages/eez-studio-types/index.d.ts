@@ -364,6 +364,22 @@ export interface WorkerToRenderMessage {
         name: string;
     };
 
+    getLvglScreenByName?: {
+        name: string;
+    };
+
+    getLvglObjectByName?: {
+        name: string;
+    };
+
+    getLvglGroupByName?: {
+        name: string;
+    };
+
+    getLvglStyleByName?: {
+        name: string;
+    };
+
     getLvglImageByName?: {
         name: string;
     };

@@ -4678,7 +4678,7 @@ function isActionComponent(component: Component) {
     return component instanceof ActionComponent;
 }
 
-function checkProperty(
+export function checkProperty(
     projectStore: ProjectStore,
     component: Component,
     messages: IMessage[],

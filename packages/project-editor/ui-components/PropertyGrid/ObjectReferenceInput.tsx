@@ -11,6 +11,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
 import { findBitmap } from "project-editor/project/project";
 import { SortDirectionType } from "project-editor/core/objectAdapter";
+import { getEnumItems } from "./Property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +53,15 @@ export const ObjectReferenceInput = observer(
 
         getObjectNames() {
             const { propertyInfo } = this.props;
+
+            if (!propertyInfo.referencedObjectCollectionPath) {
+                if (propertyInfo.enumItems) {
+                    return getEnumItems(this.props.objects, propertyInfo).map(
+                        enumItem => enumItem.id
+                    );
+                }
+                return [];
+            }
 
             let assets = this.context.project._assets.maps[
                 "name"

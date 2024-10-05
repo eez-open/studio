@@ -599,7 +599,8 @@ export const builtInFunctions: {
                 : undefined,
         getValueType: (...args: ValueType[]) => {
             return "blob";
-        }
+        },
+        enabled: projectStore => !projectStore.projectTypeTraits.isLVGL
     },
 
     "Flow.getBitmapAsDataURL": {
@@ -1421,6 +1422,20 @@ export const builtInFunctions: {
         operationIndex: 69,
         arity: 0,
         args: [],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => 0,
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
+
+    "LVGL.getScreenByName": {
+        operationIndex: 89,
+        arity: 0,
+        args: ["string"],
         eval: (
             expressionContext: IExpressionContext | undefined,
             ...args: any[]

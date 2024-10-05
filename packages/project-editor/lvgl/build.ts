@@ -722,6 +722,7 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
+        //
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             this.styles.length > 0
@@ -735,6 +736,7 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
+        //
         if (this.project.lvglGroups.groups.length > 0) {
             build.line("void ui_create_groups() {");
             build.indent();
@@ -762,6 +764,40 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.pages.length > 0) {
+                build.line(
+                    `static const char *screen_names[] = { ${this.pages
+                        .map(page => `"${page.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.project._store.lvglIdentifiers.identifiersArray.size > 0) {
+                build.line(
+                    `static const char *object_names[] = { ${this.project._store.lvglIdentifiers.identifiersArray
+                        .get(this.project.pages[0])!
+                        .map(lvglIdentifier => `"${lvglIdentifier.identifier}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.project.lvglGroups.groups.length > 0) {
+                build.line(
+                    `static const char *group_names[] = { ${this.project.lvglGroups.groups
+                        .map(group => `"${group.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            if (this.styles.length > 0) {
+                build.line(
+                    `static const char *style_names[] = { ${this.styles
+                        .map(style => `"${style.name}"`)
+                        .join(", ")} };`
+                );
+            }
+            build.line("");
+        }
+
+        //
         build.line("void create_screens() {");
         build.indent();
 
@@ -775,6 +811,30 @@ export class LVGLBuild extends Build {
             this.styles.length > 0
         ) {
             build.line("eez_flow_init_styles(add_style, remove_style);");
+            build.line("");
+        }
+
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.pages.length > 0) {
+                build.line(
+                    `eez_flow_init_screen_names(screen_names, sizeof(screen_names) / sizeof(const char *));`
+                );
+            }
+            if (this.project._store.lvglIdentifiers.identifiersArray.size > 0) {
+                build.line(
+                    `eez_flow_init_object_names(object_names, sizeof(object_names) / sizeof(const char *));`
+                );
+            }
+            if (this.project.lvglGroups.groups.length > 0) {
+                build.line(
+                    `eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`
+                );
+            }
+            if (this.styles.length > 0) {
+                build.line(
+                    `eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`
+                );
+            }
             build.line("");
         }
 

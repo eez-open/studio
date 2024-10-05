@@ -61,7 +61,7 @@ import {
     getObjectVariableTypeFromType,
     SYSTEM_STRUCTURES,
     isValidType,
-    SYSTEM_ENUMS
+    getSystemEnums
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -1315,14 +1315,8 @@ export class ProjectVariables extends EezObject {
             map.set(enumDef.name, enumDef);
         }
 
-        const project = ProjectEditor.getProject(this);
-        const systemEnums = SYSTEM_ENUMS.filter(
-            enumDef =>
-                enumDef.projectTypes == undefined ||
-                enumDef.projectTypes.indexOf(
-                    project.settings.general.projectType
-                ) != -1
-        );
+        const projectStore = ProjectEditor.getProjectStore(this);
+        const systemEnums = getSystemEnums(projectStore);
         for (const enumDef of systemEnums) {
             map.set(enumDef.name, enumDef);
         }

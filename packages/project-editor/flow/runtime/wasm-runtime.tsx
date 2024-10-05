@@ -377,6 +377,22 @@ export class WasmRuntime extends RemoteRuntime {
                 return bitmap.imageSrc;
             }
             return null;
+        } else if (workerToRenderMessage.getLvglScreenByName) {
+            return this.lgvlPageRuntime?.getLvglScreenByName(
+                workerToRenderMessage.getLvglScreenByName.name
+            );
+        } else if (workerToRenderMessage.getLvglObjectByName) {
+            return this.lgvlPageRuntime?.getLvglObjectByName(
+                workerToRenderMessage.getLvglObjectByName.name
+            );
+        } else if (workerToRenderMessage.getLvglGroupByName) {
+            return this.lgvlPageRuntime?.getLvglGroupByName(
+                workerToRenderMessage.getLvglGroupByName.name
+            );
+        } else if (workerToRenderMessage.getLvglStyleByName) {
+            return this.lgvlPageRuntime?.getLvglStyleByName(
+                workerToRenderMessage.getLvglStyleByName.name
+            );
         } else if (workerToRenderMessage.getLvglImageByName) {
             return (
                 this.lgvlPageRuntime?.getBitmapPtrByName(

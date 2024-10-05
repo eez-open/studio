@@ -969,20 +969,24 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1036456: ($0) => { startToDebuggerMessage($0); },  
- 1036488: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036563: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036638: ($0) => { finishToDebuggerMessage($0); },  
- 1036671: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1036724: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1036757: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1036793: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1036899: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1036935: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1036972: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1037012: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1037069: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1037128: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1038920: ($0) => { startToDebuggerMessage($0); },  
+ 1038952: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1039027: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1039102: ($0) => { finishToDebuggerMessage($0); },  
+ 1039135: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1039189: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1039243: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1039296: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1039349: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1039402: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1039435: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1039471: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1039577: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1039613: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1039650: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1039690: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1039747: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1039806: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 

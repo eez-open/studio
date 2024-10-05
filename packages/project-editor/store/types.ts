@@ -19,7 +19,7 @@ import {
     getArrayElementTypeFromType,
     BASIC_TYPE_NAMES,
     SYSTEM_STRUCTURES,
-    SYSTEM_ENUMS
+    getSystemEnums
 } from "project-editor/features/variable/value-type";
 import { computed, makeObservable } from "mobx";
 import { basicFlowValueTypes } from "project-editor/build/value-types";
@@ -73,13 +73,7 @@ export class TypesStore {
             this.getTypeFromValueType(`struct:${structure.name}`)
         );
 
-        const systemEnums = SYSTEM_ENUMS.filter(
-            enumDef =>
-                enumDef.projectTypes == undefined ||
-                enumDef.projectTypes.indexOf(
-                    this.projectStore.project.settings.general.projectType
-                ) != -1
-        );
+        const systemEnums = getSystemEnums(this.projectStore);
         systemEnums.forEach(enumDef =>
             this.getTypeFromValueType(`enum:${enumDef.name}`)
         );

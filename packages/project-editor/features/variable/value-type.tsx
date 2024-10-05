@@ -27,7 +27,7 @@ import {
     PropertyInfo,
     PropertyProps
 } from "project-editor/core/object";
-import type { Project, ProjectType } from "project-editor/project/project";
+import { Project, ProjectType } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
@@ -305,17 +305,46 @@ export function registerSystemStructure(
 ////////////////////////////////////////////////////////////////////////////////
 
 class SystemEnum implements IEnum {
-    name: string;
-    members: IEnumMember[];
-    projectTypes: ProjectType[] | undefined;
+    static SYSTEM_ENUMS: SystemEnum[] = [];
+
+    static getSystemEnums(projectStore: ProjectStore) {
+        return this.SYSTEM_ENUMS.filter(systemEnum => {
+            if (systemEnum.projectTypes == undefined) {
+                return true;
+            }
+
+            if (
+                systemEnum.projectTypes.indexOf(
+                    projectStore.project.settings.general.projectType
+                ) != -1
+            ) {
+                if (
+                    projectStore.project.settings.general.projectType ==
+                    ProjectType.LVGL
+                ) {
+                    if (systemEnum.lvglVersion == undefined) {
+                        return true;
+                    }
+
+                    if (
+                        systemEnum.lvglVersion ==
+                        projectStore.project.settings.general.lvglVersion
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        });
+    }
 
     constructor(
-        enumDef: Omit<IEnum, "membersMap"> & {
-            projectTypes: ProjectType[] | undefined;
-        }
+        public name: string,
+        public members: IEnumMember[],
+        private projectTypes: ProjectType[] | undefined,
+        private lvglVersion?: "8.3" | "9.0"
     ) {
-        Object.assign(this, enumDef);
-
         makeObservable(this, {
             membersMap: computed
         });
@@ -330,14 +359,24 @@ class SystemEnum implements IEnum {
     }
 }
 
-export const SYSTEM_ENUMS: SystemEnum[] = [];
+export function registerSystemEnum({
+    name,
+    members,
+    projectTypes,
+    lvglVersion
+}: {
+    name: string;
+    members: IEnumMember[];
+    projectTypes: ProjectType[] | undefined;
+    lvglVersion?: "8.3" | "9.0";
+}) {
+    SystemEnum.SYSTEM_ENUMS.push(
+        new SystemEnum(name, members, projectTypes, lvglVersion)
+    );
+}
 
-export function registerSystemEnum(
-    systemEnum: Omit<IEnum, "membersMap"> & {
-        projectTypes: ProjectType[] | undefined;
-    }
-) {
-    SYSTEM_ENUMS.push(new SystemEnum(systemEnum));
+export function getSystemEnums(projectStore: ProjectStore) {
+    return SystemEnum.getSystemEnums(projectStore);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -600,13 +639,7 @@ export const VariableTypeSelect = observer(
 
             const enumTypes = [
                 ...project.variables.enums,
-                ...SYSTEM_ENUMS.filter(
-                    enumDef =>
-                        enumDef.projectTypes == undefined ||
-                        enumDef.projectTypes.indexOf(
-                            this.props.project.settings.general.projectType
-                        ) != -1
-                )
+                ...getSystemEnums(this.props.project._store)
             ];
 
             const enums = enumTypes.map(enumDef => (

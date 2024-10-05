@@ -44,7 +44,7 @@ import {
     isStructType,
     isObjectType,
     getObjectVariableTypeFromType,
-    SYSTEM_ENUMS
+    getSystemEnums
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -815,14 +815,7 @@ const SelectItemDialog = observer(
 
                 const enumTypes = [
                     ...this.context.project.variables.enums,
-                    ...SYSTEM_ENUMS.filter(
-                        enumDef =>
-                            enumDef.projectTypes == undefined ||
-                            enumDef.projectTypes.indexOf(
-                                this.context.project.settings.general
-                                    .projectType
-                            ) != -1
-                    )
+                    ...getSystemEnums(this.context)
                 ];
 
                 if (enumTypes.length) {

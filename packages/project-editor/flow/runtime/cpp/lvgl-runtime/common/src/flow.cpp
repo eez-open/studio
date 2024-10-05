@@ -990,6 +990,30 @@ static lv_group_t *getLvglGroupFromIndex(int32_t index) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static int32_t getLvglScreenByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglScreenByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglObjectByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglObjectByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglGroupByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglGroupByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
+static int32_t getLvglStyleByName(const char *name) {
+    return (int32_t)EM_ASM_INT({
+        return getLvglStyleByName($0, UTF8ToString($1));
+    }, eez::flow::g_wasmModuleId, name);
+}
+
 static const void *getLvglImageByName(const char *name) {
     return (const void *)EM_ASM_INT({
         return getLvglImageByName($0, UTF8ToString($1));
@@ -1033,6 +1057,10 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
     eez::flow::replacePageHook = replacePageHook;
     eez::flow::stopScriptHook = stopScript;
     eez::flow::getLvglObjectFromIndexHook = getLvglObjectFromIndex;
+    eez::flow::getLvglScreenByNameHook = getLvglScreenByName;
+    eez::flow::getLvglObjectByNameHook = getLvglObjectByName;
+    eez::flow::getLvglGroupByNameHook = getLvglGroupByName;
+    eez::flow::getLvglStyleByNameHook = getLvglStyleByName;
     eez::flow::getLvglImageByNameHook = getLvglImageByName;
     eez::flow::lvglObjAddStyleHook = lvglObjAddStyle;
     eez::flow::lvglObjRemoveStyleHook = lvglObjRemoveStyle;
