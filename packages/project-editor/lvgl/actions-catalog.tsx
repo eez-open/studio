@@ -145,6 +145,31 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    name: "objGetWidth",
+    properties: [
+        {
+            name: "object",
+            type: "widget"
+        },
+        {
+            name: "result",
+            type: "integer",
+            isAssignable: true
+        }
+    ],
+    defaults: {},
+    label: ([object, width]) => (
+        <>
+            {object}
+            <RightArrow />
+            {width}
+        </>
+    )
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
     name: "objSetHeight",
     properties: [
         {
