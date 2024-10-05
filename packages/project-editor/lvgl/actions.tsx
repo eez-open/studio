@@ -3040,7 +3040,9 @@ export class LVGLActionComponent extends ActionComponent {
                         actionJs.endType = "literal";
                         actionJs.delayType = "literal";
                         actionJs.timeType = "literal";
+                        actionJs.relative = actionJs.relative ?? false;
                         actionJs.relativeType = "literal";
+                        actionJs.instant = actionJs.instant ?? false;
                         actionJs.instantType = "literal";
                         if (!actionJs.path) {
                             actionJs.path = "LINEAR";

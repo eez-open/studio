@@ -44,7 +44,7 @@ import {
     LV_LAYOUT_NONE
 } from "project-editor/lvgl/lvgl-constants";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getEnumItems } from "project-editor/ui-components/PropertyGrid/Property";
+import { getEnumItems } from "project-editor/ui-components/PropertyGrid/utils";
 import type { LVGLPageRuntime } from "./page-runtime";
 
 ////////////////////////////////////////////////////////////////////////////////

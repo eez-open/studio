@@ -11,7 +11,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
 import { findBitmap } from "project-editor/project/project";
 import { SortDirectionType } from "project-editor/core/objectAdapter";
-import { getEnumItems } from "./Property";
+import { getEnumItems } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -27,7 +27,7 @@ import {
     PropertyInfo,
     PropertyProps
 } from "project-editor/core/object";
-import { Project, ProjectType } from "project-editor/project/project";
+import type { Project, ProjectType } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
@@ -318,10 +318,7 @@ class SystemEnum implements IEnum {
                     projectStore.project.settings.general.projectType
                 ) != -1
             ) {
-                if (
-                    projectStore.project.settings.general.projectType ==
-                    ProjectType.LVGL
-                ) {
+                if (projectStore.projectTypeTraits.isLVGL) {
                     if (systemEnum.lvglVersion == undefined) {
                         return true;
                     }

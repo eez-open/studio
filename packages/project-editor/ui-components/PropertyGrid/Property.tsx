@@ -18,8 +18,6 @@ import {
     PropertyType,
     PropertyProps,
     getParent,
-    PropertyInfo,
-    IEezObject,
     getObjectPropertyDisplayName,
     isPropertyOptional,
     EnumItem
@@ -40,6 +38,7 @@ import {
 } from "project-editor/flow/expression/ExpressionBuilder";
 
 import {
+    getEnumItems,
     getFormText,
     getObjectPropertyValue,
     getPropertyValue,
@@ -52,7 +51,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Checkbox } from "./Checkbox";
 import { ImageProperty } from "./ImageProperty";
 
-import { isArray } from "eez-studio-shared/util";
 import { General } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1196,59 +1194,4 @@ function arrayCompareShallow(arr1: any, arr2: any) {
     }
 
     return true;
-}
-
-export function getEnumItems(
-    objects: IEezObject[],
-    propertyInfo: PropertyInfo
-) {
-    if (!propertyInfo.enumItems) {
-        return [];
-    }
-
-    if (isArray(propertyInfo.enumItems)) {
-        return propertyInfo.enumItems;
-    }
-
-    const enumItems = propertyInfo.enumItems;
-
-    const enumItemsArray = objects.map(object => enumItems(object));
-
-    const result = [];
-
-    for (let enumItems1 of enumItemsArray) {
-        for (let enumItem1 of enumItems1) {
-            let foundInAll = true;
-
-            for (let enumItems2 of enumItemsArray) {
-                let found = false;
-                for (let enumItem2 of enumItems2) {
-                    if (enumItem1.id == enumItem2.id) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    foundInAll = false;
-                    break;
-                }
-            }
-
-            if (foundInAll) {
-                let found = false;
-                for (let enumItem2 of result) {
-                    if (enumItem1.id == enumItem2.id) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    result.push(enumItem1);
-                }
-            }
-        }
-    }
-
-    return result;
 }

@@ -1802,6 +1802,7 @@ export class Component extends EezObject {
             },
             {
                 name: "absolutePosition",
+                displayName: "Absolute pos.",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
