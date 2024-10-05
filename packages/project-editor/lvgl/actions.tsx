@@ -3097,7 +3097,8 @@ export class LVGLActionComponent extends ActionComponent {
                                         break;
                                     case "hidden":
                                         actionJs.action = "objSetFlagHidden";
-                                        actionJs.hidden = actionJs.value;
+                                        actionJs.hidden =
+                                            actionJs.value ?? false;
                                         delete actionJs.value;
                                         actionJs.hiddenType =
                                             actionJs.valueType;
@@ -3105,7 +3106,8 @@ export class LVGLActionComponent extends ActionComponent {
                                         break;
                                     case "checked":
                                         actionJs.action = "objSetStateChecked";
-                                        actionJs.checked = actionJs.value;
+                                        actionJs.checked =
+                                            actionJs.value ?? false;
                                         delete actionJs.value;
                                         actionJs.checkedType =
                                             actionJs.valueType;
@@ -3113,7 +3115,8 @@ export class LVGLActionComponent extends ActionComponent {
                                         break;
                                     case "disabled":
                                         actionJs.action = "objSetStateDisabled";
-                                        actionJs.disabled = actionJs.value;
+                                        actionJs.disabled =
+                                            actionJs.value ?? false;
                                         delete actionJs.value;
                                         actionJs.disabledType =
                                             actionJs.valueType;
