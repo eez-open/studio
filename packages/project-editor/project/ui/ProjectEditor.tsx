@@ -47,6 +47,7 @@ import {
     extensionsManagerStore
 } from "home/extensions-manager/extensions-manager";
 import { LVGLGroupsTab } from "project-editor/lvgl/groups";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -303,7 +304,24 @@ const Content = observer(
                     icon = <Icon icon="material:warning" className="warning" />;
                     numMessages = section.numWarnings;
                 } else {
-                    icon = <Icon icon="material:check" className="info" />;
+                    icon = (
+                        <Icon
+                            icon="material:check"
+                            className="info"
+                            style={
+                                node.getId() == LayoutModels.OUTPUT_TAB_ID &&
+                                this.context.lastSuccessfulBuildRevision ==
+                                    this.context.lastRevision
+                                    ? {
+                                          color: settingsController.isDarkTheme
+                                              ? "#27FB2C"
+                                              : "#00FF21",
+                                          fontWeight: "bold"
+                                      }
+                                    : undefined
+                            }
+                        />
+                    );
                     numMessages = 0;
                 }
 
@@ -471,6 +489,9 @@ const Content = observer(
             checksSection.numErrors;
             checksSection.numWarnings;
             checksSection.loading;
+
+            this.context.lastRevisionStable;
+            this.context.lastSuccessfulBuildRevision;
 
             const sectionOutput = this.context.outputSectionsStore.getSection(
                 Section.OUTPUT

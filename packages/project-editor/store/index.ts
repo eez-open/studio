@@ -174,6 +174,8 @@ export class ProjectStore {
     lastRevision: symbol;
     lastRevisionStable: symbol;
 
+    lastSuccessfulBuildRevision: symbol | undefined;
+
     filePath: string | undefined;
     backgroundCheckEnabled = true;
 
@@ -248,6 +250,7 @@ export class ProjectStore {
             savedRevision: observable,
             lastRevision: observable,
             lastRevisionStable: observable,
+            lastSuccessfulBuildRevision: observable,
             isModified: computed,
             setModified: action,
             updateLastRevisionStable: action,
@@ -782,7 +785,10 @@ export class ProjectStore {
                 LayoutModels.OUTPUT_TAB_ID
             );
         } else {
-            notification.info("Build done.");
+            runInAction(() => {
+                this.lastSuccessfulBuildRevision = this.lastRevisionStable;
+            });
+            notification.info("Build successful.", { autoClose: 1000 });
         }
         return result;
     }
