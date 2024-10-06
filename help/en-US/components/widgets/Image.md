@@ -10,6 +10,10 @@ This Widget displays an image.
 
 The name of the bitmap to be displayed.
 
+## Change pivot point (default is center)
+
+If enabled then specify the image pivot point X and Y coordinate.
+
 ## Pivot X
 
 X position of the center of rotation. If left blank, the center of rotation is in the middle of the Widget.

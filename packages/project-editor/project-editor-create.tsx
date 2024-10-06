@@ -127,6 +127,7 @@ import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Color } from "project-editor/features/style/theme";
 import { UserProperty } from "./flow/user-property";
+import { LVGLActionComponent } from "project-editor/lvgl/actions";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -204,6 +205,7 @@ export async function createProjectEditor(
         LVGLButtonMatrixWidgetClass: LVGLButtonMatrixWidget,
         LVGLLedWidgetClass: LVGLLedWidget,
         LVGLStyleClass: LVGLStyle,
+        LVGLActionComponentClass: LVGLActionComponent,
         getProject,
         getProjectStore,
         getFlow,

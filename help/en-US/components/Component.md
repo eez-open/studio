@@ -26,7 +26,7 @@ The width of the component. It is set in pixels.
 
 The height of the component. It is set in pixels.
 
-## Absolute position
+## Absolute pos.
 
 The absolute position of the component in relation to the page. This property is read-only.
 

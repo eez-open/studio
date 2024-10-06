@@ -104,6 +104,7 @@ import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
 import type { UserProperty } from "./flow/user-property";
+import type { LVGLActionComponent } from "./lvgl/actions";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -153,6 +154,7 @@ export interface IProjectEditor {
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
     LVGLLedWidgetClass: typeof LVGLLedWidget;
     LVGLStyleClass: typeof LVGLStyle;
+    LVGLActionComponentClass: typeof LVGLActionComponent;
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;

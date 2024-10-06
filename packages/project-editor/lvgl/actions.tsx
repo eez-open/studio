@@ -2130,6 +2130,7 @@ export interface IActionPropertyDefinition {
     name: string;
     type: LvglActionPropertyType;
     isAssignable?: boolean;
+    helpText: string;
 }
 
 function getValueTypeFromActionPropertyType(
@@ -2168,14 +2169,18 @@ export interface IActionDefinition {
         propertyValues: string[],
         propertyNames: string[]
     ) => React.ReactNode;
+    helpText: string;
 }
 
+export const actionDefinitions: IActionDefinition[] = [];
 const actionClasses = new Map<string, typeof LVGLActionType>();
 const actionNameToActionId = new Map<string, number>();
 
 let nextActionId = 0;
 
 export function registerAction(actionDefinition: IActionDefinition) {
+    actionDefinitions.push(actionDefinition);
+
     actionNameToActionId.set(actionDefinition.name, nextActionId++);
 
     const properties: PropertyInfo[] = [];
@@ -3402,6 +3407,35 @@ export class LVGLActionComponent extends ActionComponent {
 }
 
 registerClass("LVGLActionComponent", LVGLActionComponent);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function generateLVGLActionsMarkdown() {
+    let result =
+        "List of actions to be executed. The following actions are available:\n\n";
+
+    for (const actionDefinition of actionDefinitions) {
+        result += `- **${humanize(actionDefinition.name)}**: ${
+            actionDefinition.helpText
+        }\n`;
+
+        for (const actionProperty of actionDefinition.properties) {
+            result += `  - *${
+                actionProperty.isAssignable
+                    ? `Store ${actionProperty.name} into`
+                    : humanize(actionProperty.name)
+            }*: ${actionProperty.helpText}\n`;
+        }
+
+        result += "\n";
+    }
+
+    result += "\n";
+
+    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 import "./actions-catalog";
 import { RightArrow } from "project-editor/ui-components/icons";

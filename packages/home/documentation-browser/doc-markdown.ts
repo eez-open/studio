@@ -10,6 +10,8 @@ import { sourceRootDir } from "eez-studio-shared/util";
 import { ComponentInfo, ParentComponentInfo } from "./component-info";
 import { getModel } from "./model";
 import { isDev } from "eez-studio-shared/util-electron";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { generateLVGLActionsMarkdown } from "project-editor/lvgl/actions";
 
 let watcher: FSWatcher | undefined;
 
@@ -328,18 +330,28 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
         );
         builder.addEmptyLine();
         properties.forEach(property => {
-            builder.addHeading(
-                2,
-                property +
-                    (markdown?.properties[property]?.draft
-                        ? " [DRAFT]"
-                        : markdown?.properties[property]?.empty
-                        ? " [EMPTY]"
-                        : "")
-            );
-            builder.addEmptyLine();
-            if (markdown && markdown.properties[property]) {
-                builder.addRaw(markdown.properties[property].raw);
+            if (
+                property == "Actions" &&
+                componentInfo.componentClass.objectClass ==
+                    ProjectEditor.LVGLActionComponentClass
+            ) {
+                builder.addHeading(2, property);
+                builder.addEmptyLine();
+                builder.addRaw(generateLVGLActionsMarkdown());
+            } else {
+                builder.addHeading(
+                    2,
+                    property +
+                        (markdown?.properties[property]?.draft
+                            ? " [DRAFT]"
+                            : markdown?.properties[property]?.empty
+                            ? " [EMPTY]"
+                            : "")
+                );
+                builder.addEmptyLine();
+                if (markdown && markdown.properties[property]) {
+                    builder.addRaw(markdown.properties[property].raw);
+                }
             }
         });
 
