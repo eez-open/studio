@@ -683,9 +683,11 @@ void doUpdateTasks() {
             const char *cur_val = lv_dropdown_get_options(updateTask.obj);
             if (strcmp(new_val, cur_val) != 0) lv_dropdown_set_options(updateTask.obj, new_val);
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_SELECTED) {
-            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
-            uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
-            if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
+                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
+                uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
+                if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
+            }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_OPTIONS) {
             const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
             const char *cur_val = lv_roller_get_options(updateTask.obj);

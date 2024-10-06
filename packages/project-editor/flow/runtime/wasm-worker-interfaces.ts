@@ -16,8 +16,9 @@ export interface RendererToWorkerMessage {
 
     // mouse data from Canvas
     wheel?: {
+        updated: boolean;
         deltaY: number;
-        clicked: number;
+        pressed: number;
     };
     pointerEvents?: {
         x: number;

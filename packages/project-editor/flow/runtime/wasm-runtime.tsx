@@ -135,8 +135,11 @@ export class WasmRuntime extends RemoteRuntime {
         y: number;
         pressed: number;
     }[] = [];
+
+    wheelUpdated = false;
     wheelDeltaY = 0;
-    wheelClicked = 0;
+    wheelPressed = 0;
+
     keysPressed: number[] = [];
     screen: any;
     lastScreen: any;
@@ -574,8 +577,9 @@ export class WasmRuntime extends RemoteRuntime {
             wheel: this.isPaused
                 ? undefined
                 : {
+                      updated: this.wheelUpdated,
                       deltaY: this.wheelDeltaY,
-                      clicked: this.wheelClicked
+                      pressed: this.wheelPressed
                   },
             pointerEvents: this.isPaused ? undefined : this.pointerEvents,
             keysPressed: this.isPaused ? undefined : this.keysPressed,
@@ -586,8 +590,8 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.worker.postMessage(message);
 
+        this.wheelUpdated = false;
         this.wheelDeltaY = 0;
-        this.wheelClicked = 0;
         this.pointerEvents = [];
         this.keysPressed = [];
     };
@@ -1300,8 +1304,10 @@ export const WasmCanvas = observer(
             }
 
             if (event.buttons == 4) {
-                wasmRuntime.wheelClicked = 1;
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 1;
             }
+
             canvas.setPointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
@@ -1315,6 +1321,13 @@ export const WasmCanvas = observer(
             if (!canvas) {
                 return;
             }
+
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (wasmRuntime) {
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 0;
+            }
+
             canvas.releasePointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
@@ -1324,6 +1337,13 @@ export const WasmCanvas = observer(
             if (!canvas) {
                 return;
             }
+
+            const wasmRuntime = this.context.runtime as WasmRuntime;
+            if (wasmRuntime) {
+                wasmRuntime.wheelUpdated = true;
+                wasmRuntime.wheelPressed = 0;
+            }
+
             canvas.releasePointerCapture(event.pointerId);
             this.sendPointerEvent(event);
         };
@@ -1342,6 +1362,7 @@ export const WasmCanvas = observer(
             if (!wasmRuntime) {
                 return;
             }
+            wasmRuntime.wheelUpdated = true;
             wasmRuntime.wheelDeltaY += event.deltaY;
         };
 

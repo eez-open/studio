@@ -283,7 +283,6 @@ static void hal_init() {
         lv_indev_set_type(encoder_indev, LV_INDEV_TYPE_ENCODER);
         lv_indev_set_read_cb(encoder_indev, my_mousewheel_read);
         //lv_indev_set_mode(encoder_indev, LV_INDEV_MODE_EVENT);
-
 #else
         static lv_indev_drv_t indev_drv_3;
         lv_indev_drv_init(&indev_drv_3);
@@ -377,12 +376,12 @@ EM_PORT_API(void) onPointerEvent(int x, int y, int pressed) {
     mouse_pressed = pressed;
 }
 
-EM_PORT_API(void) onMouseWheelEvent(double yMouseWheel, int clicked) {
+EM_PORT_API(void) onMouseWheelEvent(double yMouseWheel, int pressed) {
     if (yMouseWheel >= 100 || yMouseWheel <= -100) {
         yMouseWheel /= 100;
     }
     mouse_wheel_delta = round(yMouseWheel);
-    mouse_wheel_pressed = clicked;
+    mouse_wheel_pressed = pressed;
 }
 
 EM_PORT_API(void) onKeyPressed(uint32_t key) {

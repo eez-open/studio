@@ -883,13 +883,10 @@ export function createWasmWorker(
         }
 
         if (rendererToWorkerMessage.wheel) {
-            if (
-                rendererToWorkerMessage.wheel.deltaY != 0 ||
-                rendererToWorkerMessage.wheel.clicked != 0
-            ) {
+            if (rendererToWorkerMessage.wheel.updated) {
                 WasmFlowRuntime._onMouseWheelEvent(
                     rendererToWorkerMessage.wheel.deltaY,
-                    rendererToWorkerMessage.wheel.clicked
+                    rendererToWorkerMessage.wheel.pressed
                 );
             }
         }

@@ -553,7 +553,7 @@ export interface IWasmFlowRuntime {
     _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, darkTheme: boolean, timeZone: number): void;
     _mainLoop(): boolean;
     _getSyncedBuffer(): number;
-    _onMouseWheelEvent(wheelDeltaY: number, wheelClicked: number): void;
+    _onMouseWheelEvent(wheelDeltaY: number, pressed: number): void;
     _onPointerEvent(x: number, y: number, pressed: number): void;
     _onKeyPressed(key: number): void;
     _onMessageFromDebugger(messageData: number, messageDataSize: number): void;
