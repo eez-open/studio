@@ -3623,3 +3623,23 @@
         }
     }
 }
+
+.EezStudio_NewLVGLActionDialog {
+    .EezStudio_SearchInput_Container {
+        border: 1px solid @borderColor;
+        border-bottom: none;
+    }
+    .EezStudio_ListContainer {
+        min-height: 50px;
+        max-height: 480px;
+
+        .EezStudio_List {
+            padding: 5px;
+
+            > div.EezStudio_Selected {
+                background-color: @selectionBackgroundColor;
+                color: @selectionColor;
+            }
+        }
+    }
+}
