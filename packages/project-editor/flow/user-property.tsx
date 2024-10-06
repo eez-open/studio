@@ -14,6 +14,7 @@ import {
     getParent,
     IEezObject,
     IMessage,
+    IOnSelectParams,
     MessageType,
     PropertyInfo,
     PropertyProps,
@@ -251,8 +252,11 @@ function getReferencedFlow(object: IEezObject): Flow | undefined {
     return undefined;
 }
 
-function getPropertyInfoForUserProperty(userProperty: UserProperty) {
-    return userProperty.assignable
+function getPropertyInfoForUserProperty(
+    userProperty: UserProperty,
+    parent: IEezObject
+) {
+    const propertyInfo = userProperty.assignable
         ? makeAssignableExpressionProperty(
               {
                   name: userProperty.id,
@@ -273,12 +277,31 @@ function getPropertyInfoForUserProperty(userProperty: UserProperty) {
               },
               userProperty.type
           );
+
+    const onSelect = propertyInfo.onSelect!;
+
+    propertyInfo.onSelect = async (
+        object: IEezObject,
+        propertyInfo: PropertyInfo,
+        params?: IOnSelectParams
+    ) => {
+        (object as any)._eez_parent = parent;
+
+        await onSelect(object, propertyInfo, params);
+
+        delete (object as any)._eez_parent;
+    };
+
+    return propertyInfo;
 }
 
 function getUserPropertiesAsPropertyInfos(
-    userProperties: UserProperty[]
+    userProperties: UserProperty[],
+    parent: IEezObject
 ): PropertyInfo[] {
-    return userProperties.map(getPropertyInfoForUserProperty);
+    return userProperties.map(userProperty =>
+        getPropertyInfoForUserProperty(userProperty, parent)
+    );
 }
 
 function makeValueObjectForUserProperty(
@@ -287,7 +310,7 @@ function makeValueObjectForUserProperty(
 ) {
     const valueObject = EezValueObject.create(
         userPropertyValues,
-        getPropertyInfoForUserProperty(userProperty),
+        getPropertyInfoForUserProperty(userProperty, userPropertyValues),
         userPropertyValues.values[userProperty.id]
     );
 
@@ -394,7 +417,10 @@ export const UserPropertyValuesProperty = observer(
                 return [];
             }
 
-            return getUserPropertiesAsPropertyInfos(flow.userProperties);
+            return getUserPropertiesAsPropertyInfos(
+                flow.userProperties,
+                object
+            );
         }
 
         render() {

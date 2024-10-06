@@ -449,6 +449,8 @@ export const Property = observer(
                     if (newValue != oldValue) {
                         this.context.undoManager.setCombineCommands(true);
 
+                        console.log("Change unique value", oldValue, newValue);
+
                         runInAction(() => {
                             replaceObjectReference(
                                 this.props.objects[0],

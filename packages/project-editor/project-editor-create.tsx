@@ -126,6 +126,7 @@ import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Color } from "project-editor/features/style/theme";
+import { UserProperty } from "./flow/user-property";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -186,6 +187,7 @@ export async function createProjectEditor(
         OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,
+        UserPropertyClass: UserProperty,
         GlyphClass: Glyph,
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,

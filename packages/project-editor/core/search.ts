@@ -489,7 +489,10 @@ export function* searchForReference(
     let identifierType: IdentifierType | undefined;
     let structType: ValueType | undefined;
     let enumType: ValueType | undefined;
-    if (object instanceof ProjectEditor.VariableClass) {
+    if (
+        object instanceof ProjectEditor.VariableClass ||
+        object instanceof ProjectEditor.UserPropertyClass
+    ) {
         let flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
         if (flow) {
             identifierType = "local-variable";

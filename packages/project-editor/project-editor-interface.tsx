@@ -103,6 +103,7 @@ import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
+import type { UserProperty } from "./flow/user-property";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -135,6 +136,7 @@ export interface IProjectEditor {
     OutputActionComponentClass: typeof OutputActionComponent;
     CallActionActionComponentClass: typeof CallActionActionComponent;
     VariableClass: typeof Variable;
+    UserPropertyClass: typeof UserProperty;
     GlyphClass: typeof Glyph;
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
