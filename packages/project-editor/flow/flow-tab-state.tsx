@@ -68,8 +68,8 @@ export abstract class FlowTabState implements IEditorState {
             transform = this.transform;
         }
         transform.translate = {
-            x: -this.flow.pageRect.width / 2,
-            y: -this.flow.pageRect.height / 2
+            x: -(this.flow.pageRect.width * transform.scale) / 2,
+            y: -(this.flow.pageRect.height * transform.scale) / 2
         };
     }
 
