@@ -159,12 +159,55 @@ export class FlowDocument implements IDocument {
                 add: false
             },
             undefined,
-            objects.length == 0
+            this.flow.object instanceof ProjectEditor.PageClass &&
+                objects.length == 0
                 ? [
                       new MenuItem({
                           label: "Center View",
                           click: async () => {
                               this.flowContext.viewState.centerView();
+                          }
+                      }),
+                      new MenuItem({
+                          label: "Center View on All Pages",
+                          click: async () => {
+                              this.flowContext.viewState.centerView();
+
+                              for (const page of this.projectStore.project
+                                  .pages) {
+                                  if (page != this.flow.object) {
+                                      let uiState =
+                                          this.projectStore.uiStateStore.getObjectUIState(
+                                              page,
+                                              "flow-state"
+                                          );
+
+                                      if (!uiState) {
+                                          uiState = {};
+                                      }
+
+                                      uiState.transform = {
+                                          translate: {
+                                              x: this.flowContext.viewState
+                                                  .transform.translate.x,
+                                              y: this.flowContext.viewState
+                                                  .transform.translate.y
+                                          },
+                                          scale:
+                                              uiState.transform?.scale ??
+                                              this.flowContext.viewState
+                                                  .transform.scale
+                                      };
+
+                                      runInAction(() => {
+                                          this.projectStore.uiStateStore.updateObjectUIState(
+                                              page,
+                                              "flow-state",
+                                              uiState
+                                          );
+                                      });
+                                  }
+                              }
                           }
                       }),
                       ...(this.projectStore.uiStateStore.globalFlowZoom

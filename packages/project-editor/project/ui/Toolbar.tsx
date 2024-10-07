@@ -34,6 +34,7 @@ import {
     model as scrapbookModel
 } from "project-editor/store/scrapbook";
 import { closest } from "eez-studio-shared/dom";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -779,47 +780,38 @@ const PageZoomButton = observer(
                                 }}
                             />
                         </div>
-                        <li>
-                            <hr className="dropdown-divider" />
-                        </li>
+                        <hr className="dropdown-divider" />
                         {[10, 25, 50, 75, 100, 150, 200, 400, 800, 1600].map(
                             zoom => (
-                                <li key={zoom}>
-                                    <a
-                                        className="dropdown-item"
-                                        href="#"
-                                        onClick={() => {
-                                            this.zoom = zoom / 100;
-                                            this.setDropDownOpen(false);
-                                        }}
-                                    >
-                                        Zoom to {zoom}%
-                                    </a>
+                                <li
+                                    key={zoom}
+                                    className="EezStudio_PageZoomButton_DropdownContent_MenuItem"
+                                    onClick={() => {
+                                        this.zoom = zoom / 100;
+                                        this.setDropDownOpen(false);
+                                    }}
+                                >
+                                    Zoom to {zoom}%
                                 </li>
                             )
                         )}
-                        <li>
-                            <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    checked={this.globalZoom}
-                                    id="EezStudio_PageZoomButton_DropdownContent_GlobalZoomCheckbox"
-                                    onChange={action(event => {
-                                        this.globalZoom = event.target.checked;
-                                        this.setDropDownOpen(false);
-                                    })}
+                        <hr className="dropdown-divider" />
+                        <li
+                            className="EezStudio_PageZoomButton_DropdownContent_Checkmark"
+                            onClick={() => {
+                                this.globalZoom = !this.globalZoom;
+                                this.setDropDownOpen(false);
+                            }}
+                        >
+                            {this.globalZoom ? (
+                                <Icon icon="material:check_box" size={20} />
+                            ) : (
+                                <Icon
+                                    icon="material:check_box_outline_blank"
+                                    size={20}
                                 />
-                                <label
-                                    className="form-check-label"
-                                    htmlFor="EezStudio_PageZoomButton_DropdownContent_GlobalZoomCheckbox"
-                                >
-                                    Global zoom
-                                </label>
-                            </div>
+                            )}
+                            <span style={{ paddingLeft: 2 }}>Global zoom</span>
                         </li>
                     </ul>
                 </div>,

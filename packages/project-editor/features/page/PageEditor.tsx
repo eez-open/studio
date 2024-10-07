@@ -155,7 +155,7 @@ export class PageTabState extends FlowTabState {
     }
 
     get transform() {
-        if (this.projectStore.uiStateStore.globalFlowZoom) {
+        if (!this.isRuntime && this.projectStore.uiStateStore.globalFlowZoom) {
             const newTransform = this._transform.clone();
             newTransform.scale = this.projectStore.uiStateStore.flowZoom;
             return newTransform;
@@ -166,10 +166,29 @@ export class PageTabState extends FlowTabState {
     set transform(transform: Transform) {
         runInAction(() => {
             this._transform = transform;
-            if (this.projectStore.uiStateStore.globalFlowZoom) {
+            if (
+                !this.isRuntime &&
+                this.projectStore.uiStateStore.globalFlowZoom
+            ) {
                 this.projectStore.uiStateStore.flowZoom = transform.scale;
             }
         });
+    }
+
+    resetTransform(transform?: Transform) {
+        if (!transform) {
+            if (this.projectStore.uiStateStore.globalFlowZoom) {
+                this.projectStore.uiStateStore.flowZoom = 1;
+            }
+
+            transform = this.transform;
+        }
+
+        transform.scale = 1;
+        transform.translate = {
+            x: -this.flow.pageRect.width / 2,
+            y: -this.flow.pageRect.height / 2
+        };
     }
 
     loadState() {
@@ -216,10 +235,10 @@ export class PageTabState extends FlowTabState {
             selection: this.widgetContainer.saveState(),
             transform: {
                 translate: {
-                    x: this._transform.translate.x,
-                    y: this._transform.translate.y
+                    x: this.transform.translate.x,
+                    y: this.transform.translate.y
                 },
-                scale: this._transform.scale
+                scale: this.transform.scale
             },
             timeline: this.timeline.saveState()
         };

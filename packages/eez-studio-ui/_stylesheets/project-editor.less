@@ -3645,7 +3645,8 @@
 }
 
 .EezStudio_PageZoomButton {
-    padding: 1px 6px;
+    padding: 1px 4px;
+    width: 72px;
 
     background-color: @selectionBackgroundColor;
     &:hover {
@@ -3672,14 +3673,22 @@
 
         li {
             list-style: none;
+
             cursor: pointer;
+
             &:hover {
                 color: @selectionColor;
                 background-color: @selectionBackgroundColor;
             }
 
-            .form-check {
-                margin: 2px 16px;
+            &.EezStudio_PageZoomButton_DropdownContent_MenuItem {
+                margin: 2px 0;
+                padding: 2px 0 2px 24px;
+            }
+
+            &.EezStudio_PageZoomButton_DropdownContent_Checkmark {
+                margin: 2px 0px;
+                padding: 2px;
             }
         }
     }
