@@ -97,6 +97,7 @@ export class PageTabState extends FlowTabState {
 
         makeObservable(this, {
             _transform: observable,
+            transform: computed,
             frontFace: computed
         });
 
@@ -154,12 +155,20 @@ export class PageTabState extends FlowTabState {
     }
 
     get transform() {
+        if (this.projectStore.uiStateStore.globalFlowZoom) {
+            const newTransform = this._transform.clone();
+            newTransform.scale = this.projectStore.uiStateStore.flowZoom;
+            return newTransform;
+        }
         return this._transform;
     }
 
     set transform(transform: Transform) {
         runInAction(() => {
             this._transform = transform;
+            if (this.projectStore.uiStateStore.globalFlowZoom) {
+                this.projectStore.uiStateStore.flowZoom = transform.scale;
+            }
         });
     }
 
@@ -187,7 +196,9 @@ export class PageTabState extends FlowTabState {
                     x: state.transform.translate.x ?? 0,
                     y: state.transform.translate.y ?? 0
                 },
-                scale: state.transform.scale ?? 1
+                scale: this.projectStore.uiStateStore.globalFlowZoom
+                    ? this.projectStore.uiStateStore.flowZoom
+                    : state.transform.scale ?? 1
             });
         }
 

@@ -1,5 +1,6 @@
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import { intersection } from "lodash";
+import { MenuItem } from "@electron/remote";
 
 import type { Point, Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
@@ -153,7 +154,67 @@ export class FlowDocument implements IDocument {
     }
 
     createContextMenu(objects: TreeObjectAdapter[]) {
-        return this.flow.createSelectionContextMenu();
+        return this.flow.createSelectionContextMenu(
+            {
+                add: false
+            },
+            undefined,
+            objects.length == 0
+                ? [
+                      new MenuItem({
+                          label: "Center View",
+                          click: async () => {
+                              this.flowContext.viewState.centerView();
+                          }
+                      }),
+                      ...(this.projectStore.uiStateStore.globalFlowZoom
+                          ? []
+                          : [
+                                new MenuItem({
+                                    label: "Set the Same Zoom for All Pages",
+                                    click: async () => {
+                                        for (const page of this.projectStore
+                                            .project.pages) {
+                                            if (page != this.flow.object) {
+                                                let uiState =
+                                                    this.projectStore.uiStateStore.getObjectUIState(
+                                                        page,
+                                                        "flow-state"
+                                                    );
+
+                                                if (!uiState) {
+                                                    uiState = {};
+                                                }
+
+                                                uiState.transform = {
+                                                    translate: {
+                                                        x: this.flowContext
+                                                            .viewState.transform
+                                                            .translate.x,
+                                                        y: this.flowContext
+                                                            .viewState.transform
+                                                            .translate.y
+                                                    },
+                                                    scale: this.flowContext
+                                                        .viewState.transform
+                                                        .scale
+                                                };
+
+                                                runInAction(() => {
+                                                    this.projectStore.uiStateStore.updateObjectUIState(
+                                                        page,
+                                                        "flow-state",
+                                                        uiState
+                                                    );
+                                                });
+                                            }
+                                        }
+                                    }
+                                })
+                            ])
+                  ]
+                : undefined
+        );
     }
 
     duplicateSelection = () => {

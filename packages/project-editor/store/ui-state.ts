@@ -47,6 +47,9 @@ export class UIStateStore {
 
     showFinishedFlowsInDebugger: boolean = true;
 
+    globalFlowZoom: boolean = true;
+    flowZoom: number = 1;
+
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
     }
@@ -97,7 +100,9 @@ export class UIStateStore {
             lvglState: observable,
             lvglExpandedPropertiesGroup: observable,
             expressionBuilderInstrumentId: observable,
-            showFinishedFlowsInDebugger: observable
+            showFinishedFlowsInDebugger: observable,
+            globalFlowZoom: observable,
+            flowZoom: observable
         });
     }
 
@@ -230,6 +235,14 @@ export class UIStateStore {
                 this.showFinishedFlowsInDebugger =
                     uiState.showInactiveFlowsInDebugger;
             }
+
+            if (uiState.globalFlowZoom != undefined) {
+                this.globalFlowZoom = uiState.globalFlowZoom;
+            }
+
+            if (uiState.flowZoom != undefined) {
+                this.flowZoom = uiState.flowZoom;
+            }
         });
     }
 
@@ -291,7 +304,9 @@ export class UIStateStore {
             lvglState: this.lvglState,
             lvglExpandedPropertiesGroup: this.lvglExpandedPropertiesGroup,
             expressionBuilderInstrumentId: this.expressionBuilderInstrumentId,
-            showInactiveFlowsInDebugger: this.showFinishedFlowsInDebugger
+            showInactiveFlowsInDebugger: this.showFinishedFlowsInDebugger,
+            globalFlowZoom: this.globalFlowZoom,
+            flowZoom: this.flowZoom
         };
 
         return state;

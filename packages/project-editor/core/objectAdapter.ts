@@ -552,10 +552,12 @@ export class TreeObjectAdapter {
 
     createSelectionContextMenu(
         actions?: {
-            pasteSelection: () => void;
-            duplicateSelection: () => void;
+            add?: boolean;
+            pasteSelection?: () => void;
+            duplicateSelection?: () => void;
         },
-        editable?: boolean
+        editable?: boolean,
+        additionalMenuItems?: Electron.MenuItem[]
     ) {
         let menuItems: Electron.MenuItem[] = [];
 
@@ -589,7 +591,12 @@ export class TreeObjectAdapter {
             parentObject = this.object;
         }
 
-        if (editable && parentObject && canAdd(parentObject)) {
+        if (
+            editable &&
+            parentObject &&
+            canAdd(parentObject) &&
+            !(actions?.add === false)
+        ) {
             menuItems.push(
                 new MenuItem({
                     label: "Add",
@@ -737,6 +744,17 @@ export class TreeObjectAdapter {
                 menuItems,
                 editable
             );
+        }
+
+        if (additionalMenuItems) {
+            if (menuItems.length > 0) {
+                menuItems.push(
+                    new MenuItem({
+                        type: "separator"
+                    })
+                );
+            }
+            menuItems = menuItems.concat(additionalMenuItems);
         }
 
         if (menuItems.length > 0) {

@@ -63,6 +63,16 @@ export abstract class FlowTabState implements IEditorState {
         };
     }
 
+    centerView(transform?: Transform) {
+        if (!transform) {
+            transform = this.transform;
+        }
+        transform.translate = {
+            x: -this.flow.pageRect.width / 2,
+            y: -this.flow.pageRect.height / 2
+        };
+    }
+
     abstract get frontFace(): boolean;
     abstract set frontFace(value: boolean);
 

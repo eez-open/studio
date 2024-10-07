@@ -67,6 +67,10 @@ class ViewState implements IViewState {
         this.flowContext.tabState.resetTransform();
     }
 
+    centerView() {
+        this.flowContext.tabState.centerView();
+    }
+
     getResizeHandlers(): IResizeHandler[] | undefined {
         const isEditor = this.document && !this.document.projectStore.runtime;
 
