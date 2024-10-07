@@ -61,10 +61,6 @@ export abstract class FlowTabState implements IEditorState {
             x: -this.flow.pageRect.width / 2,
             y: -this.flow.pageRect.height / 2
         };
-
-        if (this.projectStore.uiStateStore.globalFlowZoom) {
-            this.projectStore.uiStateStore.flowZoom = 1;
-        }
     }
 
     centerView(transform?: Transform) {
