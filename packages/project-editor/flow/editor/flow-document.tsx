@@ -23,6 +23,7 @@ import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
+import { PageTabState } from "project-editor/features/page/PageEditor";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -176,36 +177,47 @@ export class FlowDocument implements IDocument {
                               for (const page of this.projectStore.project
                                   .pages) {
                                   if (page != this.flow.object) {
-                                      let uiState =
-                                          this.projectStore.uiStateStore.getObjectUIState(
-                                              page,
-                                              "flow-state"
+                                      const editor =
+                                          this.projectStore.editorsStore.getEditorByObject(
+                                              page
                                           );
+                                      if (editor?.state) {
+                                          const pageTabState =
+                                              editor.state as PageTabState;
 
-                                      if (!uiState) {
-                                          uiState = {};
+                                          pageTabState.centerView();
+                                      } else {
+                                          let uiState =
+                                              this.projectStore.uiStateStore.getObjectUIState(
+                                                  page,
+                                                  "flow-state"
+                                              );
+
+                                          if (!uiState) {
+                                              uiState = {};
+                                          }
+
+                                          uiState.transform = {
+                                              translate: {
+                                                  x: this.flowContext.viewState
+                                                      .transform.translate.x,
+                                                  y: this.flowContext.viewState
+                                                      .transform.translate.y
+                                              },
+                                              scale:
+                                                  uiState.transform?.scale ??
+                                                  this.flowContext.viewState
+                                                      .transform.scale
+                                          };
+
+                                          runInAction(() => {
+                                              this.projectStore.uiStateStore.updateObjectUIState(
+                                                  page,
+                                                  "flow-state",
+                                                  uiState
+                                              );
+                                          });
                                       }
-
-                                      uiState.transform = {
-                                          translate: {
-                                              x: this.flowContext.viewState
-                                                  .transform.translate.x,
-                                              y: this.flowContext.viewState
-                                                  .transform.translate.y
-                                          },
-                                          scale:
-                                              uiState.transform?.scale ??
-                                              this.flowContext.viewState
-                                                  .transform.scale
-                                      };
-
-                                      runInAction(() => {
-                                          this.projectStore.uiStateStore.updateObjectUIState(
-                                              page,
-                                              "flow-state",
-                                              uiState
-                                          );
-                                      });
                                   }
                               }
                           }
