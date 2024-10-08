@@ -695,9 +695,11 @@ void doUpdateTasks() {
                 lv_roller_set_options(updateTask.obj, new_val, (lv_roller_mode_t)updateTask.param);
             }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_SELECTED) {
-            uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
-            uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
-            if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
+            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
+                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
+                uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
+                if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
+            }
         } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
             int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
             int32_t cur_val = lv_slider_get_value(updateTask.obj);

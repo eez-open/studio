@@ -143,7 +143,7 @@ struct ScpiComponentExecutionState : public ComponenentExecutionState {
 
     bool getLatestScpiResult(FlowState *flowState, unsigned componentIndex, const char **resultText, size_t *resultTextLen, bool *resultIsBlob) {
         if (errorMessage) {
-            throwError(flowState, componentIndex, errorMessage);
+            throwError(flowState, componentIndex, FlowError::Plain(errorMessage));
             return false;
         }
 
@@ -203,11 +203,11 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     auto component = (ScpiActionComponent *)flowState->flow->components[componentIndex];
 
     Value instrumentValue;
-    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, "Failed to evaluate Instrument in SCPI")) {
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_INSTRUMENT, instrumentValue, FlowError::Property("SCPI", "Instrument"))) {
         return;
     }
     if (!instrumentValue.isArray()) {
-        throwError(flowState, componentIndex, "Invalid Instrument value in SCPI\n");
+        throwError(flowState, componentIndex, FlowError::Plain("Invalid Instrument value in SCPI"));
         return;
     }
     auto instrumentArrayValue = instrumentValue.getArray();
@@ -215,7 +215,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     int err;
 
     Value timeoutValue;
-    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_TIMEOUT, timeoutValue, "Failed to evaluate Timeout in SCPI")) {
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_TIMEOUT, timeoutValue, FlowError::Property("SCPI", "Timeout"))) {
         return;
     }
     int timeout = timeoutValue.toInt32(&err);
@@ -224,7 +224,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
     }
 
     Value delayValue;
-    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_DELAY, delayValue, "Failed to evaluate Delay in SCPI")) {
+    if (!evalProperty(flowState, componentIndex, defs_v3::SCPI_ACTION_COMPONENT_PROPERTY_DELAY, delayValue, FlowError::Property("SCPI", "Delay"))) {
         return;
     }
     int delay = delayValue.toInt32(&err);
@@ -263,7 +263,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 		} else if (scpiComponentExecutionState->op == SCPI_PART_EXPR) {
 			Value value;
 			int numInstructionBytes;
-			if (!evalExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, value, "Failed to evaluate assignable expression in SCPI", &numInstructionBytes)) {
+			if (!evalExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, value, FlowError::Property("SCPI", "Assignable expression"), &numInstructionBytes)) {
 				deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
@@ -300,7 +300,7 @@ void executeScpiComponent(FlowState *flowState, unsigned componentIndex) {
 
 			Value dstValue;
 			int numInstructionBytes;
-			if (!evalAssignableExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, dstValue, "Failed to evaluate assignable expression in SCPI", &numInstructionBytes)) {
+			if (!evalAssignableExpression(flowState, componentIndex, instructions + scpiComponentExecutionState->instructionIndex, dstValue, FlowError::Property("SCPI", "Assignable expression"), &numInstructionBytes)) {
 				deallocateComponentExecutionState(flowState, componentIndex);
 				return;
 			}
