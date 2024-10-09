@@ -269,8 +269,8 @@ const versions = {
                     [CF_RGB565A8.toString()]: "RGB565A8",
                     [CF_TRUE_COLOR.toString()]: "RGB888",
 
-                    [CF_RAW.toString()]: "TRUECOLOR",
-                    [CF_RAW_ALPHA.toString()]: "TRUECOLOR_ALPHA"
+                    [CF_RAW.toString()]: "RAW",
+                    [CF_RAW_ALPHA.toString()]: "RAW_ALPHA"
                 };
 
                 const pythonShell = new PythonShell("LVGLImage.py", {
@@ -286,7 +286,7 @@ const versions = {
                         "--cf",
                         TO_IMAGE_MODE[bitmap.bpp.toString()],
                         "--output",
-                        `${tempDir}/output`,
+                        `${tempDir}`,
                         bitmapFilePath
                     ]
                 });
@@ -297,7 +297,7 @@ const versions = {
                     if (!wasError) {
                         try {
                             const cFile = await fs.promises.readFile(
-                                `${tempDir}/output/${fileName}.c`,
+                                `${tempDir}/${fileName}.c`,
                                 "utf-8"
                             );
                             resolve(cFile);
