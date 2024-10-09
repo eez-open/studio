@@ -340,9 +340,7 @@ export function* searchForObjectDependencies(
                         valueObject.propertyInfo
                             .referencedObjectCollectionPath)) &&
                     (!projectStore.project.projectTypeTraits.hasFlowSupport ||
-                        valueObject.propertyInfo
-                            .referencedObjectCollectionPath !=
-                            "variables/globalVariables")) ||
+                        flowProperty == undefined)) ||
                 valueObject.propertyInfo.type === PropertyType.ThemedColor
             ) {
                 yield {
