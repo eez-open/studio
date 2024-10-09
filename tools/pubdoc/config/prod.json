@@ -297,7 +297,7 @@
                         "content": "LVGL.html",
                         "status": "publish",
                         "id": 10095,
-                        "sha256": "77036e0d0bd887948c9209c7c3e08949830673baf836c2a7e0ca72eeaa96a05b"
+                        "sha256": "b0ca02f07411f589c0d8de2c3517faf0d09865fbd2b2efaad15e57dcca852192"
                     }
                 ]
             },
@@ -631,187 +631,187 @@
                         "content": "Arc.html",
                         "status": "publish",
                         "id": 12211,
-                        "sha256": "b248adfcf5625499c78243d1b2ef9a9a94d326cd38061a813980d75ba28db9df"
+                        "sha256": "c8d462c242bd1ef590e31eb977ffe34fdc2110ad6965e14d7f38ac302a196561"
                     },
                     {
                         "content": "Bitmap (Dashboard).html",
                         "status": "publish",
                         "id": 12212,
-                        "sha256": "7113fb963d07e60be2fabb9dce1a581a26110ba94fb03ecd1703887af1a20c62"
+                        "sha256": "a5faaf32570c7a1293a5e9adfa549b617629b61ccd0498834fe38442248bdbfa"
                     },
                     {
                         "content": "Bitmap (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12213,
-                        "sha256": "a11dc38ba0514fea3efb0ffd61bf6ba80187298450ffcf80217404777094596f"
+                        "sha256": "2b54536e653fa28d91e2bf17ff16ec9a16066a8b546dadc4acdb315e4d0e0434"
                     },
                     {
                         "content": "Button (Dashboard).html",
                         "status": "publish",
                         "id": 12214,
-                        "sha256": "a5f9e1a157d24b675da6d0ea5d4a539e1b05abd036bdc91726109457801b7ee4"
+                        "sha256": "b6d92d35dd7f7419fac63602ceb67c5e755db8a909088484f08b8897979d7634"
                     },
                     {
                         "content": "Button (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12215,
-                        "sha256": "0786bcdb188f25e98cb7112ec4be3374485b33446f62f8c96b870ebcaa3b52c4"
+                        "sha256": "60940ebb2028243ee20da1cc9d6f22b212abba320cf44c7b1fae73e8d4997e5d"
                     },
                     {
                         "content": "Button (LVGL).html",
                         "status": "publish",
                         "id": 12216,
-                        "sha256": "69fa7e31d7a92f82bbc553322a336b75da09a47e0517a4d38ed6f22fd7513da2"
+                        "sha256": "827b04e3a1aa973839bab335b0eaf4debb374f72767f229ab1aef37b3b7971f2"
                     },
                     {
                         "content": "ButtonMatrix.html",
                         "status": "publish",
                         "id": 13354,
-                        "sha256": "00703ecd9698094d550f81169f7c00995dcc2b6feb0eaca5d2a49ab2f6337e1e"
+                        "sha256": "8e15b2a7c755a28044ecbc188dd61a14e9f4e9bcf7fa89e52477f9d4818d8881"
                     },
                     {
                         "content": "ButtonGroup.html",
                         "status": "publish",
                         "id": 12217,
-                        "sha256": "3c69f73c97ccbdbac1183788d7aa1aaa832e84fb94bde85b76881523b5256a3a"
+                        "sha256": "9543d8ab561bc8ee51a54d7d69fbb8124184b139bd9dd5b972ce32ee2769d087"
                     },
                     {
                         "content": "DisplayData.html",
                         "status": "publish",
                         "id": 12218,
-                        "sha256": "37d0cffa5a3822472a74eda976142a69ae27392ac1886b4cc6347b536fa5e93b"
+                        "sha256": "3236cc40d73a6034bef4ec0ede2fec4a7f2e9bc6ceb1756aaebae7999d93151c"
                     },
                     {
                         "content": "Image.html",
                         "status": "publish",
                         "id": 12219,
-                        "sha256": "1812461acda174d6f04fdcbce8684314854b8e7213127b784101f0260a07b449"
+                        "sha256": "67ff44051f3e1b34d3ec2eea9eb7bc9ea6288abf73c7890cf471904765c0833c"
                     },
                     {
                         "content": "Label.html",
                         "status": "publish",
                         "id": 12220,
-                        "sha256": "d7b83e205ddbdeba170e5869fd5dc68451fbac315ad07183eb670a5e59d83eb3"
+                        "sha256": "f90baa4df8ec612df4680436d7aa976f1f2eacc45a3d50aa0f2d2261b34881f9"
                     },
                     {
                         "content": "List (LVGL).html",
                         "status": "publish",
                         "id": 13355,
-                        "sha256": "04f60058f925fee8c4c83e8e34835bff7eb14b5f5578582f4115109e2880f059"
+                        "sha256": "e1dd9869711890d46282e29f07706e038c297449dbe8bd2be8c56ed83482752e"
                     },
                     {
                         "content": "Markdown.html",
                         "status": "publish",
                         "id": 12221,
-                        "sha256": "02eaffef6b3aa87b37cf70b4013068d3e79a0ec0e5c3144e048f66649e895af9"
+                        "sha256": "a65b31f1a9b6c0ca1ce08967f78d780c75c6eb8b7a58baccaf0cd4447fecc950"
                     },
                     {
                         "content": "Menu.html",
                         "status": "publish",
                         "id": 13356,
-                        "sha256": "c8e5abed57dee740e463c3e013176fe47cb29b23159092cf4798ddac82bea2d2"
+                        "sha256": "79cb41b6c30e5528fb6ac3e2cd98a261e1d8baddbe7f9da1362fb44cdb1c141e"
                     },
                     {
                         "content": "MessageBox.html",
                         "status": "publish",
                         "id": 13357,
-                        "sha256": "001227aa2f3b9e10fb210a6ba6e4638f130990b85a3f43f88b3e2737198dd514"
+                        "sha256": "4b103dc47544af20f711de97f048292bebf241bf64a821038cd0f67d6db63d34"
                     },
                     {
                         "content": "MultilineText.html",
                         "status": "publish",
                         "id": 12222,
-                        "sha256": "df4e0bb11995987c64c1b038da698184e4a85272dd9cfcc5e38dbbe57ed4c0be"
+                        "sha256": "d1a0e8d077982bc37a98ab93fd14dbc7ff1e9bf0b5f86376d1411bada6ed80d5"
                     },
                     {
                         "content": "Panel.html",
                         "status": "publish",
                         "id": 12223,
-                        "sha256": "d04363b68bfbbedc2eb113eb409fa208d25fe056bfa4903abf2453a39510cc20"
+                        "sha256": "e579f5c62dd16df254eb187522802b2196e81248586c6d447ddabead8e3d5447"
                     },
                     {
                         "content": "Rectangle (Dashboard).html",
                         "status": "publish",
                         "id": 12224,
-                        "sha256": "bacc4d3004f5898960c1809c47e363a049e66ec19e8911974785db36b523506b"
+                        "sha256": "f42b4fd8099bfc0c29214b5ab270f937da2796e014e2cf23baf78bd7395db04e"
                     },
                     {
                         "content": "Rectangle (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12225,
-                        "sha256": "ec9b009d453e604e791ce77ff3e0c7f3d60e0584400b5d0ba53130e761e1a5b3"
+                        "sha256": "abc54f077e62f7e913e7aefaaf2d9244e0a71df5c469359f726e4fcc1ac370b4"
                     },
                     {
                         "content": "ScrollBar.html",
                         "status": "publish",
                         "id": 12226,
-                        "sha256": "06420ab0db579531f42487a6d044477a673869daac9200d9b6885c6bfca81e79"
+                        "sha256": "ffc5b6f94289af5111c70cf43f6475f1b7fd756a38546ee693c02cb486f15d8e"
                     },
                     {
                         "content": "Span.html",
                         "status": "publish",
                         "id": 13358,
-                        "sha256": "0faada0361963b9193e2abee52c5720655beed32996dc447ee7bdb54c9fc7f22"
+                        "sha256": "458f74a3b0a58cd7824400f4146361961b8712f4b0c2fe3167cc4ac24da6fbc6"
                     },
                     {
                         "content": "Table.html",
                         "status": "publish",
                         "id": 13359,
-                        "sha256": "6e40cbce5482de1a26163ee9b66766527bfd57223cdbebcfbeaadc90a257730d"
+                        "sha256": "3cd02fd87b2acd9f085e6256b2ae882ce7f5aa734962283a21e45ab9529a704e"
                     },
                     {
                         "content": "Tabview.html",
                         "status": "publish",
                         "id": 13360,
-                        "sha256": "47dfdc496ecdb54969bc375601c795a43924551393c7f9911dac80196e60d4a0"
+                        "sha256": "301419bc6cb30c4de683d6d9123f59d06842c2123ab13e1e6a40739d9181d2bb"
                     },
                     {
                         "content": "Tab.html",
                         "status": "publish",
                         "id": 13361,
-                        "sha256": "d6fbf28b47245f794e6b1b0163f2617cb69f728db193bb6e41a43270a74ffa34"
+                        "sha256": "7c674408ba8189dc6237ede6fd14bd60c141ed9732428d7391d7386a24dddc54"
                     },
                     {
                         "content": "Text (Dashboard).html",
                         "status": "publish",
                         "id": 12227,
-                        "sha256": "86c34ee8fa5d7684ee14dc119c360f46aa851b44be113a5b5b68422726de5c5c"
+                        "sha256": "1a1908ebddd8386c34baa3957f36d31dce030a2a40328bfb0ec04ea2544f5e7f"
                     },
                     {
                         "content": "Text (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12228,
-                        "sha256": "ba6e72dcaecb62f93b321d20addb56d371ff7f7821b3e9ff52e8c26e9481ca81"
+                        "sha256": "e10cbe0a895a8aa32338dde654733283a71c8a3dd14e2706124c5db04da6f674"
                     },
                     {
                         "content": "Textarea.html",
                         "status": "publish",
                         "id": 12229,
-                        "sha256": "8a8a20de14e58738d1eab4d2686fb5607c3bb78aaf851e095fdc43056aa0e6b3"
+                        "sha256": "e75691f12d1471d061301dbc26e58d40d2d0b7c17715a06681e703749ccca023"
                     },
                     {
                         "content": "Tileview.html",
                         "status": "publish",
                         "id": 13362,
-                        "sha256": "b39ce99867a2ac338537ddb19ce5fb2711eeef3b1902d7eaca6f7eafe25229d3"
+                        "sha256": "5ac18a53f362282cf5bf53f504d42a6628d72acb3cd278d710540f25238c37b2"
                     },
                     {
                         "content": "ToggleButton.html",
                         "status": "publish",
                         "id": 12230,
-                        "sha256": "7fa6cca6baa30d46e552b7c43da1052bc95fde03534f3f18b9eba3be89bc8fce"
+                        "sha256": "b9eb71397697a366f0d6a308884250a64b0e18c015a403dce0ce0dcb98e075ab"
                     },
                     {
                         "content": "Window.html",
                         "status": "publish",
                         "id": 13363,
-                        "sha256": "6c5dd66c3bab06291d3a02be0fc7c6c752c6e93baf1369c00223f9a4d8bf3766"
+                        "sha256": "688450d58d8763f9a56b0b2c9154dfdf1affa3c657af0eaacedc6097dac02e1c"
                     },
                     {
                         "content": "Embedded Dashboard.html",
                         "status": "publish",
                         "id": 12681,
-                        "sha256": "0196b859bb3ebe566e737874885a6dc71444cd7dfa62ebdf4b3141649a6106d5"
+                        "sha256": "bb0eee2c1eead810fe20c2744d4f3b1874b08f4608171137ca531c1d749311f0"
                     }
                 ]
             },
@@ -825,31 +825,31 @@
                         "content": "Container (Dashboard).html",
                         "status": "publish",
                         "id": 12231,
-                        "sha256": "09f07ff08dc6ad87f9a18db3aa2879a3f084ceccf558c7ad5a37fe9386a31967"
+                        "sha256": "95fc4589ef1af34b1830ac4da29001b701bc72a9c7ca346b1c9ed9cc71a51558"
                     },
                     {
                         "content": "Container (LVGL).html",
                         "status": "publish",
                         "id": 13120,
-                        "sha256": "ddfec9b52dc4295359aaae30e7ae32182d12a954d11ea72434f304c5dda2441d"
+                        "sha256": "101c09bdff63db749d1f0e9c53435ef20805bcf55fd2678310792f8d10a32d98"
                     },
                     {
                         "content": "Grid.html",
                         "status": "publish",
                         "id": 12232,
-                        "sha256": "bff18ed9af8e8d346e7e296eeded54b72a771d508a3f1e98dd54de02e155f47d"
+                        "sha256": "46faf4d3ac2da955de473669e30a544548462017613a0e52fa54361c07683d7c"
                     },
                     {
                         "content": "List (Dashboard).html",
                         "status": "publish",
                         "id": 13364,
-                        "sha256": "7c45930dd4270268b9d1f0a7cabda1fe4be09df594db1d13728e234a75e55510"
+                        "sha256": "d0b995782f851ce4a3ec3bebc71ba35770b13e966bc6af62d03bd65fcb9b6bfd"
                     },
                     {
                         "content": "Select.html",
                         "status": "publish",
                         "id": 12234,
-                        "sha256": "01e84b5903ad3a16e6cea3fb5f7f1b8493387374789dfc6b2fe052bc38b769da"
+                        "sha256": "155b71aa4b91b7a4901b93a5f9450343a238dd588fa9057f25e551eeb91b51f9"
                     }
                 ]
             },
@@ -863,151 +863,151 @@
                         "content": "Calendar.html",
                         "status": "publish",
                         "id": 12235,
-                        "sha256": "f0b24bbcd24d0fc4eba34b7e84fc937b53a4ebb909a79fb9c1d106095c5ec2d0"
+                        "sha256": "44bda52ec8258c52144f578c8e5418eaf2205c4bc288e48451b7694eda39c9a3"
                     },
                     {
                         "content": "Checkbox (Dashboard).html",
                         "status": "publish",
                         "id": 12236,
-                        "sha256": "f9d5fbb71a35ae20f6fec3da72f6545a79a25bc7ffe56563c81f19ac2d054b3b"
+                        "sha256": "cc26587117023e5208f54e9271a46d15297ac9ea09038a0e500d4ada9b2221fd"
                     },
                     {
                         "content": "Checkbox (LVGL).html",
                         "status": "publish",
                         "id": 12237,
-                        "sha256": "a244b7b1757ef0906b1195b88d5aa46a64c022bec1002588748ea3a17d2f68c0"
+                        "sha256": "bbb0a48e621b910042d4d0861813d2b319dfd995af2d517d5dfb6ca6b7a20038"
                     },
                     {
                         "content": "Colorwheel.html",
                         "status": "publish",
                         "id": 12238,
-                        "sha256": "c5c4fc579b45432ae3187d475025a5fa2434bd7fb23c76a10be09b1030646cfa"
+                        "sha256": "356fb52b314c5d45d4ecb2a3de0a9159edcfdf45da1b1e25990b055078dacf4f"
                     },
                     {
                         "content": "Dropdown (Dashboard).html",
                         "status": "publish",
                         "id": 12239,
-                        "sha256": "02c9482449b6fe64afb14b09e34c5de25dde5fbb51f2abfd14975c3071d31a95"
+                        "sha256": "83824c6ec244945b00e7401d39341a61b47d87703e6d0e1c42fc2c7944df0679"
                     },
                     {
                         "content": "Dropdown (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12240,
-                        "sha256": "ea7a82d5398078ca0b4dc8d5b70f56925e128d30acf753643f34e714060db42f"
+                        "sha256": "d4c91d39573f66249bb8ee91b581a0656f40f330774ce5de7dc31a4f8833d5a3"
                     },
                     {
                         "content": "Dropdown (LVGL).html",
                         "status": "publish",
                         "id": 12241,
-                        "sha256": "5842af51816375b0b8ad2a0b9a33ea65a10378531b3ca6f4563c9b184663d2b1"
+                        "sha256": "3d295ed4ed76d1a67dbe47d593824de79b8b541c51f8efc896ab902fc9d32892"
                     },
                     {
                         "content": "Imgbutton.html",
                         "status": "publish",
                         "id": 12242,
-                        "sha256": "1573dc0c0c3424c5fec3a79a0deda5029f92283d5c68258b5aa46f5a84f2fc55"
+                        "sha256": "6e5806576b40066cfd81985a27421594b19cbc334eece2337039c9e801226016"
                     },
                     {
                         "content": "Input (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12243,
-                        "sha256": "b8981b7af07ca57624b008e100135550b9f4f549faaddaf8fa81a3a00b63e037"
+                        "sha256": "f207aa7a478312e2ad970599ea90d21e528a545d11d0a6db738c4fbe4e5425b1"
                     },
                     {
                         "content": "Keyboard.html",
                         "status": "publish",
                         "id": 12244,
-                        "sha256": "50bc3f33045627a2fb0cce03c34e9f19e755f04c8ce076b7a217be16ee5dd6e5"
+                        "sha256": "d56aab1e5d2c537f671475c1e9b6888cd567e0362594f0de17f0c1be0a2ea883"
                     },
                     {
                         "content": "NumberInput.html",
                         "status": "publish",
                         "id": 12591,
-                        "sha256": "94d6a356def26e69cb7a815508de00774674ed891eac684d2fb990e332a34d6f"
+                        "sha256": "8e3276f7ea503e24469addb88a1ebe23373bb9aa72fd0ce01892bdf8fe304613"
                     },
                     {
                         "content": "Radio.html",
                         "status": "publish",
                         "id": 12629,
-                        "sha256": "bc6230df9326051559aaf3b7c24a692d9889300ca859c651977c9d9a4f6bf057"
+                        "sha256": "115255d458aa7e61ae40dce731bc7cdeb617dec3b11a72e817e508e4a9162b48"
                     },
                     {
                         "content": "Roller (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12245,
-                        "sha256": "f093ccfaaaaf14e8b4d74f6a37d7f00b935622deb26b4b99dc78b6b38db1f8cc"
+                        "sha256": "b0337bb8181e5fd44bb8226adede58dcf2313ee027e4a013884641e65e5f0916"
                     },
                     {
                         "content": "Roller (LVGL).html",
                         "status": "publish",
                         "id": 12246,
-                        "sha256": "0189568abb6d64d2eeeff4ea2c68468a69aded7f082b0d4b81d0dcd5cf10dfad"
+                        "sha256": "09e30c294e5b5ae5e8f4fe97cbc83df14e10c65e7cfbf5eec9cc3a8c1b84066a"
                     },
                     {
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12630,
-                        "sha256": "63f2dff687cd38daa24190e0e8dd6e92b5ebf4e466c87de287a9f936f0b17b3e"
+                        "sha256": "c41a94f274dd06fbbda947926d56beee7aa40213cee673a0b84c50fe2ca0123e"
                     },
                     {
                         "content": "Spinbox.html",
                         "status": "publish",
                         "id": 13365,
-                        "sha256": "2ba9eadb7a3bfff2502fc087d7cc44fcec18e418d27c63b2b12aba11a2445c42"
+                        "sha256": "9c13ccd1656f33bba5aa9ca35205cefb45f94c51572774b0aee6f707a3865052"
                     },
                     {
                         "content": "Slider (Dashboard).html",
                         "status": "publish",
                         "id": 12247,
-                        "sha256": "5ee65215775ccd6eca701a4e615b14b95c476079f09153222ae6efabfff5f7c0"
+                        "sha256": "308f32f6dd05db1d220e9ccb199437f546b5f7f4680e3bbfe2b711da84c6d517"
                     },
                     {
                         "content": "Slider (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12248,
-                        "sha256": "df1997cf4acff55bb61d5aacb63e2a0358b3ffbbc60cf5d87a12fdaa34c214cf"
+                        "sha256": "19617a62a6b20b909ebca01e50dece0b7860a950cb8ae382d94e5e8b429b7274"
                     },
                     {
                         "content": "Slider (LVGL).html",
                         "status": "publish",
                         "id": 12249,
-                        "sha256": "53fceed11975293bf5ec924a486a128553a1490ea799e9768b09ae262d3cb1a3"
+                        "sha256": "9d85e5e38f6231200fb59dd7b8d749cd8717824f961866c18456ff7b698a1b2f"
                     },
                     {
                         "content": "Switch (Dashboard).html",
                         "status": "publish",
                         "id": 12250,
-                        "sha256": "17235177e33d5810b6eb19eff04fd2527ba673156f8249b232e03c0e7e7f26da"
+                        "sha256": "4e8251ed0a6180bfdf5c70e8d17efab3868ef3ee2765a7f9a790d3d375c24216"
                     },
                     {
                         "content": "Switch (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12251,
-                        "sha256": "7fef226e78dde41a317f3010f1c482a2a3a7439173f03639c45ef4687a023baf"
+                        "sha256": "a2fcb8872c1e56a48c0dfcc3983aa1dc4c46fcebe60cf2297be1237c489fba04"
                     },
                     {
                         "content": "Switch (LVGL).html",
                         "status": "publish",
                         "id": 12252,
-                        "sha256": "24598a4fcc04b2d55b5a88013c4638b1ad14ff82719afc31699217122e0a31be"
+                        "sha256": "e2ee36fbfdc9a6afeafef72900e6ac378ada7dfd3abe65d68e8009c0b7c79667"
                     },
                     {
                         "content": "Terminal.html",
                         "status": "publish",
                         "id": 12253,
-                        "sha256": "bf32c54350c60b8d662a0fb07f5b2c97203d7e7fbc2254dcb9b79c14805b5835"
+                        "sha256": "f896a5285391836f7cddfab21733758553aad5954c20a220dc52386b256efe2e"
                     },
                     {
                         "content": "TextInput.html",
                         "status": "publish",
                         "id": 12254,
-                        "sha256": "fefb4cc9b504efc5c5f1d4385c6ff81fb0aefc30c5cb73d530876a1d7db4c7ca"
+                        "sha256": "a3cea6dd8380cc1c92237b0acb5c3dff42fd11320980f429dfe8a32bffad9b62"
                     },
                     {
                         "content": "UpDown.html",
                         "status": "publish",
                         "id": 12255,
-                        "sha256": "fef46112ad312edfc2d905a0a91f82bcdcc8b3962928657a4b15c93132b79bae"
+                        "sha256": "b2ed52c22b237b03fcbc396c0a2b1e65eb582ccf4e9d33ce5538705ca58ccf8c"
                     }
                 ]
             },
@@ -1021,127 +1021,127 @@
                         "content": "AnimationImage.html",
                         "status": "publish",
                         "id": 13366,
-                        "sha256": "c0edf287a91ee9bc927a3f2f65c23f076276457864bd3c8a6276aea6c033e667"
+                        "sha256": "2eb3f582ae68aca023d5786239999d39e13f60fb3acf8c2dbd54b78e5681eaf1"
                     },
                     {
                         "content": "Bar.html",
                         "status": "publish",
                         "id": 12256,
-                        "sha256": "541847283f4a691f78f22b673479baa88ca6b93447f75bd05cc218354de037c4"
+                        "sha256": "24556f75b79166dea3560ded991046da8a2d648aff43a458572572b412caed80"
                     },
                     {
                         "content": "BarGraph.html",
                         "status": "publish",
                         "id": 12257,
-                        "sha256": "794177d9ce0451c1a6a088eee6601d4b7e0f256c764839d17db704ba3f688a1a"
+                        "sha256": "6dedcd72de944891c3ccd9435159a27ad2a8dd1416fc20c6c8a680f27cdc669a"
                     },
                     {
                         "content": "Chart.html",
                         "status": "publish",
                         "id": 12258,
-                        "sha256": "1dad7581e739394ef9602d46a1c583f54024b4debcfe9676050764451c7afd85"
+                        "sha256": "a6988e2c9c15c17cbf3dfccdd7016ed1e99fb4cf0ad3eaa2b678defb88da3ca5"
                     },
                     {
                         "content": "Canvas.html",
                         "status": "publish",
                         "id": 13367,
-                        "sha256": "ef8072e034967c9f19d4810ca30ecaf5d383ea936a64a098ac83a5698c4df62c"
+                        "sha256": "875fb1294b2d7db759a15166db0700f358d0e49339101da8516e78a82f6c0529"
                     },
                     {
                         "content": "EEZChart.html",
                         "status": "publish",
                         "id": 12259,
-                        "sha256": "0b498f7a6aa6f00d479292e8e1d2fa158258388c488fbe3b1ec5c6c5056c1e5a"
+                        "sha256": "a0da5fc071f002f6096ab0d400df2c6c62839f93bd1fec9879ae5e17fb7136dd"
                     },
                     {
                         "content": "Gauge (Dashboard).html",
                         "status": "publish",
                         "id": 12260,
-                        "sha256": "334b7e9bf10100c803cc56dee253b5a3c5967dad2eb08f416291c4f4c285bb24"
+                        "sha256": "2d2e473bcd3b01abffba11813f6959afe3894bdbe043001a32f82260ce79f79d"
                     },
                     {
                         "content": "Gauge (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12261,
-                        "sha256": "31ece064df7de9aebe2eebe95fff024011b2964ab010ee8e87007197d07915f3"
+                        "sha256": "68901fc5909f9ec92e5ea4225c3bc1977e3bb95d3c5d18db81feb2c4b5fbedbb"
                     },
                     {
                         "content": "Led.html",
                         "status": "publish",
                         "id": 13368,
-                        "sha256": "fd35e9703ee705b76e21d03506fc93e0b1071d4a0f0a2126cfc1883b18412090"
+                        "sha256": "ea597aee8f995bf0ca035c4f59110f2c2fd241e2f566d37be756e60d6b625155"
                     },
                     {
                         "content": "Line.html",
                         "status": "publish",
                         "id": 13369,
-                        "sha256": "1085b5bd818b6752d5556c8c7fad23459a5b6d31f2671255360f1c72a6827005"
+                        "sha256": "e5950ca14fd91f91afc273bdc97d53639903311ab1aab74a9fa2cd5a0b0d46cd"
                     },
                     {
                         "content": "LineChart (Dashboard).html",
                         "status": "publish",
                         "id": 12262,
-                        "sha256": "c2a677a9d74f99c72e6ef88912730b9fe81c2a1f1da5f7d689d07eba08ca0fcb"
+                        "sha256": "b00855d34ec3781f6260e6e8469c561270ca3070baff91d8723f2c49c8211845"
                     },
                     {
                         "content": "LineChart (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12263,
-                        "sha256": "132ec7b509ccdbd6e9b5b9fa80af1ef4251e16f1cf7b43c9f4c2fd1b486a4f37"
+                        "sha256": "fb53fce9b9fcecb815a5c92794269fc30e344bf0c971a097484375691b27c5ad"
                     },
                     {
                         "content": "Meter.html",
                         "status": "publish",
                         "id": 12264,
-                        "sha256": "3dc15a4924a7be061e0d60cc5045b5635f45869e331d9d59f769b584c955675a"
+                        "sha256": "c81323b19a1466f99c58d86205bca2918791e3ff5763945c9b3bae5bcac8c34a"
                     },
                     {
                         "content": "Plotly.html",
                         "status": "publish",
                         "id": 12954,
-                        "sha256": "b6000cfd43e9cb06255421be02fa00c9670c3daf3c7e78c5b6d67a689d36b33f"
+                        "sha256": "b01e2690d16a77d0a63b3c7fb73578664bd5c3134c825eaa3c35bba60ca6b8ed"
                     },
                     {
                         "content": "Progress (Dashboard).html",
                         "status": "publish",
                         "id": 12265,
-                        "sha256": "f9b0e31deacfad9bd279aa36c19e59261147587e379340c32fe09690f70acc3b"
+                        "sha256": "0cb32a68fb5616f37868ae013624b4e7b95474b458461a98b0047ebb8e433b2f"
                     },
                     {
                         "content": "Progress (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12266,
-                        "sha256": "ef2175354e9e7eb9565621410338528c8e04657063e7a07c1425d770371b736f"
+                        "sha256": "a2f0a48b0a00326d930c0193e4c0b4dab63f2ef07a84cfa0fb1012d095855f57"
                     },
                     {
                         "content": "QRCode (Dashboard).html",
                         "status": "publish",
                         "id": 12267,
-                        "sha256": "9ddc71316687b05bffd9d1f158727ca445d7876de0247efe404516d66c676c0f"
+                        "sha256": "c362c594b4fdbf31e2e95044264878fbcc780d9fd57fe1f1a6799098ae87f40c"
                     },
                     {
                         "content": "QRCode (EEZ-GUI).html",
                         "status": "publish",
                         "id": 12268,
-                        "sha256": "b7f9c671d252c789717535338ad997e13be725339f6a13893c7c4454d73d84f6"
+                        "sha256": "b2cce942406a7d1fefd4969ef2a282257687cec40505d1ef90ad143fc95135ba"
                     },
                     {
                         "content": "Spinner (Dashboard).html",
                         "status": "publish",
                         "id": 12269,
-                        "sha256": "b348814c05f74346cd19b4da8627db05cac0f8e8d65fdcbac0beeeab51247db0"
+                        "sha256": "37ffa52d8e082bc47dd8a15821fd6db24045722d32d1d115a7fa9304d26d4d41"
                     },
                     {
                         "content": "Spinner (LVGL).html",
                         "status": "publish",
                         "id": 12270,
-                        "sha256": "e588066985d512dffa0851badb031f548b4b57c108f826f23cb03c16f0efb1ff"
+                        "sha256": "5809d579ea0ac835f1562d784812a748fbf5466a350a806e9078e3c887d2e65a"
                     },
                     {
                         "content": "Tabulator.html",
                         "status": "publish",
                         "id": 12955,
-                        "sha256": "7c78239e6c46fb205e90490c1d72afb40f64b28eeb1e54a7c35b31886db8f67d"
+                        "sha256": "679340869ca189f133da49c472c2172a45609e3251387021807d07c5e2085843"
                     }
                 ]
             },
@@ -1155,7 +1155,7 @@
                         "content": "InstrumentTerminal.html",
                         "status": "publish",
                         "id": 12725,
-                        "sha256": "90dbb33995fbbc029842fd941c3395a129acd0153c4affae65789b407baa875e"
+                        "sha256": "ba6cc0222aa83d5c8ed98448f63e3e7564b5f52bb62b096fd956da4959a48b4c"
                     }
                 ]
             }
