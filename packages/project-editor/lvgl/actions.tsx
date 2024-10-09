@@ -701,7 +701,7 @@ class NewLVGLActionDialogState {
 
     onSearchChange = (event: any) => {
         runInAction(() => {
-            this.searchText = ($(event.target).val() as string).trim();
+            this.searchText = $(event.target).val() as string;
             this._selectedActionName = this.filteredActionDefinitions[0]?.name;
         });
     };
