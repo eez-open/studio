@@ -7,6 +7,7 @@ export class SearchInput extends React.Component<{
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
     onClear: () => void;
+    disableSpellcheck?: boolean;
 }> {
     render() {
         return (
@@ -20,6 +21,11 @@ export class SearchInput extends React.Component<{
                     value={this.props.searchText}
                     onChange={this.props.onChange}
                     onKeyDown={this.props.onKeyDown}
+                    spellCheck={
+                        this.props.disableSpellcheck === true
+                            ? false
+                            : undefined
+                    }
                 />
                 {this.props.searchText && (
                     <IconAction

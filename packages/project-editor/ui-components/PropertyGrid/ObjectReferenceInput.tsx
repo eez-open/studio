@@ -56,9 +56,16 @@ export const ObjectReferenceInput = observer(
 
             if (!propertyInfo.referencedObjectCollectionPath) {
                 if (propertyInfo.enumItems) {
-                    return getEnumItems(this.props.objects, propertyInfo).map(
-                        enumItem => enumItem.id
-                    );
+                    return getEnumItems(this.props.objects, propertyInfo)
+                        .filter(
+                            enumItem =>
+                                (enumItem.label || enumItem.id.toString())
+                                    .toLowerCase()
+                                    .indexOf(
+                                        this.searchText.trim().toLowerCase()
+                                    ) != -1
+                        )
+                        .map(enumItem => enumItem.id);
                 }
                 return [];
             }
@@ -83,7 +90,7 @@ export const ObjectReferenceInput = observer(
                         !this.searchText ||
                         objectName
                             .toLowerCase()
-                            .indexOf(this.searchText.toLowerCase()) != -1
+                            .indexOf(this.searchText.trim().toLowerCase()) != -1
                 )
                 .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
         }
@@ -93,7 +100,7 @@ export const ObjectReferenceInput = observer(
         };
 
         onSearchChange(event: any) {
-            this.searchText = ($(event.target).val() as string).trim();
+            this.searchText = $(event.target).val() as string;
         }
 
         setDropDownOpen(open: boolean) {
@@ -196,6 +203,7 @@ export const ObjectReferenceInput = observer(
                             })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
+                            disableSpellcheck={true}
                         />
                     </div>
                     <div>
