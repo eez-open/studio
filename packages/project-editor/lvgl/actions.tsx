@@ -681,6 +681,10 @@ async function showNewLVGLActionDialog() {
             resolve(null);
         };
 
+        runInAction(() => {
+            newLVGLActionDialogState.searchText = "";
+        });
+
         showDialog(<NewLVGLActionDialog onOk={onOk} onCancel={onCancel} />);
     });
 }
