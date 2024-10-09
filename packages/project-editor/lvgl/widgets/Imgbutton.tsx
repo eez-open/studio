@@ -354,34 +354,38 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             ? "LV_IMAGEBUTTON_STATE_"
             : "LV_IMGBTN_STATE_";
 
+        const setSrcFuncName = build.isV9
+            ? "lv_imagebutton_set_src"
+            : "lv_imgbtn_set_src";
+
         if (this.imageReleased) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}RELEASED, NULL, &img_${this.imageReleased}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, &img_${this.imageReleased}, NULL);`
             );
         }
         if (this.imagePressed) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}PRESSED, NULL, &img_${this.imagePressed}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, &img_${this.imagePressed}, NULL);`
             );
         }
         if (this.imageDisabled) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}DISABLED, NULL, &img_${this.imageDisabled}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, &img_${this.imageDisabled}, NULL);`
             );
         }
         if (this.imageCheckedReleased) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}CHECKED_PRESSED, NULL, &img_${this.imageCheckedReleased}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, &img_${this.imageCheckedReleased}, NULL);`
             );
         }
         if (this.imageCheckedPressed) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}CHECKED_RELEASED, NULL, &img_${this.imageCheckedPressed}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, &img_${this.imageCheckedPressed}, NULL);`
             );
         }
         if (this.imageCheckedDisabled) {
             build.line(
-                `lv_imgbtn_set_src(obj, ${prefix}CHECKED_DISABLED, NULL, &img_${this.imageCheckedDisabled}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, &img_${this.imageCheckedDisabled}, NULL);`
             );
         }
     }
