@@ -1366,19 +1366,24 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
     }
 
     async copyBitmapFiles() {
-        if (!this.project.settings.build.destinationFolder) {
+        const destinationFolder = this.project.settings.build.destinationFolder;
+        if (!destinationFolder) {
             return;
         }
-        for (const bitmap of this.bitmaps) {
-            const output = "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
-            try {
-                let source = await getLvglBitmapSourceFile(
-                    bitmap,
-                    this.getImageVariableName(bitmap)
-                );
+        await Promise.all(
+            this.bitmaps.map(bitmap =>
+                (async () => {
+                    const output =
+                        "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
-                source = `#ifdef __has_include
+                    try {
+                        let source = await getLvglBitmapSourceFile(
+                            bitmap,
+                            this.getImageVariableName(bitmap)
+                        );
+
+                        source = `#ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
             #define LV_LVGL_H_INCLUDE_SIMPLE
@@ -1387,48 +1392,64 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 #endif
 ${source}`;
 
-                await writeTextFile(
-                    this.project._store.getAbsoluteFilePath(
-                        this.project.settings.build.destinationFolder
-                    ) +
-                        "/" +
-                        output +
-                        ".c",
-                    source
-                );
-            } catch (err) {
-                this.project._store.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.ERROR,
-                    `Error genereting bitmap '${output}.c' file: ${err}`
-                );
-            }
-        }
+                        await writeTextFile(
+                            this.project._store.getAbsoluteFilePath(
+                                destinationFolder
+                            ) +
+                                "/" +
+                                output +
+                                ".c",
+                            source
+                        );
+                    } catch (err) {
+                        this.project._store.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.ERROR,
+                            `Error genereting bitmap file '${output}.c': ${err}`
+                        );
+                    }
+                })()
+            )
+        );
     }
 
     async copyFontFiles() {
-        if (!this.project.settings.build.destinationFolder) {
+        const destinationFolder = this.project.settings.build.destinationFolder;
+        if (!destinationFolder) {
             return;
         }
-        for (const font of this.fonts) {
-            if (font.lvglSourceFile) {
-                const output = getName(
-                    "ui_font_",
-                    font.name || "",
-                    NamingConvention.UnderscoreLowerCase
-                );
 
-                await writeTextFile(
-                    this.project._store.getAbsoluteFilePath(
-                        this.project.settings.build.destinationFolder
-                    ) +
-                        "/" +
-                        output +
-                        ".c",
-                    font.lvglSourceFile
-                );
-            }
-        }
+        await Promise.all(
+            this.fonts.map(font =>
+                (async () => {
+                    if (font.lvglSourceFile) {
+                        const output = getName(
+                            "ui_font_",
+                            font.name || "",
+                            NamingConvention.UnderscoreLowerCase
+                        );
+
+                        try {
+                            await writeTextFile(
+                                this.project._store.getAbsoluteFilePath(
+                                    destinationFolder
+                                ) +
+                                    "/" +
+                                    output +
+                                    ".c",
+                                font.lvglSourceFile
+                            );
+                        } catch (err) {
+                            this.project._store.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.ERROR,
+                                `Error writing font file '${output}.c': ${err}`
+                            );
+                        }
+                    }
+                })()
+            )
+        );
     }
 }
 
