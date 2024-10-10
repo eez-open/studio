@@ -6,11 +6,13 @@ import { ProjectContext } from "project-editor/project/context";
 import { getParent } from "project-editor/core/object";
 import {
     EezValueObject,
+    getAncestorOfType,
     getPropertiesPanelLabel,
     isObjectExists
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { Settings } from "../project";
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component {
@@ -35,7 +37,11 @@ export const PropertiesPanel = observer(
             let title;
 
             const objects = this.objects
-                .filter(object => object != undefined)
+                .filter(
+                    object =>
+                        object != undefined &&
+                        !getAncestorOfType(object, Settings.classInfo)
+                )
                 .filter(object => isObjectExists(object));
 
             if (objects.length == 0) {
