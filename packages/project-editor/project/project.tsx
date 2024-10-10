@@ -270,6 +270,7 @@ export class Build extends EezObject {
     configurations: BuildConfiguration[];
     files: BuildFile[];
     destinationFolder?: string;
+    separateFolderForImagesAndFonts?: boolean;
     lvglInclude: string;
     generateSourceCodeForEezFramework: boolean;
     compressFlowDefinition: boolean;
@@ -298,6 +299,13 @@ export class Build extends EezObject {
             {
                 name: "destinationFolder",
                 type: PropertyType.RelativeFolder
+            },
+            {
+                name: "separateFolderForImagesAndFonts",
+                displayName: "Store image and font files in a separate folder",
+                checkboxStyleSwitch: true,
+                type: PropertyType.Boolean,
+                disabled: isNotLVGLProject
             },
             {
                 name: "lvglInclude",
@@ -362,6 +370,10 @@ export class Build extends EezObject {
             if (jsObject.expressionEvaluatorStackSize == undefined) {
                 jsObject.expressionEvaluatorStackSize = 20;
             }
+
+            if (jsObject.separateFolderForImagesAndFonts == undefined) {
+                jsObject.separateFolderForImagesAndFonts = false;
+            }
         },
 
         updateObjectValueHook: (build: Build, values: Partial<Build>) => {
@@ -387,6 +399,7 @@ export class Build extends EezObject {
             configurations: observable,
             files: observable,
             destinationFolder: observable,
+            separateFolderForImagesAndFonts: observable,
             lvglInclude: observable,
             generateSourceCodeForEezFramework: observable,
             compressFlowDefinition: observable,

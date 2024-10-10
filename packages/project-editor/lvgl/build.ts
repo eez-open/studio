@@ -1397,6 +1397,10 @@ ${source}`;
                                 destinationFolder
                             ) +
                                 "/" +
+                                (this.project.settings.build
+                                    .separateFolderForImagesAndFonts
+                                    ? "images/"
+                                    : "") +
                                 output +
                                 ".c",
                             source
@@ -1435,6 +1439,10 @@ ${source}`;
                                     destinationFolder
                                 ) +
                                     "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "fonts/"
+                                        : "") +
                                     output +
                                     ".c",
                                 font.lvglSourceFile
