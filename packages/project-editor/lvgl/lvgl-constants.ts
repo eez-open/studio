@@ -668,20 +668,20 @@ export const LV_IMAGE_ALIGN = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const LV_SCR_LOAD_ANIM_NONE = 1;
-export const LV_SCR_LOAD_ANIM_OVER_LEFT = 2;
-export const LV_SCR_LOAD_ANIM_OVER_RIGHT = 3;
-export const LV_SCR_LOAD_ANIM_OVER_TOP = 4;
-export const LV_SCR_LOAD_ANIM_OVER_BOTTOM = 5;
-export const LV_SCR_LOAD_ANIM_MOVE_LEFT = 6;
-export const LV_SCR_LOAD_ANIM_MOVE_RIGHT = 7;
-export const LV_SCR_LOAD_ANIM_MOVE_TOP = 8;
-export const LV_SCR_LOAD_ANIM_MOVE_BOTTOM = 9;
-export const LV_SCR_LOAD_ANIM_FADE_IN = 10;
-export const LV_SCR_LOAD_ANIM_FADE_OUT = 11;
-export const LV_SCR_LOAD_ANIM_OUT_LEFT = 12;
-export const LV_SCR_LOAD_ANIM_OUT_RIGHT = 13;
-export const LV_SCR_LOAD_ANIM_OUT_TOP = 14;
-export const LV_SCR_LOAD_ANIM_OUT_BOTTOM = 15;
+export const LV_SCR_LOAD_ANIM_NONE = 0;
+export const LV_SCR_LOAD_ANIM_OVER_LEFT = 1;
+export const LV_SCR_LOAD_ANIM_OVER_RIGHT = 2;
+export const LV_SCR_LOAD_ANIM_OVER_TOP = 3;
+export const LV_SCR_LOAD_ANIM_OVER_BOTTOM = 4;
+export const LV_SCR_LOAD_ANIM_MOVE_LEFT = 5;
+export const LV_SCR_LOAD_ANIM_MOVE_RIGHT = 6;
+export const LV_SCR_LOAD_ANIM_MOVE_TOP = 7;
+export const LV_SCR_LOAD_ANIM_MOVE_BOTTOM = 8;
+export const LV_SCR_LOAD_ANIM_FADE_IN = 9;
+export const LV_SCR_LOAD_ANIM_FADE_OUT = 10;
+export const LV_SCR_LOAD_ANIM_OUT_LEFT = 11;
+export const LV_SCR_LOAD_ANIM_OUT_RIGHT = 12;
+export const LV_SCR_LOAD_ANIM_OUT_TOP = 13;
+export const LV_SCR_LOAD_ANIM_OUT_BOTTOM = 14;
 
 export const LV_SCR_LOAD_ANIM_ENUM_NAME = "LV_SCR_LOAD_ANIM";
