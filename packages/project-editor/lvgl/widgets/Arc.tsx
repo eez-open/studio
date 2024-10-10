@@ -286,9 +286,9 @@ export class LVGLArcWidget extends LVGLWidget {
         }
 
         if (this.valueType == "literal") {
-            if (this.value != 0) {
-                build.line(`lv_arc_set_value(obj, ${this.value});`);
-            }
+            //if (this.value != 0) {
+            build.line(`lv_arc_set_value(obj, ${this.value});`);
+            //}
         }
 
         if (this.bgStartAngle != 120) {

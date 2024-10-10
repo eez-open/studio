@@ -154,18 +154,26 @@ export class PageTabState extends FlowTabState {
         }
     }
 
+    latestTransform: Transform;
+
     get transform() {
         if (!this.isRuntime && this.projectStore.uiStateStore.globalFlowZoom) {
-            const newTransform = this._transform.clone();
-            newTransform.scale = this.projectStore.uiStateStore.flowZoom;
-            return newTransform;
+            this.latestTransform = (
+                this.latestTransform || this._transform
+            ).clone();
+            this.latestTransform.scale =
+                this.projectStore.uiStateStore.flowZoom;
+            return this.latestTransform;
+        } else {
+            this.latestTransform = this._transform;
         }
-        return this._transform;
+        return this.latestTransform;
     }
 
     set transform(transform: Transform) {
         runInAction(() => {
             this._transform = transform;
+            this.latestTransform = transform;
             if (
                 !this.isRuntime &&
                 this.projectStore.uiStateStore.globalFlowZoom

@@ -454,7 +454,7 @@ const Content = observer(
                 const pageTabState = new PageTabState(
                     this.context.runtime.selectedPage,
                     this._prevPageTabState
-                        ? this._prevPageTabState._transform
+                        ? this._prevPageTabState.transform
                         : undefined
                 );
 
