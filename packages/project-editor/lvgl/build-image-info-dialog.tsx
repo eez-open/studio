@@ -130,6 +130,29 @@ const BuildImageInfoDialog = observer(
         }
 
         get pngquantInfo() {
+            if (this.isWindows) {
+                return (
+                    <li>
+                        <p>
+                            Install <b>pngquant</b> tool:
+                        </p>
+                        <p>
+                            Download from{" "}
+                            <a
+                                href="#"
+                                onClick={event => {
+                                    event.preventDefault();
+                                    openLink("https://pngquant.org");
+                                }}
+                            >
+                                https://pngquant.org
+                            </a>
+                            , put it in your PATH and restart Studio.
+                        </p>
+                    </li>
+                );
+            }
+
             if (this.isLinux) {
                 return (
                     <li>
