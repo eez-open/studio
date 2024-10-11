@@ -28,6 +28,7 @@ import {
 import { sourceRootDir } from "eez-studio-shared/util";
 import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
 import type { LVGLGroup } from "./groups";
+import { showBuildImageInfoDialog } from "./build-image-info-dialog";
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -1371,6 +1372,8 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             return;
         }
 
+        let showInfoDialog = false;
+
         await Promise.all(
             this.bitmaps.map(bitmap =>
                 (async () => {
@@ -1411,10 +1414,17 @@ ${source}`;
                             MessageType.ERROR,
                             `Error genereting bitmap file '${output}.c': ${err}`
                         );
+                        if (this.isV9) {
+                            showInfoDialog = true;
+                        }
                     }
                 })()
             )
         );
+
+        if (showInfoDialog) {
+            showBuildImageInfoDialog();
+        }
     }
 
     async copyFontFiles() {

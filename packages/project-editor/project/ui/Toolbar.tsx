@@ -123,7 +123,7 @@ export const Toolbar = observer(
             }
 
             return (
-                <nav className="navbar justify-content-between EezStudio_ToolbarNav">
+                <nav className="navbar justify-content-between EezStudio_ProjectEditor_ToolbarNav">
                     {showEditorButtons ? <EditorButtons /> : <div />}
 
                     {showRunEditSwitchControls ? (
@@ -132,10 +132,7 @@ export const Toolbar = observer(
                         <div />
                     )}
 
-                    <div
-                        className="EezStudio_FlowRuntimeControls"
-                        style={{ width: 0, justifyContent: "flex-end" }}
-                    >
+                    <div className="EezStudio_ProjectEditor_ToolbarNav_FlowRuntimeControls">
                         {globalVariablesStatuses}
                     </div>
                 </nav>
@@ -257,13 +254,7 @@ const EditorButtons = observer(
                 );
 
             return (
-                <div
-                    style={{
-                        width: 0,
-                        justifyContent: "flex-start",
-                        display: "flex"
-                    }}
-                >
+                <div className="EezStudio_ProjectEditor_ToolbarNav_EditorButtons">
                     {!this.context.runtime && (
                         <div className="btn-group" role="group">
                             <IconAction
@@ -845,7 +836,7 @@ const RunEditSwitchControls = observer(
         render() {
             const iconSize = 30;
             return (
-                <div className="EezStudio_ProjectEditor_RunEditSwitchControls d-flex">
+                <div className="EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls">
                     <ButtonAction
                         text="Edit"
                         title="Enter edit mode (Shift+F5)"

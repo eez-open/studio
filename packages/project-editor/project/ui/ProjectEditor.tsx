@@ -79,7 +79,7 @@ export const ProjectEditorView = observer(
 
             return (
                 <div className="EezStudio_ProjectEditorWrapper">
-                    <div className="EezStudio_ProjectEditorMainContentWrapper">
+                    <div className="EezStudio_ProjectEditor_MainContentWrapper">
                         {this.props.showToolbar && <Toolbar />}
                         <Content />
                     </div>

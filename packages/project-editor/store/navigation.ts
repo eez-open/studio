@@ -1,9 +1,16 @@
-import { computed, makeObservable, runInAction } from "mobx";
+import {
+    autorun,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    runInAction
+} from "mobx";
 import { observable, action } from "mobx";
+import * as FlexLayout from "flexlayout-react";
 
 import { IEezObject, getParent } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { ProjectStore } from "project-editor/store";
+import { LayoutModels, type ProjectStore } from "project-editor/store";
 import {
     isValue,
     getObjectPathAsString,
@@ -96,6 +103,8 @@ export class NavigationStore {
 
     selectedLocalVariable = observable.box<IEezObject>();
 
+    dispose1: IReactionDisposer;
+
     constructor(public projectStore: ProjectStore) {
         makeObservable(this, {
             selectedPanelForEdit: observable,
@@ -104,6 +113,40 @@ export class NavigationStore {
             propertyGridObjects: computed,
             setSelectedPanel: action,
             showObjects: action
+        });
+
+        this.dispose1 = autorun(() => {
+            const objects = this.propertyGridObjects ?? [];
+
+            const objectsLength = objects.length;
+
+            const layoutModel = this.projectStore.layoutModels?.rootEditor;
+            if (!layoutModel) {
+                return;
+            }
+
+            const node = layoutModel.getNodeById(
+                LayoutModels.PROPERTIES_TAB_ID
+            );
+            if (!node) {
+                return;
+            }
+
+            const parent = node.getParent() as FlexLayout.BorderNode;
+            if (!(parent instanceof FlexLayout.BorderNode)) {
+                return;
+            }
+
+            const isSelected = parent.getSelectedNode() == node;
+
+            if (
+                (isSelected && objectsLength == 0) ||
+                (!isSelected && objectsLength > 0)
+            ) {
+                layoutModel.doAction(
+                    FlexLayout.Actions.selectTab(node.getId())
+                );
+            }
         });
     }
 
@@ -474,5 +517,6 @@ export class NavigationStore {
         runInAction(() => {
             this.selectedPanel = undefined;
         });
+        this.dispose1();
     }
 }
