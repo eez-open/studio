@@ -2076,15 +2076,12 @@ export class CallActionActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_CALL_ACTION_ACTION,
 
         properties: [
-            makeExpressionProperty(
-                {
-                    name: "action",
-                    type: PropertyType.ObjectReference,
-                    referencedObjectCollectionPath: "actions",
-                    propertyGridGroup: specificGroup
-                },
-                "string"
-            ),
+            {
+                name: "action",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "actions",
+                propertyGridGroup: specificGroup
+            },
             userPropertyValuesProperty
         ],
         getAdditionalFlowProperties:
