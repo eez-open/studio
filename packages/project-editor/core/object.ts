@@ -382,7 +382,13 @@ export interface ClassInfo {
     icon?: React.ReactNode;
     getIcon?: (object: IEezObject) => React.ReactNode;
 
-    componentHeaderColor?: string;
+    componentHeaderColor?:
+        | ((
+              object?: IEezObject,
+              componentClass?: IObjectClassInfo,
+              projectStore?: ProjectStore
+          ) => string)
+        | string;
     componentHeaderTextColor?: string;
 
     beforeLoadHook?: (

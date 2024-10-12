@@ -4007,8 +4007,14 @@ function renderActionComponent(
 
     let titleStyle: React.CSSProperties | undefined;
     if (classInfo.componentHeaderColor) {
+        let backgroundColor;
+        if (typeof classInfo.componentHeaderColor == "string") {
+            backgroundColor = classInfo.componentHeaderColor;
+        } else {
+            backgroundColor = classInfo.componentHeaderColor(actionNode);
+        }
         titleStyle = {
-            backgroundColor: classInfo.componentHeaderColor
+            backgroundColor
         };
     }
 

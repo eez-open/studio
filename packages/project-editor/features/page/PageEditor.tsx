@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, runInAction, observable, makeObservable } from "mobx";
+import { computed, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import { IEezObject } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -96,7 +96,7 @@ export class PageTabState extends FlowTabState {
         super(object as Flow);
 
         makeObservable(this, {
-            _transform: observable,
+            //_transform: observable,
             transform: computed,
             frontFace: computed
         });
@@ -154,26 +154,16 @@ export class PageTabState extends FlowTabState {
         }
     }
 
-    latestTransform: Transform;
-
     get transform() {
         if (!this.isRuntime && this.projectStore.uiStateStore.globalFlowZoom) {
-            this.latestTransform = (
-                this.latestTransform || this._transform
-            ).clone();
-            this.latestTransform.scale =
-                this.projectStore.uiStateStore.flowZoom;
-            return this.latestTransform;
-        } else {
-            this.latestTransform = this._transform;
+            this._transform.scale = this.projectStore.uiStateStore.flowZoom;
         }
-        return this.latestTransform;
+        return this._transform;
     }
 
     set transform(transform: Transform) {
         runInAction(() => {
             this._transform = transform;
-            this.latestTransform = transform;
             if (
                 !this.isRuntime &&
                 this.projectStore.uiStateStore.globalFlowZoom
