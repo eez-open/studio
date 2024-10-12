@@ -241,7 +241,7 @@ export class LVGLTabWidget extends LVGLWidget {
                     build.line(
                         `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, _(${escapeCString(
                             this.tabName ?? ""
-                        )});`
+                        )}));`
                     );
                 } else {
                     build.line(
