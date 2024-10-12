@@ -92,7 +92,40 @@ export class LVGLStylesDefinition extends EezObject {
                 }
             }
         ],
-        defaultValue: {}
+        defaultValue: {},
+
+        beforeLoadHook(object, jsObject) {
+            if (jsObject.definition) {
+                Object.keys(jsObject.definition).forEach(part => {
+                    Object.keys(jsObject.definition[part]).forEach(state => {
+                        Object.keys(jsObject.definition[part][state]).forEach(
+                            propertyName => {
+                                if (
+                                    propertyName == "grid_column_align" ||
+                                    propertyName == "grid_row_align" ||
+                                    propertyName == "grid_cell_x_align" ||
+                                    propertyName == "grid_cell_y_align"
+                                ) {
+                                    const value =
+                                        jsObject.definition[part][state][
+                                            propertyName
+                                        ];
+                                    if (
+                                        value == "EVENLY" ||
+                                        value == "AROUND" ||
+                                        value == "BETWEEN"
+                                    ) {
+                                        jsObject.definition[part][state][
+                                            propertyName
+                                        ] = "SPACE_" + value;
+                                    }
+                                }
+                            }
+                        );
+                    });
+                });
+            }
+        }
     };
 
     override makeEditable() {
