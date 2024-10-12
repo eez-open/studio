@@ -397,8 +397,10 @@ class Model {
                 continue;
             }
 
-            let { label, icon, titleStyle } =
-                getComponentVisualData(componentClass);
+            let { label, icon, titleStyle } = getComponentVisualData(
+                componentClass,
+                undefined // projectStore is undefined here
+            );
 
             const componentInfoType = isProperSubclassOf(
                 componentClass.objectClass.classInfo,

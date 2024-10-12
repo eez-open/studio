@@ -377,7 +377,8 @@ const PaletteItem = observer(
             });
 
             const { icon, label, titleStyle } = getComponentVisualData(
-                this.props.componentClass
+                this.props.componentClass,
+                this.context
             );
 
             return (

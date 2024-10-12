@@ -21,7 +21,8 @@ import {
     getParent,
     MessageType,
     getId,
-    IMessage
+    IMessage,
+    IObjectClassInfo
 } from "project-editor/core/object";
 import {
     getAncestorOfType,
@@ -30,6 +31,7 @@ import {
     getListLabel,
     getProjectStore,
     Message,
+    ProjectStore,
     propertyNotFoundMessage,
     propertyNotSetMessage,
     Section
@@ -2106,7 +2108,28 @@ export class CallActionActionComponent extends ActionComponent {
                 <path d="M17 4a12.25 12.25 0 0 1 0 16"></path>
             </svg>
         ),
-        componentHeaderColor: "#C7E9C0",
+        componentHeaderColor: (
+            object?: CallActionActionComponent,
+            componentClass?: IObjectClassInfo,
+            projectStore?: ProjectStore
+        ) => {
+            let actionName;
+            if (object) {
+                actionName = object.action;
+                projectStore = ProjectEditor.getProjectStore(object);
+            } else if (componentClass) {
+                actionName = componentClass.props?.action;
+            }
+
+            if (projectStore && actionName) {
+                const action = findAction(projectStore.project, actionName);
+                if (action && action.implementationType == "native") {
+                    return "#9CBA93";
+                }
+            }
+
+            return "#C7E9C0";
+        },
         open: (object: CallActionActionComponent) => {
             object.open();
         },
@@ -4404,8 +4427,15 @@ export class LabelOutActionComponent extends ActionComponent {
 
         let titleStyle: React.CSSProperties | undefined;
         if (classInfo.componentHeaderColor) {
+            let backgroundColor;
+            if (typeof classInfo.componentHeaderColor == "string") {
+                backgroundColor = classInfo.componentHeaderColor;
+            } else {
+                backgroundColor = classInfo.componentHeaderColor(this);
+            }
+
             titleStyle = {
-                backgroundColor: classInfo.componentHeaderColor
+                backgroundColor
             };
         }
 
@@ -4542,8 +4572,15 @@ export class LabelInActionComponent extends ActionComponent {
 
         let titleStyle: React.CSSProperties | undefined;
         if (classInfo.componentHeaderColor) {
+            let backgroundColor;
+            if (typeof classInfo.componentHeaderColor == "string") {
+                backgroundColor = classInfo.componentHeaderColor;
+            } else {
+                backgroundColor = classInfo.componentHeaderColor(this);
+            }
+
             titleStyle = {
-                backgroundColor: classInfo.componentHeaderColor
+                backgroundColor
             };
         }
 
