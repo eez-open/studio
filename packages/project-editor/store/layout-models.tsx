@@ -377,7 +377,8 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 20,
+                                weight: 0,
+                                width: 350,
                                 children: [
                                     {
                                         type: "tabset",
@@ -422,7 +423,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 60,
+                                weight: 100,
                                 enableDeleteWhenEmpty: false,
                                 enableClose: false,
                                 id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
@@ -430,7 +431,8 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 25,
+                                weight: 0,
+                                width: 420,
                                 children: [
                                     {
                                         type: "tabset",
@@ -479,7 +481,8 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 20,
+                                weight: 0,
+                                width: 350,
                                 children: [
                                     {
                                         type: "tabset",
@@ -507,7 +510,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 60,
+                                weight: 1,
                                 enableClose: false,
                                 enableDeleteWhenEmpty: false,
                                 id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
@@ -515,7 +518,8 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 25,
+                                weight: 0,
+                                width: 420,
                                 children: [
                                     {
                                         type: "tabset",
@@ -549,7 +553,8 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 25,
+                                weight: 0,
+                                width: 320,
                                 children: [
                                     {
                                         type: "tabset",
@@ -590,7 +595,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 60,
+                                weight: 1,
                                 enableClose: false,
                                 enableDeleteWhenEmpty: false,
                                 id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
@@ -598,7 +603,8 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 25,
+                                weight: 0,
+                                width: 320,
                                 children: [
                                     {
                                         type: "tabset",

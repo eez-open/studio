@@ -3897,8 +3897,6 @@ export class Widget extends Component {
     ) {
         return 0;
     }
-
-    lvglPostCreate(runtime: LVGLPageRuntime) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

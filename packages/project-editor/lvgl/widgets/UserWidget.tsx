@@ -459,23 +459,25 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         if (runtime.wasm.assetsMap) {
             const flow =
                 runtime.wasm.assetsMap.flows[savedUserWidgetContext.pageIndex];
-            const componentPath = getObjectPathAsString(this);
-            const componentIndex = flow.componentIndexes[componentPath];
+            if (flow) {
+                const componentPath = getObjectPathAsString(this);
+                const componentIndex = flow.componentIndexes[componentPath];
 
-            runtime.lvglCreateContext = {
-                widgetIndex:
-                    savedUserWidgetContext.widgetIndex + widgetIndex + 1,
-                pageIndex:
-                    runtime.wasm.assetsMap.flowIndexes[
-                        getObjectPathAsString(this.userWidgetPage!)
-                    ],
-                flowState: savedUserWidgetContext.flowState
-                    ? runtime.wasm._lvglGetFlowState(
-                          savedUserWidgetContext.flowState,
-                          componentIndex
-                      )
-                    : 0
-            };
+                runtime.lvglCreateContext = {
+                    widgetIndex:
+                        savedUserWidgetContext.widgetIndex + widgetIndex + 1,
+                    pageIndex:
+                        runtime.wasm.assetsMap.flowIndexes[
+                            getObjectPathAsString(this.userWidgetPage!)
+                        ],
+                    flowState: savedUserWidgetContext.flowState
+                        ? runtime.wasm._lvglGetFlowState(
+                              savedUserWidgetContext.flowState,
+                              componentIndex
+                          )
+                        : 0
+                };
+            }
         }
 
         const rect = this.getLvglCreateRect();
