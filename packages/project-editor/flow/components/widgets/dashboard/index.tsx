@@ -226,7 +226,8 @@ export class TextDashboardWidget extends Widget {
                 <span
                     className={classNames(
                         this.style.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     onClick={this.onClick(flowContext)}
                     style={{ opacity: style.opacity }}
@@ -828,7 +829,8 @@ export class NumberInputDashboardWidget extends Widget {
                 <NumberInputDashboardWidgetElement
                     className={classNames(
                         this.style.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     component={this}
                     flowContext={flowContext}
@@ -975,7 +977,8 @@ export class CheckboxWidget extends Widget {
                     className={classNames(
                         "form-check",
                         this.style.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     style={{ opacity: style.opacity }}
                 >
@@ -1154,7 +1157,8 @@ export class RadioWidget extends Widget {
                     className={classNames(
                         "form-check",
                         this.style.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     style={{ opacity: style.opacity }}
                 >
@@ -1300,7 +1304,8 @@ export class SwitchDashboardWidget extends Widget {
                     className={classNames(
                         "form-check form-switch",
                         this.style.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     style={{ opacity: style.opacity }}
                 >
@@ -1993,7 +1998,8 @@ export class ButtonDashboardWidget extends Widget {
                 <button
                     className={classNames(
                         buttonStyle.classNames,
-                        this.style.getConditionalClassNames(flowContext)
+                        this.style.getConditionalClassNames(flowContext),
+                        this.style.getDynamicCSSClassName(flowContext)
                     )}
                     style={{ opacity: style.opacity }}
                     disabled={!buttonEnabled}
@@ -2326,6 +2332,9 @@ const SliderDashboardWidgetElement = observer(
                     className={classNames(
                         this.props.component.style.classNames,
                         this.props.component.style.getConditionalClassNames(
+                            flowContext
+                        ),
+                        this.props.component.style.getDynamicCSSClassName(
                             flowContext
                         )
                     )}
