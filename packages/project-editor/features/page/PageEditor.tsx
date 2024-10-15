@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, runInAction, makeObservable } from "mobx";
+import { computed, runInAction, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import { IEezObject } from "project-editor/core/object";
 import { TreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -96,7 +96,7 @@ export class PageTabState extends FlowTabState {
         super(object as Flow);
 
         makeObservable(this, {
-            //_transform: observable,
+            _transform: observable,
             transform: computed,
             frontFace: computed
         });
