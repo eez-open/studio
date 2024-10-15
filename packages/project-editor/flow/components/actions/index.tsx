@@ -2282,7 +2282,11 @@ export class CallActionActionComponent extends ActionComponent {
                     <pre key={userProperty.name}>
                         <>
                             {userProperty.displayName || userProperty.name}
-                            <LeftArrow />
+                            {userProperty.assignable ? (
+                                <RightArrow />
+                            ) : (
+                                <LeftArrow />
+                            )}
                             {this.userPropertyValues.values[userProperty.id] ||
                                 ""}
                         </>
