@@ -456,7 +456,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         const savedUserWidgetContext = runtime.lvglCreateContext;
 
-        if (runtime.wasm.assetsMap?.flowIndexes.length > 0) {
+        if (runtime.wasm.assetsMap?.flows.length > 0) {
             const flow =
                 runtime.wasm.assetsMap.flows[savedUserWidgetContext.pageIndex];
             if (flow) {

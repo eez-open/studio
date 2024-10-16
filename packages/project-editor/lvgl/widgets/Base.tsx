@@ -1575,7 +1575,7 @@ export class LVGLWidget extends Widget {
 
         const project = ProjectEditor.getProject(this);
 
-        if (runtime.wasm.assetsMap?.flowIndexes.length > 0) {
+        if (runtime.wasm.assetsMap?.flows.length > 0) {
             const page = getAncestorOfType(
                 this,
                 ProjectEditor.PageClass.classInfo
