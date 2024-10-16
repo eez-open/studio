@@ -2119,4 +2119,4 @@ char *LZ4_slideInputBuffer(void *state) {
     return (char *)(uptrval)((LZ4_stream_t *)state)->internal_donotuse.dictionary;
 }
 
-#endif /* LZ4_COMMONDEFS_ONLY */
+#endif /* LZ4_COMMONDEFS_ONLY */
