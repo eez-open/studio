@@ -959,7 +959,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     build.line("");
                     build.line(`enum {`);
                     build.indent();
-                    for (let i = 0; i < this.pages.length; i++) {
+                    for (let i = 0; i < action.userProperties.length; i++) {
                         build.line(
                             `ACTION_${getName(
                                 "",
