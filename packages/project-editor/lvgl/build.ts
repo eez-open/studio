@@ -290,8 +290,6 @@ export class LVGLBuild extends Build {
             "",
             false
         );
-
-        console.log(this.lvglObjectIdentifiers);
     }
 
     isAccessibleFromSourceCode(widget: LVGLWidget) {
