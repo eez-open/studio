@@ -11,11 +11,7 @@ import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Project, findAction } from "project-editor/project/project";
-import {
-    Section,
-    getAncestorOfType,
-    getObjectPathAsString
-} from "project-editor/store";
+import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { isDev, writeTextFile } from "eez-studio-shared/util-electron";
@@ -484,7 +480,12 @@ export class LVGLBuild extends Build {
             const pageIdentifiers =
                 this.lvglObjectIdentifiers.fromUserWidgets.get(flow);
             if (!pageIdentifiers) {
-                throw "Page identifiers not found";
+                this.assets.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    "Page identifiers not found",
+                    object
+                );
             }
             return pageIdentifiers;
         }
@@ -498,12 +499,19 @@ export class LVGLBuild extends Build {
         }
 
         const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return "";
+        }
 
         const identifier = pageIdentifiers.widgetToIdentifier.get(widget);
         if (identifier == undefined) {
-            throw `Widget identifier not found: ${getObjectPathAsString(
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget identifier not found`,
                 widget
-            )}`;
+            );
+            return "";
         }
 
         return identifier;
@@ -516,10 +524,20 @@ export class LVGLBuild extends Build {
         }
 
         const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return 0;
+        }
 
         const index = pageIdentifiers.widgetToIndex.get(widget);
+
         if (index == undefined) {
-            throw `Widget index not found: ${getObjectPathAsString(widget)}`;
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget index not found`,
+                widget
+            );
+            return 0;
         }
 
         return index;
@@ -531,12 +549,20 @@ export class LVGLBuild extends Build {
         }
 
         const pageIdentifiers = this.getPageIdentifiers(fromObject);
-
+        if (!pageIdentifiers) {
+            return 0;
+        }
         const index = pageIdentifiers.identifiers.indexOf(objectName);
 
         if (index == -1) {
             if (!this.isFirstPass) {
-                throw `Widget index not found for "${objectName}"`;
+                this.assets.projectStore.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.ERROR,
+                    `Widget index not found for "${objectName}"`,
+                    fromObject
+                );
+                return 0;
             }
         }
 
@@ -550,10 +576,19 @@ export class LVGLBuild extends Build {
         }
 
         const pageIdentifiers = this.getPageIdentifiers(widget);
+        if (!pageIdentifiers) {
+            return 0;
+        }
 
         const accessor = pageIdentifiers.widgetToAccessor.get(widget);
         if (accessor == undefined) {
-            throw `Widget accessor not found: ${getObjectPathAsString(widget)}`;
+            this.assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `Widget accessor not found`,
+                widget
+            );
+            return "";
         }
 
         return accessor;

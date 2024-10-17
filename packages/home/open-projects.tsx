@@ -167,8 +167,9 @@ class OpenProjectsStore {
                 mruItem =>
                     mruItem.filePath
                         .toLowerCase()
-                        .indexOf(openProjectsStore.searchText.toLowerCase()) !=
-                    -1
+                        .indexOf(
+                            openProjectsStore.searchText.trim().toLowerCase()
+                        ) != -1
             )
             .map(mruItem => ({
                 id: mruItem.filePath,
@@ -187,7 +188,7 @@ class OpenProjectsStore {
     };
 
     onSearchChange = (event: any) => {
-        this.searchText = ($(event.target).val() as string).trim();
+        this.searchText = $(event.target).val() as string;
         if (this.allMruItems.length > 0) {
             this.selectedMruItem = this.allMruItems[0].data;
         }
