@@ -999,10 +999,6 @@ export class Page extends Flow {
                 customWidget
             );
 
-            this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
-                lvglWidget.lvglPostCreate(runtime)
-            );
-
             return lvglObj;
         } else {
             const obj = customWidget
@@ -1026,10 +1022,6 @@ export class Page extends Flow {
             this.components
                 .filter(component => component instanceof Widget)
                 .map((widget: Widget) => widget.lvglCreate(runtime, obj));
-
-            this._lvglWidgetsIncludingUserWidgets.forEach(lvglWidget =>
-                lvglWidget.lvglPostCreate(runtime)
-            );
 
             return obj;
         }

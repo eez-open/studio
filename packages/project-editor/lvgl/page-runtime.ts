@@ -485,6 +485,20 @@ export abstract class LVGLPageRuntime {
     }
 
     registerGroupWidget(group: string, groupIndex: number, obj: number) {}
+
+    //
+    postCreateCallbacks: (() => void)[] = [];
+
+    addPostCreateCallback(callback: () => void) {
+        this.postCreateCallbacks.push(callback);
+    }
+
+    lvglCreatePage() {
+        const pageObj = this.page.lvglCreate(this, 0);
+        this.postCreateCallbacks.forEach(callback => callback());
+        this.postCreateCallbacks = [];
+        return pageObj;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -596,7 +610,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.createStyles();
 
-                        const pageObj = this.page.lvglCreate(this, 0);
+                        const pageObj = this.lvglCreatePage();
                         if (!pageObj) {
                             console.error("pageObj is undefined");
                         }
@@ -776,7 +790,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
 
                 this.createStyles();
 
-                const pageObj = this.page.lvglCreate(this, 0);
+                const pageObj = this.lvglCreatePage();
                 this.wasm._lvglScreenLoad(-1, pageObj);
                 runInAction(() => {
                     this.page._lvglRuntime = this;
@@ -1062,7 +1076,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         this.createStyles();
 
-        const pageObj = this.page.lvglCreate(this, 0);
+        const pageObj = this.lvglCreatePage();
         this.pageStates.get(this.page)!.pageObj = pageObj;
 
         this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
@@ -1360,7 +1374,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                         }
                     });
 
-                    const pageObj = this.page.lvglCreate(this, 0);
+                    const pageObj = this.lvglCreatePage();
                     if (!pageObj) {
                         console.error("pageObj is undefined");
                         return;
@@ -1574,7 +1588,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     -(new Date().getTimezoneOffset() / 60) * 100
                 );
 
-                const pageObj = this.page.lvglCreate(this, 0);
+                const pageObj = this.lvglCreatePage();
                 if (!pageObj) {
                     console.error("pageObj is undefined");
                     return;

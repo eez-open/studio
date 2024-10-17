@@ -217,41 +217,41 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             KEYBOARD_MODES[this.mode]
         );
 
-        return obj;
-    }
+        runtime.addPostCreateCallback(() => {
+            if (this.textarea) {
+                const lvglIdentifier = ProjectEditor.getProjectStore(
+                    this
+                ).lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(this),
+                    this.textarea
+                );
 
-    override lvglPostCreate(runtime: LVGLPageRuntime) {
-        if (this.textarea) {
-            const lvglIdentifier = ProjectEditor.getProjectStore(
-                this
-            ).lvglIdentifiers.getIdentifierByName(
-                ProjectEditor.getFlow(this),
-                this.textarea
-            );
+                if (lvglIdentifier && lvglIdentifier.widgets.length == 1) {
+                    const textareaWidget = lvglIdentifier.widgets[0];
 
-            if (lvglIdentifier && lvglIdentifier.widgets.length == 1) {
-                const textareaWidget = lvglIdentifier.widgets[0];
-
-                if (
-                    textareaWidget instanceof LVGLTextareaWidget &&
-                    (runtime instanceof LVGLPageViewerRuntime ||
-                        runtime instanceof LVGLNonActivePageViewerRuntime)
-                ) {
-                    setTimeout(() => {
-                        if (
-                            this._lvglObj &&
-                            textareaWidget._lvglObj &&
-                            runtime.isMounted
-                        ) {
-                            runtime.wasm._lvglSetKeyboardTextarea(
-                                this._lvglObj,
-                                textareaWidget._lvglObj
-                            );
-                        }
-                    });
+                    if (
+                        textareaWidget instanceof LVGLTextareaWidget &&
+                        (runtime instanceof LVGLPageViewerRuntime ||
+                            runtime instanceof LVGLNonActivePageViewerRuntime)
+                    ) {
+                        setTimeout(() => {
+                            if (
+                                this._lvglObj &&
+                                textareaWidget._lvglObj &&
+                                runtime.isMounted
+                            ) {
+                                runtime.wasm._lvglSetKeyboardTextarea(
+                                    this._lvglObj,
+                                    textareaWidget._lvglObj
+                                );
+                            }
+                        });
+                    }
                 }
             }
-        }
+        });
+
+        return obj;
     }
 
     override lvglBuildObj(build: LVGLBuild) {

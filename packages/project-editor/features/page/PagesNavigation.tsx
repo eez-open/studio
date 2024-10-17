@@ -185,7 +185,7 @@ export const PageStructure = observer(
             );
         }
 
-        onLockAll = () => {
+        onLockAll = action(() => {
             if (!this.treeAdapter) {
                 return;
             }
@@ -202,9 +202,9 @@ export const PageStructure = observer(
             });
 
             this.context.undoManager.setCombineCommands(false);
-        };
+        });
 
-        onUnlockAll = () => {
+        onUnlockAll = action(() => {
             if (!this.treeAdapter) {
                 return;
             }
@@ -221,7 +221,7 @@ export const PageStructure = observer(
             });
 
             this.context.undoManager.setCombineCommands(false);
-        };
+        });
 
         get isAnyHidden() {
             if (!this.treeAdapter) {
@@ -236,7 +236,7 @@ export const PageStructure = observer(
             );
         }
 
-        onHideAll = () => {
+        onHideAll = action(() => {
             if (!this.treeAdapter) {
                 return;
             }
@@ -253,9 +253,9 @@ export const PageStructure = observer(
             });
 
             this.context.undoManager.setCombineCommands(false);
-        };
+        });
 
-        onShowAll = () => {
+        onShowAll = action(() => {
             if (!this.treeAdapter) {
                 return;
             }
@@ -272,7 +272,7 @@ export const PageStructure = observer(
             });
 
             this.context.undoManager.setCombineCommands(false);
-        };
+        });
 
         renderItem = (itemId: string) => {
             if (!this.treeAdapter) {
@@ -302,11 +302,11 @@ export const PageStructure = observer(
                                     : "Lock this widget"
                             }
                             iconSize={14}
-                            onClick={() =>
+                            onClick={action(() =>
                                 this.context.updateObject(widget, {
                                     locked: !widget.locked
                                 })
-                            }
+                            )}
                             style={{
                                 visibility: widget.locked ? "visible" : "hidden"
                             }}
@@ -319,7 +319,7 @@ export const PageStructure = observer(
                             }
                             title={widget.hiddenInEditor ? "Show" : "Hide"}
                             iconSize={14}
-                            onClick={() => {
+                            onClick={action(() => {
                                 const hiddenInEditor = !widget.hiddenInEditor;
 
                                 this.context.undoManager.setCombineCommands(
@@ -349,7 +349,7 @@ export const PageStructure = observer(
                                 this.context.undoManager.setCombineCommands(
                                     false
                                 );
-                            }}
+                            })}
                             style={{
                                 visibility: widget.hiddenInEditor
                                     ? "visible"

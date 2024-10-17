@@ -1071,7 +1071,8 @@ export class Style extends EezObject {
 
             cssDeclarations: computed,
             cssPreview: computed,
-            classNames: computed
+            classNames: computed,
+            dynamicCSS: observable
         });
     }
 
