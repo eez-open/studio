@@ -286,10 +286,9 @@ function getPropertyInfoForUserProperty(
         params?: IOnSelectParams
     ) => {
         (object as any)._eez_parent = parent;
-
-        await onSelect(object, propertyInfo, params);
-
+        const result = await onSelect(object, propertyInfo, params);
         delete (object as any)._eez_parent;
+        return result;
     };
 
     return propertyInfo;
