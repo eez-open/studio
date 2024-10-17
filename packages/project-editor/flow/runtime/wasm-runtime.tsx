@@ -151,6 +151,8 @@ export class WasmRuntime extends RemoteRuntime {
 
     lgvlPageRuntime: LVGLPageViewerRuntime | undefined;
 
+    selectedDashboardTheme: string | undefined;
+
     onInitialized: (() => void) | undefined;
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +163,8 @@ export class WasmRuntime extends RemoteRuntime {
         makeObservable(this, {
             worker: observable.shallow,
             displayWidth: observable,
-            displayHeight: observable
+            displayHeight: observable,
+            selectedDashboardTheme: observable
         });
     }
 
@@ -380,6 +383,10 @@ export class WasmRuntime extends RemoteRuntime {
                 return bitmap.imageSrc;
             }
             return null;
+        } else if (workerToRenderMessage.setDashboardColorTheme) {
+            const themeName =
+                workerToRenderMessage.setDashboardColorTheme.themeName;
+            runInAction(() => (this.selectedDashboardTheme = themeName));
         } else if (workerToRenderMessage.getLvglScreenByName) {
             return this.lgvlPageRuntime?.getLvglScreenByName(
                 workerToRenderMessage.getLvglScreenByName.name
@@ -411,6 +418,10 @@ export class WasmRuntime extends RemoteRuntime {
             this.lgvlPageRuntime?.removeStyle(
                 workerToRenderMessage.lvglObjRemoveStyle.targetObj,
                 workerToRenderMessage.lvglObjRemoveStyle.styleIndex
+            );
+        } else if (workerToRenderMessage.lvglSetColorTheme) {
+            this.lgvlPageRuntime?.setColorTheme(
+                workerToRenderMessage.lvglSetColorTheme.themeName
             );
         }
         this.onWorkerMessageAsync(workerToRenderMessage);

@@ -1,5 +1,3 @@
-import tinycolor from "tinycolor2";
-
 import { IEezObject, PropertyType } from "project-editor/core/object";
 
 import {
@@ -106,22 +104,6 @@ export function colorNumToRgb(color: number): string {
     result = result >>> 0;
 
     return "#" + result.toString(16).padStart(6, "0");
-}
-
-export function colorRgbToNum(color: string): number {
-    const rgb = tinycolor(color).toRgb();
-
-    // result is in BGR format
-    let result = (rgb.b << 0) | (rgb.g << 8) | (rgb.r << 16) | (255 << 24);
-
-    // signed to unsigned
-    result = result >>> 0;
-
-    return result;
-}
-
-export function colorRgbToHexNumStr(color: string) {
-    return "0x" + colorRgbToNum(color).toString(16).padStart(8, "0");
 }
 
 export function getStylePropDefaultValue(

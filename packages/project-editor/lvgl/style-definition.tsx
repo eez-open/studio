@@ -13,7 +13,11 @@ import {
 import { humanize } from "eez-studio-shared/string";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { EezValueObject, Message } from "project-editor/store";
+import {
+    EezValueObject,
+    getAncestorOfType,
+    Message
+} from "project-editor/store";
 import { findBitmap, findFont } from "project-editor/project/project";
 
 import type { Page } from "project-editor/features/page/page";
@@ -31,12 +35,13 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import {
-    colorRgbToHexNumStr,
-    colorRgbToNum,
     getSelectorBuildCode,
     getSelectorCode
 } from "project-editor/lvgl/style-helper";
 import { getLvglCoordTypeShift } from "./lvgl-versions";
+import { getThemedColor } from "project-editor/features/style/theme";
+import { isValid } from "eez-studio-shared/color";
+import type { LVGLStyle } from "./style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,14 +285,46 @@ export class LVGLStylesDefinition extends EezObject {
 
     check(messages: IMessage[]) {
         if (this.definition) {
+            const projectStore = ProjectEditor.getProjectStore(this);
+
             Object.keys(this.definition).forEach(part => {
                 Object.keys(this.definition[part]).forEach(state => {
                     Object.keys(this.definition[part][state]).forEach(
                         propertyName => {
                             const propertyInfo =
                                 lvglPropertiesMap.get(propertyName);
+
                             if (!propertyInfo) {
                                 return;
+                            }
+
+                            if (propertyInfo.type == PropertyType.ThemedColor) {
+                                const color =
+                                    this.definition[part][state][propertyName];
+
+                                if (color) {
+                                    const colorValue = getThemedColor(
+                                        projectStore,
+                                        color
+                                    ).colorValue;
+
+                                    if (!isValid(colorValue)) {
+                                        const valueObject =
+                                            EezValueObject.create(
+                                                this,
+                                                propertyInfo,
+                                                color
+                                            );
+
+                                        messages.push(
+                                            new Message(
+                                                MessageType.ERROR,
+                                                `invalid color`,
+                                                valueObject
+                                            )
+                                        );
+                                    }
+                                }
                             }
 
                             if (
@@ -382,8 +419,8 @@ export class LVGLStylesDefinition extends EezObject {
             return;
         }
 
-        const lvglVersion =
-            ProjectEditor.getProject(widget).settings.general.lvglVersion;
+        const projectStore = ProjectEditor.getProjectStore(widget);
+        const lvglVersion = projectStore.project.settings.general.lvglVersion;
 
         Object.keys(this.definition).forEach(part => {
             Object.keys(this.definition[part]).forEach(state => {
@@ -404,15 +441,18 @@ export class LVGLStylesDefinition extends EezObject {
                             this.definition[part][state][propertyName];
 
                         if (propertyInfo.type == PropertyType.ThemedColor) {
-                            const colorValue = colorRgbToNum(value);
-
-                            runtime.wasm._lvglObjSetLocalStylePropColor(
-                                obj,
-                                runtime.getLvglStylePropCode(
-                                    propertyInfo.lvglStyleProp.code
-                                ),
-                                colorValue,
-                                selectorCode
+                            runtime.lvglSetAndUpdateColor(
+                                value,
+                                (wasm, colorNum) => {
+                                    wasm._lvglObjSetLocalStylePropColor(
+                                        obj,
+                                        runtime.getLvglStylePropCode(
+                                            propertyInfo.lvglStyleProp.code
+                                        ),
+                                        colorNum,
+                                        selectorCode
+                                    );
+                                }
                             );
                         } else if (
                             propertyInfo.type == PropertyType.Number ||
@@ -557,12 +597,31 @@ export class LVGLStylesDefinition extends EezObject {
                             this.definition[part][state][propertyName];
 
                         if (propertyInfo.type == PropertyType.ThemedColor) {
-                            build.line(
-                                `lv_obj_set_style_${build.getStylePropName(
-                                    propertyInfo.name
-                                )}(obj, lv_color_hex(${colorRgbToHexNumStr(
-                                    this.definition[part][state][propertyName]
-                                )}), ${selectorCode});`
+                            build.buildColor(
+                                this.definition[part][state][propertyName],
+                                () => {
+                                    return build.getLvglObjectAccessor(
+                                        getAncestorOfType<LVGLWidget>(
+                                            this,
+                                            ProjectEditor.LVGLWidgetClass
+                                                .classInfo
+                                        )!
+                                    );
+                                },
+                                (color: string) => {
+                                    build.line(
+                                        `lv_obj_set_style_${build.getStylePropName(
+                                            propertyInfo.name
+                                        )}(obj, lv_color_hex(${color}), ${selectorCode});`
+                                    );
+                                },
+                                (color: string, obj) => {
+                                    build.line(
+                                        `lv_obj_set_style_${build.getStylePropName(
+                                            propertyInfo.name
+                                        )}(${obj}, lv_color_hex(${color}), ${selectorCode});`
+                                    );
+                                }
                             );
                         } else if (
                             propertyInfo.type == PropertyType.Number ||
@@ -660,7 +719,12 @@ export class LVGLStylesDefinition extends EezObject {
         });
     }
 
-    lvglBuildStyle(build: LVGLBuild, part: string, state: string) {
+    lvglBuildStyle(
+        build: LVGLBuild,
+        lvglStyle: LVGLStyle,
+        part: string,
+        state: string
+    ) {
         Object.keys(this.definition?.[part]?.[state] ?? {}).forEach(
             propertyName => {
                 const propertyInfo = lvglPropertiesMap.get(propertyName);
@@ -671,12 +735,27 @@ export class LVGLStylesDefinition extends EezObject {
                 const value = this.definition[part][state][propertyName];
 
                 if (propertyInfo.type == PropertyType.ThemedColor) {
-                    build.line(
-                        `lv_style_set_${build.getStylePropName(
-                            propertyInfo.name
-                        )}(style, lv_color_hex(${colorRgbToHexNumStr(
-                            this.definition[part][state][propertyName]
-                        )}));`
+                    build.buildColor(
+                        this.definition[part][state][propertyName],
+                        () => {},
+                        color => {
+                            build.line(
+                                `lv_style_set_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(style, lv_color_hex(${color}));`
+                            );
+                        },
+                        color => {
+                            build.line(
+                                `lv_style_set_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(${build.getGetStyleFunctionName(
+                                    lvglStyle,
+                                    part,
+                                    state
+                                )}(), lv_color_hex(${color}));`
+                            );
+                        }
                     );
                 } else if (
                     propertyInfo.type == PropertyType.Number ||

@@ -3,6 +3,7 @@ import { observable, makeObservable } from "mobx";
 
 import {
     IMessage,
+    MessageType,
     PropertyType,
     makeDerivedClassInfo
 } from "project-editor/core/object";
@@ -22,6 +23,8 @@ import { KEYBOARD_MODES } from "project-editor/lvgl/lvgl-constants";
 import { LVGLTextareaWidget, LVGLWidget } from "./internal";
 import {
     getAncestorOfType,
+    getChildOfObject,
+    Message,
     propertyNotFoundMessage
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -145,15 +148,32 @@ export class LVGLKeyboardWidget extends LVGLWidget {
 
         check: (widget: LVGLKeyboardWidget, messages: IMessage[]) => {
             if (widget.textarea) {
-                if (
-                    !ProjectEditor.getProjectStore(
-                        widget
-                    ).lvglIdentifiers.getIdentifierByName(
-                        ProjectEditor.getFlow(widget),
-                        widget.textarea
-                    )
-                ) {
+                const lvglIdentifier = ProjectEditor.getProjectStore(
+                    widget
+                ).lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(widget),
+                    widget.textarea
+                );
+                if (!lvglIdentifier) {
                     messages.push(propertyNotFoundMessage(widget, "textarea"));
+                } else if (lvglIdentifier.widgets.length > 1) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Multiple widgets with the same name`,
+                            getChildOfObject(widget, "textarea")
+                        )
+                    );
+                } else if (
+                    !(lvglIdentifier.widgets[0] instanceof LVGLTextareaWidget)
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Widget "${widget.textarea}" is not a Textarea`,
+                            getChildOfObject(widget, "textarea")
+                        )
+                    );
                 }
             }
         },
@@ -177,10 +197,6 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             textarea: observable,
             mode: observable
         });
-    }
-
-    getIsAccessibleFromSourceCode() {
-        return true;
     }
 
     override lvglCreateObj(
@@ -213,8 +229,8 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 this.textarea
             );
 
-            if (lvglIdentifier) {
-                const textareaWidget = lvglIdentifier.object;
+            if (lvglIdentifier && lvglIdentifier.widgets.length == 1) {
+                const textareaWidget = lvglIdentifier.widgets[0];
 
                 if (
                     textareaWidget instanceof LVGLTextareaWidget &&
@@ -258,8 +274,11 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 ProjectEditor.getFlow(this),
                 this.textarea
             );
-            if (lvglIdentifier != undefined) {
-                const textareaWidget = lvglIdentifier.object;
+            if (
+                lvglIdentifier != undefined &&
+                lvglIdentifier.widgets.length == 1
+            ) {
+                const textareaWidget = lvglIdentifier.widgets[0];
                 build.line(
                     `lv_keyboard_set_textarea(${build.getLvglObjectAccessor(
                         this

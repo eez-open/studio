@@ -385,7 +385,7 @@ export class Bitmap extends EezObject {
                 return getThemedColor(
                     getProjectStore(this),
                     style.backgroundColorProperty
-                );
+                ).colorValue;
             }
         }
         return "transparent";

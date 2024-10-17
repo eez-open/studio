@@ -204,9 +204,15 @@ export function registerAction(actionDefinition: IActionDefinition) {
 
                     return lvglIdentifiers
                         .filter(lvglIdentifier => {
+                            if (lvglIdentifier.widgets.length > 1) {
+                                return false;
+                            }
+
+                            const widget = lvglIdentifier.widgets[0];
+
                             if (!widgetType) {
                                 return (
-                                    lvglIdentifier.object instanceof
+                                    widget instanceof
                                     ProjectEditor.LVGLWidgetClass
                                 );
                             } else {
@@ -220,10 +226,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
                                     lvglWidgetClassName
                                 )!;
 
-                                return (
-                                    lvglIdentifier.object instanceof
-                                    lvglWidgetClass
-                                );
+                                return widget instanceof lvglWidgetClass;
                             }
                         })
                         .map(lvglIdentifier => ({
@@ -496,15 +499,30 @@ export function registerAction(actionDefinition: IActionDefinition) {
                                                 propertyInfo.name
                                             )
                                         );
+                                    } else if (
+                                        lvglIdentifier.widgets.length > 1
+                                    ) {
+                                        messages.push(
+                                            new Message(
+                                                MessageType.ERROR,
+                                                `Multiple widgets with the same name`,
+                                                getChildOfObject(
+                                                    object,
+                                                    propertyInfo.name
+                                                )
+                                            )
+                                        );
                                     } else {
+                                        const widget =
+                                            lvglIdentifier.widgets[0];
+
                                         const widgetType =
                                             propertyInfo.lvglActionPropertyType.slice(
                                                 "widget:".length
                                             );
                                         if (widgetType) {
-                                            const classInfo = getClassInfo(
-                                                lvglIdentifier.object
-                                            );
+                                            const classInfo =
+                                                getClassInfo(widget);
                                             const expectedClassInfo =
                                                 getClassByName(
                                                     project._store,
@@ -517,9 +535,9 @@ export function registerAction(actionDefinition: IActionDefinition) {
                                                 messages.push(
                                                     new Message(
                                                         MessageType.ERROR,
-                                                        `Invalid object type`,
+                                                        `Invalid widget type`,
                                                         getChildOfObject(
-                                                            object,
+                                                            widget,
                                                             propertyInfo.name
                                                         )
                                                     )
@@ -986,12 +1004,7 @@ export class LVGLActionType extends EezObject {
             } else if (
                 propertyInfo.lvglActionPropertyType?.startsWith("widget")
             ) {
-                return (
-                    assets.projectStore.lvglIdentifiers.getIdentifierByName(
-                        ProjectEditor.getFlow(this),
-                        value
-                    )?.index ?? -1
-                );
+                return assets.lvglBuild.getWidgetObjectIndexByName(this, value);
             } else if (propertyInfo.lvglActionPropertyType == "group") {
                 return assets.projectStore.project.lvglGroups.groups.findIndex(
                     group => group.name == value

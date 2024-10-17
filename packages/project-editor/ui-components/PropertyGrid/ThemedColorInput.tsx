@@ -48,9 +48,17 @@ export const ThemedColorInput = observer(
         onDrop = (event: React.DragEvent) => {
             event.stopPropagation();
             event.preventDefault();
+
+            if (this.props.onClick) {
+                this.props.onClick(event as any);
+            }
+
             var data = getEezStudioDataFromDragEvent(this.context, event);
             if (data && data.objectClassName === "Color" && data.object) {
-                this.props.onChange(getProperty(data.object, "name"));
+                let value = getProperty(data.object, "name");
+                setTimeout(() => {
+                    this.props.onChange(value);
+                });
             }
         };
 
@@ -161,7 +169,7 @@ export const ThemedColorInput = observer(
                     ? settingsController.isDarkTheme
                         ? "black"
                         : "white"
-                    : getThemedColor(this.context, value);
+                    : getThemedColor(this.context, value).colorValue;
 
             if (!isValid(color)) {
                 color = settingsController.isDarkTheme ? "black" : "white";

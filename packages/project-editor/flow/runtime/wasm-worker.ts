@@ -498,6 +498,15 @@ function getBitmapAsDataURL(wasmModuleId: number, name: string) {
     return createWasmValue(WasmFlowRuntime, dataURL);
 }
 
+function setDashboardColorTheme(wasmModuleId: number, themeName: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (WasmFlowRuntime) {
+        WasmFlowRuntime.postWorkerToRendererMessage({
+            setDashboardColorTheme: { themeName }
+        });
+    }
+}
+
 function getLvglScreenByName(wasmModuleId: number, name: string) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -583,6 +592,17 @@ function lvglObjRemoveStyle(
     });
 }
 
+function lvglSetColorTheme(wasmModuleId: number, themeName: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglSetColorTheme: { themeName }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
@@ -608,6 +628,7 @@ function lvglObjRemoveStyle(
 (global as any).dashboardObjectValueDecRef = dashboardObjectValueDecRef;
 (global as any).onObjectArrayValueFree = onObjectArrayValueFree;
 (global as any).getBitmapAsDataURL = getBitmapAsDataURL;
+(global as any).setDashboardColorTheme = setDashboardColorTheme;
 (global as any).executeScpi = executeScpi;
 (global as any).getLvglScreenByName = getLvglScreenByName;
 (global as any).getLvglObjectByName = getLvglObjectByName;
@@ -616,6 +637,7 @@ function lvglObjRemoveStyle(
 (global as any).getLvglImageByName = getLvglImageByName;
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;
+(global as any).lvglSetColorTheme = lvglSetColorTheme;
 
 ////////////////////////////////////////////////////////////////////////////////
 

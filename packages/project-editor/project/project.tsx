@@ -1287,6 +1287,11 @@ function getProjectClassInfo() {
                 typeClass: Theme,
                 partOfNavigation: false,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "themesVersion",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true
             }
         ];
 
@@ -1297,6 +1302,12 @@ function getProjectClassInfo() {
                 if (
                     projectJs.settings.general.projectType == ProjectType.LVGL
                 ) {
+                    if (projectJs.themesVersion == undefined) {
+                        projectJs.themesVersion = 1;
+                        projectJs.themes = [{ name: "Default" }];
+                        projectJs.colors = [];
+                    }
+
                     delete projectJs.styles;
                     delete projectJs.texts;
 
@@ -1625,8 +1636,10 @@ export class Project extends EezObject {
     micropython: MicroPython;
     extensionDefinitions: ExtensionDefinition[];
     changes: Changes;
+
     colors: Color[];
     themes: Theme[];
+    themesVersion: number;
 
     constructor() {
         super();
@@ -1947,7 +1960,7 @@ export class Project extends EezObject {
             LayoutModels.THEMES_TAB_ID,
             LayoutModels.THEMES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            !this.projectTypeTraits.isLVGL
+            true //!this.projectTypeTraits.isLVGL
         );
 
         enableTabOnBorder(

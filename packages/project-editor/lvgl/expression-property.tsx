@@ -52,7 +52,7 @@ const LVGLProperty = observer(
                 propertyInfoType = propertyInfo.dynamicType(objects[0]);
             } else {
                 propertyInfoType = propertyInfo.colorEditorForLiteral
-                    ? PropertyType.Color
+                    ? PropertyType.ThemedColor
                     : propertyInfo.expressionType == "integer"
                     ? PropertyType.Number
                     : propertyInfo.expressionType == "string" ||

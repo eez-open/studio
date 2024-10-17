@@ -727,8 +727,8 @@ class WizardModel {
                 projectName: "LVGL",
                 description: "Start your new LVGL project development here.",
                 projectFileUrl: {
-                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.14.0/LVGL-8.3.eez-project",
-                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.14.0/LVGL-9.0.eez-project"
+                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.19.0/LVGL-8.3.eez-project",
+                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.19.0/LVGL-9.0.eez-project"
                 }
             },
             {
@@ -739,8 +739,8 @@ class WizardModel {
                 description:
                     "Start your new LVGL with EEZ Flow project development here.",
                 projectFileUrl: {
-                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.14.0/LVGL%20with%20EEZ%20Flow-8.3.eez-project",
-                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.14.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project"
+                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.19.0/LVGL%20with%20EEZ%20Flow-8.3.eez-project",
+                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.19.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project"
                 }
             },
             {

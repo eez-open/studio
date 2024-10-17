@@ -69,14 +69,6 @@ export class LVGLScreenWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override getIsAccessibleFromSourceCode() {
-        const page = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
-        return !page.isUsedAsUserWidget;
-    }
-
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number,
@@ -156,10 +148,10 @@ export class LVGLScreenWidget extends LVGLWidget {
 
                 const widgets = page.getLvglGroupWidgets(group.name);
 
-                widgets.forEach(widget => {
+                widgets.forEach(widgetPath => {
                     build.line(
                         `lv_group_add_obj(${groupVariableName}, ${build.getLvglWidgetAccessorInEventHandler(
-                            widget
+                            widgetPath
                         )});`
                     );
                 });

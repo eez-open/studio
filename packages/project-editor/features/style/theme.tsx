@@ -554,7 +554,8 @@ export class Theme extends EezObject implements ITheme {
                 name: "colors",
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
-                partOfNavigation: false
+                partOfNavigation: false,
+                computedIfNotLoadProject: true
             }
         ],
         newItem: async (parent: IEezObject) => {
@@ -648,8 +649,20 @@ function getThemedColorInProject(
     project: Project,
     colorValue: string
 ): string | undefined {
-    let selectedTheme =
-        project._store.navigationStore?.selectedThemeObject.get() as Theme;
+    let selectedTheme: Theme | undefined;
+
+    const runtime = project._store.runtime;
+    if (runtime) {
+        if (runtime instanceof ProjectEditor.WasmRuntimeClass) {
+            selectedTheme = project.themes.find(
+                theme => theme.name == runtime.selectedDashboardTheme
+            );
+        }
+    } else {
+        selectedTheme =
+            project._store.navigationStore?.selectedThemeObject.get() as Theme;
+    }
+
     if (!selectedTheme) {
         selectedTheme = project.themes[0];
     }
@@ -670,25 +683,22 @@ function getThemedColorInProject(
     return undefined;
 }
 
-export function getThemedColor(
-    projectStore: ProjectStore,
-    colorValue: string
-): string {
+export function getThemedColor(projectStore: ProjectStore, colorValue: string) {
     if (colorValue.startsWith("#")) {
-        return colorValue;
+        return { colorValue, isFromTheme: false };
     }
 
-    if (colorValue == "transparent") {
-        return `rgba(0, 0, 0, 0)`;
+    if (!projectStore.projectTypeTraits.isLVGL && colorValue == "transparent") {
+        return { colorValue: `rgba(0, 0, 0, 0)`, isFromTheme: false };
     }
 
     const project = getProjectWithThemes(projectStore);
     let color = getThemedColorInProject(project, colorValue);
     if (color) {
-        return color;
+        return { colorValue: color, isFromTheme: true };
     }
 
-    return colorValue;
+    return { colorValue, isFromTheme: false };
 }
 
 ////////////////////////////////////////////////////////////////////////////////

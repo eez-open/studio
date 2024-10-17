@@ -364,6 +364,10 @@ export interface WorkerToRenderMessage {
         name: string;
     };
 
+    setDashboardColorTheme?: {
+        themeName: string;
+    };
+
     getLvglScreenByName?: {
         name: string;
     };
@@ -392,6 +396,10 @@ export interface WorkerToRenderMessage {
     lvglObjRemoveStyle?: {
         targetObj: number;
         styleIndex: number;
+    };
+
+    lvglSetColorTheme?: {
+        themeName: string;
     };
 }
 
@@ -502,6 +510,7 @@ interface AssetsMap {
     displayWidth: number;
     displayHeight: number;
     bitmaps: string[];
+    lvglWidgetIndexes: { [identifier: string]: number };
 }
 
 export interface ScpiCommand {
@@ -674,6 +683,8 @@ export interface IWasmFlowRuntime {
     _lvglCreateCanvas(parentObj: number, index: number, x: number, y: number, w: number, h: number);
 
     _lvglCreateLed(parentObj: number, index: number, x: number, y: number, w: number, h: number, color: number, brightness: number);
+    _lvglLedSetColor(obj: number, color: number);
+    
     _lvglUpdateLedColor(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateLedBrightness(obj: number, flow_state: number, component_index: number, property_index: number): void;
 
@@ -726,6 +737,7 @@ export interface IWasmFlowRuntime {
     _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
     _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
+    
     _lvglMeterAddScale(obj: number,
         minorTickCount: number, minorTickLineWidth: number, minorTickLength: number, minorTickColor: number,
         nthMajor: number, majorTickWidth: number, majorTickLength: number, majorTickColor: number, labelGap: number,
@@ -737,6 +749,14 @@ export interface IWasmFlowRuntime {
     _lvglUpdateMeterIndicatorValue(obj: number, indicator: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateMeterIndicatorStartValue(obj: number, indicator: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateMeterIndicatorEndValue(obj: number, indicator: number, flow_state: number, component_index: number, property_index: number): void;
+    
+    _lvglMeterIndicatorNeedleLineSetColor(obj: number, indicator: number, color: number);
+    _lvglMeterIndicatorScaleLinesSetColorStart(obj: number, indicator: number, color: number);
+    _lvglMeterIndicatorScaleLinesSetColorEnd(obj: number, indicator: number, color: number);
+    _lvglMeterIndicatorArcSetColor(obj: number, indicator: number, color: number);
+    _lvglMeterScaleSetMinorTickColor(obj: number, scale: number, color: number);
+    _lvglMeterScaleSetMajorTickColor(obj: number, scale: number, color: number);
+    
     _lvglUpdateLabelText(obj: number, flow_state: number, component_index: number, property_index: number): void;
     _lvglUpdateRollerOptions(obj: number, flow_state: number, component_index: number, property_index: number, mode: number): void;
     _lvglUpdateRollerSelected(obj: number, flow_state: number, component_index: number, property_index: number): void;
@@ -792,6 +812,8 @@ export interface IWasmFlowRuntime {
     _lvglSetKeyboardGroup(groupObj: number): void;
     _lvglAddScreenLoadedEventHandler(screenObj: number): void;
     _lvglGroupAddObject(screenObj: number, groupObj: number, obj: number): void;
+
+    _lvglObjInvalidate(obj: number);
 }
 
 export interface IDashboardComponentContext {

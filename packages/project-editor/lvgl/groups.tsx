@@ -262,11 +262,14 @@ const WidgetsInGroup = observer(
                     return this.selectedPage
 
                         .getLvglGroupWidgets(this.selectedGroup.name)
-                        .map(widget => ({
-                            data: widget,
-                            id: widget.objID,
-                            selected: selectedObjects.includes(widget)
-                        }));
+                        .map(widgetPath => {
+                            const widget = widgetPath[widgetPath.length - 1];
+                            return {
+                                data: widget,
+                                id: widget.objID,
+                                selected: selectedObjects.includes(widget)
+                            };
+                        });
                 }
             }
 

@@ -113,7 +113,8 @@ import {
     COMPONENT_TYPE_SORT_ARRAY_ACTION,
     COMPONENT_TYPE_TEST_AND_SET_ACTION,
     COMPONENT_TYPE_LABEL_IN_ACTION,
-    COMPONENT_TYPE_LABEL_OUT_ACTION
+    COMPONENT_TYPE_LABEL_OUT_ACTION,
+    COMPONENT_TYPE_SET_COLOR_THEME_ACTION
 } from "project-editor/flow/components/component-types";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -121,6 +122,7 @@ import {
     CLIPBOARD_WRITE_ICON,
     LANGUAGE_ICON,
     LOG_ICON,
+    PALETTE_ICON,
     PRINT_TO_PDF_ICON
 } from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
@@ -2282,7 +2284,11 @@ export class CallActionActionComponent extends ActionComponent {
                     <pre key={userProperty.name}>
                         <>
                             {userProperty.displayName || userProperty.name}
-                            <LeftArrow />
+                            {userProperty.assignable ? (
+                                <RightArrow />
+                            ) : (
+                                <LeftArrow />
+                            )}
                             {this.userPropertyValues.values[userProperty.id] ||
                                 ""}
                         </>
@@ -3779,6 +3785,61 @@ export class AnimateActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class SetColorThemeActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        flowComponentId: COMPONENT_TYPE_SET_COLOR_THEME_ACTION,
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "theme",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "any"
+            )
+        ],
+        icon: PALETTE_ICON,
+        componentHeaderColor: "#DEB887"
+    });
+
+    theme: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            theme: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ClipboardWriteActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         componentPaletteGroupName: "GUI",
@@ -4788,6 +4849,9 @@ registerClass(
 registerClass("OverrideStyleActionComponent", OverrideStyleActionComponent);
 
 registerClass("AnimateActionComponent", AnimateActionComponent);
+
+registerClass("SetColorThemeActionComponent", SetColorThemeActionComponent);
+
 registerClass("ClipboardWriteActionComponent", ClipboardWriteActionComponent);
 
 registerClass("ErrorActionComponent", ErrorActionComponent);

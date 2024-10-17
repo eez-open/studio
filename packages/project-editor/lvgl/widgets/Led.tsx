@@ -1,7 +1,7 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 
-import { makeDerivedClassInfo } from "project-editor/core/object";
+import { makeDerivedClassInfo, MessageType } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
@@ -19,7 +19,10 @@ import {
     getExpressionPropertyData,
     getFlowStateAddressIndex
 } from "../widget-common";
-import { colorRgbToNum } from "../style-helper";
+import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getThemedColor } from "project-editor/features/style/theme";
+import { isValid } from "eez-studio-shared/color";
+import { getChildOfObject, Message } from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,6 +71,23 @@ export class LVGLLedWidget extends LVGLWidget {
             brightnessType: "literal"
         },
 
+        check(object: LVGLLedWidget, messages) {
+            const colorValue = getThemedColor(
+                ProjectEditor.getProjectStore(object),
+                object.color
+            ).colorValue;
+
+            if (!isValid(colorValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(object, "color")
+                    )
+                );
+            }
+        },
+
         icon: (
             <svg viewBox="0 0 512 512">
                 <path
@@ -98,10 +118,6 @@ export class LVGLLedWidget extends LVGLWidget {
             brightness: observable,
             brightnessType: observable
         });
-    }
-
-    get colorValue() {
-        return colorRgbToNum(this.color);
     }
 
     get brightnessValue() {
@@ -144,7 +160,7 @@ export class LVGLLedWidget extends LVGLWidget {
             rect.width,
             rect.height,
 
-            colorExpr ? 0 : this.colorValue,
+            colorExpr ? 0 : runtime.getColorNum(this.color),
             brightnessExpr ? 0 : this.brightnessValue
         );
 
@@ -154,6 +170,10 @@ export class LVGLLedWidget extends LVGLWidget {
                 getFlowStateAddressIndex(runtime),
                 colorExpr.componentIndex,
                 colorExpr.propertyIndex
+            );
+        } else {
+            runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
+                wasm._lvglLedSetColor(obj, colorNum)
             );
         }
 
@@ -175,8 +195,21 @@ export class LVGLLedWidget extends LVGLWidget {
 
     override lvglBuildSpecific(build: LVGLBuild) {
         if (this.colorType == "literal") {
-            build.line(
-                `lv_led_set_color(obj, lv_color_hex(${this.colorValue}));`
+            build.buildColor(
+                this.color,
+                () => {
+                    return build.getLvglObjectAccessor(this);
+                },
+                color => {
+                    build.line(
+                        `lv_led_set_color(obj, lv_color_hex(${color}));`
+                    );
+                },
+                (color, obj) => {
+                    build.line(
+                        `lv_led_set_color(${obj}, lv_color_hex(${color}));`
+                    );
+                }
             );
         }
 

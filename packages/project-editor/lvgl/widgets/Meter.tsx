@@ -47,11 +47,12 @@ import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { humanize } from "eez-studio-shared/string";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { checkExpression } from "project-editor/flow/expression";
-import { colorRgbToHexNumStr, colorRgbToNum } from "../style-helper";
 import {
     isFlowProperty,
     makeExpressionProperty
 } from "project-editor/flow/component";
+import { getThemedColor } from "project-editor/features/style/theme";
+import { isValid } from "eez-studio-shared/color";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,10 +176,6 @@ export class LVGLMeterIndicator extends EezObject {
         makeObservable(this, {
             type: observable
         });
-    }
-
-    getIsAccessibleFromSourceCode() {
-        return false;
     }
 
     lvglCreateObj(
@@ -364,10 +361,6 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         }
     });
 
-    override getIsAccessibleFromSourceCode() {
-        return this.valueType == "expression";
-    }
-
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         obj: number,
@@ -476,7 +469,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             },
             {
                 name: "color",
-                type: PropertyType.Color
+                type: PropertyType.ThemedColor
             },
             {
                 name: "radiusModifier",
@@ -526,12 +519,23 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                     );
                 }
             }
+
+            const colorValue = getThemedColor(
+                ProjectEditor.getProjectStore(indicator),
+                indicator.color
+            ).colorValue;
+
+            if (!isValid(colorValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(indicator, "color")
+                    )
+                );
+            }
         }
     });
-
-    override getIsAccessibleFromSourceCode() {
-        return this.valueType == "expression";
-    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -555,9 +559,13 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
             obj,
             scale,
             this.width,
-            colorRgbToNum(this.color),
+            runtime.getColorNum(this.color),
             this.radiusModifier,
             valueExpr ? 0 : (this.value as number)
+        );
+
+        runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
+            wasm._lvglMeterIndicatorNeedleLineSetColor(obj, indicator, colorNum)
         );
 
         if (valueExpr) {
@@ -572,12 +580,25 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
     }
 
     override lvglBuild(build: LVGLBuild) {
-        build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${
-                this.width
-            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
-                this.radiusModifier
-            });`
+        build.buildColor(
+            this.color,
+            () =>
+                build.genFileStaticVar(
+                    this.objID,
+                    "lv_meter_indicator_t *",
+                    "indicator"
+                ),
+            (color, indicatorVar) => {
+                build.line(
+                    `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${this.width}, lv_color_hex(${color}), ${this.radiusModifier});`
+                );
+                build.assingToFileStaticVar(indicatorVar, "indicator");
+            },
+            (color, indicatorVar) => {
+                build.line(
+                    `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                );
+            }
         );
 
         if (this.valueType == "literal") {
@@ -636,11 +657,11 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         properties: [
             {
                 name: "colorStart",
-                type: PropertyType.Color
+                type: PropertyType.ThemedColor
             },
             {
                 name: "colorEnd",
-                type: PropertyType.Color
+                type: PropertyType.ThemedColor
             },
             {
                 name: "local",
@@ -683,7 +704,10 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             endValueType: "literal"
         },
 
-        check: (indicator: LVGLMeterIndicatorArc, messages: IMessage[]) => {
+        check: (
+            indicator: LVGLMeterIndicatorScaleLines,
+            messages: IMessage[]
+        ) => {
             if (indicator.startValueType == "expression") {
                 try {
                     const widget = getAncestorOfType<LVGLWidget>(
@@ -721,15 +745,37 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                     );
                 }
             }
+
+            const colorStartValue = getThemedColor(
+                ProjectEditor.getProjectStore(indicator),
+                indicator.colorStart
+            ).colorValue;
+            if (!isValid(colorStartValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(indicator, "colorStart")
+                    )
+                );
+            }
+
+            const colorEndValue = getThemedColor(
+                ProjectEditor.getProjectStore(indicator),
+                indicator.colorEnd
+            ).colorValue;
+
+            if (!isValid(colorEndValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(indicator, "colorEnd")
+                    )
+                );
+            }
         }
     });
-
-    override getIsAccessibleFromSourceCode() {
-        return (
-            this.startValueType == "expression" ||
-            this.endValueType == "expression"
-        );
-    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -758,12 +804,28 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         const indicator = runtime.wasm._lvglMeterAddIndicatorScaleLines(
             obj,
             scale,
-            colorRgbToNum(this.colorStart),
-            colorRgbToNum(this.colorEnd),
+            runtime.getColorNum(this.colorStart),
+            runtime.getColorNum(this.colorEnd),
             this.local,
             this.widthModifier,
             startValueExpr ? 0 : (this.startValue as number),
             endValueExpr ? 0 : (this.endValue as number)
+        );
+
+        runtime.lvglUpdateColor(this.colorStart, (wasm, colorNum) =>
+            wasm._lvglMeterIndicatorScaleLinesSetColorStart(
+                obj,
+                indicator,
+                colorNum
+            )
+        );
+
+        runtime.lvglUpdateColor(this.colorEnd, (wasm, colorNum) =>
+            wasm._lvglMeterIndicatorScaleLinesSetColorEnd(
+                obj,
+                indicator,
+                colorNum
+            )
         );
 
         if (startValueExpr) {
@@ -788,12 +850,29 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
     }
 
     override lvglBuild(build: LVGLBuild) {
-        build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(${colorRgbToHexNumStr(
-                this.colorStart
-            )}), lv_color_hex(${colorRgbToHexNumStr(this.colorEnd)}), ${
-                this.local
-            }, ${this.widthModifier});`
+        build.buildColor2(
+            this.colorStart,
+            this.colorEnd,
+            () =>
+                build.genFileStaticVar(
+                    this.objID,
+                    "lv_meter_indicator_t *",
+                    "indicator"
+                ),
+            (colorStart, colorEnd, indicatorVar) => {
+                build.line(
+                    `lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(${colorStart}), lv_color_hex(${colorEnd}), ${this.local}, ${this.widthModifier});`
+                );
+                build.assingToFileStaticVar(indicatorVar, "indicator");
+            },
+            (colorStart, colorEnd, indicatorVar) => {
+                build.line(
+                    `${indicatorVar}->type_data.scale_lines.color_start = lv_color_hex(${colorStart});`
+                );
+                build.line(
+                    `${indicatorVar}->type_data.scale_lines.color_end = lv_color_hex(${colorEnd});`
+                );
+            }
         );
 
         if (this.startValueType == "literal") {
@@ -869,7 +948,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             },
             {
                 name: "color",
-                type: PropertyType.Color
+                type: PropertyType.ThemedColor
             },
             {
                 name: "radiusModifier",
@@ -942,15 +1021,22 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                     );
                 }
             }
+
+            const colorValue = getThemedColor(
+                ProjectEditor.getProjectStore(indicator),
+                indicator.color
+            ).colorValue;
+            if (!isValid(colorValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(indicator, "color")
+                    )
+                );
+            }
         }
     });
-
-    override getIsAccessibleFromSourceCode() {
-        return (
-            this.startValueType == "expression" ||
-            this.endValueType == "expression"
-        );
-    }
 
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
@@ -980,10 +1066,14 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
             obj,
             scale,
             this.width,
-            colorRgbToNum(this.color),
+            runtime.getColorNum(this.color),
             this.radiusModifier,
             startValueExpr ? 0 : (this.startValue as number),
             endValueExpr ? 0 : (this.endValue as number)
+        );
+
+        runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
+            wasm._lvglMeterIndicatorArcSetColor(obj, indicator, colorNum)
         );
 
         if (startValueExpr) {
@@ -1008,12 +1098,25 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
     }
 
     override lvglBuild(build: LVGLBuild) {
-        build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${
-                this.width
-            }, lv_color_hex(${colorRgbToHexNumStr(this.color)}), ${
-                this.radiusModifier
-            });`
+        build.buildColor(
+            this.color,
+            () =>
+                build.genFileStaticVar(
+                    this.objID,
+                    "lv_meter_indicator_t *",
+                    "indicator"
+                ),
+            (color, indicatorVar) => {
+                build.line(
+                    `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${this.width}, lv_color_hex(${color}), ${this.radiusModifier});`
+                );
+                build.assingToFileStaticVar(indicatorVar, "indicator");
+            },
+            (color, indicatorVar) => {
+                build.line(
+                    `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                );
+            }
         );
 
         if (this.startValueType == "literal") {
@@ -1087,7 +1190,7 @@ class LVGLMeterScale extends EezObject {
             { name: "minorTickCount", type: PropertyType.Number },
             { name: "minorTickLineWidth", type: PropertyType.Number },
             { name: "minorTickLength", type: PropertyType.Number },
-            { name: "minorTickColor", type: PropertyType.Color },
+            { name: "minorTickColor", type: PropertyType.ThemedColor },
 
             {
                 name: "nthMajor",
@@ -1100,7 +1203,7 @@ class LVGLMeterScale extends EezObject {
                 type: PropertyType.Number
             },
             { name: "majorTickLength", type: PropertyType.Number },
-            { name: "majorTickColor", type: PropertyType.Color },
+            { name: "majorTickColor", type: PropertyType.ThemedColor },
 
             makeExpressionProperty(
                 {
@@ -1181,6 +1284,34 @@ class LVGLMeterScale extends EezObject {
                     );
                 }
             }
+
+            const minorTickColorValue = getThemedColor(
+                ProjectEditor.getProjectStore(scale),
+                scale.minorTickColor
+            ).colorValue;
+            if (!isValid(minorTickColorValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(scale, "minorTickColor")
+                    )
+                );
+            }
+
+            const majorTickColorValue = getThemedColor(
+                ProjectEditor.getProjectStore(scale),
+                scale.majorTickColor
+            ).colorValue;
+            if (!isValid(majorTickColorValue)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `invalid color`,
+                        getChildOfObject(scale, "majorTickColor")
+                    )
+                );
+            }
         }
     };
 
@@ -1206,14 +1337,6 @@ class LVGLMeterScale extends EezObject {
             scaleAngleRange: observable,
             scaleRotation: observable
         });
-    }
-
-    getIsAccessibleFromSourceCode() {
-        return this.indicators.find(indicator =>
-            indicator.getIsAccessibleFromSourceCode()
-        )
-            ? true
-            : false;
     }
 }
 
@@ -1339,16 +1462,6 @@ export class LVGLMeterWidget extends LVGLWidget {
         });
     }
 
-    override getIsAccessibleFromSourceCode() {
-        if (super.getIsAccessibleFromSourceCode()) {
-            return true;
-        }
-
-        return this.scales.find(scale => scale.getIsAccessibleFromSourceCode())
-            ? true
-            : false;
-    }
-
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number
@@ -1378,12 +1491,12 @@ export class LVGLMeterWidget extends LVGLWidget {
                 Math.max(scale.minorTickCount, 2),
                 scale.minorTickLineWidth,
                 scale.minorTickLength,
-                colorRgbToNum(scale.minorTickColor),
+                runtime.getColorNum(scale.minorTickColor),
 
                 scale.nthMajor,
                 scale.majorTickWidth,
                 scale.majorTickLength,
-                colorRgbToNum(scale.majorTickColor),
+                runtime.getColorNum(scale.majorTickColor),
 
                 scale.labelGap,
 
@@ -1391,6 +1504,14 @@ export class LVGLMeterWidget extends LVGLWidget {
                 scale.scaleMax,
                 scale.scaleAngleRange,
                 scale.scaleRotation
+            );
+
+            runtime.lvglUpdateColor(scale.minorTickColor, (wasm, colorNum) =>
+                wasm._lvglMeterScaleSetMinorTickColor(obj, scaleObj, colorNum)
+            );
+
+            runtime.lvglUpdateColor(scale.majorTickColor, (wasm, colorNum) =>
+                wasm._lvglMeterScaleSetMajorTickColor(obj, scaleObj, colorNum)
             );
 
             for (
@@ -1486,23 +1607,39 @@ export class LVGLMeterWidget extends LVGLWidget {
 
             build.line(`lv_meter_scale_t *scale = lv_meter_add_scale(obj);`);
 
-            build.line(
-                `lv_meter_set_scale_ticks(obj, scale, ${Math.max(
-                    scale.minorTickCount,
-                    2
-                )}, ${scale.minorTickLineWidth}, ${
-                    scale.minorTickLength
-                }, lv_color_hex(${colorRgbToHexNumStr(scale.minorTickColor)}));`
-            );
+            build.buildColor2(
+                scale.minorTickColor,
+                scale.majorTickColor,
+                () =>
+                    build.genFileStaticVar(
+                        scale.objID,
+                        "lv_meter_scale_t *",
+                        "scale"
+                    ),
+                (minorTickColor, majorTickColor, scaleVar) => {
+                    build.assingToFileStaticVar(scaleVar, "scale");
 
-            build.line(
-                `lv_meter_set_scale_major_ticks(obj, scale, ${
-                    scale.nthMajor
-                }, ${scale.majorTickWidth}, ${
-                    scale.majorTickLength
-                }, lv_color_hex(${colorRgbToHexNumStr(
-                    scale.majorTickColor
-                )}), ${scale.labelGap});`
+                    build.line(
+                        `lv_meter_set_scale_ticks(obj, scale, ${Math.max(
+                            scale.minorTickCount,
+                            2
+                        )}, ${scale.minorTickLineWidth}, ${
+                            scale.minorTickLength
+                        }, lv_color_hex(${minorTickColor}));`
+                    );
+
+                    build.line(
+                        `lv_meter_set_scale_major_ticks(obj, scale, ${scale.nthMajor}, ${scale.majorTickWidth}, ${scale.majorTickLength}, lv_color_hex(${majorTickColor}), ${scale.labelGap});`
+                    );
+                },
+                (minorTickColor, majorTickColor, scaleVar) => {
+                    build.line(
+                        `${scaleVar}->tick_color = lv_color_hex(${minorTickColor});`
+                    );
+                    build.line(
+                        `${scaleVar}->tick_major_color = lv_color_hex(${majorTickColor});`
+                    );
+                }
             );
 
             build.line(

@@ -62,7 +62,7 @@ import {
     FLOW_FRAGMENT_PAGE_NAME,
     type Page
 } from "project-editor/features/page/page";
-import { Project, ProjectType } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 import { isArray } from "lodash";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
 import {
@@ -943,17 +943,17 @@ class PasteWithDependenciesModel {
             }
         }
 
-        if (pasteObject.object instanceof ProjectEditor.ColorClass) {
-            if (
-                this.destinationProjectStore.project.settings.general
-                    .projectType == ProjectType.LVGL
-            ) {
-                return {
-                    kind: "not-compatible",
-                    message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
-                };
-            }
-        }
+        // if (pasteObject.object instanceof ProjectEditor.ColorClass) {
+        //     if (
+        //         this.destinationProjectStore.project.settings.general
+        //             .projectType == ProjectType.LVGL
+        //     ) {
+        //         return {
+        //             kind: "not-compatible",
+        //             message: NOT_COMPATIBLE_WITH_PROJECT_TYPE
+        //         };
+        //     }
+        // }
 
         if (!pasteObject.destinationCollection) {
             return { kind: "doesnt-exists" };
@@ -2041,7 +2041,6 @@ export function copyObjects(
                     if (
                         component instanceof ProjectEditor.LVGLScreenWidgetClass
                     ) {
-                        console.log(component.children);
                         component.children.forEach(child => {
                             flowFragment.components.push(child);
                         });

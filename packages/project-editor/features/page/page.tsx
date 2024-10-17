@@ -219,6 +219,9 @@ export class Page extends Flow {
             dataContextOverridesObject: computed,
             rect: computed,
             _lvglWidgetsIncludingUserWidgets: computed({ keepAlive: true }),
+            _lvglWidgetsIncludingUserWidgetsWithoutCopy: computed({
+                keepAlive: true
+            }),
             _lvglWidgets: computed({ keepAlive: true })
         });
     }
@@ -915,7 +918,7 @@ export class Page extends Flow {
                     getThemedColor(
                         flowContext.projectStore,
                         pageStyle.backgroundColorProperty
-                    )
+                    ).colorValue
                 );
             }
         }
@@ -1088,17 +1091,18 @@ export class Page extends Flow {
     }
 
     getLvglGroupWidgets(groupName: string) {
-        let widgets = [];
+        let groupWidgets: LVGLWidget[][] = [];
 
-        for (const widget of this._lvglWidgetsIncludingUserWidgets) {
-            if (widget.group == groupName) {
-                widgets.push(widget);
+        for (const widgetPath of this
+            ._lvglWidgetsIncludingUserWidgetsWithoutCopy) {
+            if (widgetPath[widgetPath.length - 1].group == groupName) {
+                groupWidgets.push(widgetPath);
             }
         }
 
-        widgets.sort((a, b) => {
-            let aIndex = a.groupIndex;
-            let bIndex = b.groupIndex;
+        groupWidgets.sort((a, b) => {
+            let aIndex = a[a.length - 1].groupIndex;
+            let bIndex = b[b.length - 1].groupIndex;
 
             if (aIndex <= 0) {
                 if (bIndex > 0) {
@@ -1109,14 +1113,14 @@ export class Page extends Flow {
             }
 
             if (aIndex == bIndex) {
-                aIndex = widgets.indexOf(a);
-                bIndex = widgets.indexOf(b);
+                aIndex = groupWidgets.indexOf(a);
+                bIndex = groupWidgets.indexOf(b);
             }
 
             return aIndex - bIndex;
         });
 
-        return widgets;
+        return groupWidgets;
     }
 
     get _lvglWidgets() {
@@ -1159,6 +1163,32 @@ export class Page extends Flow {
         addWidgets(this);
 
         return widgets;
+    }
+
+    get _lvglWidgetsIncludingUserWidgetsWithoutCopy() {
+        const allWidgets: LVGLWidget[][] = [];
+
+        function addWidgets(page: Page, widgetPath: LVGLWidget[]) {
+            for (const widget of visitObjects(page.components)) {
+                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+                    allWidgets.push([...widgetPath, widget]);
+
+                    if (
+                        widget instanceof
+                        ProjectEditor.LVGLUserWidgetWidgetClass
+                    ) {
+                        const userWidgetPage = widget.userWidgetPage;
+                        if (userWidgetPage && !widget.isCycleDetected) {
+                            addWidgets(userWidgetPage, [...widgetPath, widget]);
+                        }
+                    }
+                }
+            }
+        }
+
+        addWidgets(this, []);
+
+        return allWidgets;
     }
 }
 

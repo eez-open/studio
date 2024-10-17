@@ -183,6 +183,7 @@ export interface PropertyInfo {
         referencedObject: IEezObject
     ) => boolean;
     computed?: boolean;
+    computedIfNotLoadProject?: boolean;
     modifiable?: boolean;
     onSelect?: (
         object: IEezObject,

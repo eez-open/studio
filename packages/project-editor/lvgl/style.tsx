@@ -37,10 +37,7 @@ import {
     findFont,
     type Project
 } from "project-editor/project/project";
-import {
-    colorRgbToNum,
-    getSelectorCode
-} from "project-editor/lvgl/style-helper";
+import { getSelectorCode } from "project-editor/lvgl/style-helper";
 import {
     BUILT_IN_FONTS,
     lvglPropertiesMap,
@@ -496,14 +493,17 @@ export class LVGLStyle extends EezObject {
                             const value = definition[part][state][propertyName];
 
                             if (propertyInfo.type == PropertyType.ThemedColor) {
-                                const colorValue = colorRgbToNum(value);
-
-                                runtime.wasm._lvglStyleSetPropColor(
-                                    getStyleObj(),
-                                    runtime.getLvglStylePropCode(
-                                        propertyInfo.lvglStyleProp.code
-                                    ),
-                                    colorValue
+                                runtime.lvglSetAndUpdateColor(
+                                    value,
+                                    (wasm, colorNum) => {
+                                        wasm._lvglStyleSetPropColor(
+                                            getStyleObj(),
+                                            runtime.getLvglStylePropCode(
+                                                propertyInfo.lvglStyleProp.code
+                                            ),
+                                            colorNum
+                                        );
+                                    }
                                 );
                             } else if (
                                 propertyInfo.type == PropertyType.Number ||

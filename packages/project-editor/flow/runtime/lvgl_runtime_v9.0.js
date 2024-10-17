@@ -969,24 +969,25 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1031624: ($0) => { startToDebuggerMessage($0); },  
- 1031656: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031731: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1031806: ($0) => { finishToDebuggerMessage($0); },  
- 1031839: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1031893: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1031947: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1032000: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1032053: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1032106: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1032139: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1032175: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1032281: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1032317: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1032354: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1032394: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1032451: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1032510: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1031664: ($0) => { startToDebuggerMessage($0); },  
+ 1031696: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031771: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031846: ($0) => { finishToDebuggerMessage($0); },  
+ 1031879: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1031933: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1031987: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1032040: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1032093: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1032146: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1032179: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1032215: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1032260: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1032366: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1032402: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1032439: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1032479: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1032536: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1032595: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4759,6 +4760,7 @@ var _lvglTabviewAddTab = Module['_lvglTabviewAddTab'] = createExportWrapper('lvg
 var _lvglCreateAnimationImage = Module['_lvglCreateAnimationImage'] = createExportWrapper('lvglCreateAnimationImage');
 var _lvglCreateCanvas = Module['_lvglCreateCanvas'] = createExportWrapper('lvglCreateCanvas');
 var _lvglCreateLed = Module['_lvglCreateLed'] = createExportWrapper('lvglCreateLed');
+var _lvglLedSetColor = Module['_lvglLedSetColor'] = createExportWrapper('lvglLedSetColor');
 var _lvglUpdateLedColor = Module['_lvglUpdateLedColor'] = createExportWrapper('lvglUpdateLedColor');
 var _lvglUpdateLedBrightness = Module['_lvglUpdateLedBrightness'] = createExportWrapper('lvglUpdateLedBrightness');
 var _lvglCreateList = Module['_lvglCreateList'] = createExportWrapper('lvglCreateList');
@@ -4813,6 +4815,12 @@ var _lvglMeterAddIndicatorArc = Module['_lvglMeterAddIndicatorArc'] = createExpo
 var _lvglUpdateMeterIndicatorValue = Module['_lvglUpdateMeterIndicatorValue'] = createExportWrapper('lvglUpdateMeterIndicatorValue');
 var _lvglUpdateMeterIndicatorStartValue = Module['_lvglUpdateMeterIndicatorStartValue'] = createExportWrapper('lvglUpdateMeterIndicatorStartValue');
 var _lvglUpdateMeterIndicatorEndValue = Module['_lvglUpdateMeterIndicatorEndValue'] = createExportWrapper('lvglUpdateMeterIndicatorEndValue');
+var _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = createExportWrapper('lvglMeterIndicatorNeedleLineSetColor');
+var _lvglMeterIndicatorScaleLinesSetColorStart = Module['_lvglMeterIndicatorScaleLinesSetColorStart'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorStart');
+var _lvglMeterIndicatorScaleLinesSetColorEnd = Module['_lvglMeterIndicatorScaleLinesSetColorEnd'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorEnd');
+var _lvglMeterIndicatorArcSetColor = Module['_lvglMeterIndicatorArcSetColor'] = createExportWrapper('lvglMeterIndicatorArcSetColor');
+var _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'] = createExportWrapper('lvglMeterScaleSetMinorTickColor');
+var _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = createExportWrapper('lvglMeterScaleSetMajorTickColor');
 var _lvglUpdateDropdownOptions = Module['_lvglUpdateDropdownOptions'] = createExportWrapper('lvglUpdateDropdownOptions');
 var _lvglUpdateDropdownSelected = Module['_lvglUpdateDropdownSelected'] = createExportWrapper('lvglUpdateDropdownSelected');
 var _lvglUpdateRollerOptions = Module['_lvglUpdateRollerOptions'] = createExportWrapper('lvglUpdateRollerOptions');
@@ -4845,6 +4853,7 @@ var _lvglLineSetYInvert = Module['_lvglLineSetYInvert'] = createExportWrapper('l
 var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo');
 var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
 var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
+var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');

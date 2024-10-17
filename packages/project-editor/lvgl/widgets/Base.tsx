@@ -33,7 +33,6 @@ import {
 } from "project-editor/store";
 
 import {
-    getProject,
     ProjectType,
     findAction,
     findLvglStyle,
@@ -1269,7 +1268,7 @@ export class LVGLWidget extends Widget {
                 const lvglIdentifier =
                     projectStore.lvglIdentifiers.getIdentifier(widget);
 
-                if (lvglIdentifier.duplicate) {
+                if (lvglIdentifier && lvglIdentifier.widgets.length > 1) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
@@ -1322,8 +1321,7 @@ export class LVGLWidget extends Widget {
             allStates: computed,
             relativePosition: computed,
             componentWidth: computed,
-            componentHeight: computed,
-            isAccessibleFromSourceCode: computed
+            componentHeight: computed
         });
     }
 
@@ -1573,9 +1571,13 @@ export class LVGLWidget extends Widget {
 
         runInAction(() => (this._lvglObj = obj));
 
+        if (this.group) {
+            runtime.registerGroupWidget(this.group, this.groupIndex, obj);
+        }
+
         const project = ProjectEditor.getProject(this);
 
-        if (runtime.wasm.assetsMap) {
+        if (runtime.wasm.assetsMap?.flows.length > 0) {
             const page = getAncestorOfType(
                 this,
                 ProjectEditor.PageClass.classInfo
@@ -1847,42 +1849,6 @@ export class LVGLWidget extends Widget {
 
     createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
 
-    get isAccessibleFromSourceCode() {
-        if (this.identifier) {
-            return true;
-        }
-
-        if (
-            getProject(this).projectTypeTraits.hasFlowSupport &&
-            this.timeline.length > 0
-        ) {
-            return true;
-        }
-
-        if (this.eventHandlers.length > 0 || this.hasEventHandler) {
-            return true;
-        }
-
-        if (
-            this.checkedStateType == "expression" ||
-            this.disabledStateType == "expression" ||
-            this.hiddenFlagType == "expression" ||
-            this.clickableFlagType == "expression"
-        ) {
-            return true;
-        }
-
-        if (this.group) {
-            return true;
-        }
-
-        return this.getIsAccessibleFromSourceCode();
-    }
-
-    getIsAccessibleFromSourceCode() {
-        return false;
-    }
-
     lvglBuild(build: LVGLBuild): void {
         if (this.identifier) {
             build.line(`// ${this.identifier}`);
@@ -1890,7 +1856,7 @@ export class LVGLWidget extends Widget {
 
         this.lvglBuildObj(build);
 
-        if (this.isAccessibleFromSourceCode) {
+        if (build.isAccessibleFromSourceCode(this)) {
             build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
         }
 
@@ -2314,34 +2280,34 @@ export class LVGLWidget extends Widget {
 
     get lvglBuildLeft() {
         if (this.leftUnit == "%") {
-            return `LV_PCT(${this.left})`;
+            return `LV_PCT(${Math.round(this.left)})`;
         }
-        return this.left;
+        return Math.round(this.left);
     }
 
     get lvglBuildTop() {
         if (this.topUnit == "%") {
-            return `LV_PCT(${this.top})`;
+            return `LV_PCT(${Math.round(this.top)})`;
         }
-        return this.top;
+        return Math.round(this.top);
     }
 
     get lvglBuildWidth() {
         if (this.widthUnit == "content") {
             return "LV_SIZE_CONTENT";
         } else if (this.widthUnit == "%") {
-            return `LV_PCT(${this.width})`;
+            return `LV_PCT(${Math.round(this.width)})`;
         }
-        return this.width;
+        return Math.round(this.width);
     }
 
     get lvglBuildHeight() {
         if (this.heightUnit == "content") {
             return "LV_SIZE_CONTENT";
         } else if (this.heightUnit == "%") {
-            return `LV_PCT(${this.height})`;
+            return `LV_PCT(${Math.round(this.height)})`;
         }
-        return this.height;
+        return Math.round(this.height);
     }
 
     lvglBuildObj(build: LVGLBuild): void {

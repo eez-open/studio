@@ -156,10 +156,6 @@ export class LVGLLabelWidget extends LVGLWidget {
         });
     }
 
-    override getIsAccessibleFromSourceCode() {
-        return this.textType == "expression";
-    }
-
     override lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number

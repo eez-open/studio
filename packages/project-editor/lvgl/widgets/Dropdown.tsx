@@ -162,10 +162,6 @@ export class LVGLDropdownWidget extends LVGLWidget {
         });
     }
 
-    override getIsAccessibleFromSourceCode() {
-        return this.optionsType == "expression";
-    }
-
     override get hasEventHandler() {
         return super.hasEventHandler || this.selectedType == "expression";
     }

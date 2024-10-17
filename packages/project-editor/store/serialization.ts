@@ -258,6 +258,10 @@ function loadObjectInternal(
             continue;
         }
 
+        if (propertyInfo.computedIfNotLoadProject === true && !isLoadProject) {
+            continue;
+        }
+
         let value = jsObject[propertyInfo.name];
 
         if (propertyInfo.type === PropertyType.Object) {

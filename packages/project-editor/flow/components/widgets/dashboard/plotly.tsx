@@ -715,7 +715,7 @@ const LineChartElement = observer(
                             getThemedColor(
                                 flowContext.projectStore,
                                 widget.markerStyle.borderColor
-                            )) ||
+                            ).colorValue) ||
                         "black";
 
                     const width =
@@ -750,7 +750,7 @@ const LineChartElement = observer(
                 ? getThemedColor(
                       flowContext.projectStore,
                       widget.style.backgroundColor
-                  )
+                  ).colorValue
                 : "white";
 
             return {

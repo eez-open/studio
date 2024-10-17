@@ -144,10 +144,6 @@ export class LVGLTabWidget extends LVGLWidget {
         return "both";
     }
 
-    override getIsAccessibleFromSourceCode() {
-        return this.tabNameType == "expression";
-    }
-
     override get relativePosition() {
         const relativePosition = super.relativePosition;
 
