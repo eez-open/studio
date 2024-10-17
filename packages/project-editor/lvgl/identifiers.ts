@@ -7,7 +7,11 @@ import type { Flow } from "project-editor/flow/flow";
 import { Page } from "project-editor/features/page/page";
 
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { USER_WIDGET_IDENTIFIER_SEPARATOR } from "project-editor/build/helper";
+import {
+    getName,
+    NamingConvention,
+    USER_WIDGET_IDENTIFIER_SEPARATOR
+} from "project-editor/build/helper";
 
 export const GENERATED_NAME_PREFIX = "obj";
 
@@ -96,7 +100,17 @@ export class LVGLIdentifiers {
                 if (widget instanceof ProjectEditor.LVGLScreenWidgetClass) {
                     identifierName = page.name;
                 } else {
-                    identifierName = prefix + widget.identifier;
+                    if (!widget.identifier) {
+                        return;
+                    }
+
+                    identifierName =
+                        prefix +
+                        getName(
+                            "",
+                            widget.identifier,
+                            NamingConvention.UnderscoreLowerCase
+                        );
                 }
 
                 if (!identifierName) {
