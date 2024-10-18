@@ -192,7 +192,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 referencedObjectCollectionPath = "userPages";
             } else if (actionProperty.type.startsWith("widget")) {
                 enumItems = (actionType: LVGLActionType) => {
-                    const lvglIdentifiers = ProjectEditor.getProjectStore(
+                    let lvglIdentifiers = ProjectEditor.getProjectStore(
                         actionType
                     ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
                         ProjectEditor.getFlow(actionType)
@@ -202,37 +202,40 @@ export function registerAction(actionDefinition: IActionDefinition) {
                         "widget:".length
                     );
 
-                    return lvglIdentifiers
-                        .filter(lvglIdentifier => {
-                            if (lvglIdentifier.widgets.length > 1) {
-                                return false;
-                            }
+                    lvglIdentifiers = lvglIdentifiers.filter(lvglIdentifier => {
+                        if (lvglIdentifier.widgets.length > 1) {
+                            return false;
+                        }
 
-                            const widget = lvglIdentifier.widgets[0];
+                        const widget = lvglIdentifier.widgets[0];
 
-                            if (!widgetType) {
-                                return (
-                                    widget instanceof
-                                    ProjectEditor.LVGLWidgetClass
-                                );
-                            } else {
-                                const lvglWidgetClassName = `LVGL${widgetType}Widget`;
+                        if (!widgetType) {
+                            return (
+                                widget instanceof ProjectEditor.LVGLWidgetClass
+                            );
+                        } else {
+                            const lvglWidgetClassName = `LVGL${widgetType}Widget`;
 
-                                const projectStore =
-                                    ProjectEditor.getProjectStore(actionType);
+                            const projectStore =
+                                ProjectEditor.getProjectStore(actionType);
 
-                                const lvglWidgetClass = getClassByName(
-                                    projectStore,
-                                    lvglWidgetClassName
-                                )!;
+                            const lvglWidgetClass = getClassByName(
+                                projectStore,
+                                lvglWidgetClassName
+                            )!;
 
-                                return widget instanceof lvglWidgetClass;
-                            }
-                        })
-                        .map(lvglIdentifier => ({
-                            id: lvglIdentifier.identifier,
-                            label: lvglIdentifier.identifier
-                        }));
+                            return widget instanceof lvglWidgetClass;
+                        }
+                    });
+
+                    lvglIdentifiers.sort((a, b) =>
+                        a.identifier.localeCompare(b.identifier)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
                 };
                 referencedObjectCollectionPath = "";
             } else if (actionProperty.type == "style") {

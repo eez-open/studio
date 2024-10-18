@@ -98,7 +98,11 @@ export class LVGLIdentifiers {
                 let identifierName;
 
                 if (widget instanceof ProjectEditor.LVGLScreenWidgetClass) {
-                    identifierName = page.name;
+                    identifierName = getName(
+                        "",
+                        page.name,
+                        NamingConvention.UnderscoreLowerCase
+                    );
                 } else {
                     if (!widget.identifier) {
                         return;
