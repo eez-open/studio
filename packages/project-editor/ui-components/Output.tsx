@@ -203,8 +203,8 @@ const MessageContent = observer(
 
             let text =
                 typeof this.props.message.text == "string"
-                    ? this.props.message.text.toString()
-                    : this.props.message.text;
+                    ? this.props.message.text
+                    : this.props.message.text?.toString() ?? "";
             if (text.length > MAX_OUTPUT_MESSAGE_TEXT_SIZE) {
                 text = text.substring(0, MAX_OUTPUT_MESSAGE_TEXT_SIZE) + "...";
             }
