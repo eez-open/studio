@@ -179,11 +179,6 @@ export const ComponentEnclosure = observer(
                 return;
             }
 
-            if (this.updateComponentTimeout) {
-                clearTimeout(this.updateComponentTimeout);
-                this.updateComponentTimeout = undefined;
-            }
-
             if (this.elRef.current && this.listIndex == 0) {
                 const component = this.props.component;
                 if (component instanceof ProjectEditor.PageClass) {
@@ -198,7 +193,6 @@ export const ComponentEnclosure = observer(
 
                 if (this.elRef.current.offsetParent == null) {
                     // do not calculate geometry if element is not visible
-
                     this.updateComponentTimeout = setTimeout(() => {
                         this.updateComponentTimeout = undefined;
                         this.updateComponentGeometry();
@@ -221,12 +215,24 @@ export const ComponentEnclosure = observer(
             }
         };
 
+        debounceUpdateComponentGeometry = () => {
+            if (this.updateComponentTimeout) {
+                clearTimeout(this.updateComponentTimeout);
+                this.updateComponentTimeout = undefined;
+            }
+
+            this.updateComponentTimeout = setTimeout(() => {
+                this.updateComponentTimeout = undefined;
+                this.updateComponentGeometry();
+            });
+        };
+
         componentDidMount() {
-            this.updateComponentGeometry();
+            this.debounceUpdateComponentGeometry();
         }
 
         componentDidUpdate() {
-            this.updateComponentGeometry();
+            this.debounceUpdateComponentGeometry();
         }
 
         componentWillUnmount() {

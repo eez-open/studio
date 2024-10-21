@@ -201,7 +201,13 @@ class SettingsController {
         setTimeFormat(value);
     }
 
+    onThemeSwitchedTimeout: any;
+
     switchTheme(value: boolean) {
+        if (this.onThemeSwitchedTimeout) {
+            return;
+        }
+
         this.isDarkTheme = value;
         setIsDarkTheme(value);
         this.onThemeSwitched();
@@ -238,9 +244,10 @@ class SettingsController {
                 "../../node_modules/flexlayout-react/style/light.css";
         }
 
-        setTimeout(() => {
+        this.onThemeSwitchedTimeout = setTimeout(() => {
+            this.onThemeSwitchedTimeout = undefined;
             content.style.opacity = "";
-        }, 200);
+        }, 500);
     }
 
     removeItemFromMRU(mruItem: IMruItem) {
