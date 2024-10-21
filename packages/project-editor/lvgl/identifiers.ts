@@ -80,6 +80,58 @@ export class LVGLIdentifiers {
         return styles;
     }
 
+    enumIdentifiers(page: Page, identifiers: LVGLIdentifier[], prefix: string) {
+        page._lvglWidgets.forEach(widget => {
+            let identifierName;
+
+            if (widget instanceof ProjectEditor.LVGLScreenWidgetClass) {
+                identifierName = getName(
+                    "",
+                    page.name,
+                    NamingConvention.UnderscoreLowerCase
+                );
+            } else {
+                if (!widget.identifier) {
+                    return;
+                }
+
+                identifierName =
+                    prefix +
+                    getName(
+                        "",
+                        widget.identifier,
+                        NamingConvention.UnderscoreLowerCase
+                    );
+            }
+
+            if (!identifierName) {
+                return;
+            }
+
+            const identifier = identifiers.find(
+                identifier => identifier.identifier == identifierName
+            );
+            if (identifier) {
+                identifier.widgets.push(widget);
+            } else {
+                identifiers.push({
+                    identifier: identifierName,
+                    widgets: [widget]
+                });
+            }
+
+            if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+                if (widget.userWidgetPage) {
+                    this.enumIdentifiers(
+                        widget.userWidgetPage,
+                        identifiers,
+                        identifierName + USER_WIDGET_IDENTIFIER_SEPARATOR
+                    );
+                }
+            }
+        });
+    }
+
     get widgetIdentifiers(): {
         global: LVGLIdentifier[];
         userWidget: Map<Page, LVGLIdentifier[]>;
@@ -89,69 +141,13 @@ export class LVGLIdentifiers {
             userWidget: new Map()
         };
 
-        function enumIdentifiers(
-            page: Page,
-            identifiers: LVGLIdentifier[],
-            prefix: string
-        ) {
-            page._lvglWidgets.forEach(widget => {
-                let identifierName;
-
-                if (widget instanceof ProjectEditor.LVGLScreenWidgetClass) {
-                    identifierName = getName(
-                        "",
-                        page.name,
-                        NamingConvention.UnderscoreLowerCase
-                    );
-                } else {
-                    if (!widget.identifier) {
-                        return;
-                    }
-
-                    identifierName =
-                        prefix +
-                        getName(
-                            "",
-                            widget.identifier,
-                            NamingConvention.UnderscoreLowerCase
-                        );
-                }
-
-                if (!identifierName) {
-                    return;
-                }
-
-                const identifier = identifiers.find(
-                    identifier => identifier.identifier == identifierName
-                );
-                if (identifier) {
-                    identifier.widgets.push(widget);
-                } else {
-                    identifiers.push({
-                        identifier: identifierName,
-                        widgets: [widget]
-                    });
-                }
-
-                if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
-                    if (widget.userWidgetPage) {
-                        enumIdentifiers(
-                            widget.userWidgetPage,
-                            identifiers,
-                            identifierName + USER_WIDGET_IDENTIFIER_SEPARATOR
-                        );
-                    }
-                }
-            });
-        }
-
         for (const page of this.pages) {
             if (page.isUsedAsUserWidget) {
                 const identifiers: LVGLIdentifier[] = [];
-                enumIdentifiers(page, identifiers, "");
+                this.enumIdentifiers(page, identifiers, "");
                 result.userWidget.set(page, identifiers);
             } else {
-                enumIdentifiers(page, result.global, "");
+                this.enumIdentifiers(page, result.global, "");
             }
         }
 
@@ -169,7 +165,19 @@ export class LVGLIdentifiers {
         flow: Flow,
         displayName: string
     ): LVGLIdentifier | undefined {
-        const identifiers = this.getIdentifiersVisibleFromFlow(flow);
+        let identifiers = this.getIdentifiersVisibleFromFlow(flow);
+
+        if (!identifiers) {
+            if (
+                flow instanceof ProjectEditor.PageClass &&
+                flow._lvglUserWidgetOfPageCopy
+            ) {
+                identifiers = [];
+                this.enumIdentifiers(flow, identifiers, "");
+            } else {
+                return undefined;
+            }
+        }
 
         return identifiers.find(
             lvglIdentifier => lvglIdentifier.identifier == displayName

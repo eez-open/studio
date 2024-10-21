@@ -615,7 +615,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             const widgetStartIndex =
                 assets.lvglBuild.getWidgetObjectIndex(this) + 1;
 
-            console.log(this.identifier, widgetStartIndex);
             dataBuffer.writeInt32(widgetStartIndex);
         } else {
             // flowIndex
