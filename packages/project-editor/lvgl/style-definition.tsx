@@ -631,6 +631,7 @@ export class LVGLStylesDefinition extends EezObject {
 
                         if (propertyInfo.type == PropertyType.ThemedColor) {
                             build.buildColor(
+                                this,
                                 this.definition[part][state][propertyName],
                                 () => {
                                     return build.getLvglObjectAccessor(
@@ -769,6 +770,7 @@ export class LVGLStylesDefinition extends EezObject {
 
                 if (propertyInfo.type == PropertyType.ThemedColor) {
                     build.buildColor(
+                        this,
                         this.definition[part][state][propertyName],
                         () => {},
                         color => {

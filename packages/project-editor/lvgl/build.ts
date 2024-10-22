@@ -31,6 +31,7 @@ import type { LVGLGroup } from "./groups";
 import { showBuildImageInfoDialog } from "./build-image-info-dialog";
 import tinycolor from "tinycolor2";
 import { GENERATED_NAME_PREFIX } from "./identifiers";
+import type { Flow } from "project-editor/flow/flow";
 
 interface Identifiers {
     identifiers: string[];
@@ -46,7 +47,10 @@ export class LVGLBuild extends Build {
     fontNames = new Map<string, string>();
     bitmapNames = new Map<string, string>();
 
-    updateColorCallbacks: (() => void)[] = [];
+    updateColorCallbacks: {
+        object: IEezObject;
+        callback: () => void;
+    }[] = [];
 
     isFirstPass: boolean;
 
@@ -707,6 +711,7 @@ export class LVGLBuild extends Build {
     }
 
     buildColor<T>(
+        object: IEezObject,
         color: string,
         getParams: () => T,
         callback: (color: string, params: T) => void,
@@ -716,17 +721,21 @@ export class LVGLBuild extends Build {
         callback(colorAccessor, getParams());
 
         if (!this.isFirstPass && fromTheme) {
-            this.updateColorCallbacks.push(() => {
-                const { colorAccessor } = this.getColorAccessor(
-                    color,
-                    "theme_index"
-                );
-                updateCallback(colorAccessor, getParams());
+            this.updateColorCallbacks.push({
+                object,
+                callback: () => {
+                    const { colorAccessor } = this.getColorAccessor(
+                        color,
+                        "theme_index"
+                    );
+                    updateCallback(colorAccessor, getParams());
+                }
             });
         }
     }
 
     buildColor2<T>(
+        object: IEezObject,
         color1: string,
         color2: string,
         getParams: () => T,
@@ -742,16 +751,15 @@ export class LVGLBuild extends Build {
         callback(color1Accessor, color2Accessor, getParams());
 
         if (!this.isFirstPass && (color1FromTheme || color2FromTheme)) {
-            this.updateColorCallbacks.push(() => {
-                const { colorAccessor: color1Accessor } = this.getColorAccessor(
-                    color1,
-                    "theme_index"
-                );
-                const { colorAccessor: color2Accessor } = this.getColorAccessor(
-                    color2,
-                    "theme_index"
-                );
-                updateCallback(color1Accessor, color2Accessor, getParams());
+            this.updateColorCallbacks.push({
+                object,
+                callback: () => {
+                    const { colorAccessor: color1Accessor } =
+                        this.getColorAccessor(color1, "theme_index");
+                    const { colorAccessor: color2Accessor } =
+                        this.getColorAccessor(color2, "theme_index");
+                    updateCallback(color1Accessor, color2Accessor, getParams());
+                }
             });
         }
     }
@@ -1179,29 +1187,127 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        if (this.updateColorCallbacks.length > 0) {
-            build.line(`void change_color_theme(uint32_t theme_index) {`);
-            build.indent();
-            this.updateColorCallbacks.forEach((callback, i) => {
-                callback();
-                build.line("");
-            });
+        this.buildChangeColorTheme();
 
-            build.pages
-                .filter(page => !page.isUsedAsUserWidget)
-                .forEach(page =>
-                    build.line(
-                        `lv_obj_invalidate(objects.${this.getScreenIdentifier(
-                            page
-                        )});`
-                    )
+        return this.result;
+    }
+
+    buildChangeColorTheme() {
+        if (this.updateColorCallbacks.length == 0) {
+            return;
+        }
+
+        const build = this;
+
+        build.line(`void change_color_theme(uint32_t theme_index) {`);
+        build.indent();
+
+        this.updateColorCallbacks.forEach(updateColorCallback => {
+            const flow = getAncestorOfType<Flow>(
+                updateColorCallback.object,
+                ProjectEditor.FlowClass.classInfo
+            );
+
+            if (
+                flow instanceof ProjectEditor.PageClass &&
+                flow.isUsedAsUserWidget
+            ) {
+                return;
+            }
+
+            updateColorCallback.callback();
+
+            build.line("");
+        });
+
+        this.pages.forEach(page => {
+            if (page.isUsedAsUserWidget) {
+                return;
+            }
+
+            if (this.buildChangeColorThemeForUserWidget(page, true)) {
+                build.line("");
+            }
+        });
+
+        build.pages
+            .filter(page => !page.isUsedAsUserWidget)
+            .forEach(page =>
+                build.line(
+                    `lv_obj_invalidate(objects.${this.getScreenIdentifier(
+                        page
+                    )});`
+                )
+            );
+
+        build.unindent();
+        build.line("}");
+    }
+
+    buildChangeColorThemeForUserWidget(page: Page, flag: boolean) {
+        const build = this;
+
+        let first = true;
+
+        page._lvglWidgets.forEach(lvglWidget => {
+            if (
+                !(lvglWidget instanceof ProjectEditor.LVGLUserWidgetWidgetClass)
+            ) {
+                return;
+            }
+
+            const updateColorCallbacks = this.updateColorCallbacks.filter(
+                (updateColorCallback, i) => {
+                    const flow = getAncestorOfType<Flow>(
+                        updateColorCallback.object,
+                        ProjectEditor.FlowClass.classInfo
+                    );
+
+                    return flow == lvglWidget.userWidgetPage;
+                }
+            );
+
+            if (!updateColorCallbacks) {
+                return;
+            }
+
+            if (first) {
+                first = false;
+            } else {
+                build.line("");
+            }
+
+            build.line("{");
+            build.indent();
+
+            if (flag) {
+                build.line(
+                    `int startWidgetIndex = ${
+                        this.getWidgetObjectIndex(lvglWidget) + 1
+                    };`
                 );
+            } else {
+                build.line(
+                    `startWidgetIndex += ${
+                        this.getWidgetObjectIndex(lvglWidget) + 1
+                    };`
+                );
+            }
+
+            updateColorCallbacks.forEach(updateColorCallback =>
+                updateColorCallback.callback()
+            );
+
+            this.buildChangeColorThemeForUserWidget(
+                lvglWidget.userWidgetPage!,
+                false
+            );
 
             build.unindent();
             build.line("}");
-        }
+        });
 
-        return this.result;
+        return !first;
     }
 
     async buildScreensDeclExt() {

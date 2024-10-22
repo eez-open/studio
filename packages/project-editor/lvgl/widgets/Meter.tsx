@@ -581,6 +581,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.buildColor(
+            this,
             this.color,
             () =>
                 build.genFileStaticVar(
@@ -851,6 +852,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.buildColor2(
+            this,
             this.colorStart,
             this.colorEnd,
             () =>
@@ -1099,6 +1101,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
 
     override lvglBuild(build: LVGLBuild) {
         build.buildColor(
+            this,
             this.color,
             () =>
                 build.genFileStaticVar(
@@ -1608,6 +1611,7 @@ export class LVGLMeterWidget extends LVGLWidget {
             build.line(`lv_meter_scale_t *scale = lv_meter_add_scale(obj);`);
 
             build.buildColor2(
+                this,
                 scale.minorTickColor,
                 scale.majorTickColor,
                 () =>

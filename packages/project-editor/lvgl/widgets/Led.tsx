@@ -196,6 +196,7 @@ export class LVGLLedWidget extends LVGLWidget {
     override lvglBuildSpecific(build: LVGLBuild) {
         if (this.colorType == "literal") {
             build.buildColor(
+                this,
                 this.color,
                 () => {
                     return build.getLvglObjectAccessor(this);
