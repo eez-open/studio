@@ -47,20 +47,30 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 name: "textarea",
                 type: PropertyType.Enum,
                 enumItems: (widget: LVGLKeyboardWidget) => {
-                    const page = getAncestorOfType(
-                        widget,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
-                    return page._lvglWidgets
-                        .filter(
-                            lvglWidget =>
-                                lvglWidget instanceof LVGLTextareaWidget &&
-                                lvglWidget.identifier
-                        )
-                        .map(lvglWidget => ({
-                            id: lvglWidget.identifier,
-                            label: lvglWidget.identifier
-                        }));
+                    let lvglIdentifiers = ProjectEditor.getProjectStore(
+                        widget
+                    ).lvglIdentifiers.getIdentifiersVisibleFromFlow(
+                        ProjectEditor.getFlow(widget)
+                    );
+
+                    lvglIdentifiers = lvglIdentifiers.filter(lvglIdentifier => {
+                        if (lvglIdentifier.widgets.length > 1) {
+                            return false;
+                        }
+
+                        const widget = lvglIdentifier.widgets[0];
+
+                        return widget instanceof LVGLTextareaWidget;
+                    });
+
+                    lvglIdentifiers.sort((a, b) =>
+                        a.identifier.localeCompare(b.identifier)
+                    );
+
+                    return lvglIdentifiers.map(lvglIdentifier => ({
+                        id: lvglIdentifier.identifier,
+                        label: lvglIdentifier.identifier
+                    }));
                 },
                 propertyGridGroup: specificGroup
             },
