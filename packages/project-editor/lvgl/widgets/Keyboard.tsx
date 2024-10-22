@@ -22,13 +22,11 @@ import { KEYBOARD_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLTextareaWidget, LVGLWidget } from "./internal";
 import {
-    getAncestorOfType,
     getChildOfObject,
     Message,
     propertyNotFoundMessage
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { Page } from "project-editor/features/page/page";
 
 ////////////////////////////////////////////////////////////////////////////////
 
