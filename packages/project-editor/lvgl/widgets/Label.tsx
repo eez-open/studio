@@ -49,7 +49,7 @@ export class LVGLLabelWidget extends LVGLWidget {
                 name = `${name} [${widget.identifier}]`;
             }
 
-            if (widget.text) {
+            if (widget.text && widget.textType == "literal") {
                 return `${name}: ${widget.text}`;
             }
 
