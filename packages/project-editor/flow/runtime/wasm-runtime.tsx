@@ -242,6 +242,10 @@ export class WasmRuntime extends RemoteRuntime {
             initJSObjectsMap(this.assetsMap, this.wasmModuleId);
         }
 
+        if (this.projectStore.projectTypeTraits.isLVGL) {
+            await preloadAllBitmaps(this.projectStore);
+        }
+
         this.worker = createWasmWorker(
             this.wasmModuleId,
             isDebuggerActive
@@ -279,8 +283,6 @@ export class WasmRuntime extends RemoteRuntime {
         );
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
-            await preloadAllBitmaps(this.projectStore);
-
             this.lgvlPageRuntime = new LVGLPageViewerRuntime(this);
         }
     }
