@@ -1585,7 +1585,36 @@ export class Font extends EezObject {
                 return undefined;
             }
         },
-        icon: "material:font_download"
+        icon: "material:font_download",
+
+        updateObjectValueHook: (font: Font, values: Partial<Font>) => {
+            const projectStore = getProjectStore(font);
+            if (
+                projectStore.projectTypeTraits.isLVGL &&
+                values.name != undefined &&
+                font.name != values.name
+            ) {
+                projectStore.undoManager.postponeSetCombineCommandsFalse = true;
+
+                setTimeout(async () => {
+                    projectStore.undoManager.postponeSetCombineCommandsFalse =
+                        false;
+
+                    try {
+                        await font.rebuildLvglFont(
+                            projectStore,
+                            projectStore.project.settings.general.lvglVersion,
+                            projectStore.project.settings.build.lvglInclude,
+                            values.name
+                        );
+                    } catch (err) {
+                        console.error(err);
+                    }
+
+                    projectStore.undoManager.setCombineCommands(false);
+                });
+            }
+        }
     };
 
     get glyphsMap() {
@@ -1682,14 +1711,15 @@ export class Font extends EezObject {
     async rebuildLvglFont(
         projectStore: ProjectStore,
         lvglVersion: string,
-        lvglInclude: string
+        lvglInclude: string,
+        name?: string
     ) {
         if (!this.embeddedFontFile) {
             return;
         }
 
         const fontProperties = await extractFont({
-            name: this.name,
+            name: name || this.name,
             absoluteFilePath: projectStore.getAbsoluteFilePath(
                 this.source!.filePath
             ),
