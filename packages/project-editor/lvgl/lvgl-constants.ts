@@ -345,6 +345,7 @@ export const LVGL_STYLE_STATES = [
     "DISABLED",
     "FOCUSED",
     "FOCUS_KEY",
+    "EDITED",
     "SCROLLED"
 ];
 
