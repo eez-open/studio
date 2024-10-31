@@ -1128,7 +1128,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.userWidgetsStack.pop();
     }
 
-    nextWidgetIndex = 0;
+    nextWidgetIndex = -1;
 
     override getWidgetIndex(object: LVGLWidget | Page) {
         const identifier = [
@@ -1152,6 +1152,20 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             this.runtime.assetsMap.lvglWidgetIndexes[identifier];
         if (widgetIndex != undefined) {
             return widgetIndex;
+        }
+
+        if (this.nextWidgetIndex == -1) {
+            this.nextWidgetIndex = Math.max(
+                ...Object.keys(this.runtime.assetsMap.lvglWidgetIndexes).map(
+                    key => this.runtime.assetsMap.lvglWidgetIndexes[key]
+                )
+            );
+
+            if (this.nextWidgetIndex == -Infinity) {
+                this.nextWidgetIndex = 0;
+            } else {
+                this.nextWidgetIndex++;
+            }
         }
 
         return this.nextWidgetIndex++;
