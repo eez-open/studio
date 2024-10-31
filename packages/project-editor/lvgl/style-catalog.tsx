@@ -2144,11 +2144,11 @@ const text_decor_property_info = makeEnumPropertyInfo(
 
             let build = "";
 
-            if (value.indexOf("BOTTOM") != -1) {
+            if (value.indexOf("UNDERLINE") != -1) {
                 build = (build ? build + "|" : "") + "LV_TEXT_DECOR_UNDERLINE";
             }
 
-            if (value.indexOf("TOP") != -1) {
+            if (value.indexOf("STRIKETHROUGH") != -1) {
                 build =
                     (build ? build + "|" : "") + "LV_TEXT_DECOR_STRIKETHROUGH";
             }
