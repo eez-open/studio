@@ -14,6 +14,7 @@ import {
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Settings } from "../project";
+import { Icon } from "eez-studio-ui/icon";
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component {
@@ -74,7 +75,7 @@ export const PropertiesPanel = observer(
             return (
                 <div className="EezStudio_PropertiesPanel">
                     <div className="EezStudio_PropertiesPanel_Header">
-                        {typeof icon === "string" ? <img src={icon} /> : icon}
+                        {typeof icon === "string" ? <Icon icon={icon} /> : icon}
                         {title}
                     </div>
                     <div className="EezStudio_PropertiesPanel_Body">
