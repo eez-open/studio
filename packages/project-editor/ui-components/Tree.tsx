@@ -171,18 +171,13 @@ const TreeRow = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface DropFile {
-    path: string;
-    type: string;
-}
-
 interface TreeProps {
     treeAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
-    onFilesDrop?: (files: DropFile[]) => void;
+    onFilesDrop?: (files: File[]) => void;
 }
 
 export const Tree = observer(
@@ -642,17 +637,19 @@ export const Tree = observer(
             this.props.treeAdapter.draggableAdapter!.onDragLeave(event);
         }
 
-        onDrop(event: any) {
+        onDrop(event: React.DragEvent) {
             event.stopPropagation();
             event.preventDefault();
 
             if (isFileData(event)) {
                 if (this.props.onFilesDrop) {
-                    const files: DropFile[] = [];
+                    const files: File[] = [];
                     for (let i = 0; i < event.dataTransfer.items.length; i++) {
                         const item = event.dataTransfer.items[i];
                         const file = item.getAsFile();
-                        files.push(file);
+                        if (file) {
+                            files.push(file);
+                        }
                     }
                     this.props.onFilesDrop(files);
                 }

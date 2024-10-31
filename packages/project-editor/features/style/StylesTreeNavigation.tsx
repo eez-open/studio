@@ -30,7 +30,7 @@ import { DragAndDropManagerClass } from "project-editor/core/dd";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { DropFile, Tree } from "project-editor/ui-components/Tree";
+import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ interface StylesTreeNavigationProps {
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
-    onFilesDrop?: (files: DropFile[]) => void;
+    onFilesDrop?: (files: File[]) => void;
 }
 
 export const StylesTreeNavigation = observer(

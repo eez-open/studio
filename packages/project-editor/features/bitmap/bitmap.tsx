@@ -602,6 +602,55 @@ export async function createBitmap(
     }
 }
 
+export async function createBitmapFromFile(
+    projectStore: ProjectStore,
+    file: File
+) {
+    let fileType = file.type;
+
+    if (file.type == undefined) {
+        const ext = path.extname(file.name).toLowerCase();
+        if (ext == ".jpg" || ext == ".jpeg") {
+            fileType = "image/jpg";
+        } else {
+            fileType = "image/png";
+        }
+    }
+
+    let bpp = projectStore.projectTypeTraits.isLVGL ? CF_TRUE_COLOR_ALPHA : 32;
+
+    let name = getUniquePropertyValue(
+        projectStore.project.bitmaps,
+        "name",
+        path.parse(file.name).name
+    ) as string;
+
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(
+            String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))
+        );
+
+        const bitmapProperties: Partial<Bitmap> = {
+            name,
+            image: `data:${fileType};base64,` + base64,
+            bpp,
+            alwaysBuild: false
+        };
+
+        const bitmap = createObject<Bitmap>(
+            projectStore,
+            bitmapProperties,
+            Bitmap
+        );
+
+        return bitmap;
+    } catch (err) {
+        notification.error(err);
+        return undefined;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface BitmapData {

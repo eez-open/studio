@@ -31,7 +31,6 @@ import { List } from "project-editor/ui-components/List";
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { DropFile } from "project-editor/ui-components/Tree";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,7 +156,7 @@ interface ListNavigationProps {
     dragAndDropManager?: DragAndDropManagerClass;
     searchInput?: boolean;
     editable?: boolean;
-    onFilesDrop?: (files: DropFile[]) => void;
+    onFilesDrop?: (files: File[]) => void;
 }
 
 export const ListNavigation = observer(

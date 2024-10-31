@@ -6,7 +6,7 @@ import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { isObjectExists } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
-import { Bitmap, createBitmap } from "./bitmap";
+import { Bitmap, createBitmapFromFile } from "./bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,10 +53,9 @@ export const BitmapsTab = observer(
 
                             for (const file of files) {
                                 if (file.type.startsWith("image/")) {
-                                    const bitmap = await createBitmap(
+                                    const bitmap = await createBitmapFromFile(
                                         this.context,
-                                        file.path,
-                                        file.type
+                                        file
                                     );
                                     if (bitmap) {
                                         this.context.addObject(

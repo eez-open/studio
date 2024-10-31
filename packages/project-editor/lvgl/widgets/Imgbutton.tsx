@@ -16,7 +16,6 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 import { ImgbuttonStates } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
-import { checkWidgetTypeLvglVersion } from "../widget-common";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { propertyNotFoundMessage } from "project-editor/store";
 
@@ -108,7 +107,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         ),
 
         check: (widget: LVGLImgbuttonWidget, messages: IMessage[]) => {
-            checkWidgetTypeLvglVersion(widget, messages, "8.3");
+            // checkWidgetTypeLvglVersion(widget, messages, "8.3");
 
             if (widget.imageReleased) {
                 const bitmap = findBitmap(
