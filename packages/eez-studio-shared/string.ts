@@ -52,6 +52,7 @@ export function underscore(string: string | undefined): string {
                 string[i - 1] <= "Z" &&
                 (i == string.length - 1 ||
                     (string[i + 1] >= "A" && string[i + 1] <= "Z") ||
+                    (string[i + 1] >= "0" && string[i + 1] <= "9") ||
                     string[i + 1] == " " ||
                     string[i + 1] == "." ||
                     string[i + 1] == "_")
