@@ -381,7 +381,11 @@ export interface ClassInfo {
     ) => IEezObject | PropertyInfo | undefined;
 
     icon?: React.ReactNode;
-    getIcon?: (object: IEezObject) => React.ReactNode;
+    getIcon?: (
+        object?: IEezObject,
+        componentClass?: IObjectClassInfo,
+        projectStore?: ProjectStore
+    ) => React.ReactNode | undefined;
 
     componentHeaderColor?:
         | ((

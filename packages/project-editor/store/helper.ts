@@ -323,12 +323,15 @@ export function getClassInfo(object: IEezObject): ClassInfo {
 export function getObjectIcon(object: IEezObject) {
     const classInfo = getClassInfo(object);
 
-    if (classInfo.icon) {
-        return classInfo.icon;
+    if (classInfo.getIcon) {
+        const icon = classInfo.getIcon(object);
+        if (icon) {
+            return icon;
+        }
     }
 
-    if (classInfo.getIcon) {
-        return classInfo.getIcon(object);
+    if (classInfo.icon) {
+        return classInfo.icon;
     }
 
     return undefined;

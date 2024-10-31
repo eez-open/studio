@@ -502,6 +502,14 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+
+        & > img,
+        & > svg {
+            flex-shrink: 0;
+            height: 20px;
+            object-fit: contain;
+            margin-right: 4px;
+        }
     }
 
     .EezStudio_PropertiesPanel_Body {

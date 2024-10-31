@@ -119,6 +119,8 @@ import {
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
+    CALL_ACTION_ICON,
+    CALL_NATIVE_ACTION_ICON,
     CLIPBOARD_WRITE_ICON,
     LANGUAGE_ICON,
     LOG_ICON,
@@ -2096,20 +2098,29 @@ export class CallActionActionComponent extends ActionComponent {
             }
             return component.action;
         },
-        icon: (
-            <svg
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M7 4a12.25 12.25 0 0 0 0 16"></path>
-                <path d="M17 4a12.25 12.25 0 0 1 0 16"></path>
-            </svg>
-        ),
+        icon: CALL_ACTION_ICON,
+        getIcon: (
+            object?: CallActionActionComponent,
+            componentClass?: IObjectClassInfo,
+            projectStore?: ProjectStore
+        ) => {
+            let actionName;
+            if (object) {
+                actionName = object.action;
+                projectStore = ProjectEditor.getProjectStore(object);
+            } else if (componentClass) {
+                actionName = componentClass.props?.action;
+            }
+
+            if (projectStore && actionName) {
+                const action = findAction(projectStore.project, actionName);
+                if (action && action.implementationType == "native") {
+                    return CALL_NATIVE_ACTION_ICON;
+                }
+            }
+
+            return undefined;
+        },
         componentHeaderColor: (
             object?: CallActionActionComponent,
             componentClass?: IObjectClassInfo,

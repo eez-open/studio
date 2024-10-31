@@ -227,7 +227,17 @@ export function getComponentVisualData(
     projectStore: ProjectStore | undefined
 ) {
     const classInfo = componentClass.objectClass.classInfo;
-    let icon = classInfo.icon as any;
+
+    let icon;
+
+    if (classInfo.getIcon) {
+        icon = classInfo.getIcon(undefined, componentClass, projectStore);
+    }
+
+    if (icon == undefined) {
+        icon = classInfo.icon as any;
+    }
+
     let label = componentClass.displayName
         ? componentClass.displayName
         : classInfo.componentPaletteLabel ||
