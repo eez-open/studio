@@ -106,6 +106,15 @@ export function escapeCString(unescaped: string) {
             result += "\\r";
         } else if (ch == "\t") {
             result += "\\t";
+        } else if (
+            ch == "\\" &&
+            (i == unescaped.length - 1 ||
+                (unescaped[i + 1] != "n" &&
+                    unescaped[i + 1] != "r" &&
+                    unescaped[i + 1] != "t" &&
+                    unescaped[i + 1] != "u"))
+        ) {
+            result += "\\\\";
         } else {
             result += ch;
         }
