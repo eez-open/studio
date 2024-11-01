@@ -128,6 +128,7 @@ import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { Color } from "project-editor/features/style/theme";
 import { UserProperty } from "./flow/user-property";
 import { LVGLActionComponent } from "project-editor/lvgl/actions";
+import { FlowEditor } from "project-editor/flow/editor/editor";
 
 export const conditionalStyleConditionProperty = makeExpressionProperty(
     {
@@ -240,7 +241,8 @@ export async function createProjectEditor(
         checkProperty,
         conditionalStyleConditionProperty,
         FlowTabStateClass: FlowTabState,
-        BuildFileClass: BuildFile
+        BuildFileClass: BuildFile,
+        FlowEditorClass: FlowEditor
     };
 
     ConditionalStyle.classInfo.properties.push(

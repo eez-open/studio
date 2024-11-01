@@ -17,6 +17,7 @@ import {
     findPropertyByChildObject,
     getAncestorOfType
 } from "project-editor/store/helper";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -489,6 +490,23 @@ export class NavigationStore {
             navigationStore.selectedPanel.selectedObject !== undefined
         ) {
             objects = [navigationStore.selectedPanel.selectedObject];
+        } else if (
+            this.projectStore.editorsStore &&
+            this.projectStore.editorsStore.activeEditor &&
+            this.projectStore.editorsStore.activeEditor.object instanceof
+                ProjectEditor.FlowClass
+        ) {
+            const editor = this.projectStore.editorsStore.activeEditor;
+            const pageTabState = editor.state as PageTabState;
+            if (
+                pageTabState &&
+                pageTabState.selectedObjects != undefined &&
+                pageTabState.selectedObjects.length > 0
+            ) {
+                objects = pageTabState.selectedObjects;
+            } else {
+                objects = [];
+            }
         } else {
             objects = [];
         }

@@ -360,6 +360,15 @@ export class EditorsStore {
                         );
                     }
                 }
+
+                if (
+                    this.projectStore.navigationStore.selectedPanel instanceof
+                    ProjectEditor.FlowEditorClass
+                ) {
+                    this.projectStore.navigationStore.setSelectedPanel(
+                        undefined
+                    );
+                }
             }
         });
 
