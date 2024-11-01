@@ -608,8 +608,8 @@ export const BAR_MODES = {
 // _lv_arc_mode_t
 export const ARC_MODES = {
     NORMAL: 0,
-    REVERSE: 1,
-    SYMMETRICAL: 2
+    SYMMETRICAL: 1,
+    REVERSE: 2
 };
 
 // lv_colorwheel_mode_t
