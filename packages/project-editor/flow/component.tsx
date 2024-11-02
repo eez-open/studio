@@ -1,13 +1,16 @@
 import { MenuItem } from "@electron/remote";
 import React from "react";
-import { observable, computed, makeObservable } from "mobx";
+import { observable, computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
 import { each } from "lodash";
 
 import { validators } from "eez-studio-shared/validation";
 import { BoundingRectBuilder, Point, Rect } from "eez-studio-shared/geometry";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import {
+    IFieldProperties,
+    showGenericDialog
+} from "eez-studio-ui/generic-dialog";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -110,6 +113,7 @@ import { getComponentName } from "project-editor/flow/components/components-regi
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import type {
+    EnumItems,
     IActionComponentDefinition,
     IComponentProperty,
     IDashboardComponentContext
@@ -164,6 +168,7 @@ import {
 } from "project-editor/store/serialization";
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
 import { findVariable } from "project-editor/project/project";
+import type { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2598,6 +2603,59 @@ export class EventHandler extends EezObject {
                 return;
             }
 
+            function getActions() {
+                return project.actions.map(action => ({
+                    id: action.name,
+                    label: action.name
+                }));
+            }
+            const actionEnumItems = observable.box<EnumItems>([]);
+            actionEnumItems.set(getActions());
+
+            let onChangeCallback: (fieldProperties: any, value: any) => void;
+
+            const actionProperty: IFieldProperties = {
+                name: "action",
+                type: "enum",
+                enumItems: actionEnumItems,
+                inputGroupButton: (
+                    <button
+                        className="btn btn-primary"
+                        onClick={async event => {
+                            event.preventDefault();
+
+                            try {
+                                const action = (await ProjectEditor.ActionClass
+                                    .classInfo.newItem!(
+                                    project.actions
+                                )) as Action;
+
+                                if (action) {
+                                    project._store.addObject(
+                                        project.actions,
+                                        action
+                                    );
+
+                                    runInAction(() => {
+                                        onChangeCallback(
+                                            actionProperty,
+                                            action.name
+                                        );
+
+                                        actionEnumItems.set(getActions());
+                                    });
+                                }
+                            } catch (err) {}
+                        }}
+                    >
+                        New Action
+                    </button>
+                ),
+                visible: (values: any) => {
+                    return values.handlerType == "action";
+                }
+            };
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Event Handler",
@@ -2619,17 +2677,7 @@ export class EventHandler extends EezObject {
                             visible: () =>
                                 project.projectTypeTraits.hasFlowSupport
                         },
-                        {
-                            name: "action",
-                            type: "enum",
-                            enumItems: project.actions.map(action => ({
-                                id: action.name,
-                                label: action.name
-                            })),
-                            visible: (values: any) => {
-                                return values.handlerType == "action";
-                            }
-                        },
+                        actionProperty,
                         {
                             name: "userData",
                             type: "number",
@@ -2645,7 +2693,10 @@ export class EventHandler extends EezObject {
                         : "action",
                     userData: 0
                 },
-                dialogContext: project
+                dialogContext: project,
+                setOnChangeCallback: callback => {
+                    onChangeCallback = callback;
+                }
             });
 
             const properties: Partial<EventHandler> = {

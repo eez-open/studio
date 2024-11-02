@@ -214,16 +214,19 @@ export class Action extends Flow {
                 type: PropertyType.Enum,
                 enumItems: [
                     {
-                        id: "native"
+                        id: "flow"
                     },
                     {
-                        id: "flow"
+                        id: "native"
                     }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup,
                 disabled: (action: Action) => {
-                    return isNotV1Project(action) && !hasFlowSupport(action);
+                    return (
+                        (isNotV1Project(action) && !hasFlowSupport(action)) ||
+                        isDashboardProject(action)
+                    );
                 }
             },
             {
@@ -288,6 +291,8 @@ export class Action extends Flow {
             }
         },
         newItem: async (parent: IEezObject) => {
+            const projectStore = getProjectStore(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Action",
@@ -300,13 +305,30 @@ export class Action extends Flow {
                                 validators.invalidCharacters("."),
                                 validators.unique({}, parent)
                             ]
+                        },
+                        {
+                            name: "implementationType",
+                            type: "enum",
+                            enumItems: [
+                                {
+                                    id: "flow",
+                                    label: "Flow"
+                                },
+                                {
+                                    id: "native",
+                                    label: "Native"
+                                }
+                            ],
+                            visible: () =>
+                                !projectStore.projectTypeTraits.isDashboard &&
+                                projectStore.projectTypeTraits.hasFlowSupport
                         }
                     ]
                 },
-                values: {}
+                values: {
+                    implementationType: "flow"
+                }
             });
-
-            const projectStore = getProjectStore(parent);
 
             const actionProperties: Partial<Action> = Object.assign(
                 {
@@ -314,7 +336,7 @@ export class Action extends Flow {
                 },
                 projectStore.projectTypeTraits.hasFlowSupport
                     ? ({
-                          implementationType: "flow",
+                          implementationType: result.values.implementationType,
                           components: [],
                           connectionLine: []
                       } as Partial<Action>)

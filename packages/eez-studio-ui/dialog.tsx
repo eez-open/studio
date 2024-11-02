@@ -34,6 +34,8 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
     const root = createRoot(element);
     root.render(dialog);
 
+    let jsPanelDialog;
+
     if (opts && opts.jsPanel) {
         element.style.position = "absolute";
         element.style.width = "100%";
@@ -129,15 +131,28 @@ export function showDialog(dialog: JSX.Element, opts?: IDialogOptions) {
             }
         }
 
-        const dialog = (opts.jsPanel.modeless ? jsPanel : jsPanel.modal).create(
-            config
-        );
-
-        return [dialog, element, root];
+        jsPanelDialog = (
+            opts.jsPanel.modeless ? jsPanel : jsPanel.modal
+        ).create(config);
     } else {
         document.body.appendChild(element);
-        return [undefined, element, root];
     }
+
+    // Unmount dialog if the element is removed from the DOM
+    const intervalID = setInterval(() => {
+        let parentElement = element.parentElement;
+        while (parentElement) {
+            if (parentElement instanceof HTMLBodyElement) {
+                return;
+            }
+            parentElement = parentElement.parentElement;
+        }
+
+        clearInterval(intervalID);
+        root.unmount();
+    }, 100);
+
+    return [jsPanelDialog, element, root];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,6 +317,7 @@ export const BootstrapDialog = observer(
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
         className?: string;
+        modalContentStyle?: React.CSSProperties;
     }> {
         div: HTMLDivElement | null = null;
         form: HTMLFormElement | null = null;
@@ -325,21 +341,36 @@ export const BootstrapDialog = observer(
             }
         };
 
+        static openBootstrapDialogs: React.Component[] = [];
+
+        get numOpenBootstrapDialogs() {
+            return BootstrapDialog.openBootstrapDialogs.filter(
+                genericDialog => genericDialog !== this
+            ).length;
+        }
+
         componentDidMount() {
             const div = this.div;
             if (div) {
                 $(div).on("shown.bs.modal", () => {
+                    BootstrapDialog.openBootstrapDialogs.push(this);
+
                     setTimeout(this.setFocus);
                 });
 
                 $(div).on("hidden.bs.modal", () => {
+                    BootstrapDialog.openBootstrapDialogs.pop();
+
                     const parent = div.parentElement as HTMLElement;
                     parent.remove();
                     this.props.onCancel();
                 });
 
                 this.modal = new bootstrap.Modal(div, {
-                    backdrop: this.props.backdrop ?? true
+                    backdrop:
+                        this.numOpenBootstrapDialogs == 0
+                            ? this.props.backdrop ?? true
+                            : false
                 });
                 this.modal.show();
             }
@@ -464,7 +495,14 @@ export const BootstrapDialog = observer(
                         }}
                         onKeyPress={this.onKeyPress}
                     >
-                        <div className="modal-content">
+                        <div
+                            className="modal-content"
+                            style={{
+                                transform: `translate(${
+                                    this.numOpenBootstrapDialogs * 70
+                                }px, ${this.numOpenBootstrapDialogs * 70}px)`
+                            }}
+                        >
                             {props.title && (
                                 <div className="modal-header">
                                     <h5
