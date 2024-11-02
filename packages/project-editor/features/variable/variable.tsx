@@ -1,3 +1,4 @@
+import { clipboard } from "electron";
 import React from "react";
 import {
     computed,
@@ -22,7 +23,8 @@ import {
     MessageType,
     IMessage,
     PropertyInfo,
-    getProperty
+    getProperty,
+    PropertyProps
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -61,7 +63,9 @@ import {
     getObjectVariableTypeFromType,
     SYSTEM_STRUCTURES,
     isValidType,
-    getSystemEnums
+    getSystemEnums,
+    isEnumType,
+    getEnumTypeNameFromType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -74,6 +78,12 @@ import { VARIABLE_ICON } from "project-editor/ui-components/icons";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import type { UserProperty } from "project-editor/flow/user-property";
 import type { Flow } from "project-editor/flow/flow";
+import { observer } from "mobx-react";
+import { ProjectContext } from "project-editor/project/context";
+import { Build, getName, NamingConvention } from "project-editor/build/helper";
+import { IconAction } from "eez-studio-ui/action";
+import { CodeEditor } from "eez-studio-ui/code-editor";
+import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,6 +133,205 @@ export function uniqueForVariableAndUserProperty(
         }
     };
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const NativeVariableImplementationInfoPropertyUI = observer(
+    class NativeVariableImplementationInfoPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        codeEditorRef = React.createRef<CodeEditor>();
+
+        componentDidMount() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        componentDidUpdate() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        get projectStore() {
+            return ProjectEditor.getProjectStore(this.variable);
+        }
+
+        get implementationLanguage() {
+            return this.projectStore.uiStateStore.implementationLanguage;
+        }
+
+        set implementationLanguage(value: string) {
+            runInAction(() => {
+                this.projectStore.uiStateStore.implementationLanguage = value;
+            });
+        }
+
+        get hasFlowSupport() {
+            return this.projectStore.projectTypeTraits.hasFlowSupport;
+        }
+
+        get variable() {
+            return this.props.objects[0] as Variable;
+        }
+
+        get code() {
+            const variable = this.variable;
+
+            const variableName = getName(
+                "",
+                variable.name,
+                NamingConvention.UnderscoreLowerCase
+            );
+
+            let nativeType;
+
+            if (variable.type == "integer") {
+                nativeType = "int32_t ";
+            } else if (variable.type == "float") {
+                nativeType = "float ";
+            } else if (variable.type == "double") {
+                nativeType = "double ";
+            } else if (variable.type == "boolean") {
+                nativeType = "bool ";
+            } else if (variable.type == "string") {
+                nativeType = "const char *";
+            } else if (isEnumType(variable.type)) {
+                const enumType = getEnumTypeNameFromType(variable.type);
+                nativeType = `${enumType} `;
+            } else {
+            }
+
+            const build = new Build();
+            build.startBuild();
+
+            if (variable.type == "string") {
+                if (this.implementationLanguage == "C") {
+                    build.line(`#include <string.h>`);
+                } else {
+                    build.line(`#include <string>`);
+                }
+            }
+
+            build.line(`#include "vars.h"`);
+
+            build.line("");
+
+            build.line(
+                `${
+                    variable.type == "string"
+                        ? this.implementationLanguage == "C"
+                            ? "char "
+                            : "std::string "
+                        : nativeType
+                }${variableName}${
+                    variable.type == "string" &&
+                    this.implementationLanguage == "C"
+                        ? "[100] = { 0 }"
+                        : ""
+                };`
+            );
+
+            build.line("");
+
+            build.line(
+                `${
+                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                }${nativeType}${"get_var_" + variableName}() {`
+            );
+            build.indent();
+            build.line(
+                `return ${variableName}${
+                    variable.type == "string" &&
+                    this.implementationLanguage == "C++"
+                        ? ".c_str()"
+                        : ""
+                };`
+            );
+            build.unindent();
+            build.line(`}`);
+
+            build.line("");
+
+            build.line(
+                `${
+                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                }void ${"set_var_" + variableName}(${nativeType}value) {`
+            );
+            build.indent();
+            if (
+                variable.type == "string" &&
+                this.implementationLanguage == "C"
+            ) {
+                build.line(
+                    `strncpy(${variableName}, value, sizeof(${variableName}) / sizeof(char));`
+                );
+                build.line(
+                    `${variableName}[sizeof(${variableName}) / sizeof(char) - 1] = 0;`
+                );
+            } else {
+                build.line(`${variableName} = value;`);
+            }
+            build.unindent();
+            build.line(`}`);
+
+            return build.result;
+        }
+
+        render() {
+            const code = this.code;
+
+            return (
+                <div className="EezStudio_PropertyGrid_TipBox">
+                    <div className="EezStudio_PropertyGrid_TipBox_Description">
+                        <div className="EezStudio_PropertyGrid_TipBox_Header">
+                            <Icon icon="material:lightbulb_outline" />
+                            <span>TIP</span>
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_DescriptionText">
+                            {this.hasFlowSupport
+                                ? "For native variable "
+                                : "For variable "}
+                            you must provide implementation of get and set
+                            functions. Below is a basic implementation code for
+                            such functions. You can copy and paste it into some
+                            source file in your project.
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_Toolbar">
+                            <select
+                                className="form-select"
+                                value={this.implementationLanguage}
+                                onChange={event =>
+                                    (this.implementationLanguage =
+                                        event.target.value)
+                                }
+                            >
+                                <option value="C">C</option>
+                                <option value="C++">C++</option>
+                            </select>
+                            <IconAction
+                                icon="material:content_copy"
+                                iconSize={20}
+                                title="Copy to Clipboard"
+                                onClick={() => {
+                                    clipboard.writeText(code);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <CodeEditor
+                        ref={this.codeEditorRef}
+                        mode="c_cpp"
+                        value={code}
+                        onChange={() => {}}
+                        readOnly={true}
+                        className="form-control"
+                        minLines={2}
+                        maxLines={50}
+                    />
+                </div>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,18 +398,6 @@ export class Variable extends EezObject {
             },
             variableTypeProperty,
             {
-                name: "native",
-                type: PropertyType.Boolean,
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !hasFlowSupport(variable) ||
-                    !ProjectEditor.getProject(
-                        variable
-                    ).projectTypeTraits.isVariableTypeSupportedAsNative(
-                        variable.type
-                    )
-            },
-            {
                 name: "defaultValue",
                 type: PropertyType.MultilineText,
                 expressionType: "any",
@@ -213,6 +410,35 @@ export class Variable extends EezObject {
                     return (
                         project.projectTypeTraits.isLVGL &&
                         !project.projectTypeTraits.hasFlowSupport
+                    );
+                }
+            },
+            {
+                name: "native",
+                type: PropertyType.Boolean,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !hasFlowSupport(variable) ||
+                    !ProjectEditor.getProject(
+                        variable
+                    ).projectTypeTraits.isVariableTypeSupportedAsNative(
+                        variable.type
+                    )
+            },
+            {
+                name: "nativeImplementationInfo",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent:
+                    NativeVariableImplementationInfoPropertyUI,
+                skipSearch: true,
+                hideInPropertyGrid: (variable: Variable) => {
+                    const projectStore = getProjectStore(variable);
+                    return !(
+                        isLVGLProject(variable) &&
+                        isGlobalVariable(variable) &&
+                        (!projectStore.projectTypeTraits.hasFlowSupport ||
+                            variable.native)
                     );
                 }
             },
@@ -260,9 +486,12 @@ export class Variable extends EezObject {
         ],
         icon: VARIABLE_ICON,
         listLabel: (variable: Variable) => {
+            const projectStore = getProjectStore(variable);
+
             return (
                 <>
-                    {variable.native && <span>[NATIVE] </span>}
+                    {projectStore.projectTypeTraits.hasFlowSupport &&
+                        variable.native && <span>[NATIVE] </span>}
                     {variable.persistent && <span>[PERSISTENT] </span>}
                     <span>{variable.name} </span>
                     <em className="font-monospace" style={{ opacity: 0.5 }}>

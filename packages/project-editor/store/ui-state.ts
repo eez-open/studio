@@ -50,6 +50,8 @@ export class UIStateStore {
     globalFlowZoom: boolean = true;
     flowZoom: number = 1;
 
+    implementationLanguage = "C";
+
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
     }
@@ -102,7 +104,8 @@ export class UIStateStore {
             expressionBuilderInstrumentId: observable,
             showFinishedFlowsInDebugger: observable,
             globalFlowZoom: observable,
-            flowZoom: observable
+            flowZoom: observable,
+            implementationLanguage: observable
         });
     }
 
@@ -243,6 +246,10 @@ export class UIStateStore {
             if (uiState.flowZoom != undefined) {
                 this.flowZoom = uiState.flowZoom;
             }
+
+            if (uiState.implementationLanguage != undefined) {
+                this.implementationLanguage = uiState.implementationLanguage;
+            }
         });
     }
 
@@ -306,7 +313,8 @@ export class UIStateStore {
             expressionBuilderInstrumentId: this.expressionBuilderInstrumentId,
             showInactiveFlowsInDebugger: this.showFinishedFlowsInDebugger,
             globalFlowZoom: this.globalFlowZoom,
-            flowZoom: this.flowZoom
+            flowZoom: this.flowZoom,
+            implementationLanguage: this.implementationLanguage
         };
 
         return state;

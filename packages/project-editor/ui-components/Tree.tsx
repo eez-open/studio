@@ -175,7 +175,6 @@ interface TreeProps {
     treeAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
-    onBlur?: () => void;
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
     onFilesDrop?: (files: File[]) => void;
@@ -836,14 +835,8 @@ export const Tree = observer(
         };
 
         render() {
-            const {
-                treeAdapter,
-                tabIndex,
-                onFocus,
-                onBlur,
-                onEditItem,
-                renderItem
-            } = this.props;
+            const { treeAdapter, tabIndex, onFocus, onEditItem, renderItem } =
+                this.props;
 
             const className = classNames("EezStudio_Tree", {
                 "drag-source":
@@ -857,7 +850,6 @@ export const Tree = observer(
                     tabIndex={tabIndex}
                     onKeyDown={this.onKeyDown}
                     onFocus={onFocus}
-                    onBlur={onBlur}
                     onDragOver={this.onDragOver}
                     onDragLeave={this.onDragLeave}
                     onDrop={this.onDrop}

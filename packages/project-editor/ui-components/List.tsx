@@ -10,7 +10,6 @@ interface ListProps {
     listAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
-    onBlur?: () => void;
     onEditItem?: (itemId: string) => void;
     renderItem?: (itemId: string) => React.ReactNode;
     onFilesDrop?: (files: File[]) => void;
@@ -19,15 +18,13 @@ interface ListProps {
 export const List = observer(
     class List extends React.Component<ListProps, {}> {
         render() {
-            const { tabIndex, onFocus, onBlur, onEditItem, renderItem } =
-                this.props;
+            const { tabIndex, onFocus, onEditItem, renderItem } = this.props;
 
             return (
                 <Tree
                     treeAdapter={this.props.listAdapter}
                     tabIndex={tabIndex}
                     onFocus={onFocus}
-                    onBlur={onBlur}
                     onEditItem={onEditItem}
                     renderItem={renderItem}
                     onFilesDrop={this.props.onFilesDrop}

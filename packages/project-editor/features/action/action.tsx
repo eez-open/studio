@@ -1,5 +1,6 @@
+import { clipboard } from "electron";
 import React from "react";
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, runInAction } from "mobx";
 
 import { validators } from "eez-studio-shared/validation";
 import {
@@ -9,7 +10,8 @@ import {
     PropertyType,
     MessageType,
     EezObject,
-    IMessage
+    IMessage,
+    PropertyProps
 } from "project-editor/core/object";
 import { createObject, Message } from "project-editor/store";
 import {
@@ -31,6 +33,137 @@ import {
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
+import { observer } from "mobx-react";
+import { ProjectContext } from "project-editor/project/context";
+import { CodeEditor } from "eez-studio-ui/code-editor";
+import { Build, getName, NamingConvention } from "project-editor/build/helper";
+import { Icon } from "eez-studio-ui/icon";
+import { IconAction } from "eez-studio-ui/action";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const NativeActionImplementationInfoPropertyUI = observer(
+    class NativeVariableImplementationInfoPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        codeEditorRef = React.createRef<CodeEditor>();
+
+        componentDidMount() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        componentDidUpdate() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        get projectStore() {
+            return ProjectEditor.getProjectStore(this.action);
+        }
+
+        get implementationLanguage() {
+            return this.projectStore.uiStateStore.implementationLanguage;
+        }
+
+        set implementationLanguage(value: string) {
+            runInAction(() => {
+                this.projectStore.uiStateStore.implementationLanguage = value;
+            });
+        }
+
+        get hasFlowSupport() {
+            return this.projectStore.projectTypeTraits.hasFlowSupport;
+        }
+
+        get action() {
+            return this.props.objects[0] as Action;
+        }
+
+        get code() {
+            const action = this.action;
+
+            const actionName = getName(
+                "",
+                action.name,
+                NamingConvention.UnderscoreLowerCase
+            );
+
+            const build = new Build();
+            build.startBuild();
+
+            build.line(`#include "actions.h"`);
+
+            build.line("");
+
+            build.line(
+                `${
+                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                }void ${"action_" + actionName}(lv_event_t *e) {`
+            );
+            build.indent();
+            build.line(`// TODO: Implement action ${actionName} here`);
+            build.unindent();
+            build.line(`}`);
+
+            return build.result;
+        }
+
+        render() {
+            const code = this.code;
+
+            return (
+                <div className="EezStudio_PropertyGrid_TipBox">
+                    <div className="EezStudio_PropertyGrid_TipBox_Description">
+                        <div className="EezStudio_PropertyGrid_TipBox_Header">
+                            <Icon icon="material:lightbulb_outline" />
+                            <span>TIP</span>
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_DescriptionText">
+                            {this.hasFlowSupport
+                                ? "For native user action "
+                                : "For user action "}
+                            you must provide implementation function. Below is a
+                            basic implementation code for such function. You can
+                            copy and paste it into some source file in your
+                            project.
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_Toolbar">
+                            <select
+                                className="form-select"
+                                value={this.implementationLanguage}
+                                onChange={event =>
+                                    (this.implementationLanguage =
+                                        event.target.value)
+                                }
+                            >
+                                <option value="C">C</option>
+                                <option value="C++">C++</option>
+                            </select>
+                            <IconAction
+                                icon="material:content_copy"
+                                iconSize={20}
+                                title="Copy to Clipboard"
+                                onClick={() => {
+                                    clipboard.writeText(code);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <CodeEditor
+                        ref={this.codeEditorRef}
+                        mode="c_cpp"
+                        value={code}
+                        onChange={() => {}}
+                        readOnly={true}
+                        className="form-control"
+                        minLines={2}
+                        maxLines={50}
+                    />
+                </div>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,6 +227,22 @@ export class Action extends Flow {
                 }
             },
             {
+                name: "nativeImplementationInfo",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent:
+                    NativeActionImplementationInfoPropertyUI,
+                skipSearch: true,
+                hideInPropertyGrid: (action: Action) => {
+                    const projectStore = getProjectStore(action);
+                    return !(
+                        isLVGLProject(action) &&
+                        (!projectStore.projectTypeTraits.hasFlowSupport ||
+                            action.implementationType == "native")
+                    );
+                }
+            },
+            {
                 name: "implementation",
                 type: PropertyType.CPP,
                 propertyGridGroup: specificGroup,
@@ -121,7 +270,11 @@ export class Action extends Flow {
             );
         },
         label: (action: Action) => {
-            if (action.implementationType == "native") {
+            const projectStore = getProjectStore(action);
+            if (
+                projectStore.projectTypeTraits.hasFlowSupport &&
+                action.implementationType == "native"
+            ) {
                 return "[NATIVE] " + action.name;
             }
             return action.name;

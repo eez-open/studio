@@ -358,7 +358,12 @@ export const PropertyGrid = observer(
                     ref={(ref: any) => (this.div = ref)}
                     className={classNames(
                         "EezStudio_PropertyGrid",
-                        this.props.className
+                        this.props.className,
+                        {
+                            EezStudio_PropertyGrid_NoGroups:
+                                groupPropertiesArray.length === 1 &&
+                                groupPropertiesArray[0].group.title === ""
+                        }
                     )}
                 >
                     <table>

@@ -3170,6 +3170,20 @@
             }
         }
     }
+
+    &.EezStudio_PropertyGrid_NoGroups {
+        padding: 5px;
+
+        & > table {
+            & > tbody {
+                & > tr {
+                    & > td:first-child {
+                        padding-left: 0px;
+                    }
+                }
+            }
+        }
+    }
 }
 
 .EezStudio_EmbeddedNonCollapsablePropertyGrid {
@@ -3749,6 +3763,45 @@
         pre {
             margin: 5px 0;
             user-select: text !important;
+        }
+    }
+}
+
+.EezStudio_PropertyGrid_TipBox {
+    margin: 10px 0;
+    padding: 10px;
+    border-left: 5px solid @tipBoxBorderColor;
+    border-radius: 4px;
+    box-shadow: @componentShadow;
+
+    color: @tipBoxColor;
+    background-color: @tipBoxBackgroundColor;
+
+    .EezStudio_PropertyGrid_TipBox_Description {
+        .EezStudio_PropertyGrid_TipBox_Header {
+            display: flex;
+            align-items: center;
+            font-size: 120%;
+            font-weight: bold;
+            margin-bottom: 10px;
+            & > span {
+                margin-left: 6px;
+            }
+        }
+
+        .EezStudio_PropertyGrid_TipBox_DescriptionText {
+            margin-bottom: 10px;
+        }
+
+        .EezStudio_PropertyGrid_TipBox_Toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+            select {
+                width: auto;
+            }
         }
     }
 }

@@ -332,11 +332,6 @@ export const ListNavigation = observer(
                 navigationStore.setSelectedPanel(this);
             }
         };
-        onBlur = () => {
-            if (this.context.navigationStore.selectedPanel === this) {
-                this.context.navigationStore.setSelectedPanel(undefined);
-            }
-        };
 
         onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
@@ -407,7 +402,6 @@ export const ListNavigation = observer(
                         listAdapter={this.listAdapter}
                         tabIndex={0}
                         onFocus={this.onFocus}
-                        /*onBlur={this.onBlur}*/
                         onEditItem={this.editable ? onEditItem : undefined}
                         renderItem={renderItem}
                         onFilesDrop={this.props.onFilesDrop}
