@@ -200,6 +200,10 @@
                         "sha256": "56d9bf5dbcd3a405a31580269fbd9f994ea36039a71deff7f0b6335e9632a9af"
                     },
                     {
+                        "content": "SetColorTheme.html",
+                        "status": "publish"
+                    },
+                    {
                         "content": "SetPageDirection.html",
                         "status": "publish",
                         "id": 10083,

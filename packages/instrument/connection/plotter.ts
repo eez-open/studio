@@ -60,7 +60,7 @@ export class Plotter implements LongOperation {
                     activityLogStore.storeName
                 } WHERE id IN(${answerIds.join(",")}) ORDER BY date ASC`
             )
-            .all();
+            .all() as any;
 
         if (result.length == 0) {
             return;
@@ -185,8 +185,7 @@ export class Plotter implements LongOperation {
 
                 // keep data length up to this.maxNumPoints
                 if (this.numPoints == this.maxNumPoints) {
-                    this.dataBuffer.copyWithin(
-                        0,
+                    this.dataBuffer = this.dataBuffer.subarray(
                         8 * (1 + this.variableNames.length)
                     );
                     this.numPoints = this.maxNumPoints - 1;
@@ -315,7 +314,7 @@ export class Plotter implements LongOperation {
                     .prepare(
                         `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
                     )
-                    .get(this.instrument.id);
+                    .get(this.instrument.id) as any;
                 if (!row.recordHistory) {
                     temporary = true;
                 }

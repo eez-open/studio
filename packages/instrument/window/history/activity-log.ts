@@ -304,7 +304,7 @@ export const activityLogStore = createStore({
         () => {
             const sessions = db
                 .prepare(`SELECT * FROM "history/sessions"`)
-                .all();
+                .all() as any;
             for (const session of sessions) {
                 db.exec(
                     `UPDATE "history/sessions" set uuid='${guid()}' WHERE id=${
@@ -465,7 +465,7 @@ export function log(
                 .prepare(
                     `SELECT "recordHistory" FROM "instrument" WHERE id = ?`
                 )
-                .get(activityLogEntry.oid);
+                .get(activityLogEntry.oid) as any;
             activityLogEntry.temporary = row
                 ? row.recordHistory
                     ? false
@@ -492,7 +492,7 @@ export function log(
         .prepare(
             `SELECT * FROM "${store.storeName}" WHERE temporary ORDER BY date DESC`
         )
-        .all();
+        .all() as any;
     if (rows && rows.length > LAST_N) {
         rows.slice(LAST_N).forEach(row => {
             store.deleteObject(
@@ -538,7 +538,7 @@ export function loadData(store: IStore, id: string) {
     try {
         let result = db
             .prepare(`SELECT data FROM "${store.storeName}" WHERE id = ?`)
-            .get(id);
+            .get(id) as any;
         const data = result && result.data;
         if (typeof data === "string") {
             return Buffer.from(data, "binary");

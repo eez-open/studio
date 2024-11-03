@@ -92,7 +92,9 @@ export class InstrumentDatabase implements MainSettingsModule.IDbPath {
         try {
             db = new DatabaseConstructor(this.filePath);
 
-            const result = db.prepare("SELECT description FROM settings").get();
+            const result = db
+                .prepare("SELECT description FROM settings")
+                .get() as any;
 
             if (result != undefined) {
                 return result.description;
@@ -143,7 +145,7 @@ async function createTables(db: Database) {
                 .prepare(
                     `SELECT * FROM versions WHERE tableName = '${store.store.storeName}'`
                 )
-                .get();
+                .get() as any;
             if (versionRow !== undefined) {
                 version = versionRow.version;
             }
@@ -340,8 +342,8 @@ class InstrumentDatabases {
                         `SELECT DISTINCT(oid) AS oid FROM activityLog ${logsQueryCondition}`
                     )
                     .all()
-                    .filter(row => row.oid != null)
-                    .map(row => row.oid.toString());
+                    .filter((row: any) => row.oid != null)
+                    .map((row: any) => row.oid.toString());
             } else if (conf.mode == "shortcuts") {
                 instrumentIds = [];
             } else {
@@ -353,7 +355,7 @@ class InstrumentDatabases {
                         ","
                     )})`
                 )
-                .all();
+                .all() as any;
 
             // get source sessions
             let sessionIds: string[];
@@ -365,8 +367,8 @@ class InstrumentDatabases {
                         `SELECT DISTINCT(sid) AS sid FROM activityLog ${logsQueryCondition}`
                     )
                     .all()
-                    .filter(row => row.sid != null)
-                    .map(row => row.sid.toString());
+                    .filter((row: any) => row.sid != null)
+                    .map((row: any) => row.sid.toString());
             } else if (conf.mode == "shortcuts") {
                 sessionIds = [];
             } else {
@@ -378,7 +380,7 @@ class InstrumentDatabases {
                         ","
                     )})`
                 )
-                .all();
+                .all() as any;
 
             // get source shortcuts
             let sourceShortcuts;
@@ -389,7 +391,7 @@ class InstrumentDatabases {
                             ","
                         )})`
                     )
-                    .all();
+                    .all() as any;
             } else {
                 sourceShortcuts = sourceDb
                     .prepare(
@@ -397,7 +399,7 @@ class InstrumentDatabases {
                             .map(id => `'__instrument__${id}'`)
                             .join(",")})`
                     )
-                    .all();
+                    .all() as any;
             }
 
             // insert destination instrument
@@ -461,7 +463,7 @@ class InstrumentDatabases {
                         .prepare(
                             `SELECT * FROM "history/sessions" WHERE uuid = ?`
                         )
-                        .get([sourceSession.uuid]);
+                        .get([sourceSession.uuid]) as any;
                     if (destinationSession) {
                         mapSourceSessionToDestSessionId.set(
                             BigInt(sourceSession.id),
@@ -562,7 +564,7 @@ class InstrumentDatabases {
                 .prepare(
                     `SELECT count(*) as count FROM activityLog ${logsQueryCondition}`
                 )
-                .get();
+                .get() as any;
 
             const CHUNK = 100;
             let offset = 0;
@@ -572,7 +574,7 @@ class InstrumentDatabases {
                     .prepare(
                         `SELECT * FROM activityLog ${logsQueryCondition} limit ${CHUNK} offset ${offset}`
                     )
-                    .all();
+                    .all() as any;
 
                 if (logs.length == 0) {
                     break;
@@ -590,7 +592,7 @@ class InstrumentDatabases {
                         `INSERT INTO activityLog (oid, sid, ${logColumns.join(
                             ","
                         )}) VALUES ${logs.map(
-                            log =>
+                            (log: any) =>
                                 `(?, ?, ${logColumns!
                                     .map(() => "?")
                                     .join(",")})`
@@ -598,7 +600,7 @@ class InstrumentDatabases {
                     )
                     .run(
                         logs.reduce(
-                            (arr, log) => [
+                            (arr: any, log: any) => [
                                 ...arr,
                                 mapSourceInstrumentToDestInstrumentId.get(
                                     BigInt(log.oid)
@@ -681,7 +683,7 @@ class InstrumentDatabases {
             // get source instrument
             const sourceInstruments = sourceDb
                 .prepare("SELECT * FROM instrument")
-                .all();
+                .all() as any;
 
             await pause();
 
@@ -706,21 +708,21 @@ class InstrumentDatabases {
 
             const logsCountRow = sourceDb
                 .prepare("SELECT count(*) as count FROM activityLog")
-                .get();
+                .get() as any;
 
             await pause();
 
             // get source sessions
             const sourceSessions = sourceDb
                 .prepare(`SELECT * FROM "history/sessions"`)
-                .all();
+                .all() as any;
 
             await pause();
 
             // get source shortcuts
             const sourceShortcuts = sourceDb
                 .prepare(`SELECT * FROM "shortcuts/shortcuts"`)
-                .all();
+                .all() as any;
 
             await pause();
 
@@ -773,7 +775,7 @@ class InstrumentDatabases {
                         .prepare(
                             `SELECT * FROM "history/sessions" WHERE uuid = ?`
                         )
-                        .get([sourceSession.uuid]);
+                        .get([sourceSession.uuid]) as any;
                     if (destinationSession) {
                         mapSourceSessionToDestSessionId.set(
                             BigInt(sourceSession.id),
@@ -895,7 +897,7 @@ class InstrumentDatabases {
                     .prepare(
                         `SELECT * FROM activityLog ORDER BY date ASC limit ${CHUNK} offset ${offset}`
                     )
-                    .all();
+                    .all() as any;
 
                 if (logs.length == 0) {
                     break;
@@ -913,7 +915,7 @@ class InstrumentDatabases {
                         `INSERT INTO activityLog (oid, sid, ${logColumns.join(
                             ","
                         )}) VALUES ${logs.map(
-                            log =>
+                            (log: any) =>
                                 `(?, ?, ${logColumns!
                                     .map(() => "?")
                                     .join(",")})`
@@ -921,7 +923,7 @@ class InstrumentDatabases {
                     )
                     .run(
                         logs.reduce(
-                            (arr, log) => [
+                            (arr: any, log: any) => [
                                 ...arr,
                                 mapSourceInstrumentToDestInstrumentId.get(
                                     BigInt(log.oid)

@@ -376,7 +376,7 @@ export const Tree = observer(
 
                 if ($allRows.length > 0) {
                     const firstRowRect = $allRows
-                        .get(0)
+                        .get(0)!
                         .getBoundingClientRect();
                     const treeDivRect = this.treeDiv.getBoundingClientRect();
                     let rowIndexAtCursor = Math.floor(
@@ -389,10 +389,12 @@ export const Tree = observer(
                         rowIndexAtCursor < $allRows.length
                     ) {
                         const $row = $allRows.eq(rowIndexAtCursor);
-                        const rowRect = $row.get(0).getBoundingClientRect();
+                        const rowRect = $row.get(0)!.getBoundingClientRect();
 
                         const $label = $row.find("span");
-                        const labelRect = $label.get(0).getBoundingClientRect();
+                        const labelRect = $label
+                            .get(0)!
+                            .getBoundingClientRect();
 
                         const objectId = $row.attr("data-object-id");
                         let dropItem = treeAdapter.getItemFromId(objectId!)!;
@@ -492,7 +494,7 @@ export const Tree = observer(
 
                                             const $label = $row.find("span");
                                             const labelRect = $label
-                                                .get(0)
+                                                .get(0)!
                                                 .getBoundingClientRect();
 
                                             if (
@@ -555,7 +557,7 @@ export const Tree = observer(
 
                                 const $label = $row.find("span");
                                 const labelRect = $label
-                                    .get(0)
+                                    .get(0)!
                                     .getBoundingClientRect();
 
                                 this.dropMarkVerticalConnectionLineHeight =
@@ -591,7 +593,7 @@ export const Tree = observer(
                                             const $row2 =
                                                 $allRows.eq(rowIndexAtCursor);
                                             const rowRect2 = $row2
-                                                .get(0)
+                                                .get(0)!
                                                 .getBoundingClientRect();
 
                                             this.dropMarkTop = rowRect2.bottom;
@@ -752,7 +754,7 @@ export const Tree = observer(
 
                     const items = [];
                     for (let i = iFrom; i <= iTo; i++) {
-                        const id = $($rows.get(i)).attr("data-object-id");
+                        const id = $($rows.get(i)!).attr("data-object-id");
                         if (id) {
                             const item =
                                 this.props.treeAdapter.getItemFromId(id);

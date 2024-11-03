@@ -699,7 +699,7 @@ class HistoryNavigator {
                             this.history.oidWhereClause
                         } AND date < ? ${this.history.getFilter()}`
                 )
-                .get(this.firstHistoryItemTime);
+                .get(this.firstHistoryItemTime) as any;
 
             this.hasOlder = result && Number(result.count) > 0;
         } else {
@@ -731,7 +731,7 @@ class HistoryNavigator {
                             this.history.oidWhereClause
                         } AND date > ? ${this.history.getFilter()}`
                 )
-                .get(this.lastHistoryItemTime);
+                .get(this.lastHistoryItemTime) as any;
 
             this.hasNewer = result && Number(result.count) > 0;
         } else {
@@ -1610,7 +1610,7 @@ export class DeletedItemsHistory extends History {
                 WHERE
                     ${this.oidWhereClause} AND deleted`
             )
-            .get();
+            .get() as any;
 
         runInAction(() => {
             this.deletedCount = result ? Number(result.count) : 0;

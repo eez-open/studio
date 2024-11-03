@@ -117,7 +117,7 @@ export function insertSource(
                     "${notebookItemSourcesStore.storeName}"
                 WHERE instrumentName = ? AND instrumentExtensionId = ?`
             )
-            .get([instrumentName, instrumentExtensionId]);
+            .get([instrumentName, instrumentExtensionId]) as any;
 
         const existingSourceId = result && result.id;
 
@@ -142,7 +142,7 @@ export function insertSourceFromInstrumentId(instrumentId: string) {
     try {
         let result = db
             .prepare(`SELECT * FROM "instrument" WHERE id = ?`)
-            .get([instrumentId]);
+            .get([instrumentId]) as any;
 
         if (result && result.id) {
             return insertSource(
@@ -166,7 +166,7 @@ export function getSource(sourceId: string): INotebookItemSource | null {
             .prepare(
                 `SELECT * FROM "${notebookItemSourcesStore.storeName}" WHERE id = ? `
             )
-            .get([sourceId]);
+            .get([sourceId]) as any;
 
         return source;
     } catch (err) {

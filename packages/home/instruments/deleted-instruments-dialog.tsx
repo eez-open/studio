@@ -44,7 +44,7 @@ const DeletedInstrumentsDialog = observer(
                     .prepare(
                         `SELECT * FROM "activityLog" WHERE oid=? AND type='instrument/created'`
                     )
-                    .get(instrument.id);
+                    .get(instrument.id) as any;
                 creationDate = new Date(Number(result.date));
             } catch (err) {
                 // console.error(err);

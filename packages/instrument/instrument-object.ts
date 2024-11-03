@@ -1129,7 +1129,9 @@ export const store = createStore({
         (db: Database) => {
             db.exec(`ALTER TABLE instrument ADD COLUMN uuid TEXT`);
 
-            const instruments = db.prepare(`SELECT * FROM instrument`).all();
+            const instruments = db
+                .prepare(`SELECT * FROM instrument`)
+                .all() as any;
             for (const instrument of instruments) {
                 db.exec(
                     `UPDATE instrument set uuid='${guid()}' WHERE id=${

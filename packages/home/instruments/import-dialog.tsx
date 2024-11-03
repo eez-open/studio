@@ -25,9 +25,9 @@ const ImportDialog = observer(
 
             try {
                 const db = new Database(this.props.filePath);
-                description = db
-                    .prepare("SELECT description FROM settings")
-                    .get().description;
+                description = (
+                    db.prepare("SELECT description FROM settings").get() as any
+                ).description;
             } catch (e) {
                 description = "Failed to read description";
                 className = "text-danger";

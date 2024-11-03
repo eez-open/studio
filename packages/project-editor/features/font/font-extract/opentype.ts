@@ -112,7 +112,7 @@ export class ExtractFont implements IFontExtract {
         glyphProperties.encoding = encoding;
 
         glyphProperties.dx = glyph
-            ? Math.ceil(glyph.advanceWidth * this.scale)
+            ? Math.ceil(glyph.advanceWidth ?? 0 * this.scale)
             : 0;
 
         glyphProperties.x = x1;

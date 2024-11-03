@@ -74,7 +74,7 @@ function getExternalSourceDescription(
         try {
             let result = db
                 .prepare(`SELECT * FROM "instrument" WHERE id = ?`)
-                .get([item.oid]);
+                .get([item.oid]) as any;
 
             if (result && result.id) {
                 const id = item.oid.toString();

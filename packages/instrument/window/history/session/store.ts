@@ -258,7 +258,7 @@ class HistorySessions {
 
         const logs = db
             .prepare(`SELECT * FROM activityLog WHERE sid=${session.id}`)
-            .all();
+            .all() as any;
         for (let i = 0; i < logs.length; i++) {
             const log = logs[i];
             logDelete(activityLogStore, log, {
@@ -305,13 +305,13 @@ class HistorySessions {
                 .prepare(
                     "SELECT date FROM activityLog ORDER BY date DESC LIMIT 1"
                 )
-                .get();
+                .get() as any;
         } else {
             row = db
                 .prepare(
                     "SELECT date FROM activityLog WHERE sid = ? ORDER BY date DESC LIMIT 1"
                 )
-                .get([session.id]);
+                .get([session.id]) as any;
         }
 
         if (!row) {

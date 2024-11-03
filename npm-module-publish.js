@@ -1,4 +1,5 @@
 const fse = require("fs-extra");
+const path = require("path");
 const { spawn } = require("child_process");
 
 const FOLDERS = ["packages", "libs", "resources"];
@@ -10,11 +11,12 @@ for (const folder of FOLDERS) {
 console.log(`Remove npm-module/packages/project-editor/flow/runtime/cpp ...`);
 fse.removeSync(`npm-module/packages/project-editor/flow/runtime/cpp`);
 
+/*
 console.log("Spawn npm publish ...");
 const dir = spawn(
     process.platform == "win32" ? "npm.cmd" : "npm",
     ["publish"],
-    { cwd: __dirname + "/npm-module" }
+    { cwd: __dirname + path.sep + "npm-module", shell: true }
 );
 
 dir.stdout.on("data", data => console.log(data.toString()));
@@ -28,3 +30,4 @@ dir.on("close", code => {
         fse.removeSync(`npm-module/${folder}`);
     }
 });
+*/
