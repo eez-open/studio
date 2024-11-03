@@ -341,6 +341,11 @@ export const Canvas = observer(
 
             const flowContext = this.props.flowContext;
 
+            const deltaX =
+                Math.abs(event.deltaX) < 5 ? event.deltaX : event.deltaX / 5;
+            const deltaY =
+                Math.abs(event.deltaY) < 5 ? event.deltaY : event.deltaY / 5;
+
             if (
                 event.altKey &&
                 flowContext.projectStore.projectTypeTraits.isLVGL
@@ -367,15 +372,6 @@ export const Canvas = observer(
                                     ) != -1 &&
                                     lvglWidget.children.length > 0
                                 ) {
-                                    const deltaX =
-                                        Math.abs(event.deltaX) < 10
-                                            ? event.deltaX
-                                            : event.deltaX / 5;
-                                    const deltaY =
-                                        Math.abs(event.deltaY) < 10
-                                            ? event.deltaY
-                                            : event.deltaY / 5;
-
                                     let xScroll =
                                         lvglWidget._xScroll2 +
                                         (event.shiftKey ? deltaY : deltaX);
@@ -399,7 +395,7 @@ export const Canvas = observer(
                     }
                 }
             } else if (event.ctrlKey) {
-                this.deltaY += event.deltaY;
+                this.deltaY += deltaY;
                 if (Math.abs(this.deltaY) > 10) {
                     let scale: number;
                     if (this.deltaY < 0) {
@@ -438,10 +434,10 @@ export const Canvas = observer(
                 transform.translate = {
                     x:
                         transform.translate.x -
-                        (event.shiftKey ? event.deltaY : event.deltaX),
+                        (event.shiftKey ? deltaY : deltaX),
                     y:
                         transform.translate.y -
-                        (event.shiftKey ? event.deltaX : event.deltaY)
+                        (event.shiftKey ? deltaX : deltaY)
                 };
 
                 runInAction(() => {
