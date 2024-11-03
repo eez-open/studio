@@ -201,7 +201,9 @@
                     },
                     {
                         "content": "SetColorTheme.html",
-                        "status": "publish"
+                        "status": "publish",
+                        "id": 13883,
+                        "sha256": "107b6b2e2a52d854ecee279660a32e696e84e2e37e1d9910dda5f3539e682bbb"
                     },
                     {
                         "content": "SetPageDirection.html",
@@ -301,7 +303,7 @@
                         "content": "LVGL.html",
                         "status": "publish",
                         "id": 10095,
-                        "sha256": "b0ca02f07411f589c0d8de2c3517faf0d09865fbd2b2efaad15e57dcca852192"
+                        "sha256": "4525777cf96dfba78cb20fd44d745759a20f7f20a1c6f94f9f0927947ac3d18e"
                     }
                 ]
             },
