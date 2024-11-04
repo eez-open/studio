@@ -341,8 +341,10 @@ export const Canvas = observer(
 
             const flowContext = this.props.flowContext;
 
-            const deltaX = event.deltaX;
-            const deltaY = event.deltaY;
+            console.log(event.deltaX, event.deltaY);
+
+            let deltaX = event.deltaX;
+            let deltaY = event.deltaY;
 
             if (
                 event.altKey &&
@@ -370,6 +372,9 @@ export const Canvas = observer(
                                     ) != -1 &&
                                     lvglWidget.children.length > 0
                                 ) {
+                                    if (Math.abs(deltaX) == 100) deltaX /= 5;
+                                    if (Math.abs(deltaY) == 100) deltaY /= 5;
+
                                     let xScroll =
                                         lvglWidget._xScroll2 +
                                         (event.shiftKey ? deltaY : deltaX);
