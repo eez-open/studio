@@ -341,10 +341,8 @@ export const Canvas = observer(
 
             const flowContext = this.props.flowContext;
 
-            const deltaX =
-                Math.abs(event.deltaX) < 5 ? event.deltaX : event.deltaX / 5;
-            const deltaY =
-                Math.abs(event.deltaY) < 5 ? event.deltaY : event.deltaY / 5;
+            const deltaX = event.deltaX;
+            const deltaY = event.deltaY;
 
             if (
                 event.altKey &&
@@ -629,7 +627,13 @@ export const Canvas = observer(
                     this.mouseHandler = new PanMouseHandler();
                 }
             } else {
-                this.mouseHandler = this.createMouseHandler(event);
+                if (event.altKey) {
+                    if (!this.mouseHandler) {
+                        this.mouseHandler = new PanMouseHandler();
+                    }
+                } else {
+                    this.mouseHandler = this.createMouseHandler(event);
+                }
             }
 
             if (this.mouseHandler) {
