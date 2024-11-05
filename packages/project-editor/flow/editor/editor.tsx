@@ -341,8 +341,6 @@ export const Canvas = observer(
 
             const flowContext = this.props.flowContext;
 
-            console.log(event.deltaX, event.deltaY);
-
             let deltaX = event.deltaX;
             let deltaY = event.deltaY;
 
