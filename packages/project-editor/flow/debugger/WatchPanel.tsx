@@ -312,7 +312,9 @@ const WatchTable = observer(
                                 );
 
                             if (objectVariableType) {
-                                value = objectVariableType.getValue(value);
+                                value = objectVariableType.getValue
+                                    ? objectVariableType.getValue(value)
+                                    : undefined;
 
                                 const getChildren = (
                                     value: any,

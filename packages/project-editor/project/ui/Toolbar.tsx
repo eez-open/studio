@@ -56,8 +56,9 @@ export const Toolbar = observer(
                         this.context.dataContext.get(variable.fullName);
 
                     if (objectVariableValue) {
-                        const managedValue =
-                            objectVariableType.getValue(objectVariableValue);
+                        const managedValue = objectVariableType.getValue
+                            ? objectVariableType.getValue(objectVariableValue)
+                            : undefined;
                         if (managedValue) {
                             objectVariableValue = managedValue;
                         }
