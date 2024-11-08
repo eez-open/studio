@@ -395,7 +395,7 @@ export const ImportCommandsDocDialog = observer(
 
         onOkCalled = false;
 
-        onOk(event: any) {
+        onOk = (event: any) => {
             event.preventDefault();
 
             if (this.onOkCalled) {
@@ -448,11 +448,11 @@ export const ImportCommandsDocDialog = observer(
             this.context.undoManager.setCombineCommands(false);
 
             this.context.backgroundCheckEnabled = true;
-        }
+        };
 
-        onCancel() {
+        onCancel = () => {
             this.modal.hide();
-        }
+        };
 
         handleTabClick(activeTab: Section, event: any) {
             event.preventDefault();
@@ -545,7 +545,7 @@ export const ImportCommandsDocDialog = observer(
                         key="close"
                         type="button"
                         className="btn btn-primary"
-                        onClick={this.onCancel.bind(this)}
+                        onClick={this.onCancel}
                     >
                         Close
                     </button>
@@ -689,10 +689,7 @@ export const ImportCommandsDocDialog = observer(
                     });
 
                     content = (
-                        <form
-                            className="form-horizontal"
-                            onSubmit={this.onOk.bind(this)}
-                        >
+                        <form className="form-horizontal" onSubmit={this.onOk}>
                             <ul className="nav nav-pills">{tabs}</ul>
                             <div className="EezStudio_TablesDiv">{tables}</div>
                         </form>
@@ -703,7 +700,7 @@ export const ImportCommandsDocDialog = observer(
                             key="ok"
                             type="button"
                             className="btn btn-default"
-                            onClick={this.onCancel.bind(this)}
+                            onClick={this.onCancel}
                         >
                             Cancel
                         </button>,
@@ -711,7 +708,7 @@ export const ImportCommandsDocDialog = observer(
                             key="cancel"
                             type="button"
                             className="btn btn-primary"
-                            onClick={this.onOk.bind(this)}
+                            onClick={this.onOk}
                             disabled={!this.hasSelectedChanges}
                         >
                             OK
@@ -727,7 +724,7 @@ export const ImportCommandsDocDialog = observer(
                             key="close"
                             type="button"
                             className="btn btn-primary"
-                            onClick={this.onCancel.bind(this)}
+                            onClick={this.onCancel}
                         >
                             Close
                         </button>
@@ -758,7 +755,7 @@ export const ImportCommandsDocDialog = observer(
                                 <button
                                     type="button"
                                     className="btn-close float-right"
-                                    onClick={this.onCancel.bind(this)}
+                                    onClick={this.onCancel}
                                     aria-label="Close"
                                 ></button>
                             </div>

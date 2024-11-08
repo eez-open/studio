@@ -10,22 +10,19 @@ class NoteDialog extends React.Component<{
     constructor(props: any) {
         super(props);
 
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-
         this.note = this.props.note || "";
     }
 
     note: string;
 
-    handleChange(value: string) {
+    handleChange = (value: string) => {
         this.note = value;
-    }
+    };
 
-    handleSubmit() {
+    handleSubmit = () => {
         this.props.callback(this.note);
         return true;
-    }
+    };
 
     render() {
         return (

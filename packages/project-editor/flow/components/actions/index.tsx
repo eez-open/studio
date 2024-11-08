@@ -4001,121 +4001,153 @@ export class NoopActionComponent extends ActionComponent {
 ////////////////////////////////////////////////////////////////////////////////
 
 const TrixEditor = observer(
-    ({
-        component,
-        flowContext,
-        value,
-        setValue
-    }: {
+    class TrixEditor extends React.Component<{
         component: CommentActionComponent;
         flowContext: IFlowContext;
         value: string;
         setValue: (value: string) => void;
-    }) => {
-        const inputId = React.useMemo<string>(() => guid(), []);
-        const editorId = React.useMemo<string>(() => guid(), []);
+    }> {
+        inputId = guid();
+        editorId = guid();
 
-        React.useEffect(() => {
-            const trixEditor = document.getElementById(editorId) as HTMLElement;
+        trixEditor: any;
 
-            if (value != trixEditor.innerHTML) {
-                (trixEditor as any).editor.loadHTML(value);
+        onChange = () => {
+            const { component, flowContext } = this.props;
+
+            const geometry = calcComponentGeometry(
+                component,
+                this.trixEditor.closest(
+                    ".EezStudio_ComponentEnclosure"
+                )! as HTMLElement,
+                flowContext
+            );
+
+            runInAction(() => {
+                component.geometry = geometry;
+            });
+        };
+
+        onFocus = () => {
+            const trixToolbar =
+                this.trixEditor.parentElement?.querySelector("trix-toolbar");
+            if (trixToolbar instanceof HTMLElement) {
+                trixToolbar.style.visibility = "visible";
             }
 
-            const onChange = () => {
-                const geometry = calcComponentGeometry(
-                    component,
-                    trixEditor.closest(
-                        ".EezStudio_ComponentEnclosure"
-                    )! as HTMLElement,
-                    flowContext
-                );
+            if (this.trixEditor.innerHTML != this.props.value) {
+                this.props.setValue(this.trixEditor.innerHTML);
+            }
+        };
 
-                runInAction(() => {
-                    component.geometry = geometry;
-                });
-            };
-            const onFocus = () => {
-                const trixToolbar =
-                    trixEditor.parentElement?.querySelector("trix-toolbar");
-                if (trixToolbar instanceof HTMLElement) {
-                    trixToolbar.style.visibility = "visible";
+        onBlur = () => {
+            const trixToolbar =
+                this.trixEditor.parentElement?.querySelector("trix-toolbar");
+            if (trixToolbar instanceof HTMLElement) {
+                if (!document.activeElement?.classList.contains("trix-input")) {
+                    trixToolbar.style.visibility = "";
                 }
+            }
 
-                if (trixEditor.innerHTML != value) {
-                    setValue(trixEditor.innerHTML);
-                }
-            };
-            const onBlur = () => {
-                const trixToolbar =
-                    trixEditor.parentElement?.querySelector("trix-toolbar");
-                if (trixToolbar instanceof HTMLElement) {
-                    if (
-                        !document.activeElement?.classList.contains(
-                            "trix-input"
-                        )
-                    ) {
-                        trixToolbar.style.visibility = "";
-                    }
-                }
+            if (this.trixEditor.innerHTML != this.props.value) {
+                this.props.setValue(this.trixEditor.innerHTML);
+            }
+        };
 
-                if (trixEditor.innerHTML != value) {
-                    setValue(trixEditor.innerHTML);
-                }
-            };
-            const onAttachmentAdd = (event: any) => {
-                const reader = new FileReader();
-                reader.addEventListener(
-                    "load",
-                    function () {
-                        event.attachment.setAttributes({
-                            url: reader.result
-                        });
+        onAttachmentAdd = (event: any) => {
+            const reader = new FileReader();
 
-                        (trixEditor as any).editor.loadHTML(
-                            trixEditor.innerHTML
-                        );
-                    },
-                    false
-                );
-                reader.readAsDataURL(event.attachment.file);
-            };
+            reader.addEventListener(
+                "load",
+                () => {
+                    event.attachment.setAttributes({
+                        url: reader.result
+                    });
 
-            trixEditor.addEventListener("trix-change", onChange, false);
-            trixEditor.addEventListener("trix-focus", onFocus, false);
-            trixEditor.addEventListener("trix-blur", onBlur, false);
-            trixEditor.addEventListener(
-                "trix-attachment-add",
-                onAttachmentAdd,
+                    (this.trixEditor as any).editor.loadHTML(
+                        this.trixEditor.innerHTML
+                    );
+                },
                 false
             );
 
-            return () => {
-                trixEditor.removeEventListener("trix-change", onChange, false);
-                trixEditor.removeEventListener("trix-focus", onFocus, false);
-                trixEditor.removeEventListener("trix-blur", onBlur, false);
-                trixEditor.removeEventListener(
-                    "trix-attachment-add",
-                    onAttachmentAdd,
-                    false
-                );
-            };
-        }, [value]);
-
-        var attributes: { [key: string]: string } = {
-            id: editorId,
-            input: inputId
+            reader.readAsDataURL(event.attachment.file);
         };
 
-        return (
-            <div
-                className="EezStudio_TrixEditor eez-flow-editor-capture-pointers"
-                tabIndex={0}
-            >
-                {React.createElement("trix-editor", attributes)}
-                <input id={inputId} value={value ?? ""} type="hidden"></input>
-            </div>
-        );
+        setup() {
+            if (this.trixEditor) {
+                this.trixEditor.removeEventListener(
+                    "trix-change",
+                    this.onChange,
+                    false
+                );
+                this.trixEditor.removeEventListener(
+                    "trix-focus",
+                    this.onFocus,
+                    false
+                );
+                this.trixEditor.removeEventListener(
+                    "trix-blur",
+                    this.onBlur,
+                    false
+                );
+                this.trixEditor.removeEventListener(
+                    "trix-attachment-add",
+                    this.onAttachmentAdd,
+                    false
+                );
+            }
+
+            this.trixEditor = document.getElementById(
+                this.editorId
+            ) as HTMLElement;
+
+            if (this.props.value != this.trixEditor.innerHTML) {
+                (this.trixEditor as any).editor.loadHTML(this.props.value);
+            }
+
+            this.trixEditor.addEventListener(
+                "trix-change",
+                this.onChange,
+                false
+            );
+            this.trixEditor.addEventListener("trix-focus", this.onFocus, false);
+            this.trixEditor.addEventListener("trix-blur", this.onBlur, false);
+            this.trixEditor.addEventListener(
+                "trix-attachment-add",
+                this.onAttachmentAdd,
+                false
+            );
+        }
+
+        componentDidMount(): void {
+            this.setup();
+        }
+
+        componentDidUpdate() {
+            this.setup();
+        }
+
+        render() {
+            var attributes: { [key: string]: string } = {
+                id: this.editorId,
+                input: this.inputId
+            };
+
+            return (
+                <div
+                    className="EezStudio_TrixEditor eez-flow-editor-capture-pointers"
+                    tabIndex={0}
+                >
+                    {React.createElement("trix-editor", attributes)}
+                    <input
+                        id={this.inputId}
+                        value={this.props.value ?? ""}
+                        type="hidden"
+                    ></input>
+                </div>
+            );
+        }
     }
 );
 

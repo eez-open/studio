@@ -11,11 +11,11 @@ export class RelativeFileInput extends FieldComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    onClear() {
+    onClear = () => {
         this.props.onChange(undefined);
-    }
+    };
 
-    async onSelect() {
+    onSelect = async () => {
         const result = await dialog.showOpenDialog({
             properties: ["openFile"],
             filters: this.props.fieldProperties.options.filters
@@ -28,7 +28,7 @@ export class RelativeFileInput extends FieldComponent {
                 )
             );
         }
-    }
+    };
 
     render() {
         let clearButton: JSX.Element | undefined;
@@ -38,7 +38,7 @@ export class RelativeFileInput extends FieldComponent {
                 <button
                     className="btn btn-default"
                     type="button"
-                    onClick={this.onClear.bind(this)}
+                    onClick={this.onClear}
                 >
                     <Icon icon="material:close" size={17} />
                 </button>
@@ -60,7 +60,7 @@ export class RelativeFileInput extends FieldComponent {
                     <button
                         className="btn btn-secondary"
                         type="button"
-                        onClick={this.onSelect.bind(this)}
+                        onClick={this.onSelect}
                     >
                         &hellip;
                     </button>
@@ -76,11 +76,11 @@ export class AbsoluteFileInput extends FieldComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    onClear() {
+    onClear = () => {
         this.props.onChange(undefined);
-    }
+    };
 
-    async onSelect() {
+    onSelect = async () => {
         const result = await dialog.showOpenDialog({
             properties: ["openFile"],
             filters: this.props.fieldProperties.options.filters
@@ -89,7 +89,7 @@ export class AbsoluteFileInput extends FieldComponent {
         if (result.filePaths && result.filePaths[0]) {
             this.props.onChange(result.filePaths[0]);
         }
-    }
+    };
 
     render() {
         let clearButton: JSX.Element | undefined;
@@ -99,7 +99,7 @@ export class AbsoluteFileInput extends FieldComponent {
                 <button
                     className="btn btn-default"
                     type="button"
-                    onClick={this.onClear.bind(this)}
+                    onClick={this.onClear}
                 >
                     <Icon icon="material:close" size={17} />
                 </button>
@@ -121,7 +121,7 @@ export class AbsoluteFileInput extends FieldComponent {
                     <button
                         className="btn btn-secondary"
                         type="button"
-                        onClick={this.onSelect.bind(this)}
+                        onClick={this.onSelect}
                     >
                         &hellip;
                     </button>
@@ -137,11 +137,11 @@ export class AbsoluteFileSaveInput extends FieldComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;
 
-    onClear() {
+    onClear = () => {
         this.props.onChange(undefined);
-    }
+    };
 
-    async onSelect() {
+    onSelect = async () => {
         const result = await dialog.showSaveDialog({
             properties: ["showOverwriteConfirmation"],
             filters: this.props.fieldProperties.options.filters
@@ -150,7 +150,7 @@ export class AbsoluteFileSaveInput extends FieldComponent {
         if (result.filePath) {
             this.props.onChange(result.filePath);
         }
-    }
+    };
 
     render() {
         let clearButton: JSX.Element | undefined;
@@ -160,7 +160,7 @@ export class AbsoluteFileSaveInput extends FieldComponent {
                 <button
                     className="btn btn-default"
                     type="button"
-                    onClick={this.onClear.bind(this)}
+                    onClick={this.onClear}
                 >
                     <Icon icon="material:close" size={17} />
                 </button>
@@ -182,7 +182,7 @@ export class AbsoluteFileSaveInput extends FieldComponent {
                     <button
                         className="btn btn-secondary"
                         type="button"
-                        onClick={this.onSelect.bind(this)}
+                        onClick={this.onSelect}
                     >
                         &hellip;
                     </button>

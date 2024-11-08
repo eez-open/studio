@@ -24,16 +24,10 @@ export const NavigationItem = observer(
         },
         {}
     > {
-        constructor(props: any) {
-            super(props);
-
-            this.handleClick = this.handleClick.bind(this);
-        }
-
-        handleClick(event: React.MouseEvent<HTMLDivElement>) {
+        handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
             event.preventDefault();
             this.props.selectItem(this.props.item);
-        }
+        };
 
         render() {
             let className = classNames(

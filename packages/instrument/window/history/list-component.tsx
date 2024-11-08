@@ -394,7 +394,7 @@ export class HistoryListComponentClass extends React.Component<{
 
         let c = 0;
 
-        const scrollIntoView = (() => {
+        const scrollIntoView = () => {
             const element = $(this.div).find(
                 `.EezStudio_HistoryItem_${historyItem.id}`
             )[0];
@@ -406,7 +406,7 @@ export class HistoryListComponentClass extends React.Component<{
             } else {
                 this.autoReloadEnabled = true;
             }
-        }).bind(this);
+        };
 
         scrollIntoView();
     }

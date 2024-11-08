@@ -239,7 +239,7 @@ export const GenericDialog = observer(
             this.errorMessages = undefined;
 
             if (this.props.setOnChangeCallback) {
-                this.props.setOnChangeCallback(this.onChange.bind(this));
+                this.props.setOnChangeCallback(this.onChange);
             }
         }
 
@@ -320,7 +320,7 @@ export const GenericDialog = observer(
             return true;
         }
 
-        onChange(fieldProperties: any, value: any) {
+        onChange = (fieldProperties: any, value: any) => {
             this.fieldValues[fieldProperties.name] = value;
 
             if (this.errorMessages) {
@@ -337,7 +337,7 @@ export const GenericDialog = observer(
             }
 
             this.progressType = "none";
-        }
+        };
 
         validate() {
             let errorMessages: any;

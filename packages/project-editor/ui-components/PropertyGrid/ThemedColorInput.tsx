@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { observer } from "mobx-react";
-import { SketchPicker } from "react-color";
+import Chrome from "@uiw/react-color-chrome";
 
 import { isDark, isLight, isValid } from "eez-studio-shared/color";
 
@@ -178,22 +178,17 @@ export const ThemedColorInput = observer(
             const portal = ReactDOM.createPortal(
                 <div
                     ref={this.dropDownRef}
-                    className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent shadow rounded"
+                    className="dropdown-menu dropdown-menu-end EezStudio_ThemedColorInput_DropdownContent"
                     style={{
                         display: this.dropDownOpen ? "block" : "none",
                         left: this.dropDownLeft,
                         top: this.dropDownTop
                     }}
                 >
-                    <SketchPicker
-                        width="260px"
+                    <Chrome
                         color={color}
-                        disableAlpha={true}
-                        presetColors={[]}
+                        showAlpha={false}
                         onChange={color => this.onChangeColor(color.hex, false)}
-                        onChangeComplete={color => {
-                            this.onChangeColor(color.hex, true);
-                        }}
                     />
                 </div>,
                 document.body

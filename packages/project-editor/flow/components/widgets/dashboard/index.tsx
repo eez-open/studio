@@ -299,33 +299,94 @@ registerClass("RectangleDashboardWidget", RectangleDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function TextInputWidgetInput({
-    value,
-    flowContext,
-    textInputWidget,
-    readOnly,
-    placeholder,
-    password,
-    iterators
-}: {
-    value: string;
-    flowContext: IFlowContext;
-    textInputWidget: TextInputWidget;
-    readOnly: boolean;
-    placeholder: string;
-    password: boolean;
-    iterators: number[];
-}) {
-    const ref = React.useRef<HTMLInputElement>(null);
-    const [cursor, setCursor] = React.useState<number | null>(null);
+const TextInputWidgetInput = observer(
+    class TextInputWidgetInput extends React.Component<{
+        value: string;
+        flowContext: IFlowContext;
+        textInputWidget: TextInputWidget;
+        readOnly: boolean;
+        placeholder: string;
+        password: boolean;
+        iterators: number[];
+    }> {
+        ref = React.createRef<HTMLInputElement>();
+        cursor: number | null = null;
 
-    React.useEffect(() => {
-        const input = ref.current;
-        if (input) input.setSelectionRange(cursor, cursor);
-    }, [ref, cursor, value]);
+        constructor(props: any) {
+            super(props);
 
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === "Enter") {
+            makeObservable(this, {
+                cursor: observable
+            });
+        }
+
+        setSelectionRange() {
+            const input = this.ref.current;
+            if (input) input.setSelectionRange(this.cursor, this.cursor);
+        }
+
+        componentDidMount() {
+            this.setSelectionRange();
+        }
+
+        componentDidUpdate() {
+            this.setSelectionRange();
+        }
+
+        handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Enter") {
+                const flowState = this.props.flowContext.flowState as FlowState;
+                if (flowState && flowState.runtime) {
+                    flowState.runtime.executeWidgetAction(
+                        this.props.flowContext,
+                        this.props.textInputWidget,
+                        "ON_CHANGE",
+                        makeTextInputChangeEventValue(
+                            this.props.flowContext,
+                            this.props.value
+                        ),
+                        `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
+                    );
+                }
+            }
+        };
+
+        onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const { flowContext, textInputWidget, iterators } = this.props;
+
+            const flowState = flowContext.flowState as FlowState;
+            if (flowState) {
+                runInAction(() => {
+                    this.cursor = event.target.selectionStart;
+                });
+
+                const value = event.target.value;
+
+                if (this.props.textInputWidget.data) {
+                    assignProperty(
+                        flowState,
+                        textInputWidget,
+                        "data",
+                        value,
+                        iterators
+                    );
+                }
+
+                if (flowState.runtime) {
+                    flowState.runtime.executeWidgetAction(
+                        flowContext,
+                        textInputWidget,
+                        "ON_INPUT",
+                        makeTextInputChangeEventValue(flowContext, value),
+                        `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
+                    );
+                }
+            }
+        };
+
+        onBlur = () => {
+            const { flowContext, textInputWidget, value } = this.props;
+
             const flowState = flowContext.flowState as FlowState;
             if (flowState && flowState.runtime) {
                 flowState.runtime.executeWidgetAction(
@@ -336,65 +397,28 @@ function TextInputWidgetInput({
                     `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
                 );
             }
+        };
+
+        render() {
+            const { value, readOnly, placeholder, password } = this.props;
+
+            return (
+                <>
+                    <input
+                        ref={this.ref}
+                        type={password ? "password" : "text"}
+                        value={value}
+                        placeholder={placeholder}
+                        onChange={this.onChange}
+                        onBlur={this.onBlur}
+                        onKeyDown={this.handleKeyDown}
+                        readOnly={readOnly}
+                    ></input>
+                </>
+            );
         }
-    };
-
-    return (
-        <>
-            <input
-                ref={ref}
-                type={password ? "password" : "text"}
-                value={value}
-                placeholder={placeholder}
-                onChange={event => {
-                    const flowState = flowContext.flowState as FlowState;
-                    if (flowState) {
-                        setCursor(event.target.selectionStart);
-
-                        const value = event.target.value;
-
-                        if (textInputWidget.data) {
-                            assignProperty(
-                                flowState,
-                                textInputWidget,
-                                "data",
-                                value,
-                                iterators
-                            );
-                        }
-
-                        if (flowState.runtime) {
-                            flowState.runtime.executeWidgetAction(
-                                flowContext,
-                                textInputWidget,
-                                "ON_INPUT",
-                                makeTextInputChangeEventValue(
-                                    flowContext,
-                                    value
-                                ),
-                                `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
-                            );
-                        }
-                    }
-                }}
-                onBlur={() => {
-                    const flowState = flowContext.flowState as FlowState;
-                    if (flowState && flowState.runtime) {
-                        flowState.runtime.executeWidgetAction(
-                            flowContext,
-                            textInputWidget,
-                            "ON_CHANGE",
-                            makeTextInputChangeEventValue(flowContext, value),
-                            `struct:${TEXT_INPUT_CHANGE_EVENT_STRUCT_NAME}`
-                        );
-                    }
-                }}
-                onKeyDown={handleKeyDown}
-                readOnly={readOnly}
-            ></input>
-        </>
-    );
-}
+    }
+);
 
 export class TextInputWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
