@@ -165,6 +165,12 @@ export class LVGLIdentifiers {
         flow: Flow,
         displayName: string
     ): LVGLIdentifier | undefined {
+        const identifierName = getName(
+            "",
+            displayName,
+            NamingConvention.UnderscoreLowerCase
+        );
+
         let identifiers = this.getIdentifiersVisibleFromFlow(flow);
 
         if (!identifiers) {
@@ -180,7 +186,7 @@ export class LVGLIdentifiers {
         }
 
         return identifiers.find(
-            lvglIdentifier => lvglIdentifier.identifier == displayName
+            lvglIdentifier => lvglIdentifier.identifier == identifierName
         );
     }
 

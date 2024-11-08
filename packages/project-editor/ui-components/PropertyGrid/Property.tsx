@@ -6,24 +6,20 @@ import { dialog } from "@electron/remote";
 
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
-import { validators, filterNumber } from "eez-studio-shared/validation";
-import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
+import { filterNumber } from "eez-studio-shared/validation";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
 
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Icon } from "eez-studio-ui/icon";
 
 import {
     PropertyType,
     PropertyProps,
-    getParent,
     getObjectPropertyDisplayName,
     isPropertyOptional,
     EnumItem
 } from "project-editor/core/object";
 import { info } from "project-editor/core/util";
-import { replaceObjectReference } from "project-editor/core/search";
 
 import { ConfigurationReferencesPropertyValue } from "project-editor/ui-components/ConfigurationReferencesPropertyValue";
 
@@ -52,6 +48,7 @@ import { Checkbox } from "./Checkbox";
 import { ImageProperty } from "./ImageProperty";
 
 import { General } from "project-editor/project/project";
+import { UniqueValueInput } from "./UniqueValueInput";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -393,82 +390,6 @@ export const Property = observer(
             );
         };
 
-        onEditUnique = () => {
-            const propertyInfoUnique = (this.props.propertyInfo.unique ||
-                this.props.propertyInfo.uniqueIdentifier)!;
-
-            showGenericDialog({
-                dialogDefinition: {
-                    fields: [
-                        {
-                            name: this.props.propertyInfo.name,
-                            displayName: getObjectPropertyDisplayName(
-                                this.props.objects[0],
-                                this.props.propertyInfo
-                            ),
-                            type: "string",
-                            validators: [
-                                typeof propertyInfoUnique === "boolean"
-                                    ? validators.unique(
-                                          this.props.objects[0],
-                                          getParent(this.props.objects[0])
-                                      )
-                                    : propertyInfoUnique(
-                                          this.props.objects[0],
-                                          getParent(this.props.objects[0]),
-                                          this.props.propertyInfo
-                                      )
-                            ]
-                                .concat(
-                                    isPropertyOptional(
-                                        this.props.objects[0],
-                                        this.props.propertyInfo
-                                    )
-                                        ? []
-                                        : [validators.required]
-                                )
-                                .concat(
-                                    this.props.propertyInfo.uniqueIdentifier
-                                        ? [
-                                              validatorsRenderer.identifierValidator
-                                          ]
-                                        : []
-                                )
-                        }
-                    ]
-                },
-                values: this.props.objects[0]
-            })
-                .then(result => {
-                    let oldValue = this._value;
-                    let newValue =
-                        result.values[this.props.propertyInfo.name].trim();
-                    if (newValue.length === 0) {
-                        newValue = undefined;
-                    }
-                    if (newValue != oldValue) {
-                        this.context.undoManager.setCombineCommands(true);
-
-                        console.log("Change unique value", oldValue, newValue);
-
-                        runInAction(() => {
-                            replaceObjectReference(
-                                this.props.objects[0],
-                                newValue
-                            );
-                            this.changeValue(newValue);
-                        });
-
-                        this.context.undoManager.setCombineCommands(false);
-                    }
-                })
-                .catch(error => {
-                    if (error !== undefined) {
-                        console.error(error);
-                    }
-                });
-        };
-
         onGenerateGuid = () => {
             this.changeValue(guid());
         };
@@ -572,22 +493,11 @@ export const Property = observer(
                 (propertyInfo.unique || propertyInfo.uniqueIdentifier)
             ) {
                 return (
-                    <div className="input-group">
-                        <input
-                            ref={(ref: any) => (this.input = ref)}
-                            type="text"
-                            className="form-control"
-                            value={this._value || ""}
-                            readOnly
-                        />
-                        <button
-                            className="btn btn-secondary"
-                            type="button"
-                            onClick={this.onEditUnique}
-                        >
-                            &hellip;
-                        </button>
-                    </div>
+                    <UniqueValueInput
+                        {...this.props}
+                        value={this._value}
+                        changeValue={this.changeValue}
+                    />
                 );
             } else if (propertyInfo.type === PropertyType.MultilineText) {
                 if (!readOnly && isOnSelectAvailable) {
