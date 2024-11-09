@@ -7,6 +7,7 @@ import { showDialog, Dialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 
 import { isArray } from "eez-studio-shared/util";
+import { settingsController } from "home/settings";
 
 const STUDIO_RELEASES_URL =
     "https://api.github.com/repos/eez-open/studio/releases";
@@ -177,7 +178,13 @@ const AboutBox = observer(
                 <Dialog cancelButtonText="Close">
                     <div className="EezStudio_AboutBox">
                         <div className="EezStudio_Logo">
-                            <img src="../eez-studio-ui/_images/eez_studio_logo_with_title.png"></img>
+                            <img
+                                src={
+                                    settingsController.isDarkTheme
+                                        ? "../eez-studio-ui/_images/eez_studio_logo_with_title_dark.png"
+                                        : "../eez-studio-ui/_images/eez_studio_logo_with_title.png"
+                                }
+                            ></img>
                         </div>
 
                         <div className="EezStudio_Version">
@@ -204,7 +211,7 @@ const AboutBox = observer(
                         {this.versionInfo}
 
                         <button
-                            className="EezStudio_CheckForUpdate btn btn-sm btn-light"
+                            className="EezStudio_CheckForUpdate btn btn-sm btn-secondary"
                             onClick={this.checkForUpdates}
                             disabled={this.checkingForUpdates}
                         >

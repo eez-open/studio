@@ -1,5 +1,5 @@
 import fs from "fs";
-import { app, screen, ipcMain, BrowserWindow } from "electron";
+import { app, screen, ipcMain, BrowserWindow, nativeTheme } from "electron";
 import {
     observable,
     action,
@@ -112,6 +112,10 @@ class Settings {
             BrowserWindow.getAllWindows().forEach(window =>
                 window.webContents.send("mru-changed", mru)
             );
+        });
+
+        autorun(() => {
+            nativeTheme.themeSource = this.isDarkTheme ? "dark" : "light";
         });
     }
 

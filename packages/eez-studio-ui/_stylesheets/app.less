@@ -476,8 +476,10 @@ input::placeholder {
 }
 
 button.EezStudio_Action {
-    &:active {
-        transform: translate(1px, 1px);
+    &:not(:disabled) {
+        &:active {
+            transform: translate(1px, 1px);
+        }
     }
 
     &:not(.btn-outline-success, .btn-outline-danger) {
