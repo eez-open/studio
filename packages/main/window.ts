@@ -5,6 +5,7 @@ import { action, observable, runInAction } from "mobx";
 
 import { getIcon } from "main/util";
 import {
+    settings,
     settingsRegisterWindow,
     settingsSetWindowBoundsIntoParams
 } from "main/settings";
@@ -81,8 +82,10 @@ export function createWindow(params: IWindowParams) {
 
     if (!showHidden) {
         settingsSetWindowBoundsIntoParams(params.url, windowContructorParams);
-
         windowContructorParams.icon = getIcon();
+        if (settings.isDarkTheme) {
+            windowContructorParams.backgroundColor = "#212529";
+        }
     }
 
     let browserWindow = new BrowserWindow(windowContructorParams);
@@ -119,6 +122,10 @@ export function createWindow(params: IWindowParams) {
 
     if (!showHidden) {
         browserWindow.show();
+
+        // browserWindow.once("ready-to-show", () => {
+        //     browserWindow.show();
+        // });
 
         if (!params.utilityWindow) {
             browserWindow.on("close", function (event: any) {
