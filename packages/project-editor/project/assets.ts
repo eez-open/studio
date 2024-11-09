@@ -110,6 +110,32 @@ export function findFont(project: Project, name: string | undefined) {
     return findAsset<Font>(project, "fonts", name);
 }
 
+export function findFontByVarName(
+    project: Project,
+    varName: string | undefined
+) {
+    const allAssets = project._assets.maps["name"].allAssets;
+    for (const key of allAssets.keys()) {
+        if (key.startsWith("fonts/")) {
+            const fontName = key.slice("fonts/".length);
+            const fontVarName = getName(
+                "ui_font_",
+                fontName,
+                NamingConvention.UnderscoreLowerCase
+            );
+            if (fontVarName == varName) {
+                const objects = allAssets.get(key);
+                if (objects && objects.length === 1) {
+                    return objects[0] as Font;
+                }
+                return undefined;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export function getAssetFullName<T extends EezObject & { name: string }>(
     object: T,
     separator?: string

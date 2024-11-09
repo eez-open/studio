@@ -70,6 +70,8 @@ export interface Params {
     getAllGlyphs?: boolean;
     lvglVersion?: string;
     lvglInclude?: string;
+    opts_string?: string;
+    lv_fallback?: string;
 }
 
 export interface IFontExtract {

@@ -229,8 +229,6 @@ export const GlyphComponent = observer(
         refDiv = React.createRef<HTMLDivElement>();
 
         setCanvas() {
-            console.log("setCanvas");
-
             const { glyph } = this.props;
 
             const canvas = document.createElement("canvas");

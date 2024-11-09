@@ -38,12 +38,9 @@ import { showGenericDialog } from "project-editor/core/util";
 import { GlyphSelectFieldType } from "project-editor/features/font/GlyphSelectFieldType";
 import {
     Font,
-    getEncodings,
     Glyph,
     GlyphSource,
-    removeDuplicates,
-    requiredRangesOrSymbols,
-    validateRanges
+    onEditGlyphs
 } from "project-editor/features/font/font";
 
 import {
@@ -65,8 +62,7 @@ export const FontEditor = observer(
             makeObservable(this, {
                 onSelectGlyph: action.bound,
                 onAddGlyph: action.bound,
-                onDeleteGlyph: action.bound,
-                onEditGlyphs: action.bound
+                onDeleteGlyph: action.bound
             });
         }
 
@@ -405,104 +401,6 @@ export const FontEditor = observer(
             }
         }
 
-        async onEditGlyphs() {
-            const result = await showGenericDialog(this.context, {
-                dialogDefinition: {
-                    title: "Add or Remove Characters",
-                    fields: [
-                        {
-                            name: "ranges",
-                            type: "string",
-                            validators: [
-                                validateRanges,
-                                requiredRangesOrSymbols
-                            ],
-                            formText:
-                                "Ranges and/or characters to include. Example: 32-127,140,160-170,200,210-255"
-                        },
-                        {
-                            name: "symbols",
-                            type: "string",
-                            validators: [requiredRangesOrSymbols],
-                            formText:
-                                "List of characters to include. Example: abc01234äöüčćšđ"
-                        }
-                    ]
-                },
-                values: {
-                    ranges: this.font.lvglRanges,
-                    symbols: this.font.lvglSymbols
-                }
-            });
-
-            try {
-                let relativeFilePath = this.font.source!.filePath;
-                let absoluteFilePath =
-                    this.context.getAbsoluteFilePath(relativeFilePath);
-
-                const encodingsBeforeDeduplication = getEncodings(
-                    result.values.ranges
-                )!;
-
-                const { encodings, symbols } = removeDuplicates(
-                    encodingsBeforeDeduplication,
-                    result.values.symbols
-                );
-                result.values.symbols = symbols;
-
-                const fontProperties = await extractFont({
-                    name: this.font.name,
-                    absoluteFilePath,
-                    embeddedFontFile: this.font.embeddedFontFile,
-                    relativeFilePath,
-                    renderingEngine: "LVGL",
-                    bpp: this.font.bpp,
-                    size: this.font.source!.size!,
-                    threshold: 128,
-                    createGlyphs: true,
-                    encodings,
-                    symbols: result.values.symbols,
-                    createBlankGlyphs: false,
-                    doNotAddGlyphIfNotFound: false,
-                    lvglVersion:
-                        this.context.project.settings.general.lvglVersion,
-                    lvglInclude: this.context.project.settings.build.lvglInclude
-                });
-
-                this.context.updateObject(this.font, {
-                    lvglBinFile: fontProperties.lvglBinFile,
-                    lvglSourceFile: fontProperties.lvglSourceFile,
-                    lvglGlyphs: {
-                        encodings,
-                        symbols: result.values.symbols
-                    }
-                });
-
-                this.font.loadLvglGlyphs(this.context);
-
-                notification.info(
-                    `Font ${this.font.name} successfully modified.`
-                );
-            } catch (err) {
-                let errorMessage;
-                if (err) {
-                    if (err.message) {
-                        errorMessage = err.message;
-                    } else {
-                        errorMessage = err.toString();
-                    }
-                }
-
-                if (errorMessage) {
-                    notification.error(
-                        `Modifying ${Font.name} failed: ${errorMessage}!`
-                    );
-                } else {
-                    notification.error(`Modifying ${Font.name} failed!`);
-                }
-            }
-        }
-
         onCreateShadow = async () => {
             const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
@@ -678,7 +576,7 @@ export const FontEditor = observer(
                         onAddGlyph={this.onAddGlyph}
                         onEditGlyphs={
                             this.context.projectTypeTraits.isLVGL
-                                ? this.onEditGlyphs
+                                ? () => onEditGlyphs(this.font)
                                 : undefined
                         }
                         onDeleteGlyph={this.onDeleteGlyph}

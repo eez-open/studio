@@ -2074,7 +2074,8 @@ ${source}`;
         await Promise.all(
             this.fonts.map(font =>
                 (async () => {
-                    if (font.lvglSourceFile) {
+                    const lvglSourceFile = await font.getLvglSourceFile();
+                    if (lvglSourceFile) {
                         const output = getName(
                             "ui_font_",
                             font.name || "",
@@ -2093,7 +2094,7 @@ ${source}`;
                                         : "") +
                                     output +
                                     ".c",
-                                font.lvglSourceFile
+                                lvglSourceFile
                             );
                         } catch (err) {
                             this.project._store.outputSectionsStore.write(

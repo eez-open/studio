@@ -889,18 +889,24 @@ export const Property = observer(
                         </div>
                     );
                 } else {
+                    const formText = getFormText(this.props);
                     return (
-                        <input
-                            ref={(ref: any) => (this.input = ref)}
-                            type="text"
-                            className={classNames("form-control", {
-                                "font-monospace": propertyInfo.monospaceFont
-                            })}
-                            value={this.displayValue}
-                            onChange={this.onChange}
-                            onKeyDown={this.onKeyDown}
-                            readOnly={readOnly || propertyInfo.computed}
-                        />
+                        <>
+                            <input
+                                ref={(ref: any) => (this.input = ref)}
+                                type="text"
+                                className={classNames("form-control", {
+                                    "font-monospace": propertyInfo.monospaceFont
+                                })}
+                                value={this.displayValue}
+                                onChange={this.onChange}
+                                onKeyDown={this.onKeyDown}
+                                readOnly={readOnly || propertyInfo.computed}
+                            />
+                            {formText && (
+                                <div className="form-text">{formText}</div>
+                            )}
+                        </>
                     );
                 }
             } else if (propertyInfo.type === PropertyType.Number) {

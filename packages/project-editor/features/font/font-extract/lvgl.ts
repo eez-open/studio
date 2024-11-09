@@ -63,7 +63,11 @@ export class ExtractFont implements IFontExtract {
             lv_include: this.params.lvglInclude,
             no_kerning: false,
             no_prefilter: false,
-            fast_kerning: false
+            fast_kerning: false,
+            opts_string: this.params.opts_string,
+            lv_fallback: this.params.lv_fallback
+                ? this.params.lv_fallback
+                : undefined
         };
 
         // wait for !extractBusy

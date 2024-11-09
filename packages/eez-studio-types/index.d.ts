@@ -732,7 +732,7 @@ export interface IWasmFlowRuntime {
     _lvglGetObjRelY(obj: number): number;
     _lvglGetObjWidth(obj: number): number;
     _lvglGetObjHeight(obj: number): number;
-    _lvglLoadFont(font_file_path: number): number;
+    _lvglLoadFont(font_file_path: number, fallback_user_font: number, fallback_builtin_font: number): number;
     _lvglFreeFont(font_ptr: number): void;
     _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;

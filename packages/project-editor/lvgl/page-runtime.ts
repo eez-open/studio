@@ -30,7 +30,8 @@ import type {
 import {
     Project,
     ProjectType,
-    findBitmap
+    findBitmap,
+    findFontByVarName
 } from "project-editor/project/project";
 import {
     getClassesDerivedFrom,
@@ -51,6 +52,7 @@ import {
     LV_ANIM_OFF
 } from "project-editor/lvgl/lvgl-constants";
 import {
+    BUILT_IN_FONTS,
     pad_bottom_property_info,
     pad_left_property_info,
     pad_right_property_info,
@@ -248,7 +250,32 @@ export abstract class LVGLPageRuntime {
 
             const fontPathStr = this.wasm.allocateUTF8("M:" + fontMemPtr);
 
-            let fontPtr = this.wasm._lvglLoadFont(fontPathStr);
+            let fallbackUserFont = 0;
+            let fallbackBuiltinFont = -1;
+            if (font.lvglFallbackFont) {
+                if (font.lvglFallbackFont.startsWith("ui_font_")) {
+                    const fallbackFont = findFontByVarName(
+                        this.project,
+                        font.lvglFallbackFont
+                    );
+
+                    if (fallbackFont) {
+                        fallbackUserFont = this.getFontPtr(fallbackFont);
+                    }
+                } else if (font.lvglFallbackFont.startsWith("lv_font_")) {
+                    fallbackBuiltinFont = BUILT_IN_FONTS.indexOf(
+                        font.lvglFallbackFont
+                            .slice("lv_font_".length)
+                            .toUpperCase()
+                    );
+                }
+            }
+
+            let fontPtr = this.wasm._lvglLoadFont(
+                fontPathStr,
+                fallbackUserFont,
+                fallbackBuiltinFont
+            );
 
             this.wasm._free(fontPathStr);
 
