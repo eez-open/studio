@@ -245,10 +245,29 @@ export class LVGLImageWidget extends LVGLWidget {
             );
 
             if (bitmap && bitmap.image) {
+
+                build.line(
+                    `#ifndef BOARD_TYPEDR`
+                );
+
                 build.line(
                     `lv_img_set_src(obj, &${build.getImageVariableName(
                         bitmap
                     )});`
+                );
+
+                build.line(
+                    `#else /* BOARD_TYPEDR */`
+                );
+
+                build.line(
+                    `lv_img_set_src(obj, ${build.getImageVariableName(
+                        bitmap
+                    )});`
+                );
+
+                build.line(
+                    `#endif /* BOARD_TYPEDR */`
                 );
             }
         }

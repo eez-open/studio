@@ -358,34 +358,141 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
             : "lv_imgbtn_set_src";
 
         if (this.imageReleased) {
+
+            build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
             build.line(
                 `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, &img_${this.imageReleased}, NULL);`
             );
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, img_${this.imageReleased}, NULL);`
+            );
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
+            );
+
         }
         if (this.imagePressed) {
+
+            build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
             build.line(
                 `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, &img_${this.imagePressed}, NULL);`
             );
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, img_${this.imagePressed}, NULL);`
+            );
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
+            );
         }
         if (this.imageDisabled) {
+
+
+            build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
             build.line(
                 `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, &img_${this.imageDisabled}, NULL);`
+            );
+
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, img_${this.imageDisabled}, NULL);`
+            );
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
             );
         }
         if (this.imageCheckedReleased) {
             build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
+            build.line(
                 `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, &img_${this.imageCheckedReleased}, NULL);`
             );
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, img_${this.imageCheckedReleased}, NULL);`
+            );
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
+            );
+
         }
         if (this.imageCheckedPressed) {
             build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
+            build.line(
                 `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, &img_${this.imageCheckedPressed}, NULL);`
             );
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, img_${this.imageCheckedPressed}, NULL);`
+            );
+
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
+            );
+
         }
         if (this.imageCheckedDisabled) {
             build.line(
+                `#ifndef BOARD_TYPEDR`
+            );
+
+            build.line(
                 `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, &img_${this.imageCheckedDisabled}, NULL);`
             );
+
+            build.line(
+                `#else /* BOARD_TYPEDR */`
+            );
+
+            build.line(
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, img_${this.imageCheckedDisabled}, NULL);`
+            );
+
+            build.line(
+                `#endif /* BOARD_TYPEDR */`
+            );
+
+
         }
     }
 }

@@ -78,7 +78,7 @@ export class LVGLStylesDefinition extends EezObject {
                                         style,
                                         propertyInfo,
                                         style.definition[part][state][
-                                            propertyName
+                                        propertyName
                                         ]
                                     );
 
@@ -113,7 +113,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 ) {
                                     const value =
                                         jsObject.definition[part][state][
-                                            propertyName
+                                        propertyName
                                         ];
                                     if (
                                         value == "EVENLY" ||
@@ -206,7 +206,7 @@ export class LVGLStylesDefinition extends EezObject {
 
             if (
                 def?.[part]?.[state]?.[
-                    grid_column_dsc_array_property_info.name
+                grid_column_dsc_array_property_info.name
                 ] == undefined
             ) {
                 def = add(
@@ -362,9 +362,9 @@ export class LVGLStylesDefinition extends EezObject {
 
                             if (
                                 propertyInfo.type ==
-                                    PropertyType.ObjectReference &&
+                                PropertyType.ObjectReference &&
                                 propertyInfo.referencedObjectCollectionPath ==
-                                    "bitmaps"
+                                "bitmaps"
                             ) {
                                 const value =
                                     this.definition[part][state][propertyName];
@@ -389,9 +389,8 @@ export class LVGLStylesDefinition extends EezObject {
                                     messages.push(
                                         new Message(
                                             MessageType.ERROR,
-                                            `Bitmap not found for style property ${part} - ${state} - ${
-                                                propertyInfo.displayName ||
-                                                humanize(propertyInfo.name)
+                                            `Bitmap not found for style property ${part} - ${state} - ${propertyInfo.displayName ||
+                                            humanize(propertyInfo.name)
                                             }`,
                                             valueObject
                                         )
@@ -427,9 +426,8 @@ export class LVGLStylesDefinition extends EezObject {
                                     messages.push(
                                         new Message(
                                             MessageType.ERROR,
-                                            `Font not found for style property ${part} - ${state} - ${
-                                                propertyInfo.displayName ||
-                                                humanize(propertyInfo.name)
+                                            `Font not found for style property ${part} - ${state} - ${propertyInfo.displayName ||
+                                            humanize(propertyInfo.name)
                                             }`,
                                             valueObject
                                         )
@@ -465,7 +463,7 @@ export class LVGLStylesDefinition extends EezObject {
                         if (
                             !propertyInfo ||
                             propertyInfo.lvglStyleProp.code[lvglVersion] ==
-                                undefined
+                            undefined
                         ) {
                             return;
                         }
@@ -528,9 +526,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 const numValue = propertyInfo.lvglStyleProp
                                     .valueToNum
                                     ? propertyInfo.lvglStyleProp.valueToNum(
-                                          value,
-                                          runtime
-                                      )
+                                        value,
+                                        runtime
+                                    )
                                     : value;
 
                                 runtime.wasm._lvglObjSetLocalStylePropNum(
@@ -549,9 +547,9 @@ export class LVGLStylesDefinition extends EezObject {
                             const arrValue: number[] = propertyInfo
                                 .lvglStyleProp.valueToNum
                                 ? propertyInfo.lvglStyleProp.valueToNum(
-                                      value,
-                                      runtime
-                                  )
+                                    value,
+                                    runtime
+                                )
                                 : value;
 
                             const _LV_COORD_TYPE_SHIFT =
@@ -584,7 +582,7 @@ export class LVGLStylesDefinition extends EezObject {
                         } else if (
                             propertyInfo.type == PropertyType.ObjectReference &&
                             propertyInfo.referencedObjectCollectionPath ==
-                                "bitmaps"
+                            "bitmaps"
                         ) {
                             const bitmap = findBitmap(
                                 ProjectEditor.getProject(this),
@@ -690,8 +688,8 @@ export class LVGLStylesDefinition extends EezObject {
                                 const numValue = propertyInfo.lvglStyleProp
                                     .valueBuild
                                     ? propertyInfo.lvglStyleProp.valueBuild(
-                                          value
-                                      )
+                                        value
+                                    )
                                     : value;
 
                                 build.line(
@@ -737,8 +735,12 @@ export class LVGLStylesDefinition extends EezObject {
                         } else if (
                             propertyInfo.type == PropertyType.ObjectReference &&
                             propertyInfo.referencedObjectCollectionPath ==
-                                "bitmaps"
+                            "bitmaps"
                         ) {
+                            build.line(
+                                `#ifndef BOARD_TYPEDR`
+                            );
+
                             build.line(
                                 `lv_obj_set_style_${build.getStylePropName(
                                     propertyInfo.name
@@ -746,6 +748,24 @@ export class LVGLStylesDefinition extends EezObject {
                                     value
                                 )}, ${selectorCode});`
                             );
+
+                            build.line(
+                                `#else /* BOARD_TYPEDR */`
+                            );
+
+                            build.line(
+                                `lv_obj_set_style_${build.getStylePropName(
+                                    propertyInfo.name
+                                )}(obj, ${build.getImageVariableName(
+                                    value
+                                )}, ${selectorCode});`
+                            );
+
+                            build.line(
+                                `#endif /* BOARD_TYPEDR */`
+                            );
+
+
                         }
                     }
                 );
@@ -772,7 +792,7 @@ export class LVGLStylesDefinition extends EezObject {
                     build.buildColor(
                         this,
                         this.definition[part][state][propertyName],
-                        () => {},
+                        () => { },
                         color => {
                             build.line(
                                 `lv_style_set_${build.getStylePropName(
@@ -869,10 +889,29 @@ export class LVGLStylesDefinition extends EezObject {
                     propertyInfo.type == PropertyType.ObjectReference &&
                     propertyInfo.referencedObjectCollectionPath == "bitmaps"
                 ) {
+
+                    build.line(
+                        `#ifndef BOARD_TYPEDR`
+                    );
+
                     build.line(
                         `lv_style_set_${build.getStylePropName(
                             propertyInfo.name
                         )}(style, &${build.getImageVariableName(value)});`
+                    );
+
+                    build.line(
+                        `#else /* BOARD_TYPEDR */`
+                    );
+
+                    build.line(
+                        `lv_style_set_${build.getStylePropName(
+                            propertyInfo.name
+                        )}(style, ${build.getImageVariableName(value)});`
+                    );
+
+                    build.line(
+                        `#endif /* BOARD_TYPEDR */`
                     );
                 }
             }
