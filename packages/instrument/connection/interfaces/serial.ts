@@ -14,9 +14,7 @@ export class SerialInterface implements CommunicationInterface {
     connectedCalled = false;
     data: string | undefined;
 
-    constructor(private host: CommunicationInterfaceHost) {
-        this.sendNextChunkCallback = this.sendNextChunkCallback.bind(this);
-    }
+    constructor(private host: CommunicationInterfaceHost) {}
 
     connect() {
         try {
@@ -97,7 +95,7 @@ export class SerialInterface implements CommunicationInterface {
         this.host.disconnected();
     }
 
-    sendNextChunkCallback() {
+    sendNextChunkCallback = () => {
         if (this.port && this.data) {
             let nextChunk;
             if (this.data.length <= CONF_CHUNK_SIZE) {
@@ -114,7 +112,7 @@ export class SerialInterface implements CommunicationInterface {
                 this.port.drain(this.sendNextChunkCallback);
             }
         }
-    }
+    };
 
     write(data: string) {
         if (this.port) {

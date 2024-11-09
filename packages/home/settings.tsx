@@ -1,3 +1,4 @@
+import fs from "fs";
 import { ipcRenderer, shell, clipboard } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import { confirm } from "eez-studio-ui/dialog-electron";
@@ -390,12 +391,12 @@ class SettingsController {
         }
     };
 
-    compactDatabase() {
+    compactDatabase = () => {
         if (!this.selectedDatabase) {
             return;
         }
         showDialog(<CompactDatabaseDialog database={this.selectedDatabase} />);
-    }
+    };
 }
 
 export const settingsController = new SettingsController();
@@ -419,18 +420,17 @@ const CompactDatabaseDialog = observer(
                 sizeReduced: observable
             });
 
-            var fs = require("fs");
-            this.sizeBefore = fs.statSync(
-                this.props.database.databaseSize
-            ).size;
+            this.sizeBefore = fs.statSync(this.props.database.filePath).size;
         }
 
         async componentDidMount() {
             try {
                 await dbVacuum();
 
-                this.props.database.timeOfLastDatabaseCompactOperation =
-                    Date.now();
+                runInAction(() => {
+                    this.props.database.timeOfLastDatabaseCompactOperation =
+                        Date.now();
+                });
 
                 runInAction(() => {
                     var fs = require("fs");

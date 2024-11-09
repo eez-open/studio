@@ -67,9 +67,6 @@ export const ShortcutDialog = observer(
                 codeEditorMode: computed
             });
 
-            this.handleSubmit = this.handleSubmit.bind(this);
-            this.resetToDefault = this.resetToDefault.bind(this);
-
             this.shortcut = objectClone(props.shortcut);
         }
 
@@ -173,7 +170,7 @@ export const ShortcutDialog = observer(
             return undefined;
         }
 
-        async handleSubmit() {
+        handleSubmit = async () => {
             this.wasValidated = true;
             if (!(await this.validator.checkValidity(this.shortcut))) {
                 return false;
@@ -187,7 +184,7 @@ export const ShortcutDialog = observer(
             this.props.callback(this.shortcut);
 
             return true;
-        }
+        };
 
         async revalidate() {
             if (this.wasValidated) {
@@ -272,7 +269,7 @@ export const ShortcutDialog = observer(
             );
         }
 
-        resetToDefault(event: any) {
+        resetToDefault = (event: any) => {
             event.preventDefault();
 
             if (this.originalShortcut) {
@@ -287,7 +284,7 @@ export const ShortcutDialog = observer(
                 this.shortcut.toolbarButtonColor =
                     this.originalShortcut.toolbarButtonColor;
             }
-        }
+        };
 
         get codeEditorMode() {
             if (

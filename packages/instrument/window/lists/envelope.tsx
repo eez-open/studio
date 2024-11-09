@@ -299,9 +299,6 @@ const EditEnvelopeValue = observer(
                 onTimeChange: action,
                 onValueChange: action
             });
-
-            this.onTimeChange = this.onTimeChange.bind(this);
-            this.onValueChange = this.onValueChange.bind(this);
         }
 
         time =
@@ -342,7 +339,7 @@ const EditEnvelopeValue = observer(
             return undefined;
         }
 
-        onTimeChange(event: React.ChangeEvent<HTMLInputElement>) {
+        onTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             this.time = event.target.value;
             let time = this.props.timeUnit.parseValue(this.time);
             if (typeof time === "number") {
@@ -362,9 +359,9 @@ const EditEnvelopeValue = observer(
                 this.timeError = "Invalid value";
                 this.props.onTimeChange(this.props.time!);
             }
-        }
+        };
 
-        onValueChange(event: React.ChangeEvent<HTMLInputElement>) {
+        onValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             this.value = event.target.value;
             let value = this.props.valueUnit.parseValue(this.value);
             if (typeof value === "number") {
@@ -387,7 +384,7 @@ const EditEnvelopeValue = observer(
                 this.valueError = "Invalid value";
                 this.props.onValueChange(this.props.value);
             }
-        }
+        };
 
         render() {
             return (

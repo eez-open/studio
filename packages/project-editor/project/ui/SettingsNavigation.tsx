@@ -53,7 +53,7 @@ const ProjectFeature = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        onAdd() {
+        onAdd = () => {
             let newFeatureObject = createObject(
                 this.context,
                 this.props.projectFeature.create(),
@@ -68,9 +68,9 @@ const ProjectFeature = observer(
             this.context.updateObject(this.context.project, changes);
 
             this.context.project.enableTabs();
-        }
+        };
 
-        onRemove() {
+        onRemove = () => {
             confirm(
                 "Are you sure you want to remove this feature?",
                 undefined,
@@ -95,7 +95,7 @@ const ProjectFeature = observer(
                     }
                 }
             );
-        }
+        };
 
         render() {
             let button: JSX.Element | undefined;
@@ -145,7 +145,7 @@ const ProjectFeature = observer(
                     button = (
                         <button
                             className="btn btn-secondary float-right"
-                            onClick={this.onRemove.bind(this)}
+                            onClick={this.onRemove}
                             title="Remove feature from the project"
                         >
                             Remove
@@ -156,7 +156,7 @@ const ProjectFeature = observer(
                 button = (
                     <button
                         className="btn btn-success float-right"
-                        onClick={this.onAdd.bind(this)}
+                        onClick={this.onAdd}
                         title="Add feature to the project"
                     >
                         Add
@@ -518,9 +518,9 @@ export const SettingsNavigation = observer(
             this.context.navigationStore.unmountPanel(this);
         }
 
-        onFocus() {
+        onFocus = () => {
             this.context.navigationStore.setSelectedPanel(this);
-        }
+        };
 
         onClick = (object: IEezObject) => {
             this.context.editorsStore.openEditor(
@@ -617,12 +617,12 @@ export const SettingsNavigation = observer(
                                 )
                             }
                             tabIndex={0}
-                            onFocus={this.onFocus.bind(this)}
+                            onFocus={this.onFocus}
                         />
                     }
                     style={{ overflow: "hidden" }}
                     tabIndex={0}
-                    onFocus={this.onFocus.bind(this)}
+                    onFocus={this.onFocus}
                 />
             );
         }
@@ -671,9 +671,9 @@ const DeleteButton = observer(
     class DeleteButton extends React.Component<{
         objectAdapter: TreeObjectAdapter;
     }> {
-        onDelete() {
+        onDelete = () => {
             this.props.objectAdapter.deleteSelection();
-        }
+        };
 
         render() {
             return (
@@ -681,7 +681,7 @@ const DeleteButton = observer(
                     title="Delete Selected Item"
                     icon="material:delete"
                     iconSize={16}
-                    onClick={this.onDelete.bind(this)}
+                    onClick={this.onDelete}
                     enabled={this.props.objectAdapter.canDelete()}
                 />
             );

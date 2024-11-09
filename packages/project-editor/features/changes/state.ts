@@ -758,7 +758,7 @@ async function getRevisionProject(
 
     progressCallback(50);
 
-    const revisionProjectStore = new ProjectStore({ type: "read-only" });
+    const revisionProjectStore = new ProjectStore({ type: "project-editor" });
 
     runInAction(() => {
         revisionProjectStore.setProject(

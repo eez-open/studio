@@ -77,9 +77,6 @@ export const ShortcutsToolbarButtons = observer(
                 showGroups: action
             });
 
-            this.addShortcut = this.addShortcut.bind(this);
-            this.showGroups = this.showGroups.bind(this);
-
             showExtensionShortcuts.set(
                 window.localStorage.getItem(
                     "Shortcuts_showExtensionShortcuts"
@@ -89,7 +86,7 @@ export const ShortcutsToolbarButtons = observer(
             );
         }
 
-        addShortcut() {
+        addShortcut = () => {
             showShortcutDialog(
                 this.props.shortcutsStore,
                 this.props.groupsStore,
@@ -122,11 +119,11 @@ export const ShortcutsToolbarButtons = observer(
                     }, 10);
                 }
             );
-        }
+        };
 
-        showGroups() {
+        showGroups = () => {
             this.props.shortcutsOrGroups!.set(false);
-        }
+        };
 
         render() {
             let buttons = [];

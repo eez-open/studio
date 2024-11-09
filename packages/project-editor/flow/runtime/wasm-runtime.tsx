@@ -363,9 +363,9 @@ export class WasmRuntime extends RemoteRuntime {
                 arrayValue.valueType
             );
             if (objectVariableType) {
-                const objectValue = objectVariableType.getValue(
-                    arrayValue.value
-                );
+                const objectValue = objectVariableType.getValue
+                    ? objectVariableType.getValue(arrayValue.value)
+                    : undefined;
                 if (objectValue) {
                     result =
                         objectVariableType.valueFieldDescriptions[
@@ -505,9 +505,11 @@ export class WasmRuntime extends RemoteRuntime {
                         valueType
                     );
                     if (objectVariableType) {
-                        let value = objectVariableType.getValue(
-                            workerToRenderMessage.freeArrayValue.value
-                        );
+                        let value = objectVariableType.getValue
+                            ? objectVariableType.getValue(
+                                  workerToRenderMessage.freeArrayValue.value
+                              )
+                            : undefined;
                         if (value) {
                             objectVariableType.destroyValue(value);
                         }
@@ -869,10 +871,11 @@ export class WasmRuntime extends RemoteRuntime {
                 );
 
                 if (typeof engineValueWithType.value == "object") {
-                    let objectValue =
-                        globalVariable.objectVariableType.getValue(
-                            engineValueWithType.value
-                        );
+                    let objectValue = globalVariable.objectVariableType.getValue
+                        ? globalVariable.objectVariableType.getValue(
+                              engineValueWithType.value
+                          )
+                        : undefined;
                     if (objectValue) {
                         globalVariable.objectVariableType.destroyValue(
                             objectValue

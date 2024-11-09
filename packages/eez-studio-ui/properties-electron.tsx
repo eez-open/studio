@@ -18,13 +18,7 @@ export const FileInputProperty = observer(
         },
         {}
     > {
-        constructor(props: any) {
-            super(props);
-
-            this.onSelectFile = this.onSelectFile.bind(this);
-        }
-
-        async onSelectFile(event: any) {
+        onSelectFile = async (event: any) => {
             event.preventDefault();
 
             const result = await dialog.showOpenDialog(getCurrentWindow(), {
@@ -36,7 +30,7 @@ export const FileInputProperty = observer(
             if (filePaths && filePaths[0]) {
                 this.props.onChange(filePaths[0]);
             }
-        }
+        };
 
         render() {
             let id = this.props.id || guid();

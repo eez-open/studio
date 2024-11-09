@@ -341,10 +341,8 @@ export const Canvas = observer(
 
             const flowContext = this.props.flowContext;
 
-            const deltaX =
-                Math.abs(event.deltaX) < 5 ? event.deltaX : event.deltaX / 5;
-            const deltaY =
-                Math.abs(event.deltaY) < 5 ? event.deltaY : event.deltaY / 5;
+            let deltaX = event.deltaX;
+            let deltaY = event.deltaY;
 
             if (
                 event.altKey &&
@@ -372,6 +370,9 @@ export const Canvas = observer(
                                     ) != -1 &&
                                     lvglWidget.children.length > 0
                                 ) {
+                                    if (Math.abs(deltaX) == 100) deltaX /= 5;
+                                    if (Math.abs(deltaY) == 100) deltaY /= 5;
+
                                     let xScroll =
                                         lvglWidget._xScroll2 +
                                         (event.shiftKey ? deltaY : deltaX);
@@ -629,7 +630,13 @@ export const Canvas = observer(
                     this.mouseHandler = new PanMouseHandler();
                 }
             } else {
-                this.mouseHandler = this.createMouseHandler(event);
+                if (event.altKey) {
+                    if (!this.mouseHandler) {
+                        this.mouseHandler = new PanMouseHandler();
+                    }
+                } else {
+                    this.mouseHandler = this.createMouseHandler(event);
+                }
             }
 
             if (this.mouseHandler) {

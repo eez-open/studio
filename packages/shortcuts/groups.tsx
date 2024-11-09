@@ -41,12 +41,9 @@ export const GroupsToolbarButtons = observer(
             makeObservable(this, {
                 showShortcuts: action
             });
-
-            this.addGroup = this.addGroup.bind(this);
-            this.showShortcuts = this.showShortcuts.bind(this);
         }
 
-        addGroup() {
+        addGroup = () => {
             showDialog(
                 <GroupDialog
                     groupsStore={this.props.groupsStore}
@@ -70,11 +67,11 @@ export const GroupsToolbarButtons = observer(
                     }}
                 />
             );
-        }
+        };
 
-        showShortcuts() {
+        showShortcuts = () => {
             this.props.shortcutsOrGroups.set(true);
-        }
+        };
 
         render() {
             return [

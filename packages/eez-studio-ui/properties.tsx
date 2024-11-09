@@ -665,11 +665,9 @@ export const KeybindingProperty = observer(
             makeObservable(this, {
                 keybinding: computed
             });
-
-            this.onKeyDown = this.onKeyDown.bind(this);
         }
 
-        onKeyDown(event: any) {
+        onKeyDown = (event: any) => {
             if (
                 event.nativeEvent.key === "Escape" ||
                 event.nativeEvent.key === "Enter" ||
@@ -715,7 +713,7 @@ export const KeybindingProperty = observer(
             }
 
             this.props.onChange(keybinding.join("+"));
-        }
+        };
 
         get keybinding() {
             return (
@@ -946,7 +944,7 @@ export class AbsoluteFileInputProperty extends React.Component<
     },
     {}
 > {
-    async onSelect() {
+    onSelect = async () => {
         const result = await dialog.showOpenDialog({
             properties: ["openFile"],
             filters: [{ name: "All Files", extensions: ["*"] }]
@@ -955,7 +953,7 @@ export class AbsoluteFileInputProperty extends React.Component<
         if (result.filePaths && result.filePaths[0]) {
             this.props.onChange(result.filePaths[0]);
         }
-    }
+    };
 
     render() {
         return (
@@ -968,7 +966,7 @@ export class AbsoluteFileInputProperty extends React.Component<
                     <button
                         className="btn btn-secondary"
                         type="button"
-                        onClick={this.onSelect.bind(this)}
+                        onClick={this.onSelect}
                     >
                         &hellip;
                     </button>

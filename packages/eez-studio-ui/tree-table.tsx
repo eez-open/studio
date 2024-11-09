@@ -57,12 +57,12 @@ const TreeTableRow = observer(
             this.props.node.expanded.set(!this.props.node.expanded.get());
         });
 
-        onClick(e: React.MouseEvent<HTMLDivElement>) {
+        onClick = (e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
             e.stopPropagation();
 
             this.props.selectNode(this.props.node);
-        }
+        };
 
         render() {
             let childrenRows: JSX.Element[] = [];
@@ -145,7 +145,7 @@ const TreeTableRow = observer(
                     <tr
                         data-object-id={this.props.node.id}
                         className={className}
-                        onClick={this.onClick.bind(this)}
+                        onClick={this.onClick}
                     >
                         <td
                             className={classNames(

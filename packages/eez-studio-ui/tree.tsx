@@ -38,20 +38,20 @@ export const TreeRow = observer(
             });
         }
 
-        onTriangleClick(event: any) {
+        onTriangleClick = (event: any) => {
             event.preventDefault();
             event.stopPropagation();
 
             this.props.selectNode(this.props.node);
             this.props.toggleExpanded(this.props.level, this.props.node);
-        }
+        };
 
-        onClick(e: React.MouseEvent<HTMLDivElement>) {
+        onClick = (e: React.MouseEvent<HTMLDivElement>) => {
             e.preventDefault();
             e.stopPropagation();
 
             this.props.selectNode(this.props.node);
-        }
+        };
 
         render() {
             let childrenRows: JSX.Element[] = [];
@@ -121,7 +121,7 @@ export const TreeRow = observer(
                     triangle = (
                         <span
                             className={triangleClassName}
-                            onClick={this.onTriangleClick.bind(this)}
+                            onClick={this.onTriangleClick}
                         >
                             <Icon
                                 icon="material:keyboard_arrow_right"
@@ -150,7 +150,7 @@ export const TreeRow = observer(
                             paddingLeft:
                                 this.props.level * (this.props.rowPadding ?? 20)
                         }}
-                        onClick={this.onClick.bind(this)}
+                        onClick={this.onClick}
                     >
                         {triangle}
                         {label}

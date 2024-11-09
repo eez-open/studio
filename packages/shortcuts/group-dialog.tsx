@@ -21,8 +21,6 @@ export const GroupDialog = observer(
                 group: observable
             });
 
-            this.handleSubmit = this.handleSubmit.bind(this);
-
             this.group = { ...this.props.group };
         }
 
@@ -46,13 +44,13 @@ export const GroupDialog = observer(
             ]
         });
 
-        async handleSubmit() {
+        handleSubmit = async () => {
             if (!(await this.validator.checkValidity(this.group))) {
                 return false;
             }
             this.props.callback(this.group);
             return true;
-        }
+        };
 
         render() {
             return (

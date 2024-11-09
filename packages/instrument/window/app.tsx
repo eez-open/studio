@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
@@ -26,34 +26,45 @@ import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function EditInstrumentLabelDialog({
-    instrument,
-    size
-}: {
-    instrument: InstrumentObject;
-    size?: "small" | "medium" | "large";
-}) {
-    const [label, setLabel] = React.useState(instrument.label || "");
+export const EditInstrumentLabelDialog = observer(
+    class EditInstrumentLabelDialog extends React.Component<{
+        instrument: InstrumentObject;
+        size?: "small" | "medium" | "large";
+    }> {
+        label: string;
 
-    return (
-        <Dialog
-            onOk={() => {
-                instrument.setLabel(label.trim());
-                return true;
-            }}
-            size={size}
-        >
-            <PropertyList>
-                <TextInputProperty
-                    key="label"
-                    name="Label"
-                    value={label}
-                    onChange={setLabel}
-                />
-            </PropertyList>
-        </Dialog>
-    );
-}
+        constructor(props: any) {
+            super(props);
+
+            this.label = this.props.instrument.label || "";
+
+            makeObservable(this, {
+                label: observable
+            });
+        }
+
+        render() {
+            return (
+                <Dialog
+                    onOk={() => {
+                        this.props.instrument.setLabel(this.label.trim());
+                        return true;
+                    }}
+                    size={this.props.size}
+                >
+                    <PropertyList>
+                        <TextInputProperty
+                            key="label"
+                            name="Label"
+                            value={this.label}
+                            onChange={action(value => (this.label = value))}
+                        />
+                    </PropertyList>
+                </Dialog>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 

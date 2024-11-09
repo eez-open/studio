@@ -312,12 +312,12 @@ export const LVGLStylesTreeNavigation = observer(
                 this.treeAdapter.deleteSelection();
             }
         }
-        onFocus() {
+        onFocus = () => {
             const navigationStore = this.context.navigationStore;
             if (isPartOfNavigation(this.props.navigationObject)) {
                 navigationStore.setSelectedPanel(this);
             }
-        }
+        };
 
         onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();
@@ -372,7 +372,7 @@ export const LVGLStylesTreeNavigation = observer(
                     <Tree
                         treeAdapter={this.treeAdapter}
                         tabIndex={0}
-                        onFocus={this.onFocus.bind(this)}
+                        onFocus={this.onFocus}
                         onEditItem={this.editable ? onEditItem : undefined}
                         renderItem={renderItem}
                         onFilesDrop={this.props.onFilesDrop}

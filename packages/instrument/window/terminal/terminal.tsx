@@ -49,12 +49,6 @@ const Input = observer(
                     console.error(error);
                 }
             }
-
-            this.handleHelpClick = this.handleHelpClick.bind(this);
-            this.handleChange = this.handleChange.bind(this);
-            this.handleKeyDown = this.handleKeyDown.bind(this);
-            this.handleSendCommandClick =
-                this.handleSendCommandClick.bind(this);
         }
 
         commandsHistory: string[] = [];
@@ -73,13 +67,13 @@ const Input = observer(
             }
         }
 
-        handleHelpClick() {
+        handleHelpClick = () => {
             this.props.appStore.toggleHelpVisible();
-        }
+        };
 
-        handleChange(event: any) {
+        handleChange = (event: any) => {
             this.props.terminalState.command = event.target.value;
-        }
+        };
 
         sendCommand() {
             if (this.props.terminalState.command) {
@@ -146,7 +140,7 @@ const Input = observer(
             }
         }
 
-        handleKeyDown(event: any) {
+        handleKeyDown = (event: any) => {
             if (event.key === "Enter") {
                 event.preventDefault();
                 this.sendCommand();
@@ -160,11 +154,11 @@ const Input = observer(
                 this.props.terminalState.command = this.findNextCommand() || "";
                 this.moveCursorToTheEnd = true;
             }
-        }
+        };
 
-        handleSendCommandClick() {
+        handleSendCommandClick = () => {
             this.sendCommand();
-        }
+        };
 
         render() {
             return (

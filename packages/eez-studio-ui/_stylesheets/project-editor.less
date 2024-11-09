@@ -96,10 +96,11 @@
         }
 
         .EezStudio_ProjectEditor_ToolbarNav_FlowRuntimeControls {
+            display: flex;
             @media (min-width: 1600px) {
                 width: 0;
             }
-            justify-content: "flex-end";
+            justify-content: flex-end;
         }
     }
 }
@@ -539,13 +540,12 @@
 }
 
 .EezStudio_ThemedColorInput_DropdownContent {
-    font-size: 0.8rem;
+    background: transparent;
+    border: none;
 
-    padding: 0;
-    margin: 0;
-
-    border-radius: 4px;
-    overflow: hidden;
+    .w-color-chrome {
+        color: #333;
+    }
 }
 
 .EezStudio_ObjectReferenceInput_DropdownButton {

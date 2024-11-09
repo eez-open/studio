@@ -61,6 +61,7 @@ let files = [
     "!**/node_modules/*.d.ts",
     "!**/node_modules/.bin",
     "!**/*.js.map",
+    "!**/*.mjs.map",
     "!**/*.css.map",
     "!**/*.ilk",
     "!**/*.lib",
