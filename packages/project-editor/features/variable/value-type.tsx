@@ -491,6 +491,7 @@ export const VariableTypeSelect = observer(
         dropDownLeft = 0;
         dropDownTop = 0;
         dropDownWidth = 0;
+        dropDownHeight = 0;
 
         constructor(props: any) {
             super(props);
@@ -500,6 +501,7 @@ export const VariableTypeSelect = observer(
                 dropDownLeft: observable,
                 dropDownTop: observable,
                 dropDownWidth: observable,
+                dropDownHeight: observable,
                 setDropDownOpen: action
             });
         }
@@ -545,20 +547,14 @@ export const VariableTypeSelect = observer(
                 this.dropDownTop = rectInputGroup.bottom;
                 this.dropDownWidth = rectInputGroup.width;
 
-                if (
-                    this.dropDownLeft + this.dropDownWidth >
-                    window.innerWidth
-                ) {
-                    this.dropDownLeft = window.innerWidth - this.dropDownWidth;
+                this.dropDownHeight = window.innerHeight - this.dropDownTop;
+                if (this.dropDownHeight > 640) {
+                    this.dropDownHeight = 640;
                 }
 
-                const DROP_DOWN_HEIGHT = 270;
-                if (
-                    this.dropDownTop + DROP_DOWN_HEIGHT + 20 >
-                    window.innerHeight
-                ) {
-                    this.dropDownTop =
-                        window.innerHeight - (DROP_DOWN_HEIGHT + 20);
+                if (this.dropDownHeight < 240) {
+                    this.dropDownHeight = 240;
+                    this.dropDownTop = window.innerHeight - this.dropDownHeight;
                 }
             }
         });
@@ -761,77 +757,74 @@ export const VariableTypeSelect = observer(
                         display: this.dropDownOpen ? "block" : "none",
                         left: this.dropDownLeft,
                         top: this.dropDownTop,
-                        width: this.dropDownWidth
+                        width: this.dropDownWidth,
+                        maxHeight: this.dropDownHeight
                     }}
                 >
-                    <div>
-                        <ul>
-                            <div className="font-monospace">{basicTypes}</div>
+                    <ul>
+                        <div className="font-monospace">{basicTypes}</div>
 
-                            {objectTypes.length > 0 && (
-                                <div>
-                                    <div>Objects</div>
-                                    <div className="font-monospace">
-                                        {objectTypes}
-                                    </div>
+                        {objectTypes.length > 0 && (
+                            <div>
+                                <div>Objects</div>
+                                <div className="font-monospace">
+                                    {objectTypes}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {enums.length > 0 && (
-                                <div>
-                                    <div>Enums</div>
-                                    <div className="font-monospace">
-                                        {enums}
-                                    </div>
-                                </div>
-                            )}
+                        {enums.length > 0 && (
+                            <div>
+                                <div>Enums</div>
+                                <div className="font-monospace">{enums}</div>
+                            </div>
+                        )}
 
-                            {structures.length > 0 && (
-                                <div>
-                                    <div>Structures</div>
-                                    <div className="font-monospace">
-                                        {structures}
-                                    </div>
+                        {structures.length > 0 && (
+                            <div>
+                                <div>Structures</div>
+                                <div className="font-monospace">
+                                    {structures}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {arrayOfBasicTypes.length > 0 && (
-                                <div>
-                                    <div>Arrays</div>
-                                    <div className="font-monospace">
-                                        {arrayOfBasicTypes}
-                                    </div>
+                        {arrayOfBasicTypes.length > 0 && (
+                            <div>
+                                <div>Arrays</div>
+                                <div className="font-monospace">
+                                    {arrayOfBasicTypes}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {arrayOfObjects.length > 0 && (
-                                <div>
-                                    <div>Array of Objects</div>
-                                    <div className="font-monospace">
-                                        {arrayOfObjects}
-                                    </div>
+                        {arrayOfObjects.length > 0 && (
+                            <div>
+                                <div>Array of Objects</div>
+                                <div className="font-monospace">
+                                    {arrayOfObjects}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {arrayOfEnums.length > 0 && (
-                                <div>
-                                    <div>Array of Enumerations</div>
-                                    <div className="font-monospace">
-                                        {arrayOfEnums}
-                                    </div>
+                        {arrayOfEnums.length > 0 && (
+                            <div>
+                                <div>Array of Enumerations</div>
+                                <div className="font-monospace">
+                                    {arrayOfEnums}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {arrayOfStructures.length > 0 && (
-                                <div>
-                                    <div>Array of Structures</div>
-                                    <div className="font-monospace">
-                                        {arrayOfStructures}
-                                    </div>
+                        {arrayOfStructures.length > 0 && (
+                            <div>
+                                <div>Array of Structures</div>
+                                <div className="font-monospace">
+                                    {arrayOfStructures}
                                 </div>
-                            )}
-                        </ul>
-                    </div>
+                            </div>
+                        )}
+                    </ul>
                 </div>,
                 document.body
             );
