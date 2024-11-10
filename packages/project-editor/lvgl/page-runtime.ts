@@ -166,17 +166,6 @@ export abstract class LVGLPageRuntime {
         );
     }
 
-    getLvglObjectByName(objectName: string) {
-        return this.project._store.lvglIdentifiers.widgetIdentifiers.global.findIndex(
-            lvglIdentifier => {
-                return (
-                    lvglIdentifier.identifier == objectName &&
-                    lvglIdentifier.widgets.length == 1
-                );
-            }
-        );
-    }
-
     getLvglGroupByName(groupName: string) {
         return this.project.lvglGroups.groups.findIndex(
             group => group.name == groupName
@@ -1196,6 +1185,10 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         }
 
         return this.nextWidgetIndex++;
+    }
+
+    getLvglObjectByName(objectName: string) {
+        return this.runtime.assetsMap.lvglWidgetIndexes[objectName];
     }
 }
 
