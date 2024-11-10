@@ -528,6 +528,7 @@ export const Canvas = observer(
             }
 
             const lvglCreateInProgress =
+                !runtime.isStopped &&
                 this.props.flowContext.flowState &&
                 this.props.flowContext.flowState.flow instanceof
                     ProjectEditor.PageClass &&

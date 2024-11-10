@@ -1371,10 +1371,11 @@ export abstract class DebuggerConnectionBase {
                             runtime.error = errorMessage;
                         });
 
-                        runtime.stopRuntime(true);
-
                         const { flowIndex, flowState } =
                             this.getFlowState(flowStateIndex);
+
+                        runtime.stopRuntime(true);
+
                         if (!flowState) {
                             console.error("UNEXPECTED!");
                             return;
