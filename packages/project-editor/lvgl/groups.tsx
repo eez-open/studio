@@ -28,6 +28,11 @@ import { Checkbox } from "project-editor/ui-components/PropertyGrid/Checkbox";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IListNode, List, ListItem } from "eez-studio-ui/list";
 import type { Widget } from "project-editor/flow/component";
+import { CodeEditor } from "eez-studio-ui/code-editor";
+import { Build, getName, NamingConvention } from "project-editor/build/helper";
+import { Icon } from "eez-studio-ui/icon";
+import { IconAction } from "eez-studio-ui/action";
+import { clipboard } from "electron";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +83,130 @@ const DefaultGroupPropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const GroupImplementationInfoPropertyUI = observer(
+    class GroupImplementationInfoPropertyUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        codeEditorRef = React.createRef<CodeEditor>();
+
+        componentDidMount() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        componentDidUpdate() {
+            this.codeEditorRef.current?.resize();
+        }
+
+        get projectStore() {
+            return ProjectEditor.getProjectStore(this.group);
+        }
+
+        get implementationLanguage() {
+            return this.projectStore.uiStateStore.implementationLanguage;
+        }
+
+        get hasFlowSupport() {
+            return this.projectStore.projectTypeTraits.hasFlowSupport;
+        }
+
+        get group() {
+            return this.props.objects[0] as LVGLGroup;
+        }
+
+        get code() {
+            const group = this.group;
+
+            const groupName = getName(
+                "",
+                group.name,
+                NamingConvention.UnderscoreLowerCase
+            );
+
+            const build = new Build();
+            build.startBuild();
+
+            build.line(`#include "ui.h"`);
+            build.line(
+                `#include "screens.h" // pick group declarations from here`
+            );
+
+            build.line("");
+
+            build.line(`// you should initialize your input device`);
+            build.line(`// before calling "ui_create_groups()"`);
+            build.line("lv_indev_t *my_indev;");
+            build.line("// ...");
+
+            build.line("");
+
+            build.line(`// call this before "ui_init()"`);
+            build.line(`ui_create_groups();`);
+
+            build.line("");
+
+            build.line("// set group for your input device");
+            build.line(`lv_indev_set_group(my_indev, groups.${groupName});`);
+
+            build.line("");
+            build.line("// ...");
+            build.line("");
+
+            build.line(`ui_init();`);
+
+            build.line("");
+
+            build.line("// ...");
+
+            return build.result;
+        }
+
+        render() {
+            const code = this.code;
+
+            return (
+                <div className="EezStudio_PropertyGrid_TipBox">
+                    <div className="EezStudio_PropertyGrid_TipBox_Description">
+                        <div className="EezStudio_PropertyGrid_TipBox_Header">
+                            <Icon icon="material:lightbulb_outline" />
+                            <span>TIP</span>
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_DescriptionText">
+                            From your code you neeed to set a destination group
+                            for a particular input device using
+                            <i> lv_indev_set_group</i>. Below is an example code
+                            that does that.
+                        </div>
+                        <div className="EezStudio_PropertyGrid_TipBox_Toolbar">
+                            <div />
+                            <IconAction
+                                icon="material:content_copy"
+                                iconSize={20}
+                                title="Copy to Clipboard"
+                                onClick={() => {
+                                    clipboard.writeText(code);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <CodeEditor
+                        ref={this.codeEditorRef}
+                        mode="c_cpp"
+                        value={code}
+                        onChange={() => {}}
+                        readOnly={true}
+                        className="form-control"
+                        minLines={2}
+                        maxLines={50}
+                    />
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLGroup extends EezObject {
     name: string;
 
@@ -101,6 +230,13 @@ export class LVGLGroup extends EezObject {
                 type: PropertyType.Any,
                 computed: true,
                 propertyGridColumnComponent: DefaultGroupPropertyGridUI
+            },
+            {
+                name: "groupImplementationInfo",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: GroupImplementationInfoPropertyUI,
+                skipSearch: true
             }
         ],
         newItem: async (parent: IEezObject) => {
