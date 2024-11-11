@@ -1096,7 +1096,14 @@ export class StructureField extends EezObject implements IStructureField {
             variableTypeProperty
         ],
         listLabel: (field: StructureField, collapsed: boolean) =>
-            collapsed ? field.name : "",
+            collapsed ? (
+                <span>
+                    {field.name}: <i>{field.type}</i>
+                </span>
+            ) : (
+                ""
+            ),
+
         check: (structureField: StructureField, messages: IMessage[]) => {
             if (!structureField.name) {
                 messages.push(propertyNotSetMessage(structureField, "name"));
