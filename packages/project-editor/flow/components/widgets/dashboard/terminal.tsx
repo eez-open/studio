@@ -79,6 +79,8 @@ export class TerminalWidget extends Widget {
 
                     if (executionState.onData) {
                         executionState.onData(chunk.toString());
+                    } else {
+                        executionState.data += chunk.toString();
                     }
                 });
             }
