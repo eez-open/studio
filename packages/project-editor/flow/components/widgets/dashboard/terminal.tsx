@@ -1,7 +1,7 @@
 import React from "react";
 import { Duplex, Readable } from "stream";
 
-import type { IDashboardComponentContext } from "eez-studio-types";
+import type { IDashboardComponentContext, ValueType } from "eez-studio-types";
 
 import {
     registerClass,
@@ -27,6 +27,7 @@ import { TERMINAL_WIDGET_ICON } from "project-editor/ui-components/icons";
 class ExecutionState {
     data: string = "";
     onData: ((value: string) => void) | undefined = undefined;
+    clear: (() => void) | undefined = undefined;
 }
 
 export class TerminalWidget extends Widget {
@@ -52,6 +53,18 @@ export class TerminalWidget extends Widget {
 
         execute: (context: IDashboardComponentContext) => {
             Widget.classInfo.execute!(context);
+
+            const clearTerminal = context.getInputValue("clear");
+            if (clearTerminal) {
+                context.clearInputValue("clear");
+
+                let executionState =
+                    context.getComponentExecutionState<ExecutionState>();
+                if (executionState && executionState.clear) {
+                    executionState.clear();
+                }
+                return;
+            }
 
             const data = context.evalProperty("data");
 
@@ -86,6 +99,18 @@ export class TerminalWidget extends Widget {
             }
         }
     });
+
+    getInputs() {
+        return [
+            {
+                name: "clear",
+                type: "any" as ValueType,
+                isSequenceInput: false,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
 
     getOutputs(): ComponentOutput[] {
         return [
@@ -197,6 +222,9 @@ const TerminalElement = observer(
                 if (executionState) {
                     executionState.onData = data => {
                         this.terminal.write(data);
+                    };
+                    executionState.clear = () => {
+                        this.terminal.clear();
                     };
                     if (executionState.data) {
                         this.terminal.write(executionState.data);

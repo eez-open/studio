@@ -41,13 +41,10 @@ registerActionComponents("Dashboard Specific", [
                     streamValue instanceof Readable ||
                     streamValue instanceof Duplex
                 ) {
-                    let accData = "";
-
                     context.startAsyncExecution();
 
                     streamValue.on("data", (data: Buffer) => {
-                        accData += data.toString();
-                        context.propagateValue("data", accData);
+                        context.propagateValue("data", data.toString());
                     });
 
                     let isDone = false;
