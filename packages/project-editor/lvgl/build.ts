@@ -152,24 +152,31 @@ export class LVGLBuild extends Build {
             return GENERATED_NAME_PREFIX + genIndex++;
         }
 
-        function addPageIdentifiers(
+        const addPageIdentifiers = (
             widgets: LVGLWidget[],
             pageIdentifiers: Identifiers,
             prefix: string,
             isUserWidget: boolean
-        ) {
+        ) => {
             let startIndex = isUserWidget
                 ? pageIdentifiers.identifiers.length
                 : 0;
 
             for (const widget of widgets) {
-                const identifier = widget.identifier
-                    ? getName(
-                          "",
-                          widget.identifier,
-                          NamingConvention.UnderscoreLowerCase
-                      )
-                    : generateUniqueObjectName();
+                let identifier;
+
+                if (widget.identifier) {
+                    identifier = getName(
+                        "",
+                        widget.identifier,
+                        NamingConvention.UnderscoreLowerCase
+                    );
+                } else {
+                    identifier = generateUniqueObjectName();
+                    this.assets.map.lvglWidgetGeneratedIdentifiers[
+                        widget.objID
+                    ] = identifier;
+                }
 
                 pageIdentifiers.widgetToIdentifier.set(
                     widget,
@@ -205,7 +212,7 @@ export class LVGLBuild extends Build {
                     }
                 }
             }
-        }
+        };
 
         const addIdentifiersForUserWidget = (
             prefix: string,

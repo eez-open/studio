@@ -161,7 +161,8 @@ export class Assets {
         displayWidth: this.displayWidth,
         displayHeight: this.displayHeight,
         bitmaps: [],
-        lvglWidgetIndexes: {}
+        lvglWidgetIndexes: {},
+        lvglWidgetGeneratedIdentifiers: {}
     };
 
     dashboardComponentClassNameToComponentIdMap: {

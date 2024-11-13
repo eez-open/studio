@@ -1148,9 +1148,18 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     override getWidgetIndex(object: LVGLWidget | Page) {
         const identifier = [
-            ...this.userWidgetsStack.map(widget => widget.identifier),
+            ...this.userWidgetsStack.map(
+                widget =>
+                    widget.identifier ||
+                    this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                        widget.objID
+                    ]
+            ),
             object instanceof ProjectEditor.LVGLWidgetClass
-                ? object.identifier
+                ? object.identifier ||
+                  this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                      object.objID
+                  ]
                 : object.name
         ]
             .map(identifier =>

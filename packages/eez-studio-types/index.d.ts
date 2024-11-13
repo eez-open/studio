@@ -511,6 +511,7 @@ interface AssetsMap {
     displayHeight: number;
     bitmaps: string[];
     lvglWidgetIndexes: { [identifier: string]: number };
+    lvglWidgetGeneratedIdentifiers: { [objId: string]: string };
 }
 
 export interface ScpiCommand {
