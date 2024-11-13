@@ -36,7 +36,9 @@ import {
     ProjectType,
     findAction,
     findLvglStyle,
-    Project
+    Project,
+    NamingConvention,
+    getName
 } from "project-editor/project/project";
 
 import type {
@@ -527,6 +529,24 @@ export class LVGLWidget extends Widget {
     _xScroll2: number = 0;
     _yScroll2: number = 0;
 
+    get codeIdentifier() {
+        if (!this.identifier) {
+            return undefined;
+        }
+
+        const codeIdentifier = getName(
+            "",
+            this.identifier,
+            NamingConvention.UnderscoreLowerCase
+        );
+
+        if (codeIdentifier == this.identifier) {
+            return undefined;
+        }
+
+        return codeIdentifier;
+    }
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
@@ -549,6 +569,15 @@ export class LVGLWidget extends Widget {
                 isOptional: true,
                 propertyGridGroup: generalGroup,
                 disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using Page name as identifier
+            },
+            {
+                name: "codeIdentifier",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup,
+                computed: true,
+                formText: `This identifier will be used in the generated source code in the "Objects" struct. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
+                disabled: (object: LVGLWidget) =>
+                    object.codeIdentifier == undefined
             },
             {
                 name: "left",

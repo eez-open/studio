@@ -31,7 +31,12 @@ import {
     isDashboardProject,
     isLVGLProject
 } from "project-editor/project/project-type-traits";
-import { Project, findStyle } from "project-editor/project/project";
+import {
+    NamingConvention,
+    Project,
+    findStyle,
+    getName
+} from "project-editor/project/project";
 
 import type {
     IResizeHandler,
@@ -212,6 +217,20 @@ export class Page extends Flow {
     _lvglObj: number | undefined;
     _lvglUserWidgetOfPageCopy: LVGLUserWidgetWidget;
 
+    get codeIdentifier() {
+        const codeIdentifier = getName(
+            "",
+            this.name,
+            NamingConvention.UnderscoreLowerCase
+        );
+
+        if (codeIdentifier == this.name) {
+            return undefined;
+        }
+
+        return codeIdentifier;
+    }
+
     constructor() {
         super();
 
@@ -295,6 +314,14 @@ export class Page extends Flow {
                     };
                 },
                 propertyGridGroup: generalGroup
+            },
+            {
+                name: "codeIdentifier",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup,
+                computed: true,
+                formText: `This identifier will be used in the generated source code in the "Objects" struct. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
+                disabled: (object: Page) => object.codeIdentifier == undefined
             },
             {
                 name: "description",
