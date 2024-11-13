@@ -12,11 +12,13 @@ import type { LVGLBuild } from "project-editor/lvgl/build";
 
 import { LVGLWidget } from "./internal";
 import { escapeCString, unescapeCString } from "../widget-common";
+import { makeLvglExpressionProperty } from "../expression-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLCheckboxWidget extends LVGLWidget {
     text: string;
+    textType: string;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -25,12 +27,25 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Input",
 
         properties: [
-            {
-                name: "text",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            }
+            ...makeLvglExpressionProperty(
+                "text",
+                "string",
+                "input",
+                ["literal", "translated-literal"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            )
         ],
+
+        beforeLoadHook: (
+            object: LVGLCheckboxWidget,
+            jsObject: Partial<LVGLCheckboxWidget>
+        ) => {
+            if (!jsObject.textType) {
+                jsObject.textType = "literal";
+            }
+        },
 
         defaultValue: {
             left: 0,
@@ -40,7 +55,8 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             height: 20,
             heightUnit: "content",
             clickableFlag: true,
-            text: "Checkbox"
+            text: "Checkbox",
+            textType: "literal"
         },
 
         icon: (
@@ -73,7 +89,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, { text: observable });
+        makeObservable(this, { text: observable, textType: observable });
     }
 
     override lvglCreateObj(
@@ -100,8 +116,16 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     }
 
     override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(
-            `lv_checkbox_set_text(obj, ${escapeCString(this.text ?? "")});`
-        );
+        if (this.textType == "literal") {
+            build.line(
+                `lv_checkbox_set_text(obj, ${escapeCString(this.text ?? "")});`
+            );
+        } else {
+            build.line(
+                `lv_checkbox_set_text(obj, _(${escapeCString(
+                    this.text ?? ""
+                )}));`
+            );
+        }
     }
 }
