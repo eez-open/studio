@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
-import { PropertyType, makeDerivedClassInfo } from "project-editor/core/object";
+import { makeDerivedClassInfo } from "project-editor/core/object";
 
 import { Project, ProjectType } from "project-editor/project/project";
 
