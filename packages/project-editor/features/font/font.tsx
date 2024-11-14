@@ -1737,7 +1737,10 @@ export class Font extends EezObject {
     }
 
     async loadLvglGlyphs(projectStore: ProjectStore) {
-        if (!this.lvglRanges && !this.lvglSymbols) {
+        if (
+            (!this.lvglRanges && !this.lvglSymbols) ||
+            !ProjectEditor.getProjectStore(this)
+        ) {
             return;
         }
 
