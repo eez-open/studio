@@ -72,7 +72,7 @@ import {
 import { VALIDATION_MESSAGE_REQUIRED } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import type { Style } from "project-editor/features/style/style";
-import type { LVGLStyle } from "project-editor/lvgl/style";
+import { LVGLStyle } from "project-editor/lvgl/style";
 import {
     type Theme,
     type Color,
@@ -168,8 +168,16 @@ class PasteObject {
     styleLevel: number = 0;
 
     get destinationStyle(): CommonStyle | undefined {
+        let collection;
+        if (this.object instanceof LVGLStyle) {
+            collection =
+                this.model.destinationProjectStore.project.lvglStyles.styles;
+        } else {
+            collection = this.model.destinationProjectStore.project.styles;
+        }
+
         if (this.styleLevel == 0) {
-            return this.model.destinationProjectStore.project.styles.find(
+            return collection.find(
                 destinationObject =>
                     destinationObject.name == (this.object as any).name
             );
@@ -399,7 +407,7 @@ class PasteWithDependenciesModel {
         } else if (object instanceof ProjectEditor.StyleClass) {
             addObject(projectStore.project.styles, object);
         } else if (object instanceof ProjectEditor.LVGLStyleClass) {
-            addObject(projectStore.project.lvglStyles, object);
+            addObject(projectStore.project.lvglStyles.styles, object);
         } else if (object instanceof ProjectEditor.BitmapClass) {
             addObject(projectStore.project.bitmaps, object);
         } else if (object instanceof ProjectEditor.FontClass) {
@@ -1352,7 +1360,8 @@ class PasteWithDependenciesModel {
                 } else if (object instanceof ProjectEditor.LVGLStyleClass) {
                     if (pasteObject.styleLevel == 0) {
                         collection =
-                            this.destinationProjectStore.project.lvglStyles;
+                            this.destinationProjectStore.project.lvglStyles
+                                .styles;
                     }
                 } else if (object instanceof ProjectEditor.BitmapClass) {
                     collection = this.destinationProjectStore.project.bitmaps;
