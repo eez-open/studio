@@ -108,3 +108,4 @@ enum UpdateTaskType {
 void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_state, unsigned component_index, unsigned property_index, void *subobj, int param);
 
 void setObjectIndex(lv_obj_t *obj, int32_t index);
+lv_obj_t *getLvglObjectFromIndex(int32_t index);

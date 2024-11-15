@@ -930,9 +930,12 @@ EM_PORT_API(void) lvglSetImgbuttonImageSrc(lv_obj_t *obj, lv_imgbtn_state_t stat
     lv_obj_update_layout(obj);
 }
 
-EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, lv_obj_t *textarea) {
-    lv_keyboard_set_textarea(obj, textarea);
-    lv_obj_update_layout(obj);
+EM_PORT_API(void) lvglSetKeyboardTextarea(lv_obj_t *obj, int32_t textareaIndex) {
+    lv_obj_t *textarea = getLvglObjectFromIndex(textareaIndex);
+    if (textarea) {
+        lv_keyboard_set_textarea(obj, textarea);
+        lv_obj_update_layout(obj);
+    }
 }
 
 #if LVGL_VERSION_MAJOR >= 9

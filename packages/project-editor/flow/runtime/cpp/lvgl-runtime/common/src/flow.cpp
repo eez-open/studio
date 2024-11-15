@@ -914,7 +914,7 @@ void setObjectIndex(lv_obj_t *obj, int32_t index) {
     indexToObject.insert(std::make_pair(index, obj));
 }
 
-static lv_obj_t *getLvglObjectFromIndex(int32_t index) {
+lv_obj_t *getLvglObjectFromIndex(int32_t index) {
     auto it = indexToObject.find(index);
     if (it == indexToObject.end()) {
         return nullptr;

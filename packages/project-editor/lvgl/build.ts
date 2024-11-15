@@ -588,7 +588,7 @@ export class LVGLBuild extends Build {
 
         const pageIdentifiers = this.getPageIdentifiers(widget);
         if (!pageIdentifiers) {
-            return 0;
+            return "0";
         }
 
         const accessor = pageIdentifiers.widgetToAccessor.get(widget);

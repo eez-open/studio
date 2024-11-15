@@ -737,7 +737,7 @@ export interface IWasmFlowRuntime {
     _lvglFreeFont(font_ptr: number): void;
     _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
     _lvglSetImgbuttonImageSrc(obj: number, statE: number, img_src: number): void;
-    _lvglSetKeyboardTextarea(obj: number, textarea: number): void;
+    _lvglSetKeyboardTextarea(obj: number, textareaIndex: number): void;
     
     _lvglMeterAddScale(obj: number,
         minorTickCount: number, minorTickLineWidth: number, minorTickLength: number, minorTickColor: number,

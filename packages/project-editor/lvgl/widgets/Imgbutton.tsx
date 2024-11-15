@@ -359,32 +359,44 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
 
         if (this.imageReleased) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, &img_${this.imageReleased}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, &${build.getImageVariableName(
+                    this.imageReleased
+                )}, NULL);`
             );
         }
         if (this.imagePressed) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, &img_${this.imagePressed}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, &${build.getImageVariableName(
+                    this.imagePressed
+                )}, NULL);`
             );
         }
         if (this.imageDisabled) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, &img_${this.imageDisabled}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, &${build.getImageVariableName(
+                    this.imageDisabled
+                )}, NULL);`
             );
         }
         if (this.imageCheckedReleased) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, &img_${this.imageCheckedReleased}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, &${build.getImageVariableName(
+                    this.imageCheckedReleased
+                )}, NULL);`
             );
         }
         if (this.imageCheckedPressed) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, &img_${this.imageCheckedPressed}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, &${build.getImageVariableName(
+                    this.imageCheckedPressed
+                )}, NULL);`
             );
         }
         if (this.imageCheckedDisabled) {
             build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, &img_${this.imageCheckedDisabled}, NULL);`
+                `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, &${build.getImageVariableName(
+                    this.imageCheckedDisabled
+                )}, NULL);`
             );
         }
     }

@@ -1196,8 +1196,32 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         return this.nextWidgetIndex++;
     }
 
-    getLvglObjectByName(objectName: string) {
-        return this.runtime.assetsMap.lvglWidgetIndexes[objectName];
+    getLvglObjectByName(
+        objectName: string,
+        userWidgetsStack: LVGLUserWidgetWidget[]
+    ) {
+        const identifier = [
+            ...userWidgetsStack.map(
+                widget =>
+                    widget.identifier ||
+                    this.runtime.assetsMap.lvglWidgetGeneratedIdentifiers[
+                        widget.objID
+                    ]
+            ),
+            objectName
+        ]
+            .map(identifier =>
+                identifier
+                    ? getName(
+                          "",
+                          identifier,
+                          NamingConvention.UnderscoreLowerCase
+                      )
+                    : "?"
+            )
+            .join(USER_WIDGET_IDENTIFIER_SEPARATOR);
+
+        return this.runtime.assetsMap.lvglWidgetIndexes[identifier];
     }
 }
 

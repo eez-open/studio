@@ -395,7 +395,8 @@ export class WasmRuntime extends RemoteRuntime {
             );
         } else if (workerToRenderMessage.getLvglObjectByName) {
             return this.lgvlPageRuntime?.getLvglObjectByName(
-                workerToRenderMessage.getLvglObjectByName.name
+                workerToRenderMessage.getLvglObjectByName.name,
+                []
             );
         } else if (workerToRenderMessage.getLvglGroupByName) {
             return this.lgvlPageRuntime?.getLvglGroupByName(

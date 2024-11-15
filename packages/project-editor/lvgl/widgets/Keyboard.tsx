@@ -13,7 +13,6 @@ import { ProjectType } from "project-editor/project/project";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 import {
-    LVGLNonActivePageViewerRuntime,
     LVGLPageRuntime,
     LVGLPageViewerRuntime
 } from "project-editor/lvgl/page-runtime";
@@ -225,39 +224,39 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             KEYBOARD_MODES[this.mode]
         );
 
-        runtime.addPostCreateCallback(() => {
-            if (this.textarea) {
-                const lvglIdentifier = ProjectEditor.getProjectStore(
-                    this
-                ).lvglIdentifiers.getIdentifierByName(
-                    ProjectEditor.getFlow(this),
-                    this.textarea
-                );
+        const textarea = this.textarea;
 
-                if (lvglIdentifier && lvglIdentifier.widgets.length == 1) {
-                    const textareaWidget = lvglIdentifier.widgets[0];
+        if (runtime instanceof LVGLPageViewerRuntime && textarea) {
+            const lvglIdentifier = ProjectEditor.getProjectStore(
+                this
+            ).lvglIdentifiers.getIdentifierByName(
+                ProjectEditor.getFlow(this),
+                textarea
+            );
+            if (lvglIdentifier && lvglIdentifier.widgets.length == 1) {
+                const textareaWidget = lvglIdentifier.widgets[0];
 
-                    if (
-                        textareaWidget instanceof LVGLTextareaWidget &&
-                        (runtime instanceof LVGLPageViewerRuntime ||
-                            runtime instanceof LVGLNonActivePageViewerRuntime)
-                    ) {
+                if (textareaWidget instanceof LVGLTextareaWidget) {
+                    const textareaWidgetIndex = runtime.getLvglObjectByName(
+                        textarea,
+                        runtime.userWidgetsStack
+                    );
+
+                    console.log(textarea, textareaWidgetIndex);
+
+                    runtime.addPostCreateCallback(() => {
                         setTimeout(() => {
-                            if (
-                                this._lvglObj &&
-                                textareaWidget._lvglObj &&
-                                runtime.isMounted
-                            ) {
+                            if (this._lvglObj && runtime.isMounted) {
                                 runtime.wasm._lvglSetKeyboardTextarea(
                                     this._lvglObj,
-                                    textareaWidget._lvglObj
+                                    textareaWidgetIndex
                                 );
                             }
                         });
-                    }
+                    });
                 }
             }
-        });
+        }
 
         return obj;
     }
@@ -287,10 +286,27 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 lvglIdentifier.widgets.length == 1
             ) {
                 const textareaWidget = lvglIdentifier.widgets[0];
+
+                let keyboardAccessor = build.getLvglObjectAccessor(this);
+
+                let textareaAccessor =
+                    build.getLvglObjectAccessor(textareaWidget);
+
+                if (textareaAccessor.indexOf("startWidgetIndex +") != -1) {
+                    let index = build.getWidgetObjectIndexByName(
+                        this,
+                        this.textarea
+                    );
+
+                    if (keyboardAccessor.indexOf("startWidgetIndex +") != -1) {
+                        textareaAccessor = `((lv_obj_t **)&objects)[startWidgetIndex + ${index}]`;
+                    } else {
+                        textareaAccessor = `((lv_obj_t **)&objects)[${index}]`;
+                    }
+                }
+
                 build.line(
-                    `lv_keyboard_set_textarea(${build.getLvglObjectAccessor(
-                        this
-                    )}, ${build.getLvglObjectAccessor(textareaWidget)});`
+                    `lv_keyboard_set_textarea(${keyboardAccessor}, ${textareaAccessor});`
                 );
             }
         }
