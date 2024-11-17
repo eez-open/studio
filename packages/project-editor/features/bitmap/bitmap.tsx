@@ -41,7 +41,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 
 import { showGenericDialog } from "project-editor/core/util";
 
-import { AbsoluteFileInput } from "project-editor/ui-components/FileInput";
+import { MultipleAbsoluteFileInput } from "project-editor/ui-components/FileInput";
 import { getProject, findStyle } from "project-editor/project/project";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -241,12 +241,18 @@ export class Bitmap extends EezObject {
                                 validators.required,
                                 validators.invalidCharacters("."),
                                 validators.unique({}, parent)
-                            ]
+                            ],
+                            visible: (values: any) => {
+                                return !(
+                                    values.imageFilePaths &&
+                                    values.imageFilePaths.length > 1
+                                );
+                            }
                         },
                         {
-                            name: "imageFilePath",
+                            name: "imageFilePaths",
                             displayName: "Image",
-                            type: AbsoluteFileInput,
+                            type: MultipleAbsoluteFileInput,
                             validators: [validators.required],
                             options: {
                                 filters: [
@@ -287,16 +293,46 @@ export class Bitmap extends EezObject {
                 }
             });
 
-            const name: string = result.values.name;
             const bpp: number = result.values.bpp;
 
-            return createBitmap(
-                projectStore,
-                result.values.imageFilePath,
-                undefined,
-                name,
-                bpp
-            );
+            if (result.values.imageFilePaths.length == 1) {
+                const name: string = result.values.name;
+
+                return createBitmap(
+                    projectStore,
+                    result.values.imageFilePaths[0],
+                    undefined,
+                    name,
+                    bpp
+                );
+            } else {
+                projectStore.undoManager.setCombineCommands(true);
+
+                for (let i = 0; i < result.values.imageFilePaths.length; i++) {
+                    const filePath = result.values.imageFilePaths[i];
+
+                    let name = getUniquePropertyValue(
+                        projectStore.project.bitmaps,
+                        "name",
+                        path.parse(filePath).name
+                    ) as string;
+
+                    const bitmap = await createBitmap(
+                        projectStore,
+                        filePath,
+                        undefined,
+                        name,
+                        bpp
+                    );
+                    if (bitmap) {
+                        projectStore.addObject(parent, bitmap);
+                    }
+                }
+
+                projectStore.undoManager.setCombineCommands(false);
+
+                return undefined;
+            }
         },
         icon: "material:image",
         afterLoadHook: (bitmap: Bitmap, project) => {

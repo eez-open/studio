@@ -133,6 +133,78 @@ export class AbsoluteFileInput extends FieldComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class MultipleAbsoluteFileInput extends FieldComponent {
+    static contextType = ProjectContext;
+    declare context: React.ContextType<typeof ProjectContext>;
+
+    onClear = () => {
+        this.props.onChange(undefined);
+    };
+
+    onSelect = async () => {
+        const result = await dialog.showOpenDialog({
+            properties: ["openFile", "multiSelections"],
+            filters: this.props.fieldProperties.options.filters
+        });
+
+        if (result.filePaths && result.filePaths.length > 0) {
+            this.props.onChange(result.filePaths);
+        }
+    };
+
+    get value() {
+        const value = this.props.values[this.props.fieldProperties.name];
+        if (!value) {
+            return "";
+        }
+
+        if (value.length > 1) {
+            return `${value.length} images selected`;
+        }
+
+        return value;
+    }
+
+    render() {
+        let clearButton: JSX.Element | undefined;
+
+        if (this.props.values[this.props.fieldProperties.name]) {
+            clearButton = (
+                <button
+                    className="btn btn-default"
+                    type="button"
+                    onClick={this.onClear}
+                >
+                    <Icon icon="material:close" size={17} />
+                </button>
+            );
+        }
+
+        return (
+            <div className="input-group">
+                <input
+                    type="text"
+                    className="form-control"
+                    value={this.value}
+                    readOnly
+                />
+                <>
+                    {clearButton}
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onSelect}
+                    >
+                        &hellip;
+                    </button>
+                </>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class AbsoluteFileSaveInput extends FieldComponent {
     static contextType = ProjectContext;
     declare context: React.ContextType<typeof ProjectContext>;

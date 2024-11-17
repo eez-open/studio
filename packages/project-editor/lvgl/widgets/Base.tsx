@@ -1054,8 +1054,10 @@ export class LVGLWidget extends Widget {
                 referencedObjectCollectionPath: "lvglGroups/groups",
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (widget: LVGLWidget) =>
-                    ProjectEditor.getProject(widget).lvglGroups.groups.length ==
-                        0 || widget instanceof LVGLScreenWidget
+                    (ProjectEditor.getProject(widget).lvglGroups.groups
+                        .length == 0 &&
+                        !widget.group) ||
+                    widget instanceof LVGLScreenWidget
             },
             {
                 name: "groupIndex",
