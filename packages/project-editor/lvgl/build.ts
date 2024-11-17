@@ -831,10 +831,11 @@ export class LVGLBuild extends Build {
         build.line("");
         build.line(`enum ScreensEnum {`);
         build.indent();
-        for (let i = 0; i < this.pages.length; i++) {
+        const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
+        for (let i = 0; i < pages.length; i++) {
             build.line(
                 `SCREEN_ID_${this.getScreenIdentifier(
-                    this.pages[i]
+                    pages[i]
                 ).toUpperCase()} = ${i + 1},`
             );
         }
@@ -1376,13 +1377,15 @@ export class LVGLBuild extends Build {
         }
 
         if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.pages.length > 0) {
+            const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
+            if (pages.length > 0) {
                 build.line(
-                    `static const char *screen_names[] = { ${this.pages
+                    `static const char *screen_names[] = { ${pages
                         .map(page => `"${page.name}"`)
                         .join(", ")} };`
                 );
             }
+
             if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
                 build.line(
                     `static const char *object_names[] = { ${this.lvglObjectIdentifiers.fromPage.identifiers

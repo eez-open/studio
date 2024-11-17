@@ -160,9 +160,9 @@ export abstract class LVGLPageRuntime {
 
     getLvglScreenByName(screenName: string) {
         return (
-            this.project._store.lvglIdentifiers.pages.findIndex(
-                page => page.name == screenName
-            ) + 1
+            this.project._store.lvglIdentifiers.pages
+                .filter(page => !page.isUsedAsUserWidget)
+                .findIndex(page => page.name == screenName) + 1
         );
     }
 
