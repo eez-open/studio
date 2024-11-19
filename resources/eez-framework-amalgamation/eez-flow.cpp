@@ -9256,7 +9256,8 @@ void do_OPERATION_TYPE_STRING_FORMAT(EvalStack &stack) {
         stack.push(Value::makeError());
         return;
     }
-    char result[1024];
+    //char result[1024];
+    char result[64];
     if (type == type_int) snprintf(result, sizeof(result), format, (int)b.getInt());
     else if (type == type_signed_char) snprintf(result, sizeof(result), format, (signed char)b.getInt32());
     else if (type == type_short_int) snprintf(result, sizeof(result), format, (short int)b.getInt32());
