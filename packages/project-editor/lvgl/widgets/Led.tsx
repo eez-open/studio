@@ -72,19 +72,21 @@ export class LVGLLedWidget extends LVGLWidget {
         },
 
         check(object: LVGLLedWidget, messages) {
-            const colorValue = getThemedColor(
-                ProjectEditor.getProjectStore(object),
-                object.color
-            ).colorValue;
+            if (object.colorType == "literal") {
+                const colorValue = getThemedColor(
+                    ProjectEditor.getProjectStore(object),
+                    object.color
+                ).colorValue;
 
-            if (!isValid(colorValue)) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `invalid color`,
-                        getChildOfObject(object, "color")
-                    )
-                );
+                if (!isValid(colorValue)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `invalid color`,
+                            getChildOfObject(object, "color")
+                        )
+                    );
+                }
             }
         },
 
