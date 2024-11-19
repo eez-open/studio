@@ -442,7 +442,7 @@ export abstract class LVGLPageRuntime {
     }
 
     getThemedColor(colorValue: string) {
-        if (colorValue.startsWith("#")) {
+        if (typeof colorValue != "string" || colorValue.startsWith("#")) {
             return { colorValue, isFromTheme: false };
         }
 
@@ -1313,6 +1313,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 10
             );
 
+        this.lvglWidgetsMap.set(lvglScreenWidget.type, lvglScreenWidget);
+
         for (const component of lvglScreenWidget.children) {
             this.lvglWidgetsMap.set(component.type, component);
         }
@@ -1418,26 +1420,12 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                                 lvglWidget._useStyleForStylePreview = "";
                                 lvglWidget.states = "";
 
-                                flags.push("HIDDEN");
+                                if (lvglWidget != this.page.lvglScreenWidget) {
+                                    flags.push("HIDDEN");
+                                }
                             }
 
                             lvglWidget.widgetFlags = flags.join("|");
-                        }
-
-                        const lvglScreenWidget = this.page.lvglScreenWidget!;
-                        if (
-                            this.selectedStyle &&
-                            this.canvas &&
-                            lvglScreenWidget.type ==
-                                this.selectedStyle.forWidgetType
-                        ) {
-                            lvglScreenWidget._useStyleForStylePreview =
-                                this.selectedStyle.name;
-                            lvglScreenWidget.states =
-                                this.project._store.uiStateStore.lvglState;
-                        } else {
-                            lvglScreenWidget._useStyleForStylePreview = "";
-                            lvglScreenWidget.states = "";
                         }
                     });
 

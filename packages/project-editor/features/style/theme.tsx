@@ -684,7 +684,7 @@ function getThemedColorInProject(
 }
 
 export function getThemedColor(projectStore: ProjectStore, colorValue: string) {
-    if (colorValue.startsWith("#")) {
+    if (typeof colorValue != "string" || colorValue.startsWith("#")) {
         return { colorValue, isFromTheme: false };
     }
 
