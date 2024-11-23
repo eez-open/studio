@@ -57,7 +57,7 @@ import { ButtonAction } from "eez-studio-ui/action";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 import { compareVersions } from "eez-studio-shared/util";
 
-// from https://envox.hr/gitea
+// from https://envox.eu/gitea
 interface TemplateProject {
     clone_url: string;
     html_url: string;
@@ -382,7 +382,7 @@ class WizardModel {
 
     async fetchTemplateProjects() {
         const result = await fetch(
-            "https://envox.hr/gitea/api/v1/repos/search?q=eez-flow-template&topic=true"
+            "https://envox.eu/gitea/api/v1/repos/search?q=eez-flow-template&topic=true"
         );
         const data = await result.json();
         const templateProjects = data.data.map(
@@ -875,7 +875,7 @@ class WizardModel {
                     id: "_templates",
                     label: (
                         <Count
-                            label="From envox.hr/gitea"
+                            label="From envox.eu/gitea"
                             count={this.templateProjectTypes.length}
                             attention={false}
                         ></Count>
