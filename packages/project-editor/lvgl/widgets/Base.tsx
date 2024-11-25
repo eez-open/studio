@@ -1993,11 +1993,23 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            build.line(
-                `bool val = ${build.getVariableGetterFunctionName(
-                    this.hiddenFlag as string
-                )}();`
-            );
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "hiddenFlag"
+                );
+
+                build.line(
+                    `bool val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                );
+            } else {
+                build.line(
+                    `bool val = ${build.getVariableGetterFunctionName(
+                        this.hiddenFlag as string
+                    )}();`
+                );
+            }
 
             build.line(`if (val) lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);`);
             build.line(`else lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);`);
@@ -2010,11 +2022,23 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            build.line(
-                `bool val = ${build.getVariableGetterFunctionName(
-                    this.clickableFlag as string
-                )}();`
-            );
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "clickableFlag"
+                );
+
+                build.line(
+                    `bool val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                );
+            } else {
+                build.line(
+                    `bool val = ${build.getVariableGetterFunctionName(
+                        this.clickableFlag as string
+                    )}();`
+                );
+            }
 
             build.line(`if (val) lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);`);
             build.line(`else lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICKABLE);`);
@@ -2068,11 +2092,23 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            build.line(
-                `bool val = ${build.getVariableGetterFunctionName(
-                    this.checkedState as string
-                )}();`
-            );
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "checkedState"
+                );
+
+                build.line(
+                    `bool val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
+                );
+            } else {
+                build.line(
+                    `bool val = ${build.getVariableGetterFunctionName(
+                        this.checkedState as string
+                    )}();`
+                );
+            }
 
             build.line(`if (val) lv_obj_add_state(obj, LV_STATE_CHECKED);`);
             build.line(`else lv_obj_clear_state(obj, LV_STATE_CHECKED);`);
@@ -2085,11 +2121,23 @@ export class LVGLWidget extends Widget {
             build.line(`{`);
             build.indent();
 
-            build.line(
-                `bool val = ${build.getVariableGetterFunctionName(
-                    this.disabledState as string
-                )}();`
-            );
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                let componentIndex = build.assets.getComponentIndex(this);
+                const propertyIndex = build.assets.getComponentPropertyIndex(
+                    this,
+                    "disabledState"
+                );
+
+                build.line(
+                    `bool val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
+                );
+            } else {
+                build.line(
+                    `bool val = ${build.getVariableGetterFunctionName(
+                        this.disabledState as string
+                    )}();`
+                );
+            }
 
             build.line(`if (val) lv_obj_add_state(obj, LV_STATE_DISABLED);`);
             build.line(`else lv_obj_clear_state(obj, LV_STATE_DISABLED);`);
