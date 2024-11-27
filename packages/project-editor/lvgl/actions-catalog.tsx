@@ -43,7 +43,8 @@ registerAction({
     defaults: {
         fadeMode: "FADE_IN",
         speed: 200,
-        delay: 0
+        delay: 0,
+        useStack: true
     },
     label: (
         [screen, fadeMode, speed, delay, useStack],
