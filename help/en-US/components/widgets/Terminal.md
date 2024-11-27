@@ -14,6 +14,8 @@ Style used when rendering of the Widget.
 
 # INPUTS [EMPTY]
 
+## clear
+
 # OUTPUTS [EMPTY]
 
 ## onData

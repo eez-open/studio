@@ -10,6 +10,10 @@
 
 Label displayed next to the checkbox.
 
+## Text type
+
+Here we can choose whether the `Text` property will be calculated from the Expression.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

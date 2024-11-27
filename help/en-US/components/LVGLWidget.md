@@ -4,6 +4,8 @@
 
 Widget name. We reference the Widget within the project by its name, for example in the LVGL action. For each Widget, we must choose a unique name within the entire project. This field is optional and does not need to be set if we do not need to reference the Widget.
 
+## Code identifier [EMPTY]
+
 ## Left unit
 
 The following options are available:

@@ -13,6 +13,7 @@ List of actions to be executed. The following actions are available:
   - *Fade mode*: Selection of animation when moving from the previous page to a new page
   - *Speed*: Animation duration in milliseconds
   - *Delay*: Delay in milliseconds before the animation starts.
+  - *Use stack*: Put active screen on the stack.
 
 - **Change to Previous Screen**: Change to the previous screen
   - *Fade mode*: Selection of animation when moving from the previous page to a new page
