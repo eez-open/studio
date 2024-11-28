@@ -295,7 +295,7 @@ export class FlowDocument implements IDocument {
     pasteSelection = () => {
         if (canPasteWithDependencies(this.projectStore)) {
             this.flow.pasteSelection();
-        } else {
+        } else if (this.flow.canPaste()) {
             this.projectStore.undoManager.setCombineCommands(true);
 
             this.flow.pasteSelection();

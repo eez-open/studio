@@ -4124,10 +4124,6 @@ const TrixEditor = observer(
             this.setup();
         }
 
-        componentDidUpdate() {
-            this.setup();
-        }
-
         render() {
             var attributes: { [key: string]: string } = {
                 id: this.editorId,

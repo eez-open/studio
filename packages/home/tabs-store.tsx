@@ -593,7 +593,6 @@ export class ProjectEditorTab implements IHomeTab {
             }
 
             if (!this.runMode) {
-                console.log("paste");
                 projectStore.paste();
             }
         };
