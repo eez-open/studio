@@ -1440,6 +1440,9 @@ export class Font extends EezObject {
             try {
                 let result;
 
+                let lvglRanges;
+                let lvglSymbols;
+
                 if (projectStore.projectTypeTraits.isLVGL) {
                     result = await showGenericDialog(projectStore, {
                         dialogDefinition: {
@@ -1518,9 +1521,12 @@ export class Font extends EezObject {
                         result.values.ranges
                     );
 
-                    const { encodings, symbols } = removeDuplicates(
-                        result.values.encodings,
-                        result.values.symbols
+                    lvglRanges = result.values.ranges;
+                    lvglSymbols = result.values.symbols;
+
+                    const { encodings, symbols } = getLvglEncodingsAndSymbols(
+                        lvglRanges,
+                        lvglSymbols
                     );
                     result.values.encodings = encodings;
                     result.values.symbols = symbols;
@@ -1637,7 +1643,9 @@ export class Font extends EezObject {
                         size: result.values.size,
                         threshold: result.values.threshold,
                         createGlyphs: result.values.createGlyphs,
-                        encodings: result.values.createGlyphs
+                        encodings: projectStore.projectTypeTraits.isLVGL
+                            ? result.values.encodings
+                            : result.values.createGlyphs
                             ? result.values.encodings
                                 ? result.values.encodings
                                 : [
@@ -1653,8 +1661,16 @@ export class Font extends EezObject {
                         lvglVersion:
                             projectStore.project.settings.general.lvglVersion,
                         lvglInclude:
-                            projectStore.project.settings.build.lvglInclude
+                            projectStore.project.settings.build.lvglInclude,
+                        getAllGlyphs: projectStore.projectTypeTraits.isLVGL
+                            ? true
+                            : undefined
                     });
+
+                    if (projectStore.projectTypeTraits.isLVGL) {
+                        (fontProperties as Font).lvglRanges = lvglRanges;
+                        (fontProperties as Font).lvglSymbols = lvglSymbols;
+                    }
 
                     const font = createObject<Font>(
                         projectStore,
