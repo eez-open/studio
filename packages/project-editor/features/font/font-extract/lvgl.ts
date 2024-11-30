@@ -153,5 +153,7 @@ export class ExtractFont implements IFontExtract {
         });
     };
 
-    freeResources() {}
+    freeResources() {
+        extractBusy = false;
+    }
 }
