@@ -22,13 +22,14 @@ import {
 import { Flow } from "project-editor/flow/flow";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
 import { ConnectionLine } from "project-editor/flow/connection-line";
-import { CatchErrorActionComponent } from "project-editor/flow/components/actions";
 import { Component, Widget } from "project-editor/flow/component";
 import { IEezObject } from "project-editor/core/object";
 import type {
     IComponentState,
     IDataContext,
-    IFlowContext
+    IFlowContext,
+    IFlowState,
+    IRuntime
 } from "project-editor/flow/flow-interfaces";
 import { Page } from "project-editor/features/page/page";
 import {
@@ -88,7 +89,7 @@ export enum StateMachineAction {
 
 export type SingleStepMode = "step-into" | "step-over" | "step-out";
 
-export abstract class RuntimeBase {
+export abstract class RuntimeBase implements IRuntime {
     state: State = State.STARTING;
     isDebuggerActive = false;
 
@@ -375,17 +376,6 @@ export abstract class RuntimeBase {
         }
     }
 
-    removeQueueTasksForFlowState(flowState: FlowState) {
-        runInAction(() => {
-            const queueTasksBefore = flowState.runtime.queue.length;
-            flowState.runtime.queue = flowState.runtime.queue.filter(
-                queueTask => queueTask.flowState != flowState
-            );
-            const queueTasksAfter = flowState.runtime.queue.length;
-            flowState.numActiveComponents -= queueTasksBefore - queueTasksAfter;
-        });
-    }
-
     skipNextQueueTask(nextQueueTask: QueueTask) {
         if (this.state != State.PAUSED) {
             return false;
@@ -521,8 +511,6 @@ export abstract class RuntimeBase {
             false
         );
     }
-
-    sendResultToWorker(messageId: number, result: any, finalResult?: boolean) {}
 
     onBreakpointAdded(component: Component) {}
 
@@ -844,7 +832,7 @@ export abstract class RuntimeBase {
     onKeyDown(e: KeyboardEvent) {}
 }
 
-export class FlowState {
+export class FlowState implements IFlowState {
     id = guid();
     componentStates = new Map<Component, ComponentState>();
     flowStates: FlowState[] = [];
@@ -867,7 +855,6 @@ export class FlowState {
             isFinished: observable,
             setComponentExecutionState: action,
             isRunning: computed,
-            hasAnyDiposableComponent: computed,
             finish: action,
             timelinePosition: observable,
             setComponentAsyncState: action
@@ -983,47 +970,16 @@ export class FlowState {
         );
     }
 
-    get hasAnyDiposableComponent() {
-        for (let [_, componentState] of this.componentStates) {
-            if (componentState.dispose) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     finish() {
         this.runtime.destroyObjectLocalVariables(this);
         this.flowStates.forEach(flowState => flowState.finish());
-        this.componentStates.forEach(componentState => componentState.finish());
         this.runtime.logs.addLogItem(new ActionEndLogItem(this));
         this.isFinished = true;
-    }
-
-    findCatchErrorActionComponent(): ComponentState | undefined {
-        const catchErrorActionComponent = this.flow.components.find(
-            component => component instanceof CatchErrorActionComponent
-        );
-        if (catchErrorActionComponent) {
-            return this.getComponentState(catchErrorActionComponent);
-        }
-
-        if (this.parentFlowState) {
-            return this.parentFlowState.findCatchErrorActionComponent();
-        }
-
-        return undefined;
     }
 
     log(type: LogItemType, message: string, component: Component | undefined) {
         this.runtime.logs.addLogItem(
             new LogItem(type, message, this, component)
-        );
-    }
-
-    logScpi(message: string, component: Component) {
-        this.runtime.logs.addLogItem(
-            new LogItem("scpi", message, this, component)
         );
     }
 
@@ -1085,22 +1041,17 @@ export class FlowState {
 
 export class ComponentState implements IComponentState {
     inputsData = new Map<string, any>();
-    unreadInputsData = new Set<string>();
     isRunning: boolean = false;
     asyncState: boolean = false;
     executionState: any;
-    dispose: (() => void) | undefined = undefined;
 
     constructor(public flowState: FlowState, public component: Component) {
         makeObservable(this, {
             inputsData: observable,
-            unreadInputsData: observable,
             isRunning: observable,
             asyncState: observable,
             executionState: observable,
-            dispose: observable,
-            setInputData: action,
-            markInputsDataRead: action
+            setInputData: action
         });
     }
 
@@ -1110,42 +1061,6 @@ export class ComponentState implements IComponentState {
 
     setInputData(input: string, inputData: any) {
         this.inputsData.set(input, inputData);
-        this.unreadInputsData.add(input);
-    }
-
-    markInputsDataRead() {
-        this.unreadInputsData.clear();
-    }
-
-    get connectedSequenceInputsSet() {
-        const inputConnections = new Set<string>();
-        for (const connectionLine of this.flowState.flow.connectionLines) {
-            if (
-                connectionLine.targetComponent == this.component &&
-                this.sequenceInputs.find(
-                    input => input.name == connectionLine.input
-                )
-            ) {
-                inputConnections.add(connectionLine.input);
-            }
-        }
-        return inputConnections;
-    }
-
-    get sequenceInputs() {
-        return this.component.inputs.filter(input => input.isSequenceInput);
-    }
-
-    get mandatoryDataInputs() {
-        return this.component.inputs.filter(
-            input => !input.isSequenceInput && !input.isOptionalInput
-        );
-    }
-
-    finish() {
-        if (this.dispose) {
-            this.dispose();
-        }
     }
 
     get debugInfo() {

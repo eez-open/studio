@@ -86,7 +86,6 @@ export interface IFlow {}
 
 export interface IComponentState {
     inputsData: Map<string, any>;
-    unreadInputsData: Set<string>;
     asyncState: boolean;
     executionState: any;
 }
