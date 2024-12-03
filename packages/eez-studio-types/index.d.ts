@@ -152,18 +152,6 @@ export type LogItemType =
     | "info"
     | "debug";
 
-export interface IComponentFlowState {
-    getComponentExecutionState<T>(): T | undefined;
-    setComponentExecutionState<T>(executionState: T): void;
-    evalExpression(expression: string): any;
-    evalTemplateLiteral(expression: string): any;
-    assignValue(assignableExpression: string, value: any): any;
-    propagateValue(output: string, value: any): void;
-    throwError(err: string): void;
-    log(type: LogItemType, message: string): void;
-    dispose: (() => void) | undefined;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // must be serializable
