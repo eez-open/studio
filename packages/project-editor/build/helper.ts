@@ -61,4 +61,14 @@ export class Build {
     text(text: string) {
         this.result += text;
     }
+
+    blockStart(line: string) {
+        this.line(line);
+        this.indent();
+    }
+
+    blockEnd(line: string) {
+        this.unindent();
+        this.line(line);
+    }
 }
