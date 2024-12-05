@@ -16,9 +16,7 @@ const META_DIR = "./meta";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const EEZ_FRAMEWORK_PATH = path.resolve(
-    "../../../packages/project-editor/flow/runtime/cpp/eez-framework"
-);
+const EEZ_FRAMEWORK_PATH = path.resolve("../../../wasm//eez-framework");
 
 const BASE_PATH = path.resolve(EEZ_FRAMEWORK_PATH + "/src/eez");
 

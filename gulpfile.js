@@ -10,7 +10,6 @@ gulp.task("copy", function () {
     return gulp
         .src([
             SRC + "/**/*.*",
-            "!" + SRC + "/project-editor/flow/runtime/cpp/**/*.*",
             "!" + SRC + "/**/*.ts",
             "!" + SRC + "/**/*.tsx",
             "!" + SRC + "/**/*.less",

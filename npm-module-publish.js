@@ -8,9 +8,6 @@ for (const folder of FOLDERS) {
     fse.copySync(folder, `npm-module/${folder}`, { overwrite: true });
 }
 
-console.log(`Remove npm-module/packages/project-editor/flow/runtime/cpp ...`);
-fse.removeSync(`npm-module/packages/project-editor/flow/runtime/cpp`);
-
 /*
 console.log("Spawn npm publish ...");
 const dir = spawn(

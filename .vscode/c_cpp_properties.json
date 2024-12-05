@@ -4,12 +4,12 @@
             "name": "Win32",
             "includePath": [
                 "C:/emsdk/upstream/emscripten/cache/sysroot/include/emscripten",
-                "./packages/project-editor/flow/runtime/cpp/eez-framework/src",
-                "./packages/project-editor/flow/runtime/cpp/eez-runtime",
-                "./packages/project-editor/flow/runtime/cpp/eez-runtime/conf",
-                "./packages/project-editor/flow/runtime/cpp/eez-framework/src/eez/platform/simulator",
-                "./packages/project-editor/flow/runtime/cpp/eez-framework/src/eez/libs/agg",
-                "./packages/project-editor/flow/runtime/cpp/lvgl-runtime"
+                "./wasm/eez-framework/src",
+                "./wasm/eez-runtime",
+                "./wasm/eez-runtime/conf",
+                "./wasm/eez-framework/src/eez/platform/simulator",
+                "./wasm/eez-framework/src/eez/libs/agg",
+                "./wasm/lvgl-runtime"
             ],
             "defines": [
                 "DEBUG",

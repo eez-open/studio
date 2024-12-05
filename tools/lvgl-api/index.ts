@@ -128,7 +128,7 @@ function buildFunction(build: Build, func: Function) {
 (async function main() {
     const exportedFunctions = (
         await fs.promises.readFile(
-            `../../packages/project-editor/flow/runtime/cpp/lvgl-runtime/v${VERSION}/exported-functions.txt`,
+            `../../wasm/lvgl-runtime/v${VERSION}/exported-functions.txt`,
             "utf-8"
         )
     )
@@ -242,7 +242,7 @@ function buildFunction(build: Build, func: Function) {
     console.log("Processed", processed, "functions");
 
     await fs.promises.writeFile(
-        `../../packages/project-editor/flow/runtime/cpp/lvgl-runtime/v${VERSION}/stub_api.c`,
+        `../../wasm/lvgl-runtime/v${VERSION}/stub_api.c`,
         build.result
     );
 })();
