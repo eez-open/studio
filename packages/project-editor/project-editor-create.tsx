@@ -119,9 +119,8 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import { ConditionalStyle, Style } from "project-editor/features/style/style";
+import { Style } from "project-editor/features/style/style";
 
-import { PropertyType } from "project-editor/core/object";
 import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -129,14 +128,6 @@ import { Color } from "project-editor/features/style/theme";
 import { UserProperty } from "./flow/user-property";
 import { LVGLActionComponent } from "project-editor/lvgl/actions";
 import { FlowEditor } from "project-editor/flow/editor/editor";
-
-export const conditionalStyleConditionProperty = makeExpressionProperty(
-    {
-        name: "condition",
-        type: PropertyType.MultilineText
-    },
-    "boolean"
-);
 
 export async function createProjectEditor(
     homeTabs: Tabs | undefined,
@@ -239,15 +230,10 @@ export async function createProjectEditor(
         makeExpressionProperty,
         evalProperty,
         checkProperty,
-        conditionalStyleConditionProperty,
         FlowTabStateClass: FlowTabState,
         BuildFileClass: BuildFile,
         FlowEditorClass: FlowEditor
     };
-
-    ConditionalStyle.classInfo.properties.push(
-        conditionalStyleConditionProperty
-    );
 
     return projectEditor;
 }

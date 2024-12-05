@@ -99,7 +99,6 @@ import type {
 
 import type { Style } from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
-import type { PropertyInfo } from "project-editor/core/object";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Color } from "project-editor/features/style/theme";
@@ -188,7 +187,6 @@ export interface IProjectEditor {
     makeExpressionProperty: typeof makeExpressionProperty;
     evalProperty: typeof evalProperty;
     checkProperty: typeof checkProperty;
-    conditionalStyleConditionProperty: PropertyInfo;
     FlowTabStateClass: typeof FlowTabState;
     BuildFileClass: typeof BuildFile;
     FlowEditorClass: typeof FlowEditor;

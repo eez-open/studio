@@ -23,7 +23,7 @@ import { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
-import { PageTabState } from "project-editor/features/page/PageEditor";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 
 export class FlowDocument implements IDocument {
     constructor(

@@ -3,14 +3,24 @@ import tinycolor from "tinycolor2";
 import { getColorRGB, to16bitsColor } from "eez-studio-shared/color";
 
 import { findBitmap } from "project-editor/project/project";
-import type {
-    BorderRadiusSpec,
-    Style
-} from "project-editor/features/style/style";
+import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPixelByteIndex } from "project-editor/features/font/utils";
 import type { IFontExtract } from "project-editor/features/font/font-extract";
+
+////////////////////////////////////////////////////////////////////////////////
+
+type BorderRadiusSpec = {
+    topLeftX: number;
+    topLeftY: number;
+    topRightX: number;
+    topRightY: number;
+    bottomLeftX: number;
+    bottomLeftY: number;
+    bottomRightX: number;
+    bottomRightY: number;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 

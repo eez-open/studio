@@ -3,9 +3,11 @@ import mobx from "mobx";
 import { observable, computed, action, autorun, runInAction } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
+import { objectEqual } from "eez-studio-shared/util";
+
 import { getParent, IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
+import type {
     IEditor,
     IEditorState
 } from "project-editor/project/ui/EditorComponent";
@@ -18,7 +20,6 @@ import {
     objectToString
 } from "project-editor/store/helper";
 import type { ProjectStore } from "project-editor/store";
-import { objectEqual } from "eez-studio-shared/util";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////

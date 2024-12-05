@@ -78,8 +78,7 @@ import type {
     Page
 } from "project-editor/features/page/page";
 import {
-    conditionalStylesProperty,
-    dynamicCssProperty,
+    getAdditionalStyleFlowProperties,
     Style
 } from "project-editor/features/style/style";
 import type {
@@ -3216,52 +3215,7 @@ export class Widget extends Component {
             return !widget.locked && !getTimelineEditorState(widget);
         },
 
-        getAdditionalFlowProperties: (widget: Widget) => {
-            const additionalProperties: PropertyInfo[] = [];
-
-            const classInfo = getClassInfo(widget);
-
-            for (const propertyInfo of classInfo.properties) {
-                if (
-                    propertyInfo.type == PropertyType.Object &&
-                    propertyInfo.typeClass == Style
-                ) {
-                    const style = (widget as any)[propertyInfo.name] as Style;
-
-                    if (style.conditionalStyles) {
-                        for (
-                            let index = 0;
-                            index < style.conditionalStyles.length;
-                            index++
-                        ) {
-                            additionalProperties.push(
-                                Object.assign(
-                                    {},
-                                    ProjectEditor.conditionalStyleConditionProperty,
-                                    {
-                                        name: `${propertyInfo.name}.${conditionalStylesProperty.name}[${index}].${ProjectEditor.conditionalStyleConditionProperty.name}`
-                                    }
-                                )
-                            );
-                        }
-                    }
-
-                    if (style.dynamicCSS) {
-                        additionalProperties.push(
-                            Object.assign(
-                                {},
-                                ProjectEditor.conditionalStyleConditionProperty,
-                                {
-                                    name: `${propertyInfo.name}.${dynamicCssProperty.name}`
-                                }
-                            )
-                        );
-                    }
-                }
-            }
-
-            return additionalProperties;
-        },
+        getAdditionalFlowProperties: getAdditionalStyleFlowProperties,
 
         execute: (context: IDashboardComponentContext) => {
             if (context.getOutputType("@widget")) {
