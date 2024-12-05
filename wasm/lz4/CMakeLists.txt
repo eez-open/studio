@@ -26,20 +26,20 @@ add_executable(lz4 ${src_files} ${header_files})
 
 add_custom_command(TARGET lz4 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/lz4.js"
-    "${PROJECT_SOURCE_DIR}/../..")
+    "${PROJECT_SOURCE_DIR}/build/lz4.js"
+    "${PROJECT_SOURCE_DIR}/../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET lz4 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/lz4.js"
-    "${PROJECT_SOURCE_DIR}/../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/build/lz4.js"
+    "${PROJECT_SOURCE_DIR}/../../build/project-editor/flow/runtime")
 
 add_custom_command(TARGET lz4 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/lz4.wasm"
-    "${PROJECT_SOURCE_DIR}/../..")
+    "${PROJECT_SOURCE_DIR}/build/lz4.wasm"
+    "${PROJECT_SOURCE_DIR}/../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET lz4 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/lz4.wasm"
-    "${PROJECT_SOURCE_DIR}/../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/build/lz4.wasm"
+    "${PROJECT_SOURCE_DIR}/../../build/project-editor/flow/runtime")

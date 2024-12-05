@@ -30,25 +30,16 @@ tools/freetype-tools/FreeType-Emscripten
 bundle-meta.json
 circular.txt
 
-packages/project-editor/flow/runtime/cpp/eez-runtime/build
+wasm/eez-runtime/build
 !packages/project-editor/flow/runtime/eez_runtime.js
-!packages/project-editor/flow/runtime/cpp/eez-runtime/platform/simulator/emscripten/pre.js
-!packages/project-editor/flow/runtime/cpp/eez-runtime/platform/simulator/emscripten/post.js
 
-packages/project-editor/flow/runtime/cpp/lvgl-runtime/build
-!packages/project-editor/flow/runtime/cpp/lvgl-runtime/pre.js
-!packages/project-editor/flow/runtime/cpp/lvgl-runtime/post.js
-
-packages/project-editor/flow/runtime/cpp/lvgl-runtime/v8.3/build
+wasm/lvgl-runtime/v8.3/build
 !packages/project-editor/flow/runtime/lvgl_runtime_v8.3.js
 
-packages/project-editor/flow/runtime/cpp/lvgl-runtime/v9.0/build
+wasm/lvgl-runtime/v9.0/build
 !packages/project-editor/flow/runtime/lvgl_runtime_v9.0.js
 
-!packages/project-editor/flow/runtime/cpp/lvgl-runtime/common/pre.js
-!packages/project-editor/flow/runtime/cpp/lvgl-runtime/common/post.js
-
-packages/project-editor/flow/runtime/cpp/lz4/build
+wasm/lz4/build
 !packages/project-editor/flow/runtime/lz4.js
 
 npm-module/packages

@@ -1,10 +1,10 @@
 [submodule "eez-framework"]
-	path = packages/project-editor/flow/runtime/cpp/eez-framework
+	path = wasm/eez-framework
 	url = https://github.com/eez-open/eez-framework
 [submodule "lvgl-8.3"]
-	path = packages/project-editor/flow/runtime/cpp/lvgl-runtime/v8.3/lvgl
+	path = wasm/lvgl-runtime/v8.3/lvgl
 	url = https://github.com/littlevgl/lvgl.git
 [submodule "lvgl-9.0"]
-	path = packages/project-editor/flow/runtime/cpp/lvgl-runtime/v9.0/lvgl
+	path = wasm/lvgl-runtime/v9.0/lvgl
 	url = https://github.com/lvgl/lvgl.git
 	branch = release/v9.0

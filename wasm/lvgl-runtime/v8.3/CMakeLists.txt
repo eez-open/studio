@@ -46,19 +46,19 @@ target_link_libraries(lvgl_runtime_v8.3
 add_custom_command(TARGET lvgl_runtime_v8.3 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_v8.3.js"
-    "${PROJECT_SOURCE_DIR}/../../..")
+    "${PROJECT_SOURCE_DIR}/../../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET lvgl_runtime_v8.3 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_v8.3.js"
-    "${PROJECT_SOURCE_DIR}/../../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/../../../build/project-editor/flow/runtime")
 
 add_custom_command(TARGET lvgl_runtime_v8.3 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_v8.3.wasm"
-    "${PROJECT_SOURCE_DIR}/../../..")
+    "${PROJECT_SOURCE_DIR}/../../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET lvgl_runtime_v8.3 POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     "${PROJECT_SOURCE_DIR}/build/lvgl_runtime_v8.3.wasm"
-    "${PROJECT_SOURCE_DIR}/../../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/../../../build/project-editor/flow/runtime")

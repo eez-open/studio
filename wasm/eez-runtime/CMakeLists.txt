@@ -41,20 +41,20 @@ target_link_libraries(eez_runtime
 
 add_custom_command(TARGET eez_runtime POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/eez_runtime.js"
-    "${PROJECT_SOURCE_DIR}/../..")
+    "${PROJECT_SOURCE_DIR}/build/eez_runtime.js"
+    "${PROJECT_SOURCE_DIR}/../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET eez_runtime POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/eez_runtime.js"
-    "${PROJECT_SOURCE_DIR}/../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/build/eez_runtime.js"
+    "${PROJECT_SOURCE_DIR}/../../build/project-editor/flow/runtime")
 
 add_custom_command(TARGET eez_runtime POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/eez_runtime.wasm"
-    "${PROJECT_SOURCE_DIR}/../..")
+    "${PROJECT_SOURCE_DIR}/build/eez_runtime.wasm"
+    "${PROJECT_SOURCE_DIR}/../../packages/project-editor/flow/runtime")
 
 add_custom_command(TARGET eez_runtime POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-    "${PROJECT_SOURCE_DIR}/build/emscripten/eez_runtime.wasm"
-    "${PROJECT_SOURCE_DIR}/../../../../../../build/project-editor/flow/runtime")
+    "${PROJECT_SOURCE_DIR}/build/eez_runtime.wasm"
+    "${PROJECT_SOURCE_DIR}/../../build/project-editor/flow/runtime")
