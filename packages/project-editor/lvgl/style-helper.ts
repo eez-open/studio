@@ -1,4 +1,8 @@
-import { IEezObject, PropertyType } from "project-editor/core/object";
+import {
+    IEezObject,
+    LVGLParts,
+    PropertyType
+} from "project-editor/core/object";
 
 import {
     BUILT_IN_FONTS,
@@ -7,7 +11,7 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import { LVGLParts, lvglStates } from "project-editor/lvgl/lvgl-constants";
+import { lvglStates } from "project-editor/lvgl/lvgl-constants";
 import { getLvglParts } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////

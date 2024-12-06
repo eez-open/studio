@@ -3,23 +3,18 @@ import { observable, makeObservable } from "mobx";
 
 import { humanize } from "eez-studio-shared/string";
 import { Rect } from "eez-studio-shared/geometry";
+import { isArray, objectClone } from "eez-studio-shared/util";
 
 import type { IDashboardComponentContext } from "eez-studio-types";
 
-import {
-    ProjectStore,
-    IContextMenuContext,
-    getClassInfo,
-    EezValueObject
-} from "project-editor/store";
-
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
-
 import type { ValueType } from "project-editor/features/variable/value-type";
 import type { Project } from "project-editor/project/project";
-
-import { isArray, objectClone } from "eez-studio-shared/util";
-import { LVGLParts } from "project-editor/lvgl/lvgl-constants";
+import type {
+    ProjectStore,
+    IContextMenuContext,
+    EezValueObject
+} from "project-editor/store";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -322,6 +317,8 @@ export interface SerializedData {
     objects?: EezObject[];
     objectsParentPath?: string[];
 }
+
+export type LVGLParts = string;
 
 interface LVGLClassInfoProperties {
     parts: LVGLParts[] | ((object: IEezObject) => LVGLParts[]);
@@ -642,6 +639,18 @@ export function isEezObject(object: any): object is IEezObject {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export function getClass(object: IEezObject) {
+    if (isArray(object)) {
+        return getPropertyInfo(object).typeClass!;
+    } else {
+        return object.constructor as EezClass;
+    }
+}
+
+export function getClassInfo(object: IEezObject): ClassInfo {
+    return getClass(object).classInfo;
+}
 
 export function findClass(className: string) {
     return classNameToEezClassMap.get(className);

@@ -12,7 +12,8 @@ import {
     PropertyInfo,
     getParent,
     getKey,
-    EezObject
+    EezObject,
+    LVGLParts
 } from "project-editor/core/object";
 
 import {
@@ -27,7 +28,6 @@ import { ProjectStore, getLabel } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import type { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
-import type { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 
 import { isArray } from "eez-studio-shared/util";
 import {

@@ -4,12 +4,11 @@ import { observable, extendObservable, action, toJS, runInAction } from "mobx";
 import { each } from "lodash";
 
 import * as notification from "eez-studio-ui/notification";
-import { IEezObject } from "project-editor/core/object";
+import { IEezObject, LVGLParts } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { getObjectPathAsString } from "project-editor/store/helper";
 import type { ProjectStore } from "project-editor/store";
 import { Section } from "project-editor/store/output-sections";
-import type { LVGLParts } from "project-editor/lvgl/lvgl-constants";
 import { isScrapbookItemFilePath } from "project-editor/store/scrapbook";
 
 ////////////////////////////////////////////////////////////////////////////////

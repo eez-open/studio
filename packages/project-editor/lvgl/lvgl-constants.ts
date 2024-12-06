@@ -403,8 +403,6 @@ export const LVGL_PARTS_9: { [key: string]: number } = {
     ANY: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };
 
-export type LVGLParts = string;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const LV_EVENT_CHECKED = 0x7e;

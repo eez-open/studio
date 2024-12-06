@@ -423,7 +423,8 @@ export class Variable extends EezObject {
                         variable
                     ).projectTypeTraits.isVariableTypeSupportedAsNative(
                         variable.type
-                    )
+                    ),
+                checkboxStyleSwitch: true
             },
             {
                 name: "nativeImplementationInfo",
@@ -490,13 +491,24 @@ export class Variable extends EezObject {
 
             return (
                 <>
-                    {projectStore.projectTypeTraits.hasFlowSupport &&
-                        variable.native && <span>[NATIVE] </span>}
-                    {variable.persistent && <span>[PERSISTENT] </span>}
-                    <span>{variable.name} </span>
-                    <em className="font-monospace" style={{ opacity: 0.5 }}>
+                    <span>{variable.name}</span>
+                    <em
+                        className="font-monospace"
+                        style={{ opacity: 0.5, marginLeft: 8 }}
+                    >
                         {variable.type}
                     </em>
+                    {projectStore.projectTypeTraits.hasFlowSupport &&
+                        variable.native && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                NATIVE
+                            </span>
+                        )}
+                    {variable.persistent && (
+                        <span className="EezStudio_ListLabel_Badge">
+                            PERSISTENT
+                        </span>
+                    )}
                 </>
             );
         },

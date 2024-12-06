@@ -133,7 +133,7 @@ const TreeRow = observer(
                     style={{
                         paddingLeft:
                             treeAdapter.maxLevel === 0
-                                ? 0
+                                ? 4
                                 : (triangle ? 0 : 18) + level * 18
                     }}
                     onMouseUp={this.props.onMouseUp}

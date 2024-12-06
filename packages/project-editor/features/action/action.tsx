@@ -273,14 +273,21 @@ export class Action extends Flow {
             );
         },
         label: (action: Action) => {
-            const projectStore = getProjectStore(action);
-            if (
-                projectStore.projectTypeTraits.hasFlowSupport &&
-                action.implementationType == "native"
-            ) {
-                return "[NATIVE] " + action.name;
-            }
             return action.name;
+        },
+        listLabel: (action: Action) => {
+            const projectStore = getProjectStore(action);
+            return (
+                <>
+                    <span>{action.name}</span>
+                    {projectStore.projectTypeTraits.hasFlowSupport &&
+                        action.implementationType == "native" && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                NATIVE
+                            </span>
+                        )}
+                </>
+            );
         },
         beforeLoadHook: (action: Action, jsObject: any) => {
             if (jsObject.page) {
@@ -351,6 +358,7 @@ export class Action extends Flow {
 
             return action;
         },
+
         icon: "material:code"
     });
 
