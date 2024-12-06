@@ -24,7 +24,8 @@ import {
     IMessage,
     PropertyInfo,
     getProperty,
-    PropertyProps
+    PropertyProps,
+    isPropertyDisabled
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -32,7 +33,8 @@ import {
     propertyNotSetMessage,
     createObject,
     isEezObjectArray,
-    getAncestorOfType
+    getAncestorOfType,
+    findPropertyByNameInObject
 } from "project-editor/store";
 import {
     isDashboardProject,
@@ -470,7 +472,8 @@ export class Variable extends EezObject {
                             ProjectEditor.getProjectStore(variable),
                             variable.type
                         )?.editConstructorParams) ||
-                    variable.type == "object:TCPSocket"
+                    variable.type == "object:TCPSocket",
+                checkboxStyleSwitch: true
             },
             {
                 name: "persistedValue",
@@ -487,8 +490,6 @@ export class Variable extends EezObject {
         ],
         icon: VARIABLE_ICON,
         listLabel: (variable: Variable) => {
-            const projectStore = getProjectStore(variable);
-
             return (
                 <>
                     <span>{variable.name}</span>
@@ -498,17 +499,24 @@ export class Variable extends EezObject {
                     >
                         {variable.type}
                     </em>
-                    {projectStore.projectTypeTraits.hasFlowSupport &&
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(variable, "native")!
+                    ) &&
                         variable.native && (
                             <span className="EezStudio_ListLabel_Badge">
                                 NATIVE
                             </span>
                         )}
-                    {variable.persistent && (
-                        <span className="EezStudio_ListLabel_Badge">
-                            PERSISTENT
-                        </span>
-                    )}
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(variable, "persistent")!
+                    ) &&
+                        variable.persistent && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                PERSISTENT
+                            </span>
+                        )}
                 </>
             );
         },

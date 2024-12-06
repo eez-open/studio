@@ -90,7 +90,8 @@ export class LVGLLabelWidget extends LVGLWidget {
             {
                 name: "recolor",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             }
         ],
 
