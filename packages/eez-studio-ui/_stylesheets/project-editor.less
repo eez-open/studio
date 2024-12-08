@@ -293,6 +293,9 @@
             margin: 2px;
             padding: 4px;
             cursor: grab;
+            &[draggable="false"] {
+                cursor: pointer;
+            }
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -523,7 +526,13 @@
     }
 
     .EezStudio_PropertiesPanel_Body {
+        height: 100%;
         overflow: auto;
+
+        .EezStudio_PropertyGrid_NothingSelected {
+            height: 100%;
+            background-color: @panelHeaderColor;
+        }
     }
 }
 
@@ -3823,4 +3832,24 @@
     background-color: var(--bs-secondary);
     white-space: nowrap;
     border-radius: 4px;
+}
+
+.EezStudio_ProjectEditor_SelectComponentDialog {
+    .modal-content {
+        width: 530px;
+        max-height: calc(100vh - 200px);
+        .modal-body {
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            .EezStudio_ComponentsPalette_Enclosure {
+                height: unset;
+            }
+        }
+    }
+}
+
+.EezStudio_PageStructure_NoPageSelected {
+    height: 100%;
+    background-color: @panelHeaderColor;
 }

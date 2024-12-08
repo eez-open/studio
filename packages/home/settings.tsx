@@ -114,6 +114,16 @@ ipcRenderer.on("mru-changed", async (sender: any, mru: IMruItem[]) => {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const getShowComponentsPaletteInProjectEditor = function () {
+    return ipcRenderer.sendSync("getShowComponentsPaletteInProjectEditor");
+};
+
+const setShowComponentsPaletteInProjectEditor = function (value: boolean) {
+    ipcRenderer.send("setShowComponentsPaletteInProjectEditor", value);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class SettingsController {
     activetLocale = getLocale();
     activeDateFormat = getDateFormat();
@@ -129,6 +139,9 @@ class SettingsController {
 
     pythonUseCustomPath: boolean = false;
     pythonCustomPath: string = "";
+
+    _showComponentsPaletteInProjectEditor: boolean =
+        getShowComponentsPaletteInProjectEditor();
 
     constructor() {
         this.pythonUseCustomPath =
@@ -397,6 +410,15 @@ class SettingsController {
         }
         showDialog(<CompactDatabaseDialog database={this.selectedDatabase} />);
     };
+
+    get showComponentsPaletteInProjectEditor() {
+        return this._showComponentsPaletteInProjectEditor;
+    }
+
+    set showComponentsPaletteInProjectEditor(value: boolean) {
+        this._showComponentsPaletteInProjectEditor = value;
+        setShowComponentsPaletteInProjectEditor(value);
+    }
 }
 
 export const settingsController = new SettingsController();

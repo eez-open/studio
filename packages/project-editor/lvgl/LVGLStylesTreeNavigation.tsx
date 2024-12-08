@@ -68,7 +68,7 @@ const AddButton = observer(
         render() {
             return (
                 <IconAction
-                    title="Add Item"
+                    title="Add Style..."
                     icon="material:add"
                     iconSize={16}
                     onClick={this.onAdd}

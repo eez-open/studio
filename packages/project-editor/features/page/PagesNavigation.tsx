@@ -428,7 +428,12 @@ export const PageStructure = observer(
                         />
                     </Body>
                 </VerticalHeaderWithBody>
-            ) : null;
+            ) : (
+                <div
+                    className="EezStudio_PageStructure_NoPageSelected"
+                    onContextMenu={e => e.preventDefault()}
+                ></div>
+            );
         }
     }
 );

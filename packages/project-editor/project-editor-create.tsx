@@ -128,6 +128,7 @@ import { Color } from "project-editor/features/style/theme";
 import { UserProperty } from "./flow/user-property";
 import { LVGLActionComponent } from "project-editor/lvgl/actions";
 import { FlowEditor } from "project-editor/flow/editor/editor";
+import { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 
 export async function createProjectEditor(
     homeTabs: Tabs | undefined,
@@ -232,7 +233,8 @@ export async function createProjectEditor(
         checkProperty,
         FlowTabStateClass: FlowTabState,
         BuildFileClass: BuildFile,
-        FlowEditorClass: FlowEditor
+        FlowEditorClass: FlowEditor,
+        newComponentMenuItem
     };
 
     return projectEditor;

@@ -825,6 +825,12 @@ export class NewConnectionLineFromOutputMouseHandler extends MouseHandler {
                 this.target.objectId,
                 this.target.connectionInput
             );
+        } else if (this.distance >= 20) {
+            context.document.connectToNewTarget(
+                this.sourceObject.id,
+                this.connectionOutput,
+                context.viewState.transform.offsetToPagePoint(this.endPoint)
+            );
         }
 
         context.document.onDragEnd();
@@ -1011,6 +1017,12 @@ export class NewConnectionLineFromInputMouseHandler extends MouseHandler {
                 this.source.connectionOutput,
                 this.targetObject.id,
                 this.connectionInput
+            );
+        } else if (this.distance >= 20) {
+            context.document.connectToNewSource(
+                this.targetObject.id,
+                this.connectionInput,
+                context.viewState.transform.offsetToPagePoint(this.startPoint)
             );
         }
 

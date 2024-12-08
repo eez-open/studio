@@ -12,7 +12,7 @@ import { createTransformer } from "mobx-utils";
 import { map, find, each, pickBy } from "lodash";
 
 import { stringCompare } from "eez-studio-shared/string";
-import { Rect } from "eez-studio-shared/geometry";
+import { Point, Rect } from "eez-studio-shared/geometry";
 
 import {
     getProperty,
@@ -24,7 +24,8 @@ import {
     getParent,
     getId,
     EezObject,
-    setKey
+    setKey,
+    getKey
 } from "project-editor/core/object";
 
 import {
@@ -54,7 +55,9 @@ import {
     addItem,
     isObjectReferencable,
     canContain,
-    getProjectEditorDataFromClipboard
+    getProjectEditorDataFromClipboard,
+    getAncestorOfType,
+    getAddItemName
 } from "project-editor/store";
 
 import { DragAndDropManager } from "project-editor/core/dd";
@@ -555,6 +558,7 @@ export class TreeObjectAdapter {
             add?: boolean;
             pasteSelection?: () => void;
             duplicateSelection?: () => void;
+            atPoint?: Point;
         },
         editable?: boolean,
         additionalMenuItems?: Electron.MenuItem[]
@@ -594,12 +598,13 @@ export class TreeObjectAdapter {
         if (
             editable &&
             parentObject &&
+            !(parentObject instanceof ProjectEditor.FlowClass) &&
             canAdd(parentObject) &&
             !(actions?.add === false)
         ) {
             menuItems.push(
                 new MenuItem({
-                    label: "Add",
+                    label: `Add ${getAddItemName(parentObject)}...`,
                     click: async () => {
                         const aNewObject = await addItem(parentObject!);
                         if (aNewObject) {
@@ -757,7 +762,29 @@ export class TreeObjectAdapter {
             menuItems = menuItems.concat(additionalMenuItems);
         }
 
+        console.log("selectedObject", selectedObject);
+        console.log("parentObject", parentObject);
+        if (
+            editable &&
+            getAncestorOfType(
+                selectedObject || parentObject,
+                ProjectEditor.FlowClass.classInfo
+            ) &&
+            getKey(parentObject) != "localVariables"
+        ) {
+            ProjectEditor.newComponentMenuItem(
+                selectedObject || parentObject,
+                menuItems,
+                actions?.atPoint
+            );
+        }
+
         if (menuItems.length > 0) {
+            // remove separator at the end
+            if (menuItems[menuItems.length - 1].type == "separator") {
+                menuItems.splice(menuItems.length - 1, 1);
+            }
+
             const menu = new Menu();
             menuItems.forEach(menuItem => menu.append(menuItem));
             return menu;

@@ -11,6 +11,7 @@ import {
 } from "eez-studio-ui/layout-models";
 
 import type { ProjectStore } from "project-editor/store";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +183,15 @@ export class LayoutModels extends AbstractLayoutModels {
         id: LayoutModels.LVGL_GROUPS_TAB_ID,
         component: "lvgl-groups",
         icon: "material:view_compact"
+    };
+
+    static COMPONENTS_PALETTE_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Components Palette",
+        id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+        component: "componentsPalette",
+        icon: "svg:components"
     };
 
     static iconFactory = (node: FlexLayout.TabNode) => {
@@ -452,14 +462,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                         type: "tabset",
                                         weight: 1,
                                         children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Components Palette",
-                                                id: LayoutModels.COMPONENTS_PALETTE_TAB_ID,
-                                                component: "componentsPalette",
-                                                icon: "svg:components"
-                                            }
+                                            LayoutModels.COMPONENTS_PALETTE_TAB
                                         ]
                                     }
                                 ]
@@ -1072,6 +1075,12 @@ export class LayoutModels extends AbstractLayoutModels {
                 model.doAction(FlexLayout.Actions.selectTab(tabId));
             }
         }
+    }
+
+    toggleComponentsPalette() {
+        settingsController.showComponentsPaletteInProjectEditor =
+            !settingsController.showComponentsPaletteInProjectEditor;
+        this.projectStore.project.enableTabs();
     }
 
     reset() {

@@ -774,7 +774,8 @@ export const Canvas = observer(
 
                     setTimeout(() => {
                         const menu = context.document.createContextMenu(
-                            context.viewState.selectedObjects
+                            context.viewState.selectedObjects,
+                            { atPoint: point }
                         );
                         if (menu) {
                             if (this.mouseHandler) {

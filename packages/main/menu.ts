@@ -729,6 +729,19 @@ function buildViewMenu(win: IWindow | undefined) {
         });
 
         viewSubmenu.push({
+            label: settings.showComponentsPaletteInProjectEditor
+                ? "Hide Components Palette"
+                : "Show Components Palette",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send(
+                        "toggleComponentsPalette"
+                    );
+                }
+            }
+        });
+
+        viewSubmenu.push({
             label: "Reset Layout",
             click: function (item) {
                 if (win) {

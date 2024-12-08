@@ -11,6 +11,7 @@ import {
     addItem,
     canAdd,
     createObject,
+    getAddItemName,
     getAncestorOfType,
     IPanel,
     LayoutModels
@@ -648,18 +649,17 @@ const AddButton = observer(
 
         render() {
             return (
-                <IconAction
-                    title="Add Item"
-                    icon="material:add"
-                    iconSize={16}
-                    onClick={this.onAdd}
-                    enabled={
-                        this.props.objectAdapter.selectedObject &&
-                        canAdd(this.props.objectAdapter.selectedObject)
-                            ? true
-                            : false
-                    }
-                />
+                this.props.objectAdapter.selectedObject &&
+                canAdd(this.props.objectAdapter.selectedObject) && (
+                    <IconAction
+                        title={`Add ${getAddItemName(
+                            this.props.objectAdapter.selectedObject
+                        )}...`}
+                        icon="material:add"
+                        iconSize={16}
+                        onClick={this.onAdd}
+                    />
+                )
             );
         }
     }

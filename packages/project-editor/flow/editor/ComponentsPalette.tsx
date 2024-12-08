@@ -5,21 +5,32 @@ import {
     computed,
     makeObservable,
     IReactionDisposer,
-    reaction
+    reaction,
+    runInAction
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { MenuItem } from "@electron/remote";
 
-import { objectClone } from "eez-studio-shared/util";
+import { isArray, objectClone } from "eez-studio-shared/util";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
-import { getDefaultValue, IObjectClassInfo } from "project-editor/core/object";
+import {
+    getDefaultValue,
+    IEezObject,
+    IObjectClassInfo
+} from "project-editor/core/object";
 import { DragAndDropManager } from "project-editor/core/dd";
 import {
     createObject,
+    findPastePlaceInside,
+    getAncestorOfType,
     getClass,
+    getClassInfo,
     NavigationStore,
     objectToClipboardData,
+    ProjectStore,
     setClipboardData
 } from "project-editor/store";
 import type { Component } from "project-editor/flow/component";
@@ -35,6 +46,169 @@ import {
     getComponentVisualData,
     getComponentGroupDisplayName
 } from "project-editor/flow/components/components-registry";
+import { Point } from "eez-studio-shared/geometry";
+
+////////////////////////////////////////////////////////////////////////////////
+
+export async function selectComponentDialog(
+    projectStore: ProjectStore,
+    type: "actions" | "widgets"
+) {
+    return new Promise<Component | null>(resolve => {
+        const onOk = (value: Component) => {
+            resolve(value);
+        };
+
+        const onCancel = () => {
+            resolve(null);
+        };
+
+        showDialog(
+            <SelectComponentDialog
+                projectStore={projectStore}
+                type={type}
+                onOk={onOk}
+                onCancel={onCancel}
+            />
+        );
+    });
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const SelectComponentDialog = observer(
+    class SelectComponentDialog extends React.Component<{
+        projectStore: ProjectStore;
+        type: "actions" | "widgets";
+        onOk: (value: Component) => void;
+        onCancel: () => void;
+    }> {
+        open: boolean = true;
+
+        constructor(props: any) {
+            super(props);
+
+            makeObservable(this, {
+                open: observable
+            });
+        }
+
+        render() {
+            return (
+                <ProjectContext.Provider value={this.props.projectStore}>
+                    <Dialog
+                        className="EezStudio_ProjectEditor_SelectComponentDialog"
+                        open={this.open}
+                        modal={true}
+                        title={`Add ${
+                            this.props.type == "actions" ? "Action" : "Widget"
+                        }`}
+                        onCancel={this.props.onCancel}
+                    >
+                        <ComponentsPalette1
+                            type={this.props.type}
+                            onSelectComponent={component => {
+                                runInAction(() => {
+                                    this.open = false;
+                                });
+                                this.props.onOk(component);
+                            }}
+                        />
+                    </Dialog>
+                </ProjectContext.Provider>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export function newComponentMenuItem(
+    object: IEezObject,
+    menuItems: Electron.MenuItem[],
+    atPoint?: Point
+) {
+    const flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
+    if (flow) {
+        const isPage = flow instanceof ProjectEditor.PageClass;
+        const isAction = flow instanceof ProjectEditor.ActionClass;
+
+        if (isPage || isAction) {
+            let type: "actions" | "widgets" = "actions";
+
+            if (
+                (isPage &&
+                    (!atPoint ||
+                        (atPoint.x >= 0 &&
+                            atPoint.x < flow.width &&
+                            atPoint.y >= 0 &&
+                            atPoint.y < flow.height))) ||
+                object instanceof ProjectEditor.WidgetClass
+            ) {
+                type = "widgets";
+            }
+
+            menuItems.unshift(new MenuItem({ type: "separator" }));
+
+            menuItems.unshift(
+                new MenuItem({
+                    label: `Add ${type == "actions" ? "Action" : "Widget"}...`,
+                    click: async () => {
+                        const projectStore =
+                            ProjectEditor.getProjectStore(object);
+
+                        const component = await selectComponentDialog(
+                            projectStore,
+                            type
+                        );
+
+                        if (component) {
+                            if (atPoint) {
+                                component.left = Math.round(atPoint.x);
+                                component.top = Math.round(atPoint.y);
+                            }
+
+                            let parent;
+
+                            let selectedWidget = object;
+                            if (
+                                selectedWidget instanceof
+                                ProjectEditor.WidgetClass
+                            ) {
+                                const pastePlace = findPastePlaceInside(
+                                    selectedWidget,
+                                    getClassInfo(component),
+                                    true
+                                );
+                                if (isArray(pastePlace)) {
+                                    parent = pastePlace;
+                                    if (atPoint) {
+                                        component.left -= selectedWidget.left;
+                                        component.top -= selectedWidget.top;
+                                    }
+                                }
+                            }
+
+                            let newObject = projectStore.addObject(
+                                parent || flow.components,
+                                component
+                            );
+
+                            projectStore.navigationStore.showObjects(
+                                [newObject],
+                                true,
+                                true,
+                                true
+                            );
+                        }
+                    }
+                })
+            );
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 export const ComponentsPalette = observer(
     class ComponentsPalette extends React.Component {
@@ -85,6 +259,7 @@ export const ComponentsPalette = observer(
 export const ComponentsPalette1 = observer(
     class ComponentsPalette1 extends React.Component<{
         type: "widgets" | "actions";
+        onSelectComponent?: (value: Component) => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -110,24 +285,28 @@ export const ComponentsPalette1 = observer(
                 readFromLocalStorage: action
             });
 
-            this.dispose = reaction(
-                () => ({
-                    searchText: this.searchText
-                }),
-                arg => {
-                    localStorage.setItem(
-                        "ComponentsPaletteSearchText_" + this.props.type,
-                        arg.searchText
-                    );
-                }
-            );
+            if (!this.props.onSelectComponent) {
+                this.dispose = reaction(
+                    () => ({
+                        searchText: this.searchText
+                    }),
+                    arg => {
+                        localStorage.setItem(
+                            "ComponentsPaletteSearchText_" + this.props.type,
+                            arg.searchText
+                        );
+                    }
+                );
+            }
         }
 
         readFromLocalStorage() {
-            this.searchText =
-                localStorage.getItem(
-                    "ComponentsPaletteSearchText_" + this.props.type
-                ) || "";
+            if (!this.props.onSelectComponent) {
+                this.searchText =
+                    localStorage.getItem(
+                        "ComponentsPaletteSearchText_" + this.props.type
+                    ) || "";
+            }
         }
 
         componentDidUpdate() {
@@ -135,7 +314,9 @@ export const ComponentsPalette1 = observer(
         }
 
         componentWillUnmount() {
-            this.dispose();
+            if (this.dispose) {
+                this.dispose();
+            }
         }
 
         onSelect(widgetClass: IObjectClassInfo | undefined) {
@@ -191,6 +372,7 @@ export const ComponentsPalette1 = observer(
                                     this.selectedComponentClass
                                 }
                                 onSelect={this.onSelect}
+                                onSelectComponent={this.props.onSelectComponent}
                             ></PaletteGroup>
                         ))}
                     </div>
@@ -207,6 +389,7 @@ class PaletteGroup extends React.Component<{
     componentClasses: IObjectClassInfo[];
     selectedComponentClass: IObjectClassInfo | undefined;
     onSelect: (componentClass: IObjectClassInfo | undefined) => void;
+    onSelectComponent?: (value: Component) => void;
 }> {
     render() {
         let name = getComponentGroupDisplayName(this.props.name);
@@ -230,6 +413,9 @@ class PaletteGroup extends React.Component<{
                                         componentClass ===
                                         this.props.selectedComponentClass
                                     }
+                                    onSelectComponent={
+                                        this.props.onSelectComponent
+                                    }
                                 />
                             );
                         })}
@@ -247,15 +433,12 @@ const PaletteItem = observer(
         componentClass: IObjectClassInfo;
         selected: boolean;
         onSelect: (componentClass: IObjectClassInfo | undefined) => void;
+        onSelectComponent?: (value: Component) => void;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        constructor(props: {
-            componentClass: IObjectClassInfo;
-            selected: boolean;
-            onSelect: (componentClass: IObjectClassInfo | undefined) => void;
-        }) {
+        constructor(props: any) {
             super(props);
 
             makeObservable(this, {
@@ -264,9 +447,7 @@ const PaletteItem = observer(
             });
         }
 
-        onDragStart(event: React.DragEvent<HTMLDivElement>) {
-            event.stopPropagation();
-
+        get component() {
             let protoObject = new this.props.componentClass.objectClass();
 
             const componentClass = getClass(protoObject);
@@ -314,6 +495,14 @@ const PaletteItem = observer(
             if (object.height == undefined) {
                 object.height = 0;
             }
+
+            return object;
+        }
+
+        onDragStart(event: React.DragEvent<HTMLDivElement>) {
+            event.stopPropagation();
+
+            const object = this.component;
 
             setClipboardData(
                 event,
@@ -373,6 +562,7 @@ const PaletteItem = observer(
 
             let className = classNames("eez-component-palette-item", {
                 selected: this.props.selected,
+                "no-drag": this.props.onSelectComponent != undefined,
                 dragging
             });
 
@@ -384,12 +574,24 @@ const PaletteItem = observer(
             return (
                 <div
                     className={className}
-                    onClick={() =>
-                        this.props.onSelect(this.props.componentClass)
+                    onClick={() => {
+                        if (this.props.onSelectComponent) {
+                            this.props.onSelectComponent(this.component);
+                        } else {
+                            this.props.onSelect(this.props.componentClass);
+                        }
+                    }}
+                    draggable={!this.props.onSelectComponent}
+                    onDragStart={
+                        this.props.onSelectComponent
+                            ? undefined
+                            : this.onDragStart
                     }
-                    draggable={true}
-                    onDragStart={this.onDragStart}
-                    onDragEnd={this.onDragEnd}
+                    onDragEnd={
+                        this.props.onSelectComponent
+                            ? undefined
+                            : this.onDragEnd
+                    }
                     style={titleStyle}
                 >
                     {typeof icon === "string" ? <img src={icon} /> : icon}

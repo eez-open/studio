@@ -622,6 +622,9 @@ export class ProjectEditorTab implements IHomeTab {
                 projectStore.navigationStore.selectedPanel.selectAll();
             }
         };
+        const onToggleComponentsPalette = () => {
+            projectStore.layoutModels.toggleComponentsPalette();
+        };
         const onResetLayoutModels = () => {
             if (!this.runMode) {
                 projectStore.layoutModels.reset();
@@ -674,6 +677,7 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("delete", deleteSelection);
         ipcRenderer.on("select-all", selectAll);
 
+        ipcRenderer.on("toggleComponentsPalette", onToggleComponentsPalette);
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
 
         ipcRenderer.on("reload-project", onReloadProject);
@@ -698,6 +702,10 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener("delete", deleteSelection);
             ipcRenderer.removeListener("select-all", selectAll);
 
+            ipcRenderer.removeListener(
+                "toggleComponentsPalette",
+                onToggleComponentsPalette
+            );
             ipcRenderer.removeListener(
                 "resetLayoutModels",
                 onResetLayoutModels

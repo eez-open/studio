@@ -332,7 +332,7 @@ export class EditorsStore {
             }
         }
 
-        if (!activeEditor) {
+        if (!activeEditor && this.tabs.length) {
             activeEditor = this.activeEditor;
         }
 

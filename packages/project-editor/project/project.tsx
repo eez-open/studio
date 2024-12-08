@@ -79,6 +79,7 @@ export { ProjectType } from "project-editor/core/object";
 import { isArray } from "eez-studio-shared/util";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 import type { LVGLGroups } from "project-editor/lvgl/groups";
+import { settingsController } from "home/settings";
 
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
@@ -2031,6 +2032,33 @@ export class Project extends EezObject {
             LayoutModels.COMPONENTS_PALETTE_TAB_ID,
             flowSupport
         );
+
+        enableTab(
+            this._store.layoutModels.rootEditor,
+            LayoutModels.COMPONENTS_PALETTE_TAB_ID,
+            LayoutModels.COMPONENTS_PALETTE_TAB,
+            LayoutModels.PROPERTIES_TAB_ID,
+            settingsController.showComponentsPaletteInProjectEditor
+        );
+
+        // make sure Properties tab width is not 0
+        const propertiesNode = this._store.layoutModels.rootEditor.getNodeById(
+            LayoutModels.PROPERTIES_TAB_ID
+        );
+        if (propertiesNode) {
+            const rect = propertiesNode.getRect();
+            if (rect.width == 0) {
+                const parent = propertiesNode.getParent();
+                if (parent) {
+                    this._store.layoutModels.rootEditor.doAction(
+                        FlexLayout.Actions.updateNodeAttributes(
+                            parent.getId(),
+                            { width: 420 }
+                        )
+                    );
+                }
+            }
+        }
     }
 
     get missingExtensions() {

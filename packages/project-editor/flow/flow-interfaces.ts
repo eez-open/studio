@@ -164,6 +164,16 @@ export interface IDocument {
         targetObjectId: string,
         connectionInput: string
     ): void;
+    connectToNewTarget(
+        sourceObjectId: string,
+        connectionOutput: string,
+        atPoint: Point
+    ): void;
+    connectToNewSource(
+        targetObjectId: string,
+        connectionInput: string,
+        atPoint: Point
+    ): void;
 }
 
 export interface ObjectIdUnderPointer {

@@ -59,6 +59,8 @@ class Settings {
 
     _loaded: boolean = false;
 
+    showComponentsPaletteInProjectEditor: boolean = true;
+
     async loadSettings() {
         if (this._loaded) {
             return;
@@ -89,7 +91,8 @@ class Settings {
             locale: observable,
             dateFormat: observable,
             timeFormat: observable,
-            isDarkTheme: observable
+            isDarkTheme: observable,
+            showComponentsPaletteInProjectEditor: observable
         });
 
         reaction(
@@ -181,6 +184,11 @@ class Settings {
 
         if (settingsJs.isDarkTheme != undefined) {
             this.isDarkTheme = settingsJs.isDarkTheme;
+        }
+
+        if (settingsJs.showComponentsPaletteInProjectEditor != undefined) {
+            this.showComponentsPaletteInProjectEditor =
+                settingsJs.showComponentsPaletteInProjectEditor;
         }
     }
 }
@@ -465,5 +473,28 @@ ipcMain.on("getIsDarkTheme", function (event: any) {
 ipcMain.on("setIsDarkTheme", function (event: any, value: boolean) {
     setIsDarkTheme(value);
 });
+
+////////////////////////////////////////////////////////////////////////////////
+
+function getShowComponentsPaletteInProjectEditor() {
+    return settings.showComponentsPaletteInProjectEditor;
+}
+
+function setShowComponentsPaletteInProjectEditor(value: boolean) {
+    runInAction(() => {
+        settings.showComponentsPaletteInProjectEditor = value;
+    });
+}
+
+ipcMain.on("getShowComponentsPaletteInProjectEditor", function (event: any) {
+    event.returnValue = getShowComponentsPaletteInProjectEditor();
+});
+
+ipcMain.on(
+    "setShowComponentsPaletteInProjectEditor",
+    function (event: any, value: boolean) {
+        setShowComponentsPaletteInProjectEditor(value);
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////

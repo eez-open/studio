@@ -317,7 +317,6 @@ export const BootstrapDialog = observer(
         additionalFooterControl?: React.ReactNode;
         backdrop?: "static" | boolean;
         className?: string;
-        modalContentStyle?: React.CSSProperties;
     }> {
         div: HTMLDivElement | null = null;
         form: HTMLFormElement | null = null;

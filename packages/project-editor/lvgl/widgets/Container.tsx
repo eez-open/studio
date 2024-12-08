@@ -62,8 +62,8 @@ export class LVGLContainerWidget extends LVGLWidget {
         defaultValue: {
             left: 0,
             top: 0,
-            width: 100,
-            height: 50,
+            width: 300,
+            height: 200,
             clickableFlag: true
         },
 

@@ -867,7 +867,6 @@ const propertiesMap: { [propertyName: string]: PropertyInfo } = {};
 for (const property of properties) {
     propertiesMap[property.name] = property;
 }
-console.log(propertiesMap);
 
 ////////////////////////////////////////////////////////////////////////////////
 

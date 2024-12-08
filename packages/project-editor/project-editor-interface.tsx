@@ -105,6 +105,7 @@ import type { Color } from "project-editor/features/style/theme";
 import type { UserProperty } from "project-editor/flow/user-property";
 import type { LVGLActionComponent } from "project-editor/lvgl/actions";
 import type { FlowEditor } from "project-editor/flow/editor/editor";
+import type { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -190,6 +191,7 @@ export interface IProjectEditor {
     FlowTabStateClass: typeof FlowTabState;
     BuildFileClass: typeof BuildFile;
     FlowEditorClass: typeof FlowEditor;
+    newComponentMenuItem: typeof newComponentMenuItem;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

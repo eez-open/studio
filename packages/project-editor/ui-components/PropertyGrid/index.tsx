@@ -284,7 +284,12 @@ export const PropertyGrid = observer(
             let objects = this.objects;
 
             if (objects.length === 0) {
-                return null;
+                return (
+                    <div
+                        className="EezStudio_PropertyGrid_NothingSelected"
+                        onContextMenu={e => e.preventDefault()}
+                    ></div>
+                );
             }
 
             //

@@ -773,6 +773,17 @@ class FlowDocument implements IDocument {
         targetObjectId: string,
         connectionInput: string
     ) {}
+
+    connectToNewTarget(
+        sourceObjectId: string,
+        connectionOutput: string,
+        atPoint: Point
+    ) {}
+    connectToNewSource(
+        targetObjectId: string,
+        connectionInput: string,
+        atPoint: Point
+    ) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

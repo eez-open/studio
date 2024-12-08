@@ -22,6 +22,7 @@ import {
 import {
     addItem,
     canAdd,
+    getAddItemName,
     IPanel,
     isPartOfNavigation
 } from "project-editor/store";
@@ -103,7 +104,11 @@ const AddButton = observer(
         render() {
             return (
                 <IconAction
-                    title="Add Item"
+                    title={`Add ${
+                        this.props.navigationObject
+                            ? getAddItemName(this.props.navigationObject)
+                            : "Item"
+                    }...`}
                     icon="material:add"
                     iconSize={16}
                     onClick={this.onAdd}

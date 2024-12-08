@@ -667,13 +667,6 @@ export function extendContextMenu(
     }
 }
 
-export function canAdd(object: IEezObject) {
-    return (
-        (isArrayElement(object) || isArray(object)) &&
-        getClassInfo(object).newItem != undefined
-    );
-}
-
 export function canDuplicate(object: IEezObject) {
     return isArrayElement(object);
 }
@@ -731,6 +724,34 @@ export function canPaste(projectStore: ProjectStore, object: IEezObject) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+export function canAdd(object: IEezObject) {
+    return (
+        (isArrayElement(object) || isArray(object)) &&
+        getClassInfo(object).newItem != undefined
+    );
+}
+
+export function getAddItemName(object: IEezObject) {
+    const parent = isArray(object) ? object : getParent(object);
+    if (!parent) {
+        return null;
+    }
+
+    const project = getProject(parent);
+    if (parent == project.userWidgets) {
+        return "User Widget";
+    }
+    if (getParent(parent) == project.lvglStyles) {
+        return "Style";
+    }
+
+    if (getParent(parent) == project.lvglGroups) {
+        return "Group";
+    }
+
+    return humanize(getClass(parent).name);
+}
 
 export async function addItem(object: IEezObject) {
     const parent = isArray(object) ? object : getParent(object);
