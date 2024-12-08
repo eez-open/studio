@@ -742,6 +742,9 @@ export function getAddItemName(object: IEezObject) {
     if (parent == project.userWidgets) {
         return "User Widget";
     }
+    if (parent == project.actions) {
+        return "User Action";
+    }
     if (getParent(parent) == project.lvglStyles) {
         return "Style";
     }

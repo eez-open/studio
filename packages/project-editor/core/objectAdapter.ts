@@ -762,15 +762,16 @@ export class TreeObjectAdapter {
             menuItems = menuItems.concat(additionalMenuItems);
         }
 
-        console.log("selectedObject", selectedObject);
-        console.log("parentObject", parentObject);
         if (
             editable &&
             getAncestorOfType(
                 selectedObject || parentObject,
                 ProjectEditor.FlowClass.classInfo
             ) &&
-            getKey(parentObject) != "localVariables"
+            getKey(parentObject) != "localVariables" &&
+            getKey(parentObject) != "actions" &&
+            getKey(parentObject) != "userPages" &&
+            getKey(parentObject) != "userWidgets"
         ) {
             ProjectEditor.newComponentMenuItem(
                 selectedObject || parentObject,
