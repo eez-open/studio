@@ -663,6 +663,7 @@ export class ProjectEditorTab implements IHomeTab {
                         } else if (event.key == "v") {
                             paste();
                         } else if (event.key == "a") {
+                            event.preventDefault();
                             selectAll();
                         }
                     } else if (
