@@ -647,13 +647,32 @@ export class ProjectEditorTab implements IHomeTab {
                     !(event.target instanceof HTMLInputElement) &&
                     !(event.target instanceof HTMLTextAreaElement)
                 ) {
-                    if (event.ctrlKey) {
-                        if (event.key == "x") {
+                    if (
+                        (event.ctrlKey || event.metaKey) &&
+                        !event.shiftKey &&
+                        !event.altKey
+                    ) {
+                        if (event.key == "z") {
+                            undo();
+                        } else if (event.key == "y") {
+                            redo();
+                        } else if (event.key == "x") {
                             cut();
                         } else if (event.key == "c") {
                             copy();
                         } else if (event.key == "v") {
                             paste();
+                        } else if (event.key == "a") {
+                            selectAll();
+                        }
+                    } else if (
+                        !event.ctrlKey &&
+                        !event.metaKey &&
+                        !event.shiftKey &&
+                        !event.altKey
+                    ) {
+                        if (event.key == "Backspace" || event.key == "Delete") {
+                            deleteSelection();
                         }
                     }
                 }

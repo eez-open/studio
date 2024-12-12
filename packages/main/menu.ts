@@ -471,7 +471,7 @@ function buildEditMenu(win: IWindow | undefined) {
                 id: "undo",
                 label: "Undo",
                 accelerator: "CmdOrCtrl+Z",
-                role: isMacOs() ? "undo" : undefined,
+                role: "undo",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
                         const win = findWindowByBrowserWindow(focusedWindow);
@@ -488,7 +488,7 @@ function buildEditMenu(win: IWindow | undefined) {
                 id: "redo",
                 label: "Redo",
                 accelerator: "CmdOrCtrl+Y",
-                role: isMacOs() ? "redo" : undefined,
+                role: "redo",
                 click: function (item, focusedWindow) {
                     if (focusedWindow) {
                         const win = findWindowByBrowserWindow(focusedWindow);
@@ -507,7 +507,7 @@ function buildEditMenu(win: IWindow | undefined) {
             {
                 label: "Cut",
                 accelerator: "CmdOrCtrl+X",
-                role: isMacOs() ? "cut" : undefined,
+                role: "cut",
                 click: function (item) {
                     if (win) {
                         win.browserWindow.webContents.send("cut");
@@ -517,7 +517,7 @@ function buildEditMenu(win: IWindow | undefined) {
             {
                 label: "Copy",
                 accelerator: "CmdOrCtrl+C",
-                role: isMacOs() ? "copy" : undefined,
+                role: "copy",
                 click: function (item) {
                     if (win) {
                         win.browserWindow.webContents.send("copy");
@@ -527,7 +527,7 @@ function buildEditMenu(win: IWindow | undefined) {
             {
                 label: "Paste",
                 accelerator: "CmdOrCtrl+V",
-                role: isMacOs() ? "paste" : undefined,
+                role: "paste",
                 click: function (item) {
                     if (win) {
                         win.browserWindow.webContents.send("paste");
@@ -537,7 +537,7 @@ function buildEditMenu(win: IWindow | undefined) {
             {
                 label: "Delete",
                 accelerator: "Delete",
-                role: isMacOs() ? "delete" : undefined,
+                role: "delete",
                 click: function (item) {
                     if (win) {
                         win.browserWindow.webContents.send("delete");
@@ -549,8 +549,8 @@ function buildEditMenu(win: IWindow | undefined) {
             },
             {
                 label: "Select All",
-                accelerator: isMacOs() ? "CmdOrCtrl+A" : undefined,
-                role: isMacOs() ? "selectAll" : undefined,
+                accelerator: "CmdOrCtrl+A",
+                role: "selectAll",
                 click: function (item) {
                     if (win) {
                         win.browserWindow.webContents.send("select-all");
