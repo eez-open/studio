@@ -122,7 +122,7 @@ function getUint8Array(data: string | Buffer) {
 }
 
 function detectCSV(data: string | Buffer) {
-    if (data instanceof Buffer) {
+    if (Buffer.isBuffer(data)) {
         data = data.toString("binary");
     }
 
@@ -242,7 +242,7 @@ export async function extractColumnFromCSVHeuristically(
     // 0.00024000,143.19070000
 
     let lines;
-    if (data instanceof Buffer) {
+    if (Buffer.isBuffer(data)) {
         lines = data.toString("utf8").split("\n");
     } else {
         lines = data.split("\n");

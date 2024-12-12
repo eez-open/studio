@@ -255,7 +255,7 @@ export class DataBuffer {
 }
 
 export class DummyDataBuffer {
-    buffer = Buffer.alloc(0);
+    buffer = Buffer.from(new Uint8Array());
 
     currentOffset = 0;
 
