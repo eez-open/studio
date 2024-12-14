@@ -2964,7 +2964,7 @@
 
         .EezStudio_ArrayElementProperty_Item {
             border: 1px solid @borderColor;
-            border-radius: 4px;
+            border-radius: var(--bs-border-radius);
 
             margin-bottom: 10px;
             &:last-item {
@@ -2974,7 +2974,8 @@
             .EezStudio_ArrayElementProperty_Header {
                 background-color: @panelHeaderColor;
 
-                border-radius: 4px 4px 0 0;
+                border-radius: var(--bs-border-radius) var(--bs-border-radius) 0
+                    0;
 
                 border-bottom: 1px solid @borderColor;
                 padding: 2px;
@@ -3000,7 +3001,8 @@
                 padding: 10px;
                 background-color: @backgroundColor;
 
-                border-radius: 0 0 4px 4px;
+                border-radius: 0 0 var(--bs-border-radius)
+                    var(--bs-border-radius);
 
                 .EezStudio_ArrayElementProperty_Body_Property {
                     display: flex;
@@ -3039,7 +3041,7 @@
 .EezStudio_ArrayPropertyToolbar {
     background-color: @panelHeaderColor;
     padding: 4px 8px;
-    border-radius: 4px 4px 0 0;
+    border-radius: var(--bs-border-radius) var(--bs-border-radius) 0 0;
 }
 
 .EezStudio_EmbeddedPropertyGrid {
@@ -3116,11 +3118,6 @@
     }
 
     & > .EezStudio_PropertyGrid_Group {
-        margin-bottom: 10px;
-        &:last-child {
-            margin-bottom: 0;
-        }
-
         & > .EezStudio_PropertyGrid_Group_Header {
             width: 100%;
 
@@ -3128,18 +3125,33 @@
             align-items: end;
 
             background-color: var(--bs-secondary-bg);
+            &:hover {
+                filter: brightness(90%);
+            }
+            &:active {
+                filter: brightness(80%);
+            }
 
-            padding: 5px 0;
+            border-top: 1px solid @borderColor;
+            border-bottom: 1px solid @borderColor;
 
-            font-size: 95%;
+            padding: 3px 0;
+
+            font-size: 90%;
             text-transform: uppercase;
             font-weight: bold;
 
             cursor: pointer;
         }
 
+        &:first-child {
+            & > .EezStudio_PropertyGrid_Group_Header {
+                border-top: none;
+            }
+        }
+
         & > .EezStudio_PropertyGrid_Group_Body {
-            padding: 10px 10px 0 10px;
+            padding: 10px;
         }
 
         &.collapsed {
