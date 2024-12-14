@@ -3,6 +3,7 @@ import { observable, action, makeObservable } from "mobx";
 import { IEezObject, PropertyInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
+
 class PropertyCollapsedStore {
     map: {
         [key: string]: boolean;

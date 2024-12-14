@@ -775,7 +775,6 @@ const blinkProperty: PropertyInfo = {
 const cssProperty: PropertyInfo = {
     name: "css",
     displayName: "Additional CSS",
-    propertyNameAbove: true,
     type: PropertyType.CSS,
     cssAttributeName: "css",
     nonInheritable: true,
@@ -787,7 +786,6 @@ export const dynamicCssProperty = makeExpressionProperty(
     {
         name: "dynamicCSS",
         displayName: "Dynamic CSS",
-        propertyNameAbove: true,
         type: PropertyType.MultilineText,
         disabled: (object: IEezObject, propertyInfo: PropertyInfo) => {
             if (isNotDashboardProject(object)) {
@@ -810,7 +808,6 @@ export const dynamicCssProperty = makeExpressionProperty(
 const cssPreviewProperty: PropertyInfo = {
     name: "cssPreview",
     displayName: "CSS preview",
-    propertyNameAbove: true,
     type: PropertyType.CSS,
     disabled: isNotDashboardProject,
     readOnlyInPropertyGrid: true,

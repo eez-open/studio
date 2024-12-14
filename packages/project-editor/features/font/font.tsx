@@ -946,14 +946,7 @@ const EmptySpacePropertyGridUI = observer(
                 return null;
             }
 
-            return (
-                <tr>
-                    <td />
-                    <td>
-                        <div style={{ marginTop: 10 }}></div>
-                    </td>
-                </tr>
-            );
+            return <div style={{ marginTop: 10 }}></div>;
         }
     }
 );
@@ -966,22 +959,20 @@ const EditGlyphsPropertyGridUI = observer(
             }
 
             return (
-                <tr>
-                    <td />
-                    <td>
-                        <div style={{ marginBottom: 10 }}>
-                            <Button
-                                color="primary"
-                                size="small"
-                                onClick={() =>
-                                    onEditGlyphs(this.props.objects[0] as Font)
-                                }
-                            >
-                                Add or Remove Characters
-                            </Button>
-                        </div>
-                    </td>
-                </tr>
+                <div style={{ marginBottom: 10, display: "flex" }}>
+                    <div style={{ width: "33%" }}></div>
+                    <div style={{ width: "100%" }}>
+                        <Button
+                            color="primary"
+                            size="small"
+                            onClick={() =>
+                                onEditGlyphs(this.props.objects[0] as Font)
+                            }
+                        >
+                            Add or Remove Characters
+                        </Button>
+                    </div>
+                </div>
             );
         }
     }
@@ -1016,10 +1007,17 @@ const ExportFontFilePropertyGridUI = observer(
                 return null;
             }
             return (
-                <div style={{ marginTop: 10 }}>
-                    <Button color="primary" size="small" onClick={this.export}>
-                        Export Font File
-                    </Button>
+                <div style={{ marginBottom: 10, display: "flex" }}>
+                    <div style={{ width: "33%" }}></div>
+                    <div style={{ width: "100%" }}>
+                        <Button
+                            color="primary"
+                            size="small"
+                            onClick={this.export}
+                        >
+                            Export Font File
+                        </Button>
+                    </div>
                 </div>
             );
         }
@@ -1113,20 +1111,18 @@ const ChangeBitsPerPixel = observer(
                 return null;
             }
             return (
-                <tr>
-                    <td />
-                    <td>
-                        <div style={{ marginBottom: 10 }}>
-                            <Button
-                                color="primary"
-                                size="small"
-                                onClick={this.onModify}
-                            >
-                                Change bits per pixel
-                            </Button>
-                        </div>
-                    </td>
-                </tr>
+                <div style={{ marginBottom: 10, display: "flex" }}>
+                    <div style={{ width: "33%" }}></div>
+                    <div style={{ width: "100%" }}>
+                        <Button
+                            color="primary"
+                            size="small"
+                            onClick={this.onModify}
+                        >
+                            Change bits per pixel
+                        </Button>
+                    </div>
+                </div>
             );
         }
     }

@@ -411,15 +411,6 @@ class ArrayPropertyItemDraggable {
         }
 
         //
-        if (this.cloneElement instanceof HTMLTableRowElement) {
-            this.cloneElement
-                .querySelectorAll("td")
-                ?.forEach(
-                    (tdElement: HTMLTableCellElement) =>
-                        (tdElement.style.width = 1 / 3 + "%")
-                );
-        }
-
         const r1 = this.itemRects[0];
         const r2 = this.itemRects[this.currentItemIndex];
 
@@ -434,6 +425,8 @@ class ArrayPropertyItemDraggable {
         this.cloneElement.style.margin = "0";
 
         this.cloneElement.style.transform = `translate(0px, 0px) scale(${ArrayPropertyItemDraggable.PICKED_UP_SCALE})`;
+
+        this.cloneElement.style.backgroundColor = "var(--bs-body-bg)";
 
         this.itemElement.style.opacity = "0.5";
         this.itemElement.parentElement!.appendChild(this.cloneElement);
@@ -1188,29 +1181,16 @@ const ArrayElementProperties = observer(
                     </div>
                     {!collapsed && (
                         <div className="EezStudio_ArrayElementProperty_Body">
-                            <table>
-                                <tbody>
-                                    {getClassInfo(
-                                        this.props.object
-                                    ).properties.map(propertyInfo => (
-                                        <tr
-                                            key={propertyInfo.name}
-                                            className={classNames({
-                                                inError: isPropertyInError(
-                                                    this.props.object,
-                                                    propertyInfo
-                                                )
-                                            })}
-                                        >
-                                            <ArrayElementProperty
-                                                propertyInfo={propertyInfo}
-                                                object={this.props.object}
-                                                readOnly={this.props.readOnly}
-                                            />
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            {getClassInfo(this.props.object).properties.map(
+                                propertyInfo => (
+                                    <ArrayElementProperty
+                                        key={propertyInfo.name}
+                                        propertyInfo={propertyInfo}
+                                        object={this.props.object}
+                                        readOnly={this.props.readOnly}
+                                    />
+                                )
+                            )}
                         </div>
                     )}
                 </div>
@@ -1241,10 +1221,13 @@ const ArrayElementProperty = observer(
         render() {
             const { object, propertyInfo, readOnly } = this.props;
 
-            const className = classNames(propertyInfo.name, {
-                inError: isPropertyInError(object, propertyInfo),
-                highlighted: isHighlightedProperty(object, propertyInfo)
-            });
+            const className = classNames(
+                "EezStudio_ArrayElementProperty_Body_Property",
+                {
+                    inError: isPropertyInError(object, propertyInfo),
+                    highlighted: isHighlightedProperty(object, propertyInfo)
+                }
+            );
 
             if (isArrayElementPropertyVisible(propertyInfo, object)) {
                 if (
@@ -1252,7 +1235,7 @@ const ArrayElementProperty = observer(
                     !propertyInfo.onSelect
                 ) {
                     return (
-                        <td className={className} colSpan={2}>
+                        <div className={className}>
                             <Property
                                 propertyInfo={propertyInfo}
                                 objects={[object]}
@@ -1262,18 +1245,22 @@ const ArrayElementProperty = observer(
                                 }
                                 updateObject={this.updateObject}
                             />
-                        </td>
+                        </div>
                     );
                 } else {
+                    const propertyName = getObjectPropertyDisplayName(
+                        object,
+                        propertyInfo
+                    );
                     return (
-                        <>
-                            <td className={propertyInfo.name}>
-                                {getObjectPropertyDisplayName(
-                                    object,
-                                    propertyInfo
-                                )}
-                            </td>
-                            <td className={className}>
+                        <div className={className}>
+                            <div
+                                className={propertyInfo.name}
+                                title={propertyName}
+                            >
+                                {propertyName}
+                            </div>
+                            <div className={propertyInfo.name}>
                                 <Property
                                     propertyInfo={propertyInfo}
                                     objects={[object]}
@@ -1283,12 +1270,12 @@ const ArrayElementProperty = observer(
                                     }
                                     updateObject={this.updateObject}
                                 />
-                            </td>
-                        </>
+                            </div>
+                        </div>
                     );
                 }
             } else {
-                return <td />;
+                return <div />;
             }
         }
     }

@@ -504,7 +504,7 @@ export const Property = observer(
                     const formText = getFormText(this.props);
 
                     return (
-                        <>
+                        <div style={{ width: "100%" }}>
                             <div
                                 className="input-group"
                                 title={this._value || ""}
@@ -542,7 +542,7 @@ export const Property = observer(
                             {formText && (
                                 <div className="form-text">{formText}</div>
                             )}
-                        </>
+                        </div>
                     );
                 } else {
                     return (
@@ -891,7 +891,7 @@ export const Property = observer(
                 } else {
                     const formText = getFormText(this.props);
                     return (
-                        <>
+                        <div style={{ width: "100%" }}>
                             <input
                                 ref={(ref: any) => (this.input = ref)}
                                 type="text"
@@ -906,14 +906,14 @@ export const Property = observer(
                             {formText && (
                                 <div className="form-text">{formText}</div>
                             )}
-                        </>
+                        </div>
                     );
                 }
             } else if (propertyInfo.type === PropertyType.Number) {
                 const formText = getFormText(this.props);
 
                 return (
-                    <>
+                    <div style={{ width: "100%" }}>
                         <input
                             ref={(ref: any) => (this.input = ref)}
                             type="text"
@@ -927,7 +927,7 @@ export const Property = observer(
                         {formText && (
                             <div className="form-text">{formText}</div>
                         )}
-                    </>
+                    </div>
                 );
             } else if (propertyInfo.type === PropertyType.Color) {
                 return (

@@ -85,10 +85,12 @@ export const PropertiesPanel = observer(
                             readOnly={!!this.context.runtime}
                         />
                         {secondObject && (
-                            <PropertyGrid
-                                objects={[secondObject]}
-                                readOnly={!!this.context.runtime}
-                            />
+                            <div style={{ marginTop: 10 }}>
+                                <PropertyGrid
+                                    objects={[secondObject]}
+                                    readOnly={!!this.context.runtime}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

@@ -2454,6 +2454,7 @@
 
     & > div {
         border: 1px solid @panelBorderColor;
+        overflow: hidden;
     }
 
     & > div:nth-child(1) {
@@ -2488,6 +2489,10 @@
         .EezStudio_TreeRowEnclosure:not(:first-child) {
             > .EezStudio_TreeRow.part {
                 padding-top: 5px;
+            }
+
+            .EezStudio_TreeRowLabel {
+                margin-left: 13px;
             }
         }
 
@@ -2526,14 +2531,24 @@
                     color: @inErrorTextColor;
                     background-color: @inErrorBackgroundColor;
                 }
-                padding-left: 10px;
+                padding-left: 5px;
+                padding-right: 5px;
                 display: flex;
                 align-items: baseline;
                 .EezStudio_LVGLStylesDefinition_Name {
-                    font-size: 95%;
-                    min-width: 120px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    width: 33%;
+
                     .form-check-label {
-                        transform: translateY(-3px);
+                        padding: 4px;
+                        span {
+                            font-size: 95%;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
                     }
                 }
                 .EezStudio_LVGLStylesDefinition_Value {
@@ -2565,6 +2580,9 @@
 .EezStudio_LVGLGeometryProperty {
     width: 100%;
     display: flex;
+    & > :first-child {
+        width: 100%;
+    }
     & > select {
         min-width: 95px;
         margin-left: 2px;
@@ -2576,11 +2594,15 @@
     width: 100%;
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
+
+    & > :first-child {
+        width: 67%;
+    }
+
     & > select {
-        min-width: 130px;
+        width: 33%;
+        max-width: 130px;
         margin-left: 2px;
-        flex: 0;
     }
 }
 
@@ -2897,6 +2919,9 @@
 
     margin-top: 2px;
     margin-bottom: 2px;
+    &:last-child {
+        margin-bottom: 0;
+    }
 
     input[type="color"] {
         height: 28px;
@@ -2928,30 +2953,9 @@
         min-height: auto;
     }
 
-    table {
-        & > tbody {
-            & > tr.inError {
-                color: @inErrorTextColor;
-                background-color: @inErrorBackgroundColor;
-            }
-            & > td.highlighted {
-                background-color: #ff6666;
-            }
-
-            & > tr > td {
-                &:nth-child(2) {
-                    padding-left: 10px;
-                    width: 100%;
-                }
-            }
-        }
-    }
-
     .EezStudio_ArrayPropertyContent {
         position: relative;
         border-top: 1px solid @borderColor;
-
-        border-radius: 0 0 4px px;
 
         padding: 10px;
         padding-bottom: 0;
@@ -2963,6 +2967,9 @@
             border-radius: 4px;
 
             margin-bottom: 10px;
+            &:last-item {
+                margin-bottom: 0;
+            }
 
             .EezStudio_ArrayElementProperty_Header {
                 background-color: @panelHeaderColor;
@@ -2970,7 +2977,7 @@
                 border-radius: 4px 4px 0 0;
 
                 border-bottom: 1px solid @borderColor;
-                padding: 5px;
+                padding: 2px;
 
                 display: flex;
                 align-items: center;
@@ -2994,14 +3001,34 @@
                 background-color: @backgroundColor;
 
                 border-radius: 0 0 4px 4px;
-            }
 
-            table {
-                width: 100%;
+                .EezStudio_ArrayElementProperty_Body_Property {
+                    display: flex;
+                    align-items: baseline;
 
-                tr {
-                    td:first-child {
+                    & > div:first-child {
+                        width: 33%;
                         white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    & > div:nth-child(2) {
+                        width: 100%;
+                    }
+
+                    &:not(:last-child) {
+                        margin-bottom: 2px;
+                    }
+
+                    &.inError {
+                        color: @inErrorTextColor;
+                        background-color: @inErrorBackgroundColor;
+                        padding: 2px;
+                        margin: 0;
+
+                        .form-text {
+                            color: @inErrorTextColor;
+                        }
                     }
                 }
             }
@@ -3036,6 +3063,7 @@
 }
 
 .EezStudio_EmbeddedNonCollapsablePropertyGrid {
+    width: 100%;
     & > div {
         padding: 0;
         overflow: hidden;
@@ -3045,7 +3073,6 @@
 
 .EezStudio_PropertyGrid {
     flex-grow: 1;
-    padding: 5px 2px 10px 0px;
     overflow-x: hidden;
     overflow-y: auto;
 
@@ -3088,114 +3115,101 @@
         min-width: 15.39px;
     }
 
-    & > table {
-        width: 100%;
+    & > .EezStudio_PropertyGrid_Group {
+        margin-bottom: 10px;
+        &:last-child {
+            margin-bottom: 0;
+        }
 
-        & > tbody {
-            & > tr {
-                &.inError {
-                    color: @inErrorTextColor;
-                    background-color: @inErrorBackgroundColor;
+        & > .EezStudio_PropertyGrid_Group_Header {
+            width: 100%;
 
-                    .form-text {
-                        color: @inErrorTextColor;
-                    }
-                }
+            display: flex;
+            align-items: end;
 
-                &.highlighted {
-                    background-color: #ff6666;
-                }
+            background-color: var(--bs-secondary-bg);
 
-                & > td {
-                    vertical-align: baseline;
-                    padding-top: 1px;
-                    padding-bottom: 1px;
-                }
+            padding: 5px 0;
 
-                & > td:first-child {
-                    padding-left: 20px;
-                    &:not([colspan="2"]) {
-                        padding-right: 10px;
-                    }
-                }
+            font-size: 95%;
+            text-transform: uppercase;
+            font-weight: bold;
 
-                & > td > div.EezStudio_CodeEditor {
-                    display: list-item;
-                }
+            cursor: pointer;
+        }
 
-                & > td.property-name {
-                    white-space: nowrap;
-                    height: 26px;
+        & > .EezStudio_PropertyGrid_Group_Body {
+            padding: 10px 10px 0 10px;
+        }
 
-                    & > .collapsable {
-                        transform: translateX(-10px);
-                        cursor: pointer;
-                        &:hover {
-                            background-color: #eee;
-                        }
-                    }
-                }
-
-                & > td:nth-child(2) {
-                    width: 100%;
-                }
-
-                & > td.group-cell {
-                    padding-left: 0;
-                    padding-right: 0;
-                    & > div.group-container {
-                        width: 100%;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        & > div.group-title {
-                            font-size: 85%;
-                            text-transform: uppercase;
-                            font-weight: bold;
-                            display: inline-flex;
-                            align-items: center;
-                        }
-
-                        cursor: pointer;
-                        &:hover {
-                            background-color: #eee;
-                        }
-                    }
-                }
-
-                & > td.embedded-property-cell {
-                    padding-left: 20px;
-                    padding-right: 0;
-
-                    & > .collapsable > div.collapsable-property-name {
-                        margin-top: 4px;
-                        transform: translateX(-10px);
-                        cursor: pointer;
-                        &:hover {
-                            background-color: #eee;
-                        }
-                    }
-                }
-
-                textarea.pre {
-                    font-family: "EEZ Studio Font Monospace";
-                    font-size: 0.72rem;
-                }
+        &.collapsed {
+            & > .EezStudio_PropertyGrid_Group_Body {
+                display: none;
             }
         }
     }
 
-    &.EezStudio_PropertyGrid_NoGroups {
-        padding: 5px;
+    & .EezStudio_PropertyGrid_Property {
+        display: flex;
+        align-items: baseline;
 
-        & > table {
-            & > tbody {
-                & > tr {
-                    & > td:first-child {
-                        padding-left: 0px;
-                    }
+        margin-bottom: 2px;
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        & > .property-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            height: 26px;
+            width: 33%;
+
+            & > .collapsable {
+                transform: translateX(-10px);
+                cursor: pointer;
+                &:hover {
+                    background-color: #eee;
                 }
             }
+        }
+
+        & > .embedded-property-cell {
+            width: 100%;
+
+            & > .collapsable > div.collapsable-property-name {
+                margin-top: 4px;
+                transform: translateX(-10px);
+                cursor: pointer;
+                &:hover {
+                    background-color: #eee;
+                }
+            }
+        }
+
+        &.inError {
+            color: @inErrorTextColor;
+            background-color: @inErrorBackgroundColor;
+            padding: 2px;
+            margin: 0;
+
+            .form-text {
+                color: @inErrorTextColor;
+            }
+        }
+
+        &.highlighted {
+            background-color: #ff6666;
+        }
+
+        .EezStudio_CodeEditor {
+            display: list-item;
+        }
+
+        textarea.pre {
+            font-family: "EEZ Studio Font Monospace";
+            font-size: 0.72rem;
         }
     }
 }
@@ -3212,6 +3226,7 @@
     padding: 6px;
     width: 20px;
     height: 20px;
+    flex: 0;
 
     &:hover {
         background-color: #eee;

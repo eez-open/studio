@@ -37,6 +37,11 @@ export const PropertyName = observer(
         render() {
             const { objects, propertyInfo } = this.props;
 
+            let propertyName = getObjectPropertyDisplayName(
+                objects[0],
+                propertyInfo
+            );
+
             if (propertyInfo.propertyGridCollapsable) {
                 const enabled =
                     !propertyInfo.propertyGridCollapsableEnabled ||
@@ -52,6 +57,10 @@ export const PropertyName = observer(
                         object => (object as any)[propertyInfo.name]
                     )
                 });
+
+                if (numModifications > 0) {
+                    propertyName += ` (${numModifications})`;
+                }
 
                 return (
                     <div className="collapsable" onClick={this.toggleCollapsed}>
@@ -71,16 +80,16 @@ export const PropertyName = observer(
                                     className="triangle"
                                 />
                             )}
-                            {getObjectPropertyDisplayName(
-                                objects[0],
-                                propertyInfo
-                            )}
-                            {numModifications > 0 && ` (${numModifications})`}
+                            <span title={propertyName}>{propertyName}</span>
                         </div>
                     </div>
                 );
             } else {
-                return getObjectPropertyDisplayName(objects[0], propertyInfo);
+                return (
+                    <div className="property-name" title={propertyName}>
+                        {propertyName}
+                    </div>
+                );
             }
         }
     }

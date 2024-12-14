@@ -1743,36 +1743,6 @@ export class Component extends EezObject {
                 hideInDocumentation: "all"
             },
             {
-                name: "alignAndDistribute",
-                type: PropertyType.Any,
-                propertyGridGroup: geometryGroup,
-                computed: true,
-                propertyGridRowComponent: AlignAndDistributePropertyGridUI,
-                skipSearch: true,
-                hideInPropertyGrid: (widget: Widget) => {
-                    if (isWidgetUnderDockingManager(widget)) {
-                        return true;
-                    }
-                    const projectStore = ProjectEditor.getProjectStore(widget);
-                    const propertyGridObjects =
-                        projectStore.navigationStore.propertyGridObjects;
-
-                    if (propertyGridObjects.length < 2) {
-                        return true;
-                    }
-
-                    if (
-                        propertyGridObjects.find(
-                            object => !(object instanceof Component)
-                        )
-                    ) {
-                        return true;
-                    }
-
-                    return false;
-                }
-            },
-            {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
@@ -1813,6 +1783,36 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action"
+            },
+            {
+                name: "alignAndDistribute",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                propertyGridRowComponent: AlignAndDistributePropertyGridUI,
+                skipSearch: true,
+                hideInPropertyGrid: (widget: Widget) => {
+                    if (isWidgetUnderDockingManager(widget)) {
+                        return true;
+                    }
+                    const projectStore = ProjectEditor.getProjectStore(widget);
+                    const propertyGridObjects =
+                        projectStore.navigationStore.propertyGridObjects;
+
+                    if (propertyGridObjects.length < 2) {
+                        return true;
+                    }
+
+                    if (
+                        propertyGridObjects.find(
+                            object => !(object instanceof Component)
+                        )
+                    ) {
+                        return true;
+                    }
+
+                    return false;
+                }
             },
             {
                 name: "centerWidgetUI",

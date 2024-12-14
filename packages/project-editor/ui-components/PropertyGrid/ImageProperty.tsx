@@ -53,7 +53,7 @@ export const ImageProperty = observer(
             const embeddedImage = imageValue.startsWith("data:image");
 
             return (
-                <div>
+                <div style={{ width: "100%" }}>
                     <div className="input-group">
                         <input
                             type="text"

@@ -1159,23 +1159,27 @@ export class LineChartWidget extends Widget {
             {
                 name: "showLegend",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             },
             {
                 name: "showGrid",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             },
             {
                 name: "showZeroLines",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             },
             {
                 name: "showXAxis",
                 displayName: "Show X axis",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             },
             {
                 name: "xAxisTickSuffix",
@@ -1221,7 +1225,8 @@ export class LineChartWidget extends Widget {
                 name: "showYAxis",
                 displayName: "Show Y axis",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
             },
             {
                 name: "yAxisTickSuffix",

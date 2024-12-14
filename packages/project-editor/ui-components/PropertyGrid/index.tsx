@@ -4,13 +4,16 @@ import classNames from "classnames";
 
 import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
 
+import { Icon } from "eez-studio-ui/icon";
+
 import {
     IEezObject,
     PropertyType,
     getParent,
     getKey,
     isAnyPropertyReadOnly,
-    PropertyInfo
+    PropertyInfo,
+    IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 import {
     isValue,
@@ -19,17 +22,16 @@ import {
 } from "project-editor/store";
 
 import { isAnyObjectReadOnly } from "project-editor/project/project";
-
 import { ProjectContext } from "project-editor/project/context";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { Property } from "./Property";
 import { PropertyName } from "./PropertyName";
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 import { groupCollapsedStore } from "./GroupCollapsedStore";
 import { PropertyEnclosure } from "./PropertyEnclosure";
-import { GroupTitle } from "./GroupTitle";
-import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyGroups } from "./groups";
+import { PropertyMenu } from "./PropertyMenu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +40,6 @@ export const PropertyGrid = observer(
         objects: IEezObject[];
         className?: string;
         readOnly?: boolean;
-        collapsed?: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -160,8 +161,7 @@ export const PropertyGrid = observer(
                 propertyInfo,
                 objects,
                 updateObject: this.updateObject,
-                readOnly: readOnly || propertyReadOnly,
-                collapsed: false
+                readOnly: readOnly || propertyReadOnly
             };
 
             let propertyMenuEnabled;
@@ -177,107 +177,77 @@ export const PropertyGrid = observer(
                 propertyMenuEnabled = false;
             }
 
-            const propertyGroup = propertyInfo.propertyGridGroup;
-
-            const collapsed = this.props.collapsed
-                ? true
-                : propertyGroup &&
-                  groupCollapsedStore.isCollapsed(propertyGroup)
-                ? true
-                : false;
-
-            propertyProps.collapsed = collapsed;
+            let propertyMenu = isPropertyMenuSupported &&
+                !propertyInfo.propertyGridCollapsable &&
+                propertyMenuEnabled && (
+                    <PropertyMenu
+                        propertyInfo={propertyInfo}
+                        objects={objects}
+                        updateObject={this.updateObject}
+                        readOnly={readOnly}
+                    />
+                );
 
             let property;
             if (colSpan) {
                 if (propertyInfo.propertyGridFullRowComponent) {
-                    property = <Property {...propertyProps} />;
+                    property = (
+                        <>
+                            <Property {...propertyProps} />
+                            {propertyMenu}
+                        </>
+                    );
                 } else {
                     property = (
-                        <td
-                            className={classNames({
-                                "embedded-property-cell":
-                                    propertyInfo.type === PropertyType.Object
-                            })}
-                            colSpan={
-                                propertyInfo.propertyGridCollapsable ? 3 : 2
-                            }
-                            style={
-                                propertyInfo.type === PropertyType.Array ||
-                                propertyInfo.type === PropertyType.Any
-                                    ? {
-                                          width: "100%"
-                                      }
-                                    : undefined
-                            }
-                        >
-                            <Property {...propertyProps} />
-                        </td>
+                        <>
+                            <div
+                                className={classNames({
+                                    "embedded-property-cell":
+                                        propertyInfo.type ===
+                                        PropertyType.Object
+                                })}
+                                style={
+                                    propertyInfo.type === PropertyType.Array ||
+                                    propertyInfo.type === PropertyType.Any
+                                        ? {
+                                              width: "100%"
+                                          }
+                                        : undefined
+                                }
+                            >
+                                <Property {...propertyProps} />
+                            </div>
+                            {propertyMenu}
+                        </>
                     );
                 }
             } else {
-                if (propertyInfo.propertyNameAbove) {
-                    property = (
-                        <React.Fragment>
-                            <td colSpan={2}>
-                                <Property {...propertyProps} />
-                            </td>
-                        </React.Fragment>
-                    );
-                } else {
-                    property = (
-                        <React.Fragment>
-                            <td className="property-name">
-                                <PropertyName {...propertyProps} />
-                            </td>
-
-                            <td>
-                                <Property {...propertyProps} />
-                            </td>
-                        </React.Fragment>
-                    );
-                }
+                property = (
+                    <>
+                        <PropertyName {...propertyProps} />
+                        <div
+                            style={{
+                                display: "flex",
+                                width: "100%",
+                                alignItems: "center"
+                            }}
+                        >
+                            <Property {...propertyProps} />
+                            {propertyMenu}
+                        </div>
+                    </>
+                );
             }
 
-            const propertyComponent = (
+            return (
                 <PropertyEnclosure
                     key={propertyInfo.name}
                     objects={objects}
                     propertyInfo={propertyInfo}
                     highlightedPropertyName={highlightedPropertyName}
                     property={property}
-                    isPropertyMenuSupported={isPropertyMenuSupported}
-                    propertyMenuEnabled={propertyMenuEnabled}
-                    readOnly={propertyProps.readOnly}
-                    updateObject={this.updateObject}
-                    style={{
-                        visibility: collapsed ? "collapse" : "visible"
-                    }}
                 />
             );
-
-            if (propertyInfo.propertyNameAbove) {
-                return (
-                    <React.Fragment key={propertyInfo.name}>
-                        <tr
-                            style={{
-                                visibility: collapsed ? "collapse" : "visible"
-                            }}
-                        >
-                            <td
-                                className="property-name"
-                                colSpan={2}
-                                style={{ paddingTop: 8 }}
-                            >
-                                <PropertyName {...propertyProps} />
-                            </td>
-                        </tr>
-                        {propertyComponent}
-                    </React.Fragment>
-                );
-            }
-
-            return propertyComponent;
         }
 
         render() {
@@ -322,24 +292,30 @@ export const PropertyGrid = observer(
                 properties
             );
 
+            let withGroups = false;
+
             const rows = groupPropertiesArray.map(groupProperties => {
                 if (groupProperties.group.title) {
+                    withGroups = true;
                     return (
-                        <React.Fragment key={groupProperties.group.id}>
-                            <GroupTitle
-                                group={groupProperties.group}
-                                object={objects[0]}
-                            />
-                            {groupProperties.properties.map(property =>
-                                this.renderProperty(
-                                    objects,
-                                    property,
-                                    readOnly,
-                                    isPropertyMenuSupported,
-                                    highlightedPropertyName
-                                )
-                            )}
-                        </React.Fragment>
+                        <PropertiesGroup
+                            group={groupProperties.group}
+                            object={objects[0]}
+                            key={groupProperties.group.id}
+                        >
+                            {!groupCollapsedStore.isCollapsed(
+                                groupProperties.group
+                            ) &&
+                                groupProperties.properties.map(property =>
+                                    this.renderProperty(
+                                        objects,
+                                        property,
+                                        readOnly,
+                                        isPropertyMenuSupported,
+                                        highlightedPropertyName
+                                    )
+                                )}
+                        </PropertiesGroup>
                     );
                 } else {
                     return (
@@ -363,17 +339,56 @@ export const PropertyGrid = observer(
                     ref={(ref: any) => (this.div = ref)}
                     className={classNames(
                         "EezStudio_PropertyGrid",
-                        this.props.className,
-                        {
-                            EezStudio_PropertyGrid_NoGroups:
-                                groupPropertiesArray.length === 1 &&
-                                groupPropertiesArray[0].group.title === ""
-                        }
+                        this.props.className
                     )}
+                    style={!withGroups ? { padding: 5 } : undefined}
                 >
-                    <table>
-                        <tbody>{rows}</tbody>
-                    </table>
+                    {rows}
+                </div>
+            );
+        }
+    }
+);
+
+const PropertiesGroup = observer(
+    class PropertiesGroup extends React.Component<{
+        group: IPropertyGridGroupDefinition;
+        object: IEezObject;
+        children: React.ReactNode;
+    }> {
+        toggleCollapsed = () => {
+            groupCollapsedStore.toggleColapsed(this.props.group);
+        };
+
+        render() {
+            const { group } = this.props;
+
+            const collapsed = groupCollapsedStore.isCollapsed(group);
+
+            return (
+                <div
+                    className={classNames("EezStudio_PropertyGrid_Group", {
+                        collapsed
+                    })}
+                >
+                    <div
+                        className={"EezStudio_PropertyGrid_Group_Header"}
+                        onClick={this.toggleCollapsed}
+                    >
+                        <Icon
+                            icon={
+                                collapsed
+                                    ? "material:keyboard_arrow_right"
+                                    : "material:keyboard_arrow_down"
+                            }
+                            size={18}
+                            className="triangle"
+                        />
+                        {group.title}
+                    </div>
+                    <div className="EezStudio_PropertyGrid_Group_Body">
+                        {this.props.children}
+                    </div>
                 </div>
             );
         }

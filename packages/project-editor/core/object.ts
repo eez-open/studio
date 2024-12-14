@@ -127,7 +127,6 @@ export interface PropertyProps {
     objects: IEezObject[];
     readOnly: boolean;
     updateObject: (propertyValues: Object) => void;
-    collapsed?: boolean;
     onClick?: (event: React.MouseEvent) => void;
 }
 
@@ -278,8 +277,6 @@ export interface PropertyInfo {
     formText?:
         | string
         | ((object: IEezObject | undefined) => React.ReactNode | undefined);
-
-    propertyNameAbove?: boolean;
 
     hasExpressionProperties?: boolean;
 

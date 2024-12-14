@@ -141,7 +141,6 @@ export const EmbeddedPropertyGrid = observer(
                         objects={this.props.objects.map(
                             object => (object as any)[propertyInfo.name]
                         )}
-                        collapsed={this.props.collapsed}
                     />
                 </div>
             );

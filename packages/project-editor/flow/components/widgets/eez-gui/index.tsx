@@ -3516,8 +3516,7 @@ export class LineChartEmbeddedWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: [],
-                propertyNameAbove: true
+                defaultValue: []
             },
             makeDataPropertyInfo("showTitle", {}, "boolean"),
             makeDataPropertyInfo("showLegend", {}, "boolean"),
