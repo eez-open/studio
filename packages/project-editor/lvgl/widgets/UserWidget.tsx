@@ -1,14 +1,13 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { observable, makeObservable, computed, runInAction } from "mobx";
+import { observable, makeObservable, computed } from "mobx";
 
 import {
     IMessage,
     MessageType,
     PropertyProps,
     PropertyType,
-    makeDerivedClassInfo,
-    setParent
+    makeDerivedClassInfo
 } from "project-editor/core/object";
 
 import {
@@ -28,13 +27,11 @@ import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import {
-    clipboardDataToObject,
     getAncestorOfType,
     getChildOfObject,
     getObjectPathAsString,
     getProjectStore,
     Message,
-    objectToClipboardData,
     propertyNotFoundMessage,
     propertyNotSetMessage,
     updateObject
@@ -234,8 +231,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         makeObservable(this, {
             userWidgetPage: computed,
-            isCycleDetected: computed,
-            userWidgetPageCopy: computed({ keepAlive: true })
+            isCycleDetected: computed
         });
     }
 
@@ -305,49 +301,6 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         ) as Page;
 
         return testForCycle(userWidgetPage);
-    }
-
-    _userWidgetPageCopyIds: string[] = [];
-
-    get userWidgetPageCopy(): Page | undefined {
-        const page = this.userWidgetPage;
-
-        if (!page) {
-            return undefined;
-        }
-
-        const project = ProjectEditor.getProject(page);
-        const projectStore = project._store;
-
-        let userWidgetPageCopy: Page | undefined = undefined;
-
-        // WORKAROUND: projectStore.lastRevisionStable is read to detect if the page was modified
-        projectStore.lastRevisionStable;
-
-        // runInAction is needed to avoid observing copied page
-        runInAction(() => {
-            const idsBefore = new Set(projectStore.objects.keys());
-
-            userWidgetPageCopy = clipboardDataToObject(
-                projectStore,
-                objectToClipboardData(projectStore, page)
-            ).object as Page;
-            setParent(userWidgetPageCopy, project.userWidgets);
-
-            for (const id of this._userWidgetPageCopyIds) {
-                projectStore.objects.delete(id);
-            }
-            this._userWidgetPageCopyIds = [];
-            for (const id of projectStore.objects.keys()) {
-                if (!idsBefore.has(id)) {
-                    this._userWidgetPageCopyIds.push(id);
-                }
-            }
-
-            userWidgetPageCopy._lvglUserWidgetOfPageCopy = this;
-        });
-
-        return userWidgetPageCopy;
     }
 
     open() {
@@ -434,9 +387,9 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
     ): number {
         const widgetIndex = runtime.getWidgetIndex(this);
 
-        const userWidgetPageCopy = this.userWidgetPageCopy;
+        const userWidgetPage = this.userWidgetPage;
 
-        if (!userWidgetPageCopy || this.isCycleDetected) {
+        if (!userWidgetPage || this.isCycleDetected) {
             const rect = this.getLvglCreateRect();
 
             return runtime.wasm._lvglCreateUserWidget(
@@ -478,7 +431,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
 
         runtime.beginUserWidget(this);
 
-        const obj = userWidgetPageCopy.lvglCreate(runtime, parentObj, {
+        const obj = userWidgetPage.lvglCreate(runtime, parentObj, {
             widgetIndex,
             left: rect.left,
             top: rect.top,

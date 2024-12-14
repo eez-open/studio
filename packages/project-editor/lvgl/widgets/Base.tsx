@@ -1600,7 +1600,9 @@ export class LVGLWidget extends Widget {
     ) {
         const obj = this.lvglCreateObj(runtime, parentObj, customWidget);
 
-        runInAction(() => (this._lvglObj = obj));
+        if (!runtime.isInsideUserWidget) {
+            runInAction(() => (this._lvglObj = obj));
+        }
 
         if (this.group) {
             runtime.registerGroupWidget(this.group, this.groupIndex, obj);

@@ -173,18 +173,6 @@ export class LVGLIdentifiers {
 
         let identifiers = this.getIdentifiersVisibleFromFlow(flow);
 
-        if (!identifiers) {
-            if (
-                flow instanceof ProjectEditor.PageClass &&
-                flow._lvglUserWidgetOfPageCopy
-            ) {
-                identifiers = [];
-                this.enumIdentifiers(flow, identifiers, "");
-            } else {
-                return undefined;
-            }
-        }
-
         return identifiers.find(
             lvglIdentifier => lvglIdentifier.identifier == identifierName
         );

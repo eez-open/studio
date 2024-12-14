@@ -172,10 +172,18 @@ export class LVGLBuild extends Build {
                         NamingConvention.UnderscoreLowerCase
                     );
                 } else {
-                    identifier = generateUniqueObjectName();
-                    this.assets.map.lvglWidgetGeneratedIdentifiers[
-                        widget.objID
-                    ] = identifier;
+                    identifier =
+                        this.assets.map.lvglWidgetGeneratedIdentifiers[
+                            widget.objID
+                        ];
+
+                    if (!identifier) {
+                        identifier = generateUniqueObjectName();
+
+                        this.assets.map.lvglWidgetGeneratedIdentifiers[
+                            widget.objID
+                        ] = identifier;
+                    }
                 }
 
                 pageIdentifiers.widgetToIdentifier.set(

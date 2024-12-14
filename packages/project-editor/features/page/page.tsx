@@ -69,10 +69,7 @@ import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import { visitObjects } from "project-editor/core/search";
-import type {
-    LVGLUserWidgetWidget,
-    LVGLWidget
-} from "project-editor/lvgl/widgets";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { PAGES_ICON } from "project-editor/ui-components/icons";
@@ -215,7 +212,6 @@ export class Page extends Flow {
 
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
-    _lvglUserWidgetOfPageCopy: LVGLUserWidgetWidget;
 
     get codeIdentifier() {
         const codeIdentifier = getName(
@@ -237,8 +233,7 @@ export class Page extends Flow {
         makeObservable(this, {
             dataContextOverridesObject: computed,
             rect: computed,
-            _lvglWidgetsIncludingUserWidgets: computed({ keepAlive: true }),
-            _lvglWidgetsIncludingUserWidgetsWithoutCopy: computed({
+            _lvglWidgetsIncludingUserWidgets: computed({
                 keepAlive: true
             }),
             _lvglWidgets: computed({ keepAlive: true })
@@ -1112,8 +1107,7 @@ export class Page extends Flow {
     getLvglGroupWidgets(groupName: string) {
         let groupWidgets: LVGLWidget[][] = [];
 
-        for (const widgetPath of this
-            ._lvglWidgetsIncludingUserWidgetsWithoutCopy) {
+        for (const widgetPath of this._lvglWidgetsIncludingUserWidgets) {
             if (widgetPath[widgetPath.length - 1].group == groupName) {
                 groupWidgets.push(widgetPath);
             }
@@ -1159,32 +1153,6 @@ export class Page extends Flow {
     }
 
     get _lvglWidgetsIncludingUserWidgets() {
-        const widgets: LVGLWidget[] = [];
-
-        function addWidgets(page: Page) {
-            for (const widget of visitObjects(page.components)) {
-                if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    widgets.push(widget);
-
-                    if (
-                        widget instanceof
-                        ProjectEditor.LVGLUserWidgetWidgetClass
-                    ) {
-                        const userWidgetPageCopy = widget.userWidgetPageCopy;
-                        if (userWidgetPageCopy && !widget.isCycleDetected) {
-                            addWidgets(userWidgetPageCopy);
-                        }
-                    }
-                }
-            }
-        }
-
-        addWidgets(this);
-
-        return widgets;
-    }
-
-    get _lvglWidgetsIncludingUserWidgetsWithoutCopy() {
         const allWidgets: LVGLWidget[][] = [];
 
         function addWidgets(page: Page, widgetPath: LVGLWidget[]) {

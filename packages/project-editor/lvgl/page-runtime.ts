@@ -123,6 +123,10 @@ export abstract class LVGLPageRuntime {
 
     beginUserWidget(widget: LVGLUserWidgetWidget) {}
 
+    get isInsideUserWidget() {
+        return false;
+    }
+
     endUserWidget() {}
 
     getWidgetIndex(object: LVGLWidget | Page) {
@@ -319,7 +323,7 @@ export abstract class LVGLPageRuntime {
                 //runtime.wasm._lvglDeleteObject(page._lvglObj);
                 page._lvglObj = undefined;
 
-                page._lvglWidgetsIncludingUserWidgets.forEach(
+                page._lvglWidgets.forEach(
                     widget => (widget._lvglObj = undefined)
                 );
             }
@@ -615,7 +619,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     try {
                         // set all _lvglObj to undefined
                         runInAction(() => {
-                            this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                            this.page._lvglWidgets.forEach(
                                 widget => (widget._lvglObj = undefined)
                             );
                         });
@@ -1140,6 +1144,10 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.userWidgetsStack.push(widget);
     }
 
+    override get isInsideUserWidget() {
+        return this.userWidgetsStack.length > 0;
+    }
+
     override endUserWidget() {
         this.userWidgetsStack.pop();
     }
@@ -1377,7 +1385,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
                     // set all _lvglObj to undefined
                     runInAction(() => {
-                        this.page._lvglWidgetsIncludingUserWidgets.forEach(
+                        this.page._lvglWidgets.forEach(
                             widget => (widget._lvglObj = undefined)
                         );
                     });
@@ -1529,9 +1537,7 @@ function getObjects(page: Page) {
     const objects = [];
     objects.push(page._lvglObj!);
 
-    page._lvglWidgetsIncludingUserWidgets.forEach(widget =>
-        objects.push(widget._lvglObj!)
-    );
+    page._lvglWidgets.forEach(widget => objects.push(widget._lvglObj!));
 
     return objects;
 }
@@ -1548,7 +1554,7 @@ function setObjects(
 
         page._lvglObj = objects[index++];
 
-        page._lvglWidgetsIncludingUserWidgets.forEach(
+        page._lvglWidgets.forEach(
             widget => (widget._lvglObj = objects[index++])
         );
     });

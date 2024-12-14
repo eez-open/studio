@@ -237,18 +237,18 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                 const textareaWidget = lvglIdentifier.widgets[0];
 
                 if (textareaWidget instanceof LVGLTextareaWidget) {
+                    const keyboardWidgetIndex = runtime.getWidgetIndex(this);
+
                     const textareaWidgetIndex = runtime.getLvglObjectByName(
                         textarea,
                         runtime.userWidgetsStack
                     );
 
-                    console.log(textarea, textareaWidgetIndex);
-
                     runtime.addPostCreateCallback(() => {
                         setTimeout(() => {
-                            if (this._lvglObj && runtime.isMounted) {
+                            if (runtime.isMounted) {
                                 runtime.wasm._lvglSetKeyboardTextarea(
-                                    this._lvglObj,
+                                    keyboardWidgetIndex,
                                     textareaWidgetIndex
                                 );
                             }
