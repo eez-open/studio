@@ -129,10 +129,15 @@ export const ThemedColorInput = observer(
             if (this.dropDownOpen) {
                 const rectButton = buttonEl.getBoundingClientRect();
 
-                const DROP_DOWN_WIDTH = 280;
+                const DROP_DOWN_WIDTH = 230;
+                const DROP_DOWN_HEIGHT = 268;
 
                 this.dropDownLeft = rectButton.right - DROP_DOWN_WIDTH;
-                this.dropDownTop = rectButton.bottom;
+
+                this.dropDownTop = rectButton.bottom - 9;
+                if (this.dropDownTop + DROP_DOWN_HEIGHT > window.innerHeight) {
+                    this.dropDownTop = window.innerHeight - DROP_DOWN_HEIGHT;
+                }
             }
         });
 
@@ -202,6 +207,7 @@ export const ThemedColorInput = observer(
 
                             this.onChangeColor(color.hex, false);
                         }}
+                        placement={"" as any}
                     />
                 </div>,
                 document.body
