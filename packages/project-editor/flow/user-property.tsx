@@ -433,9 +433,9 @@ export const UserPropertyValuesProperty = observer(
                 .values;
 
             return this.properties.map(propertyInfo => (
-                <tr
+                <div
                     key={propertyInfo.name}
-                    className={classNames({
+                    className={classNames("EezStudio_PropertyGrid_Property", {
                         inError: isPropertyInError(
                             userPropertyValues,
                             propertyInfo.name
@@ -446,12 +446,13 @@ export const UserPropertyValuesProperty = observer(
                         )
                     })}
                 >
-                    <td>
-                        <span title={propertyInfo.expressionType}>
-                            {propertyInfo.displayName as string}{" "}
-                        </span>
-                    </td>
-                    <td style={{ width: "100%" }}>
+                    <div
+                        className="property-name"
+                        title={propertyInfo.expressionType}
+                    >
+                        {propertyInfo.displayName as string}
+                    </div>
+                    <div style={{ width: "100%" }}>
                         <ProjectEditor.Property
                             key={propertyInfo.name}
                             propertyInfo={propertyInfo}
@@ -467,8 +468,8 @@ export const UserPropertyValuesProperty = observer(
                             }}
                             readOnly={false}
                         />
-                    </td>
-                </tr>
+                    </div>
+                </div>
             ));
         }
     }
