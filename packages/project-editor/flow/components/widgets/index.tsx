@@ -1620,7 +1620,7 @@ const UserWidgetPropertyGridUI = observer(
                 return null;
             }
             return (
-                <div style={{ marginTop: 5, marginBottom: 5 }}>
+                <div style={{ display: "flex", marginTop: 5, marginBottom: 5 }}>
                     <Button
                         color="primary"
                         size="small"

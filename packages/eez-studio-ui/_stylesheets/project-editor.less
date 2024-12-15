@@ -2543,11 +2543,15 @@
 
                     .form-check-label {
                         padding: 4px;
+                        width: 100%;
+                        overflow: hidden;
+                        display: inline-flex;
                         span {
+                            margin-left: 2px;
                             font-size: 95%;
                             white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                            //overflow: hidden;
+                            //text-overflow: ellipsis;
                         }
                     }
                 }
@@ -2978,7 +2982,7 @@
                     0;
 
                 border-bottom: 1px solid @borderColor;
-                padding: 2px;
+                padding: 1px;
 
                 display: flex;
                 align-items: center;
@@ -3040,7 +3044,7 @@
 
 .EezStudio_ArrayPropertyToolbar {
     background-color: @panelHeaderColor;
-    padding: 4px 8px;
+    padding: 2px 8px;
     border-radius: var(--bs-border-radius) var(--bs-border-radius) 0 0;
 }
 
