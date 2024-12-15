@@ -2075,8 +2075,8 @@ export class WidgetTimelinePathEditorHandler extends MouseHandlerWithSnapLines {
         }
     }
 
-    up(context: IFlowContext) {
-        super.up(context);
+    up(context: IFlowContext, cancel: boolean) {
+        super.up(context, cancel);
         context.projectStore.undoManager.setCombineCommands(false);
     }
 }

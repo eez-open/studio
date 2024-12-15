@@ -305,7 +305,7 @@ export const Canvas = observer(
             this.buttonsAtDown = event.buttons;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, true);
                 this.mouseHandler = undefined;
             }
 
@@ -352,11 +352,11 @@ export const Canvas = observer(
             }
         };
 
-        onDragEnd(event: PointerEvent) {
+        onDragEnd(event: PointerEvent, cancel: boolean) {
             let preventContextMenu = false;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, cancel);
 
                 if (this.mouseHandler instanceof PanMouseHandler) {
                     if (pointDistance(this.mouseHandler.totalMovement) > 10) {
@@ -445,7 +445,10 @@ export const Canvas = observer(
                         );
                         if (menu) {
                             if (this.mouseHandler) {
-                                this.mouseHandler.up(this.props.flowContext);
+                                this.mouseHandler.up(
+                                    this.props.flowContext,
+                                    true
+                                );
                                 this.mouseHandler = undefined;
                             }
 

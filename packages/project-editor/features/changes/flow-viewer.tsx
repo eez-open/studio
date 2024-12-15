@@ -427,7 +427,7 @@ export const Canvas = observer(
             this.buttonsAtDown = event.buttons;
 
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, true);
                 this.mouseHandler = undefined;
             }
 
@@ -472,9 +472,9 @@ export const Canvas = observer(
             }
         };
 
-        onDragEnd(event: PointerEvent) {
+        onDragEnd(event: PointerEvent, cancel: boolean) {
             if (this.mouseHandler) {
-                this.mouseHandler.up(this.props.flowContext);
+                this.mouseHandler.up(this.props.flowContext, cancel);
 
                 this.mouseHandler = undefined;
             }
