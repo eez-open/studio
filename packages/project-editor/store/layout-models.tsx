@@ -387,8 +387,7 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 0,
-                                width: 350,
+                                weight: 15,
                                 children: [
                                     {
                                         type: "tabset",
@@ -433,7 +432,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 100,
+                                weight: 65,
                                 enableDeleteWhenEmpty: false,
                                 enableClose: false,
                                 id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
@@ -441,8 +440,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 0,
-                                width: 420,
+                                weight: 20,
                                 children: [
                                     {
                                         type: "tabset",

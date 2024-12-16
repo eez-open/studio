@@ -2040,25 +2040,6 @@ export class Project extends EezObject {
             LayoutModels.PROPERTIES_TAB_ID,
             settingsController.showComponentsPaletteInProjectEditor
         );
-
-        // make sure Properties tab width is not 0
-        const propertiesNode = this._store.layoutModels.rootEditor.getNodeById(
-            LayoutModels.PROPERTIES_TAB_ID
-        );
-        if (propertiesNode) {
-            const rect = propertiesNode.getRect();
-            if (rect.width == 0) {
-                const parent = propertiesNode.getParent();
-                if (parent) {
-                    this._store.layoutModels.rootEditor.doAction(
-                        FlexLayout.Actions.updateNodeAttributes(
-                            parent.getId(),
-                            { width: 420 }
-                        )
-                    );
-                }
-            }
-        }
     }
 
     get missingExtensions() {
