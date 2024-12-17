@@ -264,7 +264,6 @@ export interface PropertyInfo {
     ) => boolean;
 
     monospaceFont?: boolean;
-    disableSpellcheck?: boolean;
     cssAttributeName?: string;
     checkboxStyleSwitch?: boolean;
     checkboxHideLabel?: boolean;

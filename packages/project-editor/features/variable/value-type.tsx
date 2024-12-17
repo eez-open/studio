@@ -976,8 +976,7 @@ export const variableTypeProperty: PropertyInfo = {
     name: "type",
     type: PropertyType.String,
     propertyGridColumnComponent: VariableTypeUI,
-    monospaceFont: true,
-    disableSpellcheck: true
+    monospaceFont: true
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -522,11 +522,6 @@ export const Property = observer(
                                         overflowY: "hidden"
                                     }}
                                     readOnly={propertyInfo.computed}
-                                    spellCheck={
-                                        propertyInfo.disableSpellcheck
-                                            ? false
-                                            : true
-                                    }
                                 />
                                 <button
                                     className="btn btn-secondary"
@@ -555,9 +550,6 @@ export const Property = observer(
                             onChange={this.onChange}
                             style={{ resize: "none", overflowY: "hidden" }}
                             readOnly={readOnly || propertyInfo.computed}
-                            spellCheck={
-                                propertyInfo.disableSpellcheck ? false : true
-                            }
                         />
                     );
                 }
@@ -725,9 +717,6 @@ export const Property = observer(
                             onChange={this.onChange}
                             style={{ resize: "none", overflowY: "hidden" }}
                             readOnly={readOnly || propertyInfo.computed}
-                            spellCheck={
-                                propertyInfo.disableSpellcheck ? false : true
-                            }
                             onClick={this.props.onClick}
                         />
                     );
@@ -751,11 +740,6 @@ export const Property = observer(
                                         overflowY: "hidden"
                                     }}
                                     readOnly={propertyInfo.computed}
-                                    spellCheck={
-                                        propertyInfo.disableSpellcheck
-                                            ? false
-                                            : true
-                                    }
                                 />
                                 <button
                                     className="btn btn-secondary"

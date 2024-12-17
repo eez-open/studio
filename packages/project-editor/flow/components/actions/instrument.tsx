@@ -97,7 +97,6 @@ export class SCPIActionComponent extends ActionComponent {
                     type: PropertyType.MultilineText,
                     propertyGridGroup: specificGroup,
                     monospaceFont: true,
-                    disableSpellcheck: true,
                     flowProperty: "scpi-template-literal",
                     expressionType: undefined,
                     getInstrumentId: (component: SCPIActionComponent) => {

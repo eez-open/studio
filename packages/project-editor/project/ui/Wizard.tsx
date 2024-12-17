@@ -2744,7 +2744,6 @@ class NameInput extends React.Component<{
                 className="form-control"
                 value={this.props.value || ""}
                 onChange={event => this.props.onChange(event.target.value)}
-                spellCheck={false}
                 onKeyDown={this.props.onKeyDown}
             />
         );
@@ -2775,7 +2774,6 @@ class DirectoryBrowserInput extends React.Component<{
                     className="form-control"
                     value={this.props.value || ""}
                     onChange={event => this.props.onChange(event.target.value)}
-                    spellCheck={false}
                 />
                 <>
                     <button
@@ -2819,7 +2817,6 @@ class FileBrowserInput extends React.Component<{
                     className="form-control"
                     value={this.props.value || ""}
                     onChange={event => this.props.onChange(event.target.value)}
-                    spellCheck={false}
                 />
                 <>
                     <button

@@ -549,7 +549,6 @@ export class ExtensionDirective extends EezObject {
             {
                 name: "extensionName",
                 type: PropertyType.String,
-                disableSpellcheck: true,
 
                 onSelect: async (
                     object: IEezObject,

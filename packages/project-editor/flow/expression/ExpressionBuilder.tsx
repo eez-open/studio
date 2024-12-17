@@ -1271,7 +1271,6 @@ const SelectItemDialog = observer(
                                 this.value = event.target.value;
                             })}
                             onSelect={this.onSelectionChange}
-                            spellCheck={false}
                         />
                         {tabs}
                         <div

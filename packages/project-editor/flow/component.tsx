@@ -529,8 +529,7 @@ export function makeExpressionProperty(
                     },
                     params
                 ),
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -558,8 +557,7 @@ export function makeAssignableExpressionProperty(
                     },
                     params
                 ),
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );
@@ -572,8 +570,7 @@ export function makeTemplateLiteralProperty(
         {
             flowProperty: "template-literal",
             expressionType: "string",
-            monospaceFont: true,
-            disableSpellcheck: true
+            monospaceFont: true
         } as Partial<PropertyInfo>,
         propertyInfo
     );

@@ -279,13 +279,13 @@ export class Action extends Flow {
             const projectStore = getProjectStore(action);
             return (
                 <>
-                    <span>{action.name}</span>
                     {projectStore.projectTypeTraits.hasFlowSupport &&
                         action.implementationType == "native" && (
                             <span className="EezStudio_ListLabel_Badge">
                                 NATIVE
                             </span>
                         )}
+                    <span>{action.name}</span>
                 </>
             );
         },

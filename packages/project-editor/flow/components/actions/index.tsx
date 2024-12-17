@@ -550,7 +550,6 @@ export class EvalJSExprActionComponent extends ActionComponent {
                 type: PropertyType.MultilineText,
                 propertyGridGroup: specificGroup,
                 monospaceFont: true,
-                disableSpellcheck: true,
                 flowProperty: "template-literal"
             }
         ],

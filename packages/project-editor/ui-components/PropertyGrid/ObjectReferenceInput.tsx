@@ -203,7 +203,6 @@ export const ObjectReferenceInput = observer(
                             })}
                             onChange={this.onSearchChange}
                             onKeyDown={this.onSearchChange}
-                            disableSpellcheck={true}
                         />
                     </div>
                     <div>

@@ -406,7 +406,6 @@ export class Variable extends EezObject {
                 expressionIsConstant: true,
                 flowProperty: "input",
                 monospaceFont: true,
-                disableSpellcheck: true,
                 disabled: object => {
                     const project = ProjectEditor.getProject(object);
                     return (
@@ -450,8 +449,7 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText,
                 disabled: object =>
                     isLVGLProject(object) || hasFlowSupport(object),
-                monospaceFont: true,
-                disableSpellcheck: true
+                monospaceFont: true
             },
             {
                 name: "usedIn",
@@ -492,13 +490,6 @@ export class Variable extends EezObject {
         listLabel: (variable: Variable) => {
             return (
                 <>
-                    <span>{variable.name}</span>
-                    <em
-                        className="font-monospace"
-                        style={{ opacity: 0.5, marginLeft: 8 }}
-                    >
-                        {variable.type}
-                    </em>
                     {!isPropertyDisabled(
                         variable,
                         findPropertyByNameInObject(variable, "native")!
@@ -517,6 +508,13 @@ export class Variable extends EezObject {
                                 PERSISTENT
                             </span>
                         )}
+                    <span>{variable.name}</span>
+                    <em
+                        className="font-monospace"
+                        style={{ opacity: 0.5, marginLeft: 8 }}
+                    >
+                        {variable.type}
+                    </em>
                 </>
             );
         },
