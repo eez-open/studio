@@ -442,7 +442,8 @@ export const Canvas = observer(
                     movementX: event.movementX ?? 0,
                     movementY: event.movementY ?? 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.down(this.props.flowContext, event);
@@ -465,7 +466,8 @@ export const Canvas = observer(
                         ? this.mouseHandler.lastPointerEvent.movementY
                         : 0,
                     ctrlKey: event.ctrlKey,
-                    shiftKey: event.shiftKey
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.mouseHandler.move(this.props.flowContext, event);

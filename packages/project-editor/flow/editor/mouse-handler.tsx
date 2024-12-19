@@ -56,6 +56,7 @@ export interface IPointerEvent {
     movementY: number;
     ctrlKey: boolean;
     shiftKey: boolean;
+    timeStamp: number;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +92,7 @@ export class MouseHandler implements IMouseHandler {
     down(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
-        this.timeAtDown = new Date().getTime();
+        this.timeAtDown = event.timeStamp;
 
         this.lastOffsetPoint = this.offsetPointAtDown =
             this.transform.pointerEventToOffsetPoint(event);
@@ -106,7 +107,7 @@ export class MouseHandler implements IMouseHandler {
     move(context: IFlowContext, event: IPointerEvent) {
         this.transform = context.viewState.transform;
 
-        this.elapsedTime = new Date().getTime() - this.timeAtDown;
+        this.elapsedTime = event.timeStamp - this.timeAtDown;
 
         let offsetPoint = this.transform.pointerEventToOffsetPoint(event);
 
@@ -395,12 +396,12 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     move(context: IFlowContext, event: IPointerEvent) {
         super.move(context, event);
 
-        if (this.elapsedTime < 100 && this.distance < 20) {
-            return;
-        }
-
         this.left += this.movement.x / context.viewState.transform.scale;
         this.top += this.movement.y / context.viewState.transform.scale;
+
+        if (this.elapsedTime < 200 && this.distance < 10) {
+            return;
+        }
 
         const { left, top } = this.snapLines.dragSnap(
             this.left,

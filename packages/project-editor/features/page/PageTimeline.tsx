@@ -612,7 +612,8 @@ const TimelineEditor = observer(
                 movementX: e.movementX ?? 0,
                 movementY: e.movementY ?? 0,
                 ctrlKey: e.ctrlKey,
-                shiftKey: e.shiftKey
+                shiftKey: e.shiftKey,
+                timeStamp: e.timeStamp
             };
 
             const dragSettings = hitTest(this.props.timelineState, e, x1, y1);
@@ -763,7 +764,8 @@ const TimelineEditor = observer(
                 movementX: e.movementX ?? 0,
                 movementY: e.movementY ?? 0,
                 ctrlKey: e.ctrlKey,
-                shiftKey: e.shiftKey
+                shiftKey: e.shiftKey,
+                timeStamp: e.timeStamp
             };
 
             const rectSvg = this.svgRef.current!.getBoundingClientRect();
