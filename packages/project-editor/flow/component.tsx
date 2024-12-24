@@ -2933,11 +2933,20 @@ export class Widget extends Component {
                     )) {
                         const eventDef = classInfo.widgetEvents[eventName];
                         if (eventDef.oldName == "action") {
-                            jsObject.eventHandlers.push({
-                                eventName,
-                                handlerType: "action",
-                                action: jsObject.action
-                            });
+                            if (
+                                !jsObject.eventHandlers.find(
+                                    (eventHandler: EventHandler) =>
+                                        eventHandler.eventName == eventName &&
+                                        eventHandler.handlerType == "action" &&
+                                        eventHandler.action == jsObject.action
+                                )
+                            ) {
+                                jsObject.eventHandlers.push({
+                                    eventName,
+                                    handlerType: "action",
+                                    action: jsObject.action
+                                });
+                            }
                             break;
                         }
                     }
@@ -2952,15 +2961,24 @@ export class Widget extends Component {
                         )) {
                             const eventDef = classInfo.widgetEvents[eventName];
                             if (eventDef.oldName == asOutputProperty) {
-                                jsObject.eventHandlers.push({
-                                    eventName,
-                                    handlerType: "flow"
-                                });
-                                wireSourceChanged(
-                                    object,
-                                    asOutputProperty,
-                                    eventName
-                                );
+                                if (
+                                    !jsObject.eventHandlers.find(
+                                        (eventHandler: EventHandler) =>
+                                            eventHandler.eventName ==
+                                                eventName &&
+                                            eventHandler.handlerType == "flow"
+                                    )
+                                ) {
+                                    jsObject.eventHandlers.push({
+                                        eventName,
+                                        handlerType: "flow"
+                                    });
+                                    wireSourceChanged(
+                                        object,
+                                        asOutputProperty,
+                                        eventName
+                                    );
+                                }
                                 break;
                             }
                         }

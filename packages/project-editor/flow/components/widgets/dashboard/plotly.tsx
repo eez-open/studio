@@ -489,7 +489,6 @@ interface InputData {
 
 export class PlotlyLineChartExecutionState {
     updated: number = 0;
-    valuesMap: Map<number, number[]>;
     values: InputData[] = [];
     maxPoints: number = 0;
     labels: string[] = [];
@@ -1417,11 +1416,6 @@ export class LineChartWidget extends Widget {
 
             if (resetInputValue !== undefined) {
                 context.clearInputValue("reset");
-
-                if (executionState.valuesMap) {
-                    executionState.valuesMap.clear();
-                }
-
                 executionState!.values = [];
             } else {
                 let maxPoints = context.evalProperty("maxPoints");
@@ -1430,24 +1424,44 @@ export class LineChartWidget extends Widget {
                 if (xValue != undefined) {
                     const lineValues = context.getExpressionListParam(8);
 
-                    if (!executionState.valuesMap) {
-                        executionState!.valuesMap = new Map();
-                    }
-                    executionState.valuesMap.set(xValue, lineValues);
-
-                    let xValues = [...executionState.valuesMap.keys()];
-                    xValues.sort((a, b) => a - b);
-                    while (xValues.length > 0 && xValues.length > maxPoints) {
-                        executionState.valuesMap.delete(xValues.shift()!);
+                    if (!executionState.values) {
+                        executionState.values = [];
                     }
 
-                    let values = xValues.map(xValue => ({
-                        xValue,
-                        lineValues: executionState!.valuesMap.get(xValue)!
-                    }));
+                    let inserted = false;
+
+                    for (let i = 0; i < executionState.values.length; i++) {
+                        if (xValue < executionState.values[i].xValue) {
+                            executionState.values.splice(i, 0, {
+                                xValue,
+                                lineValues
+                            });
+                            inserted = true;
+                            break;
+                        }
+
+                        if (xValue == executionState.values[i].xValue) {
+                            if (i < executionState.values.length - 1) {
+                                executionState.values[i].lineValues =
+                                    lineValues;
+                                inserted = true;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!inserted) {
+                        executionState.values.push({
+                            xValue,
+                            lineValues
+                        });
+                    }
+
+                    while (executionState.values.length > maxPoints) {
+                        executionState.values.splice(0, 1);
+                    }
 
                     executionState!.maxPoints = maxPoints;
-                    executionState!.values = values;
                 }
             }
 
