@@ -122,6 +122,7 @@ import {
     CALL_ACTION_ICON,
     CALL_NATIVE_ACTION_ICON,
     CLIPBOARD_WRITE_ICON,
+    FOCUS_WIDGET_ICON,
     LANGUAGE_ICON,
     LOG_ICON,
     PALETTE_ICON,
@@ -4835,6 +4836,110 @@ export class PrintToPDFActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class FocusWidgetActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        componentPaletteGroupName: "GUI",
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "widget",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "widget"
+            )
+        ],
+        defaultValue: {},
+        icon: FOCUS_WIDGET_ICON,
+        componentHeaderColor: "#DEB887",
+        execute: (context: IDashboardComponentContext) => {
+            const widget = context.evalProperty<number>("widget");
+            if (widget == undefined) {
+                context.throwError(`Invalid Widget property`);
+                return;
+            }
+
+            const widgetInfo =
+                context.WasmFlowRuntime.getWidgetHandleInfo(widget);
+
+            if (!widgetInfo) {
+                context.throwError(`Invalid Widget handle`);
+                return;
+            }
+
+            const widgetContext = new DashboardComponentContext(
+                context.WasmFlowRuntime,
+                widgetInfo.flowStateIndex,
+                widgetInfo.componentIndex
+            );
+
+            const executionState =
+                widgetContext.getComponentExecutionState<any>();
+
+            if (!executionState) {
+                context.throwError(`Widget not initialized`);
+                return;
+            }
+
+            if (!executionState.focus) {
+                context.throwError(`Widget doesn't support focus`);
+                return;
+            }
+
+            executionState.focus();
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    widget: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            widget: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.widget) {
+            return null;
+        }
+        return (
+            <div className="body">
+                <pre>{this.widget}</pre>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 registerClass("StartActionComponent", StartActionComponent);
 registerClass("EndActionComponent", EndActionComponent);
 registerClass("InputActionComponent", InputActionComponent);
@@ -4902,3 +5007,5 @@ registerClass("NoopActionComponent", NoopActionComponent);
 registerClass("CommentActionComponent", CommentActionComponent);
 
 registerClass("PrintToPDFActionComponent", PrintToPDFActionComponent);
+
+registerClass("FocusWidgetActionComponent", FocusWidgetActionComponent);

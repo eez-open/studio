@@ -1331,3 +1331,19 @@ export function openProject(filePath: string, runMode: boolean) {
         console.error(err);
     }
 }
+
+ipcRenderer.on("show-documentation-browser", async () => {
+    if (
+        tabs.activeTab instanceof ProjectEditorTab &&
+        tabs.activeTab.projectStore &&
+        tabs.activeTab.projectStore.runtime
+    ) {
+        return;
+    }
+
+    const { showDocumentationBrowser } = await import(
+        "home/documentation-browser"
+    );
+    await initProjectEditor(tabs, ProjectEditorTab);
+    showDocumentationBrowser();
+});

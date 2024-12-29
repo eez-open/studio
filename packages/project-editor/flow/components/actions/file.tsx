@@ -147,7 +147,7 @@ registerActionComponents("File", [
                 name: "encoding",
                 type: "expression",
                 valueType: "string",
-                formText: `"ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "binary" or "latin1"`
+                formText: `"ascii", "base64", "hex", "ucs2", "ucs-2", "utf16le", "utf-16le", "utf8", "utf-8", "utf8-bom", "binary" or "latin1"`
             }
         ],
         execute: (context: IDashboardComponentContext) => {
@@ -157,11 +157,13 @@ registerActionComponents("File", [
                 return;
             }
 
-            const encodingValue = context.evalProperty("encoding");
+            let encodingValue = context.evalProperty("encoding");
             if (typeof encodingValue != "string") {
                 context.throwError("${encoding} is not a string");
                 return;
             }
+
+            let contentValue = context.evalProperty("content");
 
             const encodings = [
                 "ascii",
@@ -176,6 +178,10 @@ registerActionComponents("File", [
                 "binary",
                 "latin1"
             ];
+            if (encodingValue == "utf8-bom") {
+                encodingValue = "utf8";
+                contentValue = "\ufeff" + contentValue;
+            }
             if (encodings.indexOf(encodingValue) == -1) {
                 context.throwError(
                     `Unsupported encoding value ${encodingValue}, supported: ${encodings.join(
@@ -184,8 +190,6 @@ registerActionComponents("File", [
                 );
                 return;
             }
-
-            const contentValue = context.evalProperty("content");
 
             context = context.startAsyncExecution();
 

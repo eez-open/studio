@@ -79,7 +79,6 @@ import { getClassByName } from "project-editor/core/object";
 import { FLOW_EVENT_KEYDOWN } from "project-editor/flow/runtime/flow-events";
 import { preloadAllBitmaps } from "project-editor/features/bitmap/bitmap";
 import { releaseRuntimeDashboardStates } from "project-editor/flow/runtime/component-execution-states";
-import { hasClass } from "eez-studio-shared/dom";
 import { findBitmap } from "project-editor/project/assets";
 
 interface IGlobalVariableBase {
@@ -1186,6 +1185,7 @@ export class WasmRuntime extends RemoteRuntime {
             //key = e.key;
         }
 
+        /*
         if (e.target instanceof HTMLInputElement) {
             if (
                 (key != "Tab" && key != "ShiftTab") ||
@@ -1208,6 +1208,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         e.preventDefault();
         e.stopPropagation();
+        */
 
         let valuePtr = createWasmValue(this.worker.wasm, key);
 

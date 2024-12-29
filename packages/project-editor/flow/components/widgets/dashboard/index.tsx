@@ -612,6 +612,10 @@ registerClass("TextInputWidget", TextInputWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class NumberInputDashboardExecutionState {
+    focus?: () => void;
+}
+
 const NumberInputDashboardWidgetElement = observer(
     class NumberInputDashboardWidgetElement extends React.Component<{
         className: string;
@@ -635,6 +639,16 @@ const NumberInputDashboardWidgetElement = observer(
         componentDidMount() {
             if (this.props.flowContext.flowState && this.inputElement.current) {
                 this.inputElement.current.focus();
+            }
+
+            let executionState =
+                this.props.flowContext.flowState?.getComponentExecutionState<NumberInputDashboardExecutionState>(
+                    this.props.component
+                );
+            if (executionState) {
+                executionState.focus = () => {
+                    this.inputElement.current?.focus();
+                };
             }
         }
 
@@ -811,6 +825,18 @@ export class NumberInputDashboardWidget extends Widget {
                 code: 1,
                 paramExpressionType: `struct:${SLIDER_CHANGE_EVENT_STRUCT_NAME}`,
                 oldName: "action"
+            }
+        },
+
+        execute: (context: IDashboardComponentContext) => {
+            Widget.classInfo.execute!(context);
+
+            let executionState =
+                context.getComponentExecutionState<NumberInputDashboardExecutionState>();
+            if (!executionState) {
+                context.setComponentExecutionState<NumberInputDashboardExecutionState>(
+                    new NumberInputDashboardExecutionState()
+                );
             }
         }
     });
@@ -2605,3 +2631,4 @@ import "project-editor/flow/components/widgets/dashboard/embedded-dashboard";
 
 import { assignProperty } from "project-editor/flow/runtime/worker-dashboard-component-context";
 import { guid } from "eez-studio-shared/guid";
+import { IDashboardComponentContext } from "eez-studio-types";
