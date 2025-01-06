@@ -142,6 +142,7 @@ export const Messages = observer(
                         rootNode={this.rootNode}
                         selectNode={this.selectNode}
                         showOnlyChildren={true}
+                        collapseSingleChild={true}
                     />
                 </div>
             );
@@ -183,22 +184,35 @@ const MessageContent = observer(
                     }
                 }
             } else {
-                let iconName = "material:";
+                let iconName;
                 let iconClassName;
+
                 if (this.props.message.type == MessageType.ERROR) {
-                    iconName += "error";
+                    iconName = "material:error";
                     iconClassName = "error";
                 } else if (this.props.message.type == MessageType.WARNING) {
-                    iconName += "warning";
+                    iconName = "material:warning";
                     iconClassName = "warning";
                 } else if (this.props.message.type == MessageType.INFO) {
-                    iconName += "info";
+                    iconName = "material:info";
+                    iconClassName = "info";
+                } else if (this.props.message.object) {
+                    iconName = getObjectIcon(this.props.message.object);
                     iconClassName = "info";
                 } else {
-                    iconName += "folder";
+                    iconName = "material:folder";
                     iconClassName = "folder";
                 }
-                icon = <Icon icon={iconName} className={iconClassName} />;
+
+                if (iconName) {
+                    icon = (
+                        <Icon
+                            icon={iconName}
+                            className={iconClassName}
+                            size={18}
+                        />
+                    );
+                }
             }
 
             let text =

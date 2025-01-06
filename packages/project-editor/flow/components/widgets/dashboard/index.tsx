@@ -4,7 +4,6 @@ import {
     makeObservable,
     computed,
     runInAction,
-    IReactionDisposer,
     action
 } from "mobx";
 import classNames from "classnames";
@@ -309,28 +308,16 @@ const TextInputWidgetInput = observer(
         password: boolean;
         iterators: number[];
     }> {
-        ref = React.createRef<HTMLInputElement>();
-        cursor: number | null = null;
+        inputElement = React.createRef<HTMLInputElement>();
+        latestFlowValue: any;
+        inputValue: any;
 
         constructor(props: any) {
             super(props);
 
             makeObservable(this, {
-                cursor: observable
+                inputValue: observable
             });
-        }
-
-        setSelectionRange() {
-            const input = this.ref.current;
-            if (input) input.setSelectionRange(this.cursor, this.cursor);
-        }
-
-        componentDidMount() {
-            this.setSelectionRange();
-        }
-
-        componentDidUpdate() {
-            this.setSelectionRange();
         }
 
         handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -354,13 +341,13 @@ const TextInputWidgetInput = observer(
         onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             const { flowContext, textInputWidget, iterators } = this.props;
 
+            runInAction(() => {
+                this.inputValue = event.target.value;
+            });
+
             const flowState = flowContext.flowState as FlowState;
             if (flowState) {
-                runInAction(() => {
-                    this.cursor = event.target.selectionStart;
-                });
-
-                const value = event.target.value;
+                const value = this.inputValue;
 
                 if (this.props.textInputWidget.data) {
                     assignProperty(
@@ -402,12 +389,26 @@ const TextInputWidgetInput = observer(
         render() {
             const { value, readOnly, placeholder, password } = this.props;
 
+            if (value != this.latestFlowValue) {
+                this.latestFlowValue = value;
+
+                setTimeout(
+                    action(() => {
+                        this.inputValue = undefined;
+                    })
+                );
+            }
+
             return (
                 <>
                     <input
-                        ref={this.ref}
+                        ref={this.inputElement}
                         type={password ? "password" : "text"}
-                        value={value}
+                        value={
+                            this.inputValue != undefined
+                                ? this.inputValue
+                                : value
+                        }
                         placeholder={placeholder}
                         onChange={this.onChange}
                         onBlur={this.onBlur}
@@ -626,6 +627,10 @@ const NumberInputDashboardWidgetElement = observer(
         disableDefaultTabHandling: boolean;
         iterators: number[];
     }> {
+        inputElement = React.createRef<HTMLInputElement>();
+        latestFlowValue: any;
+        inputValue: any;
+
         constructor(props: any) {
             super(props);
 
@@ -633,8 +638,6 @@ const NumberInputDashboardWidgetElement = observer(
                 inputValue: observable
             });
         }
-
-        inputElement = React.createRef<HTMLInputElement>();
 
         componentDidMount() {
             if (this.props.flowContext.flowState && this.inputElement.current) {
@@ -651,10 +654,6 @@ const NumberInputDashboardWidgetElement = observer(
                 };
             }
         }
-
-        dispose: IReactionDisposer;
-        latestFlowValue: any;
-        inputValue: any;
 
         render() {
             const { flowContext, component } = this.props;

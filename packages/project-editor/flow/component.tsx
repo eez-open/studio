@@ -2020,7 +2020,9 @@ export class Component extends EezObject {
                                 componentInput.displayName ||
                                 componentInput.name
                             }"`,
-                            component
+                            component,
+                            undefined,
+                            true
                         )
                     );
                 }
@@ -2096,7 +2098,9 @@ export class Component extends EezObject {
                                           )
                                     : componentOutput.name
                             }" is not connected`,
-                            component
+                            component,
+                            undefined,
+                            true
                         )
                     );
                 }

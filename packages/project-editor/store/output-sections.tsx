@@ -52,7 +52,8 @@ export class Message implements IMessage {
         public type: MessageType,
         public text: string,
         public object?: IEezObject,
-        public messages?: Message[]
+        public messages?: Message[],
+        public useGeneratedId?: boolean
     ) {
         makeObservable(this, {
             selected: observable,
@@ -61,6 +62,9 @@ export class Message implements IMessage {
     }
 
     get id() {
+        if (this.useGeneratedId) {
+            return this._id;
+        }
         return this.object ? getObjectPathAsString(this.object) : this._id;
     }
 }

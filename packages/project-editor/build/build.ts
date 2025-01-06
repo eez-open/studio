@@ -661,7 +661,7 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
             new Message(
                 MessageType.GROUP,
                 getLabel(object),
-                undefined,
+                object,
                 messages as Message[]
             )
         ];

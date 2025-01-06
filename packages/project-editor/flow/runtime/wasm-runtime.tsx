@@ -1186,10 +1186,11 @@ export class WasmRuntime extends RemoteRuntime {
             //key = e.key;
         }
 
-        const isFunctionKey =
-            key != undefined && key.startsWith("F") && key.length > 1;
+        const passKey =
+            (key != undefined && key.startsWith("F") && key.length > 1) ||
+            key == "Escape";
 
-        if (!isFunctionKey) {
+        if (!passKey) {
             if (e.target instanceof HTMLInputElement) {
                 if (
                     (key != "Tab" && key != "ShiftTab") ||
@@ -1198,6 +1199,7 @@ export class WasmRuntime extends RemoteRuntime {
                         "eez-studio-disable-default-tab-handling"
                     )
                 ) {
+                    // do not pass key
                     return;
                 }
             }
@@ -1206,15 +1208,16 @@ export class WasmRuntime extends RemoteRuntime {
                 e.target instanceof HTMLSelectElement ||
                 e.target instanceof HTMLTextAreaElement
             ) {
+                // do not pass key
                 return;
             }
         }
 
-        /*
         if (key == undefined) {
             return;
         }
 
+        /*
         e.preventDefault();
         e.stopPropagation();
         */
