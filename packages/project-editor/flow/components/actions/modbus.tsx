@@ -231,7 +231,10 @@ export class ModbusActionComponent extends ActionComponent {
 
                 let connectionId =
                     connectionObject instanceof SerialConnection
-                        ? "serial-" + connectionObject.connectionId
+                        ? "serial-" +
+                          connectionObject.connectionId +
+                          "-" +
+                          timeout
                         : "tcp-" + connectionObject.id;
 
                 let client;

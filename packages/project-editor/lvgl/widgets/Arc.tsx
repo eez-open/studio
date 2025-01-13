@@ -114,8 +114,8 @@ export class LVGLArcWidget extends LVGLWidget {
             rangeMaxType: "literal",
             value: 25,
             valueType: "literal",
-            bgStartAngle: 120,
-            bgEndAngle: 60,
+            bgStartAngle: 135,
+            bgEndAngle: 45,
             mode: "NORMAL",
             rotation: 0
         },
@@ -291,11 +291,11 @@ export class LVGLArcWidget extends LVGLWidget {
             //}
         }
 
-        if (this.bgStartAngle != 120) {
+        if (this.bgStartAngle != 135) {
             build.line(`lv_arc_set_bg_start_angle(obj, ${this.bgStartAngle});`);
         }
 
-        if (this.bgEndAngle != 0) {
+        if (this.bgEndAngle != 45) {
             build.line(`lv_arc_set_bg_end_angle(obj, ${this.bgEndAngle});`);
         }
 
