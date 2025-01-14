@@ -371,6 +371,94 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
         });
     }
 
+    getConnectionLineAlignedY(context: IFlowContext, event: IPointerEvent) {
+        if (!event.ctrlKey) {
+            return undefined;
+        }
+
+        let foundConnectionLine;
+        let foundDx = 0;
+
+        for (const connectionLine of (context.document.flow.object as Flow)
+            .connectionLines) {
+            if (
+                this.selectedObjects.find(
+                    selectedObject =>
+                        selectedObject.object == connectionLine.sourceComponent
+                )
+            ) {
+                // skip connection lines where source is among selected objects
+                continue;
+            }
+
+            const selectedObject = this.selectedObjects.find(
+                selectedObject =>
+                    selectedObject.object == connectionLine.targetComponent
+            );
+            if (selectedObject) {
+                const sourceOutputX =
+                    connectionLine.sourceComponent.geometry.left +
+                    connectionLine.sourceComponent.geometry.outputs[
+                        connectionLine.output
+                    ].position.x;
+
+                const targetInputX =
+                    this.rects[
+                        this.selectedObjects.findIndex(
+                            selectedObject =>
+                                selectedObject.object ==
+                                connectionLine.targetComponent
+                        )
+                    ].left +
+                    connectionLine.targetComponent.geometry.inputs[
+                        connectionLine.input
+                    ].position.x;
+
+                const dx = targetInputX - sourceOutputX;
+
+                if (
+                    dx > 0 &&
+                    (!foundConnectionLine || Math.abs(dx) < Math.abs(foundDx))
+                ) {
+                    foundConnectionLine = connectionLine;
+                    foundDx = dx;
+                }
+            }
+        }
+
+        if (!foundConnectionLine) {
+            return undefined;
+        }
+
+        const topSource = foundConnectionLine.sourceComponent.top;
+
+        const topBounding = this.selectionBoundingRectAtDown.top;
+        const topTarget =
+            this.objectPositionsAtDown[
+                this.selectedObjects.findIndex(
+                    selectedObject =>
+                        selectedObject.object ==
+                        foundConnectionLine.targetComponent
+                )
+            ].y;
+
+        const sourceOutputY =
+            foundConnectionLine.sourceComponent.geometry.outputs[
+                foundConnectionLine.output
+            ].position.y;
+
+        const targetInputY =
+            foundConnectionLine.targetComponent.geometry.inputs[
+                foundConnectionLine.input
+            ].position.y;
+
+        return (
+            topSource +
+            (topBounding - topTarget) -
+            (targetInputY - sourceOutputY)
+        );
+    }
+
     down(context: IFlowContext, event: IPointerEvent) {
         super.down(context, event);
 
@@ -403,12 +491,20 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             return;
         }
 
-        const { left, top } = this.snapLines.dragSnap(
+        let { left, top } = this.snapLines.dragSnap(
             this.left,
             this.top,
             this.selectionBoundingRectAtDown.width,
             this.selectionBoundingRectAtDown.height
         );
+
+        const connectionLineAlignedY = this.getConnectionLineAlignedY(
+            context,
+            event
+        );
+        if (connectionLineAlignedY) {
+            top = connectionLineAlignedY;
+        }
 
         const viewState = context.viewState;
 
