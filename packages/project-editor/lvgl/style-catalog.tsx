@@ -46,6 +46,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getEnumItems } from "project-editor/ui-components/PropertyGrid/utils";
 import type { LVGLPageRuntime } from "./page-runtime";
+import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1343,6 +1344,8 @@ const BorderSide = observer(
                 selectedValues = [];
             }
 
+            settingsController.isDarkTheme;
+
             return (
                 <Select
                     options={options}
@@ -1398,6 +1401,59 @@ const BorderSide = observer(
                     value={selectedValues}
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
+                    theme={theme => {
+                        return {
+                            ...theme,
+                            colors: {
+                                ...theme.colors,
+
+                                danger: "#DE350B",
+                                dangerLight: "#FFBDAD",
+
+                                ...(settingsController.isDarkTheme
+                                    ? {
+                                          neutral0: "hsl(0, 0%, 10%)",
+                                          neutral5: "hsl(0, 0%, 20%)",
+                                          neutral10: "hsl(0, 0%, 30%)",
+                                          neutral20: "hsl(0, 0%, 40%)",
+                                          neutral30: "hsl(0, 0%, 50%)",
+                                          neutral40: "hsl(0, 0%, 60%)",
+                                          neutral50: "hsl(0, 0%, 70%)",
+                                          neutral60: "hsl(0, 0%, 80%)",
+                                          neutral70: "hsl(0, 0%, 90%)",
+                                          neutral80: "hsl(0, 0%, 95%)",
+                                          neutral90: "hsl(0, 0%, 100%)"
+                                      }
+                                    : {
+                                          neutral0: "hsl(0, 0%, 100%)",
+                                          neutral5: "hsl(0, 0%, 95%)",
+                                          neutral10: "hsl(0, 0%, 90%)",
+                                          neutral20: "hsl(0, 0%, 80%)",
+                                          neutral30: "hsl(0, 0%, 70%)",
+                                          neutral40: "hsl(0, 0%, 60%)",
+                                          neutral50: "hsl(0, 0%, 50%)",
+                                          neutral60: "hsl(0, 0%, 40%)",
+                                          neutral70: "hsl(0, 0%, 30%)",
+                                          neutral80: "hsl(0, 0%, 20%)",
+                                          neutral90: "hsl(0, 0%, 10%)"
+                                      }),
+
+                                primary: "#2684FF",
+                                primary25: "#DEEBFF",
+                                primary50: "#B2D4FF",
+                                primary75: "#4C9AFF"
+                            }
+                        };
+                    }}
+                    styles={{
+                        option: (baseStyles, state) => ({
+                            ...baseStyles,
+                            ...(settingsController.isDarkTheme &&
+                            state.isFocused
+                                ? { color: "#333" }
+                                : {})
+                        })
+                    }}
                 />
             );
         }
@@ -2039,6 +2095,8 @@ const TextDecorationSide = observer(
                 selectedValues = [];
             }
 
+            settingsController.isDarkTheme;
+
             return (
                 <Select
                     options={options}
@@ -2082,6 +2140,59 @@ const TextDecorationSide = observer(
                     value={selectedValues}
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
+                    theme={theme => {
+                        return {
+                            ...theme,
+                            colors: {
+                                ...theme.colors,
+
+                                danger: "#DE350B",
+                                dangerLight: "#FFBDAD",
+
+                                ...(settingsController.isDarkTheme
+                                    ? {
+                                          neutral0: "hsl(0, 0%, 10%)",
+                                          neutral5: "hsl(0, 0%, 20%)",
+                                          neutral10: "hsl(0, 0%, 30%)",
+                                          neutral20: "hsl(0, 0%, 40%)",
+                                          neutral30: "hsl(0, 0%, 50%)",
+                                          neutral40: "hsl(0, 0%, 60%)",
+                                          neutral50: "hsl(0, 0%, 70%)",
+                                          neutral60: "hsl(0, 0%, 80%)",
+                                          neutral70: "hsl(0, 0%, 90%)",
+                                          neutral80: "hsl(0, 0%, 95%)",
+                                          neutral90: "hsl(0, 0%, 100%)"
+                                      }
+                                    : {
+                                          neutral0: "hsl(0, 0%, 100%)",
+                                          neutral5: "hsl(0, 0%, 95%)",
+                                          neutral10: "hsl(0, 0%, 90%)",
+                                          neutral20: "hsl(0, 0%, 80%)",
+                                          neutral30: "hsl(0, 0%, 70%)",
+                                          neutral40: "hsl(0, 0%, 60%)",
+                                          neutral50: "hsl(0, 0%, 50%)",
+                                          neutral60: "hsl(0, 0%, 40%)",
+                                          neutral70: "hsl(0, 0%, 30%)",
+                                          neutral80: "hsl(0, 0%, 20%)",
+                                          neutral90: "hsl(0, 0%, 10%)"
+                                      }),
+
+                                primary: "#2684FF",
+                                primary25: "#DEEBFF",
+                                primary50: "#B2D4FF",
+                                primary75: "#4C9AFF"
+                            }
+                        };
+                    }}
+                    styles={{
+                        option: (baseStyles, state) => ({
+                            ...baseStyles,
+                            ...(settingsController.isDarkTheme &&
+                            state.isFocused
+                                ? { color: "#333" }
+                                : {})
+                        })
+                    }}
                 />
             );
         }
