@@ -428,6 +428,7 @@ export const SettingsContent = observer(
                                 extension.key == "variables" ||
                                 extension.key == "styles" ||
                                 extension.key == "lvglStyles" ||
+                                extension.key == "lvglGroups" ||
                                 extension.key == "fonts" ||
                                 extension.key == "bitmaps" ||
                                 extension.key == "texts" ||
@@ -436,7 +437,10 @@ export const SettingsContent = observer(
                                 return false;
                             }
                         } else {
-                            if (extension.key == "lvglStyles") {
+                            if (
+                                extension.key == "lvglStyles" ||
+                                extension.key == "lvglGroups"
+                            ) {
                                 return false;
                             }
                         }
