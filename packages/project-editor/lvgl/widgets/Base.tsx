@@ -2000,7 +2000,7 @@ export class LVGLWidget extends Widget {
 
         if (this.flagScrollDirection) {
             build.line(
-                `lv_obj_set_scroll_snap_x(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
+                `lv_obj_set_scroll_dir(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
             );
         }
 
