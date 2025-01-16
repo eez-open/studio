@@ -308,19 +308,22 @@ export class ProjectStore {
                         } else {
                             this.onSetRuntimeMode();
                         }
+                        return false;
                     }
                 } else {
                     this.onSetRuntimeMode();
+                    return false;
                 }
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("shift+f5", () => {
             if (this.runtime) {
                 this.onSetEditorMode();
+                return false;
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("ctrl+f5", () => {
@@ -330,9 +333,10 @@ export class ProjectStore {
             ) {
                 if (!this.runtime || !this.runtime.isDebuggerActive) {
                     this.onSetDebuggerMode();
+                    return false;
                 }
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("f6", () => {
@@ -342,8 +346,9 @@ export class ProjectStore {
                 !this.runtime.isPaused
             ) {
                 this.runtime.pause();
+                return false;
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("f10", () => {
@@ -353,8 +358,9 @@ export class ProjectStore {
                 this.runtime.isPaused
             ) {
                 this.runtime.runSingleStep("step-over");
+                return false;
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("f11", () => {
@@ -364,8 +370,9 @@ export class ProjectStore {
                 this.runtime.isPaused
             ) {
                 this.runtime.runSingleStep("step-into");
+                return false;
             }
-            return false;
+            return true;
         });
 
         Mousetrap.bind("shift+f11", () => {
@@ -375,8 +382,9 @@ export class ProjectStore {
                 this.runtime.isPaused
             ) {
                 this.runtime.runSingleStep("step-out");
+                return false;
             }
-            return false;
+            return true;
         });
     }
 
