@@ -241,7 +241,7 @@ EM_PORT_API(lv_obj_t *) lvglDropdownGetList(lv_obj_t *parentObj, int32_t index) 
 }
 
 
-EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t range_min, int32_t range_max, int32_t value, int32_t bg_start_angle, int32_t bg_end_angle, lv_bar_mode_t mode, int32_t rotation) {
+EM_PORT_API(lv_obj_t *) lvglCreateArc(lv_obj_t *parentObj, int32_t index, lv_coord_t x, lv_coord_t y, lv_coord_t w, lv_coord_t h, int32_t range_min, int32_t range_max, int32_t value, int32_t bg_start_angle, int32_t bg_end_angle, lv_arc_mode_t mode, int32_t rotation) {
     lv_obj_t *obj = lv_arc_create(parentObj);
     lv_obj_set_pos(obj, x, y);
     lv_obj_set_size(obj, w, h);
@@ -1225,10 +1225,11 @@ EM_PORT_API(lv_obj_t *) lvglTabviewGetTabContent(lv_obj_t *parentObj, int32_t in
 
 EM_PORT_API(void) lvglLineSetPoints(lv_obj_t *obj, float *point_values, uint32_t point_num) {
     lv_line_t *line = (lv_line_t *)obj;
-    if (line->point_array) {
 #if LVGL_VERSION_MAJOR >= 9
-        lv_free((void *)line->point_array);
+    if (line->point_array.constant) {
+        lv_free((void *)line->point_array.constant);
 #else
+    if (line->point_array) {
         lv_mem_free((void *)line->point_array);
 #endif
     }

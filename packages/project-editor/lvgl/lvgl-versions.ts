@@ -37,11 +37,56 @@ import { settingsController } from "home/settings";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const V8_LV_COORD_TYPE_SHIFT = 13;
+const V8_LV_COORD_TYPE_SPEC = 1 << V8_LV_COORD_TYPE_SHIFT;
+function V8_LV_COORD_SET_SPEC(x: number) {
+    return x | V8_LV_COORD_TYPE_SPEC;
+}
+
+const V8_LV_COORD_MAX = (1 << V8_LV_COORD_TYPE_SHIFT) - 1;
+
+function V8_LV_PCT(x: number) {
+    return x < 0 ? V8_LV_COORD_SET_SPEC(1000 - x) : V8_LV_COORD_SET_SPEC(x);
+}
+
+const V8_LV_SIZE_CONTENT = V8_LV_COORD_SET_SPEC(2001);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const V9_LV_COORD_TYPE_SHIFT = 29;
+const V9_LV_COORD_TYPE_SPEC = 1 << V9_LV_COORD_TYPE_SHIFT;
+
+function V9_LV_COORD_SET_SPEC(x: number) {
+    return x | V9_LV_COORD_TYPE_SPEC;
+}
+
+const V9_LV_COORD_MAX = (1 << V9_LV_COORD_TYPE_SHIFT) - 1;
+
+const V9_LV_PCT_STORED_MAX = V9_LV_COORD_MAX - 1;
+
+const V9_LV_PCT_POS_MAX = V9_LV_PCT_STORED_MAX / 2;
+
+function V9_LV_PCT(x: number) {
+    return V9_LV_COORD_SET_SPEC(
+        x < 0
+            ? V9_LV_PCT_POS_MAX - Math.max(x, -V9_LV_PCT_POS_MAX)
+            : Math.min(x, V9_LV_PCT_POS_MAX)
+    );
+}
+
+const V9_LV_SIZE_CONTENT = V9_LV_COORD_SET_SPEC(V9_LV_COORD_MAX);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const versions = {
     "8.3": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v8.3.js",
 
-        _LV_COORD_TYPE_SHIFT: 13,
+        LV_COORD: {
+            LV_COORD_MAX: V8_LV_COORD_MAX,
+            LV_SIZE_CONTENT: V8_LV_SIZE_CONTENT,
+            LV_PCT: V8_LV_PCT
+        },
 
         bitmapColorFormats: [
             { id: CF_ALPHA_1_BIT, label: "ALPHA 1 BIT" },
@@ -197,7 +242,11 @@ const versions = {
     "9.0": {
         wasmFlowRuntime: "project-editor/flow/runtime/lvgl_runtime_v9.0.js",
 
-        _LV_COORD_TYPE_SHIFT: 29,
+        LV_COORD: {
+            LV_COORD_MAX: V9_LV_COORD_MAX,
+            LV_SIZE_CONTENT: V9_LV_SIZE_CONTENT,
+            LV_PCT: V9_LV_PCT
+        },
 
         bitmapColorFormats: [
             { id: CF_L8, label: "L8" },
@@ -488,8 +537,8 @@ export function getLvglStylePropCode(
     return code[ProjectEditor.getProject(object).settings.general.lvglVersion];
 }
 
-export function getLvglCoordTypeShift(object: IEezObject) {
-    return getVersionProperty(object, "_LV_COORD_TYPE_SHIFT");
+export function getLvglCoord(object: IEezObject) {
+    return getVersionProperty(object, "LV_COORD");
 }
 
 export function getLvglBitmapPtr(

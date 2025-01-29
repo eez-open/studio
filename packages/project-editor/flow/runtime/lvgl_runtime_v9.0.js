@@ -969,25 +969,25 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1029552: ($0) => { startToDebuggerMessage($0); },  
- 1029584: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1029659: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1029734: ($0) => { finishToDebuggerMessage($0); },  
- 1029767: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1029821: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1029875: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1029928: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1029981: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1030034: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1030067: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1030103: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1030148: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1030254: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1030290: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1030327: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1030367: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1030424: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1030483: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1031824: ($0) => { startToDebuggerMessage($0); },  
+ 1031856: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1031931: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1032006: ($0) => { finishToDebuggerMessage($0); },  
+ 1032039: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1032093: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1032147: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1032200: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1032253: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1032306: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1032339: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1032375: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1032420: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1032526: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1032562: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1032599: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1032639: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1032696: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1032755: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4854,9 +4854,9 @@ var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo'
 var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
 var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
 var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate');
+var _fflush = Module['_fflush'] = createExportWrapper('fflush');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');
-var _fflush = Module['_fflush'] = createExportWrapper('fflush');
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
 var _emscripten_stack_get_free = () => (_emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'])();
 var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();

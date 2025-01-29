@@ -78,47 +78,49 @@ export const LVGLPage = observer(
     }
 );
 
-const LVGLPageCanvas = React.forwardRef(
-    (
-        props: {
-            width: number;
-            height: number;
-            flowContext: IFlowContext;
-        },
-        ref: React.Ref<HTMLCanvasElement>
-    ) => {
-        const style: React.CSSProperties = {
-            imageRendering:
-                props.flowContext.viewState.transform.scale > 2
-                    ? "pixelated"
-                    : "auto"
-        };
+const LVGLPageCanvas = observer(
+    React.forwardRef(
+        (
+            props: {
+                width: number;
+                height: number;
+                flowContext: IFlowContext;
+            },
+            ref: React.Ref<HTMLCanvasElement>
+        ) => {
+            const style: React.CSSProperties = {
+                imageRendering:
+                    props.flowContext.viewState.transform.scale > 2
+                        ? "pixelated"
+                        : "auto"
+            };
 
-        if (
-            props.flowContext.projectStore.project.settings.general
-                .circularDisplay ||
-            props.flowContext.projectStore.project.settings.general
-                .displayBorderRadius != 0
-        ) {
-            style.borderRadius = props.flowContext.projectStore.project.settings
-                .general.circularDisplay
-                ? Math.min(props.width, props.height)
-                : props.flowContext.projectStore.project.settings.general
-                      .displayBorderRadius;
+            if (
+                props.flowContext.projectStore.project.settings.general
+                    .circularDisplay ||
+                props.flowContext.projectStore.project.settings.general
+                    .displayBorderRadius != 0
+            ) {
+                style.borderRadius = props.flowContext.projectStore.project
+                    .settings.general.circularDisplay
+                    ? Math.min(props.width, props.height)
+                    : props.flowContext.projectStore.project.settings.general
+                          .displayBorderRadius;
 
-            style.border = `1px solid ${
-                settingsController.isDarkTheme ? "#444" : "#eee"
-            }`;
-            style.transform = "translate(-1px, -1px)";
+                style.border = `1px solid ${
+                    settingsController.isDarkTheme ? "#444" : "#eee"
+                }`;
+                style.transform = "translate(-1px, -1px)";
+            }
+
+            return (
+                <canvas
+                    ref={ref}
+                    width={props.width}
+                    height={props.height}
+                    style={style}
+                ></canvas>
+            );
         }
-
-        return (
-            <canvas
-                ref={ref}
-                width={props.width}
-                height={props.height}
-                style={style}
-            ></canvas>
-        );
-    }
+    )
 );

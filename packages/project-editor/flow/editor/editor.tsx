@@ -139,8 +139,8 @@ const CenterLines = observer(
             const transform = flowContext.viewState.transform;
 
             const CENTER_LINES_COLOR = settingsController.isDarkTheme
-                ? "#444"
-                : "#eee";
+                ? "#666"
+                : "#ddd";
             const CENTER_LINES_WIDTH = 1 / transform.scale;
 
             const centerLineStyle = {

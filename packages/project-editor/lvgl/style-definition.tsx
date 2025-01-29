@@ -38,7 +38,7 @@ import {
     getSelectorBuildCode,
     getSelectorCode
 } from "project-editor/lvgl/style-helper";
-import { getLvglCoordTypeShift } from "./lvgl-versions";
+import { getLvglCoord } from "./lvgl-versions";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { isValid } from "eez-studio-shared/color";
 import type { LVGLStyle } from "./style";
@@ -554,10 +554,7 @@ export class LVGLStylesDefinition extends EezObject {
                                   )
                                 : value;
 
-                            const _LV_COORD_TYPE_SHIFT =
-                                getLvglCoordTypeShift(widget);
-                            const LV_COORD_MAX =
-                                (1 << _LV_COORD_TYPE_SHIFT) - 1;
+                            const { LV_COORD_MAX } = getLvglCoord(widget);
                             const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
 
                             arrValue.push(LV_GRID_TEMPLATE_LAST);

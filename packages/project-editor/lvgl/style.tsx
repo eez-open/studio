@@ -44,7 +44,7 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { getLvglCoordTypeShift } from "./lvgl-versions";
+import { getLvglCoord } from "./lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -566,10 +566,7 @@ export class LVGLStyle extends EezObject {
                                       )
                                     : value;
 
-                                const _LV_COORD_TYPE_SHIFT =
-                                    getLvglCoordTypeShift(this);
-                                const LV_COORD_MAX =
-                                    (1 << _LV_COORD_TYPE_SHIFT) - 1;
+                                const { LV_COORD_MAX } = getLvglCoord(this);
                                 const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
 
                                 arrValue.push(LV_GRID_TEMPLATE_LAST);

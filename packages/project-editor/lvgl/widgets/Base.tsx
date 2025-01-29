@@ -79,7 +79,7 @@ import { LVGLStyle } from "project-editor/lvgl/style";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import {
-    getLvglCoordTypeShift,
+    getLvglCoord,
     getLvglEvents,
     getLvglFlagCodes
 } from "project-editor/lvgl/lvgl-versions";
@@ -2264,17 +2264,7 @@ export class LVGLWidget extends Widget {
             return page.rect;
         }
 
-        const _LV_COORD_TYPE_SHIFT = getLvglCoordTypeShift(this);
-        const _LV_COORD_TYPE_SPEC = 1 << _LV_COORD_TYPE_SHIFT;
-        function LV_COORD_SET_SPEC(x: number) {
-            return x | _LV_COORD_TYPE_SPEC;
-        }
-
-        function LV_PCT(x: number) {
-            return x < 0 ? LV_COORD_SET_SPEC(1000 - x) : LV_COORD_SET_SPEC(x);
-        }
-
-        const LV_SIZE_CONTENT = LV_COORD_SET_SPEC(2001);
+        const { LV_SIZE_CONTENT, LV_PCT } = getLvglCoord(this);
 
         let left;
         if (this.leftUnit == "%") {
