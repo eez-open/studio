@@ -445,7 +445,7 @@ function ensureUniqueProperties(
     );
     objects.forEach(object => {
         for (const propertyInfo of getClassInfo(object).properties) {
-            if (propertyInfo.unique) {
+            if (propertyInfo.unique || propertyInfo.uniqueIdentifier) {
                 if (propertyInfo.type == PropertyType.GUID) {
                     (object as any)[propertyInfo.name] = guid();
                 } else {
