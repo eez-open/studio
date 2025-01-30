@@ -1,3 +1,4 @@
+import path from "path";
 import React from "react";
 import {
     observable,
@@ -126,6 +127,7 @@ import {
     LANGUAGE_ICON,
     LOG_ICON,
     PALETTE_ICON,
+    PLAY_AUDIO_ICON,
     PRINT_TO_PDF_ICON
 } from "project-editor/ui-components/icons";
 import { humanize } from "eez-studio-shared/string";
@@ -2070,6 +2072,107 @@ export class LogActionComponent extends ActionComponent {
         return (
             <div className="body">
                 <pre>{this.value}</pre>
+            </div>
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class PlayAudioActionComponent extends ActionComponent {
+    static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType === ProjectType.DASHBOARD,
+
+        properties: [
+            makeExpressionProperty(
+                {
+                    name: "audioFile",
+                    type: PropertyType.MultilineText,
+                    propertyGridGroup: specificGroup
+                },
+                "string"
+            )
+        ],
+        defaultValue: {},
+        icon: PLAY_AUDIO_ICON,
+        componentHeaderColor: "#C9E9D2",
+        execute: (context: IDashboardComponentContext) => {
+            const audioFile = context.evalProperty<string>("audioFile");
+            if (audioFile == undefined) {
+                context.throwError(`Invalid Audio file property`);
+                return;
+            }
+
+            // Create an AudioContext
+            const audioContext = new window.AudioContext();
+
+            // Function to play audio
+            function playAudio(url: string) {
+                fetch(url)
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer =>
+                        audioContext.decodeAudioData(arrayBuffer)
+                    )
+                    .then(audioBuffer => {
+                        const source = audioContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                    })
+                    .catch(error =>
+                        console.error("Error loading audio:", error)
+                    );
+            }
+
+            playAudio(audioFile);
+
+            context.propagateValueThroughSeqout();
+        }
+    });
+
+    audioFile: string;
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            audioFile: observable
+        });
+    }
+
+    getInputs() {
+        return [
+            {
+                name: "@seqin",
+                type: "any" as ValueType,
+                isSequenceInput: true,
+                isOptionalInput: true
+            },
+            ...super.getInputs()
+        ];
+    }
+
+    getOutputs() {
+        return [
+            {
+                name: "@seqout",
+                type: "null" as ValueType,
+                isSequenceOutput: true,
+                isOptionalOutput: true
+            },
+            ...super.getOutputs()
+        ];
+    }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.audioFile) {
+            return null;
+        }
+
+        return (
+            <div className="body">
+                <pre>{path.basename(this.audioFile)}</pre>
             </div>
         );
     }
@@ -4968,6 +5071,8 @@ registerClass("DateNowActionComponent", DateNowActionComponent);
 registerClass("SortArrayActionComponent", SortArrayActionComponent);
 
 registerClass("LogActionComponent", LogActionComponent);
+
+registerClass("PlayAudioActionComponent", PlayAudioActionComponent);
 
 registerClass("ReadSettingActionComponent", ReadSettingActionComponent);
 registerClass("WriteSettingsActionComponent", WriteSettingsActionComponent);
