@@ -39,7 +39,8 @@ import {
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import {
     FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
-    FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE
+    FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE,
+    FIRST_LVGL_WIDGET_COMPONENT_TYPE
 } from "project-editor/flow/components/component-types";
 import {
     BASIC_TYPE_NAMES,
@@ -107,7 +108,12 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
                 if (component instanceof ProjectEditor.ActionComponentClass) {
                     flowComponentId = assets.nextDashboardActionComponentId++;
                 } else {
-                    flowComponentId = assets.nextDashboardWidgetComponentId++;
+                    if (assets.projectStore.projectTypeTraits.isLVGL) {
+                        flowComponentId = assets.nextLVGLWidgetComponentId++;
+                    } else {
+                        flowComponentId =
+                            assets.nextDashboardWidgetComponentId++;
+                    }
                 }
                 assets.dashboardComponentClassNameToComponentIdMap[name] =
                     flowComponentId;
@@ -527,6 +533,10 @@ export function buildFlowDefs(assets: Assets) {
 
     componentTypeEnumItems.push(
         `${TAB}FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE = ${FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE}`
+    );
+
+    componentTypeEnumItems.push(
+        `${TAB}FIRST_LVGL_WIDGET_COMPONENT_TYPE = ${FIRST_LVGL_WIDGET_COMPONENT_TYPE}`
     );
 
     defs.push(
