@@ -39,7 +39,7 @@ export class LVGLTableWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN", "ITEMS"],
+            parts: ["MAIN", "ITEMS", "SCROLLBAR"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
         }
@@ -74,5 +74,5 @@ export class LVGLTableWidget extends LVGLWidget {
         build.line(`lv_obj_t *obj = lv_table_create(parent_obj);`);
     }
 
-    override lvglBuildSpecific(build: LVGLBuild) {}
+    override lvglBuildSpecific(build: LVGLBuild) { }
 }
