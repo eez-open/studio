@@ -4,7 +4,8 @@
 [submodule "lvgl-8.3"]
 	path = wasm/lvgl-runtime/v8.3/lvgl
 	url = https://github.com/littlevgl/lvgl.git
+	branch = release/v8.3
 [submodule "lvgl-9.0"]
 	path = wasm/lvgl-runtime/v9.0/lvgl
 	url = https://github.com/lvgl/lvgl.git
-	branch = release/v9.0
+	branch = release/v9.2
