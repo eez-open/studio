@@ -3733,16 +3733,28 @@
         border: 1px solid @borderColor;
         border-bottom: none;
     }
-    .EezStudio_ListContainer {
-        min-height: 50px;
-        max-height: 480px;
+    .EezStudio_NewLVGLActionDialog_Content {
+        display: flex;
+        flex-direction: row;
+        .EezStudio_ListContainer {
+            &:nth-child(1) {
+                flex: 2;
+            }
 
-        .EezStudio_List {
-            padding: 5px;
+            &:nth-child(2) {
+                flex: 3;
+            }
 
-            > div.EezStudio_Selected {
-                background-color: @selectionBackgroundColor;
-                color: @selectionColor;
+            min-height: 50px;
+            max-height: 480px;
+
+            .EezStudio_List {
+                padding: 5px;
+
+                > div.EezStudio_Selected {
+                    background-color: @selectionBackgroundColor;
+                    color: @selectionColor;
+                }
             }
         }
     }

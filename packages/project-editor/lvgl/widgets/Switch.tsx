@@ -56,7 +56,7 @@ export class LVGLSwitchWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreateSwitch(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

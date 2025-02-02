@@ -155,7 +155,7 @@ export class LVGLLedWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateLed(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,
@@ -209,9 +209,15 @@ export class LVGLLedWidget extends LVGLWidget {
                     );
                 },
                 (color, obj) => {
-                    build.line(
-                        `lv_led_set_color(${obj}, lv_color_hex(${color}));`
-                    );
+                    if (build.project.settings.build.screensLifetimeSupport) {
+                        build.line(
+                            `if (${obj}) lv_led_set_color(${obj}, lv_color_hex(${color}));`
+                        );
+                    } else {
+                        build.line(
+                            `lv_led_set_color(${obj}, lv_color_hex(${color}));`
+                        );
+                    }
                 }
             );
         }

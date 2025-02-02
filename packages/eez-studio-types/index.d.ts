@@ -389,6 +389,14 @@ export interface WorkerToRenderMessage {
     lvglSetColorTheme?: {
         themeName: string;
     };
+
+    lvglCreateScreen?: {
+        screenIndex: number;
+    };
+
+    lvglDeleteScreen?: {
+        screenIndex: number;
+    };
 }
 
 interface IField {
@@ -548,7 +556,7 @@ export interface IWasmFlowRuntime {
     } | undefined;
 
     // eez framework API
-    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, darkTheme: boolean, timeZone: number): void;
+    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, darkTheme: boolean, timeZone: number, deleteOnScreenUnload: number): void;
     _mainLoop(): boolean;
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, pressed: number): void;
@@ -693,6 +701,8 @@ export interface IWasmFlowRuntime {
 
     _lvglScreenLoad(page_index: number, obj: number): void;
     _lvglDeleteObject(obj: number): void;
+    _lvglDeleteObjectIndex(index: number): void;
+    _lvglDeletePageFlowState(index: number): void;
     _lvglObjAddFlag(obj: number, f: number): void;
     _lvglObjClearFlag(obj: number, f: number): void;
     _lvglObjHasFlag(obj: number, f: number): boolean;
@@ -801,6 +811,7 @@ export interface IWasmFlowRuntime {
     _lvglSetKeyboardGroup(groupObj: number): void;
     _lvglAddScreenLoadedEventHandler(screenObj: number): void;
     _lvglGroupAddObject(screenObj: number, groupObj: number, obj: number): void;
+    _lvglGroupRemoveObjectsForScreen(screenObj: number): void;
 
     _lvglObjInvalidate(obj: number);
 }

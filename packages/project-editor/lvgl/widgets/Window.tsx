@@ -59,7 +59,7 @@ export class LVGLWindowWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateWindow(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

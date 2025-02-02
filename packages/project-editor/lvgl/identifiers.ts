@@ -24,6 +24,7 @@ export class LVGLIdentifiers {
     constructor(public store: ProjectStore) {
         makeObservable(this, {
             pages: computed,
+            userPages: computed,
             actions: computed,
             styles: computed,
             widgetIdentifiers: computed
@@ -38,6 +39,10 @@ export class LVGLIdentifiers {
         }
 
         return pages;
+    }
+
+    get userPages() {
+        return this.pages.filter(page => !page.isUsedAsUserWidget);
     }
 
     get actions() {

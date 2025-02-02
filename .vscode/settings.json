@@ -95,7 +95,10 @@
         "parser_private.h": "c",
         "lv_assert.h": "c",
         "lv_math.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "regex": "cpp",
+        "bitset": "cpp",
+        "shared_mutex": "cpp"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

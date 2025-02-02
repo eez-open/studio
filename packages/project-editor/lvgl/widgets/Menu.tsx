@@ -59,7 +59,7 @@ export class LVGLMenuWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateMenu(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

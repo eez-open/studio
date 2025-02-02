@@ -270,6 +270,11 @@ export class WasmRuntime extends RemoteRuntime {
             this.displayWidth,
             this.displayHeight,
             this.projectStore.project.settings.general.darkTheme,
+            this.projectStore.project.settings.build.screensLifetimeSupport
+                ? this.projectStore.lvglIdentifiers.userPages.map(
+                      page => page.deleteOnScreenUnload
+                  )
+                : undefined,
             (className: string) => getClassByName(this.projectStore, className),
             (key: string) => {
                 return this.projectStore.runtimeSettings.readSettings(key);
@@ -425,6 +430,14 @@ export class WasmRuntime extends RemoteRuntime {
         } else if (workerToRenderMessage.lvglSetColorTheme) {
             this.lgvlPageRuntime?.setColorTheme(
                 workerToRenderMessage.lvglSetColorTheme.themeName
+            );
+        } else if (workerToRenderMessage.lvglCreateScreen) {
+            this.lgvlPageRuntime?.lvglCreateScreen(
+                workerToRenderMessage.lvglCreateScreen.screenIndex
+            );
+        } else if (workerToRenderMessage.lvglDeleteScreen) {
+            this.lgvlPageRuntime?.lvglDeleteScreen(
+                workerToRenderMessage.lvglDeleteScreen.screenIndex
             );
         }
         this.onWorkerMessageAsync(workerToRenderMessage);

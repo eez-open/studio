@@ -154,7 +154,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateCalendar(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

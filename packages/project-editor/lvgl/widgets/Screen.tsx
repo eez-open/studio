@@ -90,7 +90,7 @@ export class LVGLScreenWidget extends LVGLWidget {
         } else {
             obj = runtime.wasm._lvglCreateScreen(
                 parentObj,
-                runtime.getWidgetIndex(
+                runtime.getCreateWidgetIndex(
                     getAncestorOfType(this, ProjectEditor.PageClass.classInfo)!
                 ),
 

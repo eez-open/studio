@@ -46,6 +46,7 @@ import {
     findBitmap,
     findLvglStyle,
     findPage,
+    Project,
     ProjectType
 } from "project-editor/project/project";
 import { Assets, DataBuffer } from "project-editor/build/assets";
@@ -114,6 +115,7 @@ function getValueTypeFromActionPropertyType(
 
 export interface IActionDefinition {
     name: string;
+    group: string;
     properties: IActionPropertyDefinition[];
     defaults: any;
     label?: (
@@ -121,6 +123,7 @@ export interface IActionDefinition {
         propertyNames: string[]
     ) => React.ReactNode;
     helpText: string;
+    disabled?: (project: Project) => string | false;
 }
 
 export const actionDefinitions: IActionDefinition[] = [];
@@ -427,6 +430,19 @@ export function registerAction(actionDefinition: IActionDefinition) {
 
             check: (object: LVGLActionType, messages: IMessage[]) => {
                 const projectStore = ProjectEditor.getProjectStore(object);
+
+                if (actionDefinition.disabled) {
+                    const errorMessage = actionDefinition.disabled(
+                        projectStore.project
+                    );
+                    if (errorMessage !== false) {
+                        messages.push(
+                            new Message(MessageType.ERROR, errorMessage, object)
+                        );
+                        return;
+                    }
+                }
+
                 const component = getAncestorOfType<LVGLActionComponent>(
                     object,
                     LVGLActionComponent.classInfo
@@ -692,7 +708,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-async function showNewLVGLActionDialog() {
+async function showNewLVGLActionDialog(project: Project) {
     return new Promise<string | null>(resolve => {
         const onOk = (value: string) => {
             resolve(value);
@@ -703,6 +719,7 @@ async function showNewLVGLActionDialog() {
         };
 
         runInAction(() => {
+            newLVGLActionDialogState.project = project;
             newLVGLActionDialogState.searchText = "";
             newLVGLActionDialogState._selectedActionName = undefined;
         });
@@ -714,13 +731,19 @@ async function showNewLVGLActionDialog() {
 ////////////////////////////////////////////////////////////////////////////////
 
 class NewLVGLActionDialogState {
+    project: Project;
     searchText: string = "";
+    _selectedGroup: string | undefined;
     _selectedActionName: string | undefined;
 
     constructor() {
         makeObservable(this, {
+            project: observable,
             searchText: observable,
+            _selectedGroup: observable,
             _selectedActionName: observable,
+            groups: computed,
+            searchFilteredActionDefinitions: computed,
             filteredActionDefinitions: computed
         });
     }
@@ -731,6 +754,38 @@ class NewLVGLActionDialogState {
             this._selectedActionName = this.filteredActionDefinitions[0]?.name;
         });
     };
+
+    get groups() {
+        const groups: string[] = [];
+
+        for (const actionDefinition of actionDefinitions) {
+            if (
+                this.searchFilteredActionDefinitions.indexOf(
+                    actionDefinition
+                ) != -1 &&
+                groups.indexOf(actionDefinition.group) == -1
+            ) {
+                groups.push(actionDefinition.group);
+            }
+        }
+        return groups;
+    }
+
+    get selectedGroup() {
+        if (
+            this._selectedGroup &&
+            this.groups.indexOf(this._selectedGroup) != -1
+        ) {
+            return this._selectedGroup;
+        }
+        return this.groups[0];
+    }
+
+    set selectedGroup(group: string) {
+        runInAction(() => {
+            this._selectedGroup = group;
+        });
+    }
 
     get selectedActionName() {
         return (
@@ -744,11 +799,23 @@ class NewLVGLActionDialogState {
         });
     }
 
-    get filteredActionDefinitions() {
-        return actionDefinitions.filter(actionDefinition =>
-            getActionDisplayName(actionDefinition)
+    get searchFilteredActionDefinitions() {
+        return actionDefinitions.filter(actionDefinition => {
+            if (actionDefinition.disabled) {
+                if (actionDefinition.disabled(this.project) !== false) {
+                    return false;
+                }
+            }
+
+            return getActionDisplayName(actionDefinition)
                 .toLowerCase()
-                .includes(this.searchText.toLowerCase())
+                .includes(this.searchText.toLowerCase());
+        });
+    }
+
+    get filteredActionDefinitions() {
+        return this.searchFilteredActionDefinitions.filter(
+            actionDefinition => actionDefinition.group == this.selectedGroup
         );
     }
 }
@@ -773,10 +840,25 @@ const NewLVGLActionDialog = observer(
             });
         }
 
+        get groupNodes() {
+            const nodes: IListNode<string>[] = [];
+
+            for (const group of newLVGLActionDialogState.groups) {
+                nodes.push({
+                    id: group,
+                    label: group,
+                    data: group,
+                    selected: group == newLVGLActionDialogState.selectedGroup
+                });
+            }
+
+            return nodes;
+        }
+
         get nodes() {
             const nodes: IListNode<IActionDefinition>[] = [];
 
-            for (const actionDefinition of actionDefinitions) {
+            for (const actionDefinition of newLVGLActionDialogState.filteredActionDefinitions) {
                 const actionDisplayName =
                     getActionDisplayName(actionDefinition);
 
@@ -855,23 +937,37 @@ const NewLVGLActionDialog = observer(
                             onChange={newLVGLActionDialogState.onSearchChange}
                             onKeyDown={newLVGLActionDialogState.onSearchChange}
                         />
-                        <ListContainer tabIndex={0}>
-                            <List
-                                nodes={this.nodes}
-                                renderNode={(
-                                    node: IListNode<IActionDefinition>
-                                ) => {
-                                    return <ListItem label={node.label} />;
-                                }}
-                                selectNode={(
-                                    node: IListNode<IActionDefinition>
-                                ) => {
-                                    newLVGLActionDialogState.selectedActionName =
-                                        node.data.name;
-                                }}
-                                onDoubleClick={this.onDoubleClick}
-                            ></List>
-                        </ListContainer>
+                        <div className="EezStudio_NewLVGLActionDialog_Content">
+                            <ListContainer tabIndex={0}>
+                                <List
+                                    nodes={this.groupNodes}
+                                    renderNode={(node: IListNode<string>) => {
+                                        return <ListItem label={node.label} />;
+                                    }}
+                                    selectNode={(node: IListNode<string>) => {
+                                        newLVGLActionDialogState.selectedGroup =
+                                            node.data;
+                                    }}
+                                ></List>
+                            </ListContainer>
+                            <ListContainer tabIndex={0}>
+                                <List
+                                    nodes={this.nodes}
+                                    renderNode={(
+                                        node: IListNode<IActionDefinition>
+                                    ) => {
+                                        return <ListItem label={node.label} />;
+                                    }}
+                                    selectNode={(
+                                        node: IListNode<IActionDefinition>
+                                    ) => {
+                                        newLVGLActionDialogState.selectedActionName =
+                                            node.data.name;
+                                    }}
+                                    onDoubleClick={this.onDoubleClick}
+                                ></List>
+                            </ListContainer>
+                        </div>
                     </div>
                 </Dialog>
             );
@@ -926,7 +1022,7 @@ export class LVGLActionType extends EezObject {
         newItem: async (object: LVGLActionType[]) => {
             const project = ProjectEditor.getProject(object);
 
-            const action = await showNewLVGLActionDialog();
+            const action = await showNewLVGLActionDialog(project);
 
             if (!action) {
                 return undefined;

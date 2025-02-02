@@ -133,6 +133,14 @@ export abstract class LVGLPageRuntime {
         return 0;
     }
 
+    widgetIndexes: number[] = [];
+
+    getCreateWidgetIndex(object: LVGLWidget | Page) {
+        const widgetIndex = this.getWidgetIndex(object);
+        this.widgetIndexes.push(widgetIndex);
+        return widgetIndex;
+    }
+
     getLvglStylePropCode(code: LVGLStylePropCode): number {
         return getLvglStylePropCode(this.page, code) ?? 0;
     }
@@ -376,7 +384,10 @@ export abstract class LVGLPageRuntime {
 
     //
     themeIndex: number = 0;
-    changeColorCallbacks: (() => void)[] = [];
+    changeColorCallbacks: {
+        page: Page | undefined;
+        callback: () => void;
+    }[] = [];
 
     setColorTheme(themeName: string) {
         const themeIndex = this.project.themes.findIndex(
@@ -384,13 +395,13 @@ export abstract class LVGLPageRuntime {
         );
         this.themeIndex = themeIndex != -1 ? themeIndex : 0;
 
-        this.changeColorCallbacks.forEach(callback => callback());
+        this.changeColorCallbacks.forEach(callback => callback.callback());
 
         if (this instanceof LVGLPageViewerRuntime) {
             for (const pageState of this.pageStates.values()) {
                 if (pageState.nonActivePageViewerRuntime) {
                     pageState.nonActivePageViewerRuntime.changeColorCallbacks.forEach(
-                        callback => callback()
+                        callback => callback.callback()
                     );
                     if (
                         pageState.nonActivePageViewerRuntimeWasm &&
@@ -484,9 +495,29 @@ export abstract class LVGLPageRuntime {
         const { colorNum, isFromTheme } = this.colorRgbToNum(color);
         callback(this.wasm, colorNum);
         if (isFromTheme && !this.isEditor) {
-            this.changeColorCallbacks.push(() => {
-                const { colorNum } = this.colorRgbToNum(color);
-                callback(this.wasm, colorNum);
+            this.changeColorCallbacks.push({
+                page: this.page,
+                callback: () => {
+                    const { colorNum } = this.colorRgbToNum(color);
+                    callback(this.wasm, colorNum);
+                }
+            });
+        }
+    }
+
+    lvglSetAndUpdateStyleColor(
+        color: string,
+        callback: (wasm: IWasmFlowRuntime, colorNum: number) => void
+    ) {
+        const { colorNum, isFromTheme } = this.colorRgbToNum(color);
+        callback(this.wasm, colorNum);
+        if (isFromTheme && !this.isEditor) {
+            this.changeColorCallbacks.push({
+                page: undefined,
+                callback: () => {
+                    const { colorNum } = this.colorRgbToNum(color);
+                    callback(this.wasm, colorNum);
+                }
             });
         }
     }
@@ -497,9 +528,12 @@ export abstract class LVGLPageRuntime {
     ) {
         const { isFromTheme } = this.colorRgbToNum(color);
         if (isFromTheme && !this.isEditor) {
-            this.changeColorCallbacks.push(() => {
-                const { colorNum } = this.colorRgbToNum(color);
-                callback(this.wasm, colorNum);
+            this.changeColorCallbacks.push({
+                page: this.page,
+                callback: () => {
+                    const { colorNum } = this.colorRgbToNum(color);
+                    callback(this.wasm, colorNum);
+                }
             });
         }
     }
@@ -588,7 +622,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     this.displayWidth,
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
-                    -(new Date().getTimezoneOffset() / 60) * 100
+                    -(new Date().getTimezoneOffset() / 60) * 100,
+                    0
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -801,7 +836,8 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     this.page.width,
                     this.page.height,
                     this.project.settings.general.darkTheme,
-                    -(new Date().getTimezoneOffset() / 60) * 100
+                    -(new Date().getTimezoneOffset() / 60) * 100,
+                    0
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -911,6 +947,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             nonActivePageViewerRuntimePageObj: number;
             activeObjects: number[] | undefined;
             nonActiveObjects: number[] | undefined;
+            widgetIndexes: number[];
         }
     >();
 
@@ -926,7 +963,8 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                 nonActivePageViewerRuntimeWasm: undefined,
                 nonActivePageViewerRuntimePageObj: 0,
                 activeObjects: undefined,
-                nonActiveObjects: undefined
+                nonActiveObjects: undefined,
+                widgetIndexes: []
             })
         );
     }
@@ -978,14 +1016,16 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         });
     }
 
+    lvglGroupObjects: number[] = [];
+
     async mount() {
-        const lvglGroupObjects = [];
+        this.lvglGroupObjects = [];
 
         // create groups
         for (const group of this.project.lvglGroups.groups) {
             const groupObj = this.wasm._lvglCreateGroup();
 
-            lvglGroupObjects.push(groupObj);
+            this.lvglGroupObjects.push(groupObj);
 
             if (
                 group.name ==
@@ -1005,63 +1045,27 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.pageGroupWidgets.clear();
 
         for (const page of this.pages) {
-            this.lvglCreate(page);
+            if (
+                !this.project.settings.build.screensLifetimeSupport ||
+                page.createAtStart
+            ) {
+                this.lvglCreate(page);
+            }
         }
 
         // add widgets to groups
         for (const page of this.pages) {
-            if (page._lvglObj) {
-                for (
-                    let i = 0;
-                    i < this.project.lvglGroups.groups.length;
-                    i++
-                ) {
-                    const group = this.project.lvglGroups.groups[i];
-
-                    const groupWidgets = this.pageGroupWidgets.get(page);
-
-                    if (groupWidgets) {
-                        let widgetsInGroup = groupWidgets.filter(
-                            groupObject => groupObject.group == group.name
-                        );
-
-                        widgetsInGroup.sort((a, b) => {
-                            let aIndex = a.groupIndex;
-                            let bIndex = b.groupIndex;
-
-                            if (aIndex <= 0) {
-                                if (bIndex > 0) {
-                                    return 1;
-                                }
-                            } else if (bIndex <= 0) {
-                                return -1;
-                            }
-
-                            if (aIndex == bIndex) {
-                                aIndex = widgetsInGroup.indexOf(a);
-                                bIndex = widgetsInGroup.indexOf(b);
-                            }
-
-                            return aIndex - bIndex;
-                        });
-
-                        for (const widgetInGroup of widgetsInGroup) {
-                            this.wasm._lvglGroupAddObject(
-                                page._lvglObj,
-                                lvglGroupObjects[i],
-                                widgetInGroup.obj
-                            );
-                        }
-                    }
-                }
-            }
+            this.addGroupObjectsForPage(page);
         }
 
         this.reactionDispose = autorun(() => {
             const selectedPage = this.runtime.selectedPage;
             const pageState = this.pageStates.get(selectedPage)!;
             setObjects(selectedPage, this, pageState.activeObjects!);
-            this.wasm._lvglScreenLoad(-1, selectedPage._lvglObj!);
+            this.wasm._lvglScreenLoad(
+                this.pages.indexOf(selectedPage),
+                selectedPage._lvglObj!
+            );
         });
 
         this.isMounted = true;
@@ -1077,6 +1081,39 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         }
 
         this.isMounted = false;
+    }
+
+    lvglCreateScreen(screenIndex: number) {
+        const page = this.pages[screenIndex];
+
+        const pageState = this.pageStates.get(page)!;
+        if (!pageState.pageObj) {
+            this.lvglCreate(page);
+            this.addGroupObjectsForPage(page);
+        }
+    }
+
+    lvglDeleteScreen(screenIndex: number) {
+        const page = this.pages[screenIndex];
+        const pageState = this.pageStates.get(page)!;
+        if (pageState.pageObj) {
+            this.changeColorCallbacks = this.changeColorCallbacks.filter(
+                callback => callback.page != page
+            );
+
+            this.pageGroupWidgets.delete(page);
+            this.wasm._lvglGroupRemoveObjectsForScreen(pageState.pageObj);
+
+            this.wasm._lvglDeleteObject(pageState.pageObj);
+
+            for (const widgetIndex of pageState.widgetIndexes) {
+                this.wasm._lvglDeleteObjectIndex(widgetIndex);
+            }
+
+            this.wasm._lvglDeletePageFlowState(screenIndex);
+
+            pageState.pageObj = 0;
+        }
     }
 
     lvglCreate(page: Page) {
@@ -1096,8 +1133,14 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         this.createStyles();
 
+        this.widgetIndexes = [];
+
         const pageObj = this.lvglCreatePage();
-        this.pageStates.get(this.page)!.pageObj = pageObj;
+
+        const pageState = this.pageStates.get(this.page)!;
+
+        pageState.pageObj = pageObj;
+        pageState.widgetIndexes = this.widgetIndexes;
 
         this.wasm._lvglAddScreenLoadedEventHandler(pageObj);
 
@@ -1133,6 +1176,54 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             pageState.nonActiveObjects = undefined;
             if (pageState.activeObjects) {
                 setObjects(pageState.page, this, pageState.activeObjects);
+            }
+        }
+    }
+
+    //
+
+    addGroupObjectsForPage(page: Page) {
+        if (!page._lvglObj) {
+            return;
+        }
+
+        for (let i = 0; i < this.project.lvglGroups.groups.length; i++) {
+            const group = this.project.lvglGroups.groups[i];
+
+            const groupWidgets = this.pageGroupWidgets.get(page);
+
+            if (groupWidgets) {
+                let widgetsInGroup = groupWidgets.filter(
+                    groupObject => groupObject.group == group.name
+                );
+
+                widgetsInGroup.sort((a, b) => {
+                    let aIndex = a.groupIndex;
+                    let bIndex = b.groupIndex;
+
+                    if (aIndex <= 0) {
+                        if (bIndex > 0) {
+                            return 1;
+                        }
+                    } else if (bIndex <= 0) {
+                        return -1;
+                    }
+
+                    if (aIndex == bIndex) {
+                        aIndex = widgetsInGroup.indexOf(a);
+                        bIndex = widgetsInGroup.indexOf(b);
+                    }
+
+                    return aIndex - bIndex;
+                });
+
+                for (const widgetInGroup of widgetsInGroup) {
+                    this.wasm._lvglGroupAddObject(
+                        page._lvglObj,
+                        this.lvglGroupObjects[i],
+                        widgetInGroup.obj
+                    );
+                }
             }
         }
     }
@@ -1371,7 +1462,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     this.displayWidth,
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
-                    -(new Date().getTimezoneOffset() / 60) * 100
+                    -(new Date().getTimezoneOffset() / 60) * 100,
+                    0
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -1646,7 +1738,8 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     this.displayWidth,
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
-                    -(new Date().getTimezoneOffset() / 60) * 100
+                    -(new Date().getTimezoneOffset() / 60) * 100,
+                    0
                 );
 
                 const pageObj = this.lvglCreatePage();

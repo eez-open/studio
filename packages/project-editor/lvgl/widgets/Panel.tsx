@@ -69,7 +69,7 @@ export class LVGLPanelWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreatePanel(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

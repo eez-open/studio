@@ -59,7 +59,7 @@ export class LVGLTableWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateTable(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

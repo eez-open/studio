@@ -71,7 +71,7 @@ export class LVGLChartWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateChart(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

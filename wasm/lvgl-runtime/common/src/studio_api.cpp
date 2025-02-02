@@ -596,11 +596,14 @@ EM_PORT_API(lv_obj_t *) lvglCreateWindow(lv_obj_t *parentObj, int32_t index, lv_
 static lv_obj_t *current_screen = 0;
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
+    addScreenUnloadedCallback(page_index, obj);
+
 #if LVGL_VERSION_MAJOR >= 9
     lv_screen_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
 #else
     lv_scr_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
 #endif
+
     current_screen = obj;
     screenLoad_animType = 0;
     screenLoad_speed = 0;
@@ -625,6 +628,14 @@ EM_PORT_API(void) lvglDeleteObject(lv_obj_t *obj) {
         current_screen = fallback_screen;
     }
     lv_obj_del(obj);
+}
+
+EM_PORT_API(void) lvglDeleteObjectIndex(int32_t index) {
+    deleteObjectIndex(index);
+}
+
+EM_PORT_API(void) lvglDeletePageFlowState(int32_t screenIndex) {
+    deletePageFlowState(screenIndex);
 }
 
 EM_PORT_API(void) lvglObjAddFlag(lv_obj_t *obj, lv_obj_flag_t f) {

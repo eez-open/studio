@@ -174,7 +174,7 @@ export class LVGLTabWidget extends LVGLWidget {
 
                 const obj = runtime.wasm._lvglTabviewAddTab(
                     parentObj,
-                    runtime.getWidgetIndex(this),
+                    runtime.getCreateWidgetIndex(this),
 
                     runtime.wasm.allocateUTF8(
                         tabNameExpr
@@ -207,7 +207,7 @@ export class LVGLTabWidget extends LVGLWidget {
         const rect = this.getLvglCreateRect();
         const obj = runtime.wasm._lvglCreateContainer(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

@@ -167,7 +167,7 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateLabel(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

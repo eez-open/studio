@@ -24,6 +24,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 bool is_editor = false;
+bool g_screensLifetimeSupport = false;
+extern bool *g_deleteOnScreenUnload;
 
 uint32_t screenLoad_animType = 0;
 uint32_t screenLoad_speed = 0;
@@ -669,6 +671,7 @@ void addUpdateTask(UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow_stat
 void doUpdateTasks() {
     for (auto it = updateTasks.begin(); it != updateTasks.end(); it++) {
         UpdateTask &updateTask = *it;
+        
         g_updateTask = &updateTask;
         if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
             const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
@@ -914,6 +917,26 @@ void setObjectIndex(lv_obj_t *obj, int32_t index) {
     indexToObject.insert(std::make_pair(index, obj));
 }
 
+void deleteObjectIndex(int32_t index) {
+    auto it = indexToObject.find(index);
+    if (it != indexToObject.end()) {
+        auto obj = it->second;
+
+        updateTasks.erase(
+            std::remove_if(
+                updateTasks.begin(), 
+                updateTasks.end(),
+                [obj](const UpdateTask& updateTask) { 
+                    return updateTask.obj == obj;
+                }
+            ),
+            updateTasks.end()
+        );
+
+        indexToObject.erase(it);
+    }
+}
+
 lv_obj_t *getLvglObjectFromIndex(int32_t index) {
     auto it = indexToObject.find(index);
     if (it == indexToObject.end()) {
@@ -985,6 +1008,13 @@ EM_PORT_API(void) lvglGroupAddObject(lv_obj_t *screenObj, lv_group_t *groupObj, 
     groupObjects.push_back(obj);
 }
 
+EM_PORT_API(void) lvglGroupRemoveObjectsForScreen(lv_obj_t *screenObj) {
+    auto itScreenToGroupObjects = screenToGroupObjects.find(screenObj);
+    if (itScreenToGroupObjects != screenToGroupObjects.end()) {
+        screenToGroupObjects.erase(itScreenToGroupObjects);
+    }
+}
+
 static lv_group_t *getLvglGroupFromIndex(int32_t index) {
     if (index >= 0 && index < groups.size()) {
         return groups[index];
@@ -1027,13 +1057,13 @@ static const void *getLvglImageByName(const char *name) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void lvglObjAddStyle(lv_obj_t *obj, int32_t styleIndex) {
-    return EM_ASM({
+    EM_ASM({
         lvglObjAddStyle($0, $1, $2);
     }, eez::flow::g_wasmModuleId, obj, styleIndex);
 }
 
 static void lvglObjRemoveStyle(lv_obj_t *obj, int32_t styleIndex) {
-    return EM_ASM({
+    EM_ASM({
         lvglObjRemoveStyle($0, $1, $2);
     }, eez::flow::g_wasmModuleId, obj, styleIndex);
 }
@@ -1041,14 +1071,28 @@ static void lvglObjRemoveStyle(lv_obj_t *obj, int32_t styleIndex) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void lvglSetColorTheme(const char *themeName) {
-    return EM_ASM({
+    EM_ASM({
         lvglSetColorTheme($0, UTF8ToString($1));
     }, eez::flow::g_wasmModuleId, themeName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone) {
+void createScreen(int screenIndex) {
+    EM_ASM({
+        lvglCreateScreen($0, $1);
+    }, eez::flow::g_wasmModuleId, screenIndex);
+}
+
+void deleteScreen(int screenIndex) {
+    EM_ASM({
+        lvglDeleteScreen($0, $1);
+    }, eez::flow::g_wasmModuleId, screenIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool *deleteOnScreenUnload) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
     //DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
@@ -1084,6 +1128,14 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
 
     eez::flow::start(eez::g_mainAssets);
 
+    g_screensLifetimeSupport = deleteOnScreenUnload != 0;
+
+    if (g_screensLifetimeSupport) {
+        eez_flow_set_create_screen_func(createScreen);
+        eez_flow_set_delete_screen_func(deleteScreen);
+        eez_flow_set_delete_on_screen_unload(deleteOnScreenUnload);
+    }
+
     g_currentScreen = 0;
 }
 
@@ -1110,6 +1162,28 @@ void flowOnPageLoadedStudio(unsigned pageIndex) {
         g_currentScreen = pageIndex;
     }
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
+}
+
+void on_lvgl_screen_unloaded(lv_event_t *e) {
+    if (lv_event_get_code(e) == LV_EVENT_SCREEN_UNLOADED) {
+        int16_t screenIndex = (int16_t)(lv_uintptr_t)lv_event_get_user_data(e);
+        deleteScreen(screenIndex);
+    }
+}
+
+void addScreenUnloadedCallback(unsigned screenIndex, lv_obj_t *screen) {
+    if (
+        g_screensLifetimeSupport &&
+        g_deleteOnScreenUnload &&
+        g_deleteOnScreenUnload[screenIndex]
+    ) {
+        lv_obj_add_event_cb(
+            screen,
+            on_lvgl_screen_unloaded,
+            LV_EVENT_SCREEN_UNLOADED,
+            (void*)(lv_uintptr_t)(screenIndex)
+        );
+    }
 }
 
 native_var_t native_vars[] = {

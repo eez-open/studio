@@ -79,7 +79,11 @@ export class LVGLBuild extends Build {
         id: string;
         decl: string;
         varName: string;
+        page: Page;
     }[] = [];
+
+    objectAccessors: string[] | undefined;
+    currentPage: Page;
 
     constructor(public assets: Assets) {
         super();
@@ -334,6 +338,10 @@ export class LVGLBuild extends Build {
         return this.project._store.lvglIdentifiers.pages;
     }
 
+    get userPages() {
+        return this.project._store.lvglIdentifiers.userPages;
+    }
+
     get styles() {
         return this.project._store.lvglIdentifiers.styles;
     }
@@ -432,6 +440,10 @@ export class LVGLBuild extends Build {
         return page.isUsedAsUserWidget
             ? `create_user_widget_${this.getScreenIdentifier(page)}`
             : `create_screen_${this.getScreenIdentifier(page)}`;
+    }
+
+    getScreenDeleteFunctionName(page: Page) {
+        return `delete_screen_${this.getScreenIdentifier(page)}`;
     }
 
     getScreenTickFunctionName(page: Page) {
@@ -725,6 +737,13 @@ export class LVGLBuild extends Build {
         return "0x" + colorNum.toString(16).padStart(8, "0");
     }
 
+    assignToObjectsStruct(objectAccessor: string) {
+        if (this.objectAccessors) {
+            this.objectAccessors.push(objectAccessor);
+        }
+        this.line(`${objectAccessor} = obj;`);
+    }
+
     buildColor<T>(
         object: IEezObject,
         color: string,
@@ -732,7 +751,10 @@ export class LVGLBuild extends Build {
         callback: (color: string, params: T) => void,
         updateCallback: (color: string, params: T) => void
     ) {
-        const { colorAccessor, fromTheme } = this.getColorAccessor(color, "0");
+        const { colorAccessor, fromTheme } = this.getColorAccessor(
+            color,
+            "eez_flow_get_selected_theme_index()"
+        );
         callback(colorAccessor, getParams());
 
         if (!this.isFirstPass && fromTheme) {
@@ -758,10 +780,16 @@ export class LVGLBuild extends Build {
         updateCallback: (color1: string, color2: string, params: T) => void
     ) {
         const { colorAccessor: color1Accessor, fromTheme: color1FromTheme } =
-            this.getColorAccessor(color1, "0");
+            this.getColorAccessor(
+                color1,
+                "eez_flow_get_selected_theme_index()"
+            );
 
         const { colorAccessor: color2Accessor, fromTheme: color2FromTheme } =
-            this.getColorAccessor(color2, "0");
+            this.getColorAccessor(
+                color2,
+                "eez_flow_get_selected_theme_index()"
+            );
 
         callback(color1Accessor, color2Accessor, getParams());
 
@@ -788,7 +816,8 @@ export class LVGLBuild extends Build {
             staticVar = {
                 id,
                 decl: `static ${type} ${varName};`,
-                varName
+                varName,
+                page: this.currentPage
             };
             this.fileStaticVars.push(staticVar);
         }
@@ -878,6 +907,11 @@ export class LVGLBuild extends Build {
                 }
             } else {
                 build.line(`void ${this.getScreenCreateFunctionName(page)}();`);
+                if (build.project.settings.build.screensLifetimeSupport) {
+                    build.line(
+                        `void ${this.getScreenDeleteFunctionName(page)}();`
+                    );
+                }
                 build.line(`void ${this.getScreenTickFunctionName(page)}();`);
             }
         }
@@ -1174,11 +1208,65 @@ export class LVGLBuild extends Build {
                 );
             }
             build.indent();
+
+            this.objectAccessors = [];
+            this.currentPage = page;
+
             page.lvglBuild(this);
+
+            if (!page.isUsedAsUserWidget) {
+                build.line("");
+                build.line(`${this.getScreenTickFunctionName(page)}();`);
+            }
             build.unindent();
             build.line("}");
             build.line("");
 
+            //
+            if (
+                build.project.settings.build.screensLifetimeSupport &&
+                !page.isUsedAsUserWidget
+            ) {
+                build.line(
+                    `void ${this.getScreenDeleteFunctionName(page)}() {`
+                );
+                build.indent();
+
+                if (this.isV9) {
+                    build.line(
+                        `lv_obj_delete(${build.getLvglObjectAccessor(
+                            page.lvglScreenWidget!
+                        )});`
+                    );
+                } else {
+                    build.line(
+                        `lv_obj_del(${build.getLvglObjectAccessor(
+                            page.lvglScreenWidget!
+                        )});`
+                    );
+                }
+
+                for (const objectAccessor of this.objectAccessors) {
+                    build.line(`${objectAccessor} = 0;`);
+                }
+
+                for (const fileStaticVar of this.fileStaticVars) {
+                    if (fileStaticVar.page == page) {
+                        build.line(`${fileStaticVar.varName} = 0;`);
+                    }
+                }
+
+                build.line(
+                    `deletePageFlowState(${build.assets.getFlowIndex(page)});`
+                );
+                build.unindent();
+                build.line("}");
+                build.line("");
+            }
+
+            this.objectAccessors = undefined;
+
+            //
             if (page.isUsedAsUserWidget) {
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.line(
@@ -1248,13 +1336,17 @@ export class LVGLBuild extends Build {
 
         build.pages
             .filter(page => !page.isUsedAsUserWidget)
-            .forEach(page =>
-                build.line(
-                    `lv_obj_invalidate(objects.${this.getScreenIdentifier(
-                        page
-                    )});`
-                )
-            );
+            .forEach(page => {
+                const screenIdentifier =
+                    "objects." + this.getScreenIdentifier(page);
+                if (this.project.settings.build.screensLifetimeSupport) {
+                    build.line(
+                        `if (${screenIdentifier}) lv_obj_invalidate(${screenIdentifier});`
+                    );
+                } else {
+                    build.line(`lv_obj_invalidate(${screenIdentifier});`);
+                }
+            });
 
         build.unindent();
         build.line("}");
@@ -1330,8 +1422,16 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
-        build.line("void create_screens();");
+        if (build.project.settings.build.screensLifetimeSupport) {
+            build.line("void create_screen_by_id(enum ScreensEnum screenId);");
+            build.line("void delete_screen_by_id(enum ScreensEnum screenId);");
+        }
+        build.line("void tick_screen_by_id(enum ScreensEnum screenId);");
         build.line("void tick_screen(int screen_index);");
+
+        build.line("");
+
+        build.line("void create_screens();");
 
         return this.result;
     }
@@ -1445,6 +1545,70 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
+        if (build.project.settings.build.screensLifetimeSupport) {
+            //
+            build.line("");
+
+            build.line("typedef void (*create_screen_func_t)();");
+            build.blockStart("create_screen_func_t create_screen_funcs[] = {");
+            for (const page of this.userPages) {
+                build.line(`${this.getScreenCreateFunctionName(page)},`);
+            }
+            build.blockEnd("};");
+
+            build.blockStart("void create_screen(int screen_index) {");
+            build.line("create_screen_funcs[screen_index]();");
+            build.blockEnd("}");
+
+            build.blockStart(
+                "void create_screen_by_id(enum ScreensEnum screenId) {"
+            );
+            build.line("create_screen_funcs[screenId - 1]();");
+            build.blockEnd("}");
+
+            //
+            build.line("");
+
+            build.line("typedef void (*delete_screen_func_t)();");
+
+            build.blockStart("delete_screen_func_t delete_screen_funcs[] = {");
+            for (const page of this.userPages) {
+                build.line(`${this.getScreenDeleteFunctionName(page)},`);
+            }
+            build.blockEnd("};");
+
+            build.blockStart("void delete_screen(int screen_index) {");
+            build.line("delete_screen_funcs[screen_index]();");
+            build.blockEnd("}");
+
+            build.blockStart(
+                "void delete_screen_by_id(enum ScreensEnum screenId) {"
+            );
+            build.line("delete_screen_funcs[screenId - 1]();");
+            build.blockEnd("}");
+        }
+
+        //
+        build.line("");
+
+        build.line("typedef void (*tick_screen_func_t)();");
+
+        build.blockStart("tick_screen_func_t tick_screen_funcs[] = {");
+        for (const page of this.userPages) {
+            build.line(`${this.getScreenTickFunctionName(page)},`);
+        }
+        build.blockEnd("};");
+
+        build.blockStart("void tick_screen(int screen_index) {");
+        build.line("tick_screen_funcs[screen_index]();");
+        build.blockEnd("}");
+
+        build.blockStart("void tick_screen_by_id(enum ScreensEnum screenId) {");
+        build.line("tick_screen_funcs[screenId - 1]();");
+        build.blockEnd("}");
+
+        build.line("");
+
         //
         build.line("void create_screens() {");
         build.indent();
@@ -1491,6 +1655,20 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
+        if (build.project.settings.build.screensLifetimeSupport) {
+            build.line("eez_flow_set_create_screen_func(create_screen);");
+            build.line("eez_flow_set_delete_screen_func(delete_screen);");
+            build.line(
+                `static bool delete_on_screen_unload[] = { ${this.userPages
+                    .map(page => (page.deleteOnScreenUnload ? "true" : "false"))
+                    .join(", ")} };`
+            );
+            build.line(
+                "eez_flow_set_delete_on_screen_unload(delete_on_screen_unload);"
+            );
+            build.line("");
+        }
+
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
             `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
@@ -1501,37 +1679,16 @@ export class LVGLBuild extends Build {
 
         build.line("");
 
-        for (const page of this.project.userPages) {
-            if (!page.isUsedAsUserWidget) {
+        for (const page of this.userPages) {
+            if (
+                !build.project.settings.build.screensLifetimeSupport ||
+                page.createAtStart
+            ) {
                 build.line(`${this.getScreenCreateFunctionName(page)}();`);
             }
         }
         build.unindent();
         build.line("}");
-
-        build.line("");
-
-        build.line("typedef void (*tick_screen_func_t)();");
-
-        build.line("");
-
-        build.line("tick_screen_func_t tick_screen_funcs[] = {");
-        build.indent();
-        for (const page of this.project.pages) {
-            if (page.isUsedAsUserWidget) {
-                build.line(`0,`);
-            } else {
-                build.line(`${this.getScreenTickFunctionName(page)},`);
-            }
-        }
-        build.unindent();
-        build.line("};");
-
-        build.text(`
-void tick_screen(int screen_index) {
-    tick_screen_funcs[screen_index]();
-}
-`);
 
         return this.result;
     }
@@ -1801,6 +1958,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         this.startBuild();
         const build = this;
 
+        build.line(`#include "ui.h"`);
         build.line(`#include "screens.h"`);
         build.line("");
 

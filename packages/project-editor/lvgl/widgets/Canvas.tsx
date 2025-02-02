@@ -58,7 +58,7 @@ export class LVGLCanvasWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateCanvas(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

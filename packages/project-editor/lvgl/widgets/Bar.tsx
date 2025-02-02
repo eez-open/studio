@@ -160,7 +160,7 @@ export class LVGLBarWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateBar(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

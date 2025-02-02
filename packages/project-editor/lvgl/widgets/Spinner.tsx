@@ -66,7 +66,7 @@ export class LVGLSpinnerWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreateSpinner(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

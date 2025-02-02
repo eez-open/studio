@@ -596,9 +596,15 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                 build.assingToFileStaticVar(indicatorVar, "indicator");
             },
             (color, indicatorVar) => {
-                build.line(
-                    `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
-                );
+                if (build.project.settings.build.screensLifetimeSupport) {
+                    build.line(
+                        `if (${indicatorVar}) ${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                    );
+                } else {
+                    build.line(
+                        `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                    );
+                }
             }
         );
 
@@ -868,12 +874,20 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                 build.assingToFileStaticVar(indicatorVar, "indicator");
             },
             (colorStart, colorEnd, indicatorVar) => {
+                if (build.project.settings.build.screensLifetimeSupport) {
+                    build.blockStart(`if (${indicatorVar}) {`);
+                }
+
                 build.line(
                     `${indicatorVar}->type_data.scale_lines.color_start = lv_color_hex(${colorStart});`
                 );
                 build.line(
                     `${indicatorVar}->type_data.scale_lines.color_end = lv_color_hex(${colorEnd});`
                 );
+
+                if (build.project.settings.build.screensLifetimeSupport) {
+                    build.blockEnd("}");
+                }
             }
         );
 
@@ -1116,9 +1130,15 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                 build.assingToFileStaticVar(indicatorVar, "indicator");
             },
             (color, indicatorVar) => {
-                build.line(
-                    `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
-                );
+                if (build.project.settings.build.screensLifetimeSupport) {
+                    build.line(
+                        `if (${indicatorVar}) ${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                    );
+                } else {
+                    build.line(
+                        `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                    );
+                }
             }
         );
 
@@ -1473,7 +1493,7 @@ export class LVGLMeterWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateMeter(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,
@@ -1637,12 +1657,20 @@ export class LVGLMeterWidget extends LVGLWidget {
                     );
                 },
                 (minorTickColor, majorTickColor, scaleVar) => {
+                    if (build.project.settings.build.screensLifetimeSupport) {
+                        build.blockStart(`if (${scaleVar}) {`);
+                    }
+
                     build.line(
                         `${scaleVar}->tick_color = lv_color_hex(${minorTickColor});`
                     );
                     build.line(
                         `${scaleVar}->tick_major_color = lv_color_hex(${majorTickColor});`
                     );
+
+                    if (build.project.settings.build.screensLifetimeSupport) {
+                        build.blockEnd("}");
+                    }
                 }
             );
 

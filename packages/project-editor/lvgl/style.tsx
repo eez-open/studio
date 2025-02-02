@@ -493,7 +493,7 @@ export class LVGLStyle extends EezObject {
                             const value = definition[part][state][propertyName];
 
                             if (propertyInfo.type == PropertyType.ThemedColor) {
-                                runtime.lvglSetAndUpdateColor(
+                                runtime.lvglSetAndUpdateStyleColor(
                                     value,
                                     (wasm, colorNum) => {
                                         wasm._lvglStyleSetPropColor(

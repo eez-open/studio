@@ -196,7 +196,7 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
 
             obj = runtime.wasm._lvglCreateAnimationImage(
                 parentObj,
-                runtime.getWidgetIndex(this),
+                runtime.getCreateWidgetIndex(this),
 
                 rect.left,
                 rect.top,
@@ -221,7 +221,7 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
         } else {
             obj = runtime.wasm._lvglCreateAnimationImage(
                 parentObj,
-                runtime.getWidgetIndex(this),
+                runtime.getCreateWidgetIndex(this),
 
                 rect.left,
                 rect.top,

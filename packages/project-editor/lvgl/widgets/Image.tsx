@@ -196,7 +196,7 @@ export class LVGLImageWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateImage(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

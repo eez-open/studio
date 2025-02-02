@@ -223,14 +223,14 @@ export class LVGLContainerWidget extends LVGLWidget {
             if (tabview.children.indexOf(this) == 0) {
                 return runtime.wasm._lvglTabviewGetTabBar(
                     parentObj,
-                    runtime.getWidgetIndex(this)
+                    runtime.getCreateWidgetIndex(this)
                 );
             }
 
             if (tabview.children.indexOf(this) == 1) {
                 return runtime.wasm._lvglTabviewGetTabContent(
                     parentObj,
-                    runtime.getWidgetIndex(this)
+                    runtime.getCreateWidgetIndex(this)
                 );
             }
         }
@@ -239,7 +239,7 @@ export class LVGLContainerWidget extends LVGLWidget {
         if (dropdown && dropdown.children.indexOf(this) == 0) {
             return runtime.wasm._lvglDropdownGetList(
                 parentObj,
-                runtime.getWidgetIndex(this)
+                runtime.getCreateWidgetIndex(this)
             );
         }
 
@@ -247,7 +247,7 @@ export class LVGLContainerWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreateContainer(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

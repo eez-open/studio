@@ -107,7 +107,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateColorwheel(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

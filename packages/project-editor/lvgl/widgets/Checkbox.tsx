@@ -100,7 +100,7 @@ export class LVGLCheckboxWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreateCheckbox(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

@@ -647,11 +647,22 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
                                 },
                                 (color: string, obj) => {
-                                    build.line(
-                                        `lv_obj_set_style_${build.getStylePropName(
-                                            propertyInfo.name
-                                        )}(${obj}, lv_color_hex(${color}), ${selectorCode});`
-                                    );
+                                    if (
+                                        build.project.settings.build
+                                            .screensLifetimeSupport
+                                    ) {
+                                        build.line(
+                                            `if (${obj}) lv_obj_set_style_${build.getStylePropName(
+                                                propertyInfo.name
+                                            )}(${obj}, lv_color_hex(${color}), ${selectorCode});`
+                                        );
+                                    } else {
+                                        build.line(
+                                            `lv_obj_set_style_${build.getStylePropName(
+                                                propertyInfo.name
+                                            )}(${obj}, lv_color_hex(${color}), ${selectorCode});`
+                                        );
+                                    }
                                 }
                             );
                         } else if (

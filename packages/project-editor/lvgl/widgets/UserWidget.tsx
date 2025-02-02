@@ -385,7 +385,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         runtime: LVGLPageRuntime,
         parentObj: number
     ): number {
-        const widgetIndex = runtime.getWidgetIndex(this);
+        const widgetIndex = runtime.getCreateWidgetIndex(this);
 
         const userWidgetPage = this.userWidgetPage;
 

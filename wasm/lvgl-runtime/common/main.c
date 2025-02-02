@@ -323,7 +323,7 @@ static uint32_t g_prevTick;
 static void dump_widgets_flags_info();
 static void dump_custom_styles();
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone, bool *deleteOnScreenUnload) {
     is_editor = assetsSize == 0;
 
     hor_res = displayWidth;
@@ -342,7 +342,7 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     //dump_widgets_flags_info();
 
     if (!is_editor) {
-        flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, darkTheme, timeZone);
+        flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, darkTheme, timeZone, deleteOnScreenUnload);
     }
 
 #if LVGL_VERSION_MAJOR >= 9

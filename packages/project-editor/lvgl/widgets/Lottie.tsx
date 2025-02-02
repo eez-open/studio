@@ -58,7 +58,7 @@ export class LVGLLottieWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateLottie(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

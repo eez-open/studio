@@ -86,7 +86,7 @@ export class LVGLButtonWidget extends LVGLWidget {
 
         return runtime.wasm._lvglCreateButton(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

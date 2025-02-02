@@ -28,8 +28,10 @@ import {
     propertyNotFoundMessage
 } from "project-editor/store";
 import {
+    hasFlowSupport,
     isDashboardProject,
-    isLVGLProject
+    isLVGLProject,
+    isNotLVGLProject
 } from "project-editor/project/project-type-traits";
 import {
     NamingConvention,
@@ -213,6 +215,9 @@ export class Page extends Flow {
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
 
+    createAtStart: boolean;
+    deleteOnScreenUnload: boolean;
+
     get codeIdentifier() {
         const codeIdentifier = getName(
             "",
@@ -259,7 +264,9 @@ export class Page extends Flow {
             isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
             _lvglRuntime: observable,
-            _lvglObj: observable
+            _lvglObj: observable,
+            createAtStart: observable,
+            deleteOnScreenUnload: observable
         });
     }
 
@@ -391,8 +398,36 @@ export class Page extends Flow {
                 propertyGridGroup: generalGroup,
                 disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
+            },
+            {
+                name: "createAtStart",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup,
+                checkboxStyleSwitch: true,
+                disabled: (page: Page) =>
+                    isNotLVGLProject(page) ||
+                    page.isUsedAsUserWidget ||
+                    !ProjectEditor.getProject(page).settings.build
+                        .screensLifetimeSupport
+            },
+            {
+                name: "deleteOnScreenUnload",
+                displayName: "Delete on unload",
+                type: PropertyType.Boolean,
+                propertyGridGroup: generalGroup,
+                checkboxStyleSwitch: true,
+                disabled: (page: Page) =>
+                    isNotLVGLProject(page) ||
+                    !hasFlowSupport(page) ||
+                    page.isUsedAsUserWidget ||
+                    !ProjectEditor.getProject(page).settings.build
+                        .screensLifetimeSupport
             }
         ],
+        defaultValue: {
+            createAtStart: true,
+            deleteOnScreenUnload: false
+        },
         icon: PAGES_ICON,
         label: (page: Page) => {
             return page.name;
@@ -513,6 +548,14 @@ export class Page extends Flow {
                         }
                     ];
                 }
+            }
+
+            if (jsObject.createAtStart == undefined) {
+                jsObject.createAtStart = true;
+            }
+
+            if (jsObject.deleteOnScreenUnload == undefined) {
+                jsObject.deleteOnScreenUnload = false;
             }
         },
         isPropertyMenuSupported: true,
@@ -1034,7 +1077,7 @@ export class Page extends Flow {
                   )
                 : runtime.wasm._lvglCreateScreen(
                       parentObj,
-                      runtime.getWidgetIndex(this),
+                      runtime.getCreateWidgetIndex(this),
                       this.left,
                       this.top,
                       this.width,

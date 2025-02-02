@@ -7,11 +7,13 @@ import {
 } from "./lvgl-constants";
 import { registerLvglEnum } from "./widgets";
 import { RightArrow } from "project-editor/ui-components/icons";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
     name: "changeScreen",
+    group: "Screen",
     properties: [
         {
             name: "screen",
@@ -67,6 +69,7 @@ registerAction({
 
 registerAction({
     name: "changeToPreviousScreen",
+    group: "Screen",
     properties: [
         {
             name: "fadeMode",
@@ -102,6 +105,7 @@ registerAction({
 
 registerAction({
     name: "objSetX",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -127,6 +131,7 @@ registerAction({
 
 registerAction({
     name: "objGetX",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -155,6 +160,7 @@ registerAction({
 
 registerAction({
     name: "objSetY",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -180,6 +186,7 @@ registerAction({
 
 registerAction({
     name: "objGetY",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -208,6 +215,7 @@ registerAction({
 
 registerAction({
     name: "objSetWidth",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -233,6 +241,7 @@ registerAction({
 
 registerAction({
     name: "objGetWidth",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -261,6 +270,7 @@ registerAction({
 
 registerAction({
     name: "objSetHeight",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -286,6 +296,7 @@ registerAction({
 
 registerAction({
     name: "objGetHeight",
+    group: "Widget - Position and Size",
     properties: [
         {
             name: "object",
@@ -314,6 +325,7 @@ registerAction({
 
 registerAction({
     name: "objSetStyleOpa",
+    group: "Widget - Styles",
     properties: [
         {
             name: "object",
@@ -339,6 +351,7 @@ registerAction({
 
 registerAction({
     name: "objGetStyleOpa",
+    group: "Widget - Styles",
     properties: [
         {
             name: "object",
@@ -367,6 +380,7 @@ registerAction({
 
 registerAction({
     name: "objAddStyle",
+    group: "Widget - Styles",
     properties: [
         {
             name: "object",
@@ -392,6 +406,7 @@ registerAction({
 
 registerAction({
     name: "objRemoveStyle",
+    group: "Widget - Styles",
     properties: [
         {
             name: "object",
@@ -417,6 +432,7 @@ registerAction({
 
 registerAction({
     name: "objSetFlagHidden",
+    group: "Widget - Flags",
     properties: [
         {
             name: "object",
@@ -444,6 +460,7 @@ registerAction({
 
 registerAction({
     name: "objAddFlag",
+    group: "Widget - Flags",
     properties: [
         {
             name: "object",
@@ -471,6 +488,7 @@ registerAction({
 
 registerAction({
     name: "objClearFlag",
+    group: "Widget - Flags",
     properties: [
         {
             name: "object",
@@ -498,6 +516,7 @@ registerAction({
 
 registerAction({
     name: "objHasFlag",
+    group: "Widget - Flags",
     properties: [
         {
             name: "object",
@@ -533,6 +552,7 @@ registerAction({
 
 registerAction({
     name: "objSetStateChecked",
+    group: "Widget - Flags",
     properties: [
         {
             name: "object",
@@ -560,6 +580,7 @@ registerAction({
 
 registerAction({
     name: "objSetStateDisabled",
+    group: "Widget - States",
     properties: [
         {
             name: "object",
@@ -587,6 +608,7 @@ registerAction({
 
 registerAction({
     name: "objAddState",
+    group: "Widget - States",
     properties: [
         {
             name: "object",
@@ -614,6 +636,7 @@ registerAction({
 
 registerAction({
     name: "objClearState",
+    group: "Widget - States",
     properties: [
         {
             name: "object",
@@ -641,6 +664,7 @@ registerAction({
 
 registerAction({
     name: "objHasState",
+    group: "Widget - States",
     properties: [
         {
             name: "object",
@@ -676,6 +700,7 @@ registerAction({
 
 registerAction({
     name: "arcSetValue",
+    group: "Arc",
     properties: [
         {
             name: "object",
@@ -701,6 +726,7 @@ registerAction({
 
 registerAction({
     name: "barSetValue",
+    group: "Bar",
     properties: [
         {
             name: "object",
@@ -733,6 +759,7 @@ registerAction({
 
 registerAction({
     name: "dropdownSetSelected",
+    group: "Dropdown",
     properties: [
         {
             name: "object",
@@ -758,6 +785,7 @@ registerAction({
 
 registerAction({
     name: "imageSetSrc",
+    group: "Image",
     properties: [
         {
             name: "object",
@@ -783,6 +811,7 @@ registerAction({
 
 registerAction({
     name: "imageSetAngle",
+    group: "Image",
     properties: [
         {
             name: "object",
@@ -809,6 +838,7 @@ registerAction({
 
 registerAction({
     name: "imageSetZoom",
+    group: "Image",
     properties: [
         {
             name: "object",
@@ -835,6 +865,7 @@ registerAction({
 
 registerAction({
     name: "labelSetText",
+    group: "Label",
     properties: [
         {
             name: "object",
@@ -860,6 +891,7 @@ registerAction({
 
 registerAction({
     name: "rollerSetSelected",
+    group: "Roller",
     properties: [
         {
             name: "object",
@@ -892,6 +924,7 @@ registerAction({
 
 registerAction({
     name: "sliderSetValue",
+    group: "Slider",
     properties: [
         {
             name: "object",
@@ -922,6 +955,7 @@ registerAction({
 
 registerAction({
     name: "keyboardSetTextarea",
+    group: "Keyboard",
     properties: [
         {
             name: "object",
@@ -947,6 +981,7 @@ registerAction({
 
 registerAction({
     name: "groupFocusObj",
+    group: "Group",
     properties: [
         {
             name: "object",
@@ -963,6 +998,7 @@ registerAction({
 
 registerAction({
     name: "groupFocusNext",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -979,6 +1015,7 @@ registerAction({
 
 registerAction({
     name: "groupFocusPrev",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -995,6 +1032,7 @@ registerAction({
 
 registerAction({
     name: "groupGetFocused",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -1025,6 +1063,7 @@ registerAction({
 
 registerAction({
     name: "groupFocusFreeze",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -1052,6 +1091,7 @@ registerAction({
 
 registerAction({
     name: "groupSetWrap",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -1080,6 +1120,7 @@ registerAction({
 
 registerAction({
     name: "groupSetEditing",
+    group: "Group",
     properties: [
         {
             name: "group",
@@ -1194,6 +1235,7 @@ const animLabel = (
 
 registerAction({
     name: "animX",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1202,6 +1244,7 @@ registerAction({
 
 registerAction({
     name: "animY",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1210,6 +1253,7 @@ registerAction({
 
 registerAction({
     name: "animWidth",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1218,6 +1262,7 @@ registerAction({
 
 registerAction({
     name: "animHeight",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1226,6 +1271,7 @@ registerAction({
 
 registerAction({
     name: "animOpacity",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1234,6 +1280,7 @@ registerAction({
 
 registerAction({
     name: "animImageZoom",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
@@ -1242,8 +1289,84 @@ registerAction({
 
 registerAction({
     name: "animImageAngle",
+    group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
     helpText: "Animate the angle of the image"
+});
+
+const SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE =
+    " action is not available if 'Screens lifetime support' is not enabled in Settings - Build";
+
+registerAction({
+    name: "createScreen",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen to create"
+        }
+    ],
+    defaults: {},
+    label: ([screen]) => <>{screen}</>,
+    helpText: `Create the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Create Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
+});
+
+registerAction({
+    name: "deleteScreen",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen to delete"
+        }
+    ],
+    defaults: {},
+    label: ([screen]) => <>{screen}</>,
+    helpText: `Delete the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Delete Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
+});
+
+registerAction({
+    name: "isScreenCreated",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen"
+        },
+        {
+            name: "result",
+            type: "boolean",
+            isAssignable: true,
+            helpText: "The boolean variable where to store the screen status"
+        }
+    ],
+    defaults: {},
+    label: ([screen, result]) => (
+        <>
+            <>
+                {screen}
+                <RightArrow />
+                {result}
+            </>
+        </>
+    ),
+    helpText: `Check if screen is created ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Is Screen Created' action " +
+              SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
 });

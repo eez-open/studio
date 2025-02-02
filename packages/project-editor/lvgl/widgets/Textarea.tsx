@@ -147,7 +147,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateTextarea(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

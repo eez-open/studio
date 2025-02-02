@@ -86,7 +86,7 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateMessageBox(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

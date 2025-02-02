@@ -203,7 +203,7 @@ export class LVGLArcWidget extends LVGLWidget {
 
         const obj = runtime.wasm._lvglCreateArc(
             parentObj,
-            runtime.getWidgetIndex(this),
+            runtime.getCreateWidgetIndex(this),
 
             rect.left,
             rect.top,

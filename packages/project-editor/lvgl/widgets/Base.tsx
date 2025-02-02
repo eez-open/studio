@@ -1890,7 +1890,7 @@ export class LVGLWidget extends Widget {
         this.lvglBuildObj(build);
 
         if (build.isAccessibleFromSourceCode(this)) {
-            build.line(`${build.getLvglObjectAccessor(this)} = obj;`);
+            build.assignToObjectsStruct(build.getLvglObjectAccessor(this));
         }
 
         if (this instanceof LVGLScreenWidget) {

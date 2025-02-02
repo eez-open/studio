@@ -603,6 +603,28 @@ function lvglSetColorTheme(wasmModuleId: number, themeName: string) {
     });
 }
 
+function lvglCreateScreen(wasmModuleId: number, screenIndex: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglCreateScreen: { screenIndex }
+    });
+}
+
+function lvglDeleteScreen(wasmModuleId: number, screenIndex: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglDeleteScreen: { screenIndex }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
@@ -638,6 +660,8 @@ function lvglSetColorTheme(wasmModuleId: number, themeName: string) {
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;
 (global as any).lvglSetColorTheme = lvglSetColorTheme;
+(global as any).lvglCreateScreen = lvglCreateScreen;
+(global as any).lvglDeleteScreen = lvglDeleteScreen;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -649,6 +673,7 @@ export function createWasmWorker(
     displayWidth: number,
     displayHeight: number,
     darkTheme: boolean,
+    deleteOnScreenUnload: boolean[] | undefined,
     getClassByName: (className: string) => any,
     readSettings: (key: string) => any,
     writeSettings: (key: string, value: any) => any,
@@ -885,6 +910,17 @@ export function createWasmWorker(
             var ptr = WasmFlowRuntime._malloc(assets.length);
             WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
+            let deleteOnScreenUnloadPtr = 0;
+            if (deleteOnScreenUnload) {
+                deleteOnScreenUnloadPtr = WasmFlowRuntime._malloc(
+                    deleteOnScreenUnload.length
+                );
+                for (let i = 0; i < deleteOnScreenUnload.length; i++) {
+                    WasmFlowRuntime.HEAPU8[deleteOnScreenUnloadPtr + i] =
+                        deleteOnScreenUnload[i] ? 1 : 0;
+                }
+            }
+
             WasmFlowRuntime._init(
                 wasmModuleId,
                 debuggerMessageSubsciptionFilter,
@@ -893,7 +929,8 @@ export function createWasmWorker(
                 displayWidth,
                 displayHeight,
                 darkTheme,
-                -(new Date().getTimezoneOffset() / 60) * 100
+                -(new Date().getTimezoneOffset() / 60) * 100,
+                deleteOnScreenUnloadPtr
             );
 
             WasmFlowRuntime._free(ptr);

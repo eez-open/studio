@@ -273,6 +273,7 @@ export class Build extends EezObject {
     destinationFolder?: string;
     separateFolderForImagesAndFonts?: boolean;
     lvglInclude: string;
+    screensLifetimeSupport: boolean;
     generateSourceCodeForEezFramework: boolean;
     compressFlowDefinition: boolean;
     executionQueueSize: number;
@@ -312,6 +313,12 @@ export class Build extends EezObject {
                 name: "lvglInclude",
                 displayName: "LVGL include",
                 type: PropertyType.String,
+                disabled: isNotLVGLProject
+            },
+            {
+                name: "screensLifetimeSupport",
+                checkboxStyleSwitch: true,
+                type: PropertyType.Boolean,
                 disabled: isNotLVGLProject
             },
             {
@@ -375,6 +382,10 @@ export class Build extends EezObject {
             if (jsObject.separateFolderForImagesAndFonts == undefined) {
                 jsObject.separateFolderForImagesAndFonts = false;
             }
+
+            if (jsObject.screensLifetimeSupport == undefined) {
+                jsObject.screensLifetimeSupport = false;
+            }
         },
 
         updateObjectValueHook: (build: Build, values: Partial<Build>) => {
@@ -402,6 +413,7 @@ export class Build extends EezObject {
             destinationFolder: observable,
             separateFolderForImagesAndFonts: observable,
             lvglInclude: observable,
+            screensLifetimeSupport: observable,
             generateSourceCodeForEezFramework: observable,
             compressFlowDefinition: observable,
             executionQueueSize: observable,
