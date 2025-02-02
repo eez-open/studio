@@ -32,13 +32,15 @@ export class LVGLIdentifiers {
     }
 
     get pages() {
-        const pages = [];
+        const userPages = [];
+        const userWidgets = [];
 
         for (const project of this.store.openProjectsManager.projects) {
-            pages.push(...project.pages);
+            userPages.push(...project.userPages);
+            userWidgets.push(...project.userWidgets);
         }
 
-        return pages;
+        return [...userPages, ...userWidgets];
     }
 
     get userPages() {
