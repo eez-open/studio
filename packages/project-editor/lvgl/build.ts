@@ -1227,10 +1227,9 @@ export class LVGLBuild extends Build {
                 build.project.settings.build.screensLifetimeSupport &&
                 !page.isUsedAsUserWidget
             ) {
-                build.line(
+                build.blockStart(
                     `void ${this.getScreenDeleteFunctionName(page)}() {`
                 );
-                build.indent();
 
                 if (this.isV9) {
                     build.line(
@@ -1256,11 +1255,16 @@ export class LVGLBuild extends Build {
                     }
                 }
 
-                build.line(
-                    `deletePageFlowState(${build.assets.getFlowIndex(page)});`
-                );
-                build.unindent();
-                build.line("}");
+                if (build.project.projectTypeTraits.hasFlowSupport) {
+                    build.line(
+                        `deletePageFlowState(${build.assets.getFlowIndex(
+                            page
+                        )});`
+                    );
+                }
+
+                build.blockEnd("}");
+
                 build.line("");
             }
 
@@ -1655,7 +1659,10 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        if (build.project.settings.build.screensLifetimeSupport) {
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            build.project.settings.build.screensLifetimeSupport
+        ) {
             build.line("eez_flow_set_create_screen_func(create_screen);");
             build.line("eez_flow_set_delete_screen_func(delete_screen);");
             build.line(
