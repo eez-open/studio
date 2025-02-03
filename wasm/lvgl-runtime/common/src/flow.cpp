@@ -25,7 +25,6 @@
 
 bool is_editor = false;
 bool g_screensLifetimeSupport = false;
-extern bool *g_deleteOnScreenUnload;
 
 uint32_t screenLoad_animType = 0;
 uint32_t screenLoad_speed = 0;
@@ -1094,7 +1093,7 @@ void deleteScreen(int screenIndex) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool *deleteOnScreenUnload) {
+extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool screensLifetimeSupport) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
     //DISPLAY_WIDTH = eez::g_mainAssets->settings->displayWidth;
@@ -1130,12 +1129,10 @@ extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubscipt
 
     eez::flow::start(eez::g_mainAssets);
 
-    g_screensLifetimeSupport = deleteOnScreenUnload != 0;
-
+    g_screensLifetimeSupport = screensLifetimeSupport;
     if (g_screensLifetimeSupport) {
         eez_flow_set_create_screen_func(createScreen);
         eez_flow_set_delete_screen_func(deleteScreen);
-        eez_flow_set_delete_on_screen_unload(deleteOnScreenUnload);
     }
 
     g_currentScreen = 0;
@@ -1164,28 +1161,6 @@ void flowOnPageLoadedStudio(unsigned pageIndex) {
         g_currentScreen = pageIndex;
     }
     eez::flow::getPageFlowState(eez::g_mainAssets, pageIndex);
-}
-
-void on_lvgl_screen_unloaded(lv_event_t *e) {
-    if (lv_event_get_code(e) == LV_EVENT_SCREEN_UNLOADED) {
-        int16_t screenIndex = (int16_t)(lv_uintptr_t)lv_event_get_user_data(e);
-        deleteScreen(screenIndex);
-    }
-}
-
-void addScreenUnloadedCallback(unsigned screenIndex, lv_obj_t *screen) {
-    if (
-        g_screensLifetimeSupport &&
-        g_deleteOnScreenUnload &&
-        g_deleteOnScreenUnload[screenIndex]
-    ) {
-        lv_obj_add_event_cb(
-            screen,
-            on_lvgl_screen_unloaded,
-            LV_EVENT_SCREEN_UNLOADED,
-            (void*)(lv_uintptr_t)(screenIndex)
-        );
-    }
 }
 
 native_var_t native_vars[] = {

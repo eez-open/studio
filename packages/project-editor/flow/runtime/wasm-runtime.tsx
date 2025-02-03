@@ -270,11 +270,7 @@ export class WasmRuntime extends RemoteRuntime {
             this.displayWidth,
             this.displayHeight,
             this.projectStore.project.settings.general.darkTheme,
-            this.projectStore.project.settings.build.screensLifetimeSupport
-                ? this.projectStore.lvglIdentifiers.userPages.map(
-                      page => page.deleteOnScreenUnload
-                  )
-                : undefined,
+            this.projectStore.project.settings.build.screensLifetimeSupport,
             (className: string) => getClassByName(this.projectStore, className),
             (key: string) => {
                 return this.projectStore.runtimeSettings.readSettings(key);

@@ -596,8 +596,6 @@ EM_PORT_API(lv_obj_t *) lvglCreateWindow(lv_obj_t *parentObj, int32_t index, lv_
 static lv_obj_t *current_screen = 0;
 
 EM_PORT_API(void) lvglScreenLoad(unsigned page_index, lv_obj_t *obj) {
-    addScreenUnloadedCallback(page_index, obj);
-
 #if LVGL_VERSION_MAJOR >= 9
     lv_screen_load_anim(obj, (lv_scr_load_anim_t)screenLoad_animType, screenLoad_speed, screenLoad_delay, false);
 #else
@@ -1279,6 +1277,10 @@ EM_PORT_API(lv_coord_t) lvglGetScrollY(lv_obj_t *obj) {
 
 EM_PORT_API(void) lvglObjInvalidate(lv_obj_t *obj) {
     return lv_obj_invalidate(obj);
+}
+
+EM_PORT_API(void) lvglDeleteScreenOnUnload(unsigned screenIndex) {
+    eez_flow_delete_screen_on_unload(screenIndex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

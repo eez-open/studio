@@ -556,7 +556,7 @@ export interface IWasmFlowRuntime {
     } | undefined;
 
     // eez framework API
-    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, darkTheme: boolean, timeZone: number, deleteOnScreenUnload: number): void;
+    _init(wasmModuleId: number, debuggerMessageSubsciptionFilter: number, assets: number, assetsSize: number, displayWidth: number, displayHeight: number, darkTheme: boolean, timeZone: number, screensLifetimeSupport: boolean): void;
     _mainLoop(): boolean;
     _getSyncedBuffer(): number;
     _onMouseWheelEvent(wheelDeltaY: number, pressed: number): void;
@@ -814,6 +814,8 @@ export interface IWasmFlowRuntime {
     _lvglGroupRemoveObjectsForScreen(screenObj: number): void;
 
     _lvglObjInvalidate(obj: number);
+
+    _lvglDeleteScreenOnUnload(screenIndex: number);
 }
 
 export interface IDashboardComponentContext {

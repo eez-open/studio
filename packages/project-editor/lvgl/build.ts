@@ -1214,6 +1214,19 @@ export class LVGLBuild extends Build {
 
             page.lvglBuild(this);
 
+            if (
+                this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+                build.project.settings.build.screensLifetimeSupport &&
+                page.deleteOnScreenUnload
+            ) {
+                build.line("");
+                build.line(
+                    `eez_flow_delete_screen_on_unload(SCREEN_ID_${this.getScreenIdentifier(
+                        page
+                    ).toUpperCase()} - 1);`
+                );
+            }
+
             if (!page.isUsedAsUserWidget) {
                 build.line("");
                 build.line(`${this.getScreenTickFunctionName(page)}();`);
@@ -1665,14 +1678,6 @@ export class LVGLBuild extends Build {
         ) {
             build.line("eez_flow_set_create_screen_func(create_screen);");
             build.line("eez_flow_set_delete_screen_func(delete_screen);");
-            build.line(
-                `static bool delete_on_screen_unload[] = { ${this.userPages
-                    .map(page => (page.deleteOnScreenUnload ? "true" : "false"))
-                    .join(", ")} };`
-            );
-            build.line(
-                "eez_flow_set_delete_on_screen_unload(delete_on_screen_unload);"
-            );
             build.line("");
         }
 

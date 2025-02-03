@@ -623,7 +623,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100,
-                    0
+                    false
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -837,7 +837,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     this.page.height,
                     this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100,
-                    0
+                    false
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -1136,6 +1136,14 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         this.widgetIndexes = [];
 
         const pageObj = this.lvglCreatePage();
+
+        if (
+            pageObj &&
+            this.project.settings.build.screensLifetimeSupport &&
+            this.page.deleteOnScreenUnload
+        ) {
+            this.wasm._lvglDeleteScreenOnUnload(pageIndex);
+        }
 
         const pageState = this.pageStates.get(this.page)!;
 
@@ -1463,7 +1471,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100,
-                    0
+                    false
                 );
 
                 this.requestAnimationFrameId = window.requestAnimationFrame(
@@ -1739,7 +1747,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     this.displayHeight,
                     this.project.settings.general.darkTheme,
                     -(new Date().getTimezoneOffset() / 60) * 100,
-                    0
+                    false
                 );
 
                 const pageObj = this.lvglCreatePage();

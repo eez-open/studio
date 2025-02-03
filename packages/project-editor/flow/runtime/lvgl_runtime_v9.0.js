@@ -4859,6 +4859,7 @@ var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo'
 var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
 var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
 var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate');
+var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = createExportWrapper('lvglDeleteScreenOnUnload');
 var _fflush = Module['_fflush'] = createExportWrapper('fflush');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var ___errno_location = createExportWrapper('__errno_location');

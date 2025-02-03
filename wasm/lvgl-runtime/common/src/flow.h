@@ -15,7 +15,7 @@ extern uint32_t screenLoad_delay;
 #ifdef __cplusplus
 extern "C" {
 #endif
-void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool *deleteOnScreenUnload);
+void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool screensLifetimeSupport);
 bool flowTick();
 #ifdef __cplusplus
 }
@@ -110,5 +110,3 @@ void addUpdateTask(enum UpdateTaskType updateTaskType, lv_obj_t *obj, void *flow
 void setObjectIndex(lv_obj_t *obj, int32_t index);
 void deleteObjectIndex(int32_t index);
 lv_obj_t *getLvglObjectFromIndex(int32_t index);
-
-void addScreenUnloadedCallback(unsigned screenIndex, lv_obj_t *screen);

@@ -673,7 +673,7 @@ export function createWasmWorker(
     displayWidth: number,
     displayHeight: number,
     darkTheme: boolean,
-    deleteOnScreenUnload: boolean[] | undefined,
+    screensLifetimeSupport: boolean,
     getClassByName: (className: string) => any,
     readSettings: (key: string) => any,
     writeSettings: (key: string, value: any) => any,
@@ -910,17 +910,6 @@ export function createWasmWorker(
             var ptr = WasmFlowRuntime._malloc(assets.length);
             WasmFlowRuntime.HEAPU8.set(assets, ptr);
 
-            let deleteOnScreenUnloadPtr = 0;
-            if (deleteOnScreenUnload) {
-                deleteOnScreenUnloadPtr = WasmFlowRuntime._malloc(
-                    deleteOnScreenUnload.length
-                );
-                for (let i = 0; i < deleteOnScreenUnload.length; i++) {
-                    WasmFlowRuntime.HEAPU8[deleteOnScreenUnloadPtr + i] =
-                        deleteOnScreenUnload[i] ? 1 : 0;
-                }
-            }
-
             WasmFlowRuntime._init(
                 wasmModuleId,
                 debuggerMessageSubsciptionFilter,
@@ -930,7 +919,7 @@ export function createWasmWorker(
                 displayHeight,
                 darkTheme,
                 -(new Date().getTimezoneOffset() / 60) * 100,
-                deleteOnScreenUnloadPtr
+                screensLifetimeSupport
             );
 
             WasmFlowRuntime._free(ptr);
