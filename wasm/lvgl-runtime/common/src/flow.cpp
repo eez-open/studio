@@ -886,6 +886,8 @@ void finishToDebuggerMessage() {
 }
 
 void replacePageHook(int16_t pageId, uint32_t animType, uint32_t speed, uint32_t delay) {
+    eez_flow_create_screen(pageId);
+
     screenLoad_animType = animType;
     screenLoad_speed = speed;
     screenLoad_delay = delay;
