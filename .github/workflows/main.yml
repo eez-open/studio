@@ -26,8 +26,8 @@ jobs:
               run: sudo -H pip install setuptools
 
             - name: Additional step for ubuntu
-             if: startsWith(matrix.os, 'ubuntu')
-             run: sudo apt-get install libudev-dev
+              if: startsWith(matrix.os, 'ubuntu')
+              run: sudo apt-get install libudev-dev
 
             #- name: Install Snapcraft
             #  uses: samuelmeuli/action-snapcraft@v1
