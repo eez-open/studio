@@ -37,6 +37,7 @@ import { stringCompare } from "eez-studio-shared/string";
 import { isArray } from "eez-studio-shared/util";
 import type { UserProperty } from "project-editor/flow/user-property";
 import { IObjectVariableValueFieldDescription } from "eez-studio-types";
+import { SearchInput } from "eez-studio-ui/search-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,6 +190,7 @@ const WatchTable = observer(
             super(props);
 
             makeObservable(this, {
+                searchText: observable,
                 columns: computed,
                 watchExpressions: computed,
                 globalVariables: computed,
@@ -201,6 +203,19 @@ const WatchTable = observer(
         }
 
         expandedMap = new Map<string, boolean>();
+        searchText = "";
+
+        onSearchChange = (event: any) => {
+            this.searchText = event.target.value;
+        };
+
+        filterBySearchText(text: string) {
+            const searchText = this.searchText.trim().toLowerCase();
+            if (!searchText) {
+                return true;
+            }
+            return text.toLowerCase().indexOf(searchText) != -1;
+        }
 
         expanded(id: string, defaultValue: boolean) {
             const expandedMap = this.expandedMap;
@@ -456,8 +471,11 @@ const WatchTable = observer(
                 value: undefined,
                 type: "",
                 children: () =>
-                    this.props.runtime.projectStore.uiStateStore.watchExpressions.map(
-                        (expression, i) => {
+                    this.props.runtime.projectStore.uiStateStore.watchExpressions
+                        .filter(expression =>
+                            this.filterBySearchText(expression)
+                        )
+                        .map((expression, i) => {
                             let watchExpressionLabel;
                             let value;
                             let type: any;
@@ -514,8 +532,7 @@ const WatchTable = observer(
                                 className,
                                 data: i
                             });
-                        }
-                    ),
+                        }),
                 selected: false,
                 expanded: this.expanded("expressions", true)
             });
@@ -527,47 +544,50 @@ const WatchTable = observer(
         ) => {
             variables = variables.slice();
             variables.sort((a, b) => stringCompare(a.fullName, b.fullName));
-            return variables.map(variable => {
-                const flowState = this.props.runtime.selectedFlowState;
+            return variables
+                .filter(variable => this.filterBySearchText(variable.fullName))
+                .map(variable => {
+                    const flowState = this.props.runtime.selectedFlowState;
 
-                let dataContext: IDataContext;
-                if (flowState) {
-                    dataContext = flowState.dataContext;
-                } else {
-                    dataContext = this.props.runtime.projectStore.dataContext;
-                }
+                    let dataContext: IDataContext;
+                    if (flowState) {
+                        dataContext = flowState.dataContext;
+                    } else {
+                        dataContext =
+                            this.props.runtime.projectStore.dataContext;
+                    }
 
-                const name = variable.fullName;
+                    const name = variable.fullName;
 
-                const value = dataContext.get(name);
-                const valueLabel = (
-                    <span>
-                        {getValueLabel(
-                            this.props.runtime.projectStore.project,
+                    const value = dataContext.get(name);
+                    const valueLabel = (
+                        <span>
+                            {getValueLabel(
+                                this.props.runtime.projectStore.project,
+                                value,
+                                variable.type
+                            )}
+                        </span>
+                    );
+
+                    return observable({
+                        id: id + name,
+
+                        name: name,
+                        nameTitle: name,
+                        value: valueLabel,
+                        valueTitle: valueLabel,
+                        type: variable.type,
+
+                        children: this.getValueChildren(
+                            id + name,
                             value,
                             variable.type
-                        )}
-                    </span>
-                );
-
-                return observable({
-                    id: id + name,
-
-                    name: name,
-                    nameTitle: name,
-                    value: valueLabel,
-                    valueTitle: valueLabel,
-                    type: variable.type,
-
-                    children: this.getValueChildren(
-                        id + name,
-                        value,
-                        variable.type
-                    ),
-                    selected: false,
-                    expanded: this.expanded(id + name, false)
+                        ),
+                        selected: false,
+                        expanded: this.expanded(id + name, false)
+                    });
                 });
-            });
         };
 
         get globalVariables() {
@@ -702,7 +722,9 @@ const WatchTable = observer(
             const { flowState, component } = result;
 
             const inputs = component.inputs.filter(
-                input => input.name != "@seqin"
+                input =>
+                    input.name != "@seqin" &&
+                    this.filterBySearchText(input.name)
             );
             if (inputs.length == 0) {
                 return undefined;
@@ -783,15 +805,25 @@ const WatchTable = observer(
 
         render() {
             return (
-                <div className="EezStudio_DebuggerVariablesTable">
-                    {
-                        <TreeTable
-                            columns={this.columns}
-                            showOnlyChildren={true}
-                            rootNode={this.rootNode}
-                            selectNode={this.selectNode}
-                        />
-                    }
+                <div className="EezStudio_DebuggerPanel_WatchBody">
+                    <SearchInput
+                        searchText={this.searchText}
+                        onClear={action(() => {
+                            this.searchText = "";
+                        })}
+                        onChange={this.onSearchChange}
+                        onKeyDown={this.onSearchChange}
+                    ></SearchInput>
+                    <div className="EezStudio_DebuggerVariablesTable">
+                        {
+                            <TreeTable
+                                columns={this.columns}
+                                showOnlyChildren={true}
+                                rootNode={this.rootNode}
+                                selectNode={this.selectNode}
+                            />
+                        }
+                    </div>
                 </div>
             );
         }

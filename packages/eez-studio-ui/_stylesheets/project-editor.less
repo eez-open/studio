@@ -242,6 +242,21 @@
     }
 }
 
+.EezStudio_DebuggerPanel_WatchBody {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    & > .EezStudio_SearchInput_Container {
+        flex: 0;
+        border-bottom: 1px solid @borderColor;
+    }
+
+    & > .EezStudio_DebuggerVariablesTable {
+        flex: 1;
+    }
+}
+
 .EezStudio_ComponentsPalette_Enclosure {
     height: 100%;
 
