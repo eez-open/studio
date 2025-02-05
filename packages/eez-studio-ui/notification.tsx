@@ -22,7 +22,7 @@ export function warn(message: string, options?: ToastOptions) {
 }
 
 export function error(message: string, options?: ToastOptions) {
-    return toast.error(message, options);
+    return toast.error(message, Object.assign({ autoClose: false }, options));
 }
 
 export function update(toastId: ToastId, options: UpdateOptions) {

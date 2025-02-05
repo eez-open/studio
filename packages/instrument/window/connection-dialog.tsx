@@ -4,6 +4,8 @@ import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 const os = require("os");
 
+import * as notification from "eez-studio-ui/notification";
+
 import { objectClone } from "eez-studio-shared/util";
 
 import {
@@ -181,7 +183,7 @@ export const ConnectionProperties = observer(
 
                     // TODO doesn't work on Raspbian
                     if (process.arch != "arm") {
-                        await this.refreshUsbDevices();
+                        await this.refreshUsbDevices(false);
                     }
                 } else {
                     this.initUsbDevices();
@@ -357,22 +359,28 @@ export const ConnectionProperties = observer(
             this.selectedUsbDeviceIndex = selectedUsbDeviceIndex;
         }
 
-        async refreshUsbDevices() {
+        async refreshUsbDevices(reportError: boolean) {
             const { getUsbDevices } =
                 require("instrument/connection/interfaces/usbtmc") as typeof UsbTmcModule;
 
-            const usbDevices = await getUsbDevices();
+            try {
+                const usbDevices = await getUsbDevices();
 
-            runInAction(() => {
-                devices.usbDevices = usbDevices;
-            });
+                runInAction(() => {
+                    devices.usbDevices = usbDevices;
+                });
 
-            this.initUsbDevices();
+                this.initUsbDevices();
+            } catch (err) {
+                if (reportError) {
+                    notification.error(err.toString());
+                }
+            }
         }
 
         onRefreshUsbDevices = (event: React.MouseEvent) => {
             event.preventDefault();
-            this.refreshUsbDevices();
+            this.refreshUsbDevices(true);
         };
 
         refreshVisaResources(includeNetworkResources: boolean) {
