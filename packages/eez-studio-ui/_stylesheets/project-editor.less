@@ -1364,6 +1364,12 @@
                 marker-end: url(#seqLineEnd);
             }
 
+            &.disabled {
+                stroke: @disabledConnectionLineColor;
+                marker-start: url(#disabledLineStart);
+                marker-end: url(#disabledLineEnd);
+            }
+
             &.selected {
                 stroke: @selectedConnectionLineColor;
                 marker-start: url(#selectedLineStart);
@@ -1486,6 +1492,12 @@
                 stroke: @seqConnectionLineColor;
                 marker-start: url(#seqLineStart);
                 marker-end: url(#seqLineEnd);
+            }
+
+            &.disabled {
+                stroke: @disabledConnectionLineColor;
+                marker-start: url(#disabledLineStart);
+                marker-end: url(#disabledLineEnd);
             }
 
             &.selected {

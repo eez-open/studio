@@ -282,7 +282,8 @@ function buildComponent(
         const connectionLines = flow.connectionLines.filter(
             connectionLine =>
                 connectionLine.sourceComponent === component &&
-                connectionLine.output == output.name
+                connectionLine.output == output.name &&
+                !connectionLine.disabled
         );
 
         const connectionLinesMap: {

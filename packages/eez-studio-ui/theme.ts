@@ -9,6 +9,7 @@ export interface ThemeInterface {
     selectedConnectionLineColor: string;
     seqConnectionLineColor: string;
     activeConnectionLineColor: string;
+    disabledLineColor: string;
 }
 
 export const lightTheme: ThemeInterface = {
@@ -19,7 +20,8 @@ export const lightTheme: ThemeInterface = {
     connectionLineColor: "#999",
     selectedConnectionLineColor: "red",
     seqConnectionLineColor: "#3FADB5",
-    activeConnectionLineColor: "blue"
+    activeConnectionLineColor: "blue",
+    disabledLineColor: "#aaa"
 };
 
 export const darkTheme: ThemeInterface = {
@@ -30,7 +32,8 @@ export const darkTheme: ThemeInterface = {
     connectionLineColor: "#999",
     selectedConnectionLineColor: "red",
     seqConnectionLineColor: "#3FADB5",
-    activeConnectionLineColor: "blue"
+    activeConnectionLineColor: "blue",
+    disabledLineColor: "#999"
 };
 
 export const theme = () =>
