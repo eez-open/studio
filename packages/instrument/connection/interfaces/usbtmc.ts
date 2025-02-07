@@ -903,7 +903,7 @@ export class Instrument {
         });
     }
 
-    async read_raw() {
+    async read_raw(onData: (data: any) => boolean) {
         // Read binary data from instrument
 
         if (!this.connected) {
@@ -914,51 +914,39 @@ export class Instrument {
 
         let read_data: Buffer = Buffer.alloc(0);
 
+        const SEND_CHUNK_SIZE = 32768;
+        let total_data_sent = 0;
+
+        let expect_msg_in_response = true;
+        let arbitrary_data = false;
+        let first = true;
+
         let expected_length = 0;
+
         let eom = false;
 
         const req = this.pack_dev_dep_msg_in_header(read_len, this.term_char);
         await this.bulk_out_ep_write(req);
-        let expect_msg_in_response = true;
-
-        let arbitrary_data = false;
-        let first = true;
 
         while (true) {
             let received = 0;
             let transfer_size = 0;
             do {
                 try {
-                    console.log("read before");
                     const resp = await this.bulk_in_ep_read(read_len);
                     if (resp.length === 0) {
-                        console.log("read after: 0");
                         break;
                     }
-                    console.log("received bulk data size=", resp.length);
 
                     let data: Buffer | undefined = undefined;
 
                     if (expect_msg_in_response) {
                         expect_msg_in_response = false;
 
-                        let msgid: number;
-                        let btag: number;
-                        let btaginverse: number;
                         let transfer_attributes: number;
 
-                        ({
-                            msgid,
-                            btag,
-                            btaginverse,
-                            transfer_size,
-                            transfer_attributes,
-                            data
-                        } = this.unpack_dev_dep_resp_header(resp));
-
-                        console.log(
-                            `msgid=${msgid}, btag=${btag}, btaginverse=${btaginverse}, transfer_size=${transfer_size}, transfer_attributes=${transfer_attributes}, data.length=${data.length}`
-                        );
+                        ({ transfer_size, transfer_attributes, data } =
+                            this.unpack_dev_dep_resp_header(resp));
 
                         eom = transfer_attributes & 1 ? true : false;
 
@@ -967,7 +955,7 @@ export class Instrument {
                             data.length > 0 &&
                             data[0] === "#".charCodeAt(0)
                         ) {
-                            console.log("arbitrary data");
+                            first = false;
 
                             // ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
                             const l = data[1] - "0".charCodeAt(0);
@@ -976,14 +964,9 @@ export class Instrument {
                             arbitrary_data = true;
                         }
 
-                        first = false;
-
                         if (!arbitrary_data) {
                             expected_length += transfer_size;
                         }
-
-                        console.log("expected_length =", expected_length);
-                        console.log("eom =", eom);
                     } else {
                         data = resp;
                     }
@@ -991,85 +974,58 @@ export class Instrument {
                     received += data.length;
 
                     read_data = Buffer.concat([read_data, data]);
+
+                    if (read_data.length >= SEND_CHUNK_SIZE) {
+                        let continueRead = onData(
+                            total_data_sent + read_data.length < expected_length
+                                ? read_data
+                                : read_data.subarray(
+                                      0,
+                                      expected_length - total_data_sent
+                                  )
+                        );
+                        if (!continueRead) {
+                            await this._abort_bulk_in();
+                            return;
+                        }
+
+                        total_data_sent += data.length;
+
+                        read_data = Buffer.alloc(0);
+                    }
                 } catch (err) {
                     if (isTimeoutError(err)) {
                         // timeout, abort transfer
                         await this._abort_bulk_in();
-                        console.log("timeout");
                     }
                     throw err;
                 }
-
-                console.log(`progress ${received} / ${transfer_size}`);
             } while (received < transfer_size);
 
             if (eom) {
-                console.log("eom = true");
                 break;
-            } else {
-                console.log("eom = false");
-                console.log(
-                    "still expecting: ",
-                    expected_length - read_data.length
-                );
-
-                console.log("send another request before");
-                const req = this.pack_dev_dep_msg_in_header(
-                    read_len,
-                    this.term_char
-                );
-                await this.bulk_out_ep_write(req);
-                console.log("send another request after");
-
-                expect_msg_in_response = true;
             }
+
+            const req = this.pack_dev_dep_msg_in_header(
+                read_len,
+                this.term_char
+            );
+            await this.bulk_out_ep_write(req);
+
+            expect_msg_in_response = true;
         }
 
-        return read_data.slice(0, expected_length);
-    }
-
-    async ask_raw(data: Buffer, num: number = -1) {
-        // Write then read binary data
-
-        // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
-        const was_locked = this.advantest_locked;
-        try {
-            if (this.advantest_quirk && !was_locked) {
-                await this.lock();
-            }
-            await this.write_raw(data);
-            return await this.read_raw();
-        } finally {
-            if (this.advantest_quirk && !was_locked) {
-                await this.unlock();
-            }
+        if (read_data.length > 0) {
+            onData(
+                total_data_sent + read_data.length < expected_length
+                    ? read_data
+                    : read_data.subarray(0, expected_length - total_data_sent)
+            );
         }
     }
 
     async write(message: string) {
         await this.write_raw(Buffer.from(message, "binary"));
-    }
-
-    async read() {
-        // Read string from instrument
-        return (await this.read_raw()).toString("binary");
-    }
-
-    async ask(message: string) {
-        // Write then read string
-        // Advantest/ADCMT hardware won't respond to a command unless it's in Local Lockout mode
-        const was_locked = this.advantest_locked;
-        try {
-            if (this.advantest_quirk && !was_locked) {
-                await this.lock();
-            }
-            await this.write(message);
-            return await this.read();
-        } finally {
-            if (this.advantest_quirk && !was_locked) {
-                await this.unlock();
-            }
-        }
     }
 
     async clear() {
@@ -1297,6 +1253,8 @@ export class UsbTmcInterface implements CommunicationInterface {
 
     readyToWrite = true;
 
+    abortRead = false;
+
     constructor(private host: CommunicationInterfaceHost) {
         try {
             const instrument = new Instrument(
@@ -1329,15 +1287,19 @@ export class UsbTmcInterface implements CommunicationInterface {
         return !!this.instrument;
     }
 
-    async read() {
+    read() {
         if (this.instrument) {
             this.readyToWrite = false;
 
             try {
-                let data = await this.instrument.read_raw();
-                const dataStr = data.toString("binary");
-                console.log("read", dataStr.slice(0, 50));
-                this.host.onData(dataStr);
+                this.instrument.read_raw((data: any) => {
+                    const dataStr = data.toString("binary");
+                    this.host.onData(dataStr);
+
+                    let abortRead = this.abortRead;
+                    this.abortRead = false;
+                    return !abortRead;
+                });
             } catch (err) {
                 console.log("catch", err);
             } finally {
@@ -1369,8 +1331,13 @@ export class UsbTmcInterface implements CommunicationInterface {
     async destroy() {
         await this.waitForReadyToWrite();
         if (this.instrument) {
-            this.instrument.close();
-            this.instrument = undefined;
+            this.abortRead = true;
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            try {
+                this.instrument.close();
+                this.instrument = undefined;
+            } catch (err) {}
         }
         this.host.disconnected();
     }
