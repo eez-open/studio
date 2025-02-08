@@ -1320,12 +1320,46 @@ export class Tabs {
             tab.reloadProject();
         }
     }
+
+    showNextTab() {
+        for (let i = 0; i < this.tabs.length; i++) {
+            if (this.tabs[i] == this.activeTab) {
+                if (i + 1 < this.tabs.length) {
+                    this.makeActive(this.tabs[i + 1]);
+                } else {
+                    this.makeActive(this.tabs[0]);
+                }
+                break;
+            }
+        }
+    }
+
+    showPreviousTab() {
+        for (let i = 0; i < this.tabs.length; i++) {
+            if (this.tabs[i] == this.activeTab) {
+                if (i - 1 >= 0) {
+                    this.makeActive(this.tabs[i - 1]);
+                } else {
+                    this.makeActive(this.tabs[this.tabs.length - 1]);
+                }
+                break;
+            }
+        }
+    }
 }
 
 export let tabs: Tabs;
 
 export function loadTabs() {
     tabs = new Tabs();
+
+    ipcRenderer.on("show-next-tab", async () => {
+        tabs.showNextTab();
+    });
+
+    ipcRenderer.on("show-previous-tab", async () => {
+        tabs.showPreviousTab();
+    });
 }
 
 export function openProject(filePath: string, runMode: boolean) {

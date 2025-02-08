@@ -773,6 +773,30 @@ function buildViewMenu(win: IWindow | undefined) {
     }
 
     viewSubmenu.push({
+        label: "Next Tab",
+        accelerator: "Ctrl+Tab",
+        click: function (item) {
+            if (win) {
+                win.browserWindow.webContents.send("show-next-tab");
+            }
+        }
+    });
+
+    viewSubmenu.push({
+        label: "Previous Tab",
+        accelerator: "Ctrl+Shift+Tab",
+        click: function (item) {
+            if (win) {
+                win.browserWindow.webContents.send("show-previous-tab");
+            }
+        }
+    });
+
+    viewSubmenu.push({
+        type: "separator"
+    });
+
+    viewSubmenu.push({
         label: "Reload",
         accelerator: "CmdOrCtrl+R",
         click: function (item) {
