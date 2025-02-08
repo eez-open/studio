@@ -20,6 +20,16 @@ List of actions to be executed. The following actions are available:
   - *Speed*: Animation duration in milliseconds
   - *Delay*: Delay in milliseconds before the animation starts.
 
+- **Create Screen**: Create the screen ("Screens lifetime support" should be enabled in Settings - Build)"
+  - *Screen*: The screen to create
+
+- **Delete Screen**: Delete the screen ("Screens lifetime support" should be enabled in Settings - Build)"
+  - *Screen*: The screen to delete
+
+- **Is Screen Created**: Check if screen is created ("Screens lifetime support" should be enabled in Settings - Build)"
+  - *Screen*: The screen
+  - *Store result into*: The boolean variable where to store the screen status
+
 - **Obj Set X**: Set the x coordinate of the object
   - *Object*: The object to set the x coordinate
   - *X*: The x coordinate to set
@@ -114,6 +124,29 @@ List of actions to be executed. The following actions are available:
   - *Object*: The bar to set the value
   - *Value*: The value to set (0-100)
   - *Animated*: Use animation when setting the value
+
+- **Calendar Set Today Date**: Set the today's date
+  - *Object*: The calendar object
+  - *Year*: Today's year
+  - *Month*: Today's month [1..12]
+  - *Day*: Today's day [1..31]
+
+- **Calendar Set Showed Date**: Set the currently showed
+  - *Object*: The calendar object
+  - *Year*: Showed year
+  - *Month*: Showed month [1..12]
+
+- **Calendar Set Highlighted Date**: Set the highlighted date
+  - *Object*: The calendar object
+  - *Year*: Highlight year
+  - *Month*: Highlight month [1..12]
+  - *Day*: Hilighy day [1..31]
+
+- **Calendar Get Pressed Date**: Get the currently pressed day
+  - *Object*: The calendar object
+  - *Store year into*: The integer variable where to store the year
+  - *Store month into*: The integer variable where to store the month (1..12)
+  - *Store day into*: The integer variable where to store the day (1..31)
 
 - **Dropdown Set Selected**: Set the selected item of the dropdown
   - *Object*: The dropdown to set the selected item

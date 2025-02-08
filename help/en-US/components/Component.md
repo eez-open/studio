@@ -1,11 +1,5 @@
 # PROPERTIES
 
-## Align and distribute
-
-Alignment icons and component distribution. Alignment icons appear when two or more components are selected, and distribution icons appear when three or more components are selected.
-
-![Alt text](images/align_and_distribute.png)
-
 ## Left
 
 X position of the component in relation to the page or parent widget. It is set in pixels.
@@ -29,6 +23,12 @@ The height of the component. It is set in pixels.
 ## Absolute pos.
 
 The absolute position of the component in relation to the page. This property is read-only.
+
+## Align and distribute
+
+Alignment icons and component distribution. Alignment icons appear when two or more components are selected, and distribution icons appear when three or more components are selected.
+
+![Alt text](images/align_and_distribute.png)
 
 ## Center widget
 
