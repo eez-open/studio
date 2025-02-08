@@ -90,6 +90,7 @@ import { LVGLIdentifiers } from "project-editor/lvgl/identifiers";
 import { OpenProjectsManager } from "project-editor/store/open-projects-manager";
 import { ActionComponent } from "project-editor/flow/component";
 import {
+    AssetsMap,
     IActionComponentDefinition,
     IObjectVariableType
 } from "eez-studio-types";
@@ -1509,6 +1510,66 @@ export class ProjectStore {
             pasteToSelectedPanel();
         }
     };
+
+    async findProjectComponent() {
+        const result = await showGenericDialog({
+            dialogDefinition: {
+                title: "Find Project Component",
+                fields: [
+                    {
+                        name: "componentPath",
+                        type: "string",
+                        validators: [validators.required]
+                    }
+                ]
+            },
+            values: {
+                componentPath: ""
+            }
+        });
+
+        const progressToastId = notification.info("Searching...", {
+            autoClose: false
+        });
+
+        const [flowIndex, componentIndex] =
+            result.values.componentPath.split(".");
+
+        const buildResult = await this.buildAssets();
+        const assetsMap = buildResult.GUI_ASSETS_DATA_MAP_JS as AssetsMap;
+
+        if (flowIndex >= 0 && flowIndex < assetsMap.flows.length) {
+            const flow = assetsMap.flows[flowIndex];
+            if (componentIndex >= 0 && flow.components.length) {
+                const flowComponent = flow.components[componentIndex];
+                const component = getObjectFromStringPath(
+                    this.project,
+                    flowComponent.path
+                );
+                if (component) {
+                    this.navigationStore.showObjects(
+                        [component],
+                        true,
+                        true,
+                        true
+                    );
+
+                    notification.update(progressToastId, {
+                        render: "Found.",
+                        type: notification.SUCCESS,
+                        autoClose: 1000
+                    });
+                    return;
+                }
+            }
+        }
+
+        notification.update(progressToastId, {
+            render: "Not found.",
+            type: notification.ERROR,
+            autoClose: false
+        });
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

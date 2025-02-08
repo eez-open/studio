@@ -631,6 +631,10 @@ export class ProjectEditorTab implements IHomeTab {
             }
         };
 
+        const onFindProjectComponent = () => {
+            projectStore.findProjectComponent();
+        };
+
         const onReloadProject = () => {
             this.reloadProject();
         };
@@ -699,6 +703,7 @@ export class ProjectEditorTab implements IHomeTab {
 
         ipcRenderer.on("toggleComponentsPalette", onToggleComponentsPalette);
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
+        ipcRenderer.on("findProjectComponent", onFindProjectComponent);
 
         ipcRenderer.on("reload-project", onReloadProject);
 
@@ -729,6 +734,11 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener(
                 "resetLayoutModels",
                 onResetLayoutModels
+            );
+
+            ipcRenderer.removeListener(
+                "findProjectComponent",
+                onFindProjectComponent
             );
 
             ipcRenderer.removeListener("reload-project", onReloadProject);

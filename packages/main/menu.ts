@@ -464,100 +464,117 @@ function buildFileMenu(win: IWindow | undefined) {
 ////////////////////////////////////////////////////////////////////////////////
 
 function buildEditMenu(win: IWindow | undefined) {
-    const editMenu: Electron.MenuItemConstructorOptions = {
-        label: "Edit",
-        submenu: [
-            {
-                id: "undo",
-                label: "Undo",
-                accelerator: "CmdOrCtrl+Z",
-                role: "undo",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        const win = findWindowByBrowserWindow(focusedWindow);
-                        if (win !== undefined && win.state.undo != null) {
-                            win.browserWindow.webContents.send("undo");
-                            return;
-                        }
+    const editSubmenu: Electron.MenuItemConstructorOptions[] = [
+        {
+            id: "undo",
+            label: "Undo",
+            accelerator: "CmdOrCtrl+Z",
+            role: "undo",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    const win = findWindowByBrowserWindow(focusedWindow);
+                    if (win !== undefined && win.state.undo != null) {
+                        win.browserWindow.webContents.send("undo");
+                        return;
                     }
+                }
 
-                    undoManager.undo();
-                }
-            },
-            {
-                id: "redo",
-                label: "Redo",
-                accelerator: "CmdOrCtrl+Y",
-                role: "redo",
-                click: function (item, focusedWindow) {
-                    if (focusedWindow) {
-                        const win = findWindowByBrowserWindow(focusedWindow);
-                        if (win !== undefined && win.state.redo != null) {
-                            win.browserWindow.webContents.send("redo");
-                            return;
-                        }
+                undoManager.undo();
+            }
+        },
+        {
+            id: "redo",
+            label: "Redo",
+            accelerator: "CmdOrCtrl+Y",
+            role: "redo",
+            click: function (item, focusedWindow) {
+                if (focusedWindow) {
+                    const win = findWindowByBrowserWindow(focusedWindow);
+                    if (win !== undefined && win.state.redo != null) {
+                        win.browserWindow.webContents.send("redo");
+                        return;
                     }
+                }
 
-                    undoManager.redo();
-                }
-            },
-            {
-                type: "separator"
-            },
-            {
-                label: "Cut",
-                accelerator: "CmdOrCtrl+X",
-                role: "cut",
-                click: function (item) {
-                    if (win) {
-                        win.browserWindow.webContents.send("cut");
-                    }
-                }
-            },
-            {
-                label: "Copy",
-                accelerator: "CmdOrCtrl+C",
-                role: "copy",
-                click: function (item) {
-                    if (win) {
-                        win.browserWindow.webContents.send("copy");
-                    }
-                }
-            },
-            {
-                label: "Paste",
-                accelerator: "CmdOrCtrl+V",
-                role: "paste",
-                click: function (item) {
-                    if (win) {
-                        win.browserWindow.webContents.send("paste");
-                    }
-                }
-            },
-            {
-                label: "Delete",
-                accelerator: "Delete",
-                role: "delete",
-                click: function (item) {
-                    if (win) {
-                        win.browserWindow.webContents.send("delete");
-                    }
-                }
-            },
-            {
-                type: "separator"
-            },
-            {
-                label: "Select All",
-                accelerator: "CmdOrCtrl+A",
-                role: "selectAll",
-                click: function (item) {
-                    if (win) {
-                        win.browserWindow.webContents.send("select-all");
-                    }
+                undoManager.redo();
+            }
+        },
+        {
+            type: "separator"
+        },
+        {
+            label: "Cut",
+            accelerator: "CmdOrCtrl+X",
+            role: "cut",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("cut");
                 }
             }
-        ]
+        },
+        {
+            label: "Copy",
+            accelerator: "CmdOrCtrl+C",
+            role: "copy",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("copy");
+                }
+            }
+        },
+        {
+            label: "Paste",
+            accelerator: "CmdOrCtrl+V",
+            role: "paste",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("paste");
+                }
+            }
+        },
+        {
+            label: "Delete",
+            accelerator: "Delete",
+            role: "delete",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("delete");
+                }
+            }
+        },
+        {
+            type: "separator"
+        },
+        {
+            label: "Select All",
+            accelerator: "CmdOrCtrl+A",
+            role: "selectAll",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("select-all");
+                }
+            }
+        }
+    ];
+
+    if (win?.activeTabType === "project") {
+        editSubmenu.push({
+            type: "separator"
+        });
+        editSubmenu.push({
+            label: "Find Project Component",
+            accelerator: "CmdOrCtrl+Shift+F",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("findProjectComponent");
+                }
+            }
+        });
+    }
+
+    const editMenu: Electron.MenuItemConstructorOptions = {
+        label: "Edit",
+        submenu: editSubmenu
     };
 
     enableMenuItem(
