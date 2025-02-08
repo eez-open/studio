@@ -114,6 +114,7 @@ function getValueTypeFromActionPropertyType(
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IActionDefinition {
+    id: number;
     name: string;
     group: string;
     properties: IActionPropertyDefinition[];
@@ -129,8 +130,7 @@ export interface IActionDefinition {
 export const actionDefinitions: IActionDefinition[] = [];
 const actionClasses = new Map<string, typeof LVGLActionType>();
 const actionNameToActionId = new Map<string, number>();
-
-let nextActionId = 0;
+const actionIdToActionName = new Map<number, string>();
 
 function getActionDisplayName(actionDefinition: IActionDefinition) {
     return humanize(actionDefinition.name)
@@ -144,7 +144,15 @@ function getActionDisplayName(actionDefinition: IActionDefinition) {
 export function registerAction(actionDefinition: IActionDefinition) {
     actionDefinitions.push(actionDefinition);
 
-    actionNameToActionId.set(actionDefinition.name, nextActionId++);
+    if (actionNameToActionId.has(actionDefinition.name)) {
+        throw "duplicate LVGL action name";
+    }
+    if (actionIdToActionName.has(actionDefinition.id)) {
+        throw "duplicate LVGL action name";
+    }
+
+    actionNameToActionId.set(actionDefinition.name, actionDefinition.id);
+    actionIdToActionName.set(actionDefinition.id, actionDefinition.name);
 
     const properties: PropertyInfo[] = [];
 

@@ -12,6 +12,7 @@ import type { Project } from "project-editor/project/project";
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 0,
     name: "changeScreen",
     group: "Screen",
     properties: [
@@ -68,6 +69,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 1,
     name: "changeToPreviousScreen",
     group: "Screen",
     properties: [
@@ -101,9 +103,88 @@ registerAction({
     helpText: "Change to the previous screen"
 });
 
+const SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE =
+    " action is not available if 'Screens lifetime support' is not enabled in Settings - Build";
+
+registerAction({
+    id: 47,
+    name: "createScreen",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen to create"
+        }
+    ],
+    defaults: {},
+    label: ([screen]) => <>{screen}</>,
+    helpText: `Create the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Create Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
+});
+
+registerAction({
+    id: 48,
+    name: "deleteScreen",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen to delete"
+        }
+    ],
+    defaults: {},
+    label: ([screen]) => <>{screen}</>,
+    helpText: `Delete the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Delete Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
+});
+
+registerAction({
+    id: 49,
+    name: "isScreenCreated",
+    group: "Screen",
+    properties: [
+        {
+            name: "screen",
+            type: "screen",
+            helpText: "The screen"
+        },
+        {
+            name: "result",
+            type: "boolean",
+            isAssignable: true,
+            helpText: "The boolean variable where to store the screen status"
+        }
+    ],
+    defaults: {},
+    label: ([screen, result]) => (
+        <>
+            <>
+                {screen}
+                <RightArrow />
+                {result}
+            </>
+        </>
+    ),
+    helpText: `Check if screen is created ("Screens lifetime support" should be enabled in Settings - Build)"`,
+    disabled: (project: Project) =>
+        project.settings.build.screensLifetimeSupport
+            ? false
+            : "'Is Screen Created' action " +
+              SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 2,
     name: "objSetX",
     group: "Widget - Position and Size",
     properties: [
@@ -130,6 +211,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 3,
     name: "objGetX",
     group: "Widget - Position and Size",
     properties: [
@@ -159,6 +241,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 4,
     name: "objSetY",
     group: "Widget - Position and Size",
     properties: [
@@ -185,6 +268,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 5,
     name: "objGetY",
     group: "Widget - Position and Size",
     properties: [
@@ -214,6 +298,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 6,
     name: "objSetWidth",
     group: "Widget - Position and Size",
     properties: [
@@ -240,6 +325,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 7,
     name: "objGetWidth",
     group: "Widget - Position and Size",
     properties: [
@@ -269,6 +355,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 8,
     name: "objSetHeight",
     group: "Widget - Position and Size",
     properties: [
@@ -295,6 +382,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 9,
     name: "objGetHeight",
     group: "Widget - Position and Size",
     properties: [
@@ -324,6 +412,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 10,
     name: "objSetStyleOpa",
     group: "Widget - Styles",
     properties: [
@@ -350,6 +439,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 11,
     name: "objGetStyleOpa",
     group: "Widget - Styles",
     properties: [
@@ -379,6 +469,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 12,
     name: "objAddStyle",
     group: "Widget - Styles",
     properties: [
@@ -405,6 +496,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 13,
     name: "objRemoveStyle",
     group: "Widget - Styles",
     properties: [
@@ -431,6 +523,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 14,
     name: "objSetFlagHidden",
     group: "Widget - Flags",
     properties: [
@@ -459,6 +552,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 15,
     name: "objAddFlag",
     group: "Widget - Flags",
     properties: [
@@ -487,6 +581,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 16,
     name: "objClearFlag",
     group: "Widget - Flags",
     properties: [
@@ -515,6 +610,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 17,
     name: "objHasFlag",
     group: "Widget - Flags",
     properties: [
@@ -551,6 +647,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 18,
     name: "objSetStateChecked",
     group: "Widget - Flags",
     properties: [
@@ -579,6 +676,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 19,
     name: "objSetStateDisabled",
     group: "Widget - States",
     properties: [
@@ -607,6 +705,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 20,
     name: "objAddState",
     group: "Widget - States",
     properties: [
@@ -635,6 +734,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 21,
     name: "objClearState",
     group: "Widget - States",
     properties: [
@@ -663,6 +763,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 22,
     name: "objHasState",
     group: "Widget - States",
     properties: [
@@ -699,6 +800,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 23,
     name: "arcSetValue",
     group: "Arc",
     properties: [
@@ -725,6 +827,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 24,
     name: "barSetValue",
     group: "Bar",
     properties: [
@@ -755,9 +858,158 @@ registerAction({
     helpText: "Set the value of the bar"
 });
 
+registerAction({
+    id: 50,
+    name: "calendarSetTodayDate",
+    group: "Calendar",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Calendar",
+            helpText: "The calendar object"
+        },
+        {
+            name: "year",
+            type: "integer",
+            helpText: "Today's year"
+        },
+        {
+            name: "month",
+            type: "integer",
+            helpText: "Today's month [1..12]"
+        },
+        {
+            name: "day",
+            type: "integer",
+            helpText: "Today's day [1..31]"
+        }
+    ],
+    defaults: {},
+    label: ([object, year, month, day]) => (
+        <>
+            <>
+                {object} {year} {month} {day}
+            </>
+        </>
+    ),
+    helpText: "Set the today's date"
+});
+
+registerAction({
+    id: 51,
+    name: "calendarSetShowedDate",
+    group: "Calendar",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Calendar",
+            helpText: "The calendar object"
+        },
+        {
+            name: "year",
+            type: "integer",
+            helpText: "Showed year"
+        },
+        {
+            name: "month",
+            type: "integer",
+            helpText: "Showed month [1..12]"
+        }
+    ],
+    defaults: {},
+    label: ([object, year, month]) => (
+        <>
+            <>
+                {object} {year} {month}
+            </>
+        </>
+    ),
+    helpText: "Set the currently showed"
+});
+
+registerAction({
+    id: 52,
+    name: "calendarSetHighlightedDate",
+    group: "Calendar",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Calendar",
+            helpText: "The calendar object"
+        },
+        {
+            name: "year",
+            type: "integer",
+            helpText: "Highlight year"
+        },
+        {
+            name: "month",
+            type: "integer",
+            helpText: "Highlight month [1..12]"
+        },
+        {
+            name: "day",
+            type: "integer",
+            helpText: "Hilighy day [1..31]"
+        }
+    ],
+    defaults: {},
+    label: ([object, year, month]) => (
+        <>
+            <>
+                {object} {year} {month}
+            </>
+        </>
+    ),
+    helpText: "Set the highlighted date"
+});
+
+registerAction({
+    id: 53,
+    name: "calendarGetPressedDate",
+    group: "Calendar",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Calendar",
+            helpText: "The calendar object"
+        },
+        {
+            name: "year",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The integer variable where to store the year"
+        },
+        {
+            name: "month",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The integer variable where to store the month (1..12)"
+        },
+        {
+            name: "day",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The integer variable where to store the day (1..31)"
+        }
+    ],
+    defaults: {},
+    label: ([object, year, month, day]) => (
+        <>
+            <>
+                {object}
+                <RightArrow />
+                {year} {month} {day}
+            </>
+        </>
+    ),
+    helpText: "Get the currently pressed day"
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 25,
     name: "dropdownSetSelected",
     group: "Dropdown",
     properties: [
@@ -784,6 +1036,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 26,
     name: "imageSetSrc",
     group: "Image",
     properties: [
@@ -810,6 +1063,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 27,
     name: "imageSetAngle",
     group: "Image",
     properties: [
@@ -837,6 +1091,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 28,
     name: "imageSetZoom",
     group: "Image",
     properties: [
@@ -864,6 +1119,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 29,
     name: "labelSetText",
     group: "Label",
     properties: [
@@ -890,6 +1146,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 30,
     name: "rollerSetSelected",
     group: "Roller",
     properties: [
@@ -923,6 +1180,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 31,
     name: "sliderSetValue",
     group: "Slider",
     properties: [
@@ -954,6 +1212,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 32,
     name: "keyboardSetTextarea",
     group: "Keyboard",
     properties: [
@@ -980,6 +1239,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 33,
     name: "groupFocusObj",
     group: "Group",
     properties: [
@@ -997,6 +1257,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 34,
     name: "groupFocusNext",
     group: "Group",
     properties: [
@@ -1014,6 +1275,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 35,
     name: "groupFocusPrev",
     group: "Group",
     properties: [
@@ -1031,6 +1293,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 36,
     name: "groupGetFocused",
     group: "Group",
     properties: [
@@ -1062,6 +1325,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 37,
     name: "groupFocusFreeze",
     group: "Group",
     properties: [
@@ -1090,6 +1354,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 38,
     name: "groupSetWrap",
     group: "Group",
     properties: [
@@ -1119,6 +1384,7 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 39,
     name: "groupSetEditing",
     group: "Group",
     properties: [
@@ -1234,6 +1500,7 @@ const animLabel = (
 );
 
 registerAction({
+    id: 40,
     name: "animX",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1243,6 +1510,7 @@ registerAction({
 });
 
 registerAction({
+    id: 41,
     name: "animY",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1252,6 +1520,7 @@ registerAction({
 });
 
 registerAction({
+    id: 42,
     name: "animWidth",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1261,6 +1530,7 @@ registerAction({
 });
 
 registerAction({
+    id: 43,
     name: "animHeight",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1270,6 +1540,7 @@ registerAction({
 });
 
 registerAction({
+    id: 44,
     name: "animOpacity",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1279,6 +1550,7 @@ registerAction({
 });
 
 registerAction({
+    id: 45,
     name: "animImageZoom",
     group: "Animation",
     properties: ANIM_PROPERTIES,
@@ -1288,85 +1560,11 @@ registerAction({
 });
 
 registerAction({
+    id: 46,
     name: "animImageAngle",
     group: "Animation",
     properties: ANIM_PROPERTIES,
     defaults: ANIM_DEFAULTS,
     label: animLabel,
     helpText: "Animate the angle of the image"
-});
-
-const SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE =
-    " action is not available if 'Screens lifetime support' is not enabled in Settings - Build";
-
-registerAction({
-    name: "createScreen",
-    group: "Screen",
-    properties: [
-        {
-            name: "screen",
-            type: "screen",
-            helpText: "The screen to create"
-        }
-    ],
-    defaults: {},
-    label: ([screen]) => <>{screen}</>,
-    helpText: `Create the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
-    disabled: (project: Project) =>
-        project.settings.build.screensLifetimeSupport
-            ? false
-            : "'Create Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
-});
-
-registerAction({
-    name: "deleteScreen",
-    group: "Screen",
-    properties: [
-        {
-            name: "screen",
-            type: "screen",
-            helpText: "The screen to delete"
-        }
-    ],
-    defaults: {},
-    label: ([screen]) => <>{screen}</>,
-    helpText: `Delete the screen ("Screens lifetime support" should be enabled in Settings - Build)"`,
-    disabled: (project: Project) =>
-        project.settings.build.screensLifetimeSupport
-            ? false
-            : "'Delete Screen' " + SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
-});
-
-registerAction({
-    name: "isScreenCreated",
-    group: "Screen",
-    properties: [
-        {
-            name: "screen",
-            type: "screen",
-            helpText: "The screen"
-        },
-        {
-            name: "result",
-            type: "boolean",
-            isAssignable: true,
-            helpText: "The boolean variable where to store the screen status"
-        }
-    ],
-    defaults: {},
-    label: ([screen, result]) => (
-        <>
-            <>
-                {screen}
-                <RightArrow />
-                {result}
-            </>
-        </>
-    ),
-    helpText: `Check if screen is created ("Screens lifetime support" should be enabled in Settings - Build)"`,
-    disabled: (project: Project) =>
-        project.settings.build.screensLifetimeSupport
-            ? false
-            : "'Is Screen Created' action " +
-              SCREENS_LIFETIME_SUPPORT_DISABLED_MESSAGE
 });

@@ -969,27 +969,27 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1033552: ($0) => { startToDebuggerMessage($0); },  
- 1033584: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033659: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1033734: ($0) => { finishToDebuggerMessage($0); },  
- 1033767: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1033797: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1033827: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1033881: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1033935: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1033988: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1034041: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1034094: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1034127: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1034163: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1034208: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1034314: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1034350: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1034387: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1034427: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1034484: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1034543: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1033808: ($0) => { startToDebuggerMessage($0); },  
+ 1033840: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1033915: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1033990: ($0) => { finishToDebuggerMessage($0); },  
+ 1034023: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1034053: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1034083: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1034137: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1034191: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1034244: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1034297: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1034350: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1034383: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1034419: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1034464: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1034570: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1034606: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1034643: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1034683: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1034740: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1034799: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
