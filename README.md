@@ -220,7 +220,7 @@ you are ready to use your instrument via USB-TMC interface.
 
 ## FAQ
 
-[Q&A Wiki](https://github.com/eez-open/studio/wiki/Q&A)
+[FAW Wiki](https://github.com/eez-open/studio/wiki/Q&A)
 
 **Q**: Where is the database file by default?
 **A**: Depending on the operating system, it can be:
