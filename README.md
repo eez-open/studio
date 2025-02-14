@@ -12,6 +12,7 @@ _The user owns the `.eez-project` file and all the source code generated from th
 ### Links
 
 -   [Web page](https://www.envox.eu/studio/studio-introduction/)
+-   [FAQ](https://github.com/eez-open/studio/wiki/Q&A)
 -   [Discord](https://discord.gg/q5KAeeenNG) server
 -   [X (Twitter)](https://twitter.com/envox)
 -   [Mastodon](https://mastodon.social/@envox)
