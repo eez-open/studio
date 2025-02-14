@@ -676,7 +676,7 @@ export class ProjectEditorTab implements IHomeTab {
                         !event.shiftKey &&
                         !event.altKey
                     ) {
-                        if (event.key == "Backspace" || event.key == "Delete") {
+                        if (event.key == "Delete") {
                             deleteSelection();
                         }
                     }
