@@ -8,7 +8,7 @@ See: https://github.com/node-ffi-napi/node-ffi-napi/issues/238
 import os from "os";
 import vcon from "instrument/connection/interfaces/visa-constants";
 
-import koffi from "koffi";
+import type { IKoffiLib } from "koffi";
 
 // import type * as ffiModule from "ffi-napi";
 // let ffi: typeof ffiModule | undefined;
@@ -101,9 +101,16 @@ export function loadVisa() {
     console.log("VISA dll Name", dllName);
 
     // 'string' is used to reduce code, the FFI module will create Buffers as needed
-    let libVisa: koffi.IKoffiLib | undefined;
+    let libVisa: IKoffiLib | undefined;
 
-    if (dllName) {
+    let koffi;
+    try {
+        koffi = require("koffi");
+    } catch (err) {
+        console.warn("Failed to load VISA dll (Koffi import failed)");
+    }
+
+    if (dllName && koffi) {
         try {
             libVisa = koffi.load(dllName);
         } catch (err) {
