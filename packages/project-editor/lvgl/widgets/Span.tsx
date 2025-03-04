@@ -5,10 +5,8 @@ import { makeDerivedClassInfo } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,28 +49,7 @@ export class LVGLSpanWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateSpan(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-
-        return obj;
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_spangroup_create");
     }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_spangroup_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {}
 }

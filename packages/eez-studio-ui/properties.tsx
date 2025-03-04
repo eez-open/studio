@@ -2,7 +2,7 @@ import React from "react";
 import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { dialog } from "@electron/remote";
+import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { formatBytes } from "eez-studio-shared/formatBytes";
 import { guid } from "eez-studio-shared/guid";
@@ -945,7 +945,7 @@ export class AbsoluteFileInputProperty extends React.Component<
     {}
 > {
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
             filters: [{ name: "All Files", extensions: ["*"] }]
         });

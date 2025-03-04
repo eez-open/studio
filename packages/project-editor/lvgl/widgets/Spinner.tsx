@@ -5,10 +5,8 @@ import { makeDerivedClassInfo } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,35 +56,19 @@ export class LVGLSpinnerWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        return runtime.wasm._lvglCreateSpinner(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
+    override toLVGLCode(code: LVGLCode) {
         const SPIN_TIME = 1000;
         const ARC_LENGTH = 60;
-        if (build.isV9) {
-            build.line(`lv_obj_t *obj = lv_spinner_create(parent_obj);`);
-            build.line(
-                `lv_spinner_set_anim_params(obj, ${SPIN_TIME}, ${ARC_LENGTH});`
+
+        if (code.isV9) {
+            code.createObject(`lv_spinner_create`);
+            code.callObjectFunction(
+                "lv_spinner_set_anim_params",
+                SPIN_TIME,
+                ARC_LENGTH
             );
         } else {
-            build.line(
-                `lv_obj_t *obj = lv_spinner_create(parent_obj, ${SPIN_TIME}, ${ARC_LENGTH});`
-            );
+            code.createObject(`lv_spinner_create`, SPIN_TIME, ARC_LENGTH);
         }
     }
 }

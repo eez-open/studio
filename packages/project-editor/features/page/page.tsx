@@ -1093,57 +1093,47 @@ export class Page extends Flow {
     }
 
     lvglBuild(build: LVGLBuild) {
+        if (!this.isUsedAsUserWidget) {
+            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                build.addTickCallback(() => {
+                    let flowIndex = build.assets.getFlowIndex(this);
+                    build.line(
+                        `void *flowState = getFlowState(0, ${flowIndex});`
+                    );
+                });
+            }
+        }
+
+        build.postBuildStart();
+
         if (this.lvglScreenWidget) {
             this.lvglScreenWidget!.lvglBuild(build);
-
-            this._lvglWidgets.forEach(lvglWidget =>
-                lvglWidget.lvglPostBuild(build)
-            );
         } else {
             build.line(`lv_obj_t *obj = parent_obj;`);
 
-            build.line(`{`);
-            build.indent();
+            build.blockStart(`{`);
 
             build.line(`lv_obj_t *parent_obj = obj;`);
 
             for (const widget of this.components) {
                 if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                    build.line(`{`);
-                    build.indent();
+                    build.blockStart(`{`);
 
                     widget.lvglBuild(build);
 
-                    build.unindent();
-                    build.line(`}`);
+                    build.blockEnd(`}`);
                 }
             }
 
-            build.unindent();
-            build.line(`}`);
-
-            this._lvglWidgets.forEach(lvglWidget =>
-                lvglWidget.lvglPostBuild(build)
-            );
-        }
-    }
-
-    lvglBuildTick(build: LVGLBuild) {
-        if (!this.isUsedAsUserWidget) {
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let flowIndex = build.assets.getFlowIndex(this);
-                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
-            }
+            build.blockEnd(`}`);
         }
 
-        for (const widget of this.components) {
-            if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-                widget.lvglBuildTick(build);
-            }
-        }
+        build.postBuildEnd();
 
         if (ProjectEditor.getProject(this).projectTypeTraits.hasFlowSupport) {
-            lvglBuildPageTimeline(build, this);
+            build.addTickCallback(() => {
+                lvglBuildPageTimeline(build, this);
+            });
         }
     }
 

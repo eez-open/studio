@@ -625,6 +625,37 @@ function lvglDeleteScreen(wasmModuleId: number, screenIndex: number) {
     });
 }
 
+function lvglScreenTick(wasmModuleId: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglScreenTick: {}
+    });
+}
+
+function lvglOnEventHandler(
+    wasmModuleId: number,
+    obj: number,
+    eventCode: number,
+    event: number
+) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    WasmFlowRuntime.postWorkerToRendererMessage({
+        lvglOnEventHandler: {
+            obj,
+            eventCode,
+            event
+        }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 (global as any).startToDebuggerMessage = startToDebuggerMessage;
@@ -662,6 +693,8 @@ function lvglDeleteScreen(wasmModuleId: number, screenIndex: number) {
 (global as any).lvglSetColorTheme = lvglSetColorTheme;
 (global as any).lvglCreateScreen = lvglCreateScreen;
 (global as any).lvglDeleteScreen = lvglDeleteScreen;
+(global as any).lvglScreenTick = lvglScreenTick;
+(global as any).lvglOnEventHandler = lvglOnEventHandler;
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -5,10 +5,8 @@ import { makeDerivedClassInfo } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,24 +59,7 @@ export class LVGLPanelWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        return runtime.wasm._lvglCreatePanel(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_obj_create");
     }
 }

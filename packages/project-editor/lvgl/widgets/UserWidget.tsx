@@ -18,9 +18,6 @@ import {
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { Button } from "eez-studio-ui/button";
 import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/component-types";
@@ -60,6 +57,10 @@ import {
     getAdditionalFlowPropertiesForUserProperties,
     UserPropertyValues
 } from "project-editor/flow/user-property";
+import type {
+    LVGLCode,
+    SimulatorLVGLCode
+} from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -381,153 +382,161 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
         return [...endComponents, ...outputComponents, ...super.getOutputs()];
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const widgetIndex = runtime.getCreateWidgetIndex(this);
+    override toLVGLCode(code: LVGLCode) {
+        if (code.lvglBuild) {
+            code.createObject("lv_obj_create");
 
-        const userWidgetPage = this.userWidgetPage;
+            const build = code.lvglBuild;
 
-        if (!userWidgetPage || this.isCycleDetected) {
+            this.buildStyleIfNotDefined(build, pad_left_property_info);
+            this.buildStyleIfNotDefined(build, pad_top_property_info);
+            this.buildStyleIfNotDefined(build, pad_right_property_info);
+            this.buildStyleIfNotDefined(build, pad_bottom_property_info);
+            this.buildStyleIfNotDefined(build, bg_opa_property_info);
+            this.buildStyleIfNotDefined(build, border_width_property_info);
+
+            const userWidgetPage = findPage(
+                getProject(this),
+                this.userWidgetPageName
+            );
+            if (userWidgetPage && !this.isCycleDetected) {
+                let componentIndex = build.assets.getComponentIndex(this);
+
+                const page = getAncestorOfType(
+                    this,
+                    ProjectEditor.PageClass.classInfo
+                ) as Page;
+
+                let startWidgetIndex = (
+                    build.getWidgetObjectIndex(this) + 1
+                ).toString();
+
+                if (page.isUsedAsUserWidget) {
+                    startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
+                }
+
+                if (build.project.projectTypeTraits.hasFlowSupport) {
+                    build.line(
+                        `${build.getScreenCreateFunctionName(
+                            userWidgetPage
+                        )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                    );
+                } else {
+                    build.line(
+                        `${build.getScreenCreateFunctionName(
+                            userWidgetPage
+                        )}(obj, ${startWidgetIndex});`
+                    );
+                }
+            }
+
+            build.addTickCallback(() => {
+                const userWidgetPage = findPage(
+                    getProject(this),
+                    this.userWidgetPageName
+                );
+                if (userWidgetPage && !this.isCycleDetected) {
+                    let componentIndex = build.assets.getComponentIndex(this);
+
+                    const page = getAncestorOfType(
+                        this,
+                        ProjectEditor.PageClass.classInfo
+                    ) as Page;
+
+                    let startWidgetIndex = (
+                        build.getWidgetObjectIndex(this) + 1
+                    ).toString();
+
+                    if (page.isUsedAsUserWidget) {
+                        startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
+                    }
+
+                    if (build.project.projectTypeTraits.hasFlowSupport) {
+                        build.line(
+                            `${build.getScreenTickFunctionName(
+                                userWidgetPage
+                            )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                        );
+                    } else {
+                        build.line(
+                            `${build.getScreenTickFunctionName(
+                                userWidgetPage
+                            )}(${startWidgetIndex});`
+                        );
+                    }
+                }
+            });
+        } else {
+            const simulatorCode = code as SimulatorLVGLCode;
+
+            const runtime = simulatorCode.pageRuntime;
+
+            const widgetIndex = runtime.getCreateWidgetIndex(this);
+
+            const userWidgetPage = this.userWidgetPage;
+
+            if (!userWidgetPage || this.isCycleDetected) {
+                const rect = this.getLvglCreateRect();
+
+                simulatorCode.obj = runtime.wasm._lvglCreateUserWidget(
+                    simulatorCode.parentObj,
+                    widgetIndex,
+
+                    rect.left,
+                    rect.top,
+                    rect.width,
+                    rect.height
+                );
+
+                return;
+            }
+
+            const savedUserWidgetContext = runtime.lvglCreateContext;
+
+            if (runtime.wasm.assetsMap?.flows.length > 0) {
+                const flow =
+                    runtime.wasm.assetsMap.flows[
+                        savedUserWidgetContext.pageIndex
+                    ];
+                if (flow) {
+                    const componentPath = getObjectPathAsString(this);
+                    const componentIndex = flow.componentIndexes[componentPath];
+
+                    runtime.lvglCreateContext = {
+                        page: savedUserWidgetContext.page,
+                        pageIndex:
+                            runtime.wasm.assetsMap.flowIndexes[
+                                getObjectPathAsString(this.userWidgetPage!)
+                            ],
+                        flowState: savedUserWidgetContext.flowState
+                            ? runtime.wasm._lvglGetFlowState(
+                                  savedUserWidgetContext.flowState,
+                                  componentIndex
+                              )
+                            : 0
+                    };
+                }
+            }
+
             const rect = this.getLvglCreateRect();
 
-            return runtime.wasm._lvglCreateUserWidget(
-                parentObj,
-                widgetIndex,
+            runtime.beginUserWidget(this);
 
-                rect.left,
-                rect.top,
-                rect.width,
-                rect.height
+            simulatorCode.obj = userWidgetPage.lvglCreate(
+                runtime,
+                simulatorCode.parentObj,
+                {
+                    widgetIndex,
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                }
             );
-        }
 
-        const savedUserWidgetContext = runtime.lvglCreateContext;
+            runtime.endUserWidget();
 
-        if (runtime.wasm.assetsMap?.flows.length > 0) {
-            const flow =
-                runtime.wasm.assetsMap.flows[savedUserWidgetContext.pageIndex];
-            if (flow) {
-                const componentPath = getObjectPathAsString(this);
-                const componentIndex = flow.componentIndexes[componentPath];
-
-                runtime.lvglCreateContext = {
-                    pageIndex:
-                        runtime.wasm.assetsMap.flowIndexes[
-                            getObjectPathAsString(this.userWidgetPage!)
-                        ],
-                    flowState: savedUserWidgetContext.flowState
-                        ? runtime.wasm._lvglGetFlowState(
-                              savedUserWidgetContext.flowState,
-                              componentIndex
-                          )
-                        : 0
-                };
-            }
-        }
-
-        const rect = this.getLvglCreateRect();
-
-        runtime.beginUserWidget(this);
-
-        const obj = userWidgetPage.lvglCreate(runtime, parentObj, {
-            widgetIndex,
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height
-        });
-
-        runtime.endUserWidget();
-
-        runtime.lvglCreateContext = savedUserWidgetContext;
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        this.buildStyleIfNotDefined(build, pad_left_property_info);
-        this.buildStyleIfNotDefined(build, pad_top_property_info);
-        this.buildStyleIfNotDefined(build, pad_right_property_info);
-        this.buildStyleIfNotDefined(build, pad_bottom_property_info);
-        this.buildStyleIfNotDefined(build, bg_opa_property_info);
-        this.buildStyleIfNotDefined(build, border_width_property_info);
-
-        const userWidgetPage = findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
-        if (userWidgetPage && !this.isCycleDetected) {
-            let componentIndex = build.assets.getComponentIndex(this);
-
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            let startWidgetIndex = (
-                build.getWidgetObjectIndex(this) + 1
-            ).toString();
-
-            if (page.isUsedAsUserWidget) {
-                startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
-            }
-
-            if (build.project.projectTypeTraits.hasFlowSupport) {
-                build.line(
-                    `${build.getScreenCreateFunctionName(
-                        userWidgetPage
-                    )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
-                );
-            } else {
-                build.line(
-                    `${build.getScreenCreateFunctionName(
-                        userWidgetPage
-                    )}(obj, ${startWidgetIndex});`
-                );
-            }
-        }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        const userWidgetPage = findPage(
-            getProject(this),
-            this.userWidgetPageName
-        );
-        if (userWidgetPage && !this.isCycleDetected) {
-            let componentIndex = build.assets.getComponentIndex(this);
-
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            let startWidgetIndex = (
-                build.getWidgetObjectIndex(this) + 1
-            ).toString();
-
-            if (page.isUsedAsUserWidget) {
-                startWidgetIndex = `startWidgetIndex + ${startWidgetIndex}`;
-            }
-
-            if (build.project.projectTypeTraits.hasFlowSupport) {
-                build.line(
-                    `${build.getScreenTickFunctionName(
-                        userWidgetPage
-                    )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
-                );
-            } else {
-                build.line(
-                    `${build.getScreenTickFunctionName(
-                        userWidgetPage
-                    )}(${startWidgetIndex});`
-                );
-            }
+            runtime.lvglCreateContext = savedUserWidgetContext;
         }
     }
 

@@ -52,7 +52,7 @@ function enableMenuItem(
 }
 
 async function openProjectWithFileDialog(focusedWindow: BaseWindow) {
-    const result = await dialog.showOpenDialog({
+    const result = await dialog.showOpenDialog(focusedWindow, {
         properties: ["openFile"],
         filters: [
             { name: "EEZ Project", extensions: ["eez-project"] },
@@ -267,7 +267,7 @@ function buildFileMenu(win: IWindow | undefined) {
             {
                 label: "Load Debug Info...",
                 click: async function (item: any, focusedWindow: any) {
-                    const result = await dialog.showOpenDialog({
+                    const result = await dialog.showOpenDialog(focusedWindow, {
                         properties: ["openFile"],
                         filters: [
                             {
@@ -306,7 +306,7 @@ function buildFileMenu(win: IWindow | undefined) {
         {
             label: "Import Instrument Definition...",
             click: async function (item: any, focusedWindow: any) {
-                const result = await dialog.showOpenDialog({
+                const result = await dialog.showOpenDialog(focusedWindow, {
                     properties: ["openFile"],
                     filters: [
                         {

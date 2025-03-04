@@ -7,32 +7,21 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import {
-    ARC_MODES,
-    LV_EVENT_ARC_VALUE_CHANGED
-} from "project-editor/lvgl/lvgl-constants";
+import { ARC_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback
-} from "../widget-common";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLArcWidget extends LVGLWidget {
-    rangeMin: number;
+    rangeMin: number | string;
     rangeMinType: LVGLPropertyType;
-    rangeMax: number;
+    rangeMax: number | string;
     rangeMaxType: LVGLPropertyType;
     value: number | string;
     valueType: LVGLPropertyType;
@@ -179,171 +168,176 @@ export class LVGLArcWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return super.hasEventHandler || this.valueType == "expression";
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_arc_create");
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rangeMinExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "rangeMin"
-        );
-        const rangeMaxExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "rangeMax"
-        );
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateArc(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            rangeMinExpr ? 0 : this.rangeMin,
-            rangeMaxExpr ? 0 : this.rangeMax,
-
-            valueExpr ? 0 : (this.value as number),
-            this.bgStartAngle,
-            this.bgEndAngle,
-            ARC_MODES[this.mode],
-            this.rotation
-        );
-
-        if (rangeMinExpr) {
-            runtime.wasm._lvglUpdateArcRangeMin(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                rangeMinExpr.componentIndex,
-                rangeMinExpr.propertyIndex
-            );
-        }
-
-        if (rangeMaxExpr) {
-            runtime.wasm._lvglUpdateArcRangeMax(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                rangeMaxExpr.componentIndex,
-                rangeMaxExpr.propertyIndex
-            );
-        }
-
-        if (valueExpr) {
-            runtime.wasm._lvglUpdateArcValue(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-        if (valueExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_ARC_VALUE_CHANGED,
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_arc_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
         if (this.rangeMinType == "literal" && this.rangeMaxType == "literal") {
             if (this.rangeMin != 0 || this.rangeMax != 100) {
-                build.line(
-                    `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMax});`
+                code.callObjectFunction(
+                    "lv_arc_set_range",
+                    this.rangeMin,
+                    this.rangeMax
                 );
             }
         } else if (this.rangeMinType == "literal") {
-            build.line(
-                `lv_arc_set_range(obj, ${this.rangeMin}, ${this.rangeMin});`
+            code.callObjectFunction(
+                "lv_arc_set_range",
+                this.rangeMin,
+                this.rangeMin
             );
         } else if (this.rangeMaxType == "literal") {
-            build.line(
-                `lv_arc_set_range(obj, ${this.rangeMax}, ${this.rangeMax});`
+            code.callObjectFunction(
+                "lv_arc_set_range",
+                this.rangeMax,
+                this.rangeMax
             );
+        }
+
+        if (this.rangeMinType == "expression") {
+            code.addToTick("rangeMin", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.rangeMin as string,
+                    "Failed to evaluate Range min in Arc widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_arc_get_min_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    const min = code.assign("int16_t", "min", "new_val");
+
+                    const max = code.callObjectFunctionWithAssignment(
+                        "int16_t",
+                        "max",
+                        "lv_arc_get_max_value"
+                    );
+
+                    code.ifIntegerLess(min, max, () => {
+                        code.callObjectFunction("lv_arc_set_range", min, max);
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }
+
+        if (this.rangeMaxType == "expression") {
+            code.addToTick("rangeMax", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.rangeMax as string,
+                    "Failed to evaluate Range max in Arc widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_arc_get_max_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    const min = code.callObjectFunctionWithAssignment(
+                        "int16_t",
+                        "min",
+                        "lv_arc_get_min_value"
+                    );
+
+                    const max = code.assign("int16_t", "max", "new_val");
+
+                    code.ifIntegerLess(min, max, () => {
+                        code.callObjectFunction("lv_arc_set_range", min, max);
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
         }
 
         if (this.valueType == "literal") {
-            //if (this.value != 0) {
-            build.line(`lv_arc_set_value(obj, ${this.value});`);
-            //}
+            code.callObjectFunction("lv_arc_set_value", this.value);
+        } else {
+            code.addToTick("value", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.value as string,
+                    "Failed to evaluate Value in Arc widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_arc_get_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction("lv_arc_set_value", new_val);
+
+                    code.tickChangeEnd();
+                });
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            "lv_arc_get_value",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "value",
+                            this.value as string,
+                            value,
+                            "Failed to assign Value in Arc widget"
+                        );
+                    });
+                }
+            );
         }
 
         if (this.bgStartAngle != 135) {
-            build.line(`lv_arc_set_bg_start_angle(obj, ${this.bgStartAngle});`);
+            code.callObjectFunction(
+                "lv_arc_set_bg_start_angle",
+                this.bgStartAngle
+            );
         }
 
         if (this.bgEndAngle != 45) {
-            build.line(`lv_arc_set_bg_end_angle(obj, ${this.bgEndAngle});`);
+            code.callObjectFunction("lv_arc_set_bg_end_angle", this.bgEndAngle);
         }
 
         if (this.mode != "NORMAL") {
-            build.line(`lv_arc_set_mode(obj, LV_ARC_MODE_${this.mode});`);
+            code.callObjectFunction(
+                "lv_arc_set_mode",
+                code.constant(`LV_ARC_MODE_${this.mode}`)
+            );
         }
 
         if (this.rotation != 0) {
-            build.line(`lv_arc_set_rotation(obj, ${this.rotation});`);
+            code.callObjectFunction("lv_arc_set_rotation", this.rotation);
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
-            build,
-            this,
-            "rangeMin" as const,
-            "lv_arc_get_min_value",
-            "lv_arc_set_range",
-            undefined,
-            "min"
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
-            build,
-            this,
-            "rangeMax" as const,
-            "lv_arc_get_max_value",
-            "lv_arc_set_range",
-            undefined,
-            "max"
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLArcWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_arc_get_value",
-            "lv_arc_set_value"
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLArcWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_arc_get_value"
-        );
     }
 }

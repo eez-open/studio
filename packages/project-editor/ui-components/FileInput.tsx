@@ -1,5 +1,5 @@
 import React from "react";
-import { dialog } from "@electron/remote";
+import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { Icon } from "eez-studio-ui/icon";
 import { FieldComponent } from "eez-studio-ui/generic-dialog";
@@ -16,7 +16,7 @@ export class RelativeFileInput extends FieldComponent {
     };
 
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
             filters: this.props.fieldProperties.options.filters
         });
@@ -81,7 +81,7 @@ export class AbsoluteFileInput extends FieldComponent {
     };
 
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
             filters: this.props.fieldProperties.options.filters
         });
@@ -142,7 +142,7 @@ export class MultipleAbsoluteFileInput extends FieldComponent {
     };
 
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile", "multiSelections"],
             filters: this.props.fieldProperties.options.filters
         });
@@ -214,7 +214,7 @@ export class AbsoluteFileSaveInput extends FieldComponent {
     };
 
     onSelect = async () => {
-        const result = await dialog.showSaveDialog({
+        const result = await dialog.showSaveDialog(getCurrentWindow(), {
             properties: ["showOverwriteConfirmation"],
             filters: this.props.fieldProperties.options.filters
         });

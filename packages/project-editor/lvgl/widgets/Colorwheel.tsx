@@ -7,12 +7,11 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import { COLORWHEEL_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import { checkWidgetTypeLvglVersion } from "../widget-common";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,40 +98,26 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        if (code.isV9) {
+            code.createObject("lv_obj_create");
+            return;
+        }
 
-        const obj = runtime.wasm._lvglCreateColorwheel(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
+        code.createObject("lv_colorwheel_create", code.constant("false"));
 
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            COLORWHEEL_MODES[this.mode],
-            this.fixedMode
-        );
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_colorwheel_create(parent_obj, false);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
         if (this.mode != "HUE") {
-            build.line(
-                `lv_colorwheel_set_mode(obj, LV_COLORWHEEL_MODE_${this.mode});`
+            code.callObjectFunction(
+                "lv_colorwheel_set_mode",
+                code.constant(`LV_COLORWHEEL_MODE_${this.mode}`)
             );
         }
+
         if (this.fixedMode) {
-            build.line(`lv_colorwheel_set_mode_fixed(obj, true);`);
+            code.callObjectFunction(
+                "lv_colorwheel_set_mode_fixed",
+                code.constant("true")
+            );
         }
     }
 }

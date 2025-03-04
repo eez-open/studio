@@ -14,8 +14,6 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     LV_DIR_BOTTOM,
     LV_DIR_LEFT,
@@ -24,6 +22,7 @@ import {
 } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget, LVGLTabWidget, LVGLContainerWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,45 +161,23 @@ export class LVGLTabviewWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateTabview(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            TABVIEW_POSITION[this.tabviewPosition] ?? LV_DIR_TOP,
-
-            this.tabviewSize ?? 32
-        );
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
+    override toLVGLCode(code: LVGLCode) {
         const position = this.tabviewPosition ?? "TOP";
         const size = this.tabviewSize ?? 32;
 
-        if (build.isV9) {
-            build.line(`lv_obj_t *obj = lv_tabview_create(parent_obj);`);
-            build.line(
-                `lv_tabview_set_tab_bar_position(obj, LV_DIR_${position});`
+        if (code.isV9) {
+            code.createObject("lv_tabview_create");
+            code.callObjectFunction(
+                "lv_tabview_set_tab_bar_position",
+                code.constant(`LV_DIR_${position}`)
             );
-            build.line(`lv_tabview_set_tab_bar_size(obj, ${size});`);
+            code.callObjectFunction("lv_tabview_set_tab_bar_size", size);
         } else {
-            build.line(
-                `lv_obj_t *obj = lv_tabview_create(parent_obj, LV_DIR_${position}, ${size});`
+            code.createObject(
+                "lv_tabview_create",
+                code.constant(`LV_DIR_${position}`),
+                size
             );
         }
     }
-
-    override lvglBuildSpecific(build: LVGLBuild) {}
 }

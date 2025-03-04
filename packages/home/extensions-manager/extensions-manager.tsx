@@ -1251,7 +1251,7 @@ const ExtensionsManagerSubNavigation = observer(
         }
 
         installExtensionFromFile = async () => {
-            const result = await dialog.showOpenDialog({
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
                 filters: [
                     { name: "Extensions", extensions: ["zip"] },
@@ -1327,7 +1327,7 @@ const ExtensionsManagerSubNavigation = observer(
         };
 
         installExtensionFromFolder = async () => {
-            const result = await dialog.showOpenDialog({
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openDirectory"]
             });
 

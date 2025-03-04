@@ -227,8 +227,6 @@ const versions = {
             return bitmapPtr;
         },
 
-        hasLabelRecolorSupport: true,
-
         getLvglFlagCodes: () => {
             return LVGL_FLAG_CODES;
         },
@@ -445,8 +443,6 @@ const versions = {
             return bitmapPtr;
         },
 
-        hasLabelRecolorSupport: false,
-
         getLvglFlagCodes: () => {
             return LVGL_FLAG_CODES_90;
         },
@@ -547,10 +543,6 @@ export function getLvglBitmapPtr(
     bitmapData: BitmapData
 ) {
     return getVersionProperty(object, "getLvglBitmapPtr")(wasm, bitmapData);
-}
-
-export function lvglHasLabelRecolorSupport(object: IEezObject) {
-    return getVersionProperty(object, "hasLabelRecolorSupport");
 }
 
 export function getLvglFlagCodes(object: IEezObject) {

@@ -12,24 +12,14 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLTabviewWidget, LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getExpressionPropertyInitalValue,
-    getFlowStateAddressIndex,
-    escapeCString,
-    unescapeCString
-} from "../widget-common";
 import { AutoSize } from "project-editor/flow/component";
 import { Message } from "project-editor/store";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -159,106 +149,104 @@ export class LVGLTabWidget extends LVGLWidget {
         return relativePosition;
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        if (this.tabview) {
-            const tabIndex = this.tabIndex;
-            if (tabIndex != -1) {
-                const tabNameExpr = getExpressionPropertyData(
-                    runtime,
-                    this,
-                    "tabName"
-                );
-
-                const obj = runtime.wasm._lvglTabviewAddTab(
-                    parentObj,
-                    runtime.getCreateWidgetIndex(this),
-
-                    runtime.wasm.allocateUTF8(
-                        tabNameExpr
-                            ? " " // can't be empty in LVGL version 8.3
-                            : this.tabNameType == "expression"
-                            ? getExpressionPropertyInitalValue(
-                                  runtime,
-                                  this,
-                                  "tabName"
-                              )
-                            : unescapeCString(this.tabName || "")
+    override toLVGLCode(code: LVGLCode) {
+        const tabview = this.tabview;
+        const tabIndex = this.tabIndex;
+        if (tabview && tabIndex != -1) {
+            if (!(this.parentWidget instanceof LVGLTabviewWidget)) {
+                code.getParentObject(
+                    "lv_tabview_add_tab",
+                    code.stringProperty(
+                        this.tabNameType,
+                        this.tabName,
+                        undefined,
+                        true
                     )
                 );
-
-                if (tabNameExpr) {
-                    runtime.wasm._lvglUpdateTabName(
-                        obj,
-                        getFlowStateAddressIndex(runtime),
-                        tabNameExpr.componentIndex,
-                        tabNameExpr.propertyIndex,
-                        tabIndex
-                    );
-                }
-
-                return obj;
+            } else {
+                code.getObject(
+                    "lv_tabview_add_tab",
+                    code.stringProperty(
+                        this.tabNameType,
+                        this.tabName,
+                        undefined,
+                        true
+                    )
+                );
             }
-        }
 
-        // Tab widget outside of Tabview, just create dummy widget
-        const rect = this.getLvglCreateRect();
-        const obj = runtime.wasm._lvglCreateContainer(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        if (this.tabview) {
-            const tabIndex = this.tabIndex;
-            if (tabIndex != -1) {
-                let parentObj = "parent_obj";
-
-                if (!(this.parentWidget instanceof LVGLTabviewWidget)) {
-                    parentObj = "lv_obj_get_parent(parent_obj)";
-                }
-
-                if (this.tabNameType == "literal") {
-                    build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, ${escapeCString(
-                            this.tabName ?? ""
-                        )});`
+            if (this.tabNameType == "expression") {
+                code.addToTick("tabName", () => {
+                    const new_val = code.evalTextProperty(
+                        "const char *",
+                        "new_val",
+                        this.tabName,
+                        "Failed to evaluate Tab name in Tab widget"
                     );
-                } else if (this.tabNameType == "translated-literal") {
-                    build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, _(${escapeCString(
-                            this.tabName ?? ""
-                        )}));`
+
+                    let tabview = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "tabview",
+                        "lv_obj_get_parent",
+                        code.callObjectFunctionInline("lv_obj_get_parent")
                     );
-                } else {
-                    build.line(
-                        `lv_obj_t *obj = lv_tabview_add_tab(${parentObj}, " ");`
-                    );
-                }
-                return;
+
+                    let cur_val;
+                    if (code.lvglBuild) {
+                        const build = code.lvglBuild;
+
+                        if (build.isV9) {
+                            build.line(
+                                `lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);`
+                            );
+                            build.line(
+                                `lv_obj_t *button = lv_obj_get_child_by_type(tab_bar, ${tabIndex}, &lv_button_class);`
+                            );
+                            build.line(
+                                `lv_obj_t *label = lv_obj_get_child_by_type(button, 0, &lv_label_class);`
+                            );
+                            build.line(
+                                `const char *cur_val = lv_label_get_text(label);`
+                            );
+                        } else {
+                            if (
+                                tabview.tabviewPosition == "LEFT" ||
+                                tabview.tabviewPosition == "RIGHT"
+                            ) {
+                                build.line(
+                                    `const char *cur_val = ((lv_tabview_t *)tabview)->map[${tabIndex} * 2];`
+                                );
+                            } else {
+                                build.line(
+                                    `const char *cur_val = ((lv_tabview_t *)tabview)->map[${tabIndex}];`
+                                );
+                            }
+                        }
+
+                        cur_val = "cur_val";
+                    } else {
+                        cur_val = code.callFreeFunction(
+                            "lvglGetTabName",
+                            tabview,
+                            tabIndex,
+                            code.constant(`LV_DIR_${tabview.tabviewPosition}`)
+                        );
+                    }
+
+                    code.ifStringNotEqual(new_val, cur_val, () => {
+                        code.tickChangeStart();
+                        code.callFreeFunction(
+                            "lv_tabview_rename_tab",
+                            tabview,
+                            tabIndex,
+                            new_val
+                        );
+                        code.tickChangeEnd();
+                    });
+                });
             }
         } else {
-            // Tab widget outside of Tabview, create "generic" widget
-            build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+            code.createObject("lv_obj_create");
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLTabWidget>(
-            build,
-            this,
-            "tabName" as const,
-            "",
-            ""
-        );
     }
 }

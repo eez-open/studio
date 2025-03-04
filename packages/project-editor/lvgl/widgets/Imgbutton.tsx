@@ -11,13 +11,10 @@ import { findBitmap, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import { ImgbuttonStates } from "project-editor/lvgl/lvgl-constants";
-
 import { LVGLWidget } from "./internal";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { propertyNotFoundMessage } from "project-editor/store";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -213,190 +210,69 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateImgbutton(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(
+            code.isV9 ? "lv_imagebutton_create" : "lv_imgbtn_create"
         );
 
-        if (this.imageReleased) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imageReleased
-            );
+        const prefix = code.isV9 ? "LV_IMAGEBUTTON_STATE_" : "LV_IMGBTN_STATE_";
 
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_RELEASED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        if (this.imagePressed) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imagePressed
-            );
-
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_PRESSED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        if (this.imageDisabled) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imageDisabled
-            );
-
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_DISABLED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        if (this.imageCheckedReleased) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imageCheckedReleased
-            );
-
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_RELEASED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        if (this.imageCheckedPressed) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imageCheckedPressed
-            );
-
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_PRESSED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        if (this.imageCheckedDisabled) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.imageCheckedDisabled
-            );
-
-            if (bitmap && bitmap.image) {
-                const bitmapPtr = runtime.getBitmapPtr(bitmap);
-                if (bitmapPtr) {
-                    runtime.wasm._lvglSetImgbuttonImageSrc(
-                        obj,
-                        ImgbuttonStates.LV_IMGBTN_STATE_CHECKED_DISABLED,
-                        bitmapPtr
-                    );
-                }
-            }
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        if (build.isV9) {
-            build.line(`lv_obj_t *obj = lv_imagebutton_create(parent_obj);`);
-        } else {
-            build.line(`lv_obj_t *obj = lv_imgbtn_create(parent_obj);`);
-        }
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        const prefix = build.isV9
-            ? "LV_IMAGEBUTTON_STATE_"
-            : "LV_IMGBTN_STATE_";
-
-        const setSrcFuncName = build.isV9
+        const setSrcFuncName = code.isV9
             ? "lv_imagebutton_set_src"
             : "lv_imgbtn_set_src";
 
         if (this.imageReleased) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}RELEASED, NULL, &${build.getImageVariableName(
-                    this.imageReleased
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "RELEASED"),
+                code.constant("NULL"),
+                code.image(this.imageReleased),
+                code.constant("NULL")
             );
         }
         if (this.imagePressed) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}PRESSED, NULL, &${build.getImageVariableName(
-                    this.imagePressed
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "PRESSED"),
+                code.constant("NULL"),
+                code.image(this.imagePressed),
+                code.constant("NULL")
             );
         }
         if (this.imageDisabled) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}DISABLED, NULL, &${build.getImageVariableName(
-                    this.imageDisabled
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "DISABLED"),
+                code.constant("NULL"),
+                code.image(this.imageDisabled),
+                code.constant("NULL")
             );
         }
         if (this.imageCheckedReleased) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_PRESSED, NULL, &${build.getImageVariableName(
-                    this.imageCheckedReleased
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "CHECKED_PRESSED"),
+                code.constant("NULL"),
+                code.image(this.imageCheckedReleased),
+                code.constant("NULL")
             );
         }
         if (this.imageCheckedPressed) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_RELEASED, NULL, &${build.getImageVariableName(
-                    this.imageCheckedPressed
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "CHECKED_RELEASED"),
+                code.constant("NULL"),
+                code.image(this.imageCheckedPressed),
+                code.constant("NULL")
             );
         }
         if (this.imageCheckedDisabled) {
-            build.line(
-                `${setSrcFuncName}(obj, ${prefix}CHECKED_DISABLED, NULL, &${build.getImageVariableName(
-                    this.imageCheckedDisabled
-                )}, NULL);`
+            code.callObjectFunction(
+                setSrcFuncName,
+                code.constant(prefix + "CHECKED_DISABLED"),
+                code.constant("NULL"),
+                code.image(this.imageCheckedDisabled),
+                code.constant("NULL")
             );
         }
     }

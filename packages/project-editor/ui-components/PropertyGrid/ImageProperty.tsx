@@ -1,5 +1,5 @@
 import fs from "fs";
-import { clipboard, nativeImage } from "@electron/remote";
+import { clipboard, getCurrentWindow, nativeImage } from "@electron/remote";
 import React from "react";
 import { observer } from "mobx-react";
 import { makeObservable, observable, runInAction } from "mobx";
@@ -101,29 +101,32 @@ export const ImageProperty = observer(
                                 className="btn btn-secondary"
                                 type="button"
                                 onClick={async () => {
-                                    const result = await dialog.showOpenDialog({
-                                        properties: ["openFile"],
-                                        filters: [
-                                            {
-                                                name: "Image files",
-                                                extensions: [
-                                                    "png",
-                                                    "jpg",
-                                                    "jpeg"
-                                                ]
-                                            },
-                                            {
-                                                name: "All Files",
-                                                extensions: ["*"]
-                                            }
-                                        ],
-                                        defaultPath:
-                                            propertyInfo.defaultImagesPath
-                                                ? propertyInfo.defaultImagesPath(
-                                                      this.context
-                                                  )
-                                                : undefined
-                                    });
+                                    const result = await dialog.showOpenDialog(
+                                        getCurrentWindow(),
+                                        {
+                                            properties: ["openFile"],
+                                            filters: [
+                                                {
+                                                    name: "Image files",
+                                                    extensions: [
+                                                        "png",
+                                                        "jpg",
+                                                        "jpeg"
+                                                    ]
+                                                },
+                                                {
+                                                    name: "All Files",
+                                                    extensions: ["*"]
+                                                }
+                                            ],
+                                            defaultPath:
+                                                propertyInfo.defaultImagesPath
+                                                    ? propertyInfo.defaultImagesPath(
+                                                          this.context
+                                                      )
+                                                    : undefined
+                                        }
+                                    );
                                     const filePaths = result.filePaths;
                                     if (filePaths && filePaths[0]) {
                                         if (

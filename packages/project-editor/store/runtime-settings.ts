@@ -65,6 +65,10 @@ export class RuntimeSettings {
             );
         }
 
+        if (variable.type == "date") {
+            return new Date(value);
+        }
+
         return value;
     }
 

@@ -1,4 +1,4 @@
-import { Menu, MenuItem } from "@electron/remote";
+import { getCurrentWindow, Menu, MenuItem } from "@electron/remote";
 import React from "react";
 import { makeObservable, action, computed } from "mobx";
 import { observer } from "mobx-react";
@@ -54,7 +54,7 @@ export const ChangesTab = observer(
         };
 
         open = async () => {
-            const result = await dialog.showOpenDialog({
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
                 filters: [
                     { name: "EEZ Project", extensions: ["eez-project"] },

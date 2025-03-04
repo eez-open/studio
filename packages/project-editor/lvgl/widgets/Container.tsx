@@ -10,9 +10,6 @@ import {
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
 import { getDropdown, getTabview } from "../widget-common";
 import { getProjectStore, Message } from "project-editor/store";
@@ -29,6 +26,7 @@ import {
     pad_top_property_info,
     radius_property_info
 } from "../style-catalog";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,104 +212,38 @@ export class LVGLContainerWidget extends LVGLWidget {
         return super.getResizeHandlers();
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
+    override toLVGLCode(code: LVGLCode) {
         const tabview = getTabview(this);
         if (tabview) {
             if (tabview.children.indexOf(this) == 0) {
-                return runtime.wasm._lvglTabviewGetTabBar(
-                    parentObj,
-                    runtime.getCreateWidgetIndex(this)
+                code.getObject(
+                    code.isV9
+                        ? "lv_tabview_get_tab_bar"
+                        : "lv_tabview_get_tab_btns"
                 );
-            }
-
-            if (tabview.children.indexOf(this) == 1) {
-                return runtime.wasm._lvglTabviewGetTabContent(
-                    parentObj,
-                    runtime.getCreateWidgetIndex(this)
-                );
-            }
-        }
-
-        const dropdown = getDropdown(this);
-        if (dropdown && dropdown.children.indexOf(this) == 0) {
-            return runtime.wasm._lvglDropdownGetList(
-                parentObj,
-                runtime.getCreateWidgetIndex(this)
-            );
-        }
-
-        const rect = this.getLvglCreateRect();
-
-        return runtime.wasm._lvglCreateContainer(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        const tabview = getTabview(this);
-        if (tabview) {
-            if (tabview.children.indexOf(this) == 0) {
-                if (build.isV9) {
-                    build.line(
-                        `lv_obj_t *obj = lv_tabview_get_tab_bar(parent_obj);`
-                    );
-                } else {
-                    build.line(
-                        `lv_obj_t *obj = lv_tabview_get_tab_btns(parent_obj);`
-                    );
-                }
                 return;
             }
 
             if (tabview.children.indexOf(this) == 1) {
-                build.line(
-                    `lv_obj_t *obj = lv_tabview_get_content(parent_obj);`
-                );
+                code.getObject(`lv_tabview_get_content`);
+                return;
+            }
+        } else {
+            const dropdown = getDropdown(this);
+            if (dropdown && dropdown.children.indexOf(this) == 0) {
+                code.getObject("lv_dropdown_get_list");
                 return;
             }
         }
 
-        const dropdown = getDropdown(this);
-        if (dropdown && dropdown.children.indexOf(this) == 0) {
-            build.line(`lv_obj_t *obj = lv_dropdown_get_list(parent_obj);`);
-            return;
-        }
+        code.createObject(`lv_obj_create`);
 
-        build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        const tabview = getTabview(this);
-        if (tabview) {
-            if (tabview.children.indexOf(this) == 0) {
-                return;
-            }
-
-            if (tabview.children.indexOf(this) == 1) {
-                return;
-            }
-        }
-
-        const dropdown = getDropdown(this);
-        if (dropdown && dropdown.children.indexOf(this) == 0) {
-            return;
-        }
-
-        this.buildStyleIfNotDefined(build, pad_left_property_info);
-        this.buildStyleIfNotDefined(build, pad_top_property_info);
-        this.buildStyleIfNotDefined(build, pad_right_property_info);
-        this.buildStyleIfNotDefined(build, pad_bottom_property_info);
-        this.buildStyleIfNotDefined(build, bg_opa_property_info);
-        this.buildStyleIfNotDefined(build, border_width_property_info);
-        this.buildStyleIfNotDefined(build, radius_property_info);
+        this.buildStyleIfNotDefinedInCode(code, pad_left_property_info);
+        this.buildStyleIfNotDefinedInCode(code, pad_top_property_info);
+        this.buildStyleIfNotDefinedInCode(code, pad_right_property_info);
+        this.buildStyleIfNotDefinedInCode(code, pad_bottom_property_info);
+        this.buildStyleIfNotDefinedInCode(code, bg_opa_property_info);
+        this.buildStyleIfNotDefinedInCode(code, border_width_property_info);
+        this.buildStyleIfNotDefinedInCode(code, radius_property_info);
     }
 }

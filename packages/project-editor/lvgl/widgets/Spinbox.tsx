@@ -5,26 +5,14 @@ import { makeDerivedClassInfo, PropertyType } from "project-editor/core/object";
 
 import { type Project, ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback
-} from "../widget-common";
-import {
-    LV_EVENT_SPINBOX_STEP_CHANGED,
-    LV_EVENT_SPINBOX_VALUE_CHANGED
-} from "../lvgl-constants";
+
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -181,157 +169,135 @@ export class LVGLSpinboxWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return (
-            super.hasEventHandler ||
-            this.valueType == "expression" ||
-            this.stepType == "expression"
-        );
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(`lv_spinbox_create`);
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const stepExpr = getExpressionPropertyData(runtime, this, "step");
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateSpinbox(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
+        // digitCount and separatorPosition
+        code.callObjectFunction(
+            "lv_spinbox_set_digit_format",
             this.digitCount,
-            this.separatorPosition,
-            this.min,
-            this.max,
-            this.rollover,
-
-            stepExpr
-                ? 0
-                : this.stepType == "expression"
-                ? 0
-                : (this.step as number),
-
-            valueExpr
-                ? 0
-                : this.valueType == "expression"
-                ? 0
-                : (this.value as number)
+            this.separatorPosition
         );
 
-        if (stepExpr) {
-            runtime.wasm._lvglUpdateSpinboxStep(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                stepExpr.componentIndex,
-                stepExpr.propertyIndex
-            );
-        }
+        // min and max
+        code.callObjectFunction("lv_spinbox_set_range", this.min, this.max);
 
-        if (valueExpr) {
-            runtime.wasm._lvglUpdateSpinboxValue(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const stepExpr = getExpressionPropertyData(runtime, this, "step");
-        if (stepExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_SPINBOX_STEP_CHANGED,
-                stepExpr.componentIndex,
-                stepExpr.propertyIndex,
-                0
-            );
-        }
-
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-        if (valueExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_SPINBOX_VALUE_CHANGED,
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_spinbox_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(
-            `lv_spinbox_set_digit_format(obj, ${this.digitCount}, ${this.separatorPosition});`
+        // rollover
+        code.callObjectFunction(
+            "lv_spinbox_set_rollover",
+            code.constant(this.rollover ? "true" : "false")
         );
 
-        build.line(`lv_spinbox_set_range(obj, ${this.min}, ${this.max});`);
-
-        build.line(
-            `lv_spinbox_set_rollover(obj, ${this.rollover ? "true" : "false"});`
-        );
-
+        // step
         if (this.stepType == "literal") {
-            if (this.step != 0) {
-                build.line(`lv_spinbox_set_step(obj, ${this.step});`);
-            }
+            code.callObjectFunction("lv_spinbox_set_step", this.step);
+        } else {
+            code.addToTick("step", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.step as string,
+                    "Failed to evaluate Step in Spinbox widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_spinbox_get_step"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction("lv_spinbox_set_step", new_val);
+
+                    code.tickChangeEnd();
+                });
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            "lv_spinbox_get_step",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "step",
+                            this.step as string,
+                            value,
+                            "Failed to assign Step in Spinbox widget"
+                        );
+                    });
+                }
+            );
         }
 
+        // value
         if (this.valueType == "literal") {
-            if (this.value != 0) {
-                build.line(`lv_spinbox_set_value(obj, ${this.value});`);
-            }
+            code.callObjectFunction("lv_spinbox_set_value", this.value);
+        } else {
+            code.addToTick("value", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.value as string,
+                    "Failed to evaluate Value in Spinbox widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_spinbox_get_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction("lv_spinbox_set_value", new_val);
+
+                    code.tickChangeEnd();
+                });
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            "lv_spinbox_get_value",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "value",
+                            this.value as string,
+                            value,
+                            "Failed to assign Value in Spinbox widget"
+                        );
+                    });
+                }
+            );
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
-            "step" as const,
-            "lv_spinbox_get_step",
-            "lv_spinbox_set_step"
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_spinbox_get_value",
-            "lv_spinbox_set_value"
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
-            "step" as const,
-            "lv_spinbox_get_step"
-        );
-
-        expressionPropertyBuildEventHandlerSpecific<LVGLSpinboxWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_spinbox_get_value"
-        );
     }
 }

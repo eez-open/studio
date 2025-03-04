@@ -462,7 +462,9 @@ registerObjectVariableType("SerialConnection", {
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {
-        return serialConnections.get(variableValue.id) ?? null;
+        return variableValue
+            ? serialConnections.get(variableValue.id) ?? null
+            : null;
     },
     valueFieldDescriptions: [
         {

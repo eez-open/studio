@@ -7,12 +7,9 @@ import { Project, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
-import { escapeCString, unescapeCString } from "../widget-common";
 import { makeLvglExpressionProperty } from "../expression-property";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,40 +89,12 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         makeObservable(this, { text: observable, textType: observable });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_checkbox_create");
 
-        return runtime.wasm._lvglCreateCheckbox(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            runtime.wasm.allocateUTF8(unescapeCString(this.text))
+        code.callObjectFunction(
+            "lv_checkbox_set_text",
+            code.stringProperty(this.textType, this.text)
         );
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_checkbox_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        if (this.textType == "literal") {
-            build.line(
-                `lv_checkbox_set_text(obj, ${escapeCString(this.text ?? "")});`
-            );
-        } else {
-            build.line(
-                `lv_checkbox_set_text(obj, _(${escapeCString(
-                    this.text ?? ""
-                )}));`
-            );
-        }
     }
 }

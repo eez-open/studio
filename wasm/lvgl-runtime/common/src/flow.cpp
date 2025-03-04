@@ -346,17 +346,21 @@ void updateTimelineProperties(WidgetTimeline &widgetTimeline, float timelinePosi
 
     lv_style_value_t value;
 
-    value.num = (int16_t)roundf(x);
+    value.num = (int32_t)roundf(x);
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_X, value, LV_PART_MAIN);
 
-    value.num = (int16_t)roundf(y);
+    value.num = (int32_t)roundf(y);
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_Y, value, LV_PART_MAIN);
 
-    value.num = (int16_t)roundf(w);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_WIDTH, value, LV_PART_MAIN);
+    value.num = (int32_t)roundf(w);
+    if (value.num != -1) {
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_WIDTH, value, LV_PART_MAIN);
+    }
 
-    value.num = (int16_t)roundf(h);
-    lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_HEIGHT, value, LV_PART_MAIN);
+    value.num = (int32_t)roundf(h);
+    if (value.num != -1) {
+        lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_HEIGHT, value, LV_PART_MAIN);
+    }
 
     value.num = (int32_t)roundf(opacity * 255.0f);
     lv_obj_set_local_style_prop(widgetTimeline.obj, LV_STYLE_OPA, value, LV_PART_MAIN);
@@ -433,18 +437,6 @@ void flow_event_callback(lv_event_t *e) {
     flowPropagateValueLVGLEvent(data->flow_state, data->component_index, data->output_or_property_index, e);
 }
 
-void flow_event_textarea_text_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            const char *value = lv_textarea_get_text(ta);
-            assignStringProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Text in Textarea widget");
-        }
-    }
-}
-
 void flow_event_checked_state_changed_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
     if (event == LV_EVENT_VALUE_CHANGED) {
@@ -457,113 +449,6 @@ void flow_event_checked_state_changed_callback(lv_event_t *e) {
     }
 }
 
-void flow_event_arc_value_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_arc_get_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Arc widget");
-        }
-    }
-}
-
-void flow_event_bar_value_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_bar_get_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Bar widget");
-        }
-    }
-}
-
-void flow_event_bar_value_start_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_bar_get_start_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value Start in Bar widget");
-        }
-    }
-}
-
-void flow_event_dropdown_selected_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            uint16_t selected = lv_dropdown_get_selected(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Dropdown widget");
-        }
-    }
-}
-
-void flow_event_roller_selected_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            uint16_t selected = lv_roller_get_selected(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, selected, "Failed to assign Selected in Roller widget");
-        }
-    }
-}
-
-void flow_event_slider_value_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_slider_get_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Slider widget");
-        }
-    }
-}
-
-void flow_event_slider_value_left_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_slider_get_left_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value Left in Slider widget");
-        }
-    }
-}
-
-void flow_event_spinbox_value_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_spinbox_get_value(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Value in Spinbox widget");
-        }
-    }
-}
-
-void flow_event_spinbox_step_changed_callback(lv_event_t *e) {
-    lv_event_code_t event = lv_event_get_code(e);
-    if (event == LV_EVENT_VALUE_CHANGED) {
-        lv_obj_t *ta = lv_event_get_target_obj(e);
-        if (!g_updateTask || g_updateTask->obj != ta) {
-            FlowEventCallbackData *data = (FlowEventCallbackData *)e->user_data;
-            int32_t value = lv_spinbox_get_step(ta);
-            assignIntegerProperty(data->flow_state, data->component_index, data->output_or_property_index, value, "Failed to assign Step in Spinbox widget");
-        }
-    }
-}
 
 void flow_event_checked_callback(lv_event_t *e) {
     lv_event_code_t event = lv_event_get_code(e);
@@ -636,75 +521,7 @@ void doUpdateTasks() {
         UpdateTask &updateTask = *it;
         
         g_updateTask = &updateTask;
-        if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LABEL_TEXT) {
-            const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Label widget");
-            const char *cur_val = lv_label_get_text(updateTask.obj);
-            if (strcmp(new_val, cur_val) != 0) lv_label_set_text(updateTask.obj, new_val ? new_val : "");
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_TEXTAREA_TEXT) {
-            const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Text in Textarea widget");
-            const char *cur_val = lv_textarea_get_text(updateTask.obj);
-            if (strcmp(new_val, cur_val) != 0) lv_textarea_set_text(updateTask.obj, new_val);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_OPTIONS) {
-            const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
-            const char *cur_val = lv_dropdown_get_options(updateTask.obj);
-            if (strcmp(new_val, cur_val) != 0) lv_dropdown_set_options(updateTask.obj, new_val);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_DROPDOWN_SELECTED) {
-            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
-                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget");
-                uint16_t cur_val = lv_dropdown_get_selected(updateTask.obj);
-                if (new_val != cur_val) lv_dropdown_set_selected(updateTask.obj, new_val);
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_OPTIONS) {
-            const char *new_val = evalStringArrayPropertyAndJoin(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Dropdown widget", "\n");
-            const char *cur_val = lv_roller_get_options(updateTask.obj);
-            if (compareRollerOptions((lv_roller_t *)updateTask.obj, new_val, cur_val, (lv_roller_mode_t)updateTask.param)) {
-                lv_roller_set_options(updateTask.obj, new_val, (lv_roller_mode_t)updateTask.param);
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ROLLER_SELECTED) {
-            if (!(lv_obj_get_state(updateTask.obj) & LV_STATE_EDITED)) {
-                uint16_t new_val = (uint16_t)evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Selected in Roller widget");
-                uint16_t cur_val = lv_roller_get_selected(updateTask.obj);
-                if (new_val != cur_val) lv_roller_set_selected(updateTask.obj, new_val, LV_ANIM_OFF);
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Slider widget");
-            int32_t cur_val = lv_slider_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_slider_set_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SLIDER_VALUE_LEFT) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Left in Slider widget");
-            int32_t cur_val = lv_slider_get_left_value(updateTask.obj);
-            if (new_val != cur_val) lv_slider_set_left_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_RANGE_MIN) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Range min in Arc widget");
-            int32_t cur_val = lv_arc_get_min_value(updateTask.obj);
-            if (new_val != cur_val) {
-                auto max = lv_arc_get_max_value(updateTask.obj);
-                if (new_val < max) {
-                    lv_arc_set_range(updateTask.obj, new_val, max);
-                }
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_RANGE_MAX) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Range max in Arc widget");
-            int32_t cur_val = lv_arc_get_max_value(updateTask.obj);
-            if (new_val != cur_val) {
-                auto min = lv_arc_get_min_value(updateTask.obj);
-                if (new_val > min) {
-                    lv_arc_set_range(updateTask.obj, min, new_val);
-                }
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_ARC_VALUE) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Arc widget");
-            int32_t cur_val = lv_arc_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_arc_set_value(updateTask.obj, new_val);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Bar widget");
-            int32_t cur_val = lv_bar_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_bar_set_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_BAR_VALUE_START) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value Start in Bar widget");
-            int32_t cur_val = lv_bar_get_start_value(updateTask.obj);
-            if (new_val != cur_val) lv_bar_set_start_value(updateTask.obj, new_val, updateTask.param ? LV_ANIM_ON : LV_ANIM_OFF);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CHECKED_STATE) {
+        if (updateTask.updateTaskType == UPDATE_TASK_TYPE_CHECKED_STATE) {
             bool new_val = evalBooleanProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Checked state");
             bool cur_val = lv_obj_has_state(updateTask.obj, LV_STATE_CHECKED);
             if (new_val != cur_val) {
@@ -732,84 +549,9 @@ void doUpdateTasks() {
                 if (new_val) lv_obj_add_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
                 else lv_obj_clear_flag(updateTask.obj, LV_OBJ_FLAG_CLICKABLE);
             }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_VALUE) {
-#if LVGL_VERSION_MAJOR >= 9
-    // TODO LVGL 9.0
-#else
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Value in Meter widget");
-            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
-            int32_t cur_val = indicator->start_value;
-            if (new_val != cur_val) lv_meter_set_indicator_value(updateTask.obj, indicator, new_val);
-#endif
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_START_VALUE) {
-#if LVGL_VERSION_MAJOR >= 9
-    // TODO LVGL 9.0
-#else
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator Start Value in Meter widget");
-            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
-            int32_t cur_val = indicator->start_value;
-            if (new_val != cur_val) lv_meter_set_indicator_start_value(updateTask.obj, indicator, new_val);
-#endif
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_METER_INDICATOR_END_VALUE) {
-#if LVGL_VERSION_MAJOR >= 9
-    // TODO LVGL 9.0
-#else
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Indicator End Value in Meter widget");
-            lv_meter_indicator_t *indicator = (lv_meter_indicator_t *)updateTask.subobj;
-            int32_t cur_val = indicator->end_value;
-            if (new_val != cur_val) lv_meter_set_indicator_end_value(updateTask.obj, indicator, new_val);
-#endif
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_TAB_NAME) {
-            const char *new_val = evalTextProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Tab name in Tab widget");
-
-            uint32_t tab_id = updateTask.param;
-
-            lv_obj_t *tabview = lv_obj_get_parent(updateTask.obj);
-            if (!lv_obj_check_type(tabview, &lv_tabview_class)) {
-                tabview = lv_obj_get_parent(tabview);
-            }
-
-            if (lv_obj_check_type(tabview, &lv_tabview_class)) {
-#if LVGL_VERSION_MAJOR >= 9
-                lv_obj_t *tab_bar = lv_tabview_get_tab_bar(tabview);
-                lv_obj_t *button = lv_obj_get_child_by_type(tab_bar, tab_id, &lv_button_class);
-                lv_obj_t *label = lv_obj_get_child_by_type(button, 0, &lv_label_class);
-                const char *cur_val = lv_label_get_text(label);
-#else
-                const char *cur_val = ((lv_tabview_t *)tabview)->map[tab_id * (((lv_tabview_t *)tabview)->tab_pos & LV_DIR_HOR ? 2 : 1)];
-#endif
-
-                if (strcmp(new_val, cur_val) != 0) lv_tabview_rename_tab(tabview, (uint32_t)updateTask.param, new_val ? new_val : "");
-            }
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LED_COLOR) {
-            uint32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Color in Led widget");
-#if LVGL_VERSION_MAJOR >= 9
-            uint32_t cur_val = lv_color_to_u32(((lv_led_t *)updateTask.obj)->color);
-#else
-            uint32_t cur_val = lv_color_to32(((lv_led_t *)updateTask.obj)->color);
-#endif
-            if (new_val != cur_val) lv_led_set_color(updateTask.obj, lv_color_hex(new_val));
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_LED_BRIGHTNESS) {
-            uint32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Brightness in Led widget");
-            if (new_val < 0) {
-                new_val = 0;
-            } else if (new_val > 255) {
-                new_val = 255;
-            }
-            uint32_t cur_val = lv_led_get_brightness(updateTask.obj);
-            if (new_val != cur_val) lv_led_set_brightness(updateTask.obj, new_val);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_VALUE) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Spinbox widget");
-            int32_t cur_val = lv_spinbox_get_value(updateTask.obj);
-            if (new_val != cur_val) lv_spinbox_set_value(updateTask.obj, new_val);
-        } else if (updateTask.updateTaskType == UPDATE_TASK_TYPE_SPINBOX_STEP) {
-            int32_t new_val = evalIntegerProperty(updateTask.flow_state, updateTask.component_index, updateTask.property_index, "Failed to evaluate Value in Spinbox widget");
-            int32_t cur_val = lv_spinbox_get_step(updateTask.obj);
-            if (new_val != cur_val) lv_spinbox_set_step(updateTask.obj, new_val);
         }
         g_updateTask = nullptr;
     }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -878,7 +620,7 @@ EM_PORT_API(void) setDebuggerMessageSubsciptionFilter(uint32_t filter) {
 
 static std::map<int, lv_obj_t *> indexToObject;
 
-void setObjectIndex(lv_obj_t *obj, int32_t index) {
+extern "C" void setObjectIndex(lv_obj_t *obj, int32_t index) {
     indexToObject.insert(std::make_pair(index, obj));
 }
 
@@ -902,7 +644,7 @@ void deleteObjectIndex(int32_t index) {
     }
 }
 
-lv_obj_t *getLvglObjectFromIndex(int32_t index) {
+EM_PORT_API(lv_obj_t *) getLvglObjectFromIndex(int32_t index) {
     auto it = indexToObject.find(index);
     if (it == indexToObject.end()) {
         return nullptr;
@@ -1057,6 +799,18 @@ void deleteScreen(int screenIndex) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void on_event_handler(lv_event_t *e) {
+    EM_ASM({
+        lvglOnEventHandler($0, $1, $2, $3);
+    }, eez::flow::g_wasmModuleId, lv_event_get_user_data(e), lv_event_get_code(e), e);
+}
+
+EM_PORT_API(void) lvglAddEventHandler(lv_obj_t *obj, lv_event_code_t eventCode) {
+    lv_obj_add_event_cb(obj, on_event_handler, eventCode, obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" void flowInit(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, bool darkTheme, uint32_t timeZone, bool screensLifetimeSupport) {
     lv_disp_t * dispp = lv_disp_get_default();
     lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
@@ -1116,6 +870,10 @@ extern "C" bool flowTick() {
     doAnimate();
 
     doUpdateTasks();
+
+    EM_ASM({
+        lvglScreenTick($0);
+    }, eez::flow::g_wasmModuleId);
 
     return true;
 }

@@ -1,6 +1,6 @@
 import path from "path";
 import { shell } from "electron";
-import { dialog } from "@electron/remote";
+import { dialog, getCurrentWindow } from "@electron/remote";
 import type { FileFilter } from "electron";
 import React from "react";
 
@@ -325,11 +325,13 @@ registerActionComponents("File", [
                 let filters: FileFilter[];
                 if (filtersValue != undefined) {
                     if (!Array.isArray(filtersValue)) {
+                        context.endAsyncExecution();
                         context.throwError("filters is not an array");
                         return;
                     }
 
                     if (filtersValue.length == 0) {
+                        context.endAsyncExecution();
                         context.throwError("filters empty");
                         return;
                     }
@@ -338,6 +340,7 @@ registerActionComponents("File", [
 
                     for (let i = 0; i < filtersValue.length; i++) {
                         if (typeof filtersValue[i] != "string") {
+                            context.endAsyncExecution();
                             context.throwError(
                                 "filters is not an array of strings"
                             );
@@ -346,6 +349,7 @@ registerActionComponents("File", [
 
                         const parts = filtersValue[i].split("|");
                         if (parts.length < 2) {
+                            context.endAsyncExecution();
                             context.throwError(
                                 `invalid filter at position ${i + 1}`
                             );
@@ -363,7 +367,7 @@ registerActionComponents("File", [
                     filters = [{ name: "All Files", extensions: ["*"] }];
                 }
 
-                const result = await dialog.showOpenDialog({
+                const result = await dialog.showOpenDialog(getCurrentWindow(), {
                     properties: ["openFile"],
                     filters
                 });
@@ -423,11 +427,13 @@ registerActionComponents("File", [
                 let filters: FileFilter[] | undefined;
                 if (filtersValue != undefined) {
                     if (!Array.isArray(filtersValue)) {
+                        context.endAsyncExecution();
                         context.throwError("filters is not an array");
                         return;
                     }
 
                     if (filtersValue.length == 0) {
+                        context.endAsyncExecution();
                         context.throwError("filters empty");
                         return;
                     }
@@ -436,6 +442,7 @@ registerActionComponents("File", [
 
                     for (let i = 0; i < filtersValue.length; i++) {
                         if (typeof filtersValue[i] != "string") {
+                            context.endAsyncExecution();
                             context.throwError(
                                 "filters is not an array of strings"
                             );
@@ -444,6 +451,7 @@ registerActionComponents("File", [
 
                         const parts = filtersValue[i].split("|");
                         if (parts.length < 2) {
+                            context.endAsyncExecution();
                             context.throwError(
                                 `invalid filter at position ${i + 1}`
                             );
@@ -461,7 +469,7 @@ registerActionComponents("File", [
                     filters = undefined;
                 }
 
-                const result = await dialog.showSaveDialog({
+                const result = await dialog.showSaveDialog(getCurrentWindow(), {
                     defaultPath: fileNameValue,
                     filters
                 });

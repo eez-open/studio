@@ -7,30 +7,21 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     LV_DIR_TOP,
     LV_DIR_LEFT,
     LV_DIR_BOTTOM,
     LV_DIR_RIGHT,
-    LV_EVENT_DROPDOWN_SELECTED_CHANGED
+    lvglStates
 } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback,
-    escapeCString,
-    unescapeCString
-} from "../widget-common";
+
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -162,141 +153,120 @@ export class LVGLDropdownWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return super.hasEventHandler || this.selectedType == "expression";
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(`lv_dropdown_create`);
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const optionsExpr = getExpressionPropertyData(runtime, this, "options");
-
-        const selectedExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "selected"
+        // options
+        code.callObjectFunction(
+            "lv_dropdown_set_options",
+            code.stringProperty(this.optionsType, this.options)
         );
 
-        const rect = this.getLvglCreateRect();
+        if (this.optionsType == "expression") {
+            code.addToTick("options", () => {
+                const new_val = code.evalStringArrayPropertyAndJoin(
+                    "const char *",
+                    "new_val",
+                    this.options,
+                    "Failed to evaluate Options in Dropdown widget"
+                );
 
-        const obj = runtime.wasm._lvglCreateDropdown(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "const char *",
+                    "cur_val",
+                    "lv_dropdown_get_options"
+                );
 
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            runtime.wasm.allocateUTF8(
-                optionsExpr ? "" : unescapeCString(this.options)
-            ),
-            selectedExpr ? 0 : (this.selected as number),
-
-            LVGL_DROPDOWN_DIRECTION[this.direction]
-        );
-
-        if (optionsExpr) {
-            runtime.wasm._lvglUpdateDropdownOptions(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                optionsExpr.componentIndex,
-                optionsExpr.propertyIndex
-            );
+                code.ifStringNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+                    code.callObjectFunction("lv_dropdown_set_options", new_val);
+                    code.tickChangeEnd();
+                });
+            });
         }
 
-        if (selectedExpr) {
-            runtime.wasm._lvglUpdateDropdownSelected(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                selectedExpr.componentIndex,
-                selectedExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const selectedExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "selected"
-        );
-        if (selectedExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_DROPDOWN_SELECTED_CHANGED,
-                selectedExpr.componentIndex,
-                selectedExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_dropdown_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        if (this.optionsType == "literal") {
-            build.line(
-                `lv_dropdown_set_options(obj, ${escapeCString(
-                    this.options ?? ""
-                )});`
-            );
-        } else if (this.optionsType == "translated-literal") {
-            build.line(
-                `lv_dropdown_set_options(obj, _(${escapeCString(
-                    this.options ?? ""
-                )}));`
-            );
-        } else {
-            build.line(`lv_dropdown_set_options(obj, "");`);
-        }
-
+        // direction
         if (this.direction != "bottom") {
-            build.line(
-                `lv_dropdown_set_dir(obj, LV_DIR_${this.direction.toUpperCase()});`
+            code.callObjectFunction(
+                "lv_dropdown_set_dir",
+                code.constant(`LV_DIR_${this.direction.toUpperCase()}`)
             );
         }
 
+        // selected
         if (this.selectedType == "literal") {
-            if (this.selected != 0) {
-                build.line(`lv_dropdown_set_selected(obj, ${this.selected});`);
-            }
+            code.callObjectFunction("lv_dropdown_set_selected", this.selected);
+        } else {
+            code.addToTick("selected", () => {
+                if (code.lvglBuild) {
+                    code.blockStart(
+                        `if (!(lv_obj_get_state(${code.objectAccessor}) & LV_STATE_EDITED)) {`
+                    );
+                } else {
+                    if (
+                        code.callObjectFunction("lv_obj_get_state") &
+                        lvglStates.EDITED
+                    ) {
+                        return;
+                    }
+                }
+
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.selected as string,
+                    "Failed to evaluate Selected in Dropdown widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_dropdown_get_selected"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction(
+                        "lv_dropdown_set_selected",
+                        new_val
+                    );
+
+                    code.tickChangeEnd();
+                });
+
+                if (code.lvglBuild) {
+                    code.blockEnd("}");
+                }
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            "lv_dropdown_get_selected",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "selected",
+                            this.selected as string,
+                            value,
+                            "Failed to assign Selected in Dropdown widget"
+                        );
+                    });
+                }
+            );
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLDropdownWidget>(
-            build,
-            this,
-            "options" as const,
-            "lv_dropdown_get_options",
-            "lv_dropdown_set_options"
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLDropdownWidget>(
-            build,
-            this,
-            "selected" as const,
-            "lv_dropdown_get_selected",
-            "lv_dropdown_set_selected",
-            undefined,
-            undefined,
-            true
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLDropdownWidget>(
-            build,
-            this,
-            "selected" as const,
-            "lv_dropdown_get_selected"
-        );
     }
 }

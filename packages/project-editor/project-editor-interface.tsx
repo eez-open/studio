@@ -84,7 +84,9 @@ import type {
     LVGLTabWidget,
     LVGLRollerWidget,
     LVGLButtonMatrixWidget,
-    LVGLLedWidget
+    LVGLLedWidget,
+    LVGLTabviewWidget,
+    LVGLDropdownWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
@@ -106,6 +108,8 @@ import type { UserProperty } from "project-editor/flow/user-property";
 import type { LVGLActionComponent } from "project-editor/lvgl/actions";
 import type { FlowEditor } from "project-editor/flow/editor/editor";
 import type { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
+
+import type { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -150,12 +154,15 @@ export interface IProjectEditor {
     LVGLScreenWidgetClass: typeof LVGLScreenWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
     LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;
+    LVGLTabviewWidgetClass: typeof LVGLTabviewWidget;
     LVGLTabWidgetClass: typeof LVGLTabWidget;
+    LVGLDropdownWidgetClass: typeof LVGLDropdownWidget;
     LVGLRollerWidgetClass: typeof LVGLRollerWidget;
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
     LVGLLedWidgetClass: typeof LVGLLedWidget;
     LVGLStyleClass: typeof LVGLStyle;
     LVGLActionComponentClass: typeof LVGLActionComponent;
+    LVGLPageEditorRuntimeClass: typeof LVGLPageEditorRuntime;
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;

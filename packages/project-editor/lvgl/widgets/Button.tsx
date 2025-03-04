@@ -8,10 +8,8 @@ import {
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLLabelWidget, LVGLWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,24 +76,11 @@ export class LVGLButtonWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        return runtime.wasm._lvglCreateButton(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_btn_create(parent_obj);`);
+    override toLVGLCode(code: LVGLCode) {
+        if (code.isV9) {
+            code.createObject("lv_button_create");
+        } else {
+            code.createObject("lv_btn_create");
+        }
     }
 }

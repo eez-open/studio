@@ -7,20 +7,14 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import { BAR_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex
-} from "../widget-common";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -138,128 +132,110 @@ export class LVGLBarWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return (
-            super.hasEventHandler ||
-            this.valueType == "expression" ||
-            (this.mode == "RANGE" && this.valueStartType == "expression")
-        );
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_bar_create");
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-        const valueStartExpr =
-            this.mode == "RANGE"
-                ? getExpressionPropertyData(runtime, this, "valueStart")
-                : undefined;
-
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateBar(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            this.min,
-            this.max,
-            BAR_MODES[this.mode],
-            valueExpr
-                ? !valueStartExpr
-                    ? (this.valueStart as number)
-                    : 0
-                : (this.value as number),
-            valueStartExpr ? 0 : (this.valueStart as number)
-        );
-
-        if (valueExpr) {
-            runtime.wasm._lvglUpdateBarValue(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                this.enableAnimation
-            );
-        }
-
-        if (valueStartExpr) {
-            runtime.wasm._lvglUpdateBarValueStart(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueStartExpr.componentIndex,
-                valueStartExpr.propertyIndex,
-                this.enableAnimation
-            );
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_bar_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
         if (this.min != 0 || this.max != 100) {
-            build.line(`lv_bar_set_range(obj, ${this.min}, ${this.max});`);
+            code.callObjectFunction("lv_bar_set_range", this.min, this.max);
         }
 
         if (this.mode != "NORMAL") {
-            build.line(`lv_bar_set_mode(obj, LV_BAR_MODE_${this.mode});`);
+            code.callObjectFunction(
+                "lv_bar_set_mode",
+                code.constant(`LV_BAR_MODE_${this.mode}`)
+            );
         }
 
         if (this.valueType == "literal") {
             if (this.value != 0) {
-                build.line(
-                    `lv_bar_set_value(obj, ${this.value}, ${
-                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                    });`
+                code.callObjectFunction(
+                    "lv_bar_set_value",
+                    this.value,
+                    this.enableAnimation
+                        ? code.constant("LV_ANIM_ON")
+                        : code.constant("LV_ANIM_OFF")
                 );
             }
-        }
-
-        if (this.mode == "RANGE" && this.valueStartType == "literal") {
-            if (this.valueType == "expression") {
-                build.line(
-                    `lv_bar_set_value(obj, ${this.valueStart}, ${
-                        this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                    });`
+        } else {
+            code.addToTick("value", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.value as string,
+                    "Failed to evaluate Value in Bar widget"
                 );
-            }
 
-            build.line(
-                `lv_bar_set_start_value(obj, ${this.valueStart}, ${
-                    this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                });`
-            );
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_bar_get_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction(
+                        "lv_bar_set_value",
+                        new_val,
+                        this.enableAnimation
+                            ? code.constant("LV_ANIM_ON")
+                            : code.constant("LV_ANIM_OFF")
+                    );
+
+                    code.tickChangeEnd();
+                });
+            });
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLBarWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_bar_get_value",
-            "lv_bar_set_value",
-            this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
-        );
 
         if (this.mode == "RANGE") {
-            expressionPropertyBuildTickSpecific<LVGLBarWidget>(
-                build,
-                this,
-                "valueStart" as const,
-                "lv_bar_get_start_value",
-                "lv_bar_set_start_value",
-                this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
-            );
+            if (this.valueStartType == "literal") {
+                if (this.valueType == "expression") {
+                    code.callObjectFunction(
+                        "lv_bar_set_value",
+                        this.valueStart,
+                        this.enableAnimation
+                            ? code.constant("LV_ANIM_ON")
+                            : code.constant("LV_ANIM_OFF")
+                    );
+                }
+
+                code.callObjectFunction(
+                    "lv_bar_set_start_value",
+                    this.valueStart,
+                    this.enableAnimation
+                        ? code.constant("LV_ANIM_ON")
+                        : code.constant("LV_ANIM_OFF")
+                );
+            } else {
+                code.addToTick("valueStart", () => {
+                    const new_val = code.evalIntegerProperty(
+                        "int32_t",
+                        "new_val",
+                        this.value as string,
+                        "Failed to evaluate Value start in Bar widget"
+                    );
+
+                    const cur_val = code.callObjectFunctionWithAssignment(
+                        "int32_t",
+                        "cur_val",
+                        "lv_bar_get_start_value"
+                    );
+
+                    code.ifIntegerNotEqual(new_val, cur_val, () => {
+                        code.tickChangeStart();
+
+                        code.callObjectFunction(
+                            "lv_bar_set_start_value",
+                            new_val,
+                            this.enableAnimation
+                                ? code.constant("LV_ANIM_ON")
+                                : code.constant("LV_ANIM_OFF")
+                        );
+
+                        code.tickChangeEnd();
+                    });
+                });
+            }
         }
     }
 }

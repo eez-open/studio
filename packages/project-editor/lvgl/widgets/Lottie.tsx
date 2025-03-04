@@ -5,10 +5,8 @@ import { makeDerivedClassInfo } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,32 +48,11 @@ export class LVGLLottieWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateLottie(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        if (build.isV9) {
-            build.line(`lv_obj_t *obj = lv_lottie_create(parent_obj);`);
+    override toLVGLCode(code: LVGLCode) {
+        if (code.isV9 && code.lvglBuild) {
+            code.createObject("lv_lottie_create");
         } else {
-            build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
+            code.createObject("lv_obj_create");
         }
     }
-
-    override lvglBuildSpecific(build: LVGLBuild) {}
 }

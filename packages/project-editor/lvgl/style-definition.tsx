@@ -722,8 +722,7 @@ export class LVGLStylesDefinition extends EezObject {
 
                             dsc += "LV_GRID_TEMPLATE_LAST";
 
-                            build.line("{");
-                            build.indent();
+                            build.blockStart("{");
                             build.line(`static lv_coord_t dsc[] = {${dsc}};`);
 
                             build.line(
@@ -732,8 +731,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 )}(obj, dsc, ${selectorCode});`
                             );
 
-                            build.unindent();
-                            build.line("}");
+                            build.blockEnd("}");
                         } else if (propertyInfo.type == PropertyType.Boolean) {
                             const numValue = value ? "true" : "false";
 
@@ -853,8 +851,7 @@ export class LVGLStylesDefinition extends EezObject {
 
                     dsc += "LV_GRID_TEMPLATE_LAST";
 
-                    build.line("{");
-                    build.indent();
+                    build.blockStart("{");
                     build.line(`static lv_coord_t dsc[] = {${dsc}};`);
 
                     build.line(
@@ -863,8 +860,7 @@ export class LVGLStylesDefinition extends EezObject {
                         )}(style, dsc);`
                     );
 
-                    build.unindent();
-                    build.line("}");
+                    build.blockEnd("}");
                 } else if (propertyInfo.type == PropertyType.Boolean) {
                     const numValue = value ? "true" : "false";
 

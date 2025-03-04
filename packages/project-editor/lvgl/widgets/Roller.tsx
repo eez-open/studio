@@ -7,27 +7,14 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import {
-    LV_EVENT_ROLLER_SELECTED_CHANGED,
-    ROLLER_MODES
-} from "project-editor/lvgl/lvgl-constants";
+import { lvglStates, ROLLER_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback,
-    escapeCString,
-    unescapeCString
-} from "../widget-common";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -145,146 +132,148 @@ export class LVGLRollerWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return super.hasEventHandler || this.selectedType == "expression";
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(`lv_roller_create`);
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const optionsExpr = getExpressionPropertyData(runtime, this, "options");
-
-        const selectedExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "selected"
+        // options
+        code.callObjectFunction(
+            "lv_roller_set_options",
+            code.stringProperty(this.optionsType, this.options),
+            code.constant(`LV_ROLLER_MODE_${this.mode}`)
         );
 
-        const rect = this.getLvglCreateRect();
+        if (this.optionsType == "expression") {
+            code.addToTick("options", () => {
+                const new_val = code.evalStringArrayPropertyAndJoin(
+                    "const char *",
+                    "new_val",
+                    this.options,
+                    "Failed to evaluate Options in Roller widget"
+                );
 
-        const obj = runtime.wasm._lvglCreateRoller(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "const char *",
+                    "cur_val",
+                    "lv_roller_get_options"
+                );
 
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
+                    build.blockStart(
+                        `if (compareRollerOptions((lv_roller_t *)${code.objectAccessor}, new_val, cur_val, LV_ROLLER_MODE_${this.mode}) != 0) {`
+                    );
 
-            runtime.wasm.allocateUTF8(
-                optionsExpr
-                    ? ""
-                    : unescapeCString(
-                          this.optionsType == "expression"
-                              ? `${this.options}\n${this.options}\n${this.options}`
-                              : this.options
-                      )
-            ),
-            selectedExpr ? 0 : (this.selected as number),
-            ROLLER_MODES[this.mode]
-        );
+                    code.tickChangeStart();
+                    code.callObjectFunction(
+                        "lv_roller_set_options",
+                        new_val,
+                        code.constant(`LV_ROLLER_MODE_${this.mode}`)
+                    );
+                    code.tickChangeEnd();
 
-        if (optionsExpr) {
-            runtime.wasm._lvglUpdateRollerOptions(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                optionsExpr.componentIndex,
-                optionsExpr.propertyIndex,
-                ROLLER_MODES[this.mode]
-            );
+                    build.blockEnd(`}`);
+                } else {
+                    if (
+                        code.callObjectFunction(
+                            "compareRollerOptions",
+                            new_val,
+                            cur_val,
+                            code.constant(`LV_ROLLER_MODE_${this.mode}`)
+                        )
+                    ) {
+                        code.tickChangeStart();
+                        code.callObjectFunction(
+                            "lv_roller_set_options",
+                            new_val,
+                            code.constant(`LV_ROLLER_MODE_${this.mode}`)
+                        );
+                        code.tickChangeEnd();
+                    }
+                }
+            });
         }
 
-        if (selectedExpr) {
-            runtime.wasm._lvglUpdateRollerSelected(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                selectedExpr.componentIndex,
-                selectedExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const selectedExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "selected"
-        );
-        if (selectedExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_ROLLER_SELECTED_CHANGED,
-                selectedExpr.componentIndex,
-                selectedExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_roller_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        if (this.optionsType == "literal") {
-            build.line(
-                `lv_roller_set_options(obj, ${escapeCString(
-                    this.options ?? ""
-                )}, LV_ROLLER_MODE_${this.mode});`
-            );
-        } else if (this.optionsType == "translated-literal") {
-            build.line(
-                `lv_roller_set_options(obj, _(${escapeCString(
-                    this.options ?? ""
-                )}), LV_ROLLER_MODE_${this.mode});`
-            );
-        } else {
-            build.line(
-                `lv_roller_set_options(obj, "", LV_ROLLER_MODE_${this.mode});`
-            );
-        }
-
+        // selected
         if (this.selectedType == "literal") {
             if (this.selected != 0) {
-                build.line(
-                    `lv_roller_set_selected(obj, ${this.selected}, LV_ANIM_OFF);`
+                code.callObjectFunction(
+                    "lv_roller_set_selected",
+                    this.selected,
+                    code.constant("LV_ANIM_OFF")
                 );
             }
+        } else {
+            code.addToTick("selected", () => {
+                if (code.lvglBuild) {
+                    code.blockStart(
+                        `if (!(lv_obj_get_state(${code.objectAccessor}) & LV_STATE_EDITED)) {`
+                    );
+                } else {
+                    if (
+                        code.callObjectFunction("lv_obj_get_state") &
+                        lvglStates.EDITED
+                    ) {
+                        return;
+                    }
+                }
+
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.selected as string,
+                    "Failed to evaluate Selected in Roller widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_roller_get_selected"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction(
+                        "lv_roller_set_selected",
+                        new_val,
+                        code.constant("LV_ANIM_OFF")
+                    );
+
+                    code.tickChangeEnd();
+                });
+
+                if (code.lvglBuild) {
+                    code.blockEnd("}");
+                }
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            "lv_roller_get_selected",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "selected",
+                            this.selected as string,
+                            value,
+                            "Failed to assign Selected in Roller widget"
+                        );
+                    });
+                }
+            );
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLRollerWidget>(
-            build,
-            this,
-            "options" as const,
-            "lv_roller_get_options",
-            "lv_roller_set_options",
-            `, LV_ROLLER_MODE_${this.mode}`
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLRollerWidget>(
-            build,
-            this,
-            "selected" as const,
-            "lv_roller_get_selected",
-            "lv_roller_set_selected",
-            ", LV_ANIM_OFF",
-            undefined,
-            true
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLRollerWidget>(
-            build,
-            this,
-            "selected" as const,
-            "lv_roller_get_selected"
-        );
     }
 }

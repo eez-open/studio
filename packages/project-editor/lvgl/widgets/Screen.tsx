@@ -5,16 +5,11 @@ import { IEezObject, makeDerivedClassInfo } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { getAncestorOfType } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    ICustomWidgetCreateParams,
-    Page
-} from "project-editor/features/page/page";
+import { Page } from "project-editor/features/page/page";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,98 +64,58 @@ export class LVGLScreenWidget extends LVGLWidget {
         makeObservable(this, {});
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number,
-        customWidget?: ICustomWidgetCreateParams
-    ): number {
-        const rect = this.getLvglCreateRect();
-
-        let obj;
-
-        if (customWidget) {
-            obj = runtime.wasm._lvglCreateUserWidget(
-                parentObj,
-                customWidget.widgetIndex,
-                customWidget.left,
-                customWidget.top,
-                customWidget.width,
-                customWidget.height
-            );
-        } else {
-            obj = runtime.wasm._lvglCreateScreen(
-                parentObj,
-                runtime.getCreateWidgetIndex(
-                    getAncestorOfType(this, ProjectEditor.PageClass.classInfo)!
-                ),
-
-                rect.left,
-                rect.top,
-                rect.width,
-                rect.height
-            );
-        }
-
-        return obj;
-    }
-
-    override lvglPostBuild(build: LVGLBuild): void {}
-
-    override lvglBuildObj(build: LVGLBuild) {
+    override toLVGLCode(code: LVGLCode) {
         const page = getAncestorOfType(
             this,
             ProjectEditor.PageClass.classInfo
         ) as Page;
 
-        if (page.isUsedAsUserWidget) {
-            build.line(`lv_obj_t *obj = lv_obj_create(parent_obj);`);
-        } else {
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let flowIndex = build.assets.getFlowIndex(page);
-                build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
-            }
-            build.line(`lv_obj_t *obj = lv_obj_create(0);`);
-        }
-    }
-
-    override get hasEventHandler() {
-        return (
-            super.hasEventHandler ||
-            ProjectEditor.getProject(this).lvglGroups.groups.length > 0
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        const allGroups = ProjectEditor.getProject(this).lvglGroups.groups;
-        if (allGroups.length > 0) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            build.line("if (event == LV_EVENT_SCREEN_LOAD_START) {");
-            build.indent();
-
-            for (const group of allGroups) {
-                build.line(`// group: ${group.name}`);
-
-                const groupVariableName = build.getGroupVariableName(group);
-
-                build.line(`lv_group_remove_all_objs(${groupVariableName});`);
-
-                const widgets = page.getLvglGroupWidgets(group.name);
-
-                widgets.forEach(widgetPath => {
+        if (code.lvglBuild) {
+            if (page.isUsedAsUserWidget) {
+                code.createObject("lv_obj_create");
+            } else {
+                if (code.hasFlowSupport) {
+                    const build = code.lvglBuild;
+                    let flowIndex = build.assets.getFlowIndex(page);
                     build.line(
-                        `lv_group_add_obj(${groupVariableName}, ${build.getLvglWidgetAccessorInEventHandler(
-                            widgetPath
-                        )});`
+                        `void *flowState = getFlowState(0, ${flowIndex});`
                     );
+                }
+
+                code.createScreen();
+            }
+        } else {
+            code.createScreen();
+        }
+
+        if (code.lvglBuild) {
+            const allGroups = ProjectEditor.getProject(this).lvglGroups.groups;
+            if (allGroups.length > 0) {
+                code.addEventHandler("SCREEN_LOAD_START", event => {
+                    for (const group of allGroups) {
+                        const build = code.lvglBuild!;
+
+                        build.line(`// group: ${group.name}`);
+
+                        const groupVariableName =
+                            build.getGroupVariableName(group);
+
+                        build.line(
+                            `lv_group_remove_all_objs(${groupVariableName});`
+                        );
+
+                        const widgets = page.getLvglGroupWidgets(group.name);
+
+                        widgets.forEach(widgetPath => {
+                            build.line(
+                                `lv_group_add_obj(${groupVariableName}, ${build.getLvglWidgetAccessorInEventHandler(
+                                    widgetPath
+                                )});`
+                            );
+                        });
+                    }
                 });
             }
-
-            build.unindent();
-            build.line("}");
         }
     }
 }

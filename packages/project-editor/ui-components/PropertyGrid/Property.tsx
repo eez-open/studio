@@ -2,7 +2,7 @@ import React from "react";
 import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { dialog } from "@electron/remote";
+import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
@@ -978,11 +978,14 @@ export const Property = observer(
                                     onClick={async () => {
                                         if (this.context.filePath) {
                                             const result =
-                                                await dialog.showOpenDialog({
-                                                    properties: [
-                                                        "openDirectory"
-                                                    ]
-                                                });
+                                                await dialog.showOpenDialog(
+                                                    getCurrentWindow(),
+                                                    {
+                                                        properties: [
+                                                            "openDirectory"
+                                                        ]
+                                                    }
+                                                );
 
                                             const filePaths = result.filePaths;
                                             if (filePaths && filePaths[0]) {
@@ -1038,11 +1041,16 @@ export const Property = observer(
                                     onClick={async () => {
                                         if (this.context.filePath) {
                                             const result =
-                                                await dialog.showOpenDialog({
-                                                    properties: ["openFile"],
-                                                    filters:
-                                                        propertyInfo.fileFilters
-                                                });
+                                                await dialog.showOpenDialog(
+                                                    getCurrentWindow(),
+                                                    {
+                                                        properties: [
+                                                            "openFile"
+                                                        ],
+                                                        filters:
+                                                            propertyInfo.fileFilters
+                                                    }
+                                                );
 
                                             const filePaths = result.filePaths;
                                             if (filePaths && filePaths[0]) {

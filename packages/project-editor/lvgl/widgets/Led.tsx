@@ -5,24 +5,17 @@ import { makeDerivedClassInfo, MessageType } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex
-} from "../widget-common";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { isValid } from "eez-studio-shared/color";
 import { getChildOfObject, Message } from "project-editor/store";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +101,7 @@ export class LVGLLedWidget extends LVGLWidget {
 
     color: string;
     colorType: LVGLPropertyType;
-    brightness: number;
+    brightness: number | string;
     brightnessType: LVGLPropertyType;
 
     override makeEditable() {
@@ -123,6 +116,10 @@ export class LVGLLedWidget extends LVGLWidget {
     }
 
     get brightnessValue() {
+        if (typeof this.brightness == "string") {
+            return this.brightness;
+        }
+
         if (this.brightness < 0) {
             return 0;
         }
@@ -132,116 +129,120 @@ export class LVGLLedWidget extends LVGLWidget {
         return this.brightness;
     }
 
-    override get hasEventHandler() {
-        return (
-            super.hasEventHandler ||
-            this.colorType == "expression" ||
-            this.brightnessType == "expression"
-        );
-    }
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_led_create");
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const colorExpr = getExpressionPropertyData(runtime, this, "color");
-        const brightnessExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "brightness"
-        );
-
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateLed(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            colorExpr ? 0 : runtime.getColorNum(this.color),
-            brightnessExpr ? 0 : this.brightnessValue
-        );
-
-        if (colorExpr) {
-            runtime.wasm._lvglUpdateLedColor(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                colorExpr.componentIndex,
-                colorExpr.propertyIndex
-            );
-        } else {
-            runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
-                wasm._lvglLedSetColor(obj, colorNum)
-            );
-        }
-
-        if (brightnessExpr) {
-            runtime.wasm._lvglUpdateLedBrightness(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                brightnessExpr.componentIndex,
-                brightnessExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_led_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
+        // color
         if (this.colorType == "literal") {
-            build.buildColor(
+            code.buildColor(
                 this,
                 this.color,
-                () => {
-                    return build.getLvglObjectAccessor(this);
-                },
+                () => code.objectAccessor,
                 color => {
-                    build.line(
-                        `lv_led_set_color(obj, lv_color_hex(${color}));`
+                    code.callObjectFunction(
+                        "lv_led_set_color",
+                        code.color(color)
                     );
                 },
                 (color, obj) => {
-                    if (build.project.settings.build.screensLifetimeSupport) {
+                    if (code.lvglBuild && code.screensLifetimeSupport) {
+                        const build = code.lvglBuild;
                         build.line(
-                            `if (${obj}) lv_led_set_color(${obj}, lv_color_hex(${color}));`
+                            `if (${obj}) lv_led_set_color(${obj}, ${code.color(
+                                color
+                            )});`
                         );
                     } else {
-                        build.line(
-                            `lv_led_set_color(${obj}, lv_color_hex(${color}));`
+                        code.callObjectFunction(
+                            "lv_led_set_color",
+                            code.color(color)
                         );
                     }
                 }
             );
+        } else {
+            code.addToTick("color", () => {
+                const new_val = code.evalUnsignedIntegerProperty(
+                    "uint32_t",
+                    "new_val",
+                    this.color as string,
+                    "Failed to evaluate Color in Led widget"
+                );
+
+                let cur_val;
+
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
+                    if (code.isV9) {
+                        build.line(
+                            `uint32_t cur_val = lv_color_to_u32(((lv_led_t *)${code.objectAccessor})->color);`
+                        );
+                    } else {
+                        build.line(
+                            `uint32_t cur_val = lv_color_to32(((lv_led_t *)${code.objectAccessor})->color);`
+                        );
+                    }
+                    cur_val = "cur_val";
+                } else {
+                    cur_val = code.callObjectFunction("lvglLedGetColor");
+                }
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    console.log(new_val, cur_val);
+
+                    code.callObjectFunction(
+                        "lv_led_set_color",
+                        code.color(new_val)
+                    );
+
+                    code.tickChangeEnd();
+                });
+            });
         }
 
+        // brightness
         if (this.brightnessType == "literal") {
-            build.line(`lv_led_set_brightness(obj, ${this.brightnessValue});`);
+            code.callObjectFunction(
+                "lv_led_set_brightness",
+                this.brightnessValue
+            );
+        } else {
+            code.addToTick("brightness", () => {
+                let new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.brightness as string,
+                    "Failed to evaluate Brightness in Led widget"
+                );
+
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
+                    build.line(`if (new_val < 0) new_val = 0;`);
+                    build.line(`else if (new_val > 255) new_val = 255;`);
+                } else {
+                    if (new_val < 0) {
+                        new_val = 0;
+                    } else if (new_val > 255) {
+                        new_val = 255;
+                    }
+                }
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_led_get_brightness"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction("lv_led_set_brightness", new_val);
+
+                    code.tickChangeEnd();
+                });
+            });
         }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLLedWidget>(
-            build,
-            this,
-            "color" as const,
-            "lv_led_get_color",
-            "lv_led_set_color"
-        );
-
-        expressionPropertyBuildTickSpecific<LVGLLedWidget>(
-            build,
-            this,
-            "brightness" as const,
-            "lv_led_get_brightness",
-            "lv_led_set_brightness"
-        );
     }
 }

@@ -7,24 +7,13 @@ import { Project, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import { LV_EVENT_TEXTAREA_TEXT_CHANGED } from "project-editor/lvgl/lvgl-constants";
-
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback,
-    escapeCString,
-    unescapeCString
-} from "../widget-common";
+
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,138 +126,111 @@ export class LVGLTextareaWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const textExpr = getExpressionPropertyData(runtime, this, "text");
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(`lv_textarea_create`);
 
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateTextarea(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            textExpr || !this.text
-                ? 0
-                : runtime.wasm.allocateUTF8(
-                      this.textType == "expression"
-                          ? `{${this.text}}`
-                          : unescapeCString(this.text)
-                  ),
-            !this.placeholder
-                ? 0
-                : runtime.wasm.allocateUTF8(unescapeCString(this.placeholder)),
-            this.oneLineMode,
-            this.passwordMode,
-            (!runtime.isEditor || this.textType != "expression") &&
-                this.acceptedCharacters
-                ? runtime.allocateUTF8(this.acceptedCharacters, true)
-                : 0,
-            this.maxTextLength
-        );
-
-        if (textExpr) {
-            runtime.wasm._lvglUpdateTextareaText(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                textExpr.componentIndex,
-                textExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override get hasEventHandler() {
-        return super.hasEventHandler || this.textType == "expression";
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = getExpressionPropertyData(runtime, this, "text");
-        if (valueExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_TEXTAREA_TEXT_CHANGED,
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_textarea_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
+        // acceptedCharacters
         if (this.acceptedCharacters) {
-            build.line(
-                `lv_textarea_set_accepted_chars(obj, ${escapeCString(
-                    this.acceptedCharacters
-                )});`
+            code.callObjectFunction(
+                "lv_textarea_set_accepted_chars",
+                code.stringProperty("literal", this.acceptedCharacters)
             );
         }
 
-        build.line(
-            `lv_textarea_set_max_length(obj, ${this.maxTextLength ?? 128});`
+        // maxTextLength
+        code.callObjectFunction(
+            "lv_textarea_set_max_length",
+            this.maxTextLength ?? 128
         );
 
+        // text
         if (this.text) {
-            if (this.textType == "literal") {
-                build.line(
-                    `lv_textarea_set_text(obj, ${escapeCString(this.text)});`
+            if (
+                this.textType == "literal" ||
+                this.textType == "translated-literal"
+            ) {
+                code.callObjectFunction(
+                    "lv_textarea_set_text",
+                    code.stringProperty(this.textType, this.text)
                 );
-            } else if (this.textType == "translated-literal") {
-                build.line(
-                    `lv_textarea_set_text(obj, _(${escapeCString(this.text)}));`
+            } else {
+                code.addToTick("text", () => {
+                    const new_val = code.evalTextProperty(
+                        "const char *",
+                        "new_val",
+                        this.text,
+                        "Failed to evaluate Text in Textarea widget"
+                    );
+
+                    const cur_val = code.callObjectFunctionWithAssignment(
+                        "const char *",
+                        "cur_val",
+                        "lv_textarea_get_text"
+                    );
+
+                    code.ifStringNotEqual(new_val, cur_val, () => {
+                        code.tickChangeStart();
+                        code.callObjectFunction(
+                            "lv_textarea_set_text",
+                            new_val
+                        );
+                        code.tickChangeEnd();
+                    });
+                });
+
+                code.addEventHandler(
+                    "VALUE_CHANGED",
+                    (event, tick_value_change_obj) => {
+                        const ta = code.callFreeFunctionWithAssignment(
+                            "lv_obj_t *",
+                            "ta",
+                            "lv_event_get_target",
+                            event
+                        );
+
+                        code.ifIntegerNotEqual(
+                            tick_value_change_obj,
+                            ta,
+                            () => {
+                                const value =
+                                    code.callFreeFunctionWithAssignment(
+                                        "const char *",
+                                        "value",
+                                        "lv_textarea_get_text",
+                                        ta
+                                    );
+
+                                code.assignStringProperty(
+                                    "text",
+                                    this.text as string,
+                                    value,
+                                    "Failed to assign Text in Textarea widget"
+                                );
+                            }
+                        );
+                    }
                 );
             }
         }
 
+        // placeholder
         if (this.placeholder) {
-            build.line(
-                `lv_textarea_set_placeholder_text(obj, ${escapeCString(
-                    this.placeholder
-                )});`
+            code.callObjectFunction(
+                "lv_textarea_set_placeholder_text",
+                code.stringProperty("literal", this.placeholder)
             );
         }
 
-        build.line(
-            `lv_textarea_set_one_line(obj, ${
-                this.oneLineMode ? "true" : "false"
-            });`
+        // oneLineMode
+        code.callObjectFunction(
+            "lv_textarea_set_one_line",
+            code.constant(this.oneLineMode ? "true" : "false")
         );
 
-        build.line(
-            `lv_textarea_set_password_mode(obj, ${
-                this.passwordMode ? "true" : "false"
-            });`
-        );
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLTextareaWidget>(
-            build,
-            this,
-            "text" as const,
-            "lv_textarea_get_text",
-            "lv_textarea_set_text"
-        );
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLTextareaWidget>(
-            build,
-            this,
-            "text" as const,
-            "lv_textarea_get_text"
+        // passwordMode
+        code.callObjectFunction(
+            "lv_textarea_set_password_mode",
+            code.constant(this.passwordMode ? "true" : "false")
         );
     }
 }

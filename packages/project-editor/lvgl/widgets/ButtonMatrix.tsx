@@ -12,9 +12,6 @@ import {
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -25,6 +22,7 @@ import {
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { escapeCString, unescapeCString } from "../widget-common";
 import { IWasmFlowRuntime } from "eez-studio-types";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -286,240 +284,249 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        if (code.isV9) {
+            code.createObject("lv_buttonmatrix_create");
+        } else {
+            code.createObject("lv_btnmatrix_create");
+        }
 
         const buttons = this.buttons ?? [];
 
         // buttons map
-        const mapArray = new Uint32Array(buttons.length + 1);
-        for (let i = 0; i < buttons.length; i++) {
-            let button = buttons[i];
-            mapArray[i] = runtime.wasm.allocateUTF8(
-                unescapeCString(
-                    button.newLine ? "\n" : button.text ? button.text : " "
-                )
+        let mapArray;
+        let mapArg;
+        if (code.lvglBuild) {
+            const build = code.lvglBuild;
+
+            build.blockStart(
+                `static const char *map[${buttons.length + 1}] = {`
             );
-        }
-        mapArray[buttons.length] = 0;
-
-        const mapBuffer = runtime.wasm._malloc(
-            mapArray.length * mapArray.BYTES_PER_ELEMENT
-        );
-
-        runtime.wasm.HEAPU32.set(mapArray, mapBuffer >> 2);
-
-        // buttons ctrl_map
-        const textButtons = buttons.filter(button => !button.newLine);
-        let ctrlMapBuffer;
-        if (textButtons.length > 0) {
-            const ctrlMapArray = runtime.isV9
-                ? new Uint32Array(textButtons.length)
-                : new Uint16Array(textButtons.length);
-            for (let i = 0; i < textButtons.length; i++) {
-                const button = textButtons[i];
-
-                let ctrl = button.width;
-                if (ctrl < 1) {
-                    ctrl = 1;
-                }
-                if (ctrl > 7) {
-                    ctrl = 7;
-                }
-
-                if (button.ctrlHidden) {
-                    ctrl |= MATRIX_BUTTON_CTRL.HIDDEN;
-                }
-
-                if (button.ctrlNoRepeat) {
-                    ctrl |= MATRIX_BUTTON_CTRL.NO_REPEAT;
-                }
-
-                if (button.ctrlDisabled) {
-                    ctrl |= MATRIX_BUTTON_CTRL.DISABLED;
-                }
-
-                if (button.ctrlCheckable) {
-                    ctrl |= MATRIX_BUTTON_CTRL.CHECKABLE;
-                }
-
-                if (button.ctrlChecked) {
-                    ctrl |= MATRIX_BUTTON_CTRL.CHECKED;
-                }
-
-                if (button.ctrlClickTrig) {
-                    ctrl |= MATRIX_BUTTON_CTRL.CLICK_TRIG;
-                }
-
-                if (button.ctrlPopover) {
-                    ctrl |= MATRIX_BUTTON_CTRL.POPOVER;
-                }
-
-                if (!runtime.isV9) {
-                    if (button.ctrlRecolor) {
-                        ctrl |= MATRIX_BUTTON_CTRL.RECOLOR;
-                    }
-                }
-
-                if (button.ctrlCustom1) {
-                    ctrl |= MATRIX_BUTTON_CTRL.CUSTOM_1;
-                }
-
-                if (button.ctrlCustom2) {
-                    ctrl |= MATRIX_BUTTON_CTRL.CUSTOM_2;
-                }
-
-                ctrlMapArray[i] = ctrl;
-            }
-
-            ctrlMapBuffer = runtime.wasm._malloc(
-                ctrlMapArray.length * ctrlMapArray.BYTES_PER_ELEMENT
-            );
-
-            if (runtime.isV9) {
-                runtime.wasm.HEAPU32.set(ctrlMapArray, ctrlMapBuffer >> 2);
-            } else {
-                runtime.wasm.HEAPU16.set(ctrlMapArray, ctrlMapBuffer >> 1);
-            }
-        } else {
-            ctrlMapBuffer = 0;
-        }
-
-        const obj = runtime.wasm._lvglCreateButtonMatrix(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            mapBuffer,
-            ctrlMapBuffer,
-
-            this.oneCheck
-        );
-
-        if (this._mapBuffer && this._buffersWasm == runtime.wasm) {
-            this._mapArray
-                .slice(0, -1)
-                .forEach(value => runtime.wasm._free(value));
-            runtime.wasm._free(this._mapBuffer);
-            if (this._ctrlMapBuffer) {
-                runtime.wasm._free(this._ctrlMapBuffer);
-            }
-        }
-
-        this._mapBuffer = mapBuffer;
-        this._mapArray = mapArray;
-        this._ctrlMapBuffer = ctrlMapBuffer;
-        this._buffersWasm = runtime.wasm;
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        if (build.isV9) {
-            build.line(`lv_obj_t *obj = lv_buttonmatrix_create(parent_obj);`);
-        } else {
-            build.line(`lv_obj_t *obj = lv_btnmatrix_create(parent_obj);`);
-        }
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        const buttons = this.buttons ?? [];
-
-        build.line(`static const char *map[${buttons.length + 1}] = {`);
-        build.indent();
-        buttons.forEach(button => {
-            build.line(
-                `${escapeCString(
-                    button.newLine ? "\n" : button.text ? button.text : " "
-                )},`
-            );
-        });
-        build.line(`NULL,`);
-        build.unindent();
-        build.line(`};`);
-
-        let ctrlMap = false;
-        const textButtons = buttons.filter(button => !button.newLine);
-        if (
-            textButtons.length > 0 &&
-            textButtons.find(
-                button =>
-                    button.width != 1 ||
-                    button.ctrlHidden ||
-                    button.ctrlNoRepeat ||
-                    button.ctrlDisabled ||
-                    button.ctrlCheckable ||
-                    button.ctrlChecked ||
-                    button.ctrlClickTrig ||
-                    button.ctrlPopover ||
-                    (build.isV9 ? false : button.ctrlRecolor) ||
-                    button.ctrlCustom1 ||
-                    button.ctrlCustom2
-            )
-        ) {
-            build.line(
-                `static ${
-                    build.isV9
-                        ? "lv_buttonmatrix_ctrl_t "
-                        : "lv_btnmatrix_ctrl_t "
-                }ctrl_map[${textButtons.length}] = {`
-            );
-            build.indent();
-            const prefix = build.isV9
-                ? " | LV_BUTTONMATRIX_CTRL_"
-                : " | LV_BTNMATRIX_CTRL_";
-            textButtons.forEach(button => {
+            buttons.forEach(button => {
                 build.line(
-                    `${
-                        button.width < 1
-                            ? 1
-                            : button.width > 7
-                            ? 7
-                            : button.width
-                    }${button.ctrlHidden ? prefix + "HIDDEN" : ""}${
-                        button.ctrlNoRepeat ? prefix + "NO_REPEAT" : ""
-                    }${button.ctrlDisabled ? prefix + "DISABLED" : ""}${
-                        button.ctrlCheckable ? prefix + "CHECKABLE" : ""
-                    }${button.ctrlChecked ? prefix + "CHECKED" : ""}${
-                        button.ctrlClickTrig ? prefix + "CLICK_TRIG" : ""
-                    }${button.ctrlPopover ? prefix + "POPOVER" : ""}${
-                        !build.isV9 && button.ctrlRecolor
-                            ? prefix + "RECOLOR"
-                            : ""
-                    }${button.ctrlCustom1 ? prefix + "CUSTOM_1" : ""}${
-                        button.ctrlCustom2 ? prefix + "CUSTOM_2" : ""
-                    },`
+                    `${escapeCString(
+                        button.newLine ? "\n" : button.text ? button.text : " "
+                    )},`
                 );
             });
-            build.unindent();
-            build.line(`};`);
+            build.line(`NULL,`);
+            build.blockEnd(`};`);
 
-            ctrlMap = true;
+            mapArg = "map";
+        } else {
+            const runtime = code.pageRuntime!;
+
+            mapArray = new Uint32Array(buttons.length + 1);
+            for (let i = 0; i < buttons.length; i++) {
+                let button = buttons[i];
+                mapArray[i] = runtime.wasm.allocateUTF8(
+                    unescapeCString(
+                        button.newLine ? "\n" : button.text ? button.text : " "
+                    )
+                );
+            }
+            mapArray[buttons.length] = 0;
+
+            const mapBuffer = runtime.wasm._malloc(
+                mapArray.length * mapArray.BYTES_PER_ELEMENT
+            );
+
+            runtime.wasm.HEAPU32.set(mapArray, mapBuffer >> 2);
+
+            mapArg = mapBuffer;
         }
 
-        if (build.isV9) {
-            build.line(`lv_buttonmatrix_set_map(obj, map);`);
-            if (ctrlMap) {
-                build.line(`lv_buttonmatrix_set_ctrl_map(obj, ctrl_map);`);
-            }
-            if (this.oneCheck) {
-                build.line(`lv_buttonmatrix_set_one_checked(obj, true);`);
+        // buttons ctrl_map
+        let ctrlMapArg;
+        if (code.lvglBuild) {
+            const textButtons = buttons.filter(button => !button.newLine);
+            if (
+                textButtons.length > 0 &&
+                textButtons.find(
+                    button =>
+                        button.width != 1 ||
+                        button.ctrlHidden ||
+                        button.ctrlNoRepeat ||
+                        button.ctrlDisabled ||
+                        button.ctrlCheckable ||
+                        button.ctrlChecked ||
+                        button.ctrlClickTrig ||
+                        button.ctrlPopover ||
+                        (code.isV9 ? false : button.ctrlRecolor) ||
+                        button.ctrlCustom1 ||
+                        button.ctrlCustom2
+                )
+            ) {
+                const build = code.lvglBuild;
+
+                code.blockStart(
+                    `static ${
+                        code.isV9
+                            ? "lv_buttonmatrix_ctrl_t "
+                            : "lv_btnmatrix_ctrl_t "
+                    }ctrl_map[${textButtons.length}] = {`
+                );
+
+                const prefix = code.isV9
+                    ? " | LV_BUTTONMATRIX_CTRL_"
+                    : " | LV_BTNMATRIX_CTRL_";
+
+                textButtons.forEach(button => {
+                    build.line(
+                        `${
+                            button.width < 1
+                                ? 1
+                                : button.width > 7
+                                ? 7
+                                : button.width
+                        }${button.ctrlHidden ? prefix + "HIDDEN" : ""}${
+                            button.ctrlNoRepeat ? prefix + "NO_REPEAT" : ""
+                        }${button.ctrlDisabled ? prefix + "DISABLED" : ""}${
+                            button.ctrlCheckable ? prefix + "CHECKABLE" : ""
+                        }${button.ctrlChecked ? prefix + "CHECKED" : ""}${
+                            button.ctrlClickTrig ? prefix + "CLICK_TRIG" : ""
+                        }${button.ctrlPopover ? prefix + "POPOVER" : ""}${
+                            !code.isV9 && button.ctrlRecolor
+                                ? prefix + "RECOLOR"
+                                : ""
+                        }${button.ctrlCustom1 ? prefix + "CUSTOM_1" : ""}${
+                            button.ctrlCustom2 ? prefix + "CUSTOM_2" : ""
+                        },`
+                    );
+                });
+
+                code.blockEnd(`};`);
+
+                ctrlMapArg = "ctrl_map";
             }
         } else {
-            build.line(`lv_btnmatrix_set_map(obj, map);`);
-            if (ctrlMap) {
-                build.line(`lv_btnmatrix_set_ctrl_map(obj, ctrl_map);`);
+            const runtime = code.pageRuntime!;
+
+            const textButtons = buttons.filter(button => !button.newLine);
+            let ctrlMapBuffer;
+            if (textButtons.length > 0) {
+                const ctrlMapArray = runtime.isV9
+                    ? new Uint32Array(textButtons.length)
+                    : new Uint16Array(textButtons.length);
+                for (let i = 0; i < textButtons.length; i++) {
+                    const button = textButtons[i];
+
+                    let ctrl = button.width;
+                    if (ctrl < 1) {
+                        ctrl = 1;
+                    }
+                    if (ctrl > 7) {
+                        ctrl = 7;
+                    }
+
+                    if (button.ctrlHidden) {
+                        ctrl |= MATRIX_BUTTON_CTRL.HIDDEN;
+                    }
+
+                    if (button.ctrlNoRepeat) {
+                        ctrl |= MATRIX_BUTTON_CTRL.NO_REPEAT;
+                    }
+
+                    if (button.ctrlDisabled) {
+                        ctrl |= MATRIX_BUTTON_CTRL.DISABLED;
+                    }
+
+                    if (button.ctrlCheckable) {
+                        ctrl |= MATRIX_BUTTON_CTRL.CHECKABLE;
+                    }
+
+                    if (button.ctrlChecked) {
+                        ctrl |= MATRIX_BUTTON_CTRL.CHECKED;
+                    }
+
+                    if (button.ctrlClickTrig) {
+                        ctrl |= MATRIX_BUTTON_CTRL.CLICK_TRIG;
+                    }
+
+                    if (button.ctrlPopover) {
+                        ctrl |= MATRIX_BUTTON_CTRL.POPOVER;
+                    }
+
+                    if (!runtime.isV9) {
+                        if (button.ctrlRecolor) {
+                            ctrl |= MATRIX_BUTTON_CTRL.RECOLOR;
+                        }
+                    }
+
+                    if (button.ctrlCustom1) {
+                        ctrl |= MATRIX_BUTTON_CTRL.CUSTOM_1;
+                    }
+
+                    if (button.ctrlCustom2) {
+                        ctrl |= MATRIX_BUTTON_CTRL.CUSTOM_2;
+                    }
+
+                    ctrlMapArray[i] = ctrl;
+                }
+
+                ctrlMapBuffer = runtime.wasm._malloc(
+                    ctrlMapArray.length * ctrlMapArray.BYTES_PER_ELEMENT
+                );
+
+                if (runtime.isV9) {
+                    runtime.wasm.HEAPU32.set(ctrlMapArray, ctrlMapBuffer >> 2);
+                } else {
+                    runtime.wasm.HEAPU16.set(ctrlMapArray, ctrlMapBuffer >> 1);
+                }
+            } else {
+                ctrlMapBuffer = 0;
+            }
+
+            ctrlMapArg = ctrlMapBuffer;
+        }
+
+        if (code.isV9) {
+            code.callObjectFunction("lv_buttonmatrix_set_map", mapArg);
+            if (ctrlMapArg) {
+                code.callObjectFunction(
+                    "lv_buttonmatrix_set_ctrl_map",
+                    ctrlMapArg
+                );
             }
             if (this.oneCheck) {
-                build.line(`lv_btnmatrix_set_one_checked(obj, true);`);
+                code.callObjectFunction(
+                    "lv_buttonmatrix_set_one_checked",
+                    code.constant("true")
+                );
             }
+        } else {
+            code.callObjectFunction("lv_btnmatrix_set_map", mapArg);
+            if (ctrlMapArg) {
+                code.callObjectFunction(
+                    "lv_btnmatrix_set_ctrl_map",
+                    ctrlMapArg
+                );
+            }
+            if (this.oneCheck) {
+                code.callObjectFunction(
+                    "lv_btnmatrix_set_one_checked",
+                    code.constant("true")
+                );
+            }
+        }
+
+        if (code.pageRuntime) {
+            const runtime = code.pageRuntime!;
+
+            if (this._mapBuffer && this._buffersWasm == runtime.wasm) {
+                this._mapArray
+                    .slice(0, -1)
+                    .forEach(value => runtime.wasm._free(value));
+                runtime.wasm._free(this._mapBuffer);
+                if (this._ctrlMapBuffer) {
+                    runtime.wasm._free(this._ctrlMapBuffer);
+                }
+            }
+
+            this._mapBuffer = mapArg as number;
+            this._mapArray = mapArray!;
+            this._ctrlMapBuffer = ctrlMapArg as number;
+            this._buffersWasm = runtime.wasm;
         }
     }
 }

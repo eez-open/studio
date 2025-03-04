@@ -7,12 +7,11 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import { SCALE_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import { checkWidgetTypeLvglVersion } from "../widget-common";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -141,52 +140,44 @@ export class LVGLScaleWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        if (!code.isV9) {
+            // Scale widget doesn't exist in LVGL version 8.x
+            code.createObject("lv_obj_create");
+            return;
+        }
 
-        const obj = runtime.wasm._lvglCreateScale(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
+        code.createObject(`lv_scale_create`);
 
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
+        // scaleMode
+        code.callObjectFunction(
+            "lv_scale_set_mode",
+            code.constant(`LV_SCALE_MODE_${this.scaleMode}`)
+        );
 
-            SCALE_MODES[this.scaleMode],
-
+        // minorRange and majorRange
+        code.callObjectFunction(
+            "lv_scale_set_range",
             this.minorRange,
-            this.majorRange,
-            this.totalTickCount,
-            this.majorTickEvery,
-            this.showLabels
+            this.majorRange
         );
 
-        return obj;
-    }
+        // setTotalTickCount
+        code.callObjectFunction(
+            "lv_scale_set_total_tick_count",
+            this.totalTickCount
+        );
 
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_scale_create(parent_obj);`);
-    }
+        // majorTickEvery
+        code.callObjectFunction(
+            "lv_scale_set_major_tick_every",
+            this.majorTickEvery
+        );
 
-    override lvglBuildSpecific(build: LVGLBuild) {
-        build.line(`lv_scale_set_mode(obj, LV_SCALE_MODE_${this.scaleMode});`);
-        build.line(
-            `lv_scale_set_range(obj, ${this.minorRange}, ${this.majorRange});`
-        );
-        build.line(
-            `lv_scale_set_total_tick_count(obj, ${this.totalTickCount});`
-        );
-        build.line(
-            `lv_scale_set_major_tick_every(obj, ${this.majorTickEvery});`
-        );
-        build.line(
-            `lv_scale_set_label_show(obj, ${
-                this.showLabels ? "true" : "false"
-            });`
+        // showLabels
+        code.callObjectFunction(
+            "lv_scale_set_label_show",
+            code.constant(this.showLabels ? "true" : "false")
         );
     }
 }

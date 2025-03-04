@@ -1,6 +1,6 @@
 import { ipcRenderer } from "electron";
 
-import { dialog } from "@electron/remote";
+import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
 import { observable, action, keys, makeObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -118,7 +118,7 @@ export const HistoryTools = observer(
         };
 
         attachFile = async () => {
-            const result = await dialog.showOpenDialog({
+            const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile", "multiSelections"],
                 filters: [{ name: "All Files", extensions: ["*"] }]
             });

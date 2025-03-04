@@ -435,6 +435,14 @@ export class WasmRuntime extends RemoteRuntime {
             this.lgvlPageRuntime?.lvglDeleteScreen(
                 workerToRenderMessage.lvglDeleteScreen.screenIndex
             );
+        } else if (workerToRenderMessage.lvglScreenTick) {
+            this.lgvlPageRuntime?.lvglScreenTick();
+        } else if (workerToRenderMessage.lvglOnEventHandler) {
+            this.lgvlPageRuntime?.lvglOnEventHandler(
+                workerToRenderMessage.lvglOnEventHandler.obj,
+                workerToRenderMessage.lvglOnEventHandler.eventCode,
+                workerToRenderMessage.lvglOnEventHandler.event
+            );
         }
         this.onWorkerMessageAsync(workerToRenderMessage);
         return undefined;

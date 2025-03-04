@@ -1,0 +1,13 @@
+_malloc
+_free
+_strcmp
+_setObjectIndex
+__evalTextProperty
+__evalIntegerProperty
+__evalUnsignedIntegerProperty
+__evalBooleanProperty
+__evalStringArrayPropertyAndJoin
+__assignStringProperty
+__assignIntegerProperty
+__assignBooleanProperty
+_compareRollerOptions

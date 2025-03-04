@@ -82,7 +82,9 @@ import {
     LVGLTabWidget,
     LVGLRollerWidget,
     LVGLButtonMatrixWidget,
-    LVGLLedWidget
+    LVGLLedWidget,
+    LVGLTabviewWidget,
+    LVGLDropdownWidget
 } from "project-editor/lvgl/widgets";
 
 // ACTIONS: udp
@@ -129,6 +131,8 @@ import { UserProperty } from "./flow/user-property";
 import { LVGLActionComponent } from "project-editor/lvgl/actions";
 import { FlowEditor } from "project-editor/flow/editor/editor";
 import { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
+
+import { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
 
 export async function createProjectEditor(
     homeTabs: Tabs | undefined,
@@ -193,12 +197,15 @@ export async function createProjectEditor(
         LVGLScreenWidgetClass: LVGLScreenWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
         LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,
+        LVGLTabviewWidgetClass: LVGLTabviewWidget,
         LVGLTabWidgetClass: LVGLTabWidget,
+        LVGLDropdownWidgetClass: LVGLDropdownWidget,
         LVGLRollerWidgetClass: LVGLRollerWidget,
         LVGLButtonMatrixWidgetClass: LVGLButtonMatrixWidget,
         LVGLLedWidgetClass: LVGLLedWidget,
         LVGLStyleClass: LVGLStyle,
         LVGLActionComponentClass: LVGLActionComponent,
+        LVGLPageEditorRuntimeClass: LVGLPageEditorRuntime,
         getProject,
         getProjectStore,
         getFlow,

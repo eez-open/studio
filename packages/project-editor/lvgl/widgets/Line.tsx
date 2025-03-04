@@ -12,12 +12,10 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { filterFloat } from "eez-studio-shared/validation-filters";
 import { getChildOfObject, Message } from "project-editor/store";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -117,23 +115,10 @@ export class LVGLLineWidget extends LVGLWidget {
         return this.points.trim().split(/\s+|,/);
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_line_create");
 
-        const obj = runtime.wasm._lvglCreateLine(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
-
-        // set points
+        // points
         if (this.points) {
             const values = this.pointsStrArr.map(valueStr =>
                 filterFloat(valueStr)
@@ -143,86 +128,73 @@ export class LVGLLineWidget extends LVGLWidget {
                 values.length % 2 == 0 &&
                 values.findIndex(value => isNaN(value)) == -1
             ) {
-                const valuesArray = new Float32Array(values.length);
-                for (let i = 0; i < values.length; i++) {
-                    valuesArray[i] = values[i];
-                }
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
 
-                const valuesBuffer = runtime.wasm._malloc(
-                    valuesArray.length * valuesArray.BYTES_PER_ELEMENT
-                );
+                    build.blockStart(
+                        `static ${
+                            build.isV9 ? "lv_point_precise_t" : "lv_point_t"
+                        } line_points[] = {`
+                    );
 
-                runtime.wasm.HEAPF32.set(valuesArray, valuesBuffer >> 2);
+                    const numPoints = values.length / 2;
 
-                runtime.wasm._lvglLineSetPoints(
-                    obj,
-                    valuesBuffer,
-                    values.length / 2
-                );
-
-                runtime.wasm._free(valuesBuffer);
-            }
-        }
-
-        // set invertY
-        runtime.wasm._lvglLineSetYInvert(obj, this.invertY);
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_line_create(parent_obj);`);
-
-        // set points
-        if (this.points) {
-            const values = this.pointsStrArr.map(valueStr =>
-                filterFloat(valueStr)
-            );
-
-            if (
-                values.length % 2 == 0 &&
-                values.findIndex(value => isNaN(value)) == -1
-            ) {
-                build.line(
-                    `static ${
-                        build.isV9 ? "lv_point_precise_t" : "lv_point_t"
-                    } line_points[] = {`
-                );
-
-                const numPoints = values.length / 2;
-
-                build.indent();
-
-                for (let i = 0; i < numPoints; i++) {
-                    if (build.isV9) {
-                        build.line(
-                            `{ ${values[2 * i + 0]}, ${values[2 * i + 1]} }${
-                                i == numPoints - 1 ? "" : ","
-                            }`
-                        );
-                    } else {
-                        build.line(
-                            `{ ${Math.floor(values[2 * i + 0])}, ${Math.floor(
-                                values[2 * i + 1]
-                            )} }${i == numPoints - 1 ? "" : ","}`
-                        );
+                    for (let i = 0; i < numPoints; i++) {
+                        if (build.isV9) {
+                            build.line(
+                                `{ ${values[2 * i + 0]}, ${
+                                    values[2 * i + 1]
+                                } }${i == numPoints - 1 ? "" : ","}`
+                            );
+                        } else {
+                            build.line(
+                                `{ ${Math.floor(
+                                    values[2 * i + 0]
+                                )}, ${Math.floor(values[2 * i + 1])} }${
+                                    i == numPoints - 1 ? "" : ","
+                                }`
+                            );
+                        }
                     }
+
+                    build.blockEnd(`};`);
+
+                    code.callObjectFunction(
+                        "lv_line_set_points",
+                        "line_points",
+                        numPoints
+                    );
+                } else {
+                    const runtime = code.pageRuntime!;
+
+                    const valuesArray = new Float32Array(values.length);
+                    for (let i = 0; i < values.length; i++) {
+                        valuesArray[i] = values[i];
+                    }
+
+                    const valuesBuffer = runtime.wasm._malloc(
+                        valuesArray.length * valuesArray.BYTES_PER_ELEMENT
+                    );
+
+                    runtime.wasm.HEAPF32.set(valuesArray, valuesBuffer >> 2);
+
+                    code.callObjectFunction(
+                        "lvglLineSetPoints",
+                        valuesBuffer,
+                        values.length / 2
+                    );
+
+                    runtime.wasm._free(valuesBuffer);
                 }
-
-                build.unindent();
-
-                build.line(`};`);
-
-                build.line(
-                    `lv_line_set_points(obj, line_points, ${numPoints});`
-                );
             }
         }
 
+        // invertY
         if (this.invertY) {
-            build.line(`lv_line_set_y_invert(obj, true);`);
+            code.callObjectFunction(
+                "lv_line_set_y_invert",
+                code.constant("true")
+            );
         }
     }
-
-    override lvglBuildSpecific(build: LVGLBuild) {}
 }

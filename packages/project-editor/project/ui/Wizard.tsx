@@ -2756,7 +2756,7 @@ class DirectoryBrowserInput extends React.Component<{
     onChange: (value: string | undefined) => void;
 }> {
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openDirectory"]
         });
 
@@ -2795,7 +2795,7 @@ class FileBrowserInput extends React.Component<{
     onChange: (value: string | undefined) => void;
 }> {
     onSelect = async () => {
-        const result = await dialog.showOpenDialog({
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
             filters: [
                 { name: "EEZ Project", extensions: ["eez-project"] },

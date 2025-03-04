@@ -42,6 +42,7 @@ import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import {
     getLvglBitmapPtr,
+    getLvglEvents,
     getLvglFlagCodes,
     getLvglStylePropCode,
     getLvglWasmFlowRuntimeConstructor
@@ -49,6 +50,7 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     LVGLStylePropCode,
+    LVGL_CONSTANTS_ALL,
     LV_ANIM_OFF
 } from "project-editor/lvgl/lvgl-constants";
 import {
@@ -65,15 +67,21 @@ import {
     USER_WIDGET_IDENTIFIER_SEPARATOR,
     getName
 } from "project-editor/build/helper";
+import { SimulatorLVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+interface LVGLCreateContext {
+    page: Page;
+    pageIndex: number;
+    flowState: number;
+}
+
 export abstract class LVGLPageRuntime {
     lvglVersion: "8.3" | "9.0";
-
     wasm: IWasmFlowRuntime;
+    toLVGLCode = new SimulatorLVGLCode(this, LVGL_CONSTANTS_ALL);
     isMounted: boolean = false;
-
     bitmapsCache = new Map<
         Bitmap,
         {
@@ -81,7 +89,6 @@ export abstract class LVGLPageRuntime {
             bitmapPtr: number;
         }
     >();
-
     fontsCache = new Map<
         Font,
         {
@@ -90,17 +97,27 @@ export abstract class LVGLPageRuntime {
         }
     >();
     fontAddressToFont = new Map<number, Font>();
-
-    lvglCreateContext: {
-        pageIndex: number;
-        flowState: number;
-    } = {
-        pageIndex: 0,
-        flowState: 0
-    };
+    lvglCreateContext: LVGLCreateContext;
+    tick_value_change_obj: number = 0;
+    widgetIndexes: number[] = [];
+    pointers: number[] = [];
+    oldStyleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
+    styleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
+    themeIndex: number = 0;
+    changeColorCallbacks: {
+        page: Page | undefined;
+        callback: () => void;
+    }[] = [];
+    stringLiterals = new Map<string, number>();
 
     constructor(public page: Page) {
         this.lvglVersion = this.project.settings.general.lvglVersion;
+
+        this.lvglCreateContext = {
+            page,
+            pageIndex: 0,
+            flowState: 0
+        };
 
         makeObservable(this, {
             projectStore: computed,
@@ -114,6 +131,10 @@ export abstract class LVGLPageRuntime {
 
     get project() {
         return this.projectStore.project;
+    }
+
+    get isV9() {
+        return this.lvglVersion == "9.0";
     }
 
     abstract get isEditor(): boolean;
@@ -132,8 +153,6 @@ export abstract class LVGLPageRuntime {
     getWidgetIndex(object: LVGLWidget | Page) {
         return 0;
     }
-
-    widgetIndexes: number[] = [];
 
     getCreateWidgetIndex(object: LVGLWidget | Page) {
         const widgetIndex = this.getWidgetIndex(object);
@@ -294,8 +313,6 @@ export abstract class LVGLPageRuntime {
         return cashedFont.fontPtr;
     }
 
-    pointers: number[] = [];
-
     allocateUTF8(str: string, free: boolean) {
         const stringPtr = this.wasm.allocateUTF8(str);
         if (free) {
@@ -340,13 +357,6 @@ export abstract class LVGLPageRuntime {
         });
     }
 
-    get isV9() {
-        return this.lvglVersion == "9.0";
-    }
-
-    oldStyleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
-    styleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
-
     createStyles() {
         for (const [style, lvglStyleObjects] of this.styleObjMap.entries()) {
             this.oldStyleObjMap.set(style, lvglStyleObjects);
@@ -381,13 +391,6 @@ export abstract class LVGLPageRuntime {
             lvglStyle.lvglRemoveStyleFromObject(this, targetObj);
         }
     }
-
-    //
-    themeIndex: number = 0;
-    changeColorCallbacks: {
-        page: Page | undefined;
-        callback: () => void;
-    }[] = [];
 
     setColorTheme(themeName: string) {
         const themeIndex = this.project.themes.findIndex(
@@ -540,19 +543,26 @@ export abstract class LVGLPageRuntime {
 
     registerGroupWidget(group: string, groupIndex: number, obj: number) {}
 
-    //
-    postCreateCallbacks: (() => void)[] = [];
+    addPostCreateCallback(callback: () => void) {}
 
-    addPostCreateCallback(callback: () => void) {
-        this.postCreateCallbacks.push(callback);
+    stringLiteral(str: string) {
+        let strPtr = this.stringLiterals.get(str);
+        if (!strPtr) {
+            strPtr = this.wasm.allocateUTF8(str);
+            this.stringLiterals.set(str, strPtr);
+        }
+        return strPtr;
     }
 
-    lvglCreatePage() {
-        const pageObj = this.page.lvglCreate(this, 0);
-        this.postCreateCallbacks.forEach(callback => callback());
-        this.postCreateCallbacks = [];
-        return pageObj;
-    }
+    addTickCallback(callback: (flowState: number) => void) {}
+
+    addEventHandler(
+        obj: number,
+        eventName: string,
+        callback: (event: number) => void
+    ) {}
+
+    lvglOnEventHandler(obj: number, eventCode: number, event: number) {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -665,7 +675,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.createStyles();
 
-                        const pageObj = this.lvglCreatePage();
+                        const pageObj = this.page.lvglCreate(this, 0);
                         if (!pageObj) {
                             console.error("pageObj is undefined");
                         }
@@ -846,7 +856,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
 
                 this.createStyles();
 
-                const pageObj = this.lvglCreatePage();
+                const pageObj = this.page.lvglCreate(this, 0);
                 this.wasm._lvglScreenLoad(-1, pageObj);
                 runInAction(() => {
                     this.page._lvglRuntime = this;
@@ -934,7 +944,6 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
 
 export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     reactionDispose: IReactionDisposer | undefined;
-
     pageStates = new Map<
         Page,
         {
@@ -950,6 +959,29 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             widgetIndexes: number[];
         }
     >();
+    pageGroupWidgets = new Map<
+        Page,
+        {
+            group: string;
+            groupIndex: number;
+            obj: number;
+        }[]
+    >();
+    lvglGroupObjects: number[] = [];
+    userWidgetsStack: LVGLUserWidgetWidget[] = [];
+    nextWidgetIndex = -1;
+    tickCallbacks: {
+        page: Page;
+        flowState: number;
+        callback: (flowState: number) => void;
+    }[] = [];
+    eventHandlers: {
+        page: Page;
+        obj: number;
+        eventCode: number;
+        callback: (event: number) => void;
+    }[] = [];
+    postCreateCallbacks: (() => void)[] = [];
 
     constructor(private runtime: WasmRuntime) {
         super(runtime.selectedPage);
@@ -990,15 +1022,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         return false;
     }
 
-    pageGroupWidgets = new Map<
-        Page,
-        {
-            group: string;
-            groupIndex: number;
-            obj: number;
-        }[]
-    >();
-
     override registerGroupWidget(
         group: string,
         groupIndex: number,
@@ -1015,8 +1038,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
             obj
         });
     }
-
-    lvglGroupObjects: number[] = [];
 
     async mount() {
         this.lvglGroupObjects = [];
@@ -1101,6 +1122,14 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                 callback => callback.page != page
             );
 
+            this.tickCallbacks = this.tickCallbacks.filter(
+                tickCallback => tickCallback.page != page
+            );
+
+            this.eventHandlers = this.eventHandlers.filter(
+                eventHandler => eventHandler.page != page
+            );
+
             this.pageGroupWidgets.delete(page);
             this.wasm._lvglGroupRemoveObjectsForScreen(pageState.pageObj);
 
@@ -1127,6 +1156,7 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         const pageIndex = this.runtime.assetsMap.flowIndexes[pagePath];
 
         this.lvglCreateContext = {
+            page: this.page,
             pageIndex,
             flowState: this.wasm._lvglGetFlowState(0, pageIndex)
         };
@@ -1135,7 +1165,12 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         this.widgetIndexes = [];
 
-        const pageObj = this.lvglCreatePage();
+        const pageObj = this.page.lvglCreate(this, 0);
+
+        for (const callback of this.postCreateCallbacks) {
+            callback();
+        }
+        this.postCreateCallbacks = [];
 
         if (
             pageObj &&
@@ -1237,8 +1272,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     }
 
     //
-    userWidgetsStack: LVGLUserWidgetWidget[] = [];
-
     override beginUserWidget(widget: LVGLUserWidgetWidget) {
         this.userWidgetsStack.push(widget);
     }
@@ -1250,8 +1283,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     override endUserWidget() {
         this.userWidgetsStack.pop();
     }
-
-    nextWidgetIndex = -1;
 
     override getWidgetIndex(object: LVGLWidget | Page) {
         const identifier = [
@@ -1330,6 +1361,54 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
         return this.runtime.assetsMap.lvglWidgetIndexes[identifier];
     }
+
+    override addTickCallback(callback: (flowState: number) => void) {
+        this.tickCallbacks.push({
+            page: this.page,
+            flowState: this.lvglCreateContext.flowState,
+            callback
+        });
+    }
+
+    lvglScreenTick() {
+        for (let tickCallback of this.tickCallbacks) {
+            if (this.runtime.selectedPage == tickCallback.page) {
+                tickCallback.callback(tickCallback.flowState);
+            }
+        }
+    }
+
+    override addEventHandler(
+        obj: number,
+        eventName: string,
+        callback: (event: number) => void
+    ) {
+        const eventCode = getLvglEvents(this.project)[eventName].code;
+
+        this.eventHandlers.push({
+            page: this.page,
+            obj,
+            eventCode,
+            callback
+        });
+
+        this.wasm._lvglAddEventHandler(obj, eventCode);
+    }
+
+    override lvglOnEventHandler(obj: number, eventCode: number, event: number) {
+        for (const eventHandler of this.eventHandlers) {
+            if (
+                eventHandler.obj == obj &&
+                eventHandler.eventCode == eventCode
+            ) {
+                eventHandler.callback(event);
+            }
+        }
+    }
+
+    override addPostCreateCallback(callback: () => void) {
+        this.postCreateCallbacks.push(callback);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1337,14 +1416,10 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     static PREVIEW_WIDTH = 400;
     static PREVIEW_HEIGHT = 400;
-
     lvglWidgetsMap = new Map<string, LVGLWidget>();
-
     selectedStyle: LVGLStyle | undefined;
-
     autorRunDispose: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
-
     canvas: HTMLCanvasElement | null = null;
 
     constructor(project: Project) {
@@ -1537,7 +1612,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                         }
                     });
 
-                    const pageObj = this.lvglCreatePage();
+                    const pageObj = this.page.lvglCreate(this, 0);
                     if (!pageObj) {
                         console.error("pageObj is undefined");
                         return;
@@ -1750,7 +1825,7 @@ export class LVGLReflectEditorRuntime extends LVGLPageRuntime {
                     false
                 );
 
-                const pageObj = this.lvglCreatePage();
+                const pageObj = this.page.lvglCreate(this, 0);
                 if (!pageObj) {
                     console.error("pageObj is undefined");
                     return;

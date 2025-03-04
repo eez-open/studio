@@ -7,26 +7,15 @@ import { Project, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import {
-    LV_EVENT_SLIDER_VALUE_CHANGED,
-    LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
-    SLIDER_MODES
-} from "project-editor/lvgl/lvgl-constants";
+import { SLIDER_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildEventHandlerSpecific,
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback
-} from "../widget-common";
+
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,181 +154,183 @@ export class LVGLSliderWidget extends LVGLWidget {
         });
     }
 
-    override get hasEventHandler() {
-        return (
-            super.hasEventHandler ||
-            this.valueType == "expression" ||
-            (this.mode == "RANGE" && this.valueLeftType == "expression")
-        );
-    }
+    override toLVGLCode(code: LVGLCode) {
+        const PREFIX = code.isV9 ? "" : "v8_";
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-        const valueLeftExpr =
-            this.mode == "RANGE"
-                ? getExpressionPropertyData(runtime, this, "valueLeft")
-                : undefined;
+        code.createObject(`lv_slider_create`);
 
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateSlider(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            this.min,
-            this.max,
-            SLIDER_MODES[this.mode],
-            valueExpr
-                ? !valueLeftExpr
-                    ? (this.valueLeft as number)
-                    : 0
-                : this.valueType == "expression"
-                ? 66
-                : (this.value as number),
-            valueLeftExpr
-                ? 0
-                : this.valueLeftType == "expression"
-                ? 0
-                : (this.valueLeft as number)
-        );
-
-        if (valueExpr) {
-            runtime.wasm._lvglUpdateSliderValue(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                this.enableAnimation
-            );
-        }
-
-        if (valueLeftExpr) {
-            runtime.wasm._lvglUpdateSliderValueLeft(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                valueLeftExpr.componentIndex,
-                valueLeftExpr.propertyIndex,
-                this.enableAnimation
-            );
-        }
-
-        return obj;
-    }
-
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        const valueExpr = getExpressionPropertyData(runtime, this, "value");
-        if (valueExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_SLIDER_VALUE_CHANGED,
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex,
-                0
-            );
-        }
-
-        const valueLeftExpr =
-            this.mode == "RANGE"
-                ? getExpressionPropertyData(runtime, this, "valueLeft")
-                : undefined;
-        if (valueLeftExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_SLIDER_VALUE_LEFT_CHANGED,
-                valueLeftExpr.componentIndex,
-                valueLeftExpr.propertyIndex,
-                0
-            );
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_slider_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
+        // min and max
         if (this.min != 0 || this.max != 100) {
-            build.line(`lv_slider_set_range(obj, ${this.min}, ${this.max});`);
+            code.callObjectFunction(
+                PREFIX + "lv_slider_set_range",
+                this.min,
+                this.max
+            );
         }
 
+        // mode
         if (this.mode != "NORMAL") {
-            build.line(`lv_slider_set_mode(obj, LV_SLIDER_MODE_${this.mode});`);
+            code.callObjectFunction(
+                PREFIX + "lv_slider_set_mode",
+                code.constant(`LV_SLIDER_MODE_${this.mode}`)
+            );
         }
 
+        // value
         if (this.valueType == "literal") {
             if (this.value != 0) {
-                build.line(
-                    `lv_slider_set_value(obj, ${this.value}, ${
+                code.callObjectFunction(
+                    PREFIX + "lv_slider_set_value",
+                    this.value,
+                    code.constant(
                         this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                    });`
+                    )
                 );
             }
+        } else {
+            code.addToTick("value", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.value as string,
+                    "Failed to evaluate Value in Slider widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    PREFIX + "lv_slider_get_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.callObjectFunction(
+                        PREFIX + "lv_slider_set_value",
+                        new_val,
+                        code.constant(
+                            this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                        )
+                    );
+
+                    code.tickChangeEnd();
+                });
+            });
+
+            code.addEventHandler(
+                "VALUE_CHANGED",
+                (event, tick_value_change_obj) => {
+                    const ta = code.callFreeFunctionWithAssignment(
+                        "lv_obj_t *",
+                        "ta",
+                        "lv_event_get_target",
+                        event
+                    );
+
+                    code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        const value = code.callFreeFunctionWithAssignment(
+                            "int32_t",
+                            "value",
+                            PREFIX + "lv_slider_get_value",
+                            ta
+                        );
+
+                        code.assignIntegerProperty(
+                            "value",
+                            this.value as string,
+                            value,
+                            "Failed to assign Value in Slider widget"
+                        );
+                    });
+                }
+            );
         }
 
-        if (this.mode == "RANGE" && this.valueLeftType == "literal") {
-            if (this.valueType == "expression") {
-                build.line(
-                    `lv_slider_set_value(obj, ${this.valueLeft}, ${
+        // valueLeft
+        if (this.mode == "RANGE") {
+            if (this.valueLeftType == "literal") {
+                if (this.valueType == "expression") {
+                    code.callObjectFunction(
+                        PREFIX + "lv_slider_set_value",
+                        this.valueLeft,
+                        code.constant(
+                            this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                        )
+                    );
+                }
+
+                code.callObjectFunction(
+                    PREFIX + "lv_slider_set_left_value",
+                    this.valueLeft,
+                    code.constant(
                         this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                    });`
+                    )
+                );
+            } else {
+                code.addToTick("valueLeft", () => {
+                    const new_val = code.evalIntegerProperty(
+                        "int32_t",
+                        "new_val",
+                        this.valueLeft as string,
+                        "Failed to evaluate Value left in Slider widget"
+                    );
+
+                    const cur_val = code.callObjectFunctionWithAssignment(
+                        "int32_t",
+                        "cur_val",
+                        PREFIX + "lv_slider_get_left_value"
+                    );
+
+                    code.ifIntegerNotEqual(new_val, cur_val, () => {
+                        code.tickChangeStart();
+
+                        code.callObjectFunction(
+                            PREFIX + "lv_slider_set_left_value",
+                            new_val,
+                            code.constant(
+                                this.enableAnimation
+                                    ? "LV_ANIM_ON"
+                                    : "LV_ANIM_OFF"
+                            )
+                        );
+
+                        code.tickChangeEnd();
+                    });
+                });
+
+                code.addEventHandler(
+                    "VALUE_CHANGED",
+                    (event, tick_value_change_obj) => {
+                        const ta = code.callFreeFunctionWithAssignment(
+                            "lv_obj_t *",
+                            "ta",
+                            "lv_event_get_target",
+                            event
+                        );
+
+                        code.ifIntegerNotEqual(
+                            tick_value_change_obj,
+                            ta,
+                            () => {
+                                const value =
+                                    code.callFreeFunctionWithAssignment(
+                                        "int32_t",
+                                        "value",
+                                        PREFIX + "lv_slider_get_left_value",
+                                        ta
+                                    );
+
+                                code.assignIntegerProperty(
+                                    "valueLeft",
+                                    this.value as string,
+                                    value,
+                                    "Failed to assign Value left in Slider widget"
+                                );
+                            }
+                        );
+                    }
                 );
             }
-
-            build.line(
-                `lv_slider_set_left_value(obj, ${this.valueLeft}, ${
-                    this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
-                });`
-            );
-        }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLSliderWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_slider_get_value",
-            "lv_slider_set_value",
-            this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
-        );
-
-        if (this.mode == "RANGE") {
-            expressionPropertyBuildTickSpecific<LVGLSliderWidget>(
-                build,
-                this,
-                "valueLeft" as const,
-                "lv_slider_get_left_value",
-                "lv_slider_set_left_value",
-                this.enableAnimation ? ", LV_ANIM_ON" : ", LV_ANIM_OFF"
-            );
-        }
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        expressionPropertyBuildEventHandlerSpecific<LVGLSliderWidget>(
-            build,
-            this,
-            "value" as const,
-            "lv_slider_get_value"
-        );
-
-        if (this.mode == "RANGE") {
-            expressionPropertyBuildEventHandlerSpecific<LVGLSliderWidget>(
-                build,
-                this,
-                "valueLeft" as const,
-                "lv_slider_get_left_value"
-            );
         }
     }
 }

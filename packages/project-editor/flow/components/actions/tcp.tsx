@@ -798,7 +798,7 @@ registerObjectVariableType("TCPSocket", {
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {
-        return tcpSockets.get(variableValue.id) ?? null;
+        return variableValue ? tcpSockets.get(variableValue.id) ?? null : null;
     },
     valueFieldDescriptions: [
         {

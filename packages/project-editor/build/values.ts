@@ -201,7 +201,14 @@ function buildFlowValue(
             dataBuffer.writeUint32(flowValue.value);
             dataBuffer.writeUint32(0);
         } else if (flowValue.type == FLOW_VALUE_TYPE_INT32) {
-            dataBuffer.writeInt32(flowValue.value);
+            if (
+                flowValue.value >= -2147483648 &&
+                flowValue.value <= 2147483647
+            ) {
+                dataBuffer.writeInt32(flowValue.value);
+            } else {
+                dataBuffer.writeUint32(flowValue.value);
+            }
             dataBuffer.writeUint32(0);
         } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
             dataBuffer.writeFloat(flowValue.value);

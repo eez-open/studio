@@ -9,10 +9,9 @@ import {
     PropertyType
 } from "project-editor/core/object";
 
-import { findBitmap, ProjectType } from "project-editor/project/project";
+import { IWasmFlowRuntime } from "eez-studio-types";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
+import { findBitmap, ProjectType } from "project-editor/project/project";
 
 import { LVGLWidget } from "./internal";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -21,7 +20,7 @@ import {
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
-import { IWasmFlowRuntime } from "eez-studio-types";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -158,131 +157,75 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_animimg_create");
 
-        let obj;
+        const images = this.images
+            .map(animationImage => code.image(animationImage.image))
+            .filter(image => image);
 
-        let duration = this.duration;
-        let repeat = this.repeatInfinite ? 0xffff : this.repeat;
+        if (images.length > 0) {
+            let imagesArg;
+            if (code.lvglBuild) {
+                const build = code.lvglBuild;
 
-        const bitmapPtrs = this.images
-            .map(animationImage => {
-                const bitmap = findBitmap(
-                    ProjectEditor.getProject(this),
-                    animationImage.image
+                build.blockStart(
+                    `static const ${
+                        build.isV9 ? "lv_image_dsc_t" : "lv_img_dsc_t"
+                    } *images[${images.length}] = {`
                 );
-                if (bitmap && bitmap.image) {
-                    return runtime.getBitmapPtr(bitmap);
+                images.forEach(image => {
+                    build.line(`${image},`);
+                });
+                build.blockEnd("};");
+
+                imagesArg = "(const void **)images";
+            } else {
+                const runtime = code.pageRuntime!;
+
+                const bitmapPtrArray = new Uint32Array(images.length);
+                for (let i = 0; i < images.length; i++) {
+                    bitmapPtrArray[i] = images[i];
                 }
-                return 0;
-            })
-            .filter(bitmapPtr => bitmapPtr != 0);
 
-        if (bitmapPtrs.length > 0) {
-            const bitmapPtrArray = new Uint32Array(bitmapPtrs.length);
-            for (let i = 0; i < bitmapPtrs.length; i++) {
-                bitmapPtrArray[i] = bitmapPtrs[i];
-            }
-
-            const bitmapPtrBuffer = runtime.wasm._malloc(
-                bitmapPtrArray.length * bitmapPtrArray.BYTES_PER_ELEMENT
-            );
-
-            runtime.wasm.HEAPU32.set(bitmapPtrArray, bitmapPtrBuffer >> 2);
-
-            obj = runtime.wasm._lvglCreateAnimationImage(
-                parentObj,
-                runtime.getCreateWidgetIndex(this),
-
-                rect.left,
-                rect.top,
-                rect.width,
-                rect.height,
-
-                bitmapPtrBuffer,
-                bitmapPtrs.length,
-
-                duration,
-                repeat
-            );
-
-            if (
-                this._bitmapPtrBuffer &&
-                this._bitmapPtrBufferWasm == runtime.wasm
-            ) {
-                runtime.wasm._free(this._bitmapPtrBuffer);
-            }
-            this._bitmapPtrBuffer = bitmapPtrBuffer;
-            this._bitmapPtrBufferWasm = runtime.wasm;
-        } else {
-            obj = runtime.wasm._lvglCreateAnimationImage(
-                parentObj,
-                runtime.getCreateWidgetIndex(this),
-
-                rect.left,
-                rect.top,
-                rect.width,
-                rect.height,
-
-                0,
-                0,
-
-                duration,
-                repeat
-            );
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_animimg_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        const imageVariableNames = this.images
-            .map(animationImage => {
-                const bitmap = findBitmap(
-                    ProjectEditor.getProject(this),
-                    animationImage.image
+                const bitmapPtrBuffer = runtime.wasm._malloc(
+                    bitmapPtrArray.length * bitmapPtrArray.BYTES_PER_ELEMENT
                 );
 
-                if (bitmap && bitmap.image) {
-                    return build.getImageVariableName(bitmap);
+                runtime.wasm.HEAPU32.set(bitmapPtrArray, bitmapPtrBuffer >> 2);
+
+                imagesArg = bitmapPtrBuffer;
+            }
+
+            code.callObjectFunction(
+                "lv_animimg_set_src",
+                imagesArg,
+                images.length
+            );
+
+            if (code.pageRuntime) {
+                const runtime = code.pageRuntime!;
+
+                if (
+                    this._bitmapPtrBuffer &&
+                    this._bitmapPtrBufferWasm == runtime.wasm
+                ) {
+                    runtime.wasm._free(this._bitmapPtrBuffer);
                 }
-                return "";
-            })
-            .filter(imageVariableName => imageVariableName != "");
+                this._bitmapPtrBuffer = imagesArg as number;
+                this._bitmapPtrBufferWasm = runtime.wasm;
+            }
 
-        if (imageVariableNames.length > 0) {
-            build.line(
-                `static const ${
-                    build.isV9 ? "lv_image_dsc_t" : "lv_img_dsc_t"
-                } *images[${imageVariableNames.length}] = {`
-            );
-            build.indent();
-            imageVariableNames.forEach(imageVariableName => {
-                build.line(`&${imageVariableName},`);
-            });
-            build.unindent();
-            build.line(`};`);
+            code.callObjectFunction("lv_animimg_set_duration", this.duration);
 
-            build.line(
-                `lv_animimg_set_src(obj, (const void **)images, ${imageVariableNames.length});`
+            code.callObjectFunction(
+                "lv_animimg_set_repeat_count",
+                this.repeatInfinite
+                    ? code.constant("LV_ANIM_REPEAT_INFINITE")
+                    : this.repeat
             );
-            build.line(`lv_animimg_set_duration(obj, ${this.duration});`);
-            build.line(
-                `lv_animimg_set_repeat_count(obj, ${
-                    this.repeatInfinite
-                        ? "LV_ANIM_REPEAT_INFINITE"
-                        : this.repeat
-                });`
-            );
-            build.line(`lv_animimg_start(obj);`);
+
+            code.callObjectFunction("lv_animimg_start");
         }
     }
 }

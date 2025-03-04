@@ -12,16 +12,8 @@ import {
     getProjectStore,
     Message
 } from "project-editor/store";
-import {
-    LVGLDropdownWidget,
-    LVGLTabviewWidget,
-    LVGLTabWidget,
-    type LVGLWidget
-} from "project-editor/lvgl/widgets";
-import {
-    LVGLPageEditorRuntime,
-    type LVGLPageRuntime
-} from "project-editor/lvgl/page-runtime";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import { evalConstantExpression } from "project-editor/flow/expression";
 
 export function getCode<T extends string>(
@@ -74,10 +66,9 @@ export function getExpressionPropertyData(
 export function getExpressionPropertyInitalValue(
     runtime: LVGLPageRuntime,
     widget: LVGLWidget,
-    propertyName: string
+    expr: string
 ) {
-    if (runtime instanceof LVGLPageEditorRuntime) {
-        const expr = getProperty(widget, propertyName);
+    if (runtime instanceof ProjectEditor.LVGLPageEditorRuntimeClass) {
         try {
             const result = evalConstantExpression(
                 ProjectEditor.getProject(widget),
@@ -209,7 +200,7 @@ export function checkWidgetTypeLvglVersion(
 export function getTabview(widget: LVGLWidget) {
     const parentChildren = getParent(widget) as LVGLWidget[];
     const parentWidget = getParent(parentChildren);
-    if (parentWidget instanceof LVGLTabviewWidget) {
+    if (parentWidget instanceof ProjectEditor.LVGLTabviewWidgetClass) {
         return parentWidget;
     }
     return undefined;
@@ -218,7 +209,7 @@ export function getTabview(widget: LVGLWidget) {
 export function getDropdown(widget: LVGLWidget) {
     const parentChildren = getParent(widget) as LVGLWidget[];
     const parentWidget = getParent(parentChildren);
-    if (parentWidget instanceof LVGLDropdownWidget) {
+    if (parentWidget instanceof ProjectEditor.LVGLDropdownWidgetClass) {
         return parentWidget;
     }
     return undefined;
@@ -228,7 +219,7 @@ export function isGeometryControlledByParent(widget: LVGLWidget) {
     if (
         getDropdown(widget) ||
         getTabview(widget) ||
-        widget instanceof LVGLTabWidget
+        widget instanceof ProjectEditor.LVGLTabWidgetClass
     ) {
         return true;
     }

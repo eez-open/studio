@@ -1,6 +1,8 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
+import { isValid } from "eez-studio-shared/color";
+
 import {
     ClassInfo,
     EezObject,
@@ -9,7 +11,6 @@ import {
     PropertyInfo,
     PropertyType,
     findPropertyByNameInClassInfo,
-    getProperty,
     makeDerivedClassInfo,
     registerClass
 } from "project-editor/core/object";
@@ -19,20 +20,13 @@ import { findBitmap, ProjectType } from "project-editor/project/project";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
 import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-import { LV_EVENT_METER_TICK_LABEL_EVENT } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import {
-    checkWidgetTypeLvglVersion,
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    lvglAddObjectFlowCallback
-} from "../widget-common";
+import { checkWidgetTypeLvglVersion } from "../widget-common";
 import {
     createObject,
     getAncestorOfType,
@@ -52,7 +46,8 @@ import {
     makeExpressionProperty
 } from "project-editor/flow/component";
 import { getThemedColor } from "project-editor/features/style/theme";
-import { isValid } from "eez-studio-shared/color";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { LV_EVENT_METER_TICK_LABEL_EVENT } from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +57,8 @@ const LVGL_METER_INDICATOR_TYPES = {
     SCALE_LINES: 2,
     ARC: 3
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicator extends EezObject {
     type: keyof typeof LVGL_METER_INDICATOR_TYPES;
@@ -186,88 +183,88 @@ export class LVGLMeterIndicator extends EezObject {
         indicatorIndex: number
     ) {}
 
-    lvglBuild(build: LVGLBuild) {}
-    lvglBuildTickSpecific(
-        build: LVGLBuild,
-        scaleIndex: number,
-        indicatorIndex: number
-    ) {}
-
-    expressionPropertyBuildTickSpecific(
-        build: LVGLBuild,
+    addToTick(
+        code: LVGLCode,
+        indicatorObj: any,
+        indicatorIndex: number,
         propName: string,
         propFullName: string,
-        indicatorIndex: number,
-        getProp: string,
+        get_cur_val: string,
         setFunc: string
     ) {
-        if (getProperty(this, propName + "Type") == "expression") {
-            build.line(`{`);
-            build.indent();
+        if ((this as any)[propName + "Type"] != "expression") {
+            return;
+        }
 
+        code.addToTick(propFullName, () => {
             const widget = getAncestorOfType<LVGLWidget>(
                 this,
                 LVGLWidget.classInfo
             )!;
 
-            const objectAccessor = build.getLvglObjectAccessor(widget);
+            if (code.lvglBuild) {
+                const build = code.lvglBuild;
 
-            build.line(`lv_meter_indicator_t *indicator;`);
-            build.line("");
-            build.line(
-                `lv_ll_t *indicators = &((lv_meter_t *)${objectAccessor})->indicator_ll;`
-            );
-            build.line(`int index = ${indicatorIndex};`);
-            build.line(
-                `for (indicator = _lv_ll_get_tail(indicators); index > 0 && indicator != NULL; indicator = _lv_ll_get_prev(indicators, indicator), index--);`
-            );
-            build.line("");
-            build.line("if (indicator) {");
-            build.indent();
-            {
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    let componentIndex = build.assets.getComponentIndex(widget);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            widget,
-                            propFullName
-                        );
+                const objectAccessor = build.getLvglObjectAccessor(widget);
 
-                    build.line(
-                        `int32_t new_val = evalIntegerProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate ${humanize(
-                            propName
-                        )} in ${getComponentName(widget.type)} widget");`
-                    );
-                } else {
-                    build.line(
-                        `int32_t new_val = ${build.getVariableGetterFunctionName(
-                            getProperty(this, propName)
-                        )}();`
-                    );
-                }
-
-                build.line(`int32_t cur_val = indicator->${getProp};`);
-
-                build.line("if (new_val != cur_val) {");
-                build.indent();
-                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(`lv_meter_indicator_t *indicator;`);
+                build.line("");
                 build.line(
-                    `${setFunc}(${objectAccessor}, indicator, new_val);`
+                    `lv_ll_t *indicators = &((lv_meter_t *)${objectAccessor})->indicator_ll;`
                 );
-                build.line(`tick_value_change_obj = NULL;`);
-                build.unindent();
-                build.line("}");
+                build.line(`int index = ${indicatorIndex};`);
+                build.line(
+                    `for (indicator = _lv_ll_get_tail(indicators); index > 0 && indicator != NULL; indicator = _lv_ll_get_prev(indicators, indicator), index--);`
+                );
+                build.line("");
+                build.blockStart("if (indicator) {");
+            } else {
+                // we already have indicatorObj for the Simulator
             }
-            build.unindent();
-            build.line("}");
 
-            build.unindent();
-            build.line(`}`);
-        }
+            const new_val = code.evalIntegerProperty(
+                "int32_t",
+                "new_val",
+                (this as any)[propName],
+                `Failed to evaluate ${humanize(propName)} in ${getComponentName(
+                    widget.type
+                )} widget`
+            );
+
+            let cur_val;
+            if (code.lvglBuild) {
+                code.lvglBuild.line(
+                    `int32_t cur_val = indicator->${get_cur_val};`
+                );
+                cur_val = "cur_val";
+            } else {
+                cur_val = code.callFreeFunction(
+                    "lvglGetIndicator_" + get_cur_val,
+                    indicatorObj
+                );
+            }
+
+            code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.tickChangeStart();
+                code.callObjectFunction(setFunc, indicatorObj, new_val);
+                code.tickChangeEnd();
+            });
+
+            if (code.lvglBuild) {
+                code.blockEnd("}");
+            }
+        });
     }
+
+    toLVGLCode(
+        code: LVGLCode,
+        scaleObj: any,
+        scaleIndex: number,
+        indicatorIndex: number
+    ) {}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
     image: string;
@@ -361,86 +358,45 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         }
     });
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        obj: number,
-        scale: number,
+    override toLVGLCode(
+        code: LVGLCode,
+        scaleObj: any,
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const widget = getAncestorOfType<LVGLWidget>(
-            this,
-            LVGLWidget.classInfo
-        )!;
-
-        const valueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`
-        );
-
-        const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
-
-        const pivotX = this.pivotX;
-        const pivotY = this.pivotY;
-        const value = this.value;
-
-        if (bitmap && bitmap.image) {
-            const bitmapPtr = runtime.getBitmapPtr(bitmap);
-            if (bitmapPtr) {
-                const indicator = runtime.wasm._lvglMeterAddIndicatorNeedleImg(
-                    obj,
-                    scale,
-                    bitmapPtr,
-                    pivotX,
-                    pivotY,
-                    valueExpr ? 0 : (value as number)
-                );
-
-                if (valueExpr) {
-                    runtime.wasm._lvglUpdateMeterIndicatorValue(
-                        obj,
-                        indicator,
-                        getFlowStateAddressIndex(runtime),
-                        valueExpr.componentIndex,
-                        valueExpr.propertyIndex
-                    );
-                }
-            }
-        }
-    }
-
-    override lvglBuild(build: LVGLBuild) {
-        build.line(
-            `lv_meter_indicator_t *indicator = lv_meter_add_needle_img(obj, scale, ${
-                this.image ? `&${build.getImageVariableName(this.image)}` : 0
-            }, ${this.pivotX}, ${this.pivotY});`
+        const indicatorObj = code.callObjectFunctionWithAssignment(
+            "lv_meter_indicator_t *",
+            "indicator",
+            "lv_meter_add_needle_img",
+            scaleObj,
+            code.image(this.image),
+            this.pivotX,
+            this.pivotY
         );
 
         if (this.valueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_value(obj, indicator, ${this.value});`
+            code.callObjectFunction(
+                "lv_meter_set_indicator_value",
+                indicatorObj,
+                this.value
+            );
+        } else {
+            this.addToTick(
+                code,
+                indicatorObj,
+                indicatorIndex,
+                "value",
+                `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
+                "start_value",
+                "lv_meter_set_indicator_value"
             );
         }
-    }
-
-    override lvglBuildTickSpecific(
-        build: LVGLBuild,
-        scaleIndex: number,
-        indicatorIndex: number
-    ) {
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "value",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
-            indicatorIndex,
-            "start_value",
-            "lv_meter_set_indicator_value"
-        );
     }
 }
 
 registerClass("LVGLMeterIndicatorNeedleImg", LVGLMeterIndicatorNeedleImg);
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
     width: number;
@@ -537,101 +493,79 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         }
     });
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        obj: number,
-        scale: number,
+    override toLVGLCode(
+        code: LVGLCode,
+        scaleObj: any,
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const widget = getAncestorOfType<LVGLWidget>(
-            this,
-            LVGLWidget.classInfo
-        )!;
-
-        const valueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`
-        );
-
-        const indicator = runtime.wasm._lvglMeterAddIndicatorNeedleLine(
-            obj,
-            scale,
-            this.width,
-            runtime.getColorNum(this.color),
-            this.radiusModifier,
-            valueExpr ? 0 : (this.value as number)
-        );
-
-        runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
-            wasm._lvglMeterIndicatorNeedleLineSetColor(obj, indicator, colorNum)
-        );
-
-        if (valueExpr) {
-            runtime.wasm._lvglUpdateMeterIndicatorValue(
-                obj,
-                indicator,
-                getFlowStateAddressIndex(runtime),
-                valueExpr.componentIndex,
-                valueExpr.propertyIndex
-            );
-        }
-    }
-
-    override lvglBuild(build: LVGLBuild) {
-        build.buildColor(
+        code.buildColor(
             this,
             this.color,
             () =>
-                build.genFileStaticVar(
+                code.genFileStaticVar(
                     this.objID,
                     "lv_meter_indicator_t *",
                     "indicator"
                 ),
             (color, indicatorVar) => {
-                build.line(
-                    `lv_meter_indicator_t *indicator = lv_meter_add_needle_line(obj, scale, ${this.width}, lv_color_hex(${color}), ${this.radiusModifier});`
+                const indicatorObj = code.callObjectFunctionWithAssignment(
+                    "lv_meter_indicator_t *",
+                    "indicator",
+                    "lv_meter_add_needle_line",
+                    scaleObj,
+                    this.width,
+                    code.color(color),
+                    this.radiusModifier
                 );
-                build.assingToFileStaticVar(indicatorVar, "indicator");
-            },
-            (color, indicatorVar) => {
-                if (build.project.settings.build.screensLifetimeSupport) {
-                    build.line(
-                        `if (${indicatorVar}) ${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+
+                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+
+                if (this.valueType == "literal") {
+                    code.callObjectFunction(
+                        "lv_meter_set_indicator_value",
+                        indicatorObj,
+                        this.value
                     );
                 } else {
-                    build.line(
-                        `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                    this.addToTick(
+                        code,
+                        indicatorObj,
+                        indicatorIndex,
+                        "value",
+                        `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
+                        "start_value",
+                        "lv_meter_set_indicator_value"
+                    );
+                }
+            },
+            (color, indicatorVar) => {
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
+                    if (code.screensLifetimeSupport) {
+                        build.line(
+                            `if (${indicatorVar}) ${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                        );
+                    } else {
+                        build.line(
+                            `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                        );
+                    }
+                } else {
+                    code.callObjectFunction(
+                        "lvglMeterIndicatorNeedleLineSetColor",
+                        indicatorVar,
+                        color
                     );
                 }
             }
-        );
-
-        if (this.valueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_value(obj, indicator, ${this.value});`
-            );
-        }
-    }
-
-    override lvglBuildTickSpecific(
-        build: LVGLBuild,
-        scaleIndex: number,
-        indicatorIndex: number
-    ) {
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "value",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
-            indicatorIndex,
-            "start_value",
-            "lv_meter_set_indicator_value"
         );
     }
 }
 
 registerClass("LVGLMeterIndicatorNeedleLine", LVGLMeterIndicatorNeedleLine);
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
     colorStart: string;
@@ -784,152 +718,115 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         }
     });
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        obj: number,
-        scale: number,
+    override toLVGLCode(
+        code: LVGLCode,
+        scaleObj: any,
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const widget = getAncestorOfType<LVGLWidget>(
-            this,
-            LVGLWidget.classInfo
-        )!;
-
-        const startValueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`
-        );
-
-        const endValueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`
-        );
-
-        const indicator = runtime.wasm._lvglMeterAddIndicatorScaleLines(
-            obj,
-            scale,
-            runtime.getColorNum(this.colorStart),
-            runtime.getColorNum(this.colorEnd),
-            this.local,
-            this.widthModifier,
-            startValueExpr ? 0 : (this.startValue as number),
-            endValueExpr ? 0 : (this.endValue as number)
-        );
-
-        runtime.lvglUpdateColor(this.colorStart, (wasm, colorNum) =>
-            wasm._lvglMeterIndicatorScaleLinesSetColorStart(
-                obj,
-                indicator,
-                colorNum
-            )
-        );
-
-        runtime.lvglUpdateColor(this.colorEnd, (wasm, colorNum) =>
-            wasm._lvglMeterIndicatorScaleLinesSetColorEnd(
-                obj,
-                indicator,
-                colorNum
-            )
-        );
-
-        if (startValueExpr) {
-            runtime.wasm._lvglUpdateMeterIndicatorStartValue(
-                obj,
-                indicator,
-                getFlowStateAddressIndex(runtime),
-                startValueExpr.componentIndex,
-                startValueExpr.propertyIndex
-            );
-        }
-
-        if (endValueExpr) {
-            runtime.wasm._lvglUpdateMeterIndicatorEndValue(
-                obj,
-                indicator,
-                getFlowStateAddressIndex(runtime),
-                endValueExpr.componentIndex,
-                endValueExpr.propertyIndex
-            );
-        }
-    }
-
-    override lvglBuild(build: LVGLBuild) {
-        build.buildColor2(
+        code.buildColor2(
             this,
             this.colorStart,
             this.colorEnd,
             () =>
-                build.genFileStaticVar(
+                code.genFileStaticVar(
                     this.objID,
                     "lv_meter_indicator_t *",
                     "indicator"
                 ),
             (colorStart, colorEnd, indicatorVar) => {
-                build.line(
-                    `lv_meter_indicator_t *indicator = lv_meter_add_scale_lines(obj, scale, lv_color_hex(${colorStart}), lv_color_hex(${colorEnd}), ${this.local}, ${this.widthModifier});`
+                const indicatorObj = code.callObjectFunctionWithAssignment(
+                    "lv_meter_indicator_t *",
+                    "indicator",
+                    "lv_meter_add_scale_lines",
+                    scaleObj,
+                    code.color(colorStart),
+                    code.color(colorEnd),
+                    this.local,
+                    this.widthModifier
                 );
-                build.assingToFileStaticVar(indicatorVar, "indicator");
+
+                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+
+                if (this.startValueType == "literal") {
+                    code.callObjectFunction(
+                        "lv_meter_set_indicator_start_value",
+                        indicatorObj,
+                        this.startValue
+                    );
+                } else {
+                    this.addToTick(
+                        code,
+                        indicatorObj,
+                        indicatorIndex,
+                        "startValue",
+                        `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
+                        "start_value",
+                        "lv_meter_set_indicator_start_value"
+                    );
+                }
+
+                if (this.endValueType == "literal") {
+                    code.callObjectFunction(
+                        "lv_meter_set_indicator_end_value",
+                        indicatorObj,
+                        this.endValue
+                    );
+                } else {
+                    this.addToTick(
+                        code,
+                        indicatorObj,
+                        indicatorIndex,
+                        "endValue",
+                        `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
+                        "end_value",
+                        "lv_meter_set_indicator_end_value"
+                    );
+                }
             },
             (colorStart, colorEnd, indicatorVar) => {
-                if (build.project.settings.build.screensLifetimeSupport) {
-                    build.blockStart(`if (${indicatorVar}) {`);
-                }
+                if (code.lvglBuild) {
+                    if (code.screensLifetimeSupport) {
+                        code.blockStart(`if (${indicatorVar}) {`);
+                    }
 
-                build.line(
-                    `${indicatorVar}->type_data.scale_lines.color_start = lv_color_hex(${colorStart});`
-                );
-                build.line(
-                    `${indicatorVar}->type_data.scale_lines.color_end = lv_color_hex(${colorEnd});`
-                );
+                    const build = code.lvglBuild;
 
-                if (build.project.settings.build.screensLifetimeSupport) {
-                    build.blockEnd("}");
+                    build.line(
+                        `${indicatorVar}->type_data.scale_lines.color_start = lv_color_hex(${colorStart});`
+                    );
+                    build.line(
+                        `${indicatorVar}->type_data.scale_lines.color_end = lv_color_hex(${colorEnd});`
+                    );
+
+                    if (code.screensLifetimeSupport) {
+                        code.blockEnd("}");
+                    }
+                } else {
+                    if (colorStart != undefined) {
+                        code.callObjectFunction(
+                            "lvglMeterIndicatorScaleLinesSetColorStart",
+                            indicatorVar,
+                            colorStart
+                        );
+                    }
+
+                    if (colorEnd != undefined) {
+                        code.callObjectFunction(
+                            "lvglMeterIndicatorScaleLinesSetColorEnd",
+                            indicatorVar,
+                            colorEnd
+                        );
+                    }
                 }
             }
-        );
-
-        if (this.startValueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_start_value(obj, indicator, ${this.startValue});`
-            );
-        }
-
-        if (this.endValueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_end_value(obj, indicator, ${this.endValue});`
-            );
-        }
-    }
-
-    override lvglBuildTickSpecific(
-        build: LVGLBuild,
-        scaleIndex: number,
-        indicatorIndex: number
-    ) {
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "startValue",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
-            indicatorIndex,
-            "start_value",
-            "lv_meter_set_indicator_start_value"
-        );
-
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "endValue",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
-            indicatorIndex,
-            "end_value",
-            "lv_meter_set_indicator_end_value"
         );
     }
 }
 
 registerClass("LVGLMeterIndicatorScaleLines", LVGLMeterIndicatorScaleLines);
+
+////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
     width: number;
@@ -1054,133 +951,97 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         }
     });
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        obj: number,
-        scale: number,
+    override toLVGLCode(
+        code: LVGLCode,
+        scaleObj: any,
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const widget = getAncestorOfType<LVGLWidget>(
-            this,
-            LVGLWidget.classInfo
-        )!;
-
-        const startValueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`
-        );
-
-        const endValueExpr = getExpressionPropertyData(
-            runtime,
-            widget,
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`
-        );
-
-        const indicator = runtime.wasm._lvglMeterAddIndicatorArc(
-            obj,
-            scale,
-            this.width,
-            runtime.getColorNum(this.color),
-            this.radiusModifier,
-            startValueExpr ? 0 : (this.startValue as number),
-            endValueExpr ? 0 : (this.endValue as number)
-        );
-
-        runtime.lvglUpdateColor(this.color, (wasm, colorNum) =>
-            wasm._lvglMeterIndicatorArcSetColor(obj, indicator, colorNum)
-        );
-
-        if (startValueExpr) {
-            runtime.wasm._lvglUpdateMeterIndicatorStartValue(
-                obj,
-                indicator,
-                getFlowStateAddressIndex(runtime),
-                startValueExpr.componentIndex,
-                startValueExpr.propertyIndex
-            );
-        }
-
-        if (endValueExpr) {
-            runtime.wasm._lvglUpdateMeterIndicatorEndValue(
-                obj,
-                indicator,
-                getFlowStateAddressIndex(runtime),
-                endValueExpr.componentIndex,
-                endValueExpr.propertyIndex
-            );
-        }
-    }
-
-    override lvglBuild(build: LVGLBuild) {
-        build.buildColor(
+        code.buildColor(
             this,
             this.color,
             () =>
-                build.genFileStaticVar(
+                code.genFileStaticVar(
                     this.objID,
                     "lv_meter_indicator_t *",
                     "indicator"
                 ),
             (color, indicatorVar) => {
-                build.line(
-                    `lv_meter_indicator_t *indicator = lv_meter_add_arc(obj, scale, ${this.width}, lv_color_hex(${color}), ${this.radiusModifier});`
+                const indicatorObj = code.callObjectFunctionWithAssignment(
+                    "lv_meter_indicator_t *",
+                    "indicator",
+                    "lv_meter_add_arc",
+                    scaleObj,
+                    this.width,
+                    code.color(color),
+                    this.radiusModifier
                 );
-                build.assingToFileStaticVar(indicatorVar, "indicator");
-            },
-            (color, indicatorVar) => {
-                if (build.project.settings.build.screensLifetimeSupport) {
-                    build.line(
-                        `if (${indicatorVar}) ${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+
+                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+
+                if (this.startValueType == "literal") {
+                    code.callObjectFunction(
+                        "lv_meter_set_indicator_start_value",
+                        indicatorObj,
+                        this.startValue
                     );
                 } else {
-                    build.line(
-                        `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                    this.addToTick(
+                        code,
+                        indicatorObj,
+                        indicatorIndex,
+                        "startValue",
+                        `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
+                        "start_value",
+                        "lv_meter_set_indicator_start_value"
+                    );
+                }
+
+                if (this.endValueType == "literal") {
+                    code.callObjectFunction(
+                        "lv_meter_set_indicator_end_value",
+                        indicatorObj,
+                        this.endValue
+                    );
+                } else {
+                    this.addToTick(
+                        code,
+                        indicatorObj,
+                        indicatorIndex,
+                        "endValue",
+                        `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
+                        "end_value",
+                        "lv_meter_set_indicator_end_value"
+                    );
+                }
+            },
+            (color, indicatorVar) => {
+                if (code.lvglBuild) {
+                    const build = code.lvglBuild;
+                    if (code.screensLifetimeSupport) {
+                        build.line(
+                            `if (${indicatorVar}) ${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                        );
+                    } else {
+                        build.line(
+                            `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                        );
+                    }
+                } else {
+                    code.callObjectFunction(
+                        "lvglMeterIndicatorArcSetColor",
+                        indicatorVar,
+                        color
                     );
                 }
             }
-        );
-
-        if (this.startValueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_start_value(obj, indicator, ${this.startValue});`
-            );
-        }
-
-        if (this.endValueType == "literal") {
-            build.line(
-                `lv_meter_set_indicator_end_value(obj, indicator, ${this.endValue});`
-            );
-        }
-    }
-
-    override lvglBuildTickSpecific(
-        build: LVGLBuild,
-        scaleIndex: number,
-        indicatorIndex: number
-    ) {
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "startValue",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
-            indicatorIndex,
-            "start_value",
-            "lv_meter_set_indicator_start_value"
-        );
-
-        this.expressionPropertyBuildTickSpecific(
-            build,
-            "endValue",
-            `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
-            indicatorIndex,
-            "end_value",
-            "lv_meter_set_indicator_end_value"
         );
     }
 }
 
 registerClass("LVGLMeterIndicatorArc", LVGLMeterIndicatorArc);
+
+////////////////////////////////////////////////////////////////////////////////
 
 class LVGLMeterScale extends EezObject {
     minorTickCount: number;
@@ -1363,6 +1224,8 @@ class LVGLMeterScale extends EezObject {
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 export class LVGLMeterWidget extends LVGLWidget {
     scales: LVGLMeterScale[];
 
@@ -1485,21 +1348,14 @@ export class LVGLMeterWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        if (code.isV9) {
+            // Meter widget doesn't exist in LVGL version 9.x
+            code.createObject("lv_obj_create");
+            return;
+        }
 
-        const obj = runtime.wasm._lvglCreateMeter(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height
-        );
+        code.createObject("lv_meter_create");
 
         for (
             let scaleIndex = 0;
@@ -1508,35 +1364,93 @@ export class LVGLMeterWidget extends LVGLWidget {
         ) {
             const scale = this.scales[scaleIndex];
 
-            const scaleObj = runtime.wasm._lvglMeterAddScale(
-                obj,
+            code.blockStart("{");
 
-                Math.max(scale.minorTickCount, 2),
-                scale.minorTickLineWidth,
-                scale.minorTickLength,
-                runtime.getColorNum(scale.minorTickColor),
+            const scaleObj = code.callObjectFunctionWithAssignment(
+                "lv_meter_scale_t *",
+                "scale",
+                "lv_meter_add_scale"
+            );
 
-                scale.nthMajor,
-                scale.majorTickWidth,
-                scale.majorTickLength,
-                runtime.getColorNum(scale.majorTickColor),
+            code.buildColor2(
+                this,
+                scale.minorTickColor,
+                scale.majorTickColor,
+                () =>
+                    code.genFileStaticVar(
+                        scale.objID,
+                        "lv_meter_scale_t *",
+                        "scale"
+                    ),
+                (minorTickColor, majorTickColor, scaleVar) => {
+                    code.assingToFileStaticVar(scaleVar, "scale");
 
-                scale.labelGap,
+                    code.callObjectFunction(
+                        "lv_meter_set_scale_ticks",
+                        scaleObj,
+                        Math.max(scale.minorTickCount, 2),
+                        scale.minorTickLineWidth,
+                        scale.minorTickLength,
+                        code.color(minorTickColor)
+                    );
 
+                    code.callObjectFunction(
+                        "lv_meter_set_scale_major_ticks",
+                        scaleObj,
+                        scale.nthMajor,
+                        scale.majorTickWidth,
+                        scale.majorTickLength,
+                        code.color(majorTickColor),
+                        scale.labelGap
+                    );
+                },
+                (minorTickColor, majorTickColor, scaleVar) => {
+                    if (code.lvglBuild) {
+                        if (code.screensLifetimeSupport) {
+                            code.blockStart(`if (${scaleVar}) {`);
+                        }
+
+                        const build = code.lvglBuild;
+
+                        build.line(
+                            `${scaleVar}->tick_color = lv_color_hex(${minorTickColor});`
+                        );
+                        build.line(
+                            `${scaleVar}->tick_major_color = lv_color_hex(${majorTickColor});`
+                        );
+
+                        if (code.screensLifetimeSupport) {
+                            code.blockEnd("}");
+                        }
+                    } else {
+                        if (minorTickColor != undefined) {
+                            code.callObjectFunction(
+                                "lvglMeterScaleSetMinorTickColor",
+                                scaleObj,
+                                minorTickColor
+                            );
+                        }
+
+                        if (majorTickColor != undefined) {
+                            code.callObjectFunction(
+                                "lvglMeterScaleSetMajorTickColor",
+                                scaleObj,
+                                majorTickColor
+                            );
+                        }
+                    }
+                }
+            );
+
+            code.callObjectFunction(
+                "lv_meter_set_scale_range",
+                scaleObj,
                 scale.scaleMin,
                 scale.scaleMax,
                 scale.scaleAngleRange,
                 scale.scaleRotation
             );
 
-            runtime.lvglUpdateColor(scale.minorTickColor, (wasm, colorNum) =>
-                wasm._lvglMeterScaleSetMinorTickColor(obj, scaleObj, colorNum)
-            );
-
-            runtime.lvglUpdateColor(scale.majorTickColor, (wasm, colorNum) =>
-                wasm._lvglMeterScaleSetMajorTickColor(obj, scaleObj, colorNum)
-            );
-
             for (
                 let indicatorIndex = 0;
                 indicatorIndex < scale.indicators.length;
@@ -1544,230 +1458,74 @@ export class LVGLMeterWidget extends LVGLWidget {
             ) {
                 const indicator = scale.indicators[indicatorIndex];
 
-                indicator.lvglCreateObj(
-                    runtime,
-                    obj,
+                code.blockStart("{");
+
+                indicator.toLVGLCode(
+                    code,
                     scaleObj,
                     scaleIndex,
                     indicatorIndex
                 );
+
+                code.blockEnd("}");
             }
-        }
 
-        return obj;
-    }
+            code.blockEnd("}");
 
-    override get hasEventHandler() {
-        if (super.hasEventHandler) {
-            return true;
-        }
+            if (code.hasFlowSupport && scale.label) {
+                if (code.lvglBuild) {
+                    code.addEventHandler("DRAW_PART_BEGIN", () => {
+                        const build = code.lvglBuild!;
 
-        for (
-            let scaleIndex = 0;
-            scaleIndex < this.scales.length;
-            scaleIndex++
-        ) {
-            const scale = this.scales[scaleIndex];
-            if (
-                ProjectEditor.getProject(this).projectTypeTraits
-                    .hasFlowSupport &&
-                scale.label
-            ) {
-                return true;
-            }
-        }
+                        code.callFreeFunctionWithAssignment(
+                            "lv_obj_draw_part_dsc_t *",
+                            "draw_part_dsc",
+                            "lv_event_get_draw_part_dsc",
+                            "e"
+                        );
 
-        return false;
-    }
+                        build.line(
+                            `if (draw_part_dsc->class_p != &lv_meter_class) return;`
+                        );
+                        build.line(
+                            `if (draw_part_dsc->type != LV_METER_DRAW_PART_TICK) return;`
+                        );
 
-    override createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {
-        for (
-            let scaleIndex = 0;
-            scaleIndex < this.scales.length;
-            scaleIndex++
-        ) {
-            const scale = this.scales[scaleIndex];
+                        build.line(`const char *temp;`);
+                        build.line(
+                            `g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`
+                        );
 
-            if (
-                ProjectEditor.getProject(this).projectTypeTraits
-                    .hasFlowSupport &&
-                scale.label
-            ) {
-                const labelExpr = getExpressionPropertyData(
-                    runtime,
-                    this,
-                    `scales[${scaleIndex}].label`
-                );
+                        const componentIndex =
+                            build.assets.getComponentIndex(this);
+                        const propertyIndex =
+                            build.assets.getComponentPropertyIndex(
+                                this,
+                                `scales[${scaleIndex}].label`
+                            );
 
-                if (labelExpr) {
-                    lvglAddObjectFlowCallback(
-                        runtime,
-                        obj,
-                        LV_EVENT_METER_TICK_LABEL_EVENT,
-                        labelExpr.componentIndex,
-                        labelExpr.propertyIndex,
-                        0
+                        build.line(
+                            `temp = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
+                        );
+
+                        code.if("temp", () => {
+                            build.line(`static char label[32];`);
+                            build.line(`strncpy(label, temp, sizeof(label));`);
+                            build.line(`label[sizeof(label) - 1] = 0;`);
+                            build.line(`draw_part_dsc->text = label;`);
+                            build.line(
+                                `draw_part_dsc->text_length = sizeof(label);`
+                            );
+                        });
+                    });
+                } else {
+                    // for the simulator,it would be too slow to implement
+                    // event handler in JavaScript, so we are using shortcut here
+                    code.lvglAddObjectFlowCallback(
+                        `scales[${scaleIndex}].label`,
+                        LV_EVENT_METER_TICK_LABEL_EVENT
                     );
                 }
-            }
-        }
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_meter_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        for (
-            let scaleIndex = 0;
-            scaleIndex < this.scales.length;
-            scaleIndex++
-        ) {
-            const scale = this.scales[scaleIndex];
-
-            build.line("{");
-            build.indent();
-
-            build.line(`lv_meter_scale_t *scale = lv_meter_add_scale(obj);`);
-
-            build.buildColor2(
-                this,
-                scale.minorTickColor,
-                scale.majorTickColor,
-                () =>
-                    build.genFileStaticVar(
-                        scale.objID,
-                        "lv_meter_scale_t *",
-                        "scale"
-                    ),
-                (minorTickColor, majorTickColor, scaleVar) => {
-                    build.assingToFileStaticVar(scaleVar, "scale");
-
-                    build.line(
-                        `lv_meter_set_scale_ticks(obj, scale, ${Math.max(
-                            scale.minorTickCount,
-                            2
-                        )}, ${scale.minorTickLineWidth}, ${
-                            scale.minorTickLength
-                        }, lv_color_hex(${minorTickColor}));`
-                    );
-
-                    build.line(
-                        `lv_meter_set_scale_major_ticks(obj, scale, ${scale.nthMajor}, ${scale.majorTickWidth}, ${scale.majorTickLength}, lv_color_hex(${majorTickColor}), ${scale.labelGap});`
-                    );
-                },
-                (minorTickColor, majorTickColor, scaleVar) => {
-                    if (build.project.settings.build.screensLifetimeSupport) {
-                        build.blockStart(`if (${scaleVar}) {`);
-                    }
-
-                    build.line(
-                        `${scaleVar}->tick_color = lv_color_hex(${minorTickColor});`
-                    );
-                    build.line(
-                        `${scaleVar}->tick_major_color = lv_color_hex(${majorTickColor});`
-                    );
-
-                    if (build.project.settings.build.screensLifetimeSupport) {
-                        build.blockEnd("}");
-                    }
-                }
-            );
-
-            build.line(
-                `lv_meter_set_scale_range(obj, scale, ${scale.scaleMin}, ${scale.scaleMax}, ${scale.scaleAngleRange}, ${scale.scaleRotation});`
-            );
-
-            for (
-                let indicatorIndex = 0;
-                indicatorIndex < scale.indicators.length;
-                indicatorIndex++
-            ) {
-                const indicator = scale.indicators[indicatorIndex];
-
-                build.line("{");
-                build.indent();
-
-                indicator.lvglBuild(build);
-
-                build.unindent();
-                build.line("}");
-            }
-
-            build.unindent();
-            build.line("}");
-        }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        for (
-            let scaleIndex = 0;
-            scaleIndex < this.scales.length;
-            scaleIndex++
-        ) {
-            const scale = this.scales[scaleIndex];
-            for (
-                let indicatorIndex = 0;
-                indicatorIndex < scale.indicators.length;
-                indicatorIndex++
-            ) {
-                const indicator = scale.indicators[indicatorIndex];
-                indicator.lvglBuildTickSpecific(
-                    build,
-                    scaleIndex,
-                    indicatorIndex
-                );
-            }
-        }
-    }
-
-    override buildEventHandlerSpecific(build: LVGLBuild) {
-        for (
-            let scaleIndex = 0;
-            scaleIndex < this.scales.length;
-            scaleIndex++
-        ) {
-            const scale = this.scales[scaleIndex];
-
-            if (build.project.projectTypeTraits.hasFlowSupport && scale.label) {
-                build.line("if (event == LV_EVENT_DRAW_PART_BEGIN) {");
-                build.indent();
-
-                build.line(
-                    `lv_obj_draw_part_dsc_t *draw_part_dsc = lv_event_get_draw_part_dsc(e);`
-                );
-                build.line(
-                    `if (draw_part_dsc->class_p != &lv_meter_class) return;`
-                );
-                build.line(
-                    `if (draw_part_dsc->type != LV_METER_DRAW_PART_TICK) return;`
-                );
-
-                build.line(`const char *temp;`);
-                build.line(`g_eezFlowLvlgMeterTickIndex = draw_part_dsc->id;`);
-
-                const componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    `scales[${scaleIndex}].label`
-                );
-
-                build.line(
-                    `temp = evalTextProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evalute scale label in Meter widget");`
-                );
-
-                build.line(`if (temp) {`);
-                build.indent();
-                build.line(`static char label[32];`);
-                build.line(`strncpy(label, temp, sizeof(label));`);
-                build.line(`label[sizeof(label) - 1] = 0;`);
-                build.line(`draw_part_dsc->text = label;`);
-                build.line(`draw_part_dsc->text_length = sizeof(label);`);
-                build.unindent();
-                build.line("}");
-
-                build.unindent();
-                build.line("}");
             }
         }
     }

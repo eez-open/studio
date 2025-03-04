@@ -3093,6 +3093,93 @@ export class Widget extends Component {
                         })
                     );
                 }
+
+                if (objects.length === 1) {
+                    additionalMenuItems.push(
+                        new MenuItem({
+                            label: "Resize...",
+                            click: async () => {
+                                const widget = objects[0] as Widget;
+
+                                const result = await showGenericDialog({
+                                    dialogDefinition: {
+                                        title: "Resize Widget",
+                                        fields: [
+                                            {
+                                                name: "width",
+                                                type: "number"
+                                            },
+                                            {
+                                                name: "height",
+                                                type: "number"
+                                            }
+                                        ]
+                                    },
+                                    values: {
+                                        width: widget.width,
+                                        height: widget.height
+                                    }
+                                });
+
+                                const newWidth = result.values.width;
+                                const newHeight = result.values.height;
+
+                                const projectStore = project._store;
+                                projectStore.undoManager.setCombineCommands(
+                                    true
+                                );
+
+                                const scaleHorz = newWidth / widget.width;
+                                const scaleVert = newHeight / widget.height;
+
+                                function resizeWidget(widget: Widget) {
+                                    if (
+                                        widget instanceof
+                                            ProjectEditor.ContainerWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.SelectWidgetClass
+                                    ) {
+                                        for (const childWidget of widget.widgets) {
+                                            const left = Math.floor(
+                                                childWidget.left * scaleHorz
+                                            );
+                                            const top = Math.floor(
+                                                childWidget.top * scaleVert
+                                            );
+
+                                            const width = Math.floor(
+                                                childWidget.width * scaleHorz
+                                            );
+                                            const height = Math.floor(
+                                                childWidget.height * scaleVert
+                                            );
+
+                                            updateObject(childWidget, {
+                                                left,
+                                                top,
+                                                width,
+                                                height
+                                            });
+
+                                            resizeWidget(childWidget);
+                                        }
+                                    }
+                                }
+
+                                updateObject(widget, {
+                                    width: newWidth,
+                                    height: newHeight
+                                });
+
+                                resizeWidget(widget);
+
+                                projectStore.undoManager.setCombineCommands(
+                                    false
+                                );
+                            }
+                        })
+                    );
+                }
             }
 
             if (additionalMenuItems.length > 0) {

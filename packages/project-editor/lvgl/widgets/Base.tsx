@@ -71,6 +71,9 @@ import {
     isGeometryControlledByParent,
     lvglAddObjectFlowCallback
 } from "project-editor/lvgl/widget-common";
+
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+
 import {
     LVGLPropertyType,
     makeLvglExpressionProperty
@@ -81,7 +84,8 @@ import { validators } from "eez-studio-shared/validation";
 import {
     getLvglCoord,
     getLvglEvents,
-    getLvglFlagCodes
+    getLvglFlagCodes,
+    getLvglStylePropName
 } from "project-editor/lvgl/lvgl-versions";
 import {
     LVGL_SCROLL_BAR_MODES,
@@ -1851,13 +1855,20 @@ export class LVGLWidget extends Widget {
         return obj;
     }
 
+    toLVGLCode(code: LVGLCode) {
+        console.error("UNEXPECTED!");
+    }
+
     lvglCreateObj(
         runtime: LVGLPageRuntime,
         parentObj: number,
         customWidget?: ICustomWidgetCreateParams
     ): number {
-        console.error("UNEXPECTED!");
-        return 0;
+        const code = runtime.toLVGLCode;
+        code.startWidget(this, parentObj, customWidget);
+        this.toLVGLCode(code);
+        code.endWidget();
+        return code.obj;
     }
 
     createEventHandler(runtime: LVGLPageRuntime, obj: number) {
@@ -1876,46 +1887,199 @@ export class LVGLWidget extends Widget {
                 0
             );
         }
-
-        this.createEventHandlerSpecific(runtime, obj);
     }
-
-    createEventHandlerSpecific(runtime: LVGLPageRuntime, obj: number) {}
 
     lvglBuild(build: LVGLBuild): void {
         if (this.identifier) {
             build.line(`// ${this.identifier}`);
         }
 
+        build.addTickCallback(() => {
+            if (this.checkedStateType == "expression") {
+                build.blockStart(`{`);
+
+                if (
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
+                ) {
+                    let componentIndex = build.assets.getComponentIndex(this);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            this,
+                            "checkedState"
+                        );
+
+                    build.line(
+                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
+                    );
+                } else {
+                    build.line(
+                        `bool new_val = ${build.getVariableGetterFunctionName(
+                            this.checkedState as string
+                        )}();`
+                    );
+                }
+
+                const objectAccessor = build.getLvglObjectAccessor(this);
+
+                build.line(
+                    `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_CHECKED);`
+                );
+
+                build.blockStart(`if (new_val != cur_val) {`);
+                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(
+                    `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_CHECKED);`
+                );
+                build.line(
+                    `else lv_obj_clear_state(${objectAccessor}, LV_STATE_CHECKED);`
+                );
+                build.line(`tick_value_change_obj = NULL;`);
+                build.blockEnd(`}`);
+
+                build.blockEnd(`}`);
+            }
+
+            if (this.disabledStateType == "expression") {
+                build.blockStart(`{`);
+
+                if (
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
+                ) {
+                    let componentIndex = build.assets.getComponentIndex(this);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            this,
+                            "disabledState"
+                        );
+
+                    build.line(
+                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
+                    );
+                } else {
+                    build.line(
+                        `bool new_val = ${build.getVariableGetterFunctionName(
+                            this.disabledState as string
+                        )}();`
+                    );
+                }
+                const objectAccessor = build.getLvglObjectAccessor(this);
+
+                build.line(
+                    `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_DISABLED);`
+                );
+
+                build.blockStart(`if (new_val != cur_val) {`);
+                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(
+                    `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_DISABLED);`
+                );
+                build.line(
+                    `else lv_obj_clear_state(${objectAccessor}, LV_STATE_DISABLED);`
+                );
+                build.line(`tick_value_change_obj = NULL;`);
+                build.blockEnd(`}`);
+
+                build.blockEnd(`}`);
+            }
+
+            if (this.hiddenFlagType == "expression") {
+                build.blockStart(`{`);
+
+                if (
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
+                ) {
+                    let componentIndex = build.assets.getComponentIndex(this);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            this,
+                            "hiddenFlag"
+                        );
+
+                    build.line(
+                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                    );
+                } else {
+                    build.line(
+                        `bool new_val = ${build.getVariableGetterFunctionName(
+                            this.hiddenFlag as string
+                        )}();`
+                    );
+                }
+
+                const objectAccessor = build.getLvglObjectAccessor(this);
+
+                build.line(
+                    `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
+                );
+
+                build.blockStart(`if (new_val != cur_val) {`);
+                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(
+                    `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
+                );
+                build.line(
+                    `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
+                );
+                build.line(`tick_value_change_obj = NULL;`);
+                build.blockEnd(`}`);
+
+                build.blockEnd(`}`);
+            }
+
+            if (this.clickableFlagType == "expression") {
+                build.blockStart(`{`);
+
+                if (
+                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
+                ) {
+                    let componentIndex = build.assets.getComponentIndex(this);
+                    const propertyIndex =
+                        build.assets.getComponentPropertyIndex(
+                            this,
+                            "clickableFlag"
+                        );
+
+                    build.line(
+                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
+                    );
+                } else {
+                    build.line(
+                        `bool new_val = ${build.getVariableGetterFunctionName(
+                            this.clickableFlag as string
+                        )}();`
+                    );
+                }
+
+                const objectAccessor = build.getLvglObjectAccessor(this);
+
+                build.line(
+                    `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
+                );
+
+                build.blockStart(`if (new_val != cur_val) {`);
+                build.line(`tick_value_change_obj = ${objectAccessor};`);
+                build.line(
+                    `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
+                );
+                build.line(
+                    `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
+                );
+                build.line(`tick_value_change_obj = NULL;`);
+                build.blockEnd(`}`);
+
+                build.blockEnd(`}`);
+            }
+        });
+
         this.lvglBuildObj(build);
 
-        if (build.isAccessibleFromSourceCode(this)) {
-            build.assignToObjectsStruct(build.getLvglObjectAccessor(this));
-        }
-
-        if (this instanceof LVGLScreenWidget) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
-            build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
-            build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
-        } else if (isGeometryControlledByParent(this)) {
-            // skip
-        } else {
-            build.line(
-                `lv_obj_set_pos(obj, ${this.lvglBuildLeft}, ${this.lvglBuildTop});`
-            );
-            build.line(
-                `lv_obj_set_size(obj, ${this.lvglBuildWidth}, ${this.lvglBuildHeight});`
-            );
-        }
-
-        this.lvglBuildSpecific(build);
-
+        // event handlers
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.eventHandlers.length > 0 || this.hasEventHandler) {
+            if (
+                this.eventHandlers.length > 0 ||
+                this.hasEventHandler ||
+                build.eventHandlers.get(this)
+            ) {
                 build.line(
                     `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
                         this
@@ -1951,7 +2115,7 @@ export class LVGLWidget extends Widget {
                 }
             }
 
-            if (this.hasEventHandler) {
+            if (this.hasEventHandler || build.eventHandlers.get(this)) {
                 build.line(
                     `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
                         this
@@ -1960,9 +2124,8 @@ export class LVGLWidget extends Widget {
             }
         }
 
-        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
-
         // add/clear flags
+        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
         {
             const { added, cleared } = changes(
                 lvglClassInfoProperties.defaultFlags.trim() != ""
@@ -2034,6 +2197,7 @@ export class LVGLWidget extends Widget {
             }
         }
 
+        // styles
         const useStyle = this.styleTemplate;
         if (useStyle) {
             const style = findLvglStyle(
@@ -2047,213 +2211,20 @@ export class LVGLWidget extends Widget {
         }
         this.localStyles.lvglBuild(build);
 
+        // children
         if (this.children.length > 0) {
-            build.line("{");
-            build.indent();
+            build.blockStart("{");
             build.line("lv_obj_t *parent_obj = obj;");
 
             for (const widget of this.children) {
-                build.line("{");
-                build.indent();
+                build.blockStart("{");
                 widget.lvglBuild(build);
-                build.unindent();
-                build.line("}");
+                build.blockEnd("}");
             }
 
-            build.unindent();
-            build.line("}");
+            build.blockEnd("}");
         }
     }
-
-    lvglPostBuild(build: LVGLBuild): void {}
-
-    lvglBuildTick(build: LVGLBuild): void {
-        if (this.checkedStateType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "checkedState"
-                );
-
-                build.line(
-                    `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
-                );
-            } else {
-                build.line(
-                    `bool new_val = ${build.getVariableGetterFunctionName(
-                        this.checkedState as string
-                    )}();`
-                );
-            }
-
-            const objectAccessor = build.getLvglObjectAccessor(this);
-
-            build.line(
-                `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_CHECKED);`
-            );
-
-            build.line(`if (new_val != cur_val) {`);
-            build.indent();
-            build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_CHECKED);`
-            );
-            build.line(
-                `else lv_obj_clear_state(${objectAccessor}, LV_STATE_CHECKED);`
-            );
-            build.line(`tick_value_change_obj = NULL;`);
-            build.unindent();
-            build.line(`}`);
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        if (this.disabledStateType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "disabledState"
-                );
-
-                build.line(
-                    `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
-                );
-            } else {
-                build.line(
-                    `bool new_val = ${build.getVariableGetterFunctionName(
-                        this.disabledState as string
-                    )}();`
-                );
-            }
-            const objectAccessor = build.getLvglObjectAccessor(this);
-
-            build.line(
-                `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_DISABLED);`
-            );
-
-            build.line(`if (new_val != cur_val) {`);
-            build.indent();
-            build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_DISABLED);`
-            );
-            build.line(
-                `else lv_obj_clear_state(${objectAccessor}, LV_STATE_DISABLED);`
-            );
-            build.line(`tick_value_change_obj = NULL;`);
-            build.unindent();
-            build.line(`}`);
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        if (this.hiddenFlagType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "hiddenFlag"
-                );
-
-                build.line(
-                    `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
-                );
-            } else {
-                build.line(
-                    `bool new_val = ${build.getVariableGetterFunctionName(
-                        this.hiddenFlag as string
-                    )}();`
-                );
-            }
-
-            const objectAccessor = build.getLvglObjectAccessor(this);
-
-            build.line(
-                `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-            );
-
-            build.line(`if (new_val != cur_val) {`);
-            build.indent();
-            build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-            );
-            build.line(
-                `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-            );
-            build.line(`tick_value_change_obj = NULL;`);
-            build.unindent();
-            build.line(`}`);
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        if (this.clickableFlagType == "expression") {
-            build.line(`{`);
-            build.indent();
-
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "clickableFlag"
-                );
-
-                build.line(
-                    `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
-                );
-            } else {
-                build.line(
-                    `bool new_val = ${build.getVariableGetterFunctionName(
-                        this.clickableFlag as string
-                    )}();`
-                );
-            }
-
-            const objectAccessor = build.getLvglObjectAccessor(this);
-
-            build.line(
-                `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-            );
-
-            build.line(`if (new_val != cur_val) {`);
-            build.indent();
-            build.line(`tick_value_change_obj = ${objectAccessor};`);
-            build.line(
-                `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-            );
-            build.line(
-                `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-            );
-            build.line(`tick_value_change_obj = NULL;`);
-            build.unindent();
-            build.line(`}`);
-
-            build.unindent();
-            build.line(`}`);
-        }
-
-        this.lvglBuildTickSpecific(build);
-        for (const widget of this.children) {
-            widget.lvglBuildTick(build);
-        }
-    }
-
-    lvglBuildTickSpecific(build: LVGLBuild): void {}
 
     getLvglCreateRect() {
         if (this instanceof LVGLScreenWidget) {
@@ -2334,10 +2305,10 @@ export class LVGLWidget extends Widget {
     }
 
     lvglBuildObj(build: LVGLBuild): void {
-        console.error("UNEXPECTED!");
+        const code = build.toLVGLCode;
+        code.startWidget(this);
+        this.toLVGLCode(build.toLVGLCode);
     }
-
-    lvglBuildSpecific(build: LVGLBuild): void {}
 
     get hasEventHandler() {
         return (
@@ -2348,13 +2319,11 @@ export class LVGLWidget extends Widget {
 
     buildEventHandler(build: LVGLBuild) {
         if (this.checkedStateType == "expression") {
-            build.line("if (event == LV_EVENT_VALUE_CHANGED) {");
-            build.indent();
+            build.blockStart("if (event == LV_EVENT_VALUE_CHANGED) {");
 
             build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
 
-            build.line(`if (tick_value_change_obj != ta) {`);
-            build.indent();
+            build.blockStart(`if (tick_value_change_obj != ta) {`);
 
             build.line(`bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);`);
 
@@ -2376,17 +2345,11 @@ export class LVGLWidget extends Widget {
                 );
             }
 
-            build.unindent();
-            build.line("}");
+            build.blockEnd("}");
 
-            build.unindent();
-            build.line("}");
+            build.blockEnd("}");
         }
-
-        this.buildEventHandlerSpecific(build);
     }
-
-    buildEventHandlerSpecific(build: LVGLBuild) {}
 
     buildStyleIfNotDefined(build: LVGLBuild, propertyInfo: LVGLPropertyInfo) {
         if (
@@ -2400,6 +2363,33 @@ export class LVGLWidget extends Widget {
                 `lv_obj_set_style_${build.getStylePropName(
                     propertyInfo.name
                 )}(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);`
+            );
+        }
+    }
+
+    buildStyleIfNotDefinedInCode(
+        code: LVGLCode,
+        propertyInfo: LVGLPropertyInfo
+    ) {
+        if (
+            this.localStyles.getPropertyValue(
+                propertyInfo,
+                "MAIN",
+                "DEFAULT"
+            ) == undefined
+        ) {
+            const stylePropName = getLvglStylePropName(
+                code.project,
+                propertyInfo.name
+            );
+
+            code.callObjectFunction(
+                `lv_obj_set_style_${stylePropName}`,
+                0,
+                code.or(
+                    code.constant("LV_PART_MAIN"),
+                    code.constant("LV_STATE_DEFAULT")
+                )
             );
         }
     }

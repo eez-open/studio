@@ -1,16 +1,3 @@
-_malloc
-_free
-_strcmp
-_setObjectIndex
-__evalTextProperty
-__evalIntegerProperty
-__evalUnsignedIntegerProperty
-__evalBooleanProperty
-__evalStringArrayPropertyAndJoin
-__assignStringProperty
-__assignIntegerProperty
-__assignBooleanProperty
-_compareRollerOptions
 _lv_disp_get_scr_act
 _lv_disp_get_scr_prev
 _lv_disp_load_scr

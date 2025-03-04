@@ -7,25 +7,16 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
 import { LONG_MODE_CODES } from "project-editor/lvgl/lvgl-constants";
 
-import { LVGLWidget } from "./internal";
 import {
-    expressionPropertyBuildTickSpecific,
     LVGLPropertyType,
     makeLvglExpressionProperty
-} from "../expression-property";
-import {
-    getExpressionPropertyData,
-    getExpressionPropertyInitalValue,
-    getFlowStateAddressIndex,
-    escapeCString,
-    unescapeCString
-} from "../widget-common";
+} from "project-editor/lvgl/expression-property";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { getComponentName } from "project-editor/flow/components/components-registry";
-import { lvglHasLabelRecolorSupport } from "../lvgl-versions";
+
+import { LVGLWidget } from "./internal";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,89 +148,51 @@ export class LVGLLabelWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const textExpr = getExpressionPropertyData(runtime, this, "text");
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject("lv_label_create");
 
-        const rect = this.getLvglCreateRect();
-
-        const obj = runtime.wasm._lvglCreateLabel(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            textExpr
-                ? 0
-                : runtime.wasm.allocateUTF8(
-                      this.textType == "expression"
-                          ? this.previewValue
-                              ? unescapeCString(this.previewValue)
-                              : getExpressionPropertyInitalValue(
-                                    runtime,
-                                    this,
-                                    "text"
-                                )
-                          : unescapeCString(this.text)
-                  ),
-            LONG_MODE_CODES[this.longMode],
-            this.recolor ? 1 : 0
-        );
-
-        if (textExpr) {
-            runtime.wasm._lvglUpdateLabelText(
-                obj,
-                getFlowStateAddressIndex(runtime),
-                textExpr.componentIndex,
-                textExpr.propertyIndex
-            );
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_label_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
+        // longMode
         if (this.longMode != "WRAP") {
-            build.line(
-                `lv_label_set_long_mode(obj, LV_LABEL_LONG_${this.longMode});`
+            code.callObjectFunction(
+                "lv_label_set_long_mode",
+                code.constant(`LV_LABEL_LONG_${this.longMode}`)
             );
         }
 
-        if (this.recolor) {
-            if (lvglHasLabelRecolorSupport(this)) {
-                build.line(`lv_label_set_recolor(obj, true);`);
-            }
+        // recolor
+        if (this.recolor && !code.isV9) {
+            code.callObjectFunction(
+                "lv_label_set_recolor",
+                code.constant("true")
+            );
         }
 
-        if (this.textType == "literal") {
-            build.line(
-                `lv_label_set_text(obj, ${escapeCString(this.text ?? "")});`
-            );
-        } else if (this.textType == "translated-literal") {
-            build.line(
-                `lv_label_set_text(obj, _(${escapeCString(this.text ?? "")}));`
-            );
-        } else {
-            build.line(`lv_label_set_text(obj, "");`);
-        }
-    }
-
-    override lvglBuildTickSpecific(build: LVGLBuild) {
-        expressionPropertyBuildTickSpecific<LVGLLabelWidget>(
-            build,
-            this,
-            "text" as const,
-            "lv_label_get_text",
-            "lv_label_set_text"
+        // text
+        code.callObjectFunction(
+            "lv_label_set_text",
+            code.stringProperty(this.textType, this.text, this.previewValue)
         );
+        if (this.textType == "expression") {
+            code.addToTick("text", () => {
+                const new_val = code.evalTextProperty(
+                    "const char *",
+                    "new_val",
+                    this.text,
+                    "Failed to evaluate Text in Label widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "const char *",
+                    "cur_val",
+                    "lv_label_get_text"
+                );
+
+                code.ifStringNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+                    code.callObjectFunction("lv_label_set_text", new_val);
+                    code.tickChangeEnd();
+                });
+            });
+        }
     }
 }

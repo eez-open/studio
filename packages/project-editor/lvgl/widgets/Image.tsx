@@ -11,14 +11,12 @@ import { findBitmap, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import type { LVGLBuild } from "project-editor/lvgl/build";
-
 import { LVGLWidget } from "./internal";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { propertyNotFoundMessage } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { LV_IMAGE_ALIGN } from "../lvgl-constants";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -188,88 +186,43 @@ export class LVGLImageWidget extends LVGLWidget {
         });
     }
 
-    override lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number
-    ): number {
-        const rect = this.getLvglCreateRect();
+    override toLVGLCode(code: LVGLCode) {
+        code.createObject(code.isV9 ? "lv_image_create" : "lv_img_create");
 
-        const obj = runtime.wasm._lvglCreateImage(
-            parentObj,
-            runtime.getCreateWidgetIndex(this),
-
-            rect.left,
-            rect.top,
-            rect.width,
-            rect.height,
-
-            0,
-            this.setPivot,
-            this.pivotX,
-            this.pivotY,
-            this.zoom,
-            this.angle,
-            LV_IMAGE_ALIGN[this.innerAlign]
-        );
-
-        const bitmap = findBitmap(ProjectEditor.getProject(this), this.image);
-
-        if (bitmap && bitmap.image) {
-            const bitmapPtr = runtime.getBitmapPtr(bitmap);
-            if (bitmapPtr) {
-                runtime.wasm._lvglSetImageSrc(
-                    obj,
-                    bitmapPtr,
-                    this.setPivot,
-                    this.pivotX,
-                    this.pivotY,
-                    this.zoom,
-                    this.angle,
-                    LV_IMAGE_ALIGN[this.innerAlign]
-                );
-            }
-        }
-
-        return obj;
-    }
-
-    override lvglBuildObj(build: LVGLBuild) {
-        build.line(`lv_obj_t *obj = lv_img_create(parent_obj);`);
-    }
-
-    override lvglBuildSpecific(build: LVGLBuild) {
-        if (this.image) {
-            const bitmap = findBitmap(
-                ProjectEditor.getProject(this),
-                this.image
+        const image = code.image(this.image);
+        if (image) {
+            code.callObjectFunction(
+                code.isV9 ? "lv_image_set_src" : "lv_img_set_src",
+                image
             );
-
-            if (bitmap && bitmap.image) {
-                build.line(
-                    `lv_img_set_src(obj, &${build.getImageVariableName(
-                        bitmap
-                    )});`
-                );
-            }
         }
 
         if (this.setPivot) {
-            build.line(
-                `lv_img_set_pivot(obj, ${this.pivotX}, ${this.pivotY});`
+            code.callObjectFunction(
+                code.isV9 ? "lv_image_set_pivot" : "lv_img_set_pivot",
+                this.pivotX,
+                this.pivotY
             );
         }
 
         if (this.zoom != 256) {
-            build.line(`lv_img_set_zoom(obj, ${this.zoom});`);
+            code.callObjectFunction(
+                code.isV9 ? "lv_image_set_scale" : "lv_img_set_zoom",
+                this.zoom
+            );
         }
 
         if (this.angle != 0) {
-            build.line(`lv_img_set_angle(obj, ${this.angle});`);
+            code.callObjectFunction(
+                code.isV9 ? "lv_image_set_rotation" : "lv_img_set_angle",
+                this.angle
+            );
         }
 
-        if (build.isV9 && this.innerAlign != "CENTER") {
-            build.line(
-                `lv_image_set_inner_align(obj, LV_IMAGE_ALIGN_${this.innerAlign});`
+        if (code.isV9 && this.innerAlign != "CENTER") {
+            code.callObjectFunction(
+                "lv_image_set_inner_align",
+                code.constant(`LV_IMAGE_ALIGN_${this.innerAlign}`)
             );
         }
     }
