@@ -155,7 +155,7 @@ export class LVGLSliderWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
-        const PREFIX = code.isV9 ? "" : "v8_";
+        const PREFIX = code.isV9 || code.lvglBuild ? "" : "v8_";
 
         code.createObject(`lv_slider_create`);
 

@@ -4616,7 +4616,7 @@ export class LabelOutActionComponent extends ActionComponent {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // labelInComponentIndex
         const labelInComponent = this.labelInComponent;
-        dataBuffer.writeUint16(
+        dataBuffer.writeInt16(
             labelInComponent ? assets.getComponentIndex(labelInComponent) : -1
         );
     }

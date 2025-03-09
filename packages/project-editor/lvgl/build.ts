@@ -1054,6 +1054,7 @@ export class LVGLBuild extends Build {
                         build.line(
                             `void *flowState = lv_event_get_user_data(e);`
                         );
+                        build.line(`(void)flowState;`);
 
                         build.line("");
 
@@ -1250,12 +1251,15 @@ export class LVGLBuild extends Build {
                             page
                         )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex) {`
                     );
+                    build.line(`(void)flowState;`);
+                    build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
                         `void ${this.getScreenCreateFunctionName(
                             page
                         )}(lv_obj_t *parent_obj, int startWidgetIndex) {`
                     );
+                    build.line(`(void)startWidgetIndex;`);
                 }
             } else {
                 build.blockStart(
@@ -1346,12 +1350,15 @@ export class LVGLBuild extends Build {
                             page
                         )}(void *flowState, int startWidgetIndex) {`
                     );
+                    build.line(`(void)flowState;`);
+                    build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
                         `void ${this.getScreenTickFunctionName(
                             page
                         )}(int startWidgetIndex) {`
                     );
+                    build.line(`(void)startWidgetIndex;`);
                 }
             } else {
                 build.blockStart(
@@ -2454,6 +2461,21 @@ export async function generateSourceCodeForEezFramework(
         "#define EEZ_FLOW_EVAL_STACK_SIZE 20",
         "#define EEZ_FLOW_EVAL_STACK_SIZE " +
             project.settings.build.expressionEvaluatorStackSize
+    );
+
+    eezH = eezH.replace(
+        "#include <lvgl/lvgl.h>",
+        `#include <${project.settings.build.lvglInclude}>`
+    );
+
+    const lvglFolder = project.settings.build.lvglInclude.substring(
+        0,
+        project.settings.build.lvglInclude.length - "lvgl.h".length
+    );
+
+    eezH = eezH.replace(
+        "#include <lvgl/src/lvgl_private.h>",
+        `#include <${lvglFolder}src/lvgl_private.h>`
     );
 
     await fs.promises.writeFile(

@@ -11,9 +11,9 @@
 
 #define EM_PORT_API(rettype) rettype EMSCRIPTEN_KEEPALIVE
 
-static void hal_init();
+#define EEZ_UNUSED(x) (void)(x)
 
-static lv_disp_t *disp1;
+static void hal_init();
 
 int hor_res;
 int ver_res;
@@ -72,7 +72,7 @@ void my_mouse_read(lv_indev_t * indev_drv, lv_indev_data_t * data) {
 #else
 void my_mouse_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data) {
 #endif
-    (void) indev_drv;      /*Unused*/
+    EEZ_UNUSED(indev_drv);
 
     /*Store the collected data*/
     data->point.x = (lv_coord_t)mouse_x;
@@ -85,6 +85,7 @@ void my_keyboard_read(lv_indev_t * indev_drv, lv_indev_data_t * data) {
 #else
 void my_keyboard_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data) {
 #endif
+    EEZ_UNUSED(indev_drv);
 
     if (keyboard_pressed) {
         /*Send a release manually*/
@@ -135,6 +136,7 @@ bool my_ready_cb(struct lv_fs_drv_t * drv) {
 #else
 bool my_ready_cb(struct _lv_fs_drv_t * drv) {
 #endif
+    EEZ_UNUSED(drv);
     return true;
 }
 
@@ -145,6 +147,8 @@ void *my_open_cb(struct lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode)
 void *my_open_cb(struct _lv_fs_drv_t * drv, const char * path, lv_fs_mode_t mode) {
     my_file_t *file = (my_file_t *)lv_mem_alloc(sizeof(my_file_t));
 #endif
+    EEZ_UNUSED(drv);
+    EEZ_UNUSED(mode);
     file->ptr = (void *)atoi(path);
     file->pos = 0;
     return file;
@@ -157,6 +161,7 @@ lv_fs_res_t my_close_cb(struct lv_fs_drv_t * drv, void * file_p) {
 lv_fs_res_t my_close_cb(struct _lv_fs_drv_t * drv, void * file_p) {
     lv_mem_free(file_p);
 #endif
+    EEZ_UNUSED(drv);
     return LV_FS_RES_OK;
 }
 
@@ -165,6 +170,7 @@ lv_fs_res_t my_read_cb(struct lv_fs_drv_t * drv, void * file_p, void * buf, uint
 #else
 lv_fs_res_t my_read_cb(struct _lv_fs_drv_t * drv, void * file_p, void * buf, uint32_t btr, uint32_t * br) {
 #endif
+    EEZ_UNUSED(drv);
     my_file_t *file = (my_file_t *)file_p;
     memcpy(buf, file->ptr + file->pos, btr);
     file->pos += btr;
@@ -178,6 +184,7 @@ lv_fs_res_t my_seek_cb(struct lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv
 #else
 lv_fs_res_t my_seek_cb(struct _lv_fs_drv_t * drv, void * file_p, uint32_t pos, lv_fs_whence_t whence) {
 #endif
+    EEZ_UNUSED(drv);
     my_file_t *file = (my_file_t *)file_p;
     if (whence == LV_FS_SEEK_SET) {
         file->pos = pos;
@@ -195,6 +202,7 @@ lv_fs_res_t my_tell_cb(struct lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p
 #else
 lv_fs_res_t my_tell_cb(struct _lv_fs_drv_t * drv, void * file_p, uint32_t * pos_p) {
 #endif
+    EEZ_UNUSED(drv);
     my_file_t *file = (my_file_t *)file_p;
     *pos_p = file->pos;
     return LV_FS_RES_OK;
@@ -264,7 +272,7 @@ static void hal_init() {
     disp_drv.flush_cb = my_driver_flush;    /*Used when `LV_VDB_SIZE != 0` in lv_conf.h (buffered drawing)*/
     disp_drv.hor_res = hor_res;
     disp_drv.ver_res = ver_res;
-    disp1 = lv_disp_drv_register(&disp_drv);
+    lv_disp_drv_register(&disp_drv);
 #endif
 
     if (!is_editor) {
@@ -320,8 +328,12 @@ bool initialized = false;
 static uint32_t g_prevTick;
 #endif
 
+#define DUMP_WIDGETS 0
+
+#if DUMP_WIDGETS
 static void dump_widgets_flags_info();
 static void dump_custom_styles();
+#endif
 
 EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone, bool screensLifetimeSupport) {
     is_editor = assetsSize == 0;
@@ -339,7 +351,9 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), darkTheme, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
 
-    //dump_widgets_flags_info();
+#if DUMP_WIDGETS
+    dump_widgets_flags_info();
+#endif
 
     if (!is_editor) {
         flowInit(wasmModuleId, debuggerMessageSubsciptionFilter, assets, assetsSize, darkTheme, timeZone, screensLifetimeSupport);
@@ -351,7 +365,9 @@ EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptio
 
     initialized = true;
 
-    //dump_custom_styles();
+#if DUMP_WIDGETS
+    dump_custom_styles();
+#endif
 }
 
 EM_PORT_API(bool) mainLoop() {
@@ -411,6 +427,8 @@ EM_PORT_API(void) onKeyPressed(uint32_t key) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if DUMP_WIDGETS
+
 lv_obj_t *lv_spinner_create_adapt(lv_obj_t *parentObj) {
 #if LVGL_VERSION_MAJOR >= 9
     return lv_spinner_create(parentObj);
@@ -464,27 +482,27 @@ typedef struct {
 } FlagInfo;
 
 FlagInfo flags[] = {
-    "HIDDEN", LV_OBJ_FLAG_HIDDEN,
-    "CLICKABLE", LV_OBJ_FLAG_CLICKABLE,
-    "CLICK_FOCUSABLE", LV_OBJ_FLAG_CLICK_FOCUSABLE,
-    "CHECKABLE", LV_OBJ_FLAG_CHECKABLE,
-    "SCROLLABLE", LV_OBJ_FLAG_SCROLLABLE,
-    "SCROLL_ELASTIC", LV_OBJ_FLAG_SCROLL_ELASTIC,
-    "SCROLL_MOMENTUM", LV_OBJ_FLAG_SCROLL_MOMENTUM,
-    "SCROLL_ONE", LV_OBJ_FLAG_SCROLL_ONE,
-    "SCROLL_CHAIN_HOR", LV_OBJ_FLAG_SCROLL_CHAIN_HOR,
-    "SCROLL_CHAIN_VER", LV_OBJ_FLAG_SCROLL_CHAIN_VER,
-    "SCROLL_CHAIN", LV_OBJ_FLAG_SCROLL_CHAIN,
-    "SCROLL_ON_FOCUS", LV_OBJ_FLAG_SCROLL_ON_FOCUS,
-    "SCROLL_WITH_ARROW", LV_OBJ_FLAG_SCROLL_WITH_ARROW,
-    "SNAPPABLE", LV_OBJ_FLAG_SNAPPABLE,
-    "PRESS_LOCK", LV_OBJ_FLAG_PRESS_LOCK,
-    "EVENT_BUBBLE", LV_OBJ_FLAG_EVENT_BUBBLE,
-    "GESTURE_BUBBLE", LV_OBJ_FLAG_GESTURE_BUBBLE,
-    "ADV_HITTEST", LV_OBJ_FLAG_ADV_HITTEST,
-    "IGNORE_LAYOUT", LV_OBJ_FLAG_IGNORE_LAYOUT,
-    "FLOATING", LV_OBJ_FLAG_FLOATING,
-    "OVERFLOW_VISIBLE", LV_OBJ_FLAG_OVERFLOW_VISIBLE
+    { "HIDDEN", LV_OBJ_FLAG_HIDDEN },
+    { "CLICKABLE", LV_OBJ_FLAG_CLICKABLE },
+    { "CLICK_FOCUSABLE", LV_OBJ_FLAG_CLICK_FOCUSABLE },
+    { "CHECKABLE", LV_OBJ_FLAG_CHECKABLE },
+    { "SCROLLABLE", LV_OBJ_FLAG_SCROLLABLE },
+    { "SCROLL_ELASTIC", LV_OBJ_FLAG_SCROLL_ELASTIC },
+    { "SCROLL_MOMENTUM", LV_OBJ_FLAG_SCROLL_MOMENTUM },
+    { "SCROLL_ONE", LV_OBJ_FLAG_SCROLL_ONE },
+    { "SCROLL_CHAIN_HOR", LV_OBJ_FLAG_SCROLL_CHAIN_HOR },
+    { "SCROLL_CHAIN_VER", LV_OBJ_FLAG_SCROLL_CHAIN_VER },
+    { "SCROLL_CHAIN", LV_OBJ_FLAG_SCROLL_CHAIN },
+    { "SCROLL_ON_FOCUS", LV_OBJ_FLAG_SCROLL_ON_FOCUS },
+    { "SCROLL_WITH_ARROW", LV_OBJ_FLAG_SCROLL_WITH_ARROW },
+    { "SNAPPABLE", LV_OBJ_FLAG_SNAPPABLE },
+    { "PRESS_LOCK", LV_OBJ_FLAG_PRESS_LOCK },
+    { "EVENT_BUBBLE", LV_OBJ_FLAG_EVENT_BUBBLE },
+    { "GESTURE_BUBBLE", LV_OBJ_FLAG_GESTURE_BUBBLE },
+    { "ADV_HITTEST", LV_OBJ_FLAG_ADV_HITTEST },
+    { "IGNORE_LAYOUT", LV_OBJ_FLAG_IGNORE_LAYOUT },
+    { "FLOATING", LV_OBJ_FLAG_FLOATING },
+    { "OVERFLOW_VISIBLE", LV_OBJ_FLAG_OVERFLOW_VISIBLE }
 };
 
 
@@ -542,3 +560,5 @@ void dump_custom_styles() {
     printf("LV_STYLE_GRID_CELL_ROW_SPAN %d\n", LV_STYLE_GRID_CELL_ROW_SPAN);
     printf("LV_STYLE_GRID_CELL_Y_ALIGN %d\n", LV_STYLE_GRID_CELL_Y_ALIGN);
 }
+
+#endif

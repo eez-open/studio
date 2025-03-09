@@ -1100,6 +1100,7 @@ export class Page extends Flow {
                     build.line(
                         `void *flowState = getFlowState(0, ${flowIndex});`
                     );
+                    build.line(`(void)flowState;`);
                 });
             }
         }

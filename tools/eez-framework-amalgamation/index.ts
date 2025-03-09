@@ -4,6 +4,36 @@ import { exec } from "child_process";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const LVGL_INCLUDE1 = `#ifdef LV_LVGL_H_INCLUDE_SIMPLE
+    #include "lvgl.h"
+    #if LVGL_VERSION_MAJOR > 9 || (LVGL_VERSION_MAJOR == 9 && LVGL_VERSION_MINOR > 1)
+        #ifdef __has_include
+            #if __has_include("lvgl_private.h")
+                #include "lvgl_private.h"
+            #elif __has_include("src/lvgl_private.h")
+                #include "src/lvgl_private.h"
+            #endif
+        #endif
+    #endif
+#else
+    #include "lvgl/lvgl.h"
+    #if LVGL_VERSION_MAJOR > 9 || (LVGL_VERSION_MAJOR == 9 && LVGL_VERSION_MINOR > 1)
+        #include "lvgl/src/lvgl_private.h"
+    #endif
+#endif
+`;
+
+const LVGL_INCLUDE2 = `#if defined(EEZ_FOR_LVGL)
+#ifdef LV_LVGL_H_INCLUDE_SIMPLE
+#include "lvgl.h"
+#else
+#include "lvgl/lvgl.h"
+#endif
+#endif
+`;
+
+////////////////////////////////////////////////////////////////////////////////
+
 const isDev = process.argv[process.argv.length - 1] == "dev";
 
 const OUT_DIR = isDev
@@ -430,6 +460,11 @@ async function buildEezH(files: Map<string, string>, autogenComment: string) {
 #define EEZ_FOR_LVGL_SHA256_OPTION 1
 #define EEZ_FLOW_QUEUE_SIZE 1000
 #define EEZ_FLOW_EVAL_STACK_SIZE 20
+
+#include <lvgl/lvgl.h>
+#if LVGL_VERSION_MAJOR > 9 || (LVGL_VERSION_MAJOR == 9 && LVGL_VERSION_MINOR > 1)
+#include <lvgl/src/lvgl_private.h>
+#endif
 `;
 
     for (const filePath of CONFIG.headersFront) {
@@ -453,6 +488,16 @@ async function buildEezH(files: Map<string, string>, autogenComment: string) {
 
     result += "\n\n";
     result += utf8_H;
+
+    if (!result.indexOf(LVGL_INCLUDE1)) {
+        throw "LVGL_INCLUDE not found";
+    }
+
+    result = result.replace(LVGL_INCLUDE1, "");
+
+    while (result.indexOf(LVGL_INCLUDE2) != -1) {
+        result = result.replace(LVGL_INCLUDE2, "");
+    }
 
     return result;
 }
@@ -490,6 +535,10 @@ extern "C" {
         result +=
             "// -----------------------------------------------------------------------------\n";
         result += files.get(filePath);
+    }
+
+    while (result.indexOf(LVGL_INCLUDE2) != -1) {
+        result = result.replace(LVGL_INCLUDE2, "");
     }
 
     return result;

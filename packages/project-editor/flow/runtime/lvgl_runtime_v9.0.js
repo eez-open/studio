@@ -969,29 +969,29 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1040912: ($0) => { startToDebuggerMessage($0); },  
- 1040944: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1041019: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1041094: ($0) => { finishToDebuggerMessage($0); },  
- 1041127: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1041157: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1041187: ($0) => { lvglScreenTick($0); },  
- 1041211: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1041251: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1041305: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1041359: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1041412: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1041465: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1041518: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1041551: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1041587: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1041632: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1041738: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1041774: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1041811: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1041851: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1041908: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1041967: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1040816: ($0) => { startToDebuggerMessage($0); },  
+ 1040848: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1040923: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1040998: ($0) => { finishToDebuggerMessage($0); },  
+ 1041031: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1041061: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1041091: ($0) => { lvglScreenTick($0); },  
+ 1041115: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1041155: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1041209: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1041263: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1041316: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1041369: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1041422: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1041455: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1041491: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1041536: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1041642: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1041678: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1041715: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1041755: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1041812: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1041871: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4744,24 +4744,6 @@ var _isRTL = Module['_isRTL'] = createExportWrapper('isRTL');
 var _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent');
 var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent');
 var _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed');
-var _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create');
-var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag');
-var _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create');
-var _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create');
-var _lv_button_create = Module['_lv_button_create'] = createExportWrapper('lv_button_create');
-var _lv_image_create = Module['_lv_image_create'] = createExportWrapper('lv_image_create');
-var _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create');
-var _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create');
-var _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create');
-var _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create');
-var _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create');
-var _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create');
-var _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create');
-var _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create');
-var _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create');
-var _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create');
-var _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create');
-var _lv_scale_create = Module['_lv_scale_create'] = createExportWrapper('lv_scale_create');
 var _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = createExportWrapper('lv_obj_get_style_prop');
 var _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = createExportWrapper('lv_obj_set_local_style_prop');
 var _lv_event_get_code = Module['_lv_event_get_code'] = createExportWrapper('lv_event_get_code');
@@ -4771,6 +4753,7 @@ var __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWr
 var __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty');
 var _lv_obj_add_state = Module['_lv_obj_add_state'] = createExportWrapper('lv_obj_add_state');
 var _lv_obj_remove_state = Module['_lv_obj_remove_state'] = createExportWrapper('lv_obj_remove_state');
+var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag');
 var _lv_obj_add_flag = Module['_lv_obj_add_flag'] = createExportWrapper('lv_obj_add_flag');
 var _lv_obj_remove_flag = Module['_lv_obj_remove_flag'] = createExportWrapper('lv_obj_remove_flag');
 var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript');
@@ -4790,6 +4773,7 @@ var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'
 var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler');
 var _lv_event_get_user_data = Module['_lv_event_get_user_data'] = createExportWrapper('lv_event_get_user_data');
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen');
+var _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create');
 var _lv_obj_set_pos = Module['_lv_obj_set_pos'] = createExportWrapper('lv_obj_set_pos');
 var _lv_obj_set_size = Module['_lv_obj_set_size'] = createExportWrapper('lv_obj_set_size');
 var _lv_obj_update_layout = Module['_lv_obj_update_layout'] = createExportWrapper('lv_obj_update_layout');
@@ -6020,6 +6004,7 @@ var _lv_animimg_get_duration = Module['_lv_animimg_get_duration'] = createExport
 var _lv_animimg_get_repeat_count = Module['_lv_animimg_get_repeat_count'] = createExportWrapper('lv_animimg_get_repeat_count');
 var _lv_animimg_get_anim = Module['_lv_animimg_get_anim'] = createExportWrapper('lv_animimg_get_anim');
 var _lv_arc_set_value = Module['_lv_arc_set_value'] = createExportWrapper('lv_arc_set_value');
+var _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create');
 var _lv_arc_set_start_angle = Module['_lv_arc_set_start_angle'] = createExportWrapper('lv_arc_set_start_angle');
 var _lv_arc_set_end_angle = Module['_lv_arc_set_end_angle'] = createExportWrapper('lv_arc_set_end_angle');
 var _lv_arc_set_angles = Module['_lv_arc_set_angles'] = createExportWrapper('lv_arc_set_angles');
@@ -6043,6 +6028,7 @@ var _lv_arc_get_rotation = Module['_lv_arc_get_rotation'] = createExportWrapper(
 var _lv_arc_get_knob_offset = Module['_lv_arc_get_knob_offset'] = createExportWrapper('lv_arc_get_knob_offset');
 var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createExportWrapper('lv_arc_align_obj_to_angle');
 var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle');
+var _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create');
 var _lv_bar_set_value = Module['_lv_bar_set_value'] = createExportWrapper('lv_bar_set_value');
 var _lv_bar_set_start_value = Module['_lv_bar_set_start_value'] = createExportWrapper('lv_bar_set_start_value');
 var _lv_bar_set_range = Module['_lv_bar_set_range'] = createExportWrapper('lv_bar_set_range');
@@ -6055,6 +6041,7 @@ var _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = createExportWrappe
 var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value');
 var _lv_bar_get_orientation = Module['_lv_bar_get_orientation'] = createExportWrapper('lv_bar_get_orientation');
 var _lv_bar_is_symmetrical = Module['_lv_bar_is_symmetrical'] = createExportWrapper('lv_bar_is_symmetrical');
+var _lv_button_create = Module['_lv_button_create'] = createExportWrapper('lv_button_create');
 var _lv_buttonmatrix_set_map = Module['_lv_buttonmatrix_set_map'] = createExportWrapper('lv_buttonmatrix_set_map');
 var _lv_buttonmatrix_create = Module['_lv_buttonmatrix_create'] = createExportWrapper('lv_buttonmatrix_create');
 var _lv_buttonmatrix_set_ctrl_map = Module['_lv_buttonmatrix_set_ctrl_map'] = createExportWrapper('lv_buttonmatrix_set_ctrl_map');
@@ -6071,6 +6058,7 @@ var _lv_buttonmatrix_get_button_text = Module['_lv_buttonmatrix_get_button_text'
 var _lv_buttonmatrix_has_button_ctrl = Module['_lv_buttonmatrix_has_button_ctrl'] = createExportWrapper('lv_buttonmatrix_has_button_ctrl');
 var _lv_buttonmatrix_get_one_checked = Module['_lv_buttonmatrix_get_one_checked'] = createExportWrapper('lv_buttonmatrix_get_one_checked');
 var _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = createExportWrapper('lv_calendar_set_showed_date');
+var _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create');
 var _lv_calendar_set_day_names = Module['_lv_calendar_set_day_names'] = createExportWrapper('lv_calendar_set_day_names');
 var _lv_calendar_set_today_date = Module['_lv_calendar_set_today_date'] = createExportWrapper('lv_calendar_set_today_date');
 var _lv_calendar_set_highlighted_dates = Module['_lv_calendar_set_highlighted_dates'] = createExportWrapper('lv_calendar_set_highlighted_dates');
@@ -6081,9 +6069,11 @@ var _lv_calendar_get_highlighted_dates = Module['_lv_calendar_get_highlighted_da
 var _lv_calendar_get_highlighted_dates_num = Module['_lv_calendar_get_highlighted_dates_num'] = createExportWrapper('lv_calendar_get_highlighted_dates_num');
 var _lv_calendar_get_pressed_date = Module['_lv_calendar_get_pressed_date'] = createExportWrapper('lv_calendar_get_pressed_date');
 var _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = createExportWrapper('lv_calendar_header_arrow_create');
+var _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create');
 var _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = createExportWrapper('lv_label_set_long_mode');
 var _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = createExportWrapper('lv_label_set_text_fmt');
 var _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = createExportWrapper('lv_calendar_header_dropdown_create');
+var _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create');
 var _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = createExportWrapper('lv_dropdown_set_options');
 var _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = createExportWrapper('lv_calendar_header_dropdown_set_year_list');
 var _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = createExportWrapper('lv_dropdown_clear_options');
@@ -6105,6 +6095,7 @@ var _lv_canvas_init_layer = Module['_lv_canvas_init_layer'] = createExportWrappe
 var _lv_canvas_finish_layer = Module['_lv_canvas_finish_layer'] = createExportWrapper('lv_canvas_finish_layer');
 var _lv_canvas_buf_size = Module['_lv_canvas_buf_size'] = createExportWrapper('lv_canvas_buf_size');
 var _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = createExportWrapper('lv_chart_get_point_pos_by_id');
+var _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create');
 var _lv_chart_set_type = Module['_lv_chart_set_type'] = createExportWrapper('lv_chart_set_type');
 var _lv_chart_refresh = Module['_lv_chart_refresh'] = createExportWrapper('lv_chart_refresh');
 var _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = createExportWrapper('lv_chart_set_point_count');
@@ -6136,6 +6127,7 @@ var _lv_chart_get_y_array = Module['_lv_chart_get_y_array'] = createExportWrappe
 var _lv_chart_get_x_array = Module['_lv_chart_get_x_array'] = createExportWrapper('lv_chart_get_x_array');
 var _lv_chart_get_pressed_point = Module['_lv_chart_get_pressed_point'] = createExportWrapper('lv_chart_get_pressed_point');
 var _lv_chart_get_first_point_center_offset = Module['_lv_chart_get_first_point_center_offset'] = createExportWrapper('lv_chart_get_first_point_center_offset');
+var _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create');
 var _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = createExportWrapper('lv_checkbox_set_text');
 var _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = createExportWrapper('lv_checkbox_set_text_static');
 var _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = createExportWrapper('lv_checkbox_get_text');
@@ -6159,6 +6151,7 @@ var _lv_label_set_text_static = Module['_lv_label_set_text_static'] = createExpo
 var _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = createExportWrapper('lv_dropdown_is_open');
 var _lv_image_set_src = Module['_lv_image_set_src'] = createExportWrapper('lv_image_set_src');
 var _lv_image_get_pivot = Module['_lv_image_get_pivot'] = createExportWrapper('lv_image_get_pivot');
+var _lv_image_create = Module['_lv_image_create'] = createExportWrapper('lv_image_create');
 var _lv_image_set_rotation = Module['_lv_image_set_rotation'] = createExportWrapper('lv_image_set_rotation');
 var _lv_image_set_pivot = Module['_lv_image_set_pivot'] = createExportWrapper('lv_image_set_pivot');
 var _lv_image_set_offset_x = Module['_lv_image_set_offset_x'] = createExportWrapper('lv_image_set_offset_x');
@@ -6188,6 +6181,7 @@ var _lv_imagebutton_get_src_left = Module['_lv_imagebutton_get_src_left'] = crea
 var _lv_imagebutton_get_src_middle = Module['_lv_imagebutton_get_src_middle'] = createExportWrapper('lv_imagebutton_get_src_middle');
 var _lv_imagebutton_get_src_right = Module['_lv_imagebutton_get_src_right'] = createExportWrapper('lv_imagebutton_get_src_right');
 var _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = createExportWrapper('lv_keyboard_def_event_cb');
+var _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create');
 var _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = createExportWrapper('lv_keyboard_set_textarea');
 var _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = createExportWrapper('lv_keyboard_set_mode');
 var _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = createExportWrapper('lv_keyboard_set_popovers');
@@ -6272,11 +6266,13 @@ var _lv_msgbox_close = Module['_lv_msgbox_close'] = createExportWrapper('lv_msgb
 var _lv_msgbox_close_async = Module['_lv_msgbox_close_async'] = createExportWrapper('lv_msgbox_close_async');
 var _lv_roller_set_options = Module['_lv_roller_set_options'] = createExportWrapper('lv_roller_set_options');
 var _lv_roller_set_selected = Module['_lv_roller_set_selected'] = createExportWrapper('lv_roller_set_selected');
+var _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create');
 var _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = createExportWrapper('lv_roller_set_visible_row_count');
 var _lv_roller_get_selected = Module['_lv_roller_get_selected'] = createExportWrapper('lv_roller_get_selected');
 var _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = createExportWrapper('lv_roller_get_selected_str');
 var _lv_roller_get_options = Module['_lv_roller_get_options'] = createExportWrapper('lv_roller_get_options');
 var _lv_roller_get_option_count = Module['_lv_roller_get_option_count'] = createExportWrapper('lv_roller_get_option_count');
+var _lv_scale_create = Module['_lv_scale_create'] = createExportWrapper('lv_scale_create');
 var _lv_scale_set_mode = Module['_lv_scale_set_mode'] = createExportWrapper('lv_scale_set_mode');
 var _lv_scale_set_total_tick_count = Module['_lv_scale_set_total_tick_count'] = createExportWrapper('lv_scale_set_total_tick_count');
 var _lv_scale_set_major_tick_every = Module['_lv_scale_set_major_tick_every'] = createExportWrapper('lv_scale_set_major_tick_every');
@@ -6299,6 +6295,7 @@ var _lv_scale_get_label_show = Module['_lv_scale_get_label_show'] = createExport
 var _lv_scale_get_angle_range = Module['_lv_scale_get_angle_range'] = createExportWrapper('lv_scale_get_angle_range');
 var _lv_scale_get_range_min_value = Module['_lv_scale_get_range_min_value'] = createExportWrapper('lv_scale_get_range_min_value');
 var _lv_scale_get_range_max_value = Module['_lv_scale_get_range_max_value'] = createExportWrapper('lv_scale_get_range_max_value');
+var _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create');
 var _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = createExportWrapper('lv_slider_is_dragged');
 var _lv_slider_set_value = Module['_lv_slider_set_value'] = createExportWrapper('lv_slider_set_value');
 var _lv_slider_set_left_value = Module['_lv_slider_set_left_value'] = createExportWrapper('lv_slider_set_left_value');
@@ -6351,6 +6348,8 @@ var _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = createExportWrapper(
 var _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = createExportWrapper('lv_spinbox_step_next');
 var _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = createExportWrapper('lv_spinbox_get_rollover');
 var _lv_spinner_set_anim_params = Module['_lv_spinner_set_anim_params'] = createExportWrapper('lv_spinner_set_anim_params');
+var _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create');
+var _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create');
 var _lv_table_create = Module['_lv_table_create'] = createExportWrapper('lv_table_create');
 var _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = createExportWrapper('lv_table_set_cell_value');
 var _lv_table_set_column_count = Module['_lv_table_set_column_count'] = createExportWrapper('lv_table_set_column_count');
@@ -6379,6 +6378,7 @@ var _lv_tabview_get_tab_active = Module['_lv_tabview_get_tab_active'] = createEx
 var _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = createExportWrapper('lv_textarea_cursor_up');
 var _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = createExportWrapper('lv_textarea_cursor_down');
 var _lv_textarea_delete_char_forward = Module['_lv_textarea_delete_char_forward'] = createExportWrapper('lv_textarea_delete_char_forward');
+var _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create');
 var _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = createExportWrapper('lv_textarea_clear_selection');
 var _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = createExportWrapper('lv_textarea_get_accepted_chars');
 var _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = createExportWrapper('lv_textarea_get_max_length');
