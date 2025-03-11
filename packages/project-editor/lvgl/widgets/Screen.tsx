@@ -80,6 +80,7 @@ export class LVGLScreenWidget extends LVGLWidget {
                     build.line(
                         `void *flowState = getFlowState(0, ${flowIndex});`
                     );
+                    build.line(`(void)flowState;`);
                 }
 
                 code.createScreen();
