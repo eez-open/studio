@@ -1512,6 +1512,10 @@ export class ProjectStore {
     };
 
     async findProjectComponent() {
+        if (this.runtime && !this.runtime.isDebuggerActive) {
+            return;
+        }
+
         const result = await showGenericDialog({
             dialogDefinition: {
                 title: "Find Project Component",

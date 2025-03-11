@@ -130,21 +130,38 @@ export const Property = observer(
             }
         }
 
+        _lastValue: any;
+
         updateChangeDocumentObserver() {
             if (this.changeDocumentDisposer) {
                 this.changeDocumentDisposer();
             }
 
             this.changeDocumentDisposer = autorun(() => {
+                const lastValue = this._lastValue;
+                this._lastValue = this._value;
+                if (this._value != lastValue) {
+                    return;
+                }
+
                 if (this.context.project) {
                     const getPropertyValueResult = getPropertyValue(
                         this.props.objects,
                         this.props.propertyInfo
                     );
+
+                    const value = getPropertyValueResult
+                        ? getPropertyValueResult.value
+                        : undefined;
+
+                    if (typeof value == "number") {
+                        if (value == filterNumber(this._value)) {
+                            return;
+                        }
+                    }
+
                     runInAction(() => {
-                        this._value = getPropertyValueResult
-                            ? getPropertyValueResult.value
-                            : undefined;
+                        this._value = value;
                     });
                 }
             });

@@ -235,7 +235,7 @@ export class LVGLKeyboardWidget extends LVGLWidget {
                         return;
                     }
 
-                    code.postExecute(() => {
+                    code.postPageExecute(() => {
                         let keyboardAccessor;
                         let textareaAccessor;
 

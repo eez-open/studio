@@ -168,10 +168,12 @@ export class LVGLLabelWidget extends LVGLWidget {
         }
 
         // text
-        code.callObjectFunction(
-            "lv_label_set_text",
-            code.stringProperty(this.textType, this.text, this.previewValue)
-        );
+        code.postWidgetExecute(() => {
+            code.callObjectFunction(
+                "lv_label_set_text",
+                code.stringProperty(this.textType, this.text, this.previewValue)
+            );
+        });
         if (this.textType == "expression") {
             code.addToTick("text", () => {
                 const new_val = code.evalTextProperty(

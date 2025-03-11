@@ -155,7 +155,10 @@ export interface LVGLCode {
     lvglAddObjectFlowCallback(propertyName: string, filter: number): void;
 
     //
-    postExecute(callback: () => void): void;
+    postWidgetExecute(callback: () => void): void;
+
+    //
+    postPageExecute(callback: () => void): void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +183,8 @@ export class SimulatorLVGLCode implements LVGLCode {
 
     allocated: number[] = [];
 
+    postWidgetExecuteCallbacks: (() => void)[] = [];
+
     startWidget(
         widget: LVGLWidget,
         parentObj: number,
@@ -191,6 +196,11 @@ export class SimulatorLVGLCode implements LVGLCode {
     }
 
     endWidget() {
+        for (const callback of this.postWidgetExecuteCallbacks) {
+            callback();
+        }
+        this.postWidgetExecuteCallbacks = [];
+
         this.callObjectFunction("lv_obj_update_layout");
 
         for (const tempStr of this.allocated) {
@@ -683,7 +693,7 @@ export class SimulatorLVGLCode implements LVGLCode {
         }
     }
 
-    postExecute(callback: () => void) {
+    postPageExecute(callback: () => void) {
         const widget = this.widget;
         const obj = this.obj;
         this.pageRuntime.addPostCreateCallback(() => {
@@ -691,6 +701,10 @@ export class SimulatorLVGLCode implements LVGLCode {
             this.obj = obj;
             callback();
         });
+    }
+
+    postWidgetExecute(callback: () => void) {
+        this.postWidgetExecuteCallbacks.push(callback);
     }
 }
 
@@ -703,8 +717,17 @@ export class BuildLVGLCode implements LVGLCode {
     componentIndex: number;
     propertyIndex: number;
 
+    noGoodNameCallbacks: (() => void)[] = [];
+
     startWidget(widget: LVGLWidget) {
         this.widget = widget;
+    }
+
+    endWidget() {
+        for (const callback of this.noGoodNameCallbacks) {
+            callback();
+        }
+        this.noGoodNameCallbacks = [];
     }
 
     get project() {
@@ -1211,7 +1234,11 @@ export class BuildLVGLCode implements LVGLCode {
         // this function is only used for the simulator
     }
 
-    postExecute(callback: () => void) {
+    postPageExecute(callback: () => void) {
         this.build.postBuildAdd(callback);
+    }
+
+    postWidgetExecute(callback: () => void) {
+        this.noGoodNameCallbacks.push(callback);
     }
 }

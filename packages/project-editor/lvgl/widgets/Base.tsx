@@ -1852,6 +1852,8 @@ export class LVGLWidget extends Widget {
             this._yScroll2 = runtime.wasm._lvglGetScrollY(obj);
         }
 
+        runtime.toLVGLCode.endWidget();
+
         return obj;
     }
 
@@ -1867,7 +1869,6 @@ export class LVGLWidget extends Widget {
         const code = runtime.toLVGLCode;
         code.startWidget(this, parentObj, customWidget);
         this.toLVGLCode(code);
-        code.endWidget();
         return code.obj;
     }
 
@@ -2210,6 +2211,8 @@ export class LVGLWidget extends Widget {
             }
         }
         this.localStyles.lvglBuild(build);
+
+        build.toLVGLCode.endWidget();
 
         // children
         if (this.children.length > 0) {
