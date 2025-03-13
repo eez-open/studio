@@ -79,6 +79,7 @@ import type { EmbeddedPropertyGrid } from "project-editor/ui-components/Property
 import type {
     LVGLWidget,
     LVGLScreenWidget,
+    LVGLContainerWidget,
     LVGLPanelWidget,
     LVGLUserWidgetWidget,
     LVGLTabWidget,
@@ -152,6 +153,7 @@ export interface IProjectEditor {
     ColorClass: typeof Color;
     LVGLWidgetClass: typeof LVGLWidget;
     LVGLScreenWidgetClass: typeof LVGLScreenWidget;
+    LVGLContainerWidgetClass: typeof LVGLContainerWidget;
     LVGLPanelWidgetClass: typeof LVGLPanelWidget;
     LVGLUserWidgetWidgetClass: typeof LVGLUserWidgetWidget;
     LVGLTabviewWidgetClass: typeof LVGLTabviewWidget;

@@ -16,7 +16,6 @@ import {
 import { visitObjects } from "project-editor/core/search";
 import {
     getProjectStore,
-    getAncestorOfType,
     ProjectStore,
     createObject,
     getClass,
@@ -419,22 +418,23 @@ export class FlowFragment extends EezObject {
                     | ContainerWidget
                     | SelectWidget
                     | LVGLWidget
-                    | undefined = getAncestorOfType(
-                    getParent(getParent(object)),
-                    ContainerWidget.classInfo
-                ) as ContainerWidget | undefined;
+                    | undefined;
 
-                if (!containerAncestor) {
-                    containerAncestor = getAncestorOfType(
-                        getParent(getParent(object)),
-                        SelectWidget.classInfo
-                    ) as SelectWidget | undefined;
-                    if (!containerAncestor) {
-                        containerAncestor = getAncestorOfType(
-                            getParent(getParent(object)),
-                            ProjectEditor.LVGLWidgetClass.classInfo
-                        ) as LVGLWidget | undefined;
+                let testObject: IEezObject = object;
+                while (testObject) {
+                    if (
+                        testObject instanceof
+                            ProjectEditor.ContainerWidgetClass ||
+                        testObject instanceof ProjectEditor.SelectWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.LVGLPanelWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.LVGLContainerWidgetClass
+                    ) {
+                        containerAncestor = testObject;
+                        break;
                     }
+                    testObject = getParent(testObject);
                 }
 
                 if (containerAncestor) {

@@ -325,7 +325,7 @@ export class EditorsStore {
             if (
                 parentNode &&
                 parentNode instanceof FlexLayout.TabSetNode &&
-                parentNode.isActive() &&
+                (parentNode.isActive() || !this.activeEditor) &&
                 parentNode.getSelectedNode() == tab
             ) {
                 activeEditor = editor;

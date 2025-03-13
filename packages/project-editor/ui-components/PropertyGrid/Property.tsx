@@ -424,6 +424,9 @@ export const Property = observer(
                             !isNaN(newValue.value) &&
                             newValue.value.toString() !== this._value.toString()
                         ) {
+                            runInAction(() => {
+                                this._value = newValue.value.toString();
+                            });
                             this.props.updateObject({
                                 [this.props.propertyInfo.name]: newValue.value
                             });

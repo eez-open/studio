@@ -31,7 +31,6 @@ import { ActiveFlowsPanel } from "project-editor/flow/debugger/ActiveFlowsPanel"
 import { LogsPanel } from "project-editor/flow/debugger/LogsPanel";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { VariablesTab } from "project-editor/features/variable/VariablesNavigation";
-import { FlowStructureTab } from "project-editor/flow/FlowStructureTab";
 import { StylesTab } from "project-editor/features/style/StylesNavigation";
 import { FontsTab } from "project-editor/features/font/FontsNavigation";
 import { BitmapsTab } from "project-editor/features/bitmap/BitmapsNavigation";
@@ -48,6 +47,7 @@ import {
 } from "home/extensions-manager/extensions-manager";
 import { LVGLGroupsTab } from "project-editor/lvgl/groups";
 import { settingsController } from "home/settings";
+import { PageStructure } from "project-editor/features/page/PagesNavigation";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -147,7 +147,7 @@ const Content = observer(
             }
 
             if (component === "flow-structure") {
-                return <FlowStructureTab />;
+                return <PageStructure />;
             }
 
             if (component === "variables") {

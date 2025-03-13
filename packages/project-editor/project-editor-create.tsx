@@ -77,6 +77,7 @@ import "project-editor/flow/components/widgets/eez-gui";
 import {
     LVGLWidget,
     LVGLScreenWidget,
+    LVGLContainerWidget,
     LVGLPanelWidget,
     LVGLUserWidgetWidget,
     LVGLTabWidget,
@@ -195,6 +196,7 @@ export async function createProjectEditor(
         ColorClass: Color,
         LVGLWidgetClass: LVGLWidget,
         LVGLScreenWidgetClass: LVGLScreenWidget,
+        LVGLContainerWidgetClass: LVGLContainerWidget,
         LVGLPanelWidgetClass: LVGLPanelWidget,
         LVGLUserWidgetWidgetClass: LVGLUserWidgetWidget,
         LVGLTabviewWidgetClass: LVGLTabviewWidget,
