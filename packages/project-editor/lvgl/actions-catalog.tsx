@@ -1,6 +1,7 @@
 import React from "react";
 import { IActionPropertyDefinition, registerAction } from "./actions";
 import {
+    LV_BUTTONMATRIX_CTRL_ENUM_NAME,
     LV_OBJ_FLAG_ENUM_NAME,
     LV_SCR_LOAD_ANIM_ENUM_NAME,
     LV_STATE_ENUM_NAME
@@ -856,6 +857,70 @@ registerAction({
         </>
     ),
     helpText: "Set the value of the bar"
+});
+
+registerAction({
+    id: 54,
+    name: "buttonMatrixSetButtonCtrl",
+    group: "ButtonMatrix",
+    properties: [
+        {
+            name: "object",
+            type: "widget:ButtonMatrix",
+            helpText: "The bar to set the value"
+        },
+        {
+            name: "buttonID",
+            type: "integer",
+            helpText:
+                "0 based index of the button to modify. (Not counting new lines)"
+        },
+        {
+            name: "ctrl",
+            type: `enum:${LV_BUTTONMATRIX_CTRL_ENUM_NAME}`,
+            helpText:
+                "OR-ed attributes. E.g. `LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE`"
+        }
+    ],
+    defaults: {},
+    label: ([object, buttonID, ctrl], [_1, _2, _3]) => (
+        <>
+            {object} {buttonID} {ctrl}
+        </>
+    ),
+    helpText: "Set the value of the bar"
+});
+
+registerAction({
+    id: 55,
+    name: "buttonMatrixClearButtonCtrl",
+    group: "ButtonMatrix",
+    properties: [
+        {
+            name: "object",
+            type: "widget:ButtonMatrix",
+            helpText: "The bar to set the value"
+        },
+        {
+            name: "buttonID",
+            type: "integer",
+            helpText:
+                "0 based index of the button to modify. (Not counting new lines)"
+        },
+        {
+            name: "ctrl",
+            type: `enum:${LV_BUTTONMATRIX_CTRL_ENUM_NAME}`,
+            helpText:
+                "OR-ed attributes. E.g. `LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE`"
+        }
+    ],
+    defaults: {},
+    label: ([object, buttonID, ctrl], [_1, _2, _3]) => (
+        <>
+            {object} {buttonID} {ctrl}
+        </>
+    ),
+    helpText: "Clear the attributes of a button of the button matrix"
 });
 
 registerAction({

@@ -98,7 +98,14 @@
         "stdbool.h": "c",
         "regex": "cpp",
         "bitset": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "charconv": "c",
+        "compare": "c",
+        "format": "c",
+        "xlocbuf": "c",
+        "xloctime": "c",
+        "xmemory": "c",
+        "xtree": "c"
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,

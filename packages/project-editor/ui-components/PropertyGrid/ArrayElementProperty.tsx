@@ -50,21 +50,63 @@ import { Point, pointDistance } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let objectCollapsedStore = observable.box<
+    { object: IEezObject; collapsed: Set<IEezObject> }[]
+>([]);
+
+const MAX_OBJECTS_IN_COLLAPSED_STORE = 100;
+
 export const ArrayProperty = observer(
     class ArrayProperty extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
-        collapsed = new Set<IEezObject>();
-
         constructor(props: PropertyProps) {
             super(props);
 
             makeObservable(this, {
-                collapsed: observable,
                 value: computed,
                 objects: computed
             });
+        }
+
+        get collapsed() {
+            const object = this.props.objects[0];
+
+            let objectCollapsed = objectCollapsedStore
+                .get()
+                .find(collapsed => collapsed.object == object);
+
+            if (!objectCollapsed) {
+                const collapsed = new Set<IEezObject>();
+
+                if (
+                    this.props.propertyInfo
+                        .showArrayCollapsedByDefaultInPropertyGrid == true
+                ) {
+                    if (this.value) {
+                        for (const object of this.value) {
+                            collapsed.add(object);
+                        }
+                    }
+                }
+
+                objectCollapsed = {
+                    object,
+                    collapsed
+                };
+
+                if (
+                    objectCollapsedStore.get().length ==
+                    MAX_OBJECTS_IN_COLLAPSED_STORE
+                ) {
+                    objectCollapsedStore.get().unshift();
+                }
+
+                objectCollapsedStore.get().push(objectCollapsed);
+            }
+
+            return objectCollapsed.collapsed;
         }
 
         get value() {
@@ -1024,9 +1066,12 @@ const ArrayElementProperties = observer(
                         />
 
                         <div ref={this.refHeader}>
-                            <div className="element-index">
-                                {`#${this.props.itemIndex + 1} `}
-                            </div>
+                            {!this.props.propertyInfo
+                                .hideElementIndexInPropertyGrid && (
+                                <div className="element-index">
+                                    {`#${this.props.itemIndex + 1} `}
+                                </div>
+                            )}
                             <div className="label">
                                 {getListLabel(this.props.object, collapsed)}
                             </div>

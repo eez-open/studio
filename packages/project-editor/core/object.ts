@@ -292,6 +292,9 @@ export interface PropertyInfo {
     colorEditorForLiteral?: boolean;
 
     lvglActionPropertyType?: LvglActionPropertyType;
+
+    showArrayCollapsedByDefaultInPropertyGrid?: boolean;
+    hideElementIndexInPropertyGrid?: boolean;
 }
 
 export type InheritedValue =

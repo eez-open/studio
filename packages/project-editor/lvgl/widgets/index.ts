@@ -86,7 +86,9 @@ import {
     LV_OBJ_FLAG_ENUM_NAME,
     LV_SCR_LOAD_ANIM_ENUM_NAME,
     LVGL_STATE_CODES,
-    LV_STATE_ENUM_NAME
+    LV_STATE_ENUM_NAME,
+    LV_BUTTONMATRIX_CTRL_ENUM_NAME,
+    LV_BUTTONMATRIX_CTRL
 } from "../lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,3 +279,5 @@ registerLvglEnum(LV_STATE_ENUM_NAME, {
     FOCUS_KEY: LVGL_STATE_CODES.FOCUS_KEY,
     PRESSED: LVGL_STATE_CODES.PRESSED
 });
+
+registerLvglEnum(LV_BUTTONMATRIX_CTRL_ENUM_NAME, LV_BUTTONMATRIX_CTRL);
