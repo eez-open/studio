@@ -180,17 +180,9 @@ export class LVGLArcWidget extends LVGLWidget {
                 );
             }
         } else if (this.rangeMinType == "literal") {
-            code.callObjectFunction(
-                "lv_arc_set_range",
-                this.rangeMin,
-                this.rangeMin
-            );
+            code.callObjectFunction("lv_arc_set_range", this.rangeMin, 100);
         } else if (this.rangeMaxType == "literal") {
-            code.callObjectFunction(
-                "lv_arc_set_range",
-                this.rangeMax,
-                this.rangeMax
-            );
+            code.callObjectFunction("lv_arc_set_range", 0, this.rangeMax);
         }
 
         if (this.rangeMinType == "expression") {
@@ -211,7 +203,7 @@ export class LVGLArcWidget extends LVGLWidget {
                 code.ifIntegerNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
-                    const min = code.assign("int16_t", "min", "new_val");
+                    const min = code.assign("int16_t", "min", new_val);
 
                     const max = code.callObjectFunctionWithAssignment(
                         "int16_t",
@@ -252,7 +244,7 @@ export class LVGLArcWidget extends LVGLWidget {
                         "lv_arc_get_min_value"
                     );
 
-                    const max = code.assign("int16_t", "max", "new_val");
+                    const max = code.assign("int16_t", "max", new_val);
 
                     code.ifIntegerLess(min, max, () => {
                         code.callObjectFunction("lv_arc_set_range", min, max);

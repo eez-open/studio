@@ -581,6 +581,14 @@ EM_PORT_API(const char *) lvglGetTabName(lv_obj_t *tabview, int tabIndex, lv_dir
 // so it will not be exported.
 // Here we are defining exportable wrappers to these functions.
 
+EM_PORT_API(int32_t) v8_lv_slider_get_min_value(lv_obj_t *obj) {
+    return lv_slider_get_min_value(obj);
+}
+
+EM_PORT_API(int32_t) v8_lv_slider_get_max_value(lv_obj_t *obj) {
+    return lv_slider_get_max_value(obj);
+}
+
 EM_PORT_API(void) v8_lv_slider_set_range(lv_obj_t *obj, int32_t min, int32_t max) {
     lv_slider_set_range(obj, min, max);
 }

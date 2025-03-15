@@ -969,29 +969,29 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1046016: ($0) => { startToDebuggerMessage($0); },  
- 1046048: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1046123: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1046198: ($0) => { finishToDebuggerMessage($0); },  
- 1046231: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1046261: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1046291: ($0) => { lvglScreenTick($0); },  
- 1046315: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1046355: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1046409: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1046463: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1046516: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1046569: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1046622: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1046655: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1046691: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1046736: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1046842: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1046878: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1046915: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1046955: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1047012: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1047071: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1046080: ($0) => { startToDebuggerMessage($0); },  
+ 1046112: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1046187: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1046262: ($0) => { finishToDebuggerMessage($0); },  
+ 1046295: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1046325: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1046355: ($0) => { lvglScreenTick($0); },  
+ 1046379: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1046419: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1046473: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1046527: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1046580: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1046633: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1046686: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1046719: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1046755: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1046800: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1046906: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1046942: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1046979: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1047019: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1047076: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1047135: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4861,6 +4861,10 @@ var _lv_obj_get_scroll_y = Module['_lv_obj_get_scroll_y'] = createExportWrapper(
 var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate');
 var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = createExportWrapper('lvglDeleteScreenOnUnload');
 var _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTabName');
+var _v8_lv_slider_get_min_value = Module['_v8_lv_slider_get_min_value'] = createExportWrapper('v8_lv_slider_get_min_value');
+var _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = createExportWrapper('lv_bar_get_min_value');
+var _v8_lv_slider_get_max_value = Module['_v8_lv_slider_get_max_value'] = createExportWrapper('v8_lv_slider_get_max_value');
+var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value');
 var _v8_lv_slider_set_range = Module['_v8_lv_slider_set_range'] = createExportWrapper('v8_lv_slider_set_range');
 var _lv_bar_set_range = Module['_lv_bar_set_range'] = createExportWrapper('lv_bar_set_range');
 var _v8_lv_slider_set_mode = Module['_v8_lv_slider_set_mode'] = createExportWrapper('v8_lv_slider_set_mode');
@@ -5833,8 +5837,6 @@ var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createEx
 var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle');
 var _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create');
 var _lv_bar_get_mode = Module['_lv_bar_get_mode'] = createExportWrapper('lv_bar_get_mode');
-var _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = createExportWrapper('lv_bar_get_min_value');
-var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value');
 var _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl');
 var _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = createExportWrapper('lv_btnmatrix_set_btn_width');
 var _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = createExportWrapper('lv_btnmatrix_get_map');

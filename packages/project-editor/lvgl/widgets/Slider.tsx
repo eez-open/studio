@@ -20,13 +20,17 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLSliderWidget extends LVGLWidget {
-    min: number;
-    max: number;
+    min: number | string;
+    minType: LVGLPropertyType;
+    max: number | string;
+    maxType: LVGLPropertyType;
     mode: keyof typeof SLIDER_MODES;
     value: number | string;
     valueType: LVGLPropertyType;
+    previewValue: string;
     valueLeft: number | string;
     valueLeftType: LVGLPropertyType;
+    previewValueLeft: string;
     enableAnimation: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -36,16 +40,24 @@ export class LVGLSliderWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Input",
 
         properties: [
-            {
-                name: "min",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
-            {
-                name: "max",
-                type: PropertyType.Number,
-                propertyGridGroup: specificGroup
-            },
+            ...makeLvglExpressionProperty(
+                "min",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
+            ...makeLvglExpressionProperty(
+                "max",
+                "integer",
+                "input",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
             {
                 name: "mode",
                 type: PropertyType.Enum,
@@ -57,15 +69,6 @@ export class LVGLSliderWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup
             },
             ...makeLvglExpressionProperty(
-                "value",
-                "integer",
-                "assignable",
-                ["literal", "expression"],
-                {
-                    propertyGridGroup: specificGroup
-                }
-            ),
-            ...makeLvglExpressionProperty(
                 "valueLeft",
                 "integer",
                 "assignable",
@@ -76,6 +79,31 @@ export class LVGLSliderWidget extends LVGLWidget {
                         slider.mode != "RANGE"
                 }
             ),
+            {
+                name: "previewValueLeft",
+                type: PropertyType.String,
+                disabled: (widget: LVGLSliderWidget) => {
+                    return widget.valueLeftType == "literal";
+                },
+                propertyGridGroup: specificGroup
+            },
+            ...makeLvglExpressionProperty(
+                "value",
+                "integer",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
+            {
+                name: "previewValue",
+                type: PropertyType.String,
+                disabled: (widget: LVGLSliderWidget) => {
+                    return widget.valueType == "literal";
+                },
+                propertyGridGroup: specificGroup
+            },
             {
                 name: "enableAnimation",
                 type: PropertyType.Boolean,
@@ -91,13 +119,30 @@ export class LVGLSliderWidget extends LVGLWidget {
             height: 10,
             clickableFlag: true,
             min: 0,
+            minType: "literal",
             max: 100,
+            maxType: "literal",
             mode: "NORMAL",
             value: 25,
             valueType: "literal",
+            previewValue: 25,
             valueLeft: 0,
             valueLeftType: "literal",
+            previewValueLeft: 0,
             enableAnimation: false
+        },
+
+        beforeLoadHook: (
+            object: LVGLSliderWidget,
+            jsObject: Partial<LVGLSliderWidget>
+        ) => {
+            if (jsObject.minType == undefined) {
+                jsObject.minType = "literal";
+            }
+
+            if (jsObject.maxType == undefined) {
+                jsObject.maxType = "literal";
+            }
         },
 
         icon: (
@@ -144,12 +189,16 @@ export class LVGLSliderWidget extends LVGLWidget {
 
         makeObservable(this, {
             min: observable,
+            minType: observable,
             max: observable,
+            maxType: observable,
             mode: observable,
             value: observable,
             valueType: observable,
+            previewValue: observable,
             valueLeft: observable,
             valueLeftType: observable,
+            previewValueLeft: observable,
             enableAnimation: observable
         });
     }
@@ -160,12 +209,104 @@ export class LVGLSliderWidget extends LVGLWidget {
         code.createObject(`lv_slider_create`);
 
         // min and max
-        if (this.min != 0 || this.max != 100) {
+        if (this.minType == "literal" && this.maxType == "literal") {
+            if (this.min != 0 || this.max != 100) {
+                code.callObjectFunction(
+                    PREFIX + "lv_slider_set_range",
+                    this.min,
+                    this.max
+                );
+            }
+        } else if (this.minType == "literal") {
             code.callObjectFunction(
                 PREFIX + "lv_slider_set_range",
                 this.min,
+                100
+            );
+        } else if (this.maxType == "literal") {
+            code.callObjectFunction(
+                PREFIX + "lv_slider_set_range",
+                0,
                 this.max
             );
+        }
+
+        if (this.minType == "expression") {
+            code.addToTick("min", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.min as string,
+                    "Failed to evaluate Min in Slider widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    PREFIX + "lv_slider_get_min_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    const min = code.assign("int16_t", "min", new_val);
+
+                    const max = code.callObjectFunctionWithAssignment(
+                        "int16_t",
+                        "max",
+                        PREFIX + "lv_slider_get_max_value"
+                    );
+
+                    code.ifIntegerLess(min, max, () => {
+                        code.callObjectFunction(
+                            PREFIX + "lv_slider_set_range",
+                            min,
+                            max
+                        );
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }
+
+        if (this.maxType == "expression") {
+            code.addToTick("max", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.max as string,
+                    "Failed to evaluate Max in Slider widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    PREFIX + "lv_slider_get_max_value"
+                );
+
+                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    const min = code.callObjectFunctionWithAssignment(
+                        "int16_t",
+                        "min",
+                        PREFIX + "lv_slider_get_min_value"
+                    );
+
+                    const max = code.assign("int16_t", "max", new_val);
+
+                    code.ifIntegerLess(min, max, () => {
+                        code.callObjectFunction(
+                            PREFIX + "lv_slider_set_range",
+                            min,
+                            max
+                        );
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
         }
 
         // mode
@@ -188,6 +329,20 @@ export class LVGLSliderWidget extends LVGLWidget {
                 );
             }
         } else {
+            if (code.pageRuntime && code.pageRuntime.isEditor) {
+                const previewValue = Number.parseInt(this.previewValue);
+
+                if (!isNaN(previewValue)) {
+                    code.callObjectFunction(
+                        PREFIX + "lv_slider_set_value",
+                        previewValue,
+                        code.constant(
+                            this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
+                        )
+                    );
+                }
+            }
+
             code.addToTick("value", () => {
                 const new_val = code.evalIntegerProperty(
                     "int32_t",
@@ -267,6 +422,24 @@ export class LVGLSliderWidget extends LVGLWidget {
                     )
                 );
             } else {
+                if (code.pageRuntime && code.pageRuntime.isEditor) {
+                    const previewValueLeft = Number.parseInt(
+                        this.previewValueLeft
+                    );
+
+                    if (!isNaN(previewValueLeft)) {
+                        code.callObjectFunction(
+                            PREFIX + "lv_slider_set_left_value",
+                            previewValueLeft,
+                            code.constant(
+                                this.enableAnimation
+                                    ? "LV_ANIM_ON"
+                                    : "LV_ANIM_OFF"
+                            )
+                        );
+                    }
+                }
+
                 code.addToTick("valueLeft", () => {
                     const new_val = code.evalIntegerProperty(
                         "int32_t",

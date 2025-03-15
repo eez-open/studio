@@ -1265,13 +1265,77 @@ registerAction({
             helpText: "Use animation when setting the value"
         }
     ],
-    defaults: {},
+    defaults: {
+        animated: true
+    },
     label: ([object, value, animated], [_1, _2, animatedLabel]) => (
         <>
             {object} {value} <i>{animatedLabel}</i>={animated}
         </>
     ),
     helpText: "Set the value of the slider"
+});
+
+registerAction({
+    id: 56,
+    name: "sliderSetValueLeft",
+    group: "Slider",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Slider",
+            helpText: "The slider to set the value"
+        },
+        {
+            name: "valueLeft",
+            type: "integer",
+            helpText: "The left value to set"
+        },
+        {
+            name: "animated",
+            type: "boolean",
+            helpText: "Use animation when setting the value"
+        }
+    ],
+    defaults: {
+        animated: true
+    },
+    label: ([object, valueLeft, animated], [_1, _2, animatedLabel]) => (
+        <>
+            {object} {valueLeft} <i>{animatedLabel}</i>={animated}
+        </>
+    ),
+    helpText: "Set a new value for the left knob of a slider"
+});
+
+registerAction({
+    id: 57,
+    name: "sliderSetRange",
+    group: "Slider",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Slider",
+            helpText: "The bar to set the value"
+        },
+        {
+            name: "min",
+            type: "integer",
+            helpText: "Minimum value"
+        },
+        {
+            name: "max",
+            type: "integer",
+            helpText: "Maximum value"
+        }
+    ],
+    defaults: {},
+    label: ([object, min, max], [_1, _2, _3]) => (
+        <>
+            {object} {min} {max}
+        </>
+    ),
+    helpText: "Set minimum and the maximum values of a slider"
 });
 
 ////////////////////////////////////////////////////////////////////////////////
