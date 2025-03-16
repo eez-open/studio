@@ -969,29 +969,29 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1040944: ($0) => { startToDebuggerMessage($0); },  
- 1040976: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1041051: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1041126: ($0) => { finishToDebuggerMessage($0); },  
- 1041159: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1041189: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1041219: ($0) => { lvglScreenTick($0); },  
- 1041243: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1041283: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1041337: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1041391: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1041444: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1041497: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1041550: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1041583: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1041619: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1041664: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1041770: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1041806: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1041843: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1041883: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1041940: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1041999: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1039808: ($0) => { startToDebuggerMessage($0); },  
+ 1039840: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1039915: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1039990: ($0) => { finishToDebuggerMessage($0); },  
+ 1040023: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1040053: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1040083: ($0) => { lvglScreenTick($0); },  
+ 1040107: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1040147: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1040201: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1040255: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1040308: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1040361: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1040414: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1040447: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1040483: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1040528: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1040634: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1040670: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1040707: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1040747: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1040804: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1040863: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -5877,8 +5877,6 @@ var _lv_style_set_grid_cell_row_span = Module['_lv_style_set_grid_cell_row_span'
 var _lv_text_ins = Module['_lv_text_ins'] = createExportWrapper('lv_text_ins');
 var _lv_text_cut = Module['_lv_text_cut'] = createExportWrapper('lv_text_cut');
 var _lv_text_set_text_vfmt = Module['_lv_text_set_text_vfmt'] = createExportWrapper('lv_text_set_text_vfmt');
-var _lv_text_ap_calc_bytes_count = Module['_lv_text_ap_calc_bytes_count'] = createExportWrapper('lv_text_ap_calc_bytes_count');
-var _lv_text_ap_proc = Module['_lv_text_ap_proc'] = createExportWrapper('lv_text_ap_proc');
 var _lv_timer_enable = Module['_lv_timer_enable'] = createExportWrapper('lv_timer_enable');
 var _lv_lock = Module['_lv_lock'] = createExportWrapper('lv_lock');
 var _lv_unlock = Module['_lv_unlock'] = createExportWrapper('lv_unlock');

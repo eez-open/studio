@@ -27,7 +27,11 @@ export class ExtractFont implements IFontExtract {
 
         const range: number[] = [];
         this.params.encodings!.map(encodingRange =>
-            range.push(encodingRange.from, encodingRange.to, encodingRange.from)
+            range.push(
+                encodingRange.from,
+                encodingRange.to,
+                encodingRange.mapped_from ?? encodingRange.from
+            )
         );
 
         const symbols = this.params.symbols ?? "";

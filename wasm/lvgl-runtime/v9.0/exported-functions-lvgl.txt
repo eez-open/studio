@@ -1025,8 +1025,6 @@ _lv_text_encoded_letter_next_2
 _lv_text_ins
 _lv_text_cut
 _lv_text_set_text_vfmt
-_lv_text_ap_calc_bytes_count
-_lv_text_ap_proc
 _lv_timer_core_init
 _lv_timer_enable
 _lv_timer_handler

@@ -51,6 +51,7 @@ export interface GlyphBitmap {
 export interface EncodingRange {
     from: number;
     to: number;
+    mapped_from?: number;
 }
 
 export interface Params {

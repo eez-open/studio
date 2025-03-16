@@ -140,7 +140,7 @@ export const Property = observer(
             this.changeDocumentDisposer = autorun(() => {
                 const lastValue = this._lastValue;
                 this._lastValue = this._value;
-                if (this._value != lastValue) {
+                if (!this.props.readOnly && this._value != lastValue) {
                     return;
                 }
 
