@@ -1724,7 +1724,7 @@ export class LVGLBuild extends Build {
                 );
 
                 build.line(
-                    `lv_font_t *${this.getFontVariableName(
+                    `${this.getFontVariableName(
                         font
                     )} = lv_binfont_create("${path}${output}.bin");`
                 );

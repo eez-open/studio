@@ -432,7 +432,7 @@ export class Build extends EezObject {
             files: observable,
             destinationFolder: observable,
             separateFolderForImagesAndFonts: observable,
-            storeFontsInFilesystem: observable,
+            fontsAreStoredInFilesystem: observable,
             fontsFilesystemPath: observable,
             lvglInclude: observable,
             screensLifetimeSupport: observable,
