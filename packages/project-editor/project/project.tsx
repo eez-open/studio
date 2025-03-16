@@ -312,7 +312,7 @@ export class Build extends EezObject {
                 disabled: isNotLVGLProject
             },
             {
-                name: "storeFontsInFilesystem",
+                name: "fontsAreStoredInFilesystem",
                 type: PropertyType.Boolean,
                 disabled: (object: Build) => isNotLVGLProject(object),
                 checkboxStyleSwitch: true
