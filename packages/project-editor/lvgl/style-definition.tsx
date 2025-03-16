@@ -688,7 +688,7 @@ export class LVGLStylesDefinition extends EezObject {
                                         build.line(
                                             `lv_obj_set_style_${build.getStylePropName(
                                                 propertyInfo.name
-                                            )}(obj, &${build.getFontVariableName(
+                                            )}(obj, ${build.getFontAccessor(
                                                 font
                                             )}, ${selectorCode});`
                                         );
@@ -821,9 +821,7 @@ export class LVGLStylesDefinition extends EezObject {
                                 build.line(
                                     `lv_style_set_${build.getStylePropName(
                                         propertyInfo.name
-                                    )}(style, &${build.getFontVariableName(
-                                        font
-                                    )});`
+                                    )}(style, ${build.getFontAccessor(font)});`
                                 );
                             }
                         }

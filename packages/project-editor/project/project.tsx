@@ -278,6 +278,8 @@ export class Build extends EezObject {
     compressFlowDefinition: boolean;
     executionQueueSize: number;
     expressionEvaluatorStackSize: number;
+    fontsAreStoredInFilesystem: boolean;
+    fontsFilesystemPath: string;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -308,6 +310,19 @@ export class Build extends EezObject {
                 checkboxStyleSwitch: true,
                 type: PropertyType.Boolean,
                 disabled: isNotLVGLProject
+            },
+            {
+                name: "storeFontsInFilesystem",
+                type: PropertyType.Boolean,
+                disabled: (object: Build) => isNotLVGLProject(object),
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "fontsFilesystemPath",
+                type: PropertyType.String,
+                disabled: (object: Build) =>
+                    isNotLVGLProject(object) ||
+                    !object.fontsAreStoredInFilesystem
             },
             {
                 name: "lvglInclude",
@@ -386,6 +401,11 @@ export class Build extends EezObject {
             if (jsObject.screensLifetimeSupport == undefined) {
                 jsObject.screensLifetimeSupport = false;
             }
+
+            if (jsObject.fontsAreStoredInFilesystem == undefined) {
+                jsObject.fontsAreStoredInFilesystem = false;
+                jsObject.fontsFilesystemPath = "";
+            }
         },
 
         updateObjectValueHook: (build: Build, values: Partial<Build>) => {
@@ -412,6 +432,8 @@ export class Build extends EezObject {
             files: observable,
             destinationFolder: observable,
             separateFolderForImagesAndFonts: observable,
+            storeFontsInFilesystem: observable,
+            fontsFilesystemPath: observable,
             lvglInclude: observable,
             screensLifetimeSupport: observable,
             generateSourceCodeForEezFramework: observable,

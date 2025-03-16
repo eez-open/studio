@@ -14,7 +14,11 @@ import { Project, findAction } from "project-editor/project/project";
 import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
-import { isDev, writeTextFile } from "eez-studio-shared/util-electron";
+import {
+    isDev,
+    writeBinaryData,
+    writeTextFile
+} from "eez-studio-shared/util-electron";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
     isEnumType,
@@ -675,6 +679,13 @@ export class LVGLBuild extends Build {
     getFontVariableName(font: Font) {
         this.assets.markFontUsed(font);
         return "ui_font_" + this.fontNames.get(font.objID)!;
+    }
+
+    getFontAccessor(font: Font) {
+        const variableName = this.getFontVariableName(font);
+        return this.project.settings.build.fontsAreStoredInFilesystem
+            ? variableName
+            : `&${variableName}`;
     }
 
     getAddStyleFunctionName(style: LVGLStyle) {
@@ -1681,7 +1692,53 @@ export class LVGLBuild extends Build {
         build.line("");
 
         //
+
+        if (
+            this.project.settings.build.fontsAreStoredInFilesystem &&
+            this.fonts.length > 0
+        ) {
+            for (const font of this.fonts) {
+                build.line(`lv_font_t *${this.getFontVariableName(font)};`);
+            }
+
+            build.line("");
+        }
+
+        //
         build.blockStart("void create_screens() {");
+
+        if (
+            this.project.settings.build.fontsAreStoredInFilesystem &&
+            this.fonts.length > 0
+        ) {
+            let path = this.project.settings.build.fontsFilesystemPath;
+            if (!path.endsWith("/")) {
+                path += "/";
+            }
+
+            for (const font of this.fonts) {
+                const output = getName(
+                    "ui_font_",
+                    font.name || "",
+                    NamingConvention.UnderscoreLowerCase
+                );
+
+                build.line(
+                    `lv_font_t *${this.getFontVariableName(
+                        font
+                    )} = lv_binfont_create("${path}${output}.bin");`
+                );
+                if (font.lvglFallbackFont) {
+                    build.line(
+                        `${this.getFontVariableName(font)}->fallback = &${
+                            font.lvglFallbackFont
+                        };`
+                    );
+                }
+            }
+
+            build.line("");
+        }
 
         if (this.project.lvglGroups.groups.length > 0) {
             build.line("ui_create_groups();");
@@ -1809,9 +1866,15 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         const build = this;
 
         for (const font of this.fonts) {
-            build.line(
-                `extern const lv_font_t ${this.getFontVariableName(font)};`
-            );
+            if (this.project.settings.build.fontsAreStoredInFilesystem) {
+                build.line(
+                    `extern lv_font_t *${this.getFontVariableName(font)};`
+                );
+            } else {
+                build.line(
+                    `extern const lv_font_t ${this.getFontVariableName(font)};`
+                );
+            }
         }
 
         return this.result;
@@ -2115,6 +2178,8 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     )}(lv_obj_t *obj) {`
                 );
 
+                build.line(`(void)obj;`);
+
                 if (definition) {
                     Object.keys(definition).forEach(part => {
                         Object.keys(definition[part]).forEach(state => {
@@ -2142,6 +2207,8 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                         lvglStyle
                     )}(lv_obj_t *obj) {`
                 );
+
+                build.line(`(void)obj;`);
 
                 if (definition) {
                     Object.keys(definition).forEach(part => {
@@ -2292,34 +2359,72 @@ ${source}`;
         await Promise.all(
             this.fonts.map(font =>
                 (async () => {
-                    const lvglSourceFile = await font.getLvglSourceFile();
-                    if (lvglSourceFile) {
-                        const output = getName(
-                            "ui_font_",
-                            font.name || "",
-                            NamingConvention.UnderscoreLowerCase
-                        );
+                    if (
+                        this.project.settings.build.fontsAreStoredInFilesystem
+                    ) {
+                        const lvglBinaryFileBase64 = font.lvglBinFile;
+                        const lvglBinaryFile = lvglBinaryFileBase64
+                            ? Buffer.from(lvglBinaryFileBase64, "base64")
+                            : undefined;
+                        if (lvglBinaryFile) {
+                            const output = getName(
+                                "ui_font_",
+                                font.name || "",
+                                NamingConvention.UnderscoreLowerCase
+                            );
 
-                        try {
-                            await writeTextFile(
-                                this.project._store.getAbsoluteFilePath(
-                                    destinationFolder
-                                ) +
-                                    "/" +
-                                    (this.project.settings.build
-                                        .separateFolderForImagesAndFonts
-                                        ? "fonts/"
-                                        : "") +
-                                    output +
-                                    ".c",
-                                lvglSourceFile
+                            try {
+                                await writeBinaryData(
+                                    this.project._store.getAbsoluteFilePath(
+                                        destinationFolder
+                                    ) +
+                                        "/" +
+                                        (this.project.settings.build
+                                            .separateFolderForImagesAndFonts
+                                            ? "fonts/"
+                                            : "") +
+                                        output +
+                                        ".bin",
+                                    lvglBinaryFile
+                                );
+                            } catch (err) {
+                                this.project._store.outputSectionsStore.write(
+                                    Section.OUTPUT,
+                                    MessageType.ERROR,
+                                    `Error writing font file '${output}.bin': ${err}`
+                                );
+                            }
+                        }
+                    } else {
+                        const lvglSourceFile = await font.getLvglSourceFile();
+                        if (lvglSourceFile) {
+                            const output = getName(
+                                "ui_font_",
+                                font.name || "",
+                                NamingConvention.UnderscoreLowerCase
                             );
-                        } catch (err) {
-                            this.project._store.outputSectionsStore.write(
-                                Section.OUTPUT,
-                                MessageType.ERROR,
-                                `Error writing font file '${output}.c': ${err}`
-                            );
+
+                            try {
+                                await writeTextFile(
+                                    this.project._store.getAbsoluteFilePath(
+                                        destinationFolder
+                                    ) +
+                                        "/" +
+                                        (this.project.settings.build
+                                            .separateFolderForImagesAndFonts
+                                            ? "fonts/"
+                                            : "") +
+                                        output +
+                                        ".c",
+                                    lvglSourceFile
+                                );
+                            } catch (err) {
+                                this.project._store.outputSectionsStore.write(
+                                    Section.OUTPUT,
+                                    MessageType.ERROR,
+                                    `Error writing font file '${output}.c': ${err}`
+                                );
+                            }
                         }
                     }
                 })()
