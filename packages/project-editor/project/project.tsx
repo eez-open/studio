@@ -278,8 +278,9 @@ export class Build extends EezObject {
     compressFlowDefinition: boolean;
     executionQueueSize: number;
     expressionEvaluatorStackSize: number;
-    fontsAreStoredInFilesystem: boolean;
-    fontsFilesystemPath: string;
+    imageExportMode: "source" | "binary";
+    fontExportMode: "source" | "binary";
+    fileSystemPath: string;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -312,17 +313,44 @@ export class Build extends EezObject {
                 disabled: isNotLVGLProject
             },
             {
-                name: "fontsAreStoredInFilesystem",
-                type: PropertyType.Boolean,
-                disabled: (object: Build) => isNotLVGLProject(object),
-                checkboxStyleSwitch: true
+                name: "imageExportMode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "source",
+                        label: "Source code"
+                    },
+                    {
+                        id: "binary",
+                        label: "Binary"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                disabled: (object: Build) => isNotLVGLProject(object)
             },
             {
-                name: "fontsFilesystemPath",
+                name: "fontExportMode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "source",
+                        label: "Source code"
+                    },
+                    {
+                        id: "binary",
+                        label: "Binary"
+                    }
+                ],
+                enumDisallowUndefined: true,
+                disabled: (object: Build) => isNotLVGLProject(object)
+            },
+            {
+                name: "fileSystemPath",
                 type: PropertyType.String,
                 disabled: (object: Build) =>
                     isNotLVGLProject(object) ||
-                    !object.fontsAreStoredInFilesystem
+                    (object.imageExportMode == "source" &&
+                        object.fontExportMode == "source")
             },
             {
                 name: "lvglInclude",
@@ -402,9 +430,24 @@ export class Build extends EezObject {
                 jsObject.screensLifetimeSupport = false;
             }
 
-            if (jsObject.fontsAreStoredInFilesystem == undefined) {
-                jsObject.fontsAreStoredInFilesystem = false;
-                jsObject.fontsFilesystemPath = "";
+            if ((jsObject as any).fontsAreStoredInFilesystem === true) {
+                jsObject.fontExportMode = "binary";
+            }
+
+            if ((jsObject as any).fontsFilesystemPath != undefined) {
+                jsObject.fileSystemPath = (jsObject as any).fontsFilesystemPath;
+            }
+
+            if (jsObject.imageExportMode == undefined) {
+                jsObject.imageExportMode = "source";
+            }
+
+            if (jsObject.fontExportMode == undefined) {
+                jsObject.fontExportMode = "source";
+            }
+
+            if (jsObject.fileSystemPath == undefined) {
+                jsObject.fileSystemPath = "";
             }
         },
 
@@ -432,8 +475,9 @@ export class Build extends EezObject {
             files: observable,
             destinationFolder: observable,
             separateFolderForImagesAndFonts: observable,
-            fontsAreStoredInFilesystem: observable,
-            fontsFilesystemPath: observable,
+            imageExportMode: observable,
+            fontExportMode: observable,
+            fileSystemPath: observable,
             lvglInclude: observable,
             screensLifetimeSupport: observable,
             generateSourceCodeForEezFramework: observable,

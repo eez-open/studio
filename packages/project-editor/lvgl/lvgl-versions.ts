@@ -116,7 +116,11 @@ const versions = {
             { id: CF_RGB565A8, label: "RGB565A8" }
         ],
 
-        lvglBitmapToSourceFile: async (bitmap: Bitmap, fileName: string) => {
+        lvglBitmapToSourceFile: async (
+            bitmap: Bitmap,
+            fileName: string,
+            binFile?: boolean
+        ) => {
             const { convertImage } = await import("./lv_img_conv/lib/convert");
             const { ImageMode, OutputMode } = await import(
                 "./lv_img_conv/lib/enums"
@@ -171,21 +175,23 @@ const versions = {
                     cf,
                     outName: fileName,
                     swapEndian: false,
-                    outputFormat: OutputMode.C,
-                    binaryFormat: undefined,
+                    outputFormat: binFile ? OutputMode.BIN : OutputMode.C,
+                    binaryFormat: bitmap.lvglBinaryOutputFormat,
                     overrideWidth: image.width,
-                    overrideHeight: image.height
-                })) as string;
+                    overrideHeight: image.height,
+                    dith: bitmap.lvglDither
+                })) as string | ArrayBuffer;
             } else {
                 return (await convertImage(image, {
                     cf,
                     outName: fileName,
                     swapEndian: false,
-                    outputFormat: OutputMode.C,
-                    binaryFormat: undefined,
+                    outputFormat: binFile ? OutputMode.BIN : OutputMode.C,
+                    binaryFormat: bitmap.lvglBinaryOutputFormat,
                     overrideWidth: image.width,
-                    overrideHeight: image.height
-                })) as string;
+                    overrideHeight: image.height,
+                    dith: bitmap.lvglDither
+                })) as string | ArrayBuffer;
             }
         },
 
@@ -269,7 +275,11 @@ const versions = {
             { id: CF_RAW_ALPHA, label: "RAW ALPHA" }
         ],
 
-        lvglBitmapToSourceFile: async (bitmap: Bitmap, fileName: string) => {
+        lvglBitmapToSourceFile: async (
+            bitmap: Bitmap,
+            fileName: string,
+            binFile?: boolean
+        ) => {
             const lvglImageScriptPath = isDev
                 ? resolve(`${sourceRootDir()}/../resources/lv_img_conv_9`)
                 : process.resourcesPath! + "/lv_img_conv_9";
@@ -329,7 +339,7 @@ const versions = {
                         : undefined,
                     args: [
                         "--ofmt",
-                        "C",
+                        binFile ? "BIN" : "C",
                         "--cf",
                         TO_IMAGE_MODE[bitmap.bpp.toString()],
                         "--output",
@@ -344,9 +354,12 @@ const versions = {
                     if (!wasError) {
                         try {
                             const cFile = await fs.promises.readFile(
-                                `${tempDir}/${fileName}.c`,
-                                "utf-8"
+                                `${tempDir}/${fileName}.${
+                                    binFile ? "bin" : "c"
+                                }`,
+                                binFile ? "binary" : "utf-8"
                             );
+
                             resolve(cFile);
                         } catch (err) {
                             reject(err);
@@ -509,14 +522,15 @@ export function getLvglBitmapColorFormats(object: IEezObject) {
 
 export async function getLvglBitmapSourceFile(
     bitmap: Bitmap,
-    fileName: string
+    fileName: string,
+    binFile?: boolean
 ) {
     const lvglBitmapToSourceFile = getVersionProperty(
         bitmap,
         "lvglBitmapToSourceFile"
     );
 
-    return lvglBitmapToSourceFile(bitmap, fileName);
+    return lvglBitmapToSourceFile(bitmap, fileName, binFile);
 }
 
 export function getLvglStylePropName(

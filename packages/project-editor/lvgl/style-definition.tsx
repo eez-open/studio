@@ -748,7 +748,7 @@ export class LVGLStylesDefinition extends EezObject {
                             build.line(
                                 `lv_obj_set_style_${build.getStylePropName(
                                     propertyInfo.name
-                                )}(obj, &${build.getImageVariableName(
+                                )}(obj, ${build.getImageAccessor(
                                     value
                                 )}, ${selectorCode});`
                             );
@@ -874,7 +874,7 @@ export class LVGLStylesDefinition extends EezObject {
                     build.line(
                         `lv_style_set_${build.getStylePropName(
                             propertyInfo.name
-                        )}(style, &${build.getImageVariableName(value)});`
+                        )}(style, ${build.getImageAccessor(value)});`
                     );
                 }
             }

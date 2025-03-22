@@ -36,7 +36,7 @@ import { showBuildImageInfoDialog } from "./build-image-info-dialog";
 import tinycolor from "tinycolor2";
 import { GENERATED_NAME_PREFIX } from "./identifiers";
 import type { Flow } from "project-editor/flow/flow";
-import { isGeometryControlledByParent } from "./widget-common";
+import { escapeCString, isGeometryControlledByParent } from "./widget-common";
 import { BuildLVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 interface Identifiers {
@@ -464,29 +464,6 @@ export class LVGLBuild extends Build {
             : `tick_screen_${this.getScreenIdentifier(page)}`;
     }
 
-    getImageVariableName(bitmap: Bitmap | string) {
-        const IMAGE_PREFIX = "img_";
-
-        if (typeof bitmap == "string") {
-            const bitmapobject = this.bitmaps.find(
-                bitmapobject => bitmapobject.name == bitmap
-            );
-            if (bitmapobject) {
-                this.assets.markBitmapUsed(bitmapobject);
-            }
-
-            return getName(
-                IMAGE_PREFIX,
-                bitmap,
-                NamingConvention.UnderscoreLowerCase
-            );
-        } else {
-            this.assets.markBitmapUsed(bitmap);
-
-            return IMAGE_PREFIX + this.bitmapNames.get(bitmap.objID)!;
-        }
-    }
-
     getActionFunctionName(actionName: string) {
         return getName(
             "action_",
@@ -676,6 +653,62 @@ export class LVGLBuild extends Build {
         )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
+    getImageVariableName(bitmap: Bitmap | string) {
+        const IMAGE_PREFIX = "img_";
+
+        if (typeof bitmap == "string") {
+            const bitmapobject = this.bitmaps.find(
+                bitmapobject => bitmapobject.name == bitmap
+            );
+            if (bitmapobject) {
+                this.assets.markBitmapUsed(bitmapobject);
+            }
+
+            return getName(
+                IMAGE_PREFIX,
+                bitmap,
+                NamingConvention.UnderscoreLowerCase
+            );
+        } else {
+            this.assets.markBitmapUsed(bitmap);
+
+            return IMAGE_PREFIX + this.bitmapNames.get(bitmap.objID)!;
+        }
+    }
+
+    getImageAccessor(bitmap: Bitmap | string) {
+        if (this.project.settings.build.imageExportMode == "binary") {
+            let foundBitmap: Bitmap | undefined;
+            if (typeof bitmap == "string") {
+                foundBitmap = this.bitmaps.find(
+                    bitmapobject => bitmapobject.name == bitmap
+                );
+            } else {
+                foundBitmap = bitmap;
+            }
+
+            if (foundBitmap) {
+                this.assets.markBitmapUsed(foundBitmap);
+            }
+
+            let path = this.project.settings.build.fileSystemPath;
+            if (!path.endsWith("/") && !path.endsWith("\\")) {
+                if (path.indexOf("\\") != -1) path += "\\";
+                else path += "/";
+            }
+
+            const output =
+                "ui_image_" +
+                (foundBitmap
+                    ? this.bitmapNames.get(foundBitmap.objID)!
+                    : bitmap);
+
+            return escapeCString(`${path}${output}.bin`);
+        } else {
+            return `&${this.getImageVariableName(bitmap)}`;
+        }
+    }
+
     getFontVariableName(font: Font) {
         this.assets.markFontUsed(font);
         return "ui_font_" + this.fontNames.get(font.objID)!;
@@ -683,7 +716,7 @@ export class LVGLBuild extends Build {
 
     getFontAccessor(font: Font) {
         const variableName = this.getFontVariableName(font);
-        return this.project.settings.build.fontsAreStoredInFilesystem
+        return this.project.settings.build.fontExportMode == "binary"
             ? variableName
             : `&${variableName}`;
     }
@@ -1694,7 +1727,7 @@ export class LVGLBuild extends Build {
         //
 
         if (
-            this.project.settings.build.fontsAreStoredInFilesystem &&
+            this.project.settings.build.fontExportMode == "binary" &&
             this.fonts.length > 0
         ) {
             for (const font of this.fonts) {
@@ -1708,12 +1741,13 @@ export class LVGLBuild extends Build {
         build.blockStart("void create_screens() {");
 
         if (
-            this.project.settings.build.fontsAreStoredInFilesystem &&
+            this.project.settings.build.fontExportMode == "binary" &&
             this.fonts.length > 0
         ) {
-            let path = this.project.settings.build.fontsFilesystemPath;
-            if (!path.endsWith("/")) {
-                path += "/";
+            let path = this.project.settings.build.fileSystemPath;
+            if (!path.endsWith("/") && !path.endsWith("\\")) {
+                if (path.indexOf("\\") != -1) path += "\\";
+                else path += "/";
             }
 
             for (const font of this.fonts) {
@@ -1723,11 +1757,23 @@ export class LVGLBuild extends Build {
                     NamingConvention.UnderscoreLowerCase
                 );
 
-                build.line(
-                    `${this.getFontVariableName(
-                        font
-                    )} = lv_binfont_create("${path}${output}.bin");`
-                );
+                if (this.isV9) {
+                    build.line(
+                        `${this.getFontVariableName(
+                            font
+                        )} = lv_binfont_create(${escapeCString(
+                            `${path}${output}.bin`
+                        )});`
+                    );
+                } else {
+                    build.line(
+                        `${this.getFontVariableName(
+                            font
+                        )} = lv_font_load(${escapeCString(
+                            `${path}${output}.bin`
+                        )});`
+                    );
+                }
                 if (font.lvglFallbackFont) {
                     build.line(
                         `${this.getFontVariableName(font)}->fallback = &${
@@ -1818,12 +1864,14 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
-        for (const bitmap of this.bitmaps) {
-            build.line(
-                `extern const lv_img_dsc_t ${this.getImageVariableName(
-                    bitmap
-                )};`
-            );
+        if (this.project.settings.build.imageExportMode == "source") {
+            for (const bitmap of this.bitmaps) {
+                build.line(
+                    `extern const lv_img_dsc_t ${this.getImageVariableName(
+                        bitmap
+                    )};`
+                );
+            }
         }
 
         build.text(`
@@ -1831,7 +1879,11 @@ export class LVGLBuild extends Build {
 #define EXT_IMG_DESC_T
 typedef struct _ext_img_desc_t {
     const char *name;
-    const lv_img_dsc_t *img_dsc;
+    const ${
+        this.project.settings.build.imageExportMode == "binary"
+            ? "void"
+            : "lv_img_dsc_t"
+    } *img_dsc;
 } ext_img_desc_t;
 #endif
 
@@ -1850,8 +1902,9 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         );
         if (this.bitmaps.length > 0) {
             for (const bitmap of this.bitmaps) {
-                const varName = this.getImageVariableName(bitmap);
-                build.line(`{ "${bitmap.name}", &${varName} },`);
+                build.line(
+                    `{ "${bitmap.name}", ${this.getImageAccessor(bitmap)} },`
+                );
             }
         } else {
             build.line(`0`);
@@ -1866,7 +1919,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         const build = this;
 
         for (const font of this.fonts) {
-            if (this.project.settings.build.fontsAreStoredInFilesystem) {
+            if (this.project.settings.build.fontExportMode == "binary") {
                 build.line(
                     `extern lv_font_t *${this.getFontVariableName(font)};`
                 );
@@ -2303,13 +2356,49 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                     const output =
                         "ui_image_" + this.bitmapNames.get(bitmap.objID)!;
 
-                    try {
-                        let source = await getLvglBitmapSourceFile(
-                            bitmap,
-                            this.getImageVariableName(bitmap)
-                        );
+                    if (
+                        this.project.settings.build.imageExportMode == "binary"
+                    ) {
+                        // write BIN file
+                        try {
+                            let source = (await getLvglBitmapSourceFile(
+                                bitmap,
+                                this.getImageVariableName(bitmap),
+                                true
+                            )) as ArrayBuffer;
 
-                        source = `#ifdef __has_include
+                            await writeBinaryData(
+                                this.project._store.getAbsoluteFilePath(
+                                    destinationFolder
+                                ) +
+                                    "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "images/"
+                                        : "") +
+                                    output +
+                                    ".bin",
+                                Buffer.from(source)
+                            );
+                        } catch (err) {
+                            this.project._store.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.ERROR,
+                                `Error genereting bitmap file '${output}.bin': ${err}`
+                            );
+                            if (this.isV9) {
+                                showInfoDialog = true;
+                            }
+                        }
+                    } else {
+                        // write C file
+                        try {
+                            let source = await getLvglBitmapSourceFile(
+                                bitmap,
+                                this.getImageVariableName(bitmap)
+                            );
+
+                            source = `#ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
             #define LV_LVGL_H_INCLUDE_SIMPLE
@@ -2318,27 +2407,28 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 #endif
 ${source}`;
 
-                        await writeTextFile(
-                            this.project._store.getAbsoluteFilePath(
-                                destinationFolder
-                            ) +
-                                "/" +
-                                (this.project.settings.build
-                                    .separateFolderForImagesAndFonts
-                                    ? "images/"
-                                    : "") +
-                                output +
-                                ".c",
-                            source
-                        );
-                    } catch (err) {
-                        this.project._store.outputSectionsStore.write(
-                            Section.OUTPUT,
-                            MessageType.ERROR,
-                            `Error genereting bitmap file '${output}.c': ${err}`
-                        );
-                        if (this.isV9) {
-                            showInfoDialog = true;
+                            await writeTextFile(
+                                this.project._store.getAbsoluteFilePath(
+                                    destinationFolder
+                                ) +
+                                    "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "images/"
+                                        : "") +
+                                    output +
+                                    ".c",
+                                source
+                            );
+                        } catch (err) {
+                            this.project._store.outputSectionsStore.write(
+                                Section.OUTPUT,
+                                MessageType.ERROR,
+                                `Error genereting bitmap file '${output}.c': ${err}`
+                            );
+                            if (this.isV9) {
+                                showInfoDialog = true;
+                            }
                         }
                     }
                 })()
@@ -2360,7 +2450,7 @@ ${source}`;
             this.fonts.map(font =>
                 (async () => {
                     if (
-                        this.project.settings.build.fontsAreStoredInFilesystem
+                        this.project.settings.build.fontExportMode == "binary"
                     ) {
                         const lvglBinaryFileBase64 = font.lvglBinFile;
                         const lvglBinaryFile = lvglBinaryFileBase64

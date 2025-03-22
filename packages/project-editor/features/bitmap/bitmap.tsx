@@ -49,7 +49,8 @@ import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
     BitmapColorFormat,
     isDashboardProject,
-    isLVGLProject
+    isLVGLProject,
+    isNotLVGLProject
 } from "project-editor/project/project-type-traits";
 import { IFieldProperties } from "eez-studio-types";
 import type { ProjectEditorFeature } from "project-editor/store/features";
@@ -115,6 +116,8 @@ export class Bitmap extends EezObject {
     bpp: number;
     alwaysBuild: boolean;
     style?: string;
+    lvglBinaryOutputFormat: number;
+    lvglDither: boolean;
 
     constructor() {
         super();
@@ -137,7 +140,9 @@ export class Bitmap extends EezObject {
             image: observable,
             bpp: observable,
             alwaysBuild: observable,
-            style: observable
+            style: observable,
+            lvglBinaryOutputFormat: observable,
+            lvglDither: observable
         });
     }
 
@@ -179,6 +184,50 @@ export class Bitmap extends EezObject {
                         : [{ id: 16 }, { id: 32 }],
                 defaultValue: 16,
                 disabled: isDashboardProject
+            },
+            {
+                name: "lvglBinaryOutputFormat",
+                displayName: (bitmap: Bitmap) => "Binary output format",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: 0, label: "RGB332" },
+                    { id: 1, label: "RGB565" },
+                    { id: 2, label: "RGB565 Swap" },
+                    { id: 3, label: "RGB888" }
+                ],
+                defaultValue: 3,
+                disabled: (bitmap: Bitmap) => {
+                    if (isNotLVGLProject(bitmap)) {
+                        return true;
+                    }
+
+                    const project = ProjectEditor.getProject(bitmap);
+
+                    if (project.settings.general.lvglVersion == "9.0") {
+                        return true;
+                    }
+
+                    return project.settings.build.imageExportMode != "binary";
+                }
+            },
+            {
+                name: "lvglDither",
+                displayName: (bitmap: Bitmap) => "Dither image",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (bitmap: Bitmap) => {
+                    if (isNotLVGLProject(bitmap)) {
+                        return true;
+                    }
+
+                    const project = ProjectEditor.getProject(bitmap);
+
+                    if (project.settings.general.lvglVersion == "9.0") {
+                        return true;
+                    }
+
+                    return false;
+                }
             },
             {
                 name: "style",
@@ -400,6 +449,14 @@ export class Bitmap extends EezObject {
                         }, 1000);
                     }
                 });
+            }
+
+            if (bitmap.lvglBinaryOutputFormat == undefined) {
+                bitmap.lvglBinaryOutputFormat = 3;
+            }
+
+            if (bitmap.lvglDither == undefined) {
+                bitmap.lvglDither = false;
             }
         }
     };

@@ -787,7 +787,7 @@ export class BuildLVGLCode implements LVGLCode {
         const bitmap = findBitmap(ProjectEditor.getProject(this.widget), image);
 
         return bitmap && bitmap.image
-            ? `&${this.build.getImageVariableName(bitmap)}`
+            ? `${this.build.getImageAccessor(bitmap)}`
             : 0;
     }
 
