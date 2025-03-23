@@ -805,7 +805,9 @@ export class LVGLBuild extends Build {
     ) {
         const { colorAccessor, fromTheme } = this.getColorAccessor(
             color,
-            "eez_flow_get_selected_theme_index()"
+            this.project.projectTypeTraits.hasFlowSupport
+                ? "eez_flow_get_selected_theme_index()"
+                : "active_theme_index"
         );
         callback(colorAccessor, getParams());
 
@@ -834,13 +836,17 @@ export class LVGLBuild extends Build {
         const { colorAccessor: color1Accessor, fromTheme: color1FromTheme } =
             this.getColorAccessor(
                 color1,
-                "eez_flow_get_selected_theme_index()"
+                this.project.projectTypeTraits.hasFlowSupport
+                    ? "eez_flow_get_selected_theme_index()"
+                    : "active_theme_index"
             );
 
         const { colorAccessor: color2Accessor, fromTheme: color2FromTheme } =
             this.getColorAccessor(
                 color2,
-                "eez_flow_get_selected_theme_index()"
+                this.project.projectTypeTraits.hasFlowSupport
+                    ? "eez_flow_get_selected_theme_index()"
+                    : "active_theme_index"
             );
 
         callback(color1Accessor, color2Accessor, getParams());
@@ -1067,6 +1073,10 @@ export class LVGLBuild extends Build {
 
         build.line(`objects_t objects;`);
         build.line(`lv_obj_t *tick_value_change_obj;`);
+        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            build.line(`uint32_t active_theme_index = 0;`);
+        }
+
         build.line("");
 
         if (this.fileStaticVars.length > 0) {
@@ -1429,6 +1439,11 @@ export class LVGLBuild extends Build {
         const build = this;
 
         build.blockStart(`void change_color_theme(uint32_t theme_index) {`);
+
+        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            build.line("active_theme_index = theme_index;");
+            build.line("");
+        }
 
         this.updateColorCallbacks.forEach(updateColorCallback => {
             const flow = getAncestorOfType<Flow>(
