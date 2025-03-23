@@ -348,7 +348,8 @@ export class Color extends EezObject {
                 type: PropertyType.Number,
                 isOptional: true,
                 unique: true,
-                propertyGridGroup: generalGroup
+                propertyGridGroup: generalGroup,
+                hideInPropertyGrid: true
             },
             {
                 name: "name",
@@ -458,6 +459,22 @@ export class Color extends EezObject {
             return color;
         },
 
+        onAfterPaste: (newColor: Color, fromColor: Color) => {
+            const project = ProjectEditor.getProject(newColor);
+
+            const fromTheme =
+                project._store.navigationStore.selectedThemeObject.get() as Theme;
+            if (fromTheme) {
+                for (const theme of project.themes) {
+                    project.setThemeColor(
+                        theme.objID,
+                        newColor.objID,
+                        project.getThemeColor(fromTheme.objID, fromColor.objID)
+                    );
+                }
+            }
+        },
+
         extendContextMenu: (
             thisObject: Color,
             context: IContextMenuContext,
@@ -554,7 +571,6 @@ export class Theme extends EezObject implements ITheme {
                 name: "colors",
                 type: PropertyType.StringArray,
                 hideInPropertyGrid: true,
-                partOfNavigation: false,
                 computedIfNotLoadProject: true
             }
         ],

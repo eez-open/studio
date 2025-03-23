@@ -1356,14 +1356,12 @@ function getProjectClassInfo() {
                 name: "colors",
                 type: PropertyType.Array,
                 typeClass: Color,
-                partOfNavigation: false,
                 hideInPropertyGrid: true
             },
             {
                 name: "themes",
                 type: PropertyType.Array,
                 typeClass: Theme,
-                partOfNavigation: false,
                 hideInPropertyGrid: true
             },
             {
