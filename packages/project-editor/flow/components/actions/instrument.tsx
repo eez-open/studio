@@ -1633,7 +1633,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     return;
                 }
 
-                const message: any = {
+                message = {
                     state: "success",
                     fileType: { mime: "application/eez-raw" },
                     description: chartDescription,
@@ -1661,10 +1661,9 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                         }
                     },
                     horizontalScale: chartHorizontalScale,
-                    verticalScale: chartVerticalScale
+                    verticalScale: chartVerticalScale,
+                    dataLength: chartData.length
                 };
-
-                message.dataLength = chartData.length;
 
                 historyItemType = "instrument/file-download";
             } else if (
