@@ -987,7 +987,8 @@ export const Property = observer(
                             type="text"
                             className="form-control"
                             value={this._value || ""}
-                            readOnly
+                            onChange={this.onChange}
+                            readOnly={readOnly}
                         />
                         {!readOnly && (
                             <>
@@ -1050,7 +1051,8 @@ export const Property = observer(
                             type="text"
                             className="form-control"
                             value={this._value || ""}
-                            readOnly
+                            onChange={this.onChange}
+                            readOnly={readOnly}
                         />
                         {!readOnly && (
                             <>

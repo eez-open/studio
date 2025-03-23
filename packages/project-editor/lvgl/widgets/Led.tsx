@@ -162,12 +162,25 @@ export class LVGLLedWidget extends LVGLWidget {
             );
         } else {
             code.addToTick("color", () => {
-                const new_val = code.evalUnsignedIntegerProperty(
+                let new_val = code.evalUnsignedIntegerProperty(
                     "uint32_t",
                     "new_val",
                     this.color as string,
                     "Failed to evaluate Color in Led widget"
                 );
+                if (code.lvglBuild) {
+                    if (code.isV9) {
+                        code.lvglBuild.line(
+                            `new_val = lv_color_to_u32(lv_color_hex(new_val));`
+                        );
+                    } else {
+                        code.lvglBuild.line(
+                            `new_val = lv_color_to32(lv_color_hex(new_val));`
+                        );
+                    }
+                } else {
+                    new_val &= code.callFreeFunction("to_lvgl_color", new_val);
+                }
 
                 let cur_val;
 

@@ -615,4 +615,12 @@ EM_PORT_API(int32_t) v8_lv_slider_get_left_value(const lv_obj_t *obj) {
 
 #endif
 
+EM_PORT_API(uint32_t) to_lvgl_color(uint32_t color) {
+#if LVGL_VERSION_MAJOR >= 9
+    return lv_color_to_u32(lv_color_hex(color));
+#else
+    return lv_color_to32(lv_color_hex(color));
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////

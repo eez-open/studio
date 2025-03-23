@@ -969,29 +969,29 @@ function dbg(text) {
 // === Body ===
 
 var ASM_CONSTS = {
-  1039808: ($0) => { startToDebuggerMessage($0); },  
- 1039840: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1039915: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1039990: ($0) => { finishToDebuggerMessage($0); },  
- 1040023: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1040053: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1040083: ($0) => { lvglScreenTick($0); },  
- 1040107: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1040147: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1040201: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1040255: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1040308: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1040361: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1040414: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1040447: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1040483: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1040528: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1040634: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1040670: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1040707: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1040747: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1040804: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1040863: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1039904: ($0) => { startToDebuggerMessage($0); },  
+ 1039936: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1040011: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1040086: ($0) => { finishToDebuggerMessage($0); },  
+ 1040119: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1040149: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1040179: ($0) => { lvglScreenTick($0); },  
+ 1040203: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1040243: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1040297: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1040351: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1040404: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1040457: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1040510: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1040543: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1040579: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1040624: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1040730: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1040766: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1040803: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1040843: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1040900: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1040959: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 
@@ -4867,6 +4867,7 @@ var _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTa
 var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = createExportWrapper('lv_tabview_get_tab_bar');
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type');
 var _lv_label_get_text = Module['_lv_label_get_text'] = createExportWrapper('lv_label_get_text');
+var _to_lvgl_color = Module['_to_lvgl_color'] = createExportWrapper('to_lvgl_color');
 var _lv_group_init = Module['_lv_group_init'] = createExportWrapper('lv_group_init');
 var _lv_group_deinit = Module['_lv_group_deinit'] = createExportWrapper('lv_group_deinit');
 var _lv_ll_init = Module['_lv_ll_init'] = createExportWrapper('lv_ll_init');
