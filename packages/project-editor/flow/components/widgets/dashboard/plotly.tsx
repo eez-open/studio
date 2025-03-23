@@ -1647,14 +1647,30 @@ const GaugeElement = observer(
         }
 
         get data(): PlotlyModule.Data[] {
-            const minRange = 0;
-            const maxRange = 1;
+            const minRange = this.props.flowContext.flowState
+                ? evalProperty(
+                      this.props.flowContext,
+                      this.props.widget,
+                      "minRange"
+                  )
+                : 0;
+            const maxRange = this.props.flowContext.flowState
+                ? evalProperty(
+                      this.props.flowContext,
+                      this.props.widget,
+                      "maxRange"
+                  )
+                : 1;
 
             return [
                 {
                     domain: { x: [0, 1], y: [0, 1] },
                     value: this.props.flowContext.flowState
-                        ? 0
+                        ? evalProperty(
+                              this.props.flowContext,
+                              this.props.widget,
+                              "data"
+                          )
                         : (minRange + maxRange) / 2,
                     title: { text: this.props.widget.title },
                     type: "indicator",
