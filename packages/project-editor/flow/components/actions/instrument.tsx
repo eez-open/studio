@@ -1499,7 +1499,7 @@ export class AddToInstrumentHistoryActionComponent extends ActionComponent {
                     return;
                 }
 
-                const chartData = context.evalProperty<Uint8Array>("chartData");
+                chartData = context.evalProperty<Uint8Array>("chartData");
                 if (chartData == undefined) {
                     context.throwError(`Invalid Chart data property`);
                     return;
