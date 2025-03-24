@@ -5352,6 +5352,7 @@ var _lv_msg_init = Module['_lv_msg_init'] = createExportWrapper('lv_msg_init');
 var _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf');
 var _lv_fs_tell = Module['_lv_fs_tell'] = createExportWrapper('lv_fs_tell');
 var _lv_fs_write = Module['_lv_fs_write'] = createExportWrapper('lv_fs_write');
+var _strncmp = Module['_strncmp'] = createExportWrapper('strncmp');
 var _lv_fragment_create = Module['_lv_fragment_create'] = createExportWrapper('lv_fragment_create');
 var _lv_fragment_del = Module['_lv_fragment_del'] = createExportWrapper('lv_fragment_del');
 var _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = createExportWrapper('lv_fragment_del_obj');

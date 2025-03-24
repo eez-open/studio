@@ -97,7 +97,13 @@ export class LVGLTextareaWidget extends LVGLWidget {
 
         lvgl: (widget: LVGLTextareaWidget, project: Project) => {
             return {
-                parts: ["MAIN", "SELECTED", "CURSOR"],
+                parts: [
+                    "MAIN",
+                    "SELECTED",
+                    "CURSOR",
+                    "SCROLLBAR",
+                    "TEXTAREA_PLACEHOLDER"
+                ],
                 defaultFlags:
                     project.settings.general.lvglVersion == "9.0"
                         ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SNAPPABLE"
@@ -168,7 +174,13 @@ export class LVGLTextareaWidget extends LVGLWidget {
                         "lv_textarea_get_text"
                     );
 
-                    code.ifStringNotEqual(new_val, cur_val, () => {
+                    const max_length = code.callObjectFunctionWithAssignment(
+                        "uint32_t",
+                        "max_length",
+                        "lv_textarea_get_max_length"
+                    );
+
+                    code.ifStringNotEqualN(new_val, cur_val, max_length, () => {
                         code.tickChangeStart();
                         code.callObjectFunction(
                             "lv_textarea_set_text",

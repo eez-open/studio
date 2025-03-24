@@ -385,6 +385,7 @@ export const LVGL_PARTS_8: { [key: string]: number } = {
     CURSOR: 0x070000, // LV_PART_CURSOR       Mark a specific place e.g. for text area's cursor or on a chart
 
     CUSTOM1: 0x080000, // LV_PART_CUSTOM_FIRST Extension point for custom widgets
+    TEXTAREA_PLACEHOLDER: 0x080000,
 
     ANY: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };
@@ -399,6 +400,7 @@ export const LVGL_PARTS_9: { [key: string]: number } = {
     CURSOR: 0x060000, // LV_PART_CURSOR       Mark a specific place e.g. for text area's cursor or on a chart
 
     CUSTOM1: 0x080000, // LV_PART_CUSTOM_FIRST Extension point for custom widgets
+    TEXTAREA_PLACEHOLDER: 0x080000,
 
     ANY: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };

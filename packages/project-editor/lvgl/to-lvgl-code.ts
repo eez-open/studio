@@ -120,6 +120,7 @@ export interface LVGLCode {
 
     if(a: any, callback: () => void): void;
     ifStringNotEqual(a: any, b: any, callback: () => void): void;
+    ifStringNotEqualN(a: any, b: any, n: any, callback: () => void): void;
 
     ifIntegerLess(a: any, b: any, callback: () => void): void;
     ifIntegerNotEqual(a: any, b: any, callback: () => void): void;
@@ -584,6 +585,12 @@ export class SimulatorLVGLCode implements LVGLCode {
 
     ifStringNotEqual(a: any, b: any, callback: () => void) {
         if (this.callFreeFunction("strcmp", a, b) != 0) {
+            callback();
+        }
+    }
+
+    ifStringNotEqualN(a: any, b: any, n: any, callback: () => void) {
+        if (this.callFreeFunction("strncmp", a, b, n) != 0) {
             callback();
         }
     }
@@ -1139,6 +1146,14 @@ export class BuildLVGLCode implements LVGLCode {
         const build = this.build;
 
         build.blockStart(`if (strcmp(${a}, ${b}) != 0) {`);
+        callback();
+        build.blockEnd(`}`);
+    }
+
+    ifStringNotEqualN(a: any, b: any, n: any, callback: () => void) {
+        const build = this.build;
+
+        build.blockStart(`if (strncmp(${a}, ${b}, ${n}) != 0) {`);
         callback();
         build.blockEnd(`}`);
     }

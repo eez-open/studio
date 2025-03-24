@@ -6409,6 +6409,7 @@ var _lv_win_add_title = Module['_lv_win_add_title'] = createExportWrapper('lv_wi
 var _lv_win_get_header = Module['_lv_win_get_header'] = createExportWrapper('lv_win_get_header');
 var _lv_win_add_button = Module['_lv_win_add_button'] = createExportWrapper('lv_win_add_button');
 var _lv_win_get_content = Module['_lv_win_get_content'] = createExportWrapper('lv_win_get_content');
+var _strncmp = Module['_strncmp'] = createExportWrapper('strncmp');
 var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
 var _strcmp = Module['_strcmp'] = createExportWrapper('strcmp');
 var __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty');

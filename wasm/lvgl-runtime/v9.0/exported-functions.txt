@@ -1,6 +1,7 @@
 _malloc
 _free
 _strcmp
+_strncmp
 _setObjectIndex
 __evalTextProperty
 __evalIntegerProperty
