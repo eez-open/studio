@@ -2,7 +2,8 @@
 
 ### Tehnical support
 
-Your comments, suggestions, new feature requests and bug reports are welcome and can be made in the [Issues](https://github.com/eez-open/studio/issues) section. However, please take into account that reported issues will be processed by the Envox team according to the best effort principle, so adjust your expectations accordingly. However, if you want a more prompt and high-quality response as well as direct contact with technical support, you can choose one of our [Support plans](https://www.envox.eu/support-plans/) (check also [this](https://www.envox.eu/premium-technical-support-for-eez-studio/) blog post).
+Your comments, suggestions, new feature requests and bug reports are welcome and can be made in the [Issues](https://github.com/eez-open/studio/issues) section. However, please take into account that reported issues will be processed by the Envox team according to the best effort principle, so adjust your expectations accordingly. However, if you want a more prompt and high-quality response as well as direct contact with technical support, you can choose one of our [Support plans](https://www.envox.eu/support-plans/) (check also [this](https://www.envox.eu/premium-technical-support-for-eez-studio/) blog post).  
+You are invited to join our community on [Discord](https://discord.gg/q5KAeeenNG) where you can get answers to some questions from other members. You can also start a discussion under [Discussions](https://github.com/eez-open/studio/discussions).
 
 
 ### Ownership and License
