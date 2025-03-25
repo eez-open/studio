@@ -268,6 +268,7 @@ export const ThemesSideView = observer(
                         onEditItem={this.onEditThemeName}
                         searchInput={false}
                         editable={!readOnly}
+                        doNotUsePropertyGrid={true}
                     />
                 ) : null;
             }
@@ -286,6 +287,7 @@ export const ThemesSideView = observer(
                             <ColorItem itemId={itemId} readOnly={readOnly} />
                         )}
                         editable={!readOnly}
+                        doNotUsePropertyGrid={true}
                     />
                 ) : null;
             }

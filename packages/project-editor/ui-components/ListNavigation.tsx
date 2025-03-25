@@ -162,6 +162,7 @@ interface ListNavigationProps {
     searchInput?: boolean;
     editable?: boolean;
     onFilesDrop?: (files: File[]) => void;
+    doNotUsePropertyGrid?: boolean;
 }
 
 export const ListNavigation = observer(
@@ -337,6 +338,12 @@ export const ListNavigation = observer(
                 navigationStore.setSelectedPanel(this);
             }
         };
+        doNotUsePropertyGrid() {
+            if (this.props.doNotUsePropertyGrid != undefined) {
+                return this.props.doNotUsePropertyGrid;
+            }
+            return false;
+        }
 
         onSearchChange(event: any) {
             this.searchText = ($(event.target).val() as string).trim();

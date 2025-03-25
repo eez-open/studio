@@ -38,6 +38,8 @@ export interface IPanel {
 
     canDelete?(): boolean;
     deleteSelection?(): void;
+
+    doNotUsePropertyGrid?(): boolean;
 }
 
 export class NavigationStore {
@@ -474,10 +476,20 @@ export class NavigationStore {
         }
     }
 
+    lastPropertyGridObjects: IEezObject[] = [];
+
     get propertyGridObjects() {
         let objects: IEezObject[];
 
         const navigationStore = this;
+
+        if (
+            navigationStore.selectedPanel &&
+            navigationStore.selectedPanel.doNotUsePropertyGrid &&
+            navigationStore.selectedPanel.doNotUsePropertyGrid()
+        ) {
+            return this.lastPropertyGridObjects;
+        }
 
         if (
             navigationStore.selectedPanel &&
@@ -527,6 +539,8 @@ export class NavigationStore {
                 }
             }
         }
+
+        this.lastPropertyGridObjects = objects;
 
         return objects;
     }
