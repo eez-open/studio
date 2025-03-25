@@ -716,7 +716,6 @@ export interface IWasmFlowRuntime {
     _lvglSetScrollSnapX(obj: number, align: number);
     _lvglSetScrollSnapY(obj: number, align: number);
 
-    _lvglTabviewSetActive(obj: number, tab_id: number, anim_en: number);
     _lvglLineSetPoints(obj: number, point_values: number, point_num: number);
     _lvglScrollTo(obj: number, x: number, y: number, anim_en: boolean);
     _lvglGetScrollX(obj: number): number;

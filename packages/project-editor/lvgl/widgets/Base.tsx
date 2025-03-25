@@ -2397,12 +2397,27 @@ export class LVGLWidget extends Widget {
         }
     }
 
+    get childrenToRender() {
+        // do not render Tab's that are not visible
+        return this.children.filter(child => {
+            if (child instanceof ProjectEditor.LVGLTabWidgetClass) {
+                if (
+                    child.tabview &&
+                    child.tabIndex != child.tabview.selectedTabIndex
+                ) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }
+
     override render(flowContext: IFlowContext, width: number, height: number) {
         return this._lvglObj ? (
             <>
                 <ComponentsContainerEnclosure
                     parent={this}
-                    components={this.children}
+                    components={this.childrenToRender}
                     flowContext={flowContext}
                     width={width}
                     height={height}

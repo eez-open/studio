@@ -50,8 +50,7 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     LVGLStylePropCode,
-    LVGL_CONSTANTS_ALL,
-    LV_ANIM_OFF
+    LVGL_CONSTANTS_ALL
 } from "project-editor/lvgl/lvgl-constants";
 import {
     BUILT_IN_FONTS,
@@ -109,6 +108,7 @@ export abstract class LVGLPageRuntime {
         callback: () => void;
     }[] = [];
     stringLiterals = new Map<string, number>();
+    postCreateCallbacks: (() => void)[] = [];
 
     constructor(public page: Page) {
         this.lvglVersion = this.project.settings.general.lvglVersion;
@@ -543,7 +543,9 @@ export abstract class LVGLPageRuntime {
 
     registerGroupWidget(group: string, groupIndex: number, obj: number) {}
 
-    addPostCreateCallback(callback: () => void) {}
+    addPostCreateCallback(callback: () => void) {
+        this.postCreateCallbacks.push(callback);
+    }
 
     stringLiteral(str: string) {
         let strPtr = this.stringLiterals.get(str);
@@ -680,6 +682,11 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             console.error("pageObj is undefined");
                         }
 
+                        for (const callback of this.postCreateCallbacks) {
+                            callback();
+                        }
+                        this.postCreateCallbacks = [];
+
                         const editor =
                             this.projectStore.editorsStore.getEditorByObject(
                                 this.page
@@ -715,21 +722,12 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                                     );
                                 if (tabWidget) {
                                     const tabviewWidget = tabWidget.tabview;
-                                    if (
-                                        tabviewWidget &&
-                                        tabviewWidget._lvglObj
-                                    ) {
+                                    if (tabviewWidget) {
                                         const tabIndex = tabWidget.tabIndex;
-
                                         if (tabIndex != -1) {
-                                            this.wasm._lvglTabviewSetActive(
-                                                tabviewWidget._lvglObj,
-                                                tabWidget.tabIndex,
-                                                LV_ANIM_OFF
-                                            );
-
                                             runInAction(() => {
-                                                tabWidget._refreshRelativePosition++;
+                                                tabviewWidget._selectedTabIndex =
+                                                    tabIndex;
                                             });
                                         }
                                     }
@@ -981,7 +979,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
         eventCode: number;
         callback: (event: number) => void;
     }[] = [];
-    postCreateCallbacks: (() => void)[] = [];
 
     constructor(private runtime: WasmRuntime) {
         super(runtime.selectedPage);
@@ -1404,10 +1401,6 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                 eventHandler.callback(event);
             }
         }
-    }
-
-    override addPostCreateCallback(callback: () => void) {
-        this.postCreateCallbacks.push(callback);
     }
 }
 

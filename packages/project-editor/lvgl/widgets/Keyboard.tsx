@@ -213,84 +213,87 @@ export class LVGLKeyboardWidget extends LVGLWidget {
             );
         }
 
-        const textarea = this.textarea;
-        if (textarea) {
-            const lvglIdentifier = ProjectEditor.getProjectStore(
-                this
-            ).lvglIdentifiers.getIdentifierByName(
-                ProjectEditor.getFlow(this),
-                textarea
-            );
-            if (
-                lvglIdentifier != undefined &&
-                lvglIdentifier.widgets.length == 1
-            ) {
-                const textareaWidget = lvglIdentifier.widgets[0];
+        if (!code.pageRuntime || !code.pageRuntime.isEditor) {
+            const textarea = this.textarea;
+            if (textarea) {
+                const lvglIdentifier = ProjectEditor.getProjectStore(
+                    this
+                ).lvglIdentifiers.getIdentifierByName(
+                    ProjectEditor.getFlow(this),
+                    textarea
+                );
+                if (
+                    lvglIdentifier != undefined &&
+                    lvglIdentifier.widgets.length == 1
+                ) {
+                    const textareaWidget = lvglIdentifier.widgets[0];
 
-                if (textareaWidget instanceof LVGLTextareaWidget) {
-                    if (
-                        code.pageRuntime &&
-                        !(code.pageRuntime instanceof LVGLPageViewerRuntime)
-                    ) {
-                        return;
-                    }
+                    if (textareaWidget instanceof LVGLTextareaWidget) {
+                        if (
+                            code.pageRuntime &&
+                            !(code.pageRuntime instanceof LVGLPageViewerRuntime)
+                        ) {
+                            return;
+                        }
 
-                    code.postPageExecute(() => {
-                        let keyboardAccessor;
-                        let textareaAccessor;
+                        code.postPageExecute(() => {
+                            let keyboardAccessor;
+                            let textareaAccessor;
 
-                        if (code.lvglBuild) {
-                            const build = code.lvglBuild;
+                            if (code.lvglBuild) {
+                                const build = code.lvglBuild;
 
-                            keyboardAccessor =
-                                build.getLvglObjectAccessor(this);
-                            textareaAccessor =
-                                build.getLvglObjectAccessor(textareaWidget);
-
-                            if (
-                                textareaAccessor.indexOf(
-                                    "startWidgetIndex +"
-                                ) != -1
-                            ) {
-                                let index = build.getWidgetObjectIndexByName(
-                                    this,
-                                    textarea
-                                );
+                                keyboardAccessor =
+                                    build.getLvglObjectAccessor(this);
+                                textareaAccessor =
+                                    build.getLvglObjectAccessor(textareaWidget);
 
                                 if (
-                                    keyboardAccessor.indexOf(
+                                    textareaAccessor.indexOf(
                                         "startWidgetIndex +"
                                     ) != -1
                                 ) {
-                                    textareaAccessor = `((lv_obj_t **)&objects)[startWidgetIndex + ${index}]`;
-                                } else {
-                                    textareaAccessor = `((lv_obj_t **)&objects)[${index}]`;
+                                    let index =
+                                        build.getWidgetObjectIndexByName(
+                                            this,
+                                            textarea
+                                        );
+
+                                    if (
+                                        keyboardAccessor.indexOf(
+                                            "startWidgetIndex +"
+                                        ) != -1
+                                    ) {
+                                        textareaAccessor = `((lv_obj_t **)&objects)[startWidgetIndex + ${index}]`;
+                                    } else {
+                                        textareaAccessor = `((lv_obj_t **)&objects)[${index}]`;
+                                    }
                                 }
+                            } else {
+                                const runtime =
+                                    code.pageRuntime as LVGLPageViewerRuntime;
+
+                                keyboardAccessor = code.callFreeFunction(
+                                    "getLvglObjectFromIndex",
+                                    runtime.getWidgetIndex(this)
+                                );
+
+                                textareaAccessor = code.callFreeFunction(
+                                    "getLvglObjectFromIndex",
+                                    runtime.getLvglObjectByName(
+                                        textarea,
+                                        runtime.userWidgetsStack
+                                    )
+                                );
                             }
-                        } else {
-                            const runtime =
-                                code.pageRuntime as LVGLPageViewerRuntime;
 
-                            keyboardAccessor = code.callFreeFunction(
-                                "getLvglObjectFromIndex",
-                                runtime.getWidgetIndex(this)
+                            code.callFreeFunction(
+                                "lv_keyboard_set_textarea",
+                                keyboardAccessor,
+                                textareaAccessor
                             );
-
-                            textareaAccessor = code.callFreeFunction(
-                                "getLvglObjectFromIndex",
-                                runtime.getLvglObjectByName(
-                                    textarea,
-                                    runtime.userWidgetsStack
-                                )
-                            );
-                        }
-
-                        code.callFreeFunction(
-                            "lv_keyboard_set_textarea",
-                            keyboardAccessor,
-                            textareaAccessor
-                        );
-                    });
+                        });
+                    }
                 }
             }
         }

@@ -4848,8 +4848,6 @@ var _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = createExportWrapper('l
 var _lv_obj_set_scroll_snap_x = Module['_lv_obj_set_scroll_snap_x'] = createExportWrapper('lv_obj_set_scroll_snap_x');
 var _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = createExportWrapper('lvglSetScrollSnapY');
 var _lv_obj_set_scroll_snap_y = Module['_lv_obj_set_scroll_snap_y'] = createExportWrapper('lv_obj_set_scroll_snap_y');
-var _lvglTabviewSetActive = Module['_lvglTabviewSetActive'] = createExportWrapper('lvglTabviewSetActive');
-var _lv_tabview_set_act = Module['_lv_tabview_set_act'] = createExportWrapper('lv_tabview_set_act');
 var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints');
 var _lv_line_set_points = Module['_lv_line_set_points'] = createExportWrapper('lv_line_set_points');
 var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo');
@@ -5669,6 +5667,7 @@ var _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = createExportWrapper(
 var _lv_arc_set_end_angle = Module['_lv_arc_set_end_angle'] = createExportWrapper('lv_arc_set_end_angle');
 var _lv_arc_set_start_angle = Module['_lv_arc_set_start_angle'] = createExportWrapper('lv_arc_set_start_angle');
 var _lv_btnmatrix_set_one_checked = Module['_lv_btnmatrix_set_one_checked'] = createExportWrapper('lv_btnmatrix_set_one_checked');
+var _lv_tabview_set_act = Module['_lv_tabview_set_act'] = createExportWrapper('lv_tabview_set_act');
 var _lv_tabview_create = Module['_lv_tabview_create'] = createExportWrapper('lv_tabview_create');
 var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab');
 var _lv_tabview_get_content = Module['_lv_tabview_get_content'] = createExportWrapper('lv_tabview_get_content');

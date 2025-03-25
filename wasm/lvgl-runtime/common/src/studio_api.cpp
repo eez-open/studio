@@ -505,14 +505,6 @@ EM_PORT_API(void) lvglSetScrollSnapY(lv_obj_t *obj, lv_scroll_snap_t align) {
     lv_obj_set_scroll_snap_y(obj, align);
 }
 
-EM_PORT_API(void) lvglTabviewSetActive(lv_obj_t *obj, uint32_t tab_id, lv_anim_enable_t anim_en) {
-#if LVGL_VERSION_MAJOR >= 9
-    lv_tabview_set_active(obj, tab_id, anim_en);
-#else
-    lv_tabview_set_act(obj, tab_id, anim_en);
-#endif
-}
-
 EM_PORT_API(void) lvglLineSetPoints(lv_obj_t *obj, float *point_values, uint32_t point_num) {
     lv_line_t *line = (lv_line_t *)obj;
 #if LVGL_VERSION_MAJOR >= 9

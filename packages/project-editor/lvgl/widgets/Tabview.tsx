@@ -152,12 +152,40 @@ export class LVGLTabviewWidget extends LVGLWidget {
     tabviewPosition: keyof typeof TABVIEW_POSITION;
     tabviewSize: number;
 
+    _selectedTabIndex: number = 0;
+
+    get selectedTabIndex() {
+        let numTabs = 0;
+        for (const child of this.children) {
+            if (child instanceof LVGLTabWidget) {
+                numTabs++;
+            } else {
+                for (const child2 of child.children) {
+                    if (child2 instanceof LVGLTabWidget) {
+                        numTabs++;
+                    }
+                }
+            }
+        }
+
+        if (this._selectedTabIndex < numTabs) {
+            return this._selectedTabIndex;
+        }
+
+        if (this._selectedTabIndex - 1 > 0) {
+            return this._selectedTabIndex - 1;
+        }
+
+        return 0;
+    }
+
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
             tabviewPosition: observable,
-            tabviewSize: observable
+            tabviewSize: observable,
+            _selectedTabIndex: observable
         });
     }
 
@@ -178,6 +206,26 @@ export class LVGLTabviewWidget extends LVGLWidget {
                 code.constant(`LV_DIR_${position}`),
                 size
             );
+        }
+
+        if (code.pageRuntime && code.pageRuntime.isEditor) {
+            const selectedTabIndex = this.selectedTabIndex;
+
+            code.postPageExecute(() => {
+                if (code.isV9) {
+                    code.callObjectFunction(
+                        "lv_tabview_set_active",
+                        selectedTabIndex,
+                        code.constant("LV_ANIM_OFF")
+                    );
+                } else {
+                    code.callObjectFunction(
+                        "lv_tabview_set_act",
+                        selectedTabIndex,
+                        code.constant("LV_ANIM_OFF")
+                    );
+                }
+            });
         }
     }
 }

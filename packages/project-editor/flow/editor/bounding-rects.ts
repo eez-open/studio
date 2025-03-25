@@ -150,6 +150,13 @@ export function getObjectIdFromPoint(
 
                     if (result) {
                         if (
+                            object.object instanceof
+                            ProjectEditor.LVGLTabWidgetClass
+                        ) {
+                            continue;
+                        }
+
+                        if (
                             !object.selected ||
                             (result.connectionOutput && !connectionOutput) ||
                             (result.connectionInput && !connectionInput)
