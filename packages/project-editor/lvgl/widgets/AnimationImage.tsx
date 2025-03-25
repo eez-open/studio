@@ -9,7 +9,7 @@ import {
     PropertyType
 } from "project-editor/core/object";
 
-import { IWasmFlowRuntime } from "eez-studio-types";
+import { IFieldProperties, IWasmFlowRuntime } from "eez-studio-types";
 
 import { findBitmap, ProjectType } from "project-editor/project/project";
 
@@ -17,10 +17,13 @@ import { LVGLWidget } from "./internal";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
+    createObject,
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { Bitmap } from "project-editor/features/bitmap/bitmap";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +63,87 @@ class LVGLAnimationImage extends EezObject {
             } else {
                 messages.push(propertyNotSetMessage(animationImage, "image"));
             }
+        },
+
+        newItem: async (parentObject: LVGLAnimationImage[]) => {
+            const project = ProjectEditor.getProject(parentObject);
+
+            const bitmaps: Bitmap[] =
+                project._store.lvglIdentifiers.bitmaps.filter(
+                    bitmap =>
+                        !parentObject.find(
+                            lvglAnimationImage =>
+                                lvglAnimationImage.image == bitmap.name
+                        )
+                );
+
+            if (bitmaps.length == 0) {
+                return createObject<LVGLAnimationImage>(
+                    project._store,
+                    {},
+                    LVGLAnimationImage
+                );
+            }
+
+            const fields: IFieldProperties[] = [];
+
+            fields.push({
+                name: "image",
+                type: "enum",
+                enumItems: bitmaps.map(bitmap => ({
+                    id: bitmap.name,
+                    label: bitmap.name
+                }))
+            });
+
+            if (parentObject.length == 0) {
+                fields.push({
+                    name: "numImages",
+                    displayName: "No. of images",
+                    type: "integer"
+                });
+            }
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    fields
+                },
+                values: {
+                    image: bitmaps.length > 0 ? bitmaps[0].name : undefined,
+                    numImages: 1
+                },
+                dialogContext: project
+            });
+
+            const objects = [];
+
+            const numImages = result.values.numImages ?? 1;
+
+            let bitmapIndex = bitmaps.findIndex(
+                bitmap => bitmap.name == result.values.image
+            );
+
+            for (let i = 0; i < numImages; i++, bitmapIndex++) {
+                objects.push(
+                    createObject<LVGLAnimationImage>(
+                        project._store,
+                        {
+                            image:
+                                bitmapIndex >= 0 && bitmapIndex < bitmaps.length
+                                    ? bitmaps[bitmapIndex].name
+                                    : undefined
+                        },
+                        LVGLAnimationImage
+                    )
+                );
+            }
+
+            if (objects.length > 1) {
+                project._store.addObjects(parentObject, objects);
+                return undefined;
+            }
+
+            return objects[0];
         }
     };
 
