@@ -179,6 +179,33 @@ export const ObjectReferenceInput = observer(
             }
         });
 
+        renderBitmap(objectName: string | number) {
+            if (typeof objectName != "string") {
+                return null;
+            }
+
+            if (
+                this.props.propertyInfo.referencedObjectCollectionPath !==
+                "bitmaps"
+            ) {
+                return null;
+            }
+
+            const bitmap = findBitmap(this.context.project, objectName);
+            if (!bitmap || !bitmap.imageSrc || !bitmap.imageElement) {
+                return null;
+            }
+
+            return (
+                <img
+                    src={bitmap.imageSrc}
+                    style={{
+                        backgroundColor: bitmap.backgroundColor
+                    }}
+                />
+            );
+        }
+
         render() {
             const { value, readOnly } = this.props;
 
@@ -215,6 +242,7 @@ export const ObjectReferenceInput = observer(
                                         this.setDropDownOpen(false);
                                     })}
                                 >
+                                    {this.renderBitmap(objectName)}
                                     {objectName}
                                 </li>
                             ))}
