@@ -17,6 +17,7 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 export class LVGLColorwheelWidget extends LVGLWidget {
     mode: keyof typeof COLORWHEEL_MODES;
+    knobRecolor: boolean;
     fixedMode: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -43,6 +44,12 @@ export class LVGLColorwheelWidget extends LVGLWidget {
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "knobRecolor",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: specificGroup
             }
         ],
 
@@ -53,7 +60,14 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             height: 150,
             clickableFlag: true,
             mode: "HUE",
-            fixedMode: false
+            fixedMode: false,
+            knobRecolor: false
+        },
+
+        beforeLoadHook: (object: LVGLColorwheelWidget, jsObject: any) => {
+            if (jsObject.knobRecolor == undefined) {
+                jsObject.knobRecolor = false;
+            }
         },
 
         icon: (
@@ -94,7 +108,8 @@ export class LVGLColorwheelWidget extends LVGLWidget {
 
         makeObservable(this, {
             mode: observable,
-            fixedMode: observable
+            fixedMode: observable,
+            knobRecolor: observable
         });
     }
 
@@ -104,7 +119,10 @@ export class LVGLColorwheelWidget extends LVGLWidget {
             return;
         }
 
-        code.createObject("lv_colorwheel_create", code.constant("false"));
+        code.createObject(
+            "lv_colorwheel_create",
+            code.constant(this.knobRecolor ? "true" : "false")
+        );
 
         if (this.mode != "HUE") {
             code.callObjectFunction(
