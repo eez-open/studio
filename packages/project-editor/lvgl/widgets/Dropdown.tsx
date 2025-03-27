@@ -191,6 +191,30 @@ export class LVGLDropdownWidget extends LVGLWidget {
                 "lv_dropdown_set_dir",
                 code.constant(`LV_DIR_${this.direction.toUpperCase()}`)
             );
+
+            if (code.lvglBuild) {
+                code.callObjectFunction(
+                    "lv_dropdown_set_symbol",
+                    `LV_SYMBOL_${
+                        this.direction == "top"
+                            ? "UP"
+                            : this.direction == "left"
+                            ? "LEFT"
+                            : "RIGHT"
+                    }`
+                );
+            } else {
+                code.callObjectFunction(
+                    "lv_dropdown_set_symbol",
+                    code.stringLiteral(
+                        this.direction == "top"
+                            ? "\uF077"
+                            : this.direction == "left"
+                            ? "\uF053"
+                            : "\uF054"
+                    )
+                );
+            }
         }
 
         // selected

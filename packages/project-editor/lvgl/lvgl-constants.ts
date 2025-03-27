@@ -692,6 +692,23 @@ export const LV_SCR_LOAD_ANIM_ENUM_NAME = "LV_SCR_LOAD_ANIM";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const LV_BUTTONMATRIX_CTRL = {
+    HIDDEN: 0x0010 /**< Button hidden*/,
+    NO_REPEAT: 0x0020 /**< Do not repeat press this button.*/,
+    DISABLED: 0x0040 /**< Disable this button.*/,
+    CHECKABLE: 0x0080 /**< The button can be toggled.*/,
+    CHECKED: 0x0100 /**< Button is currently toggled (e.g. checked).*/,
+    CLICK_TRIG: 0x0200 /**< 1: Send LV_EVENT_VALUE_CHANGE on CLICK, 0: Send LV_EVENT_VALUE_CHANGE on PRESS*/,
+    POPOVER: 0x0400 /**< Show a popover when pressing this key*/,
+    RECOLOR: 0x0800 /**< Enable text recoloring with `#color`*/,
+    CUSTOM_1: 0x4000 /**< Custom free to use flag*/,
+    CUSTOM_2: 0x8000 /**< Custom free to use flag*/
+};
+
+export const LV_BUTTONMATRIX_CTRL_ENUM_NAME = "LV_BUTTONMATRIX_CTRL";
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const LVGL_CONSTANTS_ALL = {
     NULL: 0,
 
@@ -780,20 +797,3 @@ export const LVGL_CONSTANTS_ALL = {
     LV_SLIDER_MODE_SYMMETRICAL: 1,
     LV_SLIDER_MODE_RANGE: 2
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-export const LV_BUTTONMATRIX_CTRL = {
-    HIDDEN: 0x0010 /**< Button hidden*/,
-    NO_REPEAT: 0x0020 /**< Do not repeat press this button.*/,
-    DISABLED: 0x0040 /**< Disable this button.*/,
-    CHECKABLE: 0x0080 /**< The button can be toggled.*/,
-    CHECKED: 0x0100 /**< Button is currently toggled (e.g. checked).*/,
-    CLICK_TRIG: 0x0200 /**< 1: Send LV_EVENT_VALUE_CHANGE on CLICK, 0: Send LV_EVENT_VALUE_CHANGE on PRESS*/,
-    POPOVER: 0x0400 /**< Show a popover when pressing this key*/,
-    RECOLOR: 0x0800 /**< Enable text recoloring with `#color`*/,
-    CUSTOM_1: 0x4000 /**< Custom free to use flag*/,
-    CUSTOM_2: 0x8000 /**< Custom free to use flag*/
-};
-
-export const LV_BUTTONMATRIX_CTRL_ENUM_NAME = "LV_BUTTONMATRIX_CTRL";
