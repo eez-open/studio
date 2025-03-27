@@ -2357,6 +2357,22 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         return this.result;
     }
 
+    async buildLoadFirstScreen() {
+        this.startBuild();
+
+        const build = this;
+
+        build.indent();
+        build.line(
+            `loadScreen(SCREEN_ID_${this.getScreenIdentifier(
+                this.pages[0]
+            ).toUpperCase()});`
+        );
+        build.unindent();
+
+        return this.result;
+    }
+
     async copyBitmapFiles() {
         const destinationFolder = this.project.settings.build.destinationFolder;
         if (!destinationFolder) {

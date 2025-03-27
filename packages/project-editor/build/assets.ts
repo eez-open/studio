@@ -1808,6 +1808,14 @@ export async function buildAssets(
                     await assets.lvglBuild.buildEezForLvglCheck();
             }
 
+            if (
+                !sectionNames ||
+                sectionNames.indexOf("LVGL_LOAD_FIRST_SCREEN") !== -1
+            ) {
+                result.LVGL_LOAD_FIRST_SCREEN =
+                    await assets.lvglBuild.buildLoadFirstScreen();
+            }
+
             if (option == "buildFiles") {
                 await assets.lvglBuild.copyBitmapFiles();
                 await assets.lvglBuild.copyFontFiles();
