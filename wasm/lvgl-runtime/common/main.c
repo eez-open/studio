@@ -444,6 +444,23 @@ lv_obj_t *lv_colorwheel_create_adapt(lv_obj_t *parentObj) {
 }
 #endif
 
+lv_obj_t *lv_qrcode_create_adapt(lv_obj_t *parentObj) {
+#if LVGL_VERSION_MAJOR >= 9
+    return lv_qrcode_create(parentObj);
+#else
+    lv_color_t dark_color;
+    dark_color.ch.blue = 255;
+    dark_color.ch.green = 0;
+    dark_color.ch.red = 0;
+    lv_color_t light_color;
+    light_color.ch.blue = 0;
+    light_color.ch.green = 0;
+    light_color.ch.red = 255;
+    return lv_qrcode_create(parentObj, 120, dark_color, light_color);
+#endif
+}
+
+    
 typedef struct {
     const char *name;
     lv_obj_t *(*create)(lv_obj_t *);
@@ -474,6 +491,7 @@ WidgetInfo widgets[] = {
     { "ImageButton", lv_imgbtn_create },
     { "Meter", lv_meter_create },
 #endif
+    { "QRCode", lv_qrcode_create_adapt },
 };
 
 typedef struct {

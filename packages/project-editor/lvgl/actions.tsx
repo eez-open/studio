@@ -116,6 +116,7 @@ function getValueTypeFromActionPropertyType(
 export interface IActionDefinition {
     id: number;
     name: string;
+    displayName?: string;
     group: string;
     properties: IActionPropertyDefinition[];
     defaults: any;
@@ -133,7 +134,7 @@ const actionNameToActionId = new Map<string, number>();
 const actionIdToActionName = new Map<number, string>();
 
 function getActionDisplayName(actionDefinition: IActionDefinition) {
-    return humanize(actionDefinition.name)
+    return (actionDefinition.displayName || humanize(actionDefinition.name))
         .split(" ")
         .map(word =>
             word == "to" ? word : word[0].toUpperCase() + word.substring(1)

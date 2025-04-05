@@ -809,7 +809,10 @@ export class LVGLBuild extends Build {
                 ? "eez_flow_get_selected_theme_index()"
                 : "active_theme_index"
         );
-        callback(colorAccessor, getParams());
+
+        const params = getParams();
+
+        callback(colorAccessor, params);
 
         if (!this.isFirstPass && fromTheme) {
             this.updateColorCallbacks.push({
@@ -819,7 +822,7 @@ export class LVGLBuild extends Build {
                         color,
                         "theme_index"
                     );
-                    updateCallback(colorAccessor, getParams());
+                    updateCallback(colorAccessor, params);
                 }
             });
         }
@@ -849,7 +852,9 @@ export class LVGLBuild extends Build {
                     : "active_theme_index"
             );
 
-        callback(color1Accessor, color2Accessor, getParams());
+        const params = getParams();
+
+        callback(color1Accessor, color2Accessor, params);
 
         if (!this.isFirstPass && (color1FromTheme || color2FromTheme)) {
             this.updateColorCallbacks.push({
@@ -859,7 +864,7 @@ export class LVGLBuild extends Build {
                         this.getColorAccessor(color1, "theme_index");
                     const { colorAccessor: color2Accessor } =
                         this.getColorAccessor(color2, "theme_index");
-                    updateCallback(color1Accessor, color2Accessor, getParams());
+                    updateCallback(color1Accessor, color2Accessor, params);
                 }
             });
         }

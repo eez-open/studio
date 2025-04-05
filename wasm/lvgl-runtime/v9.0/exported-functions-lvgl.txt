@@ -610,6 +610,11 @@ _lv_bin_decoder_open
 _lv_bin_decoder_get_area
 _lv_bin_decoder_close
 _lv_fs_stdio_init
+_lv_qrcode_set_size
+_lv_qrcode_create
+_lv_qrcode_set_dark_color
+_lv_qrcode_set_light_color
+_lv_qrcode_update
 _lv_is_initialized
 _lv_init
 _lv_deinit

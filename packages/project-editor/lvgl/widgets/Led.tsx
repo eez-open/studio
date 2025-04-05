@@ -153,8 +153,9 @@ export class LVGLLedWidget extends LVGLWidget {
                             )});`
                         );
                     } else {
-                        code.callObjectFunction(
+                        code.callFreeFunction(
                             "lv_led_set_color",
+                            obj,
                             code.color(color)
                         );
                     }

@@ -1211,6 +1211,34 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 58,
+    name: "qrCodeUpdate",
+    displayName: "QR code update",
+    group: "QRCode",
+    properties: [
+        {
+            name: "object",
+            type: "widget:QRCode",
+            helpText: "QR code widget"
+        },
+        {
+            name: "text",
+            type: "string",
+            helpText: "The text to display"
+        }
+    ],
+    defaults: {},
+    label: ([object, text]) => (
+        <>
+            {object} {text}
+        </>
+    ),
+    helpText: "Set the text of a QR code object"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
     id: 30,
     name: "rollerSetSelected",
     group: "Roller",

@@ -24,6 +24,7 @@ export * from "./Menu";
 export * from "./MessageBox";
 export * from "./Meter";
 export * from "./Panel";
+export * from "./QRCode";
 export * from "./Scale";
 export * from "./Span";
 export * from "./Spinbox";

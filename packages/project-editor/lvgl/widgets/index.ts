@@ -25,6 +25,7 @@ import {
     LVGLMessageBoxWidget,
     LVGLMeterWidget,
     LVGLPanelWidget,
+    LVGLQRCodeWidget,
     LVGLRollerWidget,
     LVGLScaleWidget,
     LVGLScreenWidget,
@@ -139,6 +140,7 @@ registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMenuWidget", LVGLMenuWidget);
 registerClass("LVGLMessageBoxWidget", LVGLMessageBoxWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
+registerClass("LVGLQRCodeWidget", LVGLQRCodeWidget);
 registerClass("LVGLPanelWidget", LVGLPanelWidget);
 registerClass("LVGLRollerWidget", LVGLRollerWidget);
 registerClass("LVGLScaleWidget", LVGLScaleWidget);
