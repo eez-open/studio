@@ -125,6 +125,16 @@ List of actions to be executed. The following actions are available:
   - *Value*: The value to set (0-100)
   - *Animated*: Use animation when setting the value
 
+- **Button Matrix Set Button Ctrl**: Set the value of the bar
+  - *Object*: The bar to set the value
+  - *Button id*: 0 based index of the button to modify. (Not counting new lines)
+  - *Ctrl*: OR-ed attributes. E.g. `LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE`
+
+- **Button Matrix Clear Button Ctrl**: Clear the attributes of a button of the button matrix
+  - *Object*: The bar to set the value
+  - *Button id*: 0 based index of the button to modify. (Not counting new lines)
+  - *Ctrl*: OR-ed attributes. E.g. `LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE`
+
 - **Calendar Set Today Date**: Set the today's date
   - *Object*: The calendar object
   - *Year*: Today's year
@@ -168,6 +178,10 @@ List of actions to be executed. The following actions are available:
   - *Object*: The label to set the text
   - *Text*: The text to set
 
+- **QR Code Update**: Set the text of a QR code object
+  - *Object*: QR code widget
+  - *Text*: The text to display
+
 - **Roller Set Selected**: Set the selected item of the roller
   - *Object*: The roller to set the selected item
   - *Selected*: The index of the selected item
@@ -177,6 +191,16 @@ List of actions to be executed. The following actions are available:
   - *Object*: The slider to set the value
   - *Value*: The value to set
   - *Animated*: Use animation when setting the value
+
+- **Slider Set Value Left**: Set a new value for the left knob of a slider
+  - *Object*: The slider to set the value
+  - *Value left*: The left value to set
+  - *Animated*: Use animation when setting the value
+
+- **Slider Set Range**: Set minimum and the maximum values of a slider
+  - *Object*: The bar to set the value
+  - *Min*: Minimum value
+  - *Max*: Maximum value
 
 - **Keyboard Set Textarea**: Set the textarea for the keyboard
   - *Object*: The keyboard to set the textarea

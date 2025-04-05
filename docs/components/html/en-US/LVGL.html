@@ -104,6 +104,14 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><em>Object</em>: The bar to set the value</p></li>
 <li><p><em>Value</em>: The value to set (0-100)</p></li>
 <li><p><em>Animated</em>: Use animation when setting the value</p></li>
+<li><p><strong>Button Matrix Set Button Ctrl</strong>: Set the value of the bar</p></li>
+<li><p><em>Object</em>: The bar to set the value</p></li>
+<li><p><em>Button id</em>: 0 based index of the button to modify. (Not counting new lines)</p></li>
+<li><p><em>Ctrl</em>: OR-ed attributes. E.g. <code>LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE</code></p></li>
+<li><p><strong>Button Matrix Clear Button Ctrl</strong>: Clear the attributes of a button of the button matrix</p></li>
+<li><p><em>Object</em>: The bar to set the value</p></li>
+<li><p><em>Button id</em>: 0 based index of the button to modify. (Not counting new lines)</p></li>
+<li><p><em>Ctrl</em>: OR-ed attributes. E.g. <code>LV_BUTTONMATRIX_CTRL.NO_REPEAT | LV_BUTTONMATRIX_CTRL.CHECKABLE</code></p></li>
 <li><p><strong>Calendar Set Today Date</strong>: Set the today's date</p></li>
 <li><p><em>Object</em>: The calendar object</p></li>
 <li><p><em>Year</em>: Today's year</p></li>
@@ -138,6 +146,9 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><strong>Label Set Text</strong>: Set the text of the label</p></li>
 <li><p><em>Object</em>: The label to set the text</p></li>
 <li><p><em>Text</em>: The text to set</p></li>
+<li><p><strong>QR Code Update</strong>: Set the text of a QR code object</p></li>
+<li><p><em>Object</em>: QR code widget</p></li>
+<li><p><em>Text</em>: The text to display</p></li>
 <li><p><strong>Roller Set Selected</strong>: Set the selected item of the roller</p></li>
 <li><p><em>Object</em>: The roller to set the selected item</p></li>
 <li><p><em>Selected</em>: The index of the selected item</p></li>
@@ -146,6 +157,14 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><em>Object</em>: The slider to set the value</p></li>
 <li><p><em>Value</em>: The value to set</p></li>
 <li><p><em>Animated</em>: Use animation when setting the value</p></li>
+<li><p><strong>Slider Set Value Left</strong>: Set a new value for the left knob of a slider</p></li>
+<li><p><em>Object</em>: The slider to set the value</p></li>
+<li><p><em>Value left</em>: The left value to set</p></li>
+<li><p><em>Animated</em>: Use animation when setting the value</p></li>
+<li><p><strong>Slider Set Range</strong>: Set minimum and the maximum values of a slider</p></li>
+<li><p><em>Object</em>: The bar to set the value</p></li>
+<li><p><em>Min</em>: Minimum value</p></li>
+<li><p><em>Max</em>: Maximum value</p></li>
 <li><p><strong>Keyboard Set Textarea</strong>: Set the textarea for the keyboard</p></li>
 <li><p><em>Object</em>: The keyboard to set the textarea</p></li>
 <li><p><em>Textarea</em>: The textarea to set</p></li>

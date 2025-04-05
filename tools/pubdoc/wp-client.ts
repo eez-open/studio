@@ -5,12 +5,13 @@ import WPAPI from "wpapi";
 import { Server } from "./types";
 
 export class WPClient {
-    username = "mvladic";
-    password = "txA79bc12";
+    username = "";
+    password = "";
 
     wp: WPAPI;
 
     constructor(private server: Server, username: string, password: string) {
+        console.log(server, username, password);
         this.wp = new WPAPI({
             endpoint: this.server.address,
             username: username,

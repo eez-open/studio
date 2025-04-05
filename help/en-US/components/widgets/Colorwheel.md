@@ -18,6 +18,10 @@ Select which part of the color will be changed with the Widget:
 
 The color mode can be fixed (so as to not change with long press) using this item.
 
+## Knob recolor
+
+Choose the color of Knob background.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

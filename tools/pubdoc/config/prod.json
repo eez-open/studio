@@ -748,6 +748,10 @@
                         "sha256": "d398695744fa0c0dc72c253e1fa83f5b52acd5b9826c00bc9b07b4e08ad9de99"
                     },
                     {
+                        "content": "QRCode.html",
+                        "status": "publish"
+                    },
+                    {
                         "content": "Rectangle (Dashboard).html",
                         "status": "publish",
                         "id": 12224,
