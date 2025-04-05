@@ -2699,15 +2699,20 @@ export async function generateSourceCodeForEezFramework(
         `#include <${project.settings.build.lvglInclude}>`
     );
 
-    const lvglFolder = project.settings.build.lvglInclude.substring(
-        0,
-        project.settings.build.lvglInclude.length - "lvgl.h".length
-    );
-
-    eezH = eezH.replace(
-        "#include <lvgl/src/lvgl_private.h>",
-        `#include <${lvglFolder}src/lvgl_private.h>`
-    );
+    if (project.settings.build.lvglInclude != "lvgl/lvgl.h") {
+        eezH = eezH.replace(
+            "#include <lvgl/src/lvgl_private.h>",
+            `   #ifdef __has_include
+        #if __has_include("lvgl_private.h")
+            #include "lvgl_private.h"
+        #elif __has_include("src/lvgl_private.h")
+            #include "src/lvgl_private.h"
+        #elif __has_include("lvgl/src/lvgl_private.h")
+            #include "lvgl/src/lvgl_private.h"
+        #endif
+    #endif`
+        );
+    }
 
     await fs.promises.writeFile(
         destinationFolderPath + "/eez-flow.h",
