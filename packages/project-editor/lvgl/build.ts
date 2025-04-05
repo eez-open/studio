@@ -2702,7 +2702,7 @@ export async function generateSourceCodeForEezFramework(
     if (project.settings.build.lvglInclude != "lvgl/lvgl.h") {
         eezH = eezH.replace(
             "#include <lvgl/src/lvgl_private.h>",
-            `   #ifdef __has_include
+            `    #ifdef __has_include
         #if __has_include("lvgl_private.h")
             #include "lvgl_private.h"
         #elif __has_include("src/lvgl_private.h")
