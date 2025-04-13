@@ -87,8 +87,6 @@ export function getExpressionPropertyInitalValue(
 export function escapeCString(unescaped: string) {
     let result = '"';
 
-    console.log(unescaped);
-
     for (let i = 0; i < unescaped.length; i++) {
         const ch = unescaped[i];
         if (ch == '"') {
@@ -109,7 +107,6 @@ export function escapeCString(unescaped: string) {
         ) {
             result += "\\\\";
         } else {
-            console.log(ch);
             result += ch;
         }
     }
