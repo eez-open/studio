@@ -1058,6 +1058,9 @@ export class LVGLBuild extends Build {
             build.line(
                 `extern uint32_t theme_colors[${this.project.themes.length}][${this.project.colors.length}];`
             );
+            if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                build.line(`extern uint32_t active_theme_index;`);
+            }
         }
 
         return this.result;
