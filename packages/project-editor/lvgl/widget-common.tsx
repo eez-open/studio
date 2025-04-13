@@ -87,6 +87,8 @@ export function getExpressionPropertyInitalValue(
 export function escapeCString(unescaped: string) {
     let result = '"';
 
+    console.log(unescaped);
+
     for (let i = 0; i < unescaped.length; i++) {
         const ch = unescaped[i];
         if (ch == '"') {
@@ -97,9 +99,17 @@ export function escapeCString(unescaped: string) {
             result += "\\r";
         } else if (ch == "\t") {
             result += "\\t";
-        } else if (ch == "\\") {
+        } else if (
+            ch == "\\" &&
+            (i + 1 == unescaped.length ||
+                (unescaped[i + 1] != "n" &&
+                    unescaped[i + 1] != "r" &&
+                    unescaped[i + 1] != "t" &&
+                    unescaped[i + 1] != "u"))
+        ) {
             result += "\\\\";
         } else {
+            console.log(ch);
             result += ch;
         }
     }
