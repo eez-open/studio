@@ -1164,9 +1164,24 @@ export class LVGLBuild extends Build {
                                 );
                             }
 
-                            build.line(
-                                `e->user_data = (void *)${eventHandler.userData};`
-                            );
+                            if (!isNaN(parseFloat(eventHandler.userData))) {
+                                // const staticFloatVarName = this.genFileStaticVar(
+                                //     eventHandler.userData, // Use a unique ID for the static variable
+                                //     "float",
+                                //     "staticFloat"
+                                // );
+                                // this.assingToFileStaticVar(staticFloatVarName, eventHandler.userData);
+                                build.line(
+                                    `static float fl = ${eventHandler.userData}f;` // Pass the pointer instead of the raw value
+                                );
+                                build.line(
+                                    `e->user_data = (void *)&fl;`//${staticFloatVarName};` // Pass the pointer instead of the raw value
+                                );
+                            } else {
+                                build.line(
+                                    `e->user_data = (void *)${eventHandler.userData};` // Original behavior for non-float values
+                                );
+                            }
 
                             if (eventHandler.handlerType == "action") {
                                 const action = findAction(
