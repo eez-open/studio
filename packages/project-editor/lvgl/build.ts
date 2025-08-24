@@ -66,22 +66,22 @@ export class LVGLBuild extends Build {
         fromPage: LVGLWidget[];
         fromUserWidgets: Map<Page, LVGLWidget[]>;
     } = {
-        fromPage: [], // all pages share the same Set
-        fromUserWidgets: new Map() // different Set for each user widget
-    };
+            fromPage: [], // all pages share the same Set
+            fromUserWidgets: new Map() // different Set for each user widget
+        };
 
     lvglObjectIdentifiers: {
         fromPage: Identifiers;
         fromUserWidgets: Map<Page, Identifiers>;
     } = {
-        fromPage: {
-            identifiers: [],
-            widgetToIdentifier: new Map(),
-            widgetToAccessor: new Map(),
-            widgetToIndex: new Map()
-        },
-        fromUserWidgets: new Map()
-    };
+            fromPage: {
+                identifiers: [],
+                widgetToIdentifier: new Map(),
+                widgetToAccessor: new Map(),
+                widgetToIndex: new Map()
+            },
+            fromUserWidgets: new Map()
+        };
 
     fileStaticVars: {
         id: string;
@@ -190,7 +190,7 @@ export class LVGLBuild extends Build {
                 } else {
                     identifier =
                         this.assets.map.lvglWidgetGeneratedIdentifiers[
-                            widget.objID
+                        widget.objID
                         ];
 
                     if (!identifier) {
@@ -210,9 +210,8 @@ export class LVGLBuild extends Build {
                 pageIdentifiers.widgetToAccessor.set(
                     widget,
                     isUserWidget
-                        ? `((lv_obj_t **)&objects)[startWidgetIndex + ${
-                              pageIdentifiers.identifiers.length - startIndex
-                          }]`
+                        ? `((lv_obj_t **)&objects)[startWidgetIndex + ${pageIdentifiers.identifiers.length - startIndex
+                        }]`
                         : `objects.${prefix + identifier}`
                 );
 
@@ -228,8 +227,8 @@ export class LVGLBuild extends Build {
                     if (page) {
                         addIdentifiersForUserWidget(
                             prefix +
-                                identifier +
-                                USER_WIDGET_IDENTIFIER_SEPARATOR,
+                            identifier +
+                            USER_WIDGET_IDENTIFIER_SEPARATOR,
                             page,
                             pageIdentifiers
                         );
@@ -1535,14 +1534,12 @@ export class LVGLBuild extends Build {
 
             if (flag) {
                 build.line(
-                    `int startWidgetIndex = ${
-                        this.getWidgetObjectIndex(lvglWidget) + 1
+                    `int startWidgetIndex = ${this.getWidgetObjectIndex(lvglWidget) + 1
                     };`
                 );
             } else {
                 build.line(
-                    `startWidgetIndex += ${
-                        this.getWidgetObjectIndex(lvglWidget) + 1
+                    `startWidgetIndex += ${this.getWidgetObjectIndex(lvglWidget) + 1
                     };`
                 );
             }
@@ -1799,8 +1796,7 @@ export class LVGLBuild extends Build {
                 }
                 if (font.lvglFallbackFont) {
                     build.line(
-                        `${this.getFontVariableName(font)}->fallback = &${
-                            font.lvglFallbackFont
+                        `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont
                         };`
                     );
                 }
@@ -1862,8 +1858,7 @@ export class LVGLBuild extends Build {
 
         build.line("lv_disp_t *dispp = lv_disp_get_default();");
         build.line(
-            `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
-                this.project.settings.general.darkTheme ? "true" : "false"
+            `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${this.project.settings.general.darkTheme ? "true" : "false"
             }, LV_FONT_DEFAULT);`
         );
         build.line("lv_disp_set_theme(dispp, theme);");
@@ -1902,11 +1897,10 @@ export class LVGLBuild extends Build {
 #define EXT_IMG_DESC_T
 typedef struct _ext_img_desc_t {
     const char *name;
-    const ${
-        this.project.settings.build.imageExportMode == "binary"
-            ? "void"
-            : "lv_img_dsc_t"
-    } *img_dsc;
+    const ${this.project.settings.build.imageExportMode == "binary"
+                ? "void"
+                : "lv_img_dsc_t"
+            } *img_dsc;
 } ext_img_desc_t;
 #endif
 
@@ -2091,10 +2085,9 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                 variable.native
             ) {
                 build.line(
-                    `{ NATIVE_VAR_TYPE_${
-                        isEnumType(variable.type)
-                            ? "INTEGER"
-                            : variable.type.toUpperCase()
+                    `{ NATIVE_VAR_TYPE_${isEnumType(variable.type)
+                        ? "INTEGER"
+                        : variable.type.toUpperCase()
                     }, ${this.getVariableGetterFunctionName(
                         variable.name
                     )}, ${this.getVariableSetterFunctionName(
@@ -2179,7 +2172,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 
                             if (
                                 lvglStyle.parentStyle?.fullDefinition?.[part]?.[
-                                    state
+                                state
                                 ]
                             ) {
                                 build.line(
@@ -2219,11 +2212,11 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                             {
                                 if (build.isV9) {
                                     build.line(
-                                        `style = lv_malloc(sizeof(lv_style_t));`
+                                        `style = (lv_style_t*)lv_malloc(sizeof(lv_style_t));`
                                     );
                                 } else {
                                     build.line(
-                                        `style = lv_mem_alloc(sizeof(lv_style_t));`
+                                        `style = (lv_style_t*)lv_mem_alloc(sizeof(lv_style_t));`
                                     );
                                 }
 
@@ -2410,13 +2403,13 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                                 this.project._store.getAbsoluteFilePath(
                                     destinationFolder
                                 ) +
-                                    "/" +
-                                    (this.project.settings.build
-                                        .separateFolderForImagesAndFonts
-                                        ? "images/"
-                                        : "") +
-                                    output +
-                                    ".bin",
+                                "/" +
+                                (this.project.settings.build
+                                    .separateFolderForImagesAndFonts
+                                    ? "images/"
+                                    : "") +
+                                output +
+                                ".bin",
                                 Buffer.from(source)
                             );
                         } catch (err) {
@@ -2450,13 +2443,13 @@ ${source}`;
                                 this.project._store.getAbsoluteFilePath(
                                     destinationFolder
                                 ) +
-                                    "/" +
-                                    (this.project.settings.build
-                                        .separateFolderForImagesAndFonts
-                                        ? "images/"
-                                        : "") +
-                                    output +
-                                    ".c",
+                                "/" +
+                                (this.project.settings.build
+                                    .separateFolderForImagesAndFonts
+                                    ? "images/"
+                                    : "") +
+                                output +
+                                ".c",
                                 source
                             );
                         } catch (err) {
@@ -2507,13 +2500,13 @@ ${source}`;
                                     this.project._store.getAbsoluteFilePath(
                                         destinationFolder
                                     ) +
-                                        "/" +
-                                        (this.project.settings.build
-                                            .separateFolderForImagesAndFonts
-                                            ? "fonts/"
-                                            : "") +
-                                        output +
-                                        ".bin",
+                                    "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "fonts/"
+                                        : "") +
+                                    output +
+                                    ".bin",
                                     lvglBinaryFile
                                 );
                             } catch (err) {
@@ -2538,13 +2531,13 @@ ${source}`;
                                     this.project._store.getAbsoluteFilePath(
                                         destinationFolder
                                     ) +
-                                        "/" +
-                                        (this.project.settings.build
-                                            .separateFolderForImagesAndFonts
-                                            ? "fonts/"
-                                            : "") +
-                                        output +
-                                        ".c",
+                                    "/" +
+                                    (this.project.settings.build
+                                        .separateFolderForImagesAndFonts
+                                        ? "fonts/"
+                                        : "") +
+                                    output +
+                                    ".c",
                                     lvglSourceFile
                                 );
                             } catch (err) {
@@ -2569,27 +2562,27 @@ export async function generateSourceCodeForEezFramework(
 ) {
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow.cpp");
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow.h");
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.c");
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-lz4.h");
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.c");
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         await fs.promises.rm(destinationFolderPath + "/eez-flow-sha256.h");
-    } catch (err) {}
+    } catch (err) { }
 
     if (
         !(
@@ -2613,7 +2606,7 @@ export async function generateSourceCodeForEezFramework(
             structs_H,
             "utf-8"
         );
-    } catch (err) {}
+    } catch (err) { }
 
     // post fix ui.h
     try {
@@ -2630,7 +2623,7 @@ export async function generateSourceCodeForEezFramework(
             ui_H,
             "utf-8"
         );
-    } catch (err) {}
+    } catch (err) { }
 
     const eezframeworkAmalgamationPath = isDev
         ? resolve(`${sourceRootDir()}/../resources/eez-framework-amalgamation`)
@@ -2688,13 +2681,13 @@ export async function generateSourceCodeForEezFramework(
     eezH = eezH.replace(
         "#define EEZ_FLOW_QUEUE_SIZE 1000",
         "#define EEZ_FLOW_QUEUE_SIZE " +
-            project.settings.build.executionQueueSize
+        project.settings.build.executionQueueSize
     );
 
     eezH = eezH.replace(
         "#define EEZ_FLOW_EVAL_STACK_SIZE 20",
         "#define EEZ_FLOW_EVAL_STACK_SIZE " +
-            project.settings.build.expressionEvaluatorStackSize
+        project.settings.build.expressionEvaluatorStackSize
     );
 
     eezH = eezH.replace(
