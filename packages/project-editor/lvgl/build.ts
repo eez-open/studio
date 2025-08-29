@@ -2446,6 +2446,11 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
 #endif
 ${source}`;
 
+                            // ensure consistent newlines accross all platforms
+                            // (LF only) to avoid unnecessary VCS diffs
+                            source = source.replace(/\r\n/g, '\n');  // Windows
+                            source = source.replace(/\r/g, '\n');  // old Mac OS
+
                             await writeTextFile(
                                 this.project._store.getAbsoluteFilePath(
                                     destinationFolder
