@@ -275,6 +275,15 @@ export class Connection
     logAnswer(data: string) {
         if (this.traceEnabled && data.trim().length > 0) {
             if (this.lastAnswerActivityLogId != undefined) {
+                const activityLog = activityLogStore.findById(
+                    this.lastAnswerActivityLogId
+                );
+                if (!activityLog || activityLog.deleted) {
+                    this.lastAnswerActivityLogId = undefined;
+                }
+            }
+
+            if (this.lastAnswerActivityLogId != undefined) {
                 this.lastAnswerActivityLogMessage += data;
 
                 logUpdate(
