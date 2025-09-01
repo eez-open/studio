@@ -948,6 +948,14 @@ export class LVGLBuild extends Build {
         this.postBuildCallbacks = [];
     }
 
+    functions: {
+        [key: string]: () => void;
+    } = {};
+
+    addFunction(name: string, callback: () => void) {
+        this.functions[name] = callback;
+    }
+
     async buildScreensDecl() {
         this.startBuild();
         const build = this;
@@ -1093,6 +1101,8 @@ export class LVGLBuild extends Build {
             );
             build.line("");
         }
+
+        Object.values(this.functions).forEach(callback => callback());
 
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             for (const page of this.pages) {
@@ -2448,8 +2458,8 @@ ${source}`;
 
                             // ensure consistent newlines accross all platforms
                             // (LF only) to avoid unnecessary VCS diffs
-                            source = source.replace(/\r\n/g, '\n');  // Windows
-                            source = source.replace(/\r/g, '\n');  // old Mac OS
+                            source = source.replace(/\r\n/g, "\n"); // Windows
+                            source = source.replace(/\r/g, "\n"); // old Mac OS
 
                             await writeTextFile(
                                 this.project._store.getAbsoluteFilePath(
