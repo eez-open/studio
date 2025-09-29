@@ -938,7 +938,7 @@ export function buildFlowStructValues(assets: Assets) {
                 set = `FloatValue(${field.name})`;
             } else if (field.type == "double") {
                 nativeType = "double ";
-                get = ".getDoulbe()";
+                get = ".getDouble()";
                 set = `DoubleValue(${field.name})`;
             } else if (field.type == "boolean") {
                 nativeType = "bool ";
