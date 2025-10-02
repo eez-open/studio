@@ -8,14 +8,17 @@ const DST = "build";
 // copy all from SRC to DST, excluding: *.ts, *.tsx, *.less, ...
 gulp.task("copy", function () {
     return gulp
-        .src([
-            SRC + "/**/*.*",
-            "!" + SRC + "/**/*.ts",
-            "!" + SRC + "/**/*.tsx",
-            "!" + SRC + "/**/*.less",
-            "!" + SRC + "/tsconfig.json",
-            "!" + SRC + "/tsconfig.dev.json"
-        ])
+        .src(
+            [
+                SRC + "/**/*.*",
+                "!" + SRC + "/**/*.ts",
+                "!" + SRC + "/**/*.tsx",
+                "!" + SRC + "/**/*.less",
+                "!" + SRC + "/tsconfig.json",
+                "!" + SRC + "/tsconfig.dev.json"
+            ],
+            { encoding: false }
+        )
         .pipe(gulp.dest(DST));
 });
 
