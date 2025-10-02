@@ -739,7 +739,7 @@ export async function createBitmapFromFile(
 
         return bitmap;
     } catch (err) {
-        notification.error(err);
+        notification.error(err.toString());
         return undefined;
     }
 }

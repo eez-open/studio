@@ -42,7 +42,7 @@ export function handleDragAndDrop() {
                         extension[1].handleDragAndDropFile;
                     if (
                         handleDragAndDropFile &&
-                        (await handleDragAndDropFile(file.path, {
+                        (await handleDragAndDropFile(file.webkitRelativePath, {
                             activeTab: tabs.activeTab!
                         }))
                     ) {

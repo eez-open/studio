@@ -844,7 +844,7 @@ export class Glyph extends EezObject {
     pasteFromClipboard() {
         const image = clipboard.readImage();
         if (image) {
-            const buffer = image.getBitmap();
+            const buffer = image.toBitmap();
 
             const width = image.getSize().width;
             const height = image.getSize().height;
