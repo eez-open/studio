@@ -139,7 +139,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         if (this.acceptedCharacters) {
             code.callObjectFunction(
                 "lv_textarea_set_accepted_chars",
-                code.stringProperty("literal", this.acceptedCharacters)
+                code.stringLiteral(this.acceptedCharacters)
             );
         }
 
@@ -229,7 +229,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         if (this.placeholder) {
             code.callObjectFunction(
                 "lv_textarea_set_placeholder_text",
-                code.stringProperty("literal", this.placeholder)
+                code.stringLiteral(this.placeholder)
             );
         }
 
