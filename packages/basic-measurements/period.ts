@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 EEZ Studio Contributors
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 import getFrequency from "./frequency";
