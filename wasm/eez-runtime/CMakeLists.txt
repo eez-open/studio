@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Release
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=8388608 -s LLD_REPORT_UNDEFINED -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/pre.js --post-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/post.js")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=8388608 -s LLD_REPORT_UNDEFINED -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString,HEAP8,HEAPU8,HEAP16,HEAPU16,HEAP32,HEAPU32,HEAPF32,HEAPF64 --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/pre.js --post-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/post.js")
 
 # debug:
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry -g")

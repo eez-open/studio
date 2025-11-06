@@ -83,7 +83,7 @@ namespace eez {
     }
 }
 
-EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone) {
+EM_PORT_API(void) init(uint32_t wasmModuleId, uint32_t debuggerMessageSubsciptionFilter, uint8_t *assets, uint32_t assetsSize, uint32_t displayWidth, uint32_t displayHeight, bool darkTheme, uint32_t timeZone, bool screensLifetimeSupport) {
     eez::flow::g_wasmModuleId = wasmModuleId;
 
     eez::flow::date::g_timeZone = timeZone;
