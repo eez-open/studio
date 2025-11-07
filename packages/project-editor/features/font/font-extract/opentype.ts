@@ -20,7 +20,7 @@ export class ExtractFont implements IFontExtract {
     fontProperties: FontProperties;
     allEncodings: number[];
 
-    constructor(private params: Params) {}
+    constructor(private params: Params) { }
 
     async start() {
         return new Promise<void>((resolve, reject) => {
@@ -97,11 +97,11 @@ export class ExtractFont implements IFontExtract {
         const bb = glyph
             ? glyph.getBoundingBox()
             : {
-                  x1: 0,
-                  x2: 0,
-                  y1: 0,
-                  y2: 0
-              };
+                x1: 0,
+                x2: 0,
+                y1: 0,
+                y2: 0
+            };
         const x1 = Math.floor(bb.x1 * this.scale);
         const x2 = Math.ceil(bb.x2 * this.scale);
         const y1 = Math.floor(bb.y1 * this.scale);
@@ -112,7 +112,7 @@ export class ExtractFont implements IFontExtract {
         glyphProperties.encoding = encoding;
 
         glyphProperties.dx = glyph
-            ? Math.ceil(glyph.advanceWidth ?? 0 * this.scale)
+            ? Math.ceil((glyph.advanceWidth ?? 0) * this.scale)
             : 0;
 
         glyphProperties.x = x1;
@@ -179,7 +179,7 @@ export class ExtractFont implements IFontExtract {
 
                         if (
                             imageData.data[
-                                (y * glyphProperties.width + x) * 4 + 3
+                            (y * glyphProperties.width + x) * 4 + 3
                             ] > this.params.threshold
                         ) {
                             pixelArray[index] |= 0x80 >> x % 8;
@@ -192,7 +192,7 @@ export class ExtractFont implements IFontExtract {
         return glyphProperties;
     }
 
-    freeResources() {}
+    freeResources() { }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
