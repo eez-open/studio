@@ -1,8 +1,45 @@
 // include: shell.js
+// include: minimum_runtime_check.js
+(function() {
+  // "30.0.0" -> 300000
+  function humanReadableVersionToPacked(str) {
+    str = str.split('-')[0]; // Remove any trailing part from e.g. "12.53.3-alpha"
+    var vers = str.split('.').slice(0, 3);
+    while(vers.length < 3) vers.push('00');
+    vers = vers.map((n, i, arr) => n.padStart(2, '0'));
+    return vers.join('');
+  }
+  // 300000 -> "30.0.0"
+  var packedVersionToHumanReadable = n => [n / 10000 | 0, (n / 100 | 0) % 100, n % 100].join('.');
+
+  var TARGET_NOT_SUPPORTED = 2147483647;
+
+  var currentNodeVersion = typeof process !== 'undefined' && process?.versions?.node ? humanReadableVersionToPacked(process.versions.node) : TARGET_NOT_SUPPORTED;
+  if (currentNodeVersion < 160000) {
+    throw new Error(`This emscripten-generated code requires node v${ packedVersionToHumanReadable(160000) } (detected v${packedVersionToHumanReadable(currentNodeVersion)})`);
+  }
+
+  var currentSafariVersion = typeof navigator !== 'undefined' && navigator?.userAgent?.includes("Safari/") && navigator.userAgent.match(/Version\/(\d+\.?\d*\.?\d*)/) ? humanReadableVersionToPacked(navigator.userAgent.match(/Version\/(\d+\.?\d*\.?\d*)/)[1]) : TARGET_NOT_SUPPORTED;
+  if (currentSafariVersion < 150000) {
+    throw new Error(`This emscripten-generated code requires Safari v${ packedVersionToHumanReadable(150000) } (detected v${currentSafariVersion})`);
+  }
+
+  var currentFirefoxVersion = typeof navigator !== 'undefined' && navigator?.userAgent?.match(/Firefox\/(\d+(?:\.\d+)?)/) ? parseFloat(navigator.userAgent.match(/Firefox\/(\d+(?:\.\d+)?)/)[1]) : TARGET_NOT_SUPPORTED;
+  if (currentFirefoxVersion < 79) {
+    throw new Error(`This emscripten-generated code requires Firefox v79 (detected v${currentFirefoxVersion})`);
+  }
+
+  var currentChromeVersion = typeof navigator !== 'undefined' && navigator?.userAgent?.match(/Chrome\/(\d+(?:\.\d+)?)/) ? parseFloat(navigator.userAgent.match(/Chrome\/(\d+(?:\.\d+)?)/)[1]) : TARGET_NOT_SUPPORTED;
+  if (currentChromeVersion < 85) {
+    throw new Error(`This emscripten-generated code requires Chrome v85 (detected v${currentChromeVersion})`);
+  }
+})();
+
+// end include: minimum_runtime_check.js
 // The Module object: Our interface to the outside world. We import
 // and export values on it. There are various ways Module can be used:
 // 1. Not defined. We create it here
-// 2. A function parameter, function(Module) { ..generated code.. }
+// 2. A function parameter, function(moduleArg) => Promise<Module>
 // 3. pre-run appended it, var Module = {}; ..generated code..
 // 4. External script tag defines var Module.
 // We need to check if Module already exists (e.g. case 3 above).
@@ -14,8 +51,20 @@
 // can continue to use Module afterwards as well.
 var Module = typeof Module != 'undefined' ? Module : {};
 
+// Determine the runtime environment we are in. You can customize this by
+// setting the ENVIRONMENT setting at compile time (see settings.js).
+
+// Attempt to auto-detect the environment
+var ENVIRONMENT_IS_WEB = !!globalThis.window;
+var ENVIRONMENT_IS_WORKER = !!globalThis.WorkerGlobalScope;
+// N.b. Electron.js environment is simultaneously a NODE-environment, but
+// also a web environment.
+var ENVIRONMENT_IS_NODE = globalThis.process?.versions?.node && globalThis.process?.type != 'renderer';
+var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
+
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
+// include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/pre.js
 module["exports"] = function (postWorkerToRendererMessage) {
     var Module = {};
 
@@ -40,14 +89,8 @@ module["exports"] = function (postWorkerToRendererMessage) {
 
 function runWasmModule(Module) {
 
+// end include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/pre.js
 
-
-// Sometimes an existing Module object exists with properties
-// meant to overwrite the default module functionality. Here
-// we collect those properties and reapply _after_ we configure
-// the current environment's defaults to avoid having to be so
-// defensive during initialization.
-var moduleOverrides = Object.assign({}, Module);
 
 var arguments_ = [];
 var thisProgram = './this.program';
@@ -55,19 +98,15 @@ var quit_ = (status, toThrow) => {
   throw toThrow;
 };
 
-// Determine the runtime environment we are in. You can customize this by
-// setting the ENVIRONMENT setting at compile time (see settings.js).
+// In MODULARIZE mode _scriptName needs to be captured already at the very top of the page immediately when the page is parsed, so it is generated there
+// before the page load. In non-MODULARIZE modes generate it here.
+var _scriptName = globalThis.document?.currentScript?.src;
 
-// Attempt to auto-detect the environment
-var ENVIRONMENT_IS_WEB = typeof window == 'object';
-var ENVIRONMENT_IS_WORKER = typeof importScripts == 'function';
-// N.b. Electron.js environment is simultaneously a NODE-environment, but
-// also a web environment.
-var ENVIRONMENT_IS_NODE = typeof process == 'object' && typeof process.versions == 'object' && typeof process.versions.node == 'string';
-var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
-
-if (Module['ENVIRONMENT']) {
-  throw new Error('Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)');
+if (typeof __filename != 'undefined') { // Node
+  _scriptName = __filename;
+} else
+if (ENVIRONMENT_IS_WORKER) {
+  _scriptName = self.location.href;
 }
 
 // `/` should be present at the end if `scriptDirectory` is not empty
@@ -80,68 +119,42 @@ function locateFile(path) {
 }
 
 // Hooks that are implemented differently in different runtime environments.
-var read_,
-    readAsync,
-    readBinary;
+var readAsync, readBinary;
 
 if (ENVIRONMENT_IS_NODE) {
-  if (typeof process == 'undefined' || !process.release || process.release.name !== 'node') throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
+  const isNode = globalThis.process?.versions?.node && globalThis.process?.type != 'renderer';
+  if (!isNode) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
 
-  var nodeVersion = process.versions.node;
-  var numericVersion = nodeVersion.split('.').slice(0, 3);
-  numericVersion = (numericVersion[0] * 10000) + (numericVersion[1] * 100) + (numericVersion[2].split('-')[0] * 1);
-  var minVersion = 160000;
-  if (numericVersion < 160000) {
-    throw new Error('This emscripten-generated code requires node v16.0.0 (detected v' + nodeVersion + ')');
-  }
-
-  // `require()` is no-op in an ESM module, use `createRequire()` to construct
-  // the require()` function.  This is only necessary for multi-environment
-  // builds, `-sENVIRONMENT=node` emits a static import declaration instead.
-  // TODO: Swap all `require()`'s with `import()`'s?
   // These modules will usually be used on Node.js. Load them eagerly to avoid
   // the complexity of lazy-loading.
   var fs = require('fs');
-  var nodePath = require('path');
 
-  if (ENVIRONMENT_IS_WORKER) {
-    scriptDirectory = nodePath.dirname(scriptDirectory) + '/';
-  } else {
-    scriptDirectory = __dirname + '/';
-  }
+  scriptDirectory = __dirname + '/';
 
 // include: node_shell_read.js
-read_ = (filename, binary) => {
-  // We need to re-wrap `file://` strings to URLs. Normalizing isn't
-  // necessary in that case, the path should already be absolute.
-  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
-  return fs.readFileSync(filename, binary ? undefined : 'utf8');
-};
-
 readBinary = (filename) => {
-  var ret = read_(filename, true);
-  if (!ret.buffer) {
-    ret = new Uint8Array(ret);
-  }
-  assert(ret.buffer);
+  // We need to re-wrap `file://` strings to URLs.
+  filename = isFileURI(filename) ? new URL(filename) : filename;
+  var ret = fs.readFileSync(filename);
+  assert(Buffer.isBuffer(ret));
   return ret;
 };
 
-readAsync = (filename, onload, onerror, binary = true) => {
-  // See the comment in the `read_` function.
-  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
-  fs.readFile(filename, binary ? undefined : 'utf8', (err, data) => {
-    if (err) onerror(err);
-    else onload(binary ? data.buffer : data);
-  });
+readAsync = async (filename, binary = true) => {
+  // See the comment in the `readBinary` function.
+  filename = isFileURI(filename) ? new URL(filename) : filename;
+  var ret = fs.readFileSync(filename, binary ? undefined : 'utf8');
+  assert(binary ? Buffer.isBuffer(ret) : typeof ret == 'string');
+  return ret;
 };
 // end include: node_shell_read.js
-  if (!Module['thisProgram'] && process.argv.length > 1) {
+  if (process.argv.length > 1) {
     thisProgram = process.argv[1].replace(/\\/g, '/');
   }
 
   arguments_ = process.argv.slice(2);
 
+  // MODULARIZE will export the module in the proper place outside, we don't need to export here
   if (typeof module != 'undefined') {
     module['exports'] = Module;
   }
@@ -151,76 +164,8 @@ readAsync = (filename, onload, onerror, binary = true) => {
     throw toThrow;
   };
 
-  Module['inspect'] = () => '[Emscripten Module object]';
-
 } else
 if (ENVIRONMENT_IS_SHELL) {
-
-  if ((typeof process == 'object' && typeof require === 'function') || typeof window == 'object' || typeof importScripts == 'function') throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
-
-  if (typeof read != 'undefined') {
-    read_ = read;
-  }
-
-  readBinary = (f) => {
-    if (typeof readbuffer == 'function') {
-      return new Uint8Array(readbuffer(f));
-    }
-    let data = read(f, 'binary');
-    assert(typeof data == 'object');
-    return data;
-  };
-
-  readAsync = (f, onload, onerror) => {
-    setTimeout(() => onload(readBinary(f)));
-  };
-
-  if (typeof clearTimeout == 'undefined') {
-    globalThis.clearTimeout = (id) => {};
-  }
-
-  if (typeof setTimeout == 'undefined') {
-    // spidermonkey lacks setTimeout but we use it above in readAsync.
-    globalThis.setTimeout = (f) => (typeof f == 'function') ? f() : abort();
-  }
-
-  if (typeof scriptArgs != 'undefined') {
-    arguments_ = scriptArgs;
-  } else if (typeof arguments != 'undefined') {
-    arguments_ = arguments;
-  }
-
-  if (typeof quit == 'function') {
-    quit_ = (status, toThrow) => {
-      // Unlike node which has process.exitCode, d8 has no such mechanism. So we
-      // have no way to set the exit code and then let the program exit with
-      // that code when it naturally stops running (say, when all setTimeouts
-      // have completed). For that reason, we must call `quit` - the only way to
-      // set the exit code - but quit also halts immediately.  To increase
-      // consistency with node (and the web) we schedule the actual quit call
-      // using a setTimeout to give the current stack and any exception handlers
-      // a chance to run.  This enables features such as addOnPostRun (which
-      // expected to be able to run code after main returns).
-      setTimeout(() => {
-        if (!(toThrow instanceof ExitStatus)) {
-          let toLog = toThrow;
-          if (toThrow && typeof toThrow == 'object' && toThrow.stack) {
-            toLog = [toThrow, toThrow.stack];
-          }
-          err(`exiting due to exception: ${toLog}`);
-        }
-        quit(status);
-      });
-      throw toThrow;
-    };
-  }
-
-  if (typeof print != 'undefined') {
-    // Prefer to use print/printErr where they exist, as they usually work better.
-    if (typeof console == 'undefined') console = /** @type{!Console} */({});
-    console.log = /** @type{!function(this:Console, ...*): undefined} */ (print);
-    console.warn = console.error = /** @type{!function(this:Console, ...*): undefined} */ (typeof printErr != 'undefined' ? printErr : print);
-  }
 
 } else
 
@@ -228,37 +173,18 @@ if (ENVIRONMENT_IS_SHELL) {
 // Node.js workers are detected as a combination of ENVIRONMENT_IS_WORKER and
 // ENVIRONMENT_IS_NODE.
 if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-  if (ENVIRONMENT_IS_WORKER) { // Check worker, not web, since window could be polyfilled
-    scriptDirectory = self.location.href;
-  } else if (typeof document != 'undefined' && document.currentScript) { // web
-    scriptDirectory = document.currentScript.src;
-  }
-  // blob urls look like blob:http://site.com/etc/etc and we cannot infer anything from them.
-  // otherwise, slice off the final part of the url to find the script directory.
-  // if scriptDirectory does not contain a slash, lastIndexOf will return -1,
-  // and scriptDirectory will correctly be replaced with an empty string.
-  // If scriptDirectory contains a query (starting with ?) or a fragment (starting with #),
-  // they are removed because they could contain a slash.
-  if (scriptDirectory.indexOf('blob:') !== 0) {
-    scriptDirectory = scriptDirectory.substr(0, scriptDirectory.replace(/[?#].*/, "").lastIndexOf('/')+1);
-  } else {
-    scriptDirectory = '';
+  try {
+    scriptDirectory = new URL('.', _scriptName).href; // includes trailing slash
+  } catch {
+    // Must be a `blob:` or `data:` URL (e.g. `blob:http://site.com/etc/etc`), we cannot
+    // infer anything from them.
   }
 
-  if (!(typeof window == 'object' || typeof importScripts == 'function')) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
+  if (!(globalThis.window || globalThis.WorkerGlobalScope)) throw new Error('not compiled for this environment (did you build to HTML and try to run it not on the web, or set ENVIRONMENT to something - like node - and run it someplace else - like on the web?)');
 
-  // Differentiate the Web Worker from the Node Worker case, as reading must
-  // be done differently.
   {
 // include: web_or_worker_shell_read.js
-read_ = (url) => {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, false);
-    xhr.send(null);
-    return xhr.responseText;
-  }
-
-  if (ENVIRONMENT_IS_WORKER) {
+if (ENVIRONMENT_IS_WORKER) {
     readBinary = (url) => {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, false);
@@ -268,21 +194,33 @@ read_ = (url) => {
     };
   }
 
-  readAsync = (url, onload, onerror) => {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = () => {
-      if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) { // file URLs can return 0
-        onload(xhr.response);
-        return;
-      }
-      onerror();
-    };
-    xhr.onerror = onerror;
-    xhr.send(null);
-  }
-
+  readAsync = async (url) => {
+    // Fetch has some additional restrictions over XHR, like it can't be used on a file:// url.
+    // See https://github.com/github/fetch/pull/92#issuecomment-140665932
+    // Cordova or Electron apps are typically loaded from a file:// url.
+    // So use XHR on webview if URL is a file URL.
+    if (isFileURI(url)) {
+      return new Promise((resolve, reject) => {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = () => {
+          if (xhr.status == 200 || (xhr.status == 0 && xhr.response)) { // file URLs can return 0
+            resolve(xhr.response);
+            return;
+          }
+          reject(xhr.status);
+        };
+        xhr.onerror = reject;
+        xhr.send(null);
+      });
+    }
+    var response = await fetch(url, { credentials: 'same-origin' });
+    if (response.ok) {
+      return response.arrayBuffer();
+    }
+    throw new Error(response.status + ' : ' + response.url);
+  };
 // end include: web_or_worker_shell_read.js
   }
 } else
@@ -290,43 +228,9 @@ read_ = (url) => {
   throw new Error('environment detection error');
 }
 
-var out = Module['print'] || console.log.bind(console);
-var err = Module['printErr'] || console.error.bind(console);
+var out = console.log.bind(console);
+var err = console.error.bind(console);
 
-// Merge back in the overrides
-Object.assign(Module, moduleOverrides);
-// Free the object hierarchy contained in the overrides, this lets the GC
-// reclaim data used e.g. in memoryInitializerRequest, which is a large typed array.
-moduleOverrides = null;
-checkIncomingModuleAPI();
-
-// Emit code to handle expected values on the Module object. This applies Module.x
-// to the proper local x. This has two benefits: first, we only emit it if it is
-// expected to arrive, and second, by using a local everywhere else that can be
-// minified.
-
-if (Module['arguments']) arguments_ = Module['arguments'];legacyModuleProp('arguments', 'arguments_');
-
-if (Module['thisProgram']) thisProgram = Module['thisProgram'];legacyModuleProp('thisProgram', 'thisProgram');
-
-if (Module['quit']) quit_ = Module['quit'];legacyModuleProp('quit', 'quit_');
-
-// perform assertions in shell.js after we set up out() and err(), as otherwise if an assertion fails it cannot print the message
-// Assertions on removed incoming Module JS APIs.
-assert(typeof Module['memoryInitializerPrefixURL'] == 'undefined', 'Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead');
-assert(typeof Module['pthreadMainPrefixURL'] == 'undefined', 'Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead');
-assert(typeof Module['cdInitializerPrefixURL'] == 'undefined', 'Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead');
-assert(typeof Module['filePackagePrefixURL'] == 'undefined', 'Module.filePackagePrefixURL option was removed, use Module.locateFile instead');
-assert(typeof Module['read'] == 'undefined', 'Module.read option was removed (modify read_ in JS)');
-assert(typeof Module['readAsync'] == 'undefined', 'Module.readAsync option was removed (modify readAsync in JS)');
-assert(typeof Module['readBinary'] == 'undefined', 'Module.readBinary option was removed (modify readBinary in JS)');
-assert(typeof Module['setWindowTitle'] == 'undefined', 'Module.setWindowTitle option was removed (modify emscripten_set_window_title in JS)');
-assert(typeof Module['TOTAL_MEMORY'] == 'undefined', 'Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY');
-legacyModuleProp('asm', 'wasmExports');
-legacyModuleProp('read', 'read_');
-legacyModuleProp('readAsync', 'readAsync');
-legacyModuleProp('readBinary', 'readBinary');
-legacyModuleProp('setWindowTitle', 'setWindowTitle');
 var IDBFS = 'IDBFS is no longer included by default; build with -lidbfs.js';
 var PROXYFS = 'PROXYFS is no longer included by default; build with -lproxyfs.js';
 var WORKERFS = 'WORKERFS is no longer included by default; build with -lworkerfs.js';
@@ -337,10 +241,13 @@ var OPFS = 'OPFS is no longer included by default; build with -lopfs.js';
 
 var NODEFS = 'NODEFS is no longer included by default; build with -lnodefs.js';
 
-assert(!ENVIRONMENT_IS_SHELL, "shell environment detected but not enabled at build time.  Add 'shell' to `-sENVIRONMENT` to enable.");
+// perform assertions in shell.js after we set up out() and err(), as otherwise
+// if an assertion fails it cannot print the message
 
+assert(!ENVIRONMENT_IS_SHELL, 'shell environment detected but not enabled at build time.  Add `shell` to `-sENVIRONMENT` to enable.');
 
 // end include: shell.js
+
 // include: preamble.js
 // === Preamble library stuff ===
 
@@ -353,15 +260,12 @@ assert(!ENVIRONMENT_IS_SHELL, "shell environment detected but not enabled at bui
 //    is up at http://kripken.github.io/emscripten-site/docs/api_reference/preamble.js.html
 
 var wasmBinary;
-if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];legacyModuleProp('wasmBinary', 'wasmBinary');
 
-if (typeof WebAssembly != 'object') {
-  abort('no native wasm support detected');
+if (!globalThis.WebAssembly) {
+  err('no native wasm support detected');
 }
 
 // Wasm globals
-
-var wasmMemory;
 
 //========================================
 // Runtime essentials
@@ -376,6 +280,10 @@ var ABORT = false;
 // but only when noExitRuntime is false.
 var EXITSTATUS;
 
+// In STRICT mode, we only define assert() when ASSERTIONS is set.  i.e. we
+// don't define it at all in release modes.  This matches the behaviour of
+// MINIMAL_RUNTIME.
+// TODO(sbc): Make this the default even without STRICT enabled.
 /** @type {function(*, string=)} */
 function assert(condition, text) {
   if (!condition) {
@@ -386,47 +294,13 @@ function assert(condition, text) {
 // We used to include malloc/free by default in the past. Show a helpful error in
 // builds with assertions.
 
-// Memory management
+/**
+ * Indicates whether filename is delivered via file protocol (as opposed to http/https)
+ * @noinline
+ */
+var isFileURI = (filename) => filename.startsWith('file://');
 
-var HEAP,
-/** @type {!Int8Array} */
-  HEAP8,
-/** @type {!Uint8Array} */
-  HEAPU8,
-/** @type {!Int16Array} */
-  HEAP16,
-/** @type {!Uint16Array} */
-  HEAPU16,
-/** @type {!Int32Array} */
-  HEAP32,
-/** @type {!Uint32Array} */
-  HEAPU32,
-/** @type {!Float32Array} */
-  HEAPF32,
-/** @type {!Float64Array} */
-  HEAPF64;
-
-function updateMemoryViews() {
-  var b = wasmMemory.buffer;
-  Module['HEAP8'] = HEAP8 = new Int8Array(b);
-  Module['HEAP16'] = HEAP16 = new Int16Array(b);
-  Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
-  Module['HEAPU16'] = HEAPU16 = new Uint16Array(b);
-  Module['HEAP32'] = HEAP32 = new Int32Array(b);
-  Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
-  Module['HEAPF32'] = HEAPF32 = new Float32Array(b);
-  Module['HEAPF64'] = HEAPF64 = new Float64Array(b);
-}
-
-assert(!Module['STACK_SIZE'], 'STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time')
-
-assert(typeof Int32Array != 'undefined' && typeof Float64Array !== 'undefined' && Int32Array.prototype.subarray != undefined && Int32Array.prototype.set != undefined,
-       'JS engine does not provide full typed array support');
-
-// If memory is defined in wasm, the user can't provide it, or set INITIAL_MEMORY
-assert(!Module['wasmMemory'], 'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally');
-assert(!Module['INITIAL_MEMORY'], 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
-
+// include: runtime_common.js
 // include: runtime_stack_check.js
 // Initializes the stack cookie. Called at the startup of main and at the startup of each thread in pthreads mode.
 function writeStackCookie() {
@@ -465,22 +339,183 @@ function checkStackCookie() {
   }
 }
 // end include: runtime_stack_check.js
-// include: runtime_assertions.js
+// include: runtime_exceptions.js
+// end include: runtime_exceptions.js
+// include: runtime_debug.js
+var runtimeDebug = true; // Switch to false at runtime to disable logging at the right times
+
+// Used by XXXXX_DEBUG settings to output debug messages.
+function dbg(...args) {
+  if (!runtimeDebug && typeof runtimeDebug != 'undefined') return;
+  // TODO(sbc): Make this configurable somehow.  Its not always convenient for
+  // logging to show up as warnings.
+  console.warn(...args);
+}
+
 // Endianness check
-(function() {
+(() => {
   var h16 = new Int16Array(1);
   var h8 = new Int8Array(h16.buffer);
   h16[0] = 0x6373;
-  if (h8[0] !== 0x73 || h8[1] !== 0x63) throw 'Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)';
+  if (h8[0] !== 0x73 || h8[1] !== 0x63) abort('Runtime error: expected the system to be little-endian! (Run with -sSUPPORT_BIG_ENDIAN to bypass)');
 })();
 
-// end include: runtime_assertions.js
-var __ATPRERUN__  = []; // functions called before the runtime is initialized
-var __ATINIT__    = []; // functions called during startup
-var __ATEXIT__    = []; // functions called during shutdown
-var __ATPOSTRUN__ = []; // functions called after the main() is called
+function consumedModuleProp(prop) {
+  if (!Object.getOwnPropertyDescriptor(Module, prop)) {
+    Object.defineProperty(Module, prop, {
+      configurable: true,
+      set() {
+        abort(`Attempt to set \`Module.${prop}\` after it has already been processed.  This can happen, for example, when code is injected via '--post-js' rather than '--pre-js'`);
+
+      }
+    });
+  }
+}
+
+function makeInvalidEarlyAccess(name) {
+  return () => assert(false, `call to '${name}' via reference taken before Wasm module initialization`);
+
+}
+
+function ignoredModuleProp(prop) {
+  if (Object.getOwnPropertyDescriptor(Module, prop)) {
+    abort(`\`Module.${prop}\` was supplied but \`${prop}\` not included in INCOMING_MODULE_JS_API`);
+  }
+}
+
+// forcing the filesystem exports a few things by default
+function isExportedByForceFilesystem(name) {
+  return name === 'FS_createPath' ||
+         name === 'FS_createDataFile' ||
+         name === 'FS_createPreloadedFile' ||
+         name === 'FS_preloadFile' ||
+         name === 'FS_unlink' ||
+         name === 'addRunDependency' ||
+         // The old FS has some functionality that WasmFS lacks.
+         name === 'FS_createLazyFile' ||
+         name === 'FS_createDevice' ||
+         name === 'removeRunDependency';
+}
+
+/**
+ * Intercept access to a symbols in the global symbol.  This enables us to give
+ * informative warnings/errors when folks attempt to use symbols they did not
+ * include in their build, or no symbols that no longer exist.
+ *
+ * We don't define this in MODULARIZE mode since in that mode emscripten symbols
+ * are never placed in the global scope.
+ */
+function hookGlobalSymbolAccess(sym, func) {
+  if (!Object.getOwnPropertyDescriptor(globalThis, sym)) {
+    Object.defineProperty(globalThis, sym, {
+      configurable: true,
+      get() {
+        func();
+        return undefined;
+      }
+    });
+  }
+}
+
+function missingGlobal(sym, msg) {
+  hookGlobalSymbolAccess(sym, () => {
+    warnOnce(`\`${sym}\` is no longer defined by emscripten. ${msg}`);
+  });
+}
+
+missingGlobal('buffer', 'Please use HEAP8.buffer or wasmMemory.buffer');
+missingGlobal('asm', 'Please use wasmExports instead');
+
+function missingLibrarySymbol(sym) {
+  hookGlobalSymbolAccess(sym, () => {
+    // Can't `abort()` here because it would break code that does runtime
+    // checks.  e.g. `if (typeof SDL === 'undefined')`.
+    var msg = `\`${sym}\` is a library symbol and not included by default; add it to your library.js __deps or to DEFAULT_LIBRARY_FUNCS_TO_INCLUDE on the command line`;
+    // DEFAULT_LIBRARY_FUNCS_TO_INCLUDE requires the name as it appears in
+    // library.js, which means $name for a JS name with no prefix, or name
+    // for a JS name like _name.
+    var librarySymbol = sym;
+    if (!librarySymbol.startsWith('_')) {
+      librarySymbol = '$' + sym;
+    }
+    msg += ` (e.g. -sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE='${librarySymbol}')`;
+    if (isExportedByForceFilesystem(sym)) {
+      msg += '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
+    }
+    warnOnce(msg);
+  });
+
+  // Any symbol that is not included from the JS library is also (by definition)
+  // not exported on the Module object.
+  unexportedRuntimeSymbol(sym);
+}
+
+function unexportedRuntimeSymbol(sym) {
+  if (!Object.getOwnPropertyDescriptor(Module, sym)) {
+    Object.defineProperty(Module, sym, {
+      configurable: true,
+      get() {
+        var msg = `'${sym}' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the Emscripten FAQ)`;
+        if (isExportedByForceFilesystem(sym)) {
+          msg += '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
+        }
+        abort(msg);
+      },
+    });
+  }
+}
+
+// end include: runtime_debug.js
+// Memory management
+var
+/** @type {!Int8Array} */
+  HEAP8,
+/** @type {!Uint8Array} */
+  HEAPU8,
+/** @type {!Int16Array} */
+  HEAP16,
+/** @type {!Uint16Array} */
+  HEAPU16,
+/** @type {!Int32Array} */
+  HEAP32,
+/** @type {!Uint32Array} */
+  HEAPU32,
+/** @type {!Float32Array} */
+  HEAPF32,
+/** @type {!Float64Array} */
+  HEAPF64;
+
+// BigInt64Array type is not correctly defined in closure
+var
+/** not-@type {!BigInt64Array} */
+  HEAP64,
+/* BigUint64Array type is not correctly defined in closure
+/** not-@type {!BigUint64Array} */
+  HEAPU64;
 
 var runtimeInitialized = false;
+
+
+
+function updateMemoryViews() {
+  var b = wasmMemory.buffer;
+  Module['HEAP8'] = HEAP8 = new Int8Array(b);
+  Module['HEAP16'] = HEAP16 = new Int16Array(b);
+  Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
+  Module['HEAPU16'] = HEAPU16 = new Uint16Array(b);
+  Module['HEAP32'] = HEAP32 = new Int32Array(b);
+  Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
+  Module['HEAPF32'] = HEAPF32 = new Float32Array(b);
+  Module['HEAPF64'] = HEAPF64 = new Float64Array(b);
+  HEAP64 = new BigInt64Array(b);
+  HEAPU64 = new BigUint64Array(b);
+}
+
+// include: memoryprofiler.js
+// end include: memoryprofiler.js
+// end include: runtime_common.js
+assert(globalThis.Int32Array && globalThis.Float64Array && Int32Array.prototype.subarray && Int32Array.prototype.set,
+       'JS engine does not provide full typed array support');
 
 function preRun() {
   if (Module['preRun']) {
@@ -489,7 +524,10 @@ function preRun() {
       addOnPreRun(Module['preRun'].shift());
     }
   }
-  callRuntimeCallbacks(__ATPRERUN__);
+  consumedModuleProp('preRun');
+  // Begin ATPRERUNS hooks
+  callRuntimeCallbacks(onPreRuns);
+  // End ATPRERUNS hooks
 }
 
 function initRuntime() {
@@ -498,17 +536,21 @@ function initRuntime() {
 
   checkStackCookie();
 
-  
-if (!Module["noFSInit"] && !FS.init.initialized)
-  FS.init();
-FS.ignorePermissions = false;
-
+  // Begin ATINITS hooks
+  if (!Module['noFSInit'] && !FS.initialized) FS.init();
 TTY.init();
-  callRuntimeCallbacks(__ATINIT__);
+  // End ATINITS hooks
+
+  wasmExports['__wasm_call_ctors']();
+
+  // Begin ATPOSTCTORS hooks
+  FS.ignorePermissions = false;
+  // End ATPOSTCTORS hooks
 }
 
 function postRun() {
   checkStackCookie();
+   // PThreads reuse the runtime from the main thread.
 
   if (Module['postRun']) {
     if (typeof Module['postRun'] == 'function') Module['postRun'] = [Module['postRun']];
@@ -516,126 +558,16 @@ function postRun() {
       addOnPostRun(Module['postRun'].shift());
     }
   }
+  consumedModuleProp('postRun');
 
-  callRuntimeCallbacks(__ATPOSTRUN__);
-}
-
-function addOnPreRun(cb) {
-  __ATPRERUN__.unshift(cb);
-}
-
-function addOnInit(cb) {
-  __ATINIT__.unshift(cb);
-}
-
-function addOnExit(cb) {
-}
-
-function addOnPostRun(cb) {
-  __ATPOSTRUN__.unshift(cb);
-}
-
-// include: runtime_math.js
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/fround
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc
-
-assert(Math.imul, 'This browser does not support Math.imul(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill');
-assert(Math.fround, 'This browser does not support Math.fround(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill');
-assert(Math.clz32, 'This browser does not support Math.clz32(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill');
-assert(Math.trunc, 'This browser does not support Math.trunc(), build with LEGACY_VM_SUPPORT or POLYFILL_OLD_MATH_FUNCTIONS to add in a polyfill');
-// end include: runtime_math.js
-// A counter of dependencies for calling run(). If we need to
-// do asynchronous work before running, increment this and
-// decrement it. Incrementing must happen in a place like
-// Module.preRun (used by emcc to add file preloading).
-// Note that you can add dependencies in preRun, even though
-// it happens right before run - run will be postponed until
-// the dependencies are met.
-var runDependencies = 0;
-var runDependencyWatcher = null;
-var dependenciesFulfilled = null; // overridden to take different actions when all run dependencies are fulfilled
-var runDependencyTracking = {};
-
-function getUniqueRunDependency(id) {
-  var orig = id;
-  while (1) {
-    if (!runDependencyTracking[id]) return id;
-    id = orig + Math.random();
-  }
-}
-
-function addRunDependency(id) {
-  runDependencies++;
-
-  if (Module['monitorRunDependencies']) {
-    Module['monitorRunDependencies'](runDependencies);
-  }
-
-  if (id) {
-    assert(!runDependencyTracking[id]);
-    runDependencyTracking[id] = 1;
-    if (runDependencyWatcher === null && typeof setInterval != 'undefined') {
-      // Check for missing dependencies every few seconds
-      runDependencyWatcher = setInterval(() => {
-        if (ABORT) {
-          clearInterval(runDependencyWatcher);
-          runDependencyWatcher = null;
-          return;
-        }
-        var shown = false;
-        for (var dep in runDependencyTracking) {
-          if (!shown) {
-            shown = true;
-            err('still waiting on run dependencies:');
-          }
-          err(`dependency: ${dep}`);
-        }
-        if (shown) {
-          err('(end of list)');
-        }
-      }, 10000);
-    }
-  } else {
-    err('warning: run dependency added without ID');
-  }
-}
-
-function removeRunDependency(id) {
-  runDependencies--;
-
-  if (Module['monitorRunDependencies']) {
-    Module['monitorRunDependencies'](runDependencies);
-  }
-
-  if (id) {
-    assert(runDependencyTracking[id]);
-    delete runDependencyTracking[id];
-  } else {
-    err('warning: run dependency removed without ID');
-  }
-  if (runDependencies == 0) {
-    if (runDependencyWatcher !== null) {
-      clearInterval(runDependencyWatcher);
-      runDependencyWatcher = null;
-    }
-    if (dependenciesFulfilled) {
-      var callback = dependenciesFulfilled;
-      dependenciesFulfilled = null;
-      callback(); // can add another dependenciesFulfilled
-    }
-  }
+  // Begin ATPOSTRUNS hooks
+  callRuntimeCallbacks(onPostRuns);
+  // End ATPOSTRUNS hooks
 }
 
 /** @param {string|number=} what */
 function abort(what) {
-  if (Module['onAbort']) {
-    Module['onAbort'](what);
-  }
+  Module['onAbort']?.(what);
 
   what = 'Aborted(' + what + ')';
   // TODO(sbc): Should we remove printing and leave it up to whoever
@@ -643,7 +575,6 @@ function abort(what) {
   err(what);
 
   ABORT = true;
-  EXITSTATUS = 1;
 
   // Use a wasm runtime error, because a JS error might be seen as a foreign
   // exception, which means we'd run destructors on it. We need the error to
@@ -655,7 +586,7 @@ function abort(what) {
   // allows this in the wasm spec.
 
   // Suppress closure compiler warning here. Closure compiler's builtin extern
-  // defintion for WebAssembly.RuntimeError claims it takes no arguments even
+  // definition for WebAssembly.RuntimeError claims it takes no arguments even
   // though it can.
   // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure gets fixed.
   /** @suppress {checkTypes} */
@@ -667,40 +598,22 @@ function abort(what) {
   throw e;
 }
 
-// include: memoryprofiler.js
-// end include: memoryprofiler.js
-// include: URIUtils.js
-// Prefix of data URIs emitted by SINGLE_FILE and related options.
-var dataURIPrefix = 'data:application/octet-stream;base64,';
-
-/**
- * Indicates whether filename is a base64 data URI.
- * @noinline
- */
-var isDataURI = (filename) => filename.startsWith(dataURIPrefix);
-
-/**
- * Indicates whether filename is delivered via file protocol (as opposed to http/https)
- * @noinline
- */
-var isFileURI = (filename) => filename.startsWith('file://');
-// end include: URIUtils.js
-function createExportWrapper(name) {
-  return function() {
+function createExportWrapper(name, nargs) {
+  return (...args) => {
     assert(runtimeInitialized, `native function \`${name}\` called before runtime initialization`);
     var f = wasmExports[name];
     assert(f, `exported native function \`${name}\` not found`);
-    return f.apply(null, arguments);
+    // Only assert for too many arguments. Too few can be valid since the missing arguments will be zero filled.
+    assert(args.length <= nargs, `native function \`${name}\` called with ${args.length} args but expects ${nargs}`);
+    return f(...args);
   };
 }
 
-// include: runtime_exceptions.js
-// end include: runtime_exceptions.js
 var wasmBinaryFile;
-  wasmBinaryFile = 'lvgl_runtime_v8.3.wasm';
-  if (!isDataURI(wasmBinaryFile)) {
-    wasmBinaryFile = locateFile(wasmBinaryFile);
-  }
+
+function findWasmBinary() {
+  return locateFile('lvgl_runtime_v8.3.wasm');
+}
 
 function getBinarySync(file) {
   if (file == wasmBinaryFile && wasmBinary) {
@@ -709,99 +622,82 @@ function getBinarySync(file) {
   if (readBinary) {
     return readBinary(file);
   }
-  throw "both async and sync fetching of the wasm failed";
+  // Throwing a plain string here, even though it not normally adviables since
+  // this gets turning into an `abort` in instantiateArrayBuffer.
+  throw 'both async and sync fetching of the wasm failed';
 }
 
-function getBinaryPromise(binaryFile) {
-  // If we don't have the binary yet, try to load it asynchronously.
-  // Fetch has some additional restrictions over XHR, like it can't be used on a file:// url.
-  // See https://github.com/github/fetch/pull/92#issuecomment-140665932
-  // Cordova or Electron apps are typically loaded from a file:// url.
-  // So use fetch if it is available and the url is not a file, otherwise fall back to XHR.
-  if (!wasmBinary
-      && (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER)) {
-    if (typeof fetch == 'function'
-      && !isFileURI(binaryFile)
-    ) {
-      return fetch(binaryFile, { credentials: 'same-origin' }).then((response) => {
-        if (!response['ok']) {
-          throw "failed to load wasm binary file at '" + binaryFile + "'";
-        }
-        return response['arrayBuffer']();
-      }).catch(() => getBinarySync(binaryFile));
-    }
-    else if (readAsync) {
-      // fetch is not available or url is file => try XHR (readAsync uses XHR internally)
-      return new Promise((resolve, reject) => {
-        readAsync(binaryFile, (response) => resolve(new Uint8Array(/** @type{!ArrayBuffer} */(response))), reject)
-      });
+async function getWasmBinary(binaryFile) {
+  // If we don't have the binary yet, load it asynchronously using readAsync.
+  if (!wasmBinary) {
+    // Fetch the binary using readAsync
+    try {
+      var response = await readAsync(binaryFile);
+      return new Uint8Array(response);
+    } catch {
+      // Fall back to getBinarySync below;
     }
   }
 
   // Otherwise, getBinarySync should be able to get it synchronously
-  return Promise.resolve().then(() => getBinarySync(binaryFile));
+  return getBinarySync(binaryFile);
 }
 
-function instantiateArrayBuffer(binaryFile, imports, receiver) {
-  return getBinaryPromise(binaryFile).then((binary) => {
-    return WebAssembly.instantiate(binary, imports);
-  }).then((instance) => {
+async function instantiateArrayBuffer(binaryFile, imports) {
+  try {
+    var binary = await getWasmBinary(binaryFile);
+    var instance = await WebAssembly.instantiate(binary, imports);
     return instance;
-  }).then(receiver, (reason) => {
+  } catch (reason) {
     err(`failed to asynchronously prepare wasm: ${reason}`);
 
     // Warn on some common problems.
-    if (isFileURI(wasmBinaryFile)) {
-      err(`warning: Loading from a file URI (${wasmBinaryFile}) is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing`);
+    if (isFileURI(binaryFile)) {
+      err(`warning: Loading from a file URI (${binaryFile}) is not supported in most browsers. See https://emscripten.org/docs/getting_started/FAQ.html#how-do-i-run-a-local-webserver-for-testing-why-does-my-program-stall-in-downloading-or-preparing`);
     }
     abort(reason);
-  });
+  }
 }
 
-function instantiateAsync(binary, binaryFile, imports, callback) {
-  if (!binary &&
-      typeof WebAssembly.instantiateStreaming == 'function' &&
-      !isDataURI(binaryFile) &&
+async function instantiateAsync(binary, binaryFile, imports) {
+  if (!binary
       // Don't use streaming for file:// delivered objects in a webview, fetch them synchronously.
-      !isFileURI(binaryFile) &&
+      && !isFileURI(binaryFile)
       // Avoid instantiateStreaming() on Node.js environment for now, as while
       // Node.js v18.1.0 implements it, it does not have a full fetch()
       // implementation yet.
       //
       // Reference:
       //   https://github.com/emscripten-core/emscripten/pull/16917
-      !ENVIRONMENT_IS_NODE &&
-      typeof fetch == 'function') {
-    return fetch(binaryFile, { credentials: 'same-origin' }).then((response) => {
-      // Suppress closure warning here since the upstream definition for
-      // instantiateStreaming only allows Promise<Repsponse> rather than
-      // an actual Response.
-      // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure is fixed.
-      /** @suppress {checkTypes} */
-      var result = WebAssembly.instantiateStreaming(response, imports);
-
-      return result.then(
-        callback,
-        function(reason) {
-          // We expect the most common failure cause to be a bad MIME type for the binary,
-          // in which case falling back to ArrayBuffer instantiation should work.
-          err(`wasm streaming compile failed: ${reason}`);
-          err('falling back to ArrayBuffer instantiation');
-          return instantiateArrayBuffer(binaryFile, imports, callback);
-        });
-    });
+      && !ENVIRONMENT_IS_NODE
+     ) {
+    try {
+      var response = fetch(binaryFile, { credentials: 'same-origin' });
+      var instantiationResult = await WebAssembly.instantiateStreaming(response, imports);
+      return instantiationResult;
+    } catch (reason) {
+      // We expect the most common failure cause to be a bad MIME type for the binary,
+      // in which case falling back to ArrayBuffer instantiation should work.
+      err(`wasm streaming compile failed: ${reason}`);
+      err('falling back to ArrayBuffer instantiation');
+      // fall back of instantiateArrayBuffer below
+    };
   }
-  return instantiateArrayBuffer(binaryFile, imports, callback);
+  return instantiateArrayBuffer(binaryFile, imports);
+}
+
+function getWasmImports() {
+  // prepare imports
+  var imports = {
+    'env': wasmImports,
+    'wasi_snapshot_preview1': wasmImports,
+  };
+  return imports;
 }
 
 // Create the wasm instance.
 // Receives the wasm imports, returns the exports.
-function createWasm() {
-  // prepare imports
-  var info = {
-    'env': wasmImports,
-    'wasi_snapshot_preview1': wasmImports,
-  };
+async function createWasm() {
   // Load the wasm module and create an instance of using native support in the JS engine.
   // handle a generated wasm instance, receiving its exports and
   // performing other necessary setup
@@ -809,23 +705,13 @@ function createWasm() {
   function receiveInstance(instance, module) {
     wasmExports = instance.exports;
 
-    
+    assignWasmExports(wasmExports);
 
-    wasmMemory = wasmExports['memory'];
-    
-    assert(wasmMemory, "memory not found in wasm exports");
-    // This assertion doesn't hold when emscripten is run in --post-link
-    // mode.
-    // TODO(sbc): Read INITIAL_MEMORY out of the wasm file in post-link mode.
-    //assert(wasmMemory.buffer.byteLength === 83886080);
     updateMemoryViews();
-
-    addOnInit(wasmExports['__wasm_call_ctors']);
 
     removeRunDependency('wasm-instantiate');
     return wasmExports;
   }
-  // wait for the pthread pool (if any)
   addRunDependency('wasm-instantiate');
 
   // Prefer streaming instantiation if available.
@@ -840,8 +726,10 @@ function createWasm() {
     trueModule = null;
     // TODO: Due to Closure regression https://github.com/google/closure-compiler/issues/3193, the above line no longer optimizes out down to the following line.
     // When the regression is fixed, can restore the above PTHREADS-enabled path.
-    receiveInstance(result['instance']);
+    return receiveInstance(result['instance']);
   }
+
+  var info = getWasmImports();
 
   // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
   // to manually instantiate the Wasm module themselves. This allows pages to
@@ -850,158 +738,35 @@ function createWasm() {
   // Also pthreads and wasm workers initialize the wasm instance through this
   // path.
   if (Module['instantiateWasm']) {
-
-    try {
-      return Module['instantiateWasm'](info, receiveInstance);
-    } catch(e) {
-      err(`Module.instantiateWasm callback failed with error: ${e}`);
-        return false;
-    }
-  }
-
-  instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult);
-  return {}; // no exports yet; we'll fill them in later
-}
-
-// Globals used by JS i64 conversions (see makeSetValue)
-var tempDouble;
-var tempI64;
-
-// include: runtime_debug.js
-function legacyModuleProp(prop, newName, incomming=true) {
-  if (!Object.getOwnPropertyDescriptor(Module, prop)) {
-    Object.defineProperty(Module, prop, {
-      configurable: true,
-      get() {
-        let extra = incomming ? ' (the initial value can be provided on Module, but after startup the value is only looked for on a local variable of that name)' : '';
-        abort(`\`Module.${prop}\` has been replaced by \`${newName}\`` + extra);
-
+    return new Promise((resolve, reject) => {
+      try {
+        Module['instantiateWasm'](info, (inst, mod) => {
+          resolve(receiveInstance(inst, mod));
+        });
+      } catch(e) {
+        err(`Module.instantiateWasm callback failed with error: ${e}`);
+        reject(e);
       }
     });
   }
+
+  wasmBinaryFile ??= findWasmBinary();
+  var result = await instantiateAsync(wasmBinary, wasmBinaryFile, info);
+  var exports = receiveInstantiationResult(result);
+  return exports;
 }
-
-function ignoredModuleProp(prop) {
-  if (Object.getOwnPropertyDescriptor(Module, prop)) {
-    abort(`\`Module.${prop}\` was supplied but \`${prop}\` not included in INCOMING_MODULE_JS_API`);
-  }
-}
-
-// forcing the filesystem exports a few things by default
-function isExportedByForceFilesystem(name) {
-  return name === 'FS_createPath' ||
-         name === 'FS_createDataFile' ||
-         name === 'FS_createPreloadedFile' ||
-         name === 'FS_unlink' ||
-         name === 'addRunDependency' ||
-         // The old FS has some functionality that WasmFS lacks.
-         name === 'FS_createLazyFile' ||
-         name === 'FS_createDevice' ||
-         name === 'removeRunDependency';
-}
-
-function missingGlobal(sym, msg) {
-  if (typeof globalThis !== 'undefined') {
-    Object.defineProperty(globalThis, sym, {
-      configurable: true,
-      get() {
-        warnOnce('`' + sym + '` is not longer defined by emscripten. ' + msg);
-        return undefined;
-      }
-    });
-  }
-}
-
-missingGlobal('buffer', 'Please use HEAP8.buffer or wasmMemory.buffer');
-missingGlobal('asm', 'Please use wasmExports instead');
-
-function missingLibrarySymbol(sym) {
-  if (typeof globalThis !== 'undefined' && !Object.getOwnPropertyDescriptor(globalThis, sym)) {
-    Object.defineProperty(globalThis, sym, {
-      configurable: true,
-      get() {
-        // Can't `abort()` here because it would break code that does runtime
-        // checks.  e.g. `if (typeof SDL === 'undefined')`.
-        var msg = '`' + sym + '` is a library symbol and not included by default; add it to your library.js __deps or to DEFAULT_LIBRARY_FUNCS_TO_INCLUDE on the command line';
-        // DEFAULT_LIBRARY_FUNCS_TO_INCLUDE requires the name as it appears in
-        // library.js, which means $name for a JS name with no prefix, or name
-        // for a JS name like _name.
-        var librarySymbol = sym;
-        if (!librarySymbol.startsWith('_')) {
-          librarySymbol = '$' + sym;
-        }
-        msg += " (e.g. -sDEFAULT_LIBRARY_FUNCS_TO_INCLUDE='" + librarySymbol + "')";
-        if (isExportedByForceFilesystem(sym)) {
-          msg += '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
-        }
-        warnOnce(msg);
-        return undefined;
-      }
-    });
-  }
-  // Any symbol that is not included from the JS libary is also (by definition)
-  // not exported on the Module object.
-  unexportedRuntimeSymbol(sym);
-}
-
-function unexportedRuntimeSymbol(sym) {
-  if (!Object.getOwnPropertyDescriptor(Module, sym)) {
-    Object.defineProperty(Module, sym, {
-      configurable: true,
-      get() {
-        var msg = "'" + sym + "' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the Emscripten FAQ)";
-        if (isExportedByForceFilesystem(sym)) {
-          msg += '. Alternatively, forcing filesystem support (-sFORCE_FILESYSTEM) can export this for you';
-        }
-        abort(msg);
-      }
-    });
-  }
-}
-
-// Used by XXXXX_DEBUG settings to output debug messages.
-function dbg(text) {
-  // TODO(sbc): Make this configurable somehow.  Its not always convenient for
-  // logging to show up as warnings.
-  console.warn.apply(console, arguments);
-}
-// end include: runtime_debug.js
-// === Body ===
-
-var ASM_CONSTS = {
-  1045584: ($0) => { startToDebuggerMessage($0); },  
- 1045616: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1045691: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1045766: ($0) => { finishToDebuggerMessage($0); },  
- 1045799: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1045829: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1045859: ($0) => { lvglScreenTick($0); },  
- 1045883: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1045923: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1045977: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1046031: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1046084: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1046137: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1046190: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1046223: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1046259: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1046304: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1046410: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1046446: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1046483: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1046523: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1046580: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1046639: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
-};
-
 
 // end include: preamble.js
 
-  /** @constructor */
-  function ExitStatus(status) {
-      this.name = 'ExitStatus';
-      this.message = `Program terminated with exit(${status})`;
-      this.status = status;
+// Begin JS library code
+
+
+  class ExitStatus {
+      name = 'ExitStatus';
+      constructor(status) {
+        this.message = `Program terminated with exit(${status})`;
+        this.status = status;
+      }
     }
 
   var callRuntimeCallbacks = (callbacks) => {
@@ -1010,122 +775,177 @@ var ASM_CONSTS = {
         callbacks.shift()(Module);
       }
     };
+  var onPostRuns = [];
+  var addOnPostRun = (cb) => onPostRuns.push(cb);
 
-  var withStackSave = (f) => {
-      var stack = stackSave();
-      var ret = f();
-      stackRestore(stack);
-      return ret;
-    };
+  var onPreRuns = [];
+  var addOnPreRun = (cb) => onPreRuns.push(cb);
+
+  var runDependencies = 0;
   
   
+  var dependenciesFulfilled = null;
   
-  var lengthBytesUTF8 = (str) => {
-      var len = 0;
-      for (var i = 0; i < str.length; ++i) {
-        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
-        // unit, not a Unicode code point of the character! So decode
-        // UTF16->UTF32->UTF8.
-        // See http://unicode.org/faq/utf_bom.html#utf16-3
-        var c = str.charCodeAt(i); // possibly a lead surrogate
-        if (c <= 0x7F) {
-          len++;
-        } else if (c <= 0x7FF) {
-          len += 2;
-        } else if (c >= 0xD800 && c <= 0xDFFF) {
-          len += 4; ++i;
-        } else {
-          len += 3;
+  var runDependencyTracking = {
+  };
+  
+  var runDependencyWatcher = null;
+  var removeRunDependency = (id) => {
+      runDependencies--;
+  
+      Module['monitorRunDependencies']?.(runDependencies);
+  
+      assert(id, 'removeRunDependency requires an ID');
+      assert(runDependencyTracking[id]);
+      delete runDependencyTracking[id];
+      if (runDependencies == 0) {
+        if (runDependencyWatcher !== null) {
+          clearInterval(runDependencyWatcher);
+          runDependencyWatcher = null;
+        }
+        if (dependenciesFulfilled) {
+          var callback = dependenciesFulfilled;
+          dependenciesFulfilled = null;
+          callback(); // can add another dependenciesFulfilled
         }
       }
-      return len;
     };
   
-  var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
-      assert(typeof str === 'string');
-      // Parameter maxBytesToWrite is not optional. Negative values, 0, null,
-      // undefined and false each don't write out any bytes.
-      if (!(maxBytesToWrite > 0))
-        return 0;
   
-      var startIdx = outIdx;
-      var endIdx = outIdx + maxBytesToWrite - 1; // -1 for string null terminator.
-      for (var i = 0; i < str.length; ++i) {
-        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
-        // unit, not a Unicode code point of the character! So decode
-        // UTF16->UTF32->UTF8.
-        // See http://unicode.org/faq/utf_bom.html#utf16-3
-        // For UTF8 byte structure, see http://en.wikipedia.org/wiki/UTF-8#Description
-        // and https://www.ietf.org/rfc/rfc2279.txt
-        // and https://tools.ietf.org/html/rfc3629
-        var u = str.charCodeAt(i); // possibly a lead surrogate
-        if (u >= 0xD800 && u <= 0xDFFF) {
-          var u1 = str.charCodeAt(++i);
-          u = 0x10000 + ((u & 0x3FF) << 10) | (u1 & 0x3FF);
-        }
-        if (u <= 0x7F) {
-          if (outIdx >= endIdx) break;
-          heap[outIdx++] = u;
-        } else if (u <= 0x7FF) {
-          if (outIdx + 1 >= endIdx) break;
-          heap[outIdx++] = 0xC0 | (u >> 6);
-          heap[outIdx++] = 0x80 | (u & 63);
-        } else if (u <= 0xFFFF) {
-          if (outIdx + 2 >= endIdx) break;
-          heap[outIdx++] = 0xE0 | (u >> 12);
-          heap[outIdx++] = 0x80 | ((u >> 6) & 63);
-          heap[outIdx++] = 0x80 | (u & 63);
-        } else {
-          if (outIdx + 3 >= endIdx) break;
-          if (u > 0x10FFFF) warnOnce('Invalid Unicode code point ' + ptrToString(u) + ' encountered when serializing a JS string to a UTF-8 string in wasm memory! (Valid unicode code points should be in range 0-0x10FFFF).');
-          heap[outIdx++] = 0xF0 | (u >> 18);
-          heap[outIdx++] = 0x80 | ((u >> 12) & 63);
-          heap[outIdx++] = 0x80 | ((u >> 6) & 63);
-          heap[outIdx++] = 0x80 | (u & 63);
-        }
+  var addRunDependency = (id) => {
+      runDependencies++;
+  
+      Module['monitorRunDependencies']?.(runDependencies);
+  
+      assert(id, 'addRunDependency requires an ID')
+      assert(!runDependencyTracking[id]);
+      runDependencyTracking[id] = 1;
+      if (runDependencyWatcher === null && globalThis.setInterval) {
+        // Check for missing dependencies every few seconds
+        runDependencyWatcher = setInterval(() => {
+          if (ABORT) {
+            clearInterval(runDependencyWatcher);
+            runDependencyWatcher = null;
+            return;
+          }
+          var shown = false;
+          for (var dep in runDependencyTracking) {
+            if (!shown) {
+              shown = true;
+              err('still waiting on run dependencies:');
+            }
+            err(`dependency: ${dep}`);
+          }
+          if (shown) {
+            err('(end of list)');
+          }
+        }, 10000);
+        // Prevent this timer from keeping the runtime alive if nothing
+        // else is.
+        runDependencyWatcher.unref?.()
       }
-      // Null-terminate the pointer to the buffer.
-      heap[outIdx] = 0;
-      return outIdx - startIdx;
     };
-  var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
-      assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
-      return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
+
+
+  
+    /**
+     * @param {number} ptr
+     * @param {string} type
+     */
+  function getValue(ptr, type = 'i8') {
+    if (type.endsWith('*')) type = '*';
+    switch (type) {
+      case 'i1': return HEAP8[ptr];
+      case 'i8': return HEAP8[ptr];
+      case 'i16': return HEAP16[((ptr)>>1)];
+      case 'i32': return HEAP32[((ptr)>>2)];
+      case 'i64': return HEAP64[((ptr)>>3)];
+      case 'float': return HEAPF32[((ptr)>>2)];
+      case 'double': return HEAPF64[((ptr)>>3)];
+      case '*': return HEAPU32[((ptr)>>2)];
+      default: abort(`invalid type for getValue: ${type}`);
+    }
+  }
+
+  var noExitRuntime = true;
+
+  var ptrToString = (ptr) => {
+      assert(typeof ptr === 'number', `ptrToString expects a number, got ${typeof ptr}`);
+      // Convert to 32-bit unsigned value
+      ptr >>>= 0;
+      return '0x' + ptr.toString(16).padStart(8, '0');
     };
-  var stringToUTF8OnStack = (str) => {
-      var size = lengthBytesUTF8(str) + 1;
-      var ret = stackAlloc(size);
-      stringToUTF8(str, ret, size);
-      return ret;
+
+
+  
+    /**
+     * @param {number} ptr
+     * @param {number} value
+     * @param {string} type
+     */
+  function setValue(ptr, value, type = 'i8') {
+    if (type.endsWith('*')) type = '*';
+    switch (type) {
+      case 'i1': HEAP8[ptr] = value; break;
+      case 'i8': HEAP8[ptr] = value; break;
+      case 'i16': HEAP16[((ptr)>>1)] = value; break;
+      case 'i32': HEAP32[((ptr)>>2)] = value; break;
+      case 'i64': HEAP64[((ptr)>>3)] = BigInt(value); break;
+      case 'float': HEAPF32[((ptr)>>2)] = value; break;
+      case 'double': HEAPF64[((ptr)>>3)] = value; break;
+      case '*': HEAPU32[((ptr)>>2)] = value; break;
+      default: abort(`invalid type for setValue: ${type}`);
+    }
+  }
+
+  var stackRestore = (val) => __emscripten_stack_restore(val);
+
+  var stackSave = () => _emscripten_stack_get_current();
+
+  var warnOnce = (text) => {
+      warnOnce.shown ||= {};
+      if (!warnOnce.shown[text]) {
+        warnOnce.shown[text] = 1;
+        if (ENVIRONMENT_IS_NODE) text = 'warning: ' + text;
+        err(text);
+      }
+    };
+
+  
+
+  var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
+  
+  var findStringEnd = (heapOrArray, idx, maxBytesToRead, ignoreNul) => {
+      var maxIdx = idx + maxBytesToRead;
+      if (ignoreNul) return maxIdx;
+      // TextDecoder needs to know the byte length in advance, it doesn't stop on
+      // null terminator by itself.
+      // As a tiny code save trick, compare idx against maxIdx using a negation,
+      // so that maxBytesToRead=undefined/NaN means Infinity.
+      while (heapOrArray[idx] && !(idx >= maxIdx)) ++idx;
+      return idx;
     };
   
-  var UTF8Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf8') : undefined;
   
     /**
      * Given a pointer 'idx' to a null-terminated UTF8-encoded string in the given
      * array that contains uint8 values, returns a copy of that string as a
      * Javascript String object.
      * heapOrArray is either a regular array, or a JavaScript typed array view.
-     * @param {number} idx
+     * @param {number=} idx
      * @param {number=} maxBytesToRead
+     * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
      * @return {string}
      */
-  var UTF8ArrayToString = (heapOrArray, idx, maxBytesToRead) => {
-      var endIdx = idx + maxBytesToRead;
-      var endPtr = idx;
-      // TextDecoder needs to know the byte length in advance, it doesn't stop on
-      // null terminator by itself.  Also, use the length info to avoid running tiny
-      // strings through TextDecoder, since .subarray() allocates garbage.
-      // (As a tiny code save trick, compare endPtr against endIdx using a negation,
-      // so that undefined means Infinity)
-      while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
+  var UTF8ArrayToString = (heapOrArray, idx = 0, maxBytesToRead, ignoreNul) => {
   
+      var endPtr = findStringEnd(heapOrArray, idx, maxBytesToRead, ignoreNul);
+  
+      // When using conditional TextDecoder, skip it for short strings as the overhead of the native call is not worth it.
       if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
         return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
       }
       var str = '';
-      // If building with TextDecoder, we have already computed the string length
-      // above, so test loop end condition against that
       while (idx < endPtr) {
         // For UTF8 byte structure, see:
         // http://en.wikipedia.org/wiki/UTF-8#Description
@@ -1162,207 +982,72 @@ var ASM_CONSTS = {
      *   maximum number of bytes to read. You can omit this parameter to scan the
      *   string until the first 0 byte. If maxBytesToRead is passed, and the string
      *   at [ptr, ptr+maxBytesToReadr[ contains a null byte in the middle, then the
-     *   string will cut short at that byte index (i.e. maxBytesToRead will not
-     *   produce a string of exact length [ptr, ptr+maxBytesToRead[) N.B. mixing
-     *   frequent uses of UTF8ToString() with and without maxBytesToRead may throw
-     *   JS JIT optimizations off, so it is worth to consider consistently using one
+     *   string will cut short at that byte index.
+     * @param {boolean=} ignoreNul - If true, the function will not stop on a NUL character.
      * @return {string}
      */
-  var UTF8ToString = (ptr, maxBytesToRead) => {
-      assert(typeof ptr == 'number');
-      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
+  var UTF8ToString = (ptr, maxBytesToRead, ignoreNul) => {
+      assert(typeof ptr == 'number', `UTF8ToString expects a number (got ${typeof ptr})`);
+      return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead, ignoreNul) : '';
     };
-  var demangle = (func) => {
-      // If demangle has failed before, stop demangling any further function names
-      // This avoids an infinite recursion with malloc()->abort()->stackTrace()->demangle()->malloc()->...
-      demangle.recursionGuard = (demangle.recursionGuard|0)+1;
-      if (demangle.recursionGuard > 1) return func;
-      return withStackSave(() => {
-        try {
-          var s = func;
-          if (s.startsWith('__Z'))
-            s = s.substr(1);
-          var buf = stringToUTF8OnStack(s);
-          var status = stackAlloc(4);
-          var ret = ___cxa_demangle(buf, 0, 0, status);
-          if (HEAP32[((status)>>2)] === 0 && ret) {
-            return UTF8ToString(ret);
-          }
-          // otherwise, libcxxabi failed
-        } catch(e) {
-        } finally {
-          _free(ret);
-          if (demangle.recursionGuard < 2) --demangle.recursionGuard;
-        }
-        // failure when using libcxxabi, don't demangle
-        return func;
-      });
-    };
-
-  
-    /**
-     * @param {number} ptr
-     * @param {string} type
-     */
-  function getValue(ptr, type = 'i8') {
-    if (type.endsWith('*')) type = '*';
-    switch (type) {
-      case 'i1': return HEAP8[((ptr)>>0)];
-      case 'i8': return HEAP8[((ptr)>>0)];
-      case 'i16': return HEAP16[((ptr)>>1)];
-      case 'i32': return HEAP32[((ptr)>>2)];
-      case 'i64': abort('to do getValue(i64) use WASM_BIGINT');
-      case 'float': return HEAPF32[((ptr)>>2)];
-      case 'double': return HEAPF64[((ptr)>>3)];
-      case '*': return HEAPU32[((ptr)>>2)];
-      default: abort(`invalid type for getValue: ${type}`);
-    }
-  }
-
-  var noExitRuntime = Module['noExitRuntime'] || true;
-
-  var ptrToString = (ptr) => {
-      assert(typeof ptr === 'number');
-      // With CAN_ADDRESS_2GB or MEMORY64, pointers are already unsigned.
-      ptr >>>= 0;
-      return '0x' + ptr.toString(16).padStart(8, '0');
-    };
-
-  
-    /**
-     * @param {number} ptr
-     * @param {number} value
-     * @param {string} type
-     */
-  function setValue(ptr, value, type = 'i8') {
-    if (type.endsWith('*')) type = '*';
-    switch (type) {
-      case 'i1': HEAP8[((ptr)>>0)] = value; break;
-      case 'i8': HEAP8[((ptr)>>0)] = value; break;
-      case 'i16': HEAP16[((ptr)>>1)] = value; break;
-      case 'i32': HEAP32[((ptr)>>2)] = value; break;
-      case 'i64': abort('to do setValue(i64) use WASM_BIGINT');
-      case 'float': HEAPF32[((ptr)>>2)] = value; break;
-      case 'double': HEAPF64[((ptr)>>3)] = value; break;
-      case '*': HEAPU32[((ptr)>>2)] = value; break;
-      default: abort(`invalid type for setValue: ${type}`);
-    }
-  }
-
-  function jsStackTrace() {
-      var error = new Error();
-      if (!error.stack) {
-        // IE10+ special cases: It does have callstack info, but it is only
-        // populated if an Error object is thrown, so try that as a special-case.
-        try {
-          throw new Error();
-        } catch(e) {
-          error = e;
-        }
-        if (!error.stack) {
-          return '(no stack trace available)';
-        }
-      }
-      return error.stack.toString();
-    }
-  
-  var demangleAll = (text) => {
-      var regex =
-        /\b_Z[\w\d_]+/g;
-      return text.replace(regex,
-        function(x) {
-          var y = demangle(x);
-          return x === y ? x : (y + ' [' + x + ']');
-        });
-    };
-  function stackTrace() {
-      var js = jsStackTrace();
-      if (Module['extraStackTrace']) js += '\n' + Module['extraStackTrace']();
-      return demangleAll(js);
-    }
-
-  var warnOnce = (text) => {
-      if (!warnOnce.shown) warnOnce.shown = {};
-      if (!warnOnce.shown[text]) {
-        warnOnce.shown[text] = 1;
-        if (ENVIRONMENT_IS_NODE) text = 'warning: ' + text;
-        err(text);
-      }
-    };
-
-  var ___assert_fail = (condition, filename, line, func) => {
+  var ___assert_fail = (condition, filename, line, func) =>
       abort(`Assertion failed: ${UTF8ToString(condition)}, at: ` + [filename ? UTF8ToString(filename) : 'unknown filename', line, func ? UTF8ToString(func) : 'unknown function']);
-    };
 
-  /** @constructor */
-  function ExceptionInfo(excPtr) {
-      this.excPtr = excPtr;
-      this.ptr = excPtr - 24;
+  class ExceptionInfo {
+      // excPtr - Thrown object pointer to wrap. Metadata pointer is calculated from it.
+      constructor(excPtr) {
+        this.excPtr = excPtr;
+        this.ptr = excPtr - 24;
+      }
   
-      this.set_type = function(type) {
+      set_type(type) {
         HEAPU32[(((this.ptr)+(4))>>2)] = type;
-      };
+      }
   
-      this.get_type = function() {
+      get_type() {
         return HEAPU32[(((this.ptr)+(4))>>2)];
-      };
+      }
   
-      this.set_destructor = function(destructor) {
+      set_destructor(destructor) {
         HEAPU32[(((this.ptr)+(8))>>2)] = destructor;
-      };
+      }
   
-      this.get_destructor = function() {
+      get_destructor() {
         return HEAPU32[(((this.ptr)+(8))>>2)];
-      };
+      }
   
-      this.set_caught = function(caught) {
+      set_caught(caught) {
         caught = caught ? 1 : 0;
-        HEAP8[(((this.ptr)+(12))>>0)] = caught;
-      };
+        HEAP8[(this.ptr)+(12)] = caught;
+      }
   
-      this.get_caught = function() {
-        return HEAP8[(((this.ptr)+(12))>>0)] != 0;
-      };
+      get_caught() {
+        return HEAP8[(this.ptr)+(12)] != 0;
+      }
   
-      this.set_rethrown = function(rethrown) {
+      set_rethrown(rethrown) {
         rethrown = rethrown ? 1 : 0;
-        HEAP8[(((this.ptr)+(13))>>0)] = rethrown;
-      };
+        HEAP8[(this.ptr)+(13)] = rethrown;
+      }
   
-      this.get_rethrown = function() {
-        return HEAP8[(((this.ptr)+(13))>>0)] != 0;
-      };
+      get_rethrown() {
+        return HEAP8[(this.ptr)+(13)] != 0;
+      }
   
       // Initialize native structure fields. Should be called once after allocated.
-      this.init = function(type, destructor) {
+      init(type, destructor) {
         this.set_adjusted_ptr(0);
         this.set_type(type);
         this.set_destructor(destructor);
       }
   
-      this.set_adjusted_ptr = function(adjustedPtr) {
+      set_adjusted_ptr(adjustedPtr) {
         HEAPU32[(((this.ptr)+(16))>>2)] = adjustedPtr;
-      };
+      }
   
-      this.get_adjusted_ptr = function() {
+      get_adjusted_ptr() {
         return HEAPU32[(((this.ptr)+(16))>>2)];
-      };
-  
-      // Get pointer which is expected to be received by catch clause in C++ code. It may be adjusted
-      // when the pointer is casted to some of the exception object base classes (e.g. when virtual
-      // inheritance is used). When a pointer is thrown this method should return the thrown pointer
-      // itself.
-      this.get_exception_ptr = function() {
-        // Work around a fastcomp bug, this code is still included for some reason in a build without
-        // exceptions support.
-        var isPointer = ___cxa_is_pointer_type(this.get_type());
-        if (isPointer) {
-          return HEAPU32[((this.excPtr)>>2)];
-        }
-        var adjusted = this.get_adjusted_ptr();
-        if (adjusted !== 0) return adjusted;
-        return this.excPtr;
-      };
+      }
     }
   
   var exceptionLast = 0;
@@ -1377,10 +1062,15 @@ var ASM_CONSTS = {
       assert(false, 'Exception thrown, but exception catching is not enabled. Compile with -sNO_DISABLE_EXCEPTION_CATCHING or -sEXCEPTION_CATCHING_ALLOWED=[..] to catch.');
     };
 
-  var setErrNo = (value) => {
-      HEAP32[((___errno_location())>>2)] = value;
-      return value;
+  var syscallGetVarargI = () => {
+      assert(SYSCALLS.varargs != undefined);
+      // the `+` prepended here is necessary to convince the JSCompiler that varargs is indeed a number.
+      var ret = HEAP32[((+SYSCALLS.varargs)>>2)];
+      SYSCALLS.varargs += 4;
+      return ret;
     };
+  var syscallGetVarargP = syscallGetVarargI;
+  
   
   var PATH = {
   isAbs:(path) => path.charAt(0) === '/',
@@ -1413,7 +1103,7 @@ var ASM_CONSTS = {
       },
   normalize:(path) => {
         var isAbsolute = PATH.isAbs(path),
-            trailingSlash = path.substr(-1) === '/';
+            trailingSlash = path.slice(-1) === '/';
         // Normalize the path
         path = PATH.normalizeArray(path.split('/').filter((p) => !!p), !isAbsolute).join('/');
         if (!path && !isAbsolute) {
@@ -1434,69 +1124,37 @@ var ASM_CONSTS = {
         }
         if (dir) {
           // It has a dirname, strip trailing slash
-          dir = dir.substr(0, dir.length - 1);
+          dir = dir.slice(0, -1);
         }
         return root + dir;
       },
-  basename:(path) => {
-        // EMSCRIPTEN return '/'' for '/', not an empty string
-        if (path === '/') return '/';
-        path = PATH.normalize(path);
-        path = path.replace(/\/$/, "");
-        var lastSlash = path.lastIndexOf('/');
-        if (lastSlash === -1) return path;
-        return path.substr(lastSlash+1);
-      },
-  join:function() {
-        var paths = Array.prototype.slice.call(arguments);
-        return PATH.normalize(paths.join('/'));
-      },
-  join2:(l, r) => {
-        return PATH.normalize(l + '/' + r);
-      },
+  basename:(path) => path && path.match(/([^\/]+|\/)\/*$/)[1],
+  join:(...paths) => PATH.normalize(paths.join('/')),
+  join2:(l, r) => PATH.normalize(l + '/' + r),
   };
   
   var initRandomFill = () => {
-      if (typeof crypto == 'object' && typeof crypto['getRandomValues'] == 'function') {
-        // for modern web browsers
-        return (view) => crypto.getRandomValues(view);
-      } else
+      // This block is not needed on v19+ since crypto.getRandomValues is builtin
       if (ENVIRONMENT_IS_NODE) {
-        // for nodejs with or without crypto support included
-        try {
-          var crypto_module = require('crypto');
-          var randomFillSync = crypto_module['randomFillSync'];
-          if (randomFillSync) {
-            // nodejs with LTS crypto support
-            return (view) => crypto_module['randomFillSync'](view);
-          }
-          // very old nodejs with the original crypto API
-          var randomBytes = crypto_module['randomBytes'];
-          return (view) => (
-            view.set(randomBytes(view.byteLength)),
-            // Return the original view to match modern native implementations.
-            view
-          );
-        } catch (e) {
-          // nodejs doesn't have crypto support
-        }
+        var nodeCrypto = require('crypto');
+        return (view) => nodeCrypto.randomFillSync(view);
       }
-      // we couldn't find a proper implementation, as Math.random() is not suitable for /dev/random, see emscripten-core/emscripten/pull/7096
-      abort("no cryptographic support found for randomDevice. consider polyfilling it if you want to use something insecure like Math.random(), e.g. put this in a --pre-js: var crypto = { getRandomValues: (array) => { for (var i = 0; i < array.length; i++) array[i] = (Math.random()*256)|0 } };");
+  
+      return (view) => crypto.getRandomValues(view);
     };
   var randomFill = (view) => {
       // Lazily init on the first invocation.
-      return (randomFill = initRandomFill())(view);
+      (randomFill = initRandomFill())(view);
     };
   
   
   
   var PATH_FS = {
-  resolve:function() {
+  resolve:(...args) => {
         var resolvedPath = '',
           resolvedAbsolute = false;
-        for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-          var path = (i >= 0) ? arguments[i] : FS.cwd();
+        for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+          var path = (i >= 0) ? args[i] : FS.cwd();
           // Skip empty and invalid entries
           if (typeof path != 'string') {
             throw new TypeError('Arguments to path.resolve must be strings');
@@ -1512,8 +1170,8 @@ var ASM_CONSTS = {
         return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
       },
   relative:(from, to) => {
-        from = PATH_FS.resolve(from).substr(1);
-        to = PATH_FS.resolve(to).substr(1);
+        from = PATH_FS.resolve(from).slice(1);
+        to = PATH_FS.resolve(to).slice(1);
         function trim(arr) {
           var start = 0;
           for (; start < arr.length; start++) {
@@ -1549,15 +1207,77 @@ var ASM_CONSTS = {
   
   var FS_stdin_getChar_buffer = [];
   
+  var lengthBytesUTF8 = (str) => {
+      var len = 0;
+      for (var i = 0; i < str.length; ++i) {
+        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
+        // unit, not a Unicode code point of the character! So decode
+        // UTF16->UTF32->UTF8.
+        // See http://unicode.org/faq/utf_bom.html#utf16-3
+        var c = str.charCodeAt(i); // possibly a lead surrogate
+        if (c <= 0x7F) {
+          len++;
+        } else if (c <= 0x7FF) {
+          len += 2;
+        } else if (c >= 0xD800 && c <= 0xDFFF) {
+          len += 4; ++i;
+        } else {
+          len += 3;
+        }
+      }
+      return len;
+    };
   
+  var stringToUTF8Array = (str, heap, outIdx, maxBytesToWrite) => {
+      assert(typeof str === 'string', `stringToUTF8Array expects a string (got ${typeof str})`);
+      // Parameter maxBytesToWrite is not optional. Negative values, 0, null,
+      // undefined and false each don't write out any bytes.
+      if (!(maxBytesToWrite > 0))
+        return 0;
+  
+      var startIdx = outIdx;
+      var endIdx = outIdx + maxBytesToWrite - 1; // -1 for string null terminator.
+      for (var i = 0; i < str.length; ++i) {
+        // For UTF8 byte structure, see http://en.wikipedia.org/wiki/UTF-8#Description
+        // and https://www.ietf.org/rfc/rfc2279.txt
+        // and https://tools.ietf.org/html/rfc3629
+        var u = str.codePointAt(i);
+        if (u <= 0x7F) {
+          if (outIdx >= endIdx) break;
+          heap[outIdx++] = u;
+        } else if (u <= 0x7FF) {
+          if (outIdx + 1 >= endIdx) break;
+          heap[outIdx++] = 0xC0 | (u >> 6);
+          heap[outIdx++] = 0x80 | (u & 63);
+        } else if (u <= 0xFFFF) {
+          if (outIdx + 2 >= endIdx) break;
+          heap[outIdx++] = 0xE0 | (u >> 12);
+          heap[outIdx++] = 0x80 | ((u >> 6) & 63);
+          heap[outIdx++] = 0x80 | (u & 63);
+        } else {
+          if (outIdx + 3 >= endIdx) break;
+          if (u > 0x10FFFF) warnOnce('Invalid Unicode code point ' + ptrToString(u) + ' encountered when serializing a JS string to a UTF-8 string in wasm memory! (Valid unicode code points should be in range 0-0x10FFFF).');
+          heap[outIdx++] = 0xF0 | (u >> 18);
+          heap[outIdx++] = 0x80 | ((u >> 12) & 63);
+          heap[outIdx++] = 0x80 | ((u >> 6) & 63);
+          heap[outIdx++] = 0x80 | (u & 63);
+          // Gotcha: if codePoint is over 0xFFFF, it is represented as a surrogate pair in UTF-16.
+          // We need to manually skip over the second code unit for correct iteration.
+          i++;
+        }
+      }
+      // Null-terminate the pointer to the buffer.
+      heap[outIdx] = 0;
+      return outIdx - startIdx;
+    };
   /** @type {function(string, boolean=, number=)} */
-  function intArrayFromString(stringy, dontAddNull, length) {
-    var len = length > 0 ? length : lengthBytesUTF8(stringy)+1;
-    var u8array = new Array(len);
-    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
-    if (dontAddNull) u8array.length = numBytesWritten;
-    return u8array;
-  }
+  var intArrayFromString = (stringy, dontAddNull, length) => {
+      var len = length > 0 ? length : lengthBytesUTF8(stringy)+1;
+      var u8array = new Array(len);
+      var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
+      if (dontAddNull) u8array.length = numBytesWritten;
+      return u8array;
+    };
   var FS_stdin_getChar = () => {
       if (!FS_stdin_getChar_buffer.length) {
         var result = null;
@@ -1577,34 +1297,27 @@ var ASM_CONSTS = {
           var fd = process.stdin.fd;
   
           try {
-            bytesRead = fs.readSync(fd, buf);
+            bytesRead = fs.readSync(fd, buf, 0, BUFSIZE);
           } catch(e) {
-            // Cross-platform differences: on Windows, reading EOF throws an exception, but on other OSes,
-            // reading EOF returns 0. Uniformize behavior by treating the EOF exception to return 0.
+            // Cross-platform differences: on Windows, reading EOF throws an
+            // exception, but on other OSes, reading EOF returns 0. Uniformize
+            // behavior by treating the EOF exception to return 0.
             if (e.toString().includes('EOF')) bytesRead = 0;
             else throw e;
           }
   
           if (bytesRead > 0) {
             result = buf.slice(0, bytesRead).toString('utf-8');
-          } else {
-            result = null;
           }
         } else
-        if (typeof window != 'undefined' &&
-          typeof window.prompt == 'function') {
+        if (globalThis.window?.prompt) {
           // Browser.
           result = window.prompt('Input: ');  // returns null on cancel
           if (result !== null) {
             result += '\n';
           }
-        } else if (typeof readline == 'function') {
-          // Command line.
-          result = readline();
-          if (result !== null) {
-            result += '\n';
-          }
-        }
+        } else
+        {}
         if (!result) {
           return null;
         }
@@ -1675,7 +1388,7 @@ var ASM_CONSTS = {
             buffer[offset+i] = result;
           }
           if (bytesRead) {
-            stream.node.timestamp = Date.now();
+            stream.node.atime = Date.now();
           }
           return bytesRead;
         },
@@ -1691,7 +1404,7 @@ var ASM_CONSTS = {
             throw new FS.ErrnoError(29);
           }
           if (length) {
-            stream.node.timestamp = Date.now();
+            stream.node.mtime = stream.node.ctime = Date.now();
           }
           return i;
         },
@@ -1702,15 +1415,15 @@ var ASM_CONSTS = {
         },
   put_char(tty, val) {
           if (val === null || val === 10) {
-            out(UTF8ArrayToString(tty.output, 0));
+            out(UTF8ArrayToString(tty.output));
             tty.output = [];
           } else {
             if (val != 0) tty.output.push(val); // val == 0 would cut text output off in the middle.
           }
         },
   fsync(tty) {
-          if (tty.output && tty.output.length > 0) {
-            out(UTF8ArrayToString(tty.output, 0));
+          if (tty.output?.length > 0) {
+            out(UTF8ArrayToString(tty.output));
             tty.output = [];
           }
         },
@@ -1739,15 +1452,15 @@ var ASM_CONSTS = {
   default_tty1_ops:{
   put_char(tty, val) {
           if (val === null || val === 10) {
-            err(UTF8ArrayToString(tty.output, 0));
+            err(UTF8ArrayToString(tty.output));
             tty.output = [];
           } else {
             if (val != 0) tty.output.push(val);
           }
         },
   fsync(tty) {
-          if (tty.output && tty.output.length > 0) {
-            err(UTF8ArrayToString(tty.output, 0));
+          if (tty.output?.length > 0) {
+            err(UTF8ArrayToString(tty.output));
             tty.output = [];
           }
         },
@@ -1755,77 +1468,65 @@ var ASM_CONSTS = {
   };
   
   
-  var zeroMemory = (address, size) => {
-      HEAPU8.fill(0, address, address + size);
-      return address;
-    };
-  
-  var alignMemory = (size, alignment) => {
-      assert(alignment, "alignment argument is required");
-      return Math.ceil(size / alignment) * alignment;
-    };
   var mmapAlloc = (size) => {
       abort('internal error: mmapAlloc called but `emscripten_builtin_memalign` native symbol not exported');
     };
   var MEMFS = {
   ops_table:null,
   mount(mount) {
-        return MEMFS.createNode(null, '/', 16384 | 511 /* 0777 */, 0);
+        return MEMFS.createNode(null, '/', 16895, 0);
       },
   createNode(parent, name, mode, dev) {
         if (FS.isBlkdev(mode) || FS.isFIFO(mode)) {
           // no supported
           throw new FS.ErrnoError(63);
         }
-        if (!MEMFS.ops_table) {
-          MEMFS.ops_table = {
-            dir: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr,
-                lookup: MEMFS.node_ops.lookup,
-                mknod: MEMFS.node_ops.mknod,
-                rename: MEMFS.node_ops.rename,
-                unlink: MEMFS.node_ops.unlink,
-                rmdir: MEMFS.node_ops.rmdir,
-                readdir: MEMFS.node_ops.readdir,
-                symlink: MEMFS.node_ops.symlink
-              },
-              stream: {
-                llseek: MEMFS.stream_ops.llseek
-              }
+        MEMFS.ops_table ||= {
+          dir: {
+            node: {
+              getattr: MEMFS.node_ops.getattr,
+              setattr: MEMFS.node_ops.setattr,
+              lookup: MEMFS.node_ops.lookup,
+              mknod: MEMFS.node_ops.mknod,
+              rename: MEMFS.node_ops.rename,
+              unlink: MEMFS.node_ops.unlink,
+              rmdir: MEMFS.node_ops.rmdir,
+              readdir: MEMFS.node_ops.readdir,
+              symlink: MEMFS.node_ops.symlink
             },
-            file: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr
-              },
-              stream: {
-                llseek: MEMFS.stream_ops.llseek,
-                read: MEMFS.stream_ops.read,
-                write: MEMFS.stream_ops.write,
-                allocate: MEMFS.stream_ops.allocate,
-                mmap: MEMFS.stream_ops.mmap,
-                msync: MEMFS.stream_ops.msync
-              }
-            },
-            link: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr,
-                readlink: MEMFS.node_ops.readlink
-              },
-              stream: {}
-            },
-            chrdev: {
-              node: {
-                getattr: MEMFS.node_ops.getattr,
-                setattr: MEMFS.node_ops.setattr
-              },
-              stream: FS.chrdev_stream_ops
+            stream: {
+              llseek: MEMFS.stream_ops.llseek
             }
-          };
-        }
+          },
+          file: {
+            node: {
+              getattr: MEMFS.node_ops.getattr,
+              setattr: MEMFS.node_ops.setattr
+            },
+            stream: {
+              llseek: MEMFS.stream_ops.llseek,
+              read: MEMFS.stream_ops.read,
+              write: MEMFS.stream_ops.write,
+              mmap: MEMFS.stream_ops.mmap,
+              msync: MEMFS.stream_ops.msync
+            }
+          },
+          link: {
+            node: {
+              getattr: MEMFS.node_ops.getattr,
+              setattr: MEMFS.node_ops.setattr,
+              readlink: MEMFS.node_ops.readlink
+            },
+            stream: {}
+          },
+          chrdev: {
+            node: {
+              getattr: MEMFS.node_ops.getattr,
+              setattr: MEMFS.node_ops.setattr
+            },
+            stream: FS.chrdev_stream_ops
+          }
+        };
         var node = FS.createNode(parent, name, mode, dev);
         if (FS.isDir(node.mode)) {
           node.node_ops = MEMFS.ops_table.dir.node;
@@ -1846,11 +1547,11 @@ var ASM_CONSTS = {
           node.node_ops = MEMFS.ops_table.chrdev.node;
           node.stream_ops = MEMFS.ops_table.chrdev.stream;
         }
-        node.timestamp = Date.now();
+        node.atime = node.mtime = node.ctime = Date.now();
         // add the new node to the parent
         if (parent) {
           parent.contents[name] = node;
-          parent.timestamp = node.timestamp;
+          parent.atime = parent.mtime = parent.ctime = node.atime;
         }
         return node;
       },
@@ -1906,9 +1607,9 @@ var ASM_CONSTS = {
           } else {
             attr.size = 0;
           }
-          attr.atime = new Date(node.timestamp);
-          attr.mtime = new Date(node.timestamp);
-          attr.ctime = new Date(node.timestamp);
+          attr.atime = new Date(node.atime);
+          attr.mtime = new Date(node.mtime);
+          attr.ctime = new Date(node.ctime);
           // NOTE: In our implementation, st_blocks = Math.ceil(st_size/st_blksize),
           //       but this is not required by the standard.
           attr.blksize = 4096;
@@ -1916,47 +1617,44 @@ var ASM_CONSTS = {
           return attr;
         },
   setattr(node, attr) {
-          if (attr.mode !== undefined) {
-            node.mode = attr.mode;
-          }
-          if (attr.timestamp !== undefined) {
-            node.timestamp = attr.timestamp;
+          for (const key of ["mode", "atime", "mtime", "ctime"]) {
+            if (attr[key] != null) {
+              node[key] = attr[key];
+            }
           }
           if (attr.size !== undefined) {
             MEMFS.resizeFileStorage(node, attr.size);
           }
         },
   lookup(parent, name) {
-          throw FS.genericErrors[44];
+          throw new FS.ErrnoError(44);
         },
   mknod(parent, name, mode, dev) {
           return MEMFS.createNode(parent, name, mode, dev);
         },
   rename(old_node, new_dir, new_name) {
-          // if we're overwriting a directory at new_name, make sure it's empty.
-          if (FS.isDir(old_node.mode)) {
-            var new_node;
-            try {
-              new_node = FS.lookupNode(new_dir, new_name);
-            } catch (e) {
-            }
-            if (new_node) {
+          var new_node;
+          try {
+            new_node = FS.lookupNode(new_dir, new_name);
+          } catch (e) {}
+          if (new_node) {
+            if (FS.isDir(old_node.mode)) {
+              // if we're overwriting a directory at new_name, make sure it's empty.
               for (var i in new_node.contents) {
                 throw new FS.ErrnoError(55);
               }
             }
+            FS.hashRemoveNode(new_node);
           }
           // do the internal rewiring
           delete old_node.parent.contents[old_node.name];
-          old_node.parent.timestamp = Date.now()
-          old_node.name = new_name;
           new_dir.contents[new_name] = old_node;
-          new_dir.timestamp = old_node.parent.timestamp;
-          old_node.parent = new_dir;
+          old_node.name = new_name;
+          new_dir.ctime = new_dir.mtime = old_node.parent.ctime = old_node.parent.mtime = Date.now();
         },
   unlink(parent, name) {
           delete parent.contents[name];
-          parent.timestamp = Date.now();
+          parent.ctime = parent.mtime = Date.now();
         },
   rmdir(parent, name) {
           var node = FS.lookupNode(parent, name);
@@ -1964,20 +1662,13 @@ var ASM_CONSTS = {
             throw new FS.ErrnoError(55);
           }
           delete parent.contents[name];
-          parent.timestamp = Date.now();
+          parent.ctime = parent.mtime = Date.now();
         },
   readdir(node) {
-          var entries = ['.', '..'];
-          for (var key in node.contents) {
-            if (!node.contents.hasOwnProperty(key)) {
-              continue;
-            }
-            entries.push(key);
-          }
-          return entries;
+          return ['.', '..', ...Object.keys(node.contents)];
         },
   symlink(parent, newname, oldpath) {
-          var node = MEMFS.createNode(parent, newname, 511 /* 0777 */ | 40960, 0);
+          var node = MEMFS.createNode(parent, newname, 0o777 | 40960, 0);
           node.link = oldpath;
           return node;
         },
@@ -2014,7 +1705,7 @@ var ASM_CONSTS = {
   
           if (!length) return 0;
           var node = stream.node;
-          node.timestamp = Date.now();
+          node.mtime = node.ctime = Date.now();
   
           if (buffer.subarray && (!node.contents || node.contents.subarray)) { // This write is from a typed array to a typed array?
             if (canOwn) {
@@ -2059,10 +1750,6 @@ var ASM_CONSTS = {
           }
           return position;
         },
-  allocate(stream, offset, length) {
-          MEMFS.expandFileStorage(stream.node, offset + length);
-          stream.node.usedBytes = Math.max(stream.node.usedBytes, offset + length);
-        },
   mmap(stream, length, position, prot, flags) {
           if (!FS.isFile(stream.node.mode)) {
             throw new FS.ErrnoError(43);
@@ -2071,26 +1758,28 @@ var ASM_CONSTS = {
           var allocated;
           var contents = stream.node.contents;
           // Only make a new copy when MAP_PRIVATE is specified.
-          if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
+          if (!(flags & 2) && contents && contents.buffer === HEAP8.buffer) {
             // We can't emulate MAP_SHARED when the file is not backed by the
             // buffer we're mapping to (e.g. the HEAP buffer).
             allocated = false;
             ptr = contents.byteOffset;
           } else {
-            // Try to avoid unnecessary slices.
-            if (position > 0 || position + length < contents.length) {
-              if (contents.subarray) {
-                contents = contents.subarray(position, position + length);
-              } else {
-                contents = Array.prototype.slice.call(contents, position, position + length);
-              }
-            }
             allocated = true;
             ptr = mmapAlloc(length);
             if (!ptr) {
               throw new FS.ErrnoError(48);
             }
-            HEAP8.set(contents, ptr);
+            if (contents) {
+              // Try to avoid unnecessary slices.
+              if (position > 0 || position + length < contents.length) {
+                if (contents.subarray) {
+                  contents = contents.subarray(position, position + length);
+                } else {
+                  contents = Array.prototype.slice.call(contents, position, position + length);
+                }
+              }
+              HEAP8.set(contents, ptr);
+            }
           }
           return { ptr, allocated };
         },
@@ -2101,73 +1790,6 @@ var ASM_CONSTS = {
         },
   },
   };
-  
-  /** @param {boolean=} noRunDep */
-  var asyncLoad = (url, onload, onerror, noRunDep) => {
-      var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : '';
-      readAsync(url, (arrayBuffer) => {
-        assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
-        onload(new Uint8Array(arrayBuffer));
-        if (dep) removeRunDependency(dep);
-      }, (event) => {
-        if (onerror) {
-          onerror();
-        } else {
-          throw `Loading data file "${url}" failed.`;
-        }
-      });
-      if (dep) addRunDependency(dep);
-    };
-  
-  
-  var FS_createDataFile = (parent, name, fileData, canRead, canWrite, canOwn) => {
-      return FS.createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
-    };
-  
-  var preloadPlugins = Module['preloadPlugins'] || [];
-  var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
-      // Ensure plugins are ready.
-      if (typeof Browser != 'undefined') Browser.init();
-  
-      var handled = false;
-      preloadPlugins.forEach((plugin) => {
-        if (handled) return;
-        if (plugin['canHandle'](fullname)) {
-          plugin['handle'](byteArray, fullname, finish, onerror);
-          handled = true;
-        }
-      });
-      return handled;
-    };
-  var FS_createPreloadedFile = (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
-      // TODO we should allow people to just pass in a complete filename instead
-      // of parent and name being that we just join them anyways
-      var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
-      var dep = getUniqueRunDependency(`cp ${fullname}`); // might have several active requests for the same fullname
-      function processData(byteArray) {
-        function finish(byteArray) {
-          if (preFinish) preFinish();
-          if (!dontCreateFile) {
-            FS_createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
-          }
-          if (onload) onload();
-          removeRunDependency(dep);
-        }
-        if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
-          if (onerror) onerror();
-          removeRunDependency(dep);
-        })) {
-          return;
-        }
-        finish(byteArray);
-      }
-      addRunDependency(dep);
-      if (typeof url == 'string') {
-        asyncLoad(url, (byteArray) => processData(byteArray), onerror);
-      } else {
-        processData(url);
-      }
-    };
   
   var FS_modeStringToFlags = (str) => {
       var flagModes = {
@@ -2195,131 +1817,191 @@ var ASM_CONSTS = {
   
   
   
-  var ERRNO_MESSAGES = {
-  0:"Success",
-  1:"Arg list too long",
-  2:"Permission denied",
-  3:"Address already in use",
-  4:"Address not available",
-  5:"Address family not supported by protocol family",
-  6:"No more processes",
-  7:"Socket already connected",
-  8:"Bad file number",
-  9:"Trying to read unreadable message",
-  10:"Mount device busy",
-  11:"Operation canceled",
-  12:"No children",
-  13:"Connection aborted",
-  14:"Connection refused",
-  15:"Connection reset by peer",
-  16:"File locking deadlock error",
-  17:"Destination address required",
-  18:"Math arg out of domain of func",
-  19:"Quota exceeded",
-  20:"File exists",
-  21:"Bad address",
-  22:"File too large",
-  23:"Host is unreachable",
-  24:"Identifier removed",
-  25:"Illegal byte sequence",
-  26:"Connection already in progress",
-  27:"Interrupted system call",
-  28:"Invalid argument",
-  29:"I/O error",
-  30:"Socket is already connected",
-  31:"Is a directory",
-  32:"Too many symbolic links",
-  33:"Too many open files",
-  34:"Too many links",
-  35:"Message too long",
-  36:"Multihop attempted",
-  37:"File or path name too long",
-  38:"Network interface is not configured",
-  39:"Connection reset by network",
-  40:"Network is unreachable",
-  41:"Too many open files in system",
-  42:"No buffer space available",
-  43:"No such device",
-  44:"No such file or directory",
-  45:"Exec format error",
-  46:"No record locks available",
-  47:"The link has been severed",
-  48:"Not enough core",
-  49:"No message of desired type",
-  50:"Protocol not available",
-  51:"No space left on device",
-  52:"Function not implemented",
-  53:"Socket is not connected",
-  54:"Not a directory",
-  55:"Directory not empty",
-  56:"State not recoverable",
-  57:"Socket operation on non-socket",
-  59:"Not a typewriter",
-  60:"No such device or address",
-  61:"Value too large for defined data type",
-  62:"Previous owner died",
-  63:"Not super-user",
-  64:"Broken pipe",
-  65:"Protocol error",
-  66:"Unknown protocol",
-  67:"Protocol wrong type for socket",
-  68:"Math result not representable",
-  69:"Read only file system",
-  70:"Illegal seek",
-  71:"No such process",
-  72:"Stale file handle",
-  73:"Connection timed out",
-  74:"Text file busy",
-  75:"Cross-device link",
-  100:"Device not a stream",
-  101:"Bad font file fmt",
-  102:"Invalid slot",
-  103:"Invalid request code",
-  104:"No anode",
-  105:"Block device required",
-  106:"Channel number out of range",
-  107:"Level 3 halted",
-  108:"Level 3 reset",
-  109:"Link number out of range",
-  110:"Protocol driver not attached",
-  111:"No CSI structure available",
-  112:"Level 2 halted",
-  113:"Invalid exchange",
-  114:"Invalid request descriptor",
-  115:"Exchange full",
-  116:"No data (for no delay io)",
-  117:"Timer expired",
-  118:"Out of streams resources",
-  119:"Machine is not on the network",
-  120:"Package not installed",
-  121:"The object is remote",
-  122:"Advertise error",
-  123:"Srmount error",
-  124:"Communication error on send",
-  125:"Cross mount point (not really error)",
-  126:"Given log. name not unique",
-  127:"f.d. invalid for this operation",
-  128:"Remote address changed",
-  129:"Can   access a needed shared lib",
-  130:"Accessing a corrupted shared lib",
-  131:".lib section in a.out corrupted",
-  132:"Attempting to link in too many libs",
-  133:"Attempting to exec a shared library",
-  135:"Streams pipe error",
-  136:"Too many users",
-  137:"Socket type not supported",
-  138:"Not supported",
-  139:"Protocol family not supported",
-  140:"Can't send after socket shutdown",
-  141:"Too many references",
-  142:"Host is down",
-  148:"No medium (in tape drive)",
-  156:"Level 2 not synchronized",
-  };
+  var strError = (errno) => UTF8ToString(_strerror(errno));
   
   var ERRNO_CODES = {
-  };
+      'EPERM': 63,
+      'ENOENT': 44,
+      'ESRCH': 71,
+      'EINTR': 27,
+      'EIO': 29,
+      'ENXIO': 60,
+      'E2BIG': 1,
+      'ENOEXEC': 45,
+      'EBADF': 8,
+      'ECHILD': 12,
+      'EAGAIN': 6,
+      'EWOULDBLOCK': 6,
+      'ENOMEM': 48,
+      'EACCES': 2,
+      'EFAULT': 21,
+      'ENOTBLK': 105,
+      'EBUSY': 10,
+      'EEXIST': 20,
+      'EXDEV': 75,
+      'ENODEV': 43,
+      'ENOTDIR': 54,
+      'EISDIR': 31,
+      'EINVAL': 28,
+      'ENFILE': 41,
+      'EMFILE': 33,
+      'ENOTTY': 59,
+      'ETXTBSY': 74,
+      'EFBIG': 22,
+      'ENOSPC': 51,
+      'ESPIPE': 70,
+      'EROFS': 69,
+      'EMLINK': 34,
+      'EPIPE': 64,
+      'EDOM': 18,
+      'ERANGE': 68,
+      'ENOMSG': 49,
+      'EIDRM': 24,
+      'ECHRNG': 106,
+      'EL2NSYNC': 156,
+      'EL3HLT': 107,
+      'EL3RST': 108,
+      'ELNRNG': 109,
+      'EUNATCH': 110,
+      'ENOCSI': 111,
+      'EL2HLT': 112,
+      'EDEADLK': 16,
+      'ENOLCK': 46,
+      'EBADE': 113,
+      'EBADR': 114,
+      'EXFULL': 115,
+      'ENOANO': 104,
+      'EBADRQC': 103,
+      'EBADSLT': 102,
+      'EDEADLOCK': 16,
+      'EBFONT': 101,
+      'ENOSTR': 100,
+      'ENODATA': 116,
+      'ETIME': 117,
+      'ENOSR': 118,
+      'ENONET': 119,
+      'ENOPKG': 120,
+      'EREMOTE': 121,
+      'ENOLINK': 47,
+      'EADV': 122,
+      'ESRMNT': 123,
+      'ECOMM': 124,
+      'EPROTO': 65,
+      'EMULTIHOP': 36,
+      'EDOTDOT': 125,
+      'EBADMSG': 9,
+      'ENOTUNIQ': 126,
+      'EBADFD': 127,
+      'EREMCHG': 128,
+      'ELIBACC': 129,
+      'ELIBBAD': 130,
+      'ELIBSCN': 131,
+      'ELIBMAX': 132,
+      'ELIBEXEC': 133,
+      'ENOSYS': 52,
+      'ENOTEMPTY': 55,
+      'ENAMETOOLONG': 37,
+      'ELOOP': 32,
+      'EOPNOTSUPP': 138,
+      'EPFNOSUPPORT': 139,
+      'ECONNRESET': 15,
+      'ENOBUFS': 42,
+      'EAFNOSUPPORT': 5,
+      'EPROTOTYPE': 67,
+      'ENOTSOCK': 57,
+      'ENOPROTOOPT': 50,
+      'ESHUTDOWN': 140,
+      'ECONNREFUSED': 14,
+      'EADDRINUSE': 3,
+      'ECONNABORTED': 13,
+      'ENETUNREACH': 40,
+      'ENETDOWN': 38,
+      'ETIMEDOUT': 73,
+      'EHOSTDOWN': 142,
+      'EHOSTUNREACH': 23,
+      'EINPROGRESS': 26,
+      'EALREADY': 7,
+      'EDESTADDRREQ': 17,
+      'EMSGSIZE': 35,
+      'EPROTONOSUPPORT': 66,
+      'ESOCKTNOSUPPORT': 137,
+      'EADDRNOTAVAIL': 4,
+      'ENETRESET': 39,
+      'EISCONN': 30,
+      'ENOTCONN': 53,
+      'ETOOMANYREFS': 141,
+      'EUSERS': 136,
+      'EDQUOT': 19,
+      'ESTALE': 72,
+      'ENOTSUP': 138,
+      'ENOMEDIUM': 148,
+      'EILSEQ': 25,
+      'EOVERFLOW': 61,
+      'ECANCELED': 11,
+      'ENOTRECOVERABLE': 56,
+      'EOWNERDEAD': 62,
+      'ESTRPIPE': 135,
+    };
   
+  var asyncLoad = async (url) => {
+      var arrayBuffer = await readAsync(url);
+      assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
+      return new Uint8Array(arrayBuffer);
+    };
+  
+  
+  var FS_createDataFile = (...args) => FS.createDataFile(...args);
+  
+  var getUniqueRunDependency = (id) => {
+      var orig = id;
+      while (1) {
+        if (!runDependencyTracking[id]) return id;
+        id = orig + Math.random();
+      }
+    };
+  
+  
+  
+  var preloadPlugins = [];
+  var FS_handledByPreloadPlugin = async (byteArray, fullname) => {
+      // Ensure plugins are ready.
+      if (typeof Browser != 'undefined') Browser.init();
+  
+      for (var plugin of preloadPlugins) {
+        if (plugin['canHandle'](fullname)) {
+          assert(plugin['handle'].constructor.name === 'AsyncFunction', 'Filesystem plugin handlers must be async functions (See #24914)')
+          return plugin['handle'](byteArray, fullname);
+        }
+      }
+      // In no plugin handled this file then return the original/unmodified
+      // byteArray.
+      return byteArray;
+    };
+  var FS_preloadFile = async (parent, name, url, canRead, canWrite, dontCreateFile, canOwn, preFinish) => {
+      // TODO we should allow people to just pass in a complete filename instead
+      // of parent and name being that we just join them anyways
+      var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
+      var dep = getUniqueRunDependency(`cp ${fullname}`); // might have several active requests for the same fullname
+      addRunDependency(dep);
+  
+      try {
+        var byteArray = url;
+        if (typeof url == 'string') {
+          byteArray = await asyncLoad(url);
+        }
+  
+        byteArray = await FS_handledByPreloadPlugin(byteArray, fullname);
+        preFinish?.();
+        if (!dontCreateFile) {
+          FS_createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
+        }
+      } finally {
+        removeRunDependency(dep);
+      }
+    };
+  var FS_createPreloadedFile = (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
+      FS_preloadFile(parent, name, url, canRead, canWrite, dontCreateFile, canOwn, preFinish).then(onload).catch(onerror);
+    };
   var FS = {
   root:null,
   mounts:[],
@@ -2331,69 +2013,175 @@ var ASM_CONSTS = {
   currentPath:"/",
   initialized:false,
   ignorePermissions:true,
-  ErrnoError:null,
-  genericErrors:{
-  },
   filesystems:null,
   syncFSRequests:0,
+  readFiles:{
+  },
+  ErrnoError:class extends Error {
+        name = 'ErrnoError';
+        // We set the `name` property to be able to identify `FS.ErrnoError`
+        // - the `name` is a standard ECMA-262 property of error objects. Kind of good to have it anyway.
+        // - when using PROXYFS, an error can come from an underlying FS
+        // as different FS objects have their own FS.ErrnoError each,
+        // the test `err instanceof FS.ErrnoError` won't detect an error coming from another filesystem, causing bugs.
+        // we'll use the reliable test `err.name == "ErrnoError"` instead
+        constructor(errno) {
+          super(runtimeInitialized ? strError(errno) : '');
+          this.errno = errno;
+          for (var key in ERRNO_CODES) {
+            if (ERRNO_CODES[key] === errno) {
+              this.code = key;
+              break;
+            }
+          }
+        }
+      },
+  FSStream:class {
+        shared = {};
+        get object() {
+          return this.node;
+        }
+        set object(val) {
+          this.node = val;
+        }
+        get isRead() {
+          return (this.flags & 2097155) !== 1;
+        }
+        get isWrite() {
+          return (this.flags & 2097155) !== 0;
+        }
+        get isAppend() {
+          return (this.flags & 1024);
+        }
+        get flags() {
+          return this.shared.flags;
+        }
+        set flags(val) {
+          this.shared.flags = val;
+        }
+        get position() {
+          return this.shared.position;
+        }
+        set position(val) {
+          this.shared.position = val;
+        }
+      },
+  FSNode:class {
+        node_ops = {};
+        stream_ops = {};
+        readMode = 292 | 73;
+        writeMode = 146;
+        mounted = null;
+        constructor(parent, name, mode, rdev) {
+          if (!parent) {
+            parent = this;  // root node sets parent to itself
+          }
+          this.parent = parent;
+          this.mount = parent.mount;
+          this.id = FS.nextInode++;
+          this.name = name;
+          this.mode = mode;
+          this.rdev = rdev;
+          this.atime = this.mtime = this.ctime = Date.now();
+        }
+        get read() {
+          return (this.mode & this.readMode) === this.readMode;
+        }
+        set read(val) {
+          val ? this.mode |= this.readMode : this.mode &= ~this.readMode;
+        }
+        get write() {
+          return (this.mode & this.writeMode) === this.writeMode;
+        }
+        set write(val) {
+          val ? this.mode |= this.writeMode : this.mode &= ~this.writeMode;
+        }
+        get isFolder() {
+          return FS.isDir(this.mode);
+        }
+        get isDevice() {
+          return FS.isChrdev(this.mode);
+        }
+      },
   lookupPath(path, opts = {}) {
-        path = PATH_FS.resolve(path);
+        if (!path) {
+          throw new FS.ErrnoError(44);
+        }
+        opts.follow_mount ??= true
   
-        if (!path) return { path: '', node: null };
-  
-        var defaults = {
-          follow_mount: true,
-          recurse_count: 0
-        };
-        opts = Object.assign(defaults, opts)
-  
-        if (opts.recurse_count > 8) {  // max recursive lookup of 8
-          throw new FS.ErrnoError(32);
+        if (!PATH.isAbs(path)) {
+          path = FS.cwd() + '/' + path;
         }
   
-        // split the absolute path
-        var parts = path.split('/').filter((p) => !!p);
+        // limit max consecutive symlinks to 40 (SYMLOOP_MAX).
+        linkloop: for (var nlinks = 0; nlinks < 40; nlinks++) {
+          // split the absolute path
+          var parts = path.split('/').filter((p) => !!p);
   
-        // start at the root
-        var current = FS.root;
-        var current_path = '/';
+          // start at the root
+          var current = FS.root;
+          var current_path = '/';
   
-        for (var i = 0; i < parts.length; i++) {
-          var islast = (i === parts.length-1);
-          if (islast && opts.parent) {
-            // stop resolving
-            break;
-          }
+          for (var i = 0; i < parts.length; i++) {
+            var islast = (i === parts.length-1);
+            if (islast && opts.parent) {
+              // stop resolving
+              break;
+            }
   
-          current = FS.lookupNode(current, parts[i]);
-          current_path = PATH.join2(current_path, parts[i]);
+            if (parts[i] === '.') {
+              continue;
+            }
   
-          // jump to the mount's root node if this is a mountpoint
-          if (FS.isMountpoint(current)) {
-            if (!islast || (islast && opts.follow_mount)) {
+            if (parts[i] === '..') {
+              current_path = PATH.dirname(current_path);
+              if (FS.isRoot(current)) {
+                path = current_path + '/' + parts.slice(i + 1).join('/');
+                // We're making progress here, don't let many consecutive ..'s
+                // lead to ELOOP
+                nlinks--;
+                continue linkloop;
+              } else {
+                current = current.parent;
+              }
+              continue;
+            }
+  
+            current_path = PATH.join2(current_path, parts[i]);
+            try {
+              current = FS.lookupNode(current, parts[i]);
+            } catch (e) {
+              // if noent_okay is true, suppress a ENOENT in the last component
+              // and return an object with an undefined node. This is needed for
+              // resolving symlinks in the path when creating a file.
+              if ((e?.errno === 44) && islast && opts.noent_okay) {
+                return { path: current_path };
+              }
+              throw e;
+            }
+  
+            // jump to the mount's root node if this is a mountpoint
+            if (FS.isMountpoint(current) && (!islast || opts.follow_mount)) {
               current = current.mounted.root;
             }
-          }
   
-          // by default, lookupPath will not follow a symlink if it is the final path component.
-          // setting opts.follow = true will override this behavior.
-          if (!islast || opts.follow) {
-            var count = 0;
-            while (FS.isLink(current.mode)) {
-              var link = FS.readlink(current_path);
-              current_path = PATH_FS.resolve(PATH.dirname(current_path), link);
-  
-              var lookup = FS.lookupPath(current_path, { recurse_count: opts.recurse_count + 1 });
-              current = lookup.node;
-  
-              if (count++ > 40) {  // limit max consecutive symlinks to 40 (SYMLOOP_MAX).
-                throw new FS.ErrnoError(32);
+            // by default, lookupPath will not follow a symlink if it is the final path component.
+            // setting opts.follow = true will override this behavior.
+            if (FS.isLink(current.mode) && (!islast || opts.follow)) {
+              if (!current.node_ops.readlink) {
+                throw new FS.ErrnoError(52);
               }
+              var link = current.node_ops.readlink(current);
+              if (!PATH.isAbs(link)) {
+                link = PATH.dirname(current_path) + '/' + link;
+              }
+              path = link + '/' + parts.slice(i + 1).join('/');
+              continue linkloop;
             }
           }
+          return { path: current_path, node: current };
         }
-  
-        return { path: current_path, node: current };
+        throw new FS.ErrnoError(32);
       },
   getPath(node) {
         var path;
@@ -2438,7 +2226,7 @@ var ASM_CONSTS = {
   lookupNode(parent, name) {
         var errCode = FS.mayLookup(parent);
         if (errCode) {
-          throw new FS.ErrnoError(errCode, parent);
+          throw new FS.ErrnoError(errCode);
         }
         var hash = FS.hashName(parent.id, name);
         for (var node = FS.nameTable[hash]; node; node = node.name_next) {
@@ -2510,12 +2298,16 @@ var ASM_CONSTS = {
         return 0;
       },
   mayLookup(dir) {
+        if (!FS.isDir(dir.mode)) return 54;
         var errCode = FS.nodePermissions(dir, 'x');
         if (errCode) return errCode;
         if (!dir.node_ops.lookup) return 2;
         return 0;
       },
   mayCreate(dir, name) {
+        if (!FS.isDir(dir.mode)) {
+          return 54;
+        }
         try {
           var node = FS.lookupNode(dir, name);
           return 20;
@@ -2555,12 +2347,18 @@ var ASM_CONSTS = {
         if (FS.isLink(node.mode)) {
           return 32;
         } else if (FS.isDir(node.mode)) {
-          if (FS.flagsToPermissionString(flags) !== 'r' || // opening for write
-              (flags & 512)) { // TODO: check for O_SEARCH? (== search for dir only)
+          if (FS.flagsToPermissionString(flags) !== 'r' // opening for write
+              || (flags & (512 | 64))) { // TODO: check for O_SEARCH? (== search for dir only)
             return 31;
           }
         }
         return FS.nodePermissions(node, FS.flagsToPermissionString(flags));
+      },
+  checkOpExists(op, err) {
+        if (!op) {
+          throw new FS.ErrnoError(err);
+        }
+        return op;
       },
   MAX_OPEN_FDS:4096,
   nextfd() {
@@ -2580,44 +2378,8 @@ var ASM_CONSTS = {
       },
   getStream:(fd) => FS.streams[fd],
   createStream(stream, fd = -1) {
-        if (!FS.FSStream) {
-          FS.FSStream = /** @constructor */ function() {
-            this.shared = { };
-          };
-          FS.FSStream.prototype = {};
-          Object.defineProperties(FS.FSStream.prototype, {
-            object: {
-              /** @this {FS.FSStream} */
-              get() { return this.node; },
-              /** @this {FS.FSStream} */
-              set(val) { this.node = val; }
-            },
-            isRead: {
-              /** @this {FS.FSStream} */
-              get() { return (this.flags & 2097155) !== 1; }
-            },
-            isWrite: {
-              /** @this {FS.FSStream} */
-              get() { return (this.flags & 2097155) !== 0; }
-            },
-            isAppend: {
-              /** @this {FS.FSStream} */
-              get() { return (this.flags & 1024); }
-            },
-            flags: {
-              /** @this {FS.FSStream} */
-              get() { return this.shared.flags; },
-              /** @this {FS.FSStream} */
-              set(val) { this.shared.flags = val; },
-            },
-            position : {
-              /** @this {FS.FSStream} */
-              get() { return this.shared.position; },
-              /** @this {FS.FSStream} */
-              set(val) { this.shared.position = val; },
-            },
-          });
-        }
+        assert(fd >= -1);
+  
         // clone it, so we can return an instance of FSStream
         stream = Object.assign(new FS.FSStream(), stream);
         if (fd == -1) {
@@ -2630,15 +2392,25 @@ var ASM_CONSTS = {
   closeStream(fd) {
         FS.streams[fd] = null;
       },
+  dupStream(origStream, fd = -1) {
+        var stream = FS.createStream(origStream, fd);
+        stream.stream_ops?.dup?.(stream);
+        return stream;
+      },
+  doSetAttr(stream, node, attr) {
+        var setattr = stream?.stream_ops.setattr;
+        var arg = setattr ? stream : node;
+        setattr ??= node.node_ops.setattr;
+        FS.checkOpExists(setattr, 63)
+        setattr(arg, attr);
+      },
   chrdev_stream_ops:{
   open(stream) {
           var device = FS.getDevice(stream.node.rdev);
           // override node's stream ops with the device's
           stream.stream_ops = device.stream_ops;
           // forward the open call
-          if (stream.stream_ops.open) {
-            stream.stream_ops.open(stream);
-          }
+          stream.stream_ops.open?.(stream);
         },
   llseek() {
           throw new FS.ErrnoError(70);
@@ -2660,7 +2432,7 @@ var ASM_CONSTS = {
   
           mounts.push(m);
   
-          check.push.apply(check, m.mounts);
+          check.push(...m.mounts);
         }
   
         return mounts;
@@ -2801,8 +2573,11 @@ var ASM_CONSTS = {
         var lookup = FS.lookupPath(path, { parent: true });
         var parent = lookup.node;
         var name = PATH.basename(path);
-        if (!name || name === '.' || name === '..') {
+        if (!name) {
           throw new FS.ErrnoError(28);
+        }
+        if (name === '.' || name === '..') {
+          throw new FS.ErrnoError(20);
         }
         var errCode = FS.mayCreate(parent, name);
         if (errCode) {
@@ -2813,14 +2588,43 @@ var ASM_CONSTS = {
         }
         return parent.node_ops.mknod(parent, name, mode, dev);
       },
-  create(path, mode) {
-        mode = mode !== undefined ? mode : 438 /* 0666 */;
+  statfs(path) {
+        return FS.statfsNode(FS.lookupPath(path, {follow: true}).node);
+      },
+  statfsStream(stream) {
+        // We keep a separate statfsStream function because noderawfs overrides
+        // it. In noderawfs, stream.node is sometimes null. Instead, we need to
+        // look at stream.path.
+        return FS.statfsNode(stream.node);
+      },
+  statfsNode(node) {
+        // NOTE: None of the defaults here are true. We're just returning safe and
+        //       sane values. Currently nodefs and rawfs replace these defaults,
+        //       other file systems leave them alone.
+        var rtn = {
+          bsize: 4096,
+          frsize: 4096,
+          blocks: 1e6,
+          bfree: 5e5,
+          bavail: 5e5,
+          files: FS.nextInode,
+          ffree: FS.nextInode - 1,
+          fsid: 42,
+          flags: 2,
+          namelen: 255,
+        };
+  
+        if (node.node_ops.statfs) {
+          Object.assign(rtn, node.node_ops.statfs(node.mount.opts.root));
+        }
+        return rtn;
+      },
+  create(path, mode = 0o666) {
         mode &= 4095;
         mode |= 32768;
         return FS.mknod(path, mode, 0);
       },
-  mkdir(path, mode) {
-        mode = mode !== undefined ? mode : 511 /* 0777 */;
+  mkdir(path, mode = 0o777) {
         mode &= 511 | 512;
         mode |= 16384;
         return FS.mknod(path, mode, 0);
@@ -2828,9 +2632,10 @@ var ASM_CONSTS = {
   mkdirTree(path, mode) {
         var dirs = path.split('/');
         var d = '';
-        for (var i = 0; i < dirs.length; ++i) {
-          if (!dirs[i]) continue;
-          d += '/' + dirs[i];
+        for (var dir of dirs) {
+          if (!dir) continue;
+          if (d || PATH.isAbs(path)) d += '/';
+          d += dir;
           try {
             FS.mkdir(d, mode);
           } catch(e) {
@@ -2841,7 +2646,7 @@ var ASM_CONSTS = {
   mkdev(path, mode, dev) {
         if (typeof dev == 'undefined') {
           dev = mode;
-          mode = 438 /* 0666 */;
+          mode = 0o666;
         }
         mode |= 8192;
         return FS.mknod(path, mode, dev);
@@ -2873,7 +2678,7 @@ var ASM_CONSTS = {
         // parents must exist
         var lookup, old_dir, new_dir;
   
-        // let the errors from non existant directories percolate up
+        // let the errors from non existent directories percolate up
         lookup = FS.lookupPath(old_path, { parent: true });
         old_dir = lookup.node;
         lookup = FS.lookupPath(new_path, { parent: true });
@@ -2939,6 +2744,9 @@ var ASM_CONSTS = {
         // do the underlying fs rename
         try {
           old_dir.node_ops.rename(old_node, new_dir, new_name);
+          // update old node (we do this here to avoid each backend
+          // needing to)
+          old_node.parent = new_dir;
         } catch (e) {
           throw e;
         } finally {
@@ -2968,10 +2776,8 @@ var ASM_CONSTS = {
   readdir(path) {
         var lookup = FS.lookupPath(path, { follow: true });
         var node = lookup.node;
-        if (!node.node_ops.readdir) {
-          throw new FS.ErrnoError(54);
-        }
-        return node.node_ops.readdir(node);
+        var readdir = FS.checkOpExists(node.node_ops.readdir, 54);
+        return readdir(node);
       },
   unlink(path) {
         var lookup = FS.lookupPath(path, { parent: true });
@@ -3006,21 +2812,32 @@ var ASM_CONSTS = {
         if (!link.node_ops.readlink) {
           throw new FS.ErrnoError(28);
         }
-        return PATH_FS.resolve(FS.getPath(link.parent), link.node_ops.readlink(link));
+        return link.node_ops.readlink(link);
       },
   stat(path, dontFollow) {
         var lookup = FS.lookupPath(path, { follow: !dontFollow });
         var node = lookup.node;
-        if (!node) {
-          throw new FS.ErrnoError(44);
-        }
-        if (!node.node_ops.getattr) {
-          throw new FS.ErrnoError(63);
-        }
-        return node.node_ops.getattr(node);
+        var getattr = FS.checkOpExists(node.node_ops.getattr, 63);
+        return getattr(node);
+      },
+  fstat(fd) {
+        var stream = FS.getStreamChecked(fd);
+        var node = stream.node;
+        var getattr = stream.stream_ops.getattr;
+        var arg = getattr ? stream : node;
+        getattr ??= node.node_ops.getattr;
+        FS.checkOpExists(getattr, 63)
+        return getattr(arg);
       },
   lstat(path) {
         return FS.stat(path, true);
+      },
+  doChmod(stream, node, mode, dontFollow) {
+        FS.doSetAttr(stream, node, {
+          mode: (mode & 4095) | (node.mode & ~4095),
+          ctime: Date.now(),
+          dontFollow
+        });
       },
   chmod(path, mode, dontFollow) {
         var node;
@@ -3030,20 +2847,21 @@ var ASM_CONSTS = {
         } else {
           node = path;
         }
-        if (!node.node_ops.setattr) {
-          throw new FS.ErrnoError(63);
-        }
-        node.node_ops.setattr(node, {
-          mode: (mode & 4095) | (node.mode & ~4095),
-          timestamp: Date.now()
-        });
+        FS.doChmod(null, node, mode, dontFollow);
       },
   lchmod(path, mode) {
         FS.chmod(path, mode, true);
       },
   fchmod(fd, mode) {
         var stream = FS.getStreamChecked(fd);
-        FS.chmod(stream.node, mode);
+        FS.doChmod(stream, stream.node, mode, false);
+      },
+  doChown(stream, node, dontFollow) {
+        FS.doSetAttr(stream, node, {
+          timestamp: Date.now(),
+          dontFollow
+          // we ignore the uid / gid for now
+        });
       },
   chown(path, uid, gid, dontFollow) {
         var node;
@@ -3053,20 +2871,30 @@ var ASM_CONSTS = {
         } else {
           node = path;
         }
-        if (!node.node_ops.setattr) {
-          throw new FS.ErrnoError(63);
-        }
-        node.node_ops.setattr(node, {
-          timestamp: Date.now()
-          // we ignore the uid / gid for now
-        });
+        FS.doChown(null, node, dontFollow);
       },
   lchown(path, uid, gid) {
         FS.chown(path, uid, gid, true);
       },
   fchown(fd, uid, gid) {
         var stream = FS.getStreamChecked(fd);
-        FS.chown(stream.node, uid, gid);
+        FS.doChown(stream, stream.node, false);
+      },
+  doTruncate(stream, node, len) {
+        if (FS.isDir(node.mode)) {
+          throw new FS.ErrnoError(31);
+        }
+        if (!FS.isFile(node.mode)) {
+          throw new FS.ErrnoError(28);
+        }
+        var errCode = FS.nodePermissions(node, 'w');
+        if (errCode) {
+          throw new FS.ErrnoError(errCode);
+        }
+        FS.doSetAttr(stream, node, {
+          size: len,
+          timestamp: Date.now()
+        });
       },
   truncate(path, len) {
         if (len < 0) {
@@ -3079,62 +2907,49 @@ var ASM_CONSTS = {
         } else {
           node = path;
         }
-        if (!node.node_ops.setattr) {
-          throw new FS.ErrnoError(63);
-        }
-        if (FS.isDir(node.mode)) {
-          throw new FS.ErrnoError(31);
-        }
-        if (!FS.isFile(node.mode)) {
-          throw new FS.ErrnoError(28);
-        }
-        var errCode = FS.nodePermissions(node, 'w');
-        if (errCode) {
-          throw new FS.ErrnoError(errCode);
-        }
-        node.node_ops.setattr(node, {
-          size: len,
-          timestamp: Date.now()
-        });
+        FS.doTruncate(null, node, len);
       },
   ftruncate(fd, len) {
         var stream = FS.getStreamChecked(fd);
-        if ((stream.flags & 2097155) === 0) {
+        if (len < 0 || (stream.flags & 2097155) === 0) {
           throw new FS.ErrnoError(28);
         }
-        FS.truncate(stream.node, len);
+        FS.doTruncate(stream, stream.node, len);
       },
   utime(path, atime, mtime) {
         var lookup = FS.lookupPath(path, { follow: true });
         var node = lookup.node;
-        node.node_ops.setattr(node, {
-          timestamp: Math.max(atime, mtime)
+        var setattr = FS.checkOpExists(node.node_ops.setattr, 63);
+        setattr(node, {
+          atime: atime,
+          mtime: mtime
         });
       },
-  open(path, flags, mode) {
+  open(path, flags, mode = 0o666) {
         if (path === "") {
           throw new FS.ErrnoError(44);
         }
         flags = typeof flags == 'string' ? FS_modeStringToFlags(flags) : flags;
-        mode = typeof mode == 'undefined' ? 438 /* 0666 */ : mode;
         if ((flags & 64)) {
           mode = (mode & 4095) | 32768;
         } else {
           mode = 0;
         }
         var node;
+        var isDirPath;
         if (typeof path == 'object') {
           node = path;
         } else {
-          path = PATH.normalize(path);
-          try {
-            var lookup = FS.lookupPath(path, {
-              follow: !(flags & 131072)
-            });
-            node = lookup.node;
-          } catch (e) {
-            // ignore
-          }
+          isDirPath = path.endsWith("/");
+          // noent_okay makes it so that if the final component of the path
+          // doesn't exist, lookupPath returns `node: undefined`. `path` will be
+          // updated to point to the target of all symlinks.
+          var lookup = FS.lookupPath(path, {
+            follow: !(flags & 131072),
+            noent_okay: true
+          });
+          node = lookup.node;
+          path = lookup.path;
         }
         // perhaps we need to create the node
         var created = false;
@@ -3144,9 +2959,14 @@ var ASM_CONSTS = {
             if ((flags & 128)) {
               throw new FS.ErrnoError(20);
             }
+          } else if (isDirPath) {
+            throw new FS.ErrnoError(31);
           } else {
             // node doesn't exist, try to create it
-            node = FS.mknod(path, mode, 0);
+            // Ignore the permission bits here to ensure we can `open` this new
+            // file below. We use chmod below the apply the permissions once the
+            // file is open.
+            node = FS.mknod(path, mode | 0o777, 0);
             created = true;
           }
         }
@@ -3193,8 +3013,10 @@ var ASM_CONSTS = {
         if (stream.stream_ops.open) {
           stream.stream_ops.open(stream);
         }
+        if (created) {
+          FS.chmod(node, mode & 0o777);
+        }
         if (Module['logReadFiles'] && !(flags & 1)) {
-          if (!FS.readFiles) FS.readFiles = {};
           if (!(path in FS.readFiles)) {
             FS.readFiles[path] = 1;
           }
@@ -3292,24 +3114,6 @@ var ASM_CONSTS = {
         if (!seeking) stream.position += bytesWritten;
         return bytesWritten;
       },
-  allocate(stream, offset, length) {
-        if (FS.isClosed(stream)) {
-          throw new FS.ErrnoError(8);
-        }
-        if (offset < 0 || length <= 0) {
-          throw new FS.ErrnoError(28);
-        }
-        if ((stream.flags & 2097155) === 0) {
-          throw new FS.ErrnoError(8);
-        }
-        if (!FS.isFile(stream.node.mode) && !FS.isDir(stream.node.mode)) {
-          throw new FS.ErrnoError(43);
-        }
-        if (!stream.stream_ops.allocate) {
-          throw new FS.ErrnoError(138);
-        }
-        stream.stream_ops.allocate(stream, offset, length);
-      },
   mmap(stream, length, position, prot, flags) {
         // User requests writing to file (prot & PROT_WRITE != 0).
         // Checking if we have permissions to write to the file unless
@@ -3328,6 +3132,9 @@ var ASM_CONSTS = {
         if (!stream.stream_ops.mmap) {
           throw new FS.ErrnoError(43);
         }
+        if (!length) {
+          throw new FS.ErrnoError(28);
+        }
         return stream.stream_ops.mmap(stream, length, position, prot, flags);
       },
   msync(stream, buffer, offset, length, mmapFlags) {
@@ -3337,7 +3144,6 @@ var ASM_CONSTS = {
         }
         return stream.stream_ops.msync(stream, buffer, offset, length, mmapFlags);
       },
-  munmap:(stream) => 0,
   ioctl(stream, cmd, arg) {
         if (!stream.stream_ops.ioctl) {
           throw new FS.ErrnoError(59);
@@ -3348,33 +3154,29 @@ var ASM_CONSTS = {
         opts.flags = opts.flags || 0;
         opts.encoding = opts.encoding || 'binary';
         if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
-          throw new Error(`Invalid encoding type "${opts.encoding}"`);
+          abort(`Invalid encoding type "${opts.encoding}"`);
         }
-        var ret;
         var stream = FS.open(path, opts.flags);
         var stat = FS.stat(path);
         var length = stat.size;
         var buf = new Uint8Array(length);
         FS.read(stream, buf, 0, length, 0);
         if (opts.encoding === 'utf8') {
-          ret = UTF8ArrayToString(buf, 0);
-        } else if (opts.encoding === 'binary') {
-          ret = buf;
+          buf = UTF8ArrayToString(buf);
         }
         FS.close(stream);
-        return ret;
+        return buf;
       },
   writeFile(path, data, opts = {}) {
         opts.flags = opts.flags || 577;
         var stream = FS.open(path, opts.flags, opts.mode);
         if (typeof data == 'string') {
-          var buf = new Uint8Array(lengthBytesUTF8(data)+1);
-          var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
-          FS.write(stream, buf, 0, actualNumBytes, undefined, opts.canOwn);
-        } else if (ArrayBuffer.isView(data)) {
+          data = new Uint8Array(intArrayFromString(data, true));
+        }
+        if (ArrayBuffer.isView(data)) {
           FS.write(stream, data, 0, data.byteLength, undefined, opts.canOwn);
         } else {
-          throw new Error('Unsupported data type');
+          abort('Unsupported data type');
         }
         FS.close(stream);
       },
@@ -3405,6 +3207,7 @@ var ASM_CONSTS = {
         FS.registerDevice(FS.makedev(1, 3), {
           read: () => 0,
           write: (stream, buffer, offset, length, pos) => length,
+          llseek: () => 0,
         });
         FS.mkdev('/dev/null', FS.makedev(1, 3));
         // setup /dev/tty and /dev/tty1
@@ -3419,7 +3222,8 @@ var ASM_CONSTS = {
         var randomBuffer = new Uint8Array(1024), randomLeft = 0;
         var randomByte = () => {
           if (randomLeft === 0) {
-            randomLeft = randomFill(randomBuffer).byteLength;
+            randomFill(randomBuffer);
+            randomLeft = randomBuffer.byteLength;
           }
           return randomBuffer[--randomLeft];
         };
@@ -3438,7 +3242,10 @@ var ASM_CONSTS = {
         FS.mkdir('/proc/self/fd');
         FS.mount({
           mount() {
-            var node = FS.createNode(proc_self, 'fd', 16384 | 511 /* 0777 */, 73);
+            var node = FS.createNode(proc_self, 'fd', 16895, 73);
+            node.stream_ops = {
+              llseek: MEMFS.stream_ops.llseek,
+            };
             node.node_ops = {
               lookup(parent, name) {
                 var fd = +name;
@@ -3447,16 +3254,22 @@ var ASM_CONSTS = {
                   parent: null,
                   mount: { mountpoint: 'fake' },
                   node_ops: { readlink: () => stream.path },
+                  id: fd + 1,
                 };
                 ret.parent = ret; // make it look like a simple root node
                 return ret;
+              },
+              readdir() {
+                return Array.from(FS.streams.entries())
+                  .filter(([k, v]) => v)
+                  .map(([k, v]) => k.toString());
               }
             };
             return node;
           }
         }, {}, '/proc/self/fd');
       },
-  createStandardStreams() {
+  createStandardStreams(input, output, error) {
         // TODO deprecate the old functionality of a single
         // input / output callback and that utilizes FS.createDevice
         // and instead require a unique set of stream ops
@@ -3465,18 +3278,18 @@ var ASM_CONSTS = {
         // default tty devices. however, if the standard streams
         // have been overwritten we create a unique device for
         // them instead.
-        if (Module['stdin']) {
-          FS.createDevice('/dev', 'stdin', Module['stdin']);
+        if (input) {
+          FS.createDevice('/dev', 'stdin', input);
         } else {
           FS.symlink('/dev/tty', '/dev/stdin');
         }
-        if (Module['stdout']) {
-          FS.createDevice('/dev', 'stdout', null, Module['stdout']);
+        if (output) {
+          FS.createDevice('/dev', 'stdout', null, output);
         } else {
           FS.symlink('/dev/tty', '/dev/stdout');
         }
-        if (Module['stderr']) {
-          FS.createDevice('/dev', 'stderr', null, Module['stderr']);
+        if (error) {
+          FS.createDevice('/dev', 'stderr', null, error);
         } else {
           FS.symlink('/dev/tty1', '/dev/stderr');
         }
@@ -3489,48 +3302,7 @@ var ASM_CONSTS = {
         assert(stdout.fd === 1, `invalid handle for stdout (${stdout.fd})`);
         assert(stderr.fd === 2, `invalid handle for stderr (${stderr.fd})`);
       },
-  ensureErrnoError() {
-        if (FS.ErrnoError) return;
-        FS.ErrnoError = /** @this{Object} */ function ErrnoError(errno, node) {
-          // We set the `name` property to be able to identify `FS.ErrnoError`
-          // - the `name` is a standard ECMA-262 property of error objects. Kind of good to have it anyway.
-          // - when using PROXYFS, an error can come from an underlying FS
-          // as different FS objects have their own FS.ErrnoError each,
-          // the test `err instanceof FS.ErrnoError` won't detect an error coming from another filesystem, causing bugs.
-          // we'll use the reliable test `err.name == "ErrnoError"` instead
-          this.name = 'ErrnoError';
-          this.node = node;
-          this.setErrno = /** @this{Object} */ function(errno) {
-            this.errno = errno;
-            for (var key in ERRNO_CODES) {
-              if (ERRNO_CODES[key] === errno) {
-                this.code = key;
-                break;
-              }
-            }
-          };
-          this.setErrno(errno);
-          this.message = ERRNO_MESSAGES[errno];
-  
-          // Try to get a maximally helpful stack trace. On Node.js, getting Error.stack
-          // now ensures it shows what we want.
-          if (this.stack) {
-            // Define the stack property for Node.js 4, which otherwise errors on the next line.
-            Object.defineProperty(this, "stack", { value: (new Error).stack, writable: true });
-            this.stack = demangleAll(this.stack);
-          }
-        };
-        FS.ErrnoError.prototype = new Error();
-        FS.ErrnoError.prototype.constructor = FS.ErrnoError;
-        // Some errors may happen quite a bit, to avoid overhead we reuse them (and suffer a lack of stack info)
-        [44].forEach((code) => {
-          FS.genericErrors[code] = new FS.ErrnoError(code);
-          FS.genericErrors[code].stack = '<generic error, no stack>';
-        });
-      },
   staticInit() {
-        FS.ensureErrnoError();
-  
         FS.nameTable = new Array(4096);
   
         FS.mount(MEMFS, {}, '/');
@@ -3544,29 +3316,25 @@ var ASM_CONSTS = {
         };
       },
   init(input, output, error) {
-        assert(!FS.init.initialized, 'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)');
-        FS.init.initialized = true;
-  
-        FS.ensureErrnoError();
+        assert(!FS.initialized, 'FS.init was previously called. If you want to initialize later with custom parameters, remove any earlier calls (note that one is automatically added to the generated code)');
+        FS.initialized = true;
   
         // Allow Module.stdin etc. to provide defaults, if none explicitly passed to us here
-        Module['stdin'] = input || Module['stdin'];
-        Module['stdout'] = output || Module['stdout'];
-        Module['stderr'] = error || Module['stderr'];
+        input ??= Module['stdin'];
+        output ??= Module['stdout'];
+        error ??= Module['stderr'];
   
-        FS.createStandardStreams();
+        FS.createStandardStreams(input, output, error);
       },
   quit() {
-        FS.init.initialized = false;
+        FS.initialized = false;
         // force-flush all streams, so we get musl std streams printed out
         _fflush(0);
         // close all of our streams
-        for (var i = 0; i < FS.streams.length; i++) {
-          var stream = FS.streams[i];
-          if (!stream) {
-            continue;
+        for (var stream of FS.streams) {
+          if (stream) {
+            FS.close(stream);
           }
-          FS.close(stream);
         }
       },
   findObject(path, dontResolveLastLink) {
@@ -3614,7 +3382,7 @@ var ASM_CONSTS = {
           try {
             FS.mkdir(current);
           } catch (e) {
-            // ignore EEXIST
+            if (e.errno != 20) throw e;
           }
           parent = current;
         }
@@ -3646,12 +3414,11 @@ var ASM_CONSTS = {
           FS.close(stream);
           FS.chmod(node, mode);
         }
-        return node;
       },
   createDevice(parent, name, input, output) {
         var path = PATH.join2(typeof parent == 'string' ? parent : FS.getPath(parent), name);
         var mode = FS_getMode(!!input, !!output);
-        if (!FS.createDevice.major) FS.createDevice.major = 64;
+        FS.createDevice.major ??= 64;
         var dev = FS.makedev(FS.createDevice.major++, 0);
         // Create a fake device that a set of stream ops to emulate
         // the old behavior.
@@ -3661,7 +3428,7 @@ var ASM_CONSTS = {
           },
           close(stream) {
             // flush any pending line data
-            if (output && output.buffer && output.buffer.length) {
+            if (output?.buffer?.length) {
               output(10);
             }
           },
@@ -3682,7 +3449,7 @@ var ASM_CONSTS = {
               buffer[offset+i] = result;
             }
             if (bytesRead) {
-              stream.node.timestamp = Date.now();
+              stream.node.atime = Date.now();
             }
             return bytesRead;
           },
@@ -3695,7 +3462,7 @@ var ASM_CONSTS = {
               }
             }
             if (length) {
-              stream.node.timestamp = Date.now();
+              stream.node.mtime = stream.node.ctime = Date.now();
             }
             return i;
           }
@@ -3704,124 +3471,112 @@ var ASM_CONSTS = {
       },
   forceLoadFile(obj) {
         if (obj.isDevice || obj.isFolder || obj.link || obj.contents) return true;
-        if (typeof XMLHttpRequest != 'undefined') {
-          throw new Error("Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.");
-        } else if (read_) {
-          // Command-line.
+        if (globalThis.XMLHttpRequest) {
+          abort("Lazy loading should have been performed (contents set) in createLazyFile, but it was not. Lazy loading only works in web workers. Use --embed-file or --preload-file in emcc on the main thread.");
+        } else { // Command-line.
           try {
-            // WARNING: Can't read binary files in V8's d8 or tracemonkey's js, as
-            //          read() will try to parse UTF8.
-            obj.contents = intArrayFromString(read_(obj.url), true);
-            obj.usedBytes = obj.contents.length;
+            obj.contents = readBinary(obj.url);
           } catch (e) {
             throw new FS.ErrnoError(29);
           }
-        } else {
-          throw new Error('Cannot load without read() or XMLHttpRequest.');
         }
       },
   createLazyFile(parent, name, url, canRead, canWrite) {
-        // Lazy chunked Uint8Array (implements get and length from Uint8Array). Actual getting is abstracted away for eventual reuse.
-        /** @constructor */
-        function LazyUint8Array() {
-          this.lengthKnown = false;
-          this.chunks = []; // Loaded chunks. Index is the chunk number
-        }
-        LazyUint8Array.prototype.get = /** @this{Object} */ function LazyUint8Array_get(idx) {
-          if (idx > this.length-1 || idx < 0) {
-            return undefined;
+        // Lazy chunked Uint8Array (implements get and length from Uint8Array).
+        // Actual getting is abstracted away for eventual reuse.
+        class LazyUint8Array {
+          lengthKnown = false;
+          chunks = []; // Loaded chunks. Index is the chunk number
+          get(idx) {
+            if (idx > this.length-1 || idx < 0) {
+              return undefined;
+            }
+            var chunkOffset = idx % this.chunkSize;
+            var chunkNum = (idx / this.chunkSize)|0;
+            return this.getter(chunkNum)[chunkOffset];
           }
-          var chunkOffset = idx % this.chunkSize;
-          var chunkNum = (idx / this.chunkSize)|0;
-          return this.getter(chunkNum)[chunkOffset];
-        };
-        LazyUint8Array.prototype.setDataGetter = function LazyUint8Array_setDataGetter(getter) {
-          this.getter = getter;
-        };
-        LazyUint8Array.prototype.cacheLength = function LazyUint8Array_cacheLength() {
-          // Find length
-          var xhr = new XMLHttpRequest();
-          xhr.open('HEAD', url, false);
-          xhr.send(null);
-          if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
-          var datalength = Number(xhr.getResponseHeader("Content-length"));
-          var header;
-          var hasByteServing = (header = xhr.getResponseHeader("Accept-Ranges")) && header === "bytes";
-          var usesGzip = (header = xhr.getResponseHeader("Content-Encoding")) && header === "gzip";
-  
-          var chunkSize = 1024*1024; // Chunk size in bytes
-  
-          if (!hasByteServing) chunkSize = datalength;
-  
-          // Function to get a range from the remote URL.
-          var doXHR = (from, to) => {
-            if (from > to) throw new Error("invalid range (" + from + ", " + to + ") or no bytes requested!");
-            if (to > datalength-1) throw new Error("only " + datalength + " bytes available! programmer error!");
-  
-            // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
+          setDataGetter(getter) {
+            this.getter = getter;
+          }
+          cacheLength() {
+            // Find length
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, false);
-            if (datalength !== chunkSize) xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
-  
-            // Some hints to the browser that we want binary data.
-            xhr.responseType = 'arraybuffer';
-            if (xhr.overrideMimeType) {
-              xhr.overrideMimeType('text/plain; charset=x-user-defined');
-            }
-  
+            xhr.open('HEAD', url, false);
             xhr.send(null);
-            if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) throw new Error("Couldn't load " + url + ". Status: " + xhr.status);
-            if (xhr.response !== undefined) {
-              return new Uint8Array(/** @type{Array<number>} */(xhr.response || []));
-            }
-            return intArrayFromString(xhr.responseText || '', true);
-          };
-          var lazyArray = this;
-          lazyArray.setDataGetter((chunkNum) => {
-            var start = chunkNum * chunkSize;
-            var end = (chunkNum+1) * chunkSize - 1; // including this byte
-            end = Math.min(end, datalength-1); // if datalength-1 is selected, this is the last block
-            if (typeof lazyArray.chunks[chunkNum] == 'undefined') {
-              lazyArray.chunks[chunkNum] = doXHR(start, end);
-            }
-            if (typeof lazyArray.chunks[chunkNum] == 'undefined') throw new Error('doXHR failed!');
-            return lazyArray.chunks[chunkNum];
-          });
+            if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) abort("Couldn't load " + url + ". Status: " + xhr.status);
+            var datalength = Number(xhr.getResponseHeader("Content-length"));
+            var header;
+            var hasByteServing = (header = xhr.getResponseHeader("Accept-Ranges")) && header === "bytes";
+            var usesGzip = (header = xhr.getResponseHeader("Content-Encoding")) && header === "gzip";
   
-          if (usesGzip || !datalength) {
-            // if the server uses gzip or doesn't supply the length, we have to download the whole file to get the (uncompressed) length
-            chunkSize = datalength = 1; // this will force getter(0)/doXHR do download the whole file
-            datalength = this.getter(0).length;
-            chunkSize = datalength;
-            out("LazyFiles on gzip forces download of the whole file when length is accessed");
+            var chunkSize = 1024*1024; // Chunk size in bytes
+  
+            if (!hasByteServing) chunkSize = datalength;
+  
+            // Function to get a range from the remote URL.
+            var doXHR = (from, to) => {
+              if (from > to) abort("invalid range (" + from + ", " + to + ") or no bytes requested!");
+              if (to > datalength-1) abort("only " + datalength + " bytes available! programmer error!");
+  
+              // TODO: Use mozResponseArrayBuffer, responseStream, etc. if available.
+              var xhr = new XMLHttpRequest();
+              xhr.open('GET', url, false);
+              if (datalength !== chunkSize) xhr.setRequestHeader("Range", "bytes=" + from + "-" + to);
+  
+              // Some hints to the browser that we want binary data.
+              xhr.responseType = 'arraybuffer';
+              if (xhr.overrideMimeType) {
+                xhr.overrideMimeType('text/plain; charset=x-user-defined');
+              }
+  
+              xhr.send(null);
+              if (!(xhr.status >= 200 && xhr.status < 300 || xhr.status === 304)) abort("Couldn't load " + url + ". Status: " + xhr.status);
+              if (xhr.response !== undefined) {
+                return new Uint8Array(/** @type{Array<number>} */(xhr.response || []));
+              }
+              return intArrayFromString(xhr.responseText || '', true);
+            };
+            var lazyArray = this;
+            lazyArray.setDataGetter((chunkNum) => {
+              var start = chunkNum * chunkSize;
+              var end = (chunkNum+1) * chunkSize - 1; // including this byte
+              end = Math.min(end, datalength-1); // if datalength-1 is selected, this is the last block
+              if (typeof lazyArray.chunks[chunkNum] == 'undefined') {
+                lazyArray.chunks[chunkNum] = doXHR(start, end);
+              }
+              if (typeof lazyArray.chunks[chunkNum] == 'undefined') abort('doXHR failed!');
+              return lazyArray.chunks[chunkNum];
+            });
+  
+            if (usesGzip || !datalength) {
+              // if the server uses gzip or doesn't supply the length, we have to download the whole file to get the (uncompressed) length
+              chunkSize = datalength = 1; // this will force getter(0)/doXHR do download the whole file
+              datalength = this.getter(0).length;
+              chunkSize = datalength;
+              out("LazyFiles on gzip forces download of the whole file when length is accessed");
+            }
+  
+            this._length = datalength;
+            this._chunkSize = chunkSize;
+            this.lengthKnown = true;
           }
-  
-          this._length = datalength;
-          this._chunkSize = chunkSize;
-          this.lengthKnown = true;
-        };
-        if (typeof XMLHttpRequest != 'undefined') {
-          if (!ENVIRONMENT_IS_WORKER) throw 'Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc';
-          var lazyArray = new LazyUint8Array();
-          Object.defineProperties(lazyArray, {
-            length: {
-              get: /** @this{Object} */ function() {
-                if (!this.lengthKnown) {
-                  this.cacheLength();
-                }
-                return this._length;
-              }
-            },
-            chunkSize: {
-              get: /** @this{Object} */ function() {
-                if (!this.lengthKnown) {
-                  this.cacheLength();
-                }
-                return this._chunkSize;
-              }
+          get length() {
+            if (!this.lengthKnown) {
+              this.cacheLength();
             }
-          });
+            return this._length;
+          }
+          get chunkSize() {
+            if (!this.lengthKnown) {
+              this.cacheLength();
+            }
+            return this._chunkSize;
+          }
+        }
   
+        if (globalThis.XMLHttpRequest) {
+          if (!ENVIRONMENT_IS_WORKER) abort('Cannot do synchronous binary XHRs outside webworkers in modern browsers. Use --embed-file or --preload-file in emcc');
+          var lazyArray = new LazyUint8Array();
           var properties = { isDevice: false, contents: lazyArray };
         } else {
           var properties = { isDevice: false, url: url };
@@ -3840,7 +3595,7 @@ var ASM_CONSTS = {
         // Add a function that defers querying the file size until it is asked the first time.
         Object.defineProperties(node, {
           usedBytes: {
-            get: /** @this {FSNode} */ function() { return this.contents.length; }
+            get: function() { return this.contents.length; }
           }
         });
         // override each stream op with one that tries to force load the lazy file first
@@ -3848,9 +3603,9 @@ var ASM_CONSTS = {
         var keys = Object.keys(node.stream_ops);
         keys.forEach((key) => {
           var fn = node.stream_ops[key];
-          stream_ops[key] = function forceLoadLazyFile() {
+          stream_ops[key] = (...args) => {
             FS.forceLoadFile(node);
-            return fn.apply(null, arguments);
+            return fn(...args);
           };
         });
         function writeChunks(stream, buffer, offset, length, position) {
@@ -3928,38 +3683,41 @@ var ASM_CONSTS = {
           }
           return dir;
         }
-        return PATH.join2(dir, path);
+        return dir + '/' + path;
       },
-  doStat(func, path, buf) {
-        try {
-          var stat = func(path);
-        } catch (e) {
-          if (e && e.node && PATH.normalize(path) !== PATH.normalize(FS.getPath(e.node))) {
-            // an error occurred while trying to look up the path; we should just report ENOTDIR
-            return -54;
-          }
-          throw e;
-        }
-        HEAP32[((buf)>>2)] = stat.dev;
-        HEAP32[(((buf)+(4))>>2)] = stat.mode;
+  writeStat(buf, stat) {
+        HEAPU32[((buf)>>2)] = stat.dev;
+        HEAPU32[(((buf)+(4))>>2)] = stat.mode;
         HEAPU32[(((buf)+(8))>>2)] = stat.nlink;
-        HEAP32[(((buf)+(12))>>2)] = stat.uid;
-        HEAP32[(((buf)+(16))>>2)] = stat.gid;
-        HEAP32[(((buf)+(20))>>2)] = stat.rdev;
-        (tempI64 = [stat.size>>>0,(tempDouble=stat.size,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((buf)+(24))>>2)] = tempI64[0],HEAP32[(((buf)+(28))>>2)] = tempI64[1]);
+        HEAPU32[(((buf)+(12))>>2)] = stat.uid;
+        HEAPU32[(((buf)+(16))>>2)] = stat.gid;
+        HEAPU32[(((buf)+(20))>>2)] = stat.rdev;
+        HEAP64[(((buf)+(24))>>3)] = BigInt(stat.size);
         HEAP32[(((buf)+(32))>>2)] = 4096;
         HEAP32[(((buf)+(36))>>2)] = stat.blocks;
         var atime = stat.atime.getTime();
         var mtime = stat.mtime.getTime();
         var ctime = stat.ctime.getTime();
-        (tempI64 = [Math.floor(atime / 1000)>>>0,(tempDouble=Math.floor(atime / 1000),(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((buf)+(40))>>2)] = tempI64[0],HEAP32[(((buf)+(44))>>2)] = tempI64[1]);
-        HEAPU32[(((buf)+(48))>>2)] = (atime % 1000) * 1000;
-        (tempI64 = [Math.floor(mtime / 1000)>>>0,(tempDouble=Math.floor(mtime / 1000),(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((buf)+(56))>>2)] = tempI64[0],HEAP32[(((buf)+(60))>>2)] = tempI64[1]);
-        HEAPU32[(((buf)+(64))>>2)] = (mtime % 1000) * 1000;
-        (tempI64 = [Math.floor(ctime / 1000)>>>0,(tempDouble=Math.floor(ctime / 1000),(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((buf)+(72))>>2)] = tempI64[0],HEAP32[(((buf)+(76))>>2)] = tempI64[1]);
-        HEAPU32[(((buf)+(80))>>2)] = (ctime % 1000) * 1000;
-        (tempI64 = [stat.ino>>>0,(tempDouble=stat.ino,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((buf)+(88))>>2)] = tempI64[0],HEAP32[(((buf)+(92))>>2)] = tempI64[1]);
+        HEAP64[(((buf)+(40))>>3)] = BigInt(Math.floor(atime / 1000));
+        HEAPU32[(((buf)+(48))>>2)] = (atime % 1000) * 1000 * 1000;
+        HEAP64[(((buf)+(56))>>3)] = BigInt(Math.floor(mtime / 1000));
+        HEAPU32[(((buf)+(64))>>2)] = (mtime % 1000) * 1000 * 1000;
+        HEAP64[(((buf)+(72))>>3)] = BigInt(Math.floor(ctime / 1000));
+        HEAPU32[(((buf)+(80))>>2)] = (ctime % 1000) * 1000 * 1000;
+        HEAP64[(((buf)+(88))>>3)] = BigInt(stat.ino);
         return 0;
+      },
+  writeStatFs(buf, stats) {
+        HEAPU32[(((buf)+(4))>>2)] = stats.bsize;
+        HEAPU32[(((buf)+(60))>>2)] = stats.bsize;
+        HEAP64[(((buf)+(8))>>3)] = BigInt(stats.blocks);
+        HEAP64[(((buf)+(16))>>3)] = BigInt(stats.bfree);
+        HEAP64[(((buf)+(24))>>3)] = BigInt(stats.bavail);
+        HEAP64[(((buf)+(32))>>3)] = BigInt(stats.files);
+        HEAP64[(((buf)+(40))>>3)] = BigInt(stats.ffree);
+        HEAPU32[(((buf)+(48))>>2)] = stats.fsid;
+        HEAPU32[(((buf)+(64))>>2)] = stats.flags;  // ST_NOSUID
+        HEAPU32[(((buf)+(56))>>2)] = stats.namelen;
       },
   doMsync(addr, stream, len, flags, offset) {
         if (!FS.isFile(stream.node.mode)) {
@@ -3972,22 +3730,14 @@ var ASM_CONSTS = {
         var buffer = HEAPU8.slice(addr, addr + len);
         FS.msync(stream, buffer, offset, len, flags);
       },
-  varargs:undefined,
-  get() {
-        assert(SYSCALLS.varargs != undefined);
-        // the `+` prepended here is necessary to convince the JSCompiler that varargs is indeed a number.
-        var ret = HEAP32[((+SYSCALLS.varargs)>>2)];
-        SYSCALLS.varargs += 4;
-        return ret;
-      },
-  getp() { return SYSCALLS.get() },
-  getStr(ptr) {
-        var ret = UTF8ToString(ptr);
-        return ret;
-      },
   getStreamFromFD(fd) {
         var stream = FS.getStreamChecked(fd);
         return stream;
+      },
+  varargs:undefined,
+  getStr(ptr) {
+        var ret = UTF8ToString(ptr);
+        return ret;
       },
   };
   function ___syscall_fcntl64(fd, cmd, varargs) {
@@ -3997,7 +3747,7 @@ var ASM_CONSTS = {
       var stream = SYSCALLS.getStreamFromFD(fd);
       switch (cmd) {
         case 0: {
-          var arg = SYSCALLS.get();
+          var arg = syscallGetVarargI();
           if (arg < 0) {
             return -28;
           }
@@ -4005,7 +3755,7 @@ var ASM_CONSTS = {
             arg++;
           }
           var newStream;
-          newStream = FS.createStream(stream, arg);
+          newStream = FS.dupStream(stream, arg);
           return newStream.fd;
         }
         case 1:
@@ -4014,53 +3764,50 @@ var ASM_CONSTS = {
         case 3:
           return stream.flags;
         case 4: {
-          var arg = SYSCALLS.get();
+          var arg = syscallGetVarargI();
           stream.flags |= arg;
           return 0;
         }
-        case 5: {
-          var arg = SYSCALLS.getp();
+        case 12: {
+          var arg = syscallGetVarargP();
           var offset = 0;
           // We're always unlocked.
           HEAP16[(((arg)+(offset))>>1)] = 2;
           return 0;
         }
-        case 6:
-        case 7:
-          return 0; // Pretend that the locking is successful.
-        case 16:
-        case 8:
-          return -28; // These are for sockets. We don't have them fully implemented yet.
-        case 9:
-          // musl trusts getown return values, due to a bug where they must be, as they overlap with errors. just return -1 here, so fcntl() returns that, and we set errno ourselves.
-          setErrNo(28);
-          return -1;
-        default: {
-          return -28;
-        }
+        case 13:
+        case 14:
+          // Pretend that the locking is successful. These are process-level locks,
+          // and Emscripten programs are a single process. If we supported linking a
+          // filesystem between programs, we'd need to do more here.
+          // See https://github.com/emscripten-core/emscripten/issues/23697
+          return 0;
       }
+      return -28;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
     return -e.errno;
   }
   }
 
+  var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
+      assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
+      return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
+    };
   
   function ___syscall_getdents64(fd, dirp, count) {
   try {
   
       var stream = SYSCALLS.getStreamFromFD(fd)
-      if (!stream.getdents) {
-        stream.getdents = FS.readdir(stream.path);
-      }
+      stream.getdents ||= FS.readdir(stream.path);
   
       var struct_size = 280;
       var pos = 0;
       var off = FS.llseek(stream, 0, 1);
   
-      var idx = Math.floor(off / struct_size);
-  
-      while (idx < stream.getdents.length && pos + struct_size <= count) {
+      var startIdx = Math.floor(off / struct_size);
+      var endIdx = Math.min(stream.getdents.length, startIdx + Math.floor(count/struct_size))
+      for (var idx = startIdx; idx < endIdx; idx++) {
         var id;
         var type;
         var name = stream.getdents[idx];
@@ -4074,7 +3821,17 @@ var ASM_CONSTS = {
           type = 4; // DT_DIR
         }
         else {
-          var child = FS.lookupNode(stream.node, name);
+          var child;
+          try {
+            child = FS.lookupNode(stream.node, name);
+          } catch (e) {
+            // If the entry is not a directory, file, or symlink, nodefs
+            // lookupNode will raise EINVAL. Skip these and continue.
+            if (e?.errno === 28) {
+              continue;
+            }
+            throw e;
+          }
           id = child.id;
           type = FS.isChrdev(child.mode) ? 2 :  // DT_CHR, character device.
                  FS.isDir(child.mode) ? 4 :     // DT_DIR, directory.
@@ -4082,13 +3839,12 @@ var ASM_CONSTS = {
                  8;                             // DT_REG, regular file.
         }
         assert(id);
-        (tempI64 = [id>>>0,(tempDouble=id,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[((dirp + pos)>>2)] = tempI64[0],HEAP32[(((dirp + pos)+(4))>>2)] = tempI64[1]);
-        (tempI64 = [(idx + 1) * struct_size>>>0,(tempDouble=(idx + 1) * struct_size,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[(((dirp + pos)+(8))>>2)] = tempI64[0],HEAP32[(((dirp + pos)+(12))>>2)] = tempI64[1]);
+        HEAP64[((dirp + pos)>>3)] = BigInt(id);
+        HEAP64[(((dirp + pos)+(8))>>3)] = BigInt((idx + 1) * struct_size);
         HEAP16[(((dirp + pos)+(16))>>1)] = 280;
-        HEAP8[(((dirp + pos)+(18))>>0)] = type;
+        HEAP8[(dirp + pos)+(18)] = type;
         stringToUTF8(name, dirp + pos + 19, 256);
         pos += struct_size;
-        idx += 1;
       }
       FS.llseek(stream, idx * struct_size, 0);
       return pos;
@@ -4098,6 +3854,7 @@ var ASM_CONSTS = {
   }
   }
 
+  
   function ___syscall_ioctl(fd, op, varargs) {
   SYSCALLS.varargs = varargs;
   try {
@@ -4112,13 +3869,13 @@ var ASM_CONSTS = {
           if (!stream.tty) return -59;
           if (stream.tty.ops.ioctl_tcgets) {
             var termios = stream.tty.ops.ioctl_tcgets(stream);
-            var argp = SYSCALLS.getp();
+            var argp = syscallGetVarargP();
             HEAP32[((argp)>>2)] = termios.c_iflag || 0;
             HEAP32[(((argp)+(4))>>2)] = termios.c_oflag || 0;
             HEAP32[(((argp)+(8))>>2)] = termios.c_cflag || 0;
             HEAP32[(((argp)+(12))>>2)] = termios.c_lflag || 0;
             for (var i = 0; i < 32; i++) {
-              HEAP8[(((argp + i)+(17))>>0)] = termios.c_cc[i] || 0;
+              HEAP8[(argp + i)+(17)] = termios.c_cc[i] || 0;
             }
             return 0;
           }
@@ -4135,14 +3892,14 @@ var ASM_CONSTS = {
         case 21508: {
           if (!stream.tty) return -59;
           if (stream.tty.ops.ioctl_tcsets) {
-            var argp = SYSCALLS.getp();
+            var argp = syscallGetVarargP();
             var c_iflag = HEAP32[((argp)>>2)];
             var c_oflag = HEAP32[(((argp)+(4))>>2)];
             var c_cflag = HEAP32[(((argp)+(8))>>2)];
             var c_lflag = HEAP32[(((argp)+(12))>>2)];
             var c_cc = []
             for (var i = 0; i < 32; i++) {
-              c_cc.push(HEAP8[(((argp + i)+(17))>>0)]);
+              c_cc.push(HEAP8[(argp + i)+(17)]);
             }
             return stream.tty.ops.ioctl_tcsets(stream.tty, op, { c_iflag, c_oflag, c_cflag, c_lflag, c_cc });
           }
@@ -4150,7 +3907,7 @@ var ASM_CONSTS = {
         }
         case 21519: {
           if (!stream.tty) return -59;
-          var argp = SYSCALLS.getp();
+          var argp = syscallGetVarargP();
           HEAP32[((argp)>>2)] = 0;
           return 0;
         }
@@ -4158,8 +3915,9 @@ var ASM_CONSTS = {
           if (!stream.tty) return -59;
           return -28; // not supported
         }
+        case 21537:
         case 21531: {
-          var argp = SYSCALLS.getp();
+          var argp = syscallGetVarargP();
           return FS.ioctl(stream, op, argp);
         }
         case 21523: {
@@ -4168,7 +3926,7 @@ var ASM_CONSTS = {
           if (!stream.tty) return -59;
           if (stream.tty.ops.ioctl_tiocgwinsz) {
             var winsize = stream.tty.ops.ioctl_tiocgwinsz(stream.tty);
-            var argp = SYSCALLS.getp();
+            var argp = syscallGetVarargP();
             HEAP16[((argp)>>1)] = winsize[0];
             HEAP16[(((argp)+(2))>>1)] = winsize[1];
           }
@@ -4193,13 +3951,14 @@ var ASM_CONSTS = {
   }
   }
 
+  
   function ___syscall_openat(dirfd, path, flags, varargs) {
   SYSCALLS.varargs = varargs;
   try {
   
       path = SYSCALLS.getStr(path);
       path = SYSCALLS.calculateAt(dirfd, path);
-      var mode = varargs ? SYSCALLS.get() : 0;
+      var mode = varargs ? syscallGetVarargI() : 0;
       return FS.open(path, flags, mode).fd;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
@@ -4207,12 +3966,43 @@ var ASM_CONSTS = {
   }
   }
 
-  var nowIsMonotonic = true;;
-  var __emscripten_get_now_is_monotonic = () => nowIsMonotonic;
-
-  var _abort = () => {
+  var __abort_js = () =>
       abort('native code called abort()');
-    };
+
+  var _emscripten_get_now = () => performance.now();
+  
+  var _emscripten_date_now = () => Date.now();
+  
+  var nowIsMonotonic = 1;
+  
+  var checkWasiClock = (clock_id) => clock_id >= 0 && clock_id <= 3;
+  
+  var INT53_MAX = 9007199254740992;
+  
+  var INT53_MIN = -9007199254740992;
+  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
+  function _clock_time_get(clk_id, ignored_precision, ptime) {
+    ignored_precision = bigintToI53Checked(ignored_precision);
+  
+  
+      if (!checkWasiClock(clk_id)) {
+        return 28;
+      }
+      var now;
+      // all wasi clocks but realtime are monotonic
+      if (clk_id === 0) {
+        now = _emscripten_date_now();
+      } else if (nowIsMonotonic) {
+        now = _emscripten_get_now();
+      } else {
+        return 52;
+      }
+      // "now" is in ms, and wasi times are in ns.
+      var nsec = Math.round(now * 1000 * 1000);
+      HEAP64[((ptime)>>3)] = BigInt(nsec);
+      return 0;
+    ;
+  }
 
   var readEmAsmArgsArray = [];
   var readEmAsmArgs = (sigPtr, buf) => {
@@ -4227,6 +4017,8 @@ var ASM_CONSTS = {
       while (ch = HEAPU8[sigPtr++]) {
         var chr = String.fromCharCode(ch);
         var validChars = ['d', 'f', 'i', 'p'];
+        // In WASM_BIGINT mode we support passing i64 values as bigint.
+        validChars.push('j');
         assert(validChars.includes(chr), `Invalid character ${ch}("${chr}") in readEmAsmArgs! Use only [${validChars}], and do not specify "v" for void return argument.`);
         // Floats are always passed as doubles, so all types except for 'i'
         // are 8 bytes and require alignment.
@@ -4236,6 +4028,7 @@ var ASM_CONSTS = {
         readEmAsmArgsArray.push(
           // Special case for pointers under wasm64 or CAN_ADDRESS_2GB mode.
           ch == 112 ? HEAPU32[((buf)>>2)] :
+          ch == 106 ? HEAP64[((buf)>>3)] :
           ch == 105 ?
             HEAP32[((buf)>>2)] :
             HEAPF64[((buf)>>3)]
@@ -4247,28 +4040,25 @@ var ASM_CONSTS = {
   var runEmAsmFunction = (code, sigPtr, argbuf) => {
       var args = readEmAsmArgs(sigPtr, argbuf);
       assert(ASM_CONSTS.hasOwnProperty(code), `No EM_ASM constant found at address ${code}.  The loaded WebAssembly file is likely out of sync with the generated JavaScript.`);
-      return ASM_CONSTS[code].apply(null, args);
+      return ASM_CONSTS[code](...args);
     };
   var _emscripten_asm_const_int = (code, sigPtr, argbuf) => {
       return runEmAsmFunction(code, sigPtr, argbuf);
     };
 
-  var _emscripten_date_now = () => Date.now();
-
   
   var runtimeKeepaliveCounter = 0;
   var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
-  
   var _proc_exit = (code) => {
       EXITSTATUS = code;
       if (!keepRuntimeAlive()) {
-        if (Module['onExit']) Module['onExit'](code);
+        Module['onExit']?.(code);
         ABORT = true;
       }
       quit_(code, new ExitStatus(code));
     };
   
-  /** @suppress {duplicate } */
+  
   /** @param {boolean|number=} implicit */
   var exitJS = (status, implicit) => {
       EXITSTATUS = status;
@@ -4290,21 +4080,12 @@ var ASM_CONSTS = {
       runtimeKeepaliveCounter = 0;
     };
   
-  
   var _emscripten_force_exit = (status) => {
       warnOnce('emscripten_force_exit cannot actually shut down the runtime, as the build does not have EXIT_RUNTIME set');
       __emscripten_runtime_keepalive_clear();
       _exit(status);
     };
 
-  var _emscripten_get_now;
-      // Modern environment where performance.now() is supported:
-      // N.B. a shorter form "_emscripten_get_now = performance.now;" is
-      // unfortunately not allowed even in current browsers (e.g. FF Nightly 75).
-      _emscripten_get_now = () => performance.now();
-  ;
-
-  var _emscripten_memcpy_js = (dest, src, num) => HEAPU8.copyWithin(dest, src, src + num);
 
   var getHeapMax = () =>
       // Stay one Wasm page short of 4GB: while e.g. Chrome is able to allocate
@@ -4313,16 +4094,21 @@ var ASM_CONSTS = {
       // casing all heap size related code to treat 0 specially.
       2147483648;
   
+  var alignMemory = (size, alignment) => {
+      assert(alignment, "alignment argument is required");
+      return Math.ceil(size / alignment) * alignment;
+    };
+  
   var growMemory = (size) => {
-      var b = wasmMemory.buffer;
-      var pages = (size - b.byteLength + 65535) / 65536;
+      var oldHeapSize = wasmMemory.buffer.byteLength;
+      var pages = ((size - oldHeapSize + 65535) / 65536) | 0;
       try {
         // round size grow request up to wasm page size (fixed 64KB per spec)
         wasmMemory.grow(pages); // .grow() takes a delta compared to the previous size
         updateMemoryViews();
         return 1 /*success*/;
       } catch(e) {
-        err(`growMemory: Attempted to grow heap from ${b.byteLength} bytes to ${size} bytes, but got error: ${e}`);
+        err(`growMemory: Attempted to grow heap from ${oldHeapSize} bytes to ${size} bytes, but got error: ${e}`);
       }
       // implicit 0 return to save code size (caller will cast "undefined" into 0
       // anyhow)
@@ -4360,8 +4146,6 @@ var ASM_CONSTS = {
         return false;
       }
   
-      var alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
-  
       // Loop through potential heap size increases. If we attempt a too eager
       // reservation that fails, cut down on the attempted size and reserve a
       // smaller bump instead. (max 3 times, chosen somewhat arbitrarily)
@@ -4370,7 +4154,7 @@ var ASM_CONSTS = {
         // but limit overreserving (default to capping at +96MB overgrowth at most)
         overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296 );
   
-        var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), 65536));
+        var newSize = Math.min(maxHeapSize, alignMemory(Math.max(requestedSize, overGrownHeapSize), 65536));
   
         var replacement = growMemory(newSize);
         if (replacement) {
@@ -4405,7 +4189,7 @@ var ASM_CONSTS = {
         if (curr < 0) return -1;
         ret += curr;
         if (curr < len) break; // nothing more to read
-        if (typeof offset !== 'undefined') {
+        if (typeof offset != 'undefined') {
           offset += curr;
         }
       }
@@ -4426,21 +4210,16 @@ var ASM_CONSTS = {
   }
 
   
-  var convertI32PairToI53Checked = (lo, hi) => {
-      assert(lo == (lo >>> 0) || lo == (lo|0)); // lo should either be a i32 or a u32
-      assert(hi === (hi|0));                    // hi should be a i32
-      return ((hi + 0x200000) >>> 0 < 0x400001 - !!lo) ? (lo >>> 0) + hi * 4294967296 : NaN;
-    };
-  function _fd_seek(fd,offset_low, offset_high,whence,newOffset) {
-    var offset = convertI32PairToI53Checked(offset_low, offset_high);;
+  function _fd_seek(fd, offset, whence, newOffset) {
+    offset = bigintToI53Checked(offset);
   
-    
+  
   try {
   
       if (isNaN(offset)) return 61;
       var stream = SYSCALLS.getStreamFromFD(fd);
       FS.llseek(stream, offset, whence);
-      (tempI64 = [stream.position>>>0,(tempDouble=stream.position,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)], HEAP32[((newOffset)>>2)] = tempI64[0],HEAP32[(((newOffset)+(4))>>2)] = tempI64[1]);
+      HEAP64[((newOffset)>>3)] = BigInt(stream.position);
       if (stream.getdents && offset === 0 && whence === 0) stream.getdents = null; // reset readdir state
       return 0;
     } catch (e) {
@@ -4460,7 +4239,11 @@ var ASM_CONSTS = {
         var curr = FS.write(stream, HEAP8, ptr, len, offset);
         if (curr < 0) return -1;
         ret += curr;
-        if (typeof offset !== 'undefined') {
+        if (curr < len) {
+          // No more space to write.
+          break;
+        }
+        if (typeof offset != 'undefined') {
           offset += curr;
         }
       }
@@ -4482,1517 +4265,624 @@ var ASM_CONSTS = {
 
   
   
-  /** @suppress {duplicate } */
   var stringToNewUTF8 = (str) => {
       var size = lengthBytesUTF8(str) + 1;
       var ret = _malloc(size);
       if (ret) stringToUTF8(str, ret, size);
       return ret;
     };
-  var allocateUTF8 = stringToNewUTF8;
+  
+  var allocateUTF8 = (...args) => stringToNewUTF8(...args);
 
   var AsciiToString = (ptr) => {
       var str = '';
       while (1) {
-        var ch = HEAPU8[((ptr++)>>0)];
+        var ch = HEAPU8[ptr++];
         if (!ch) return str;
         str += String.fromCharCode(ch);
       }
     };
 
 
-  var FSNode = /** @constructor */ function(parent, name, mode, rdev) {
-    if (!parent) {
-      parent = this;  // root node sets parent to itself
+  var handleException = (e) => {
+      // Certain exception types we do not treat as errors since they are used for
+      // internal control flow.
+      // 1. ExitStatus, which is thrown by exit()
+      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
+      //    that wish to return to JS event loop.
+      if (e instanceof ExitStatus || e == 'unwind') {
+        return EXITSTATUS;
+      }
+      checkStackCookie();
+      if (e instanceof WebAssembly.RuntimeError) {
+        if (_emscripten_stack_get_current() <= 0) {
+          err('Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to 65536)');
+        }
+      }
+      quit_(1, e);
+    };
+  
+  
+  
+  var maybeExit = () => {
+      if (!keepRuntimeAlive()) {
+        try {
+          _exit(EXITSTATUS);
+        } catch (e) {
+          handleException(e);
+        }
+      }
+    };
+  var callUserCallback = (func) => {
+      if (ABORT) {
+        err('user callback triggered after runtime exited or application aborted.  Ignoring.');
+        return;
+      }
+      try {
+        func();
+        maybeExit();
+      } catch (e) {
+        handleException(e);
+      }
+    };
+  
+  function getFullscreenElement() {
+      return document.fullscreenElement || document.mozFullScreenElement ||
+             document.webkitFullscreenElement || document.webkitCurrentFullScreenElement ||
+             document.msFullscreenElement;
     }
-    this.parent = parent;
-    this.mount = parent.mount;
-    this.mounted = null;
-    this.id = FS.nextInode++;
-    this.name = name;
-    this.mode = mode;
-    this.node_ops = {};
-    this.stream_ops = {};
-    this.rdev = rdev;
+  
+  /** @param {number=} timeout */
+  var safeSetTimeout = (func, timeout) => {
+      
+      return setTimeout(() => {
+        
+        callUserCallback(func);
+      }, timeout);
+    };
+  
+  
+  
+  var Browser = {
+  useWebGL:false,
+  isFullscreen:false,
+  pointerLock:false,
+  moduleContextCreatedCallbacks:[],
+  workers:[],
+  preloadedImages:{
+  },
+  preloadedAudios:{
+  },
+  getCanvas:() => Module['canvas'],
+  init() {
+        if (Browser.initted) return;
+        Browser.initted = true;
+  
+        // Support for plugins that can process preloaded files. You can add more of these to
+        // your app by creating and appending to preloadPlugins.
+        //
+        // Each plugin is asked if it can handle a file based on the file's name. If it can,
+        // it is given the file's raw data. When it is done, it calls a callback with the file's
+        // (possibly modified) data. For example, a plugin might decompress a file, or it
+        // might create some side data structure for use later (like an Image element, etc.).
+  
+        var imagePlugin = {};
+        imagePlugin['canHandle'] = function imagePlugin_canHandle(name) {
+          return !Module['noImageDecoding'] && /\.(jpg|jpeg|png|bmp|webp)$/i.test(name);
+        };
+        imagePlugin['handle'] = async function imagePlugin_handle(byteArray, name) {
+          var b = new Blob([byteArray], { type: Browser.getMimetype(name) });
+          if (b.size !== byteArray.length) { // Safari bug #118630
+            // Safari's Blob can only take an ArrayBuffer
+            b = new Blob([(new Uint8Array(byteArray)).buffer], { type: Browser.getMimetype(name) });
+          }
+          var url = URL.createObjectURL(b);
+          return new Promise((resolve, reject) => {
+            var img = new Image();
+            img.onload = () => {
+              assert(img.complete, `Image ${name} could not be decoded`);
+              var canvas = /** @type {!HTMLCanvasElement} */ (document.createElement('canvas'));
+              canvas.width = img.width;
+              canvas.height = img.height;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              Browser.preloadedImages[name] = canvas;
+              URL.revokeObjectURL(url);
+              resolve(byteArray);
+            };
+            img.onerror = (event) => {
+              err(`Image ${url} could not be decoded`);
+              reject();
+            };
+            img.src = url;
+          });
+        };
+        preloadPlugins.push(imagePlugin);
+  
+        var audioPlugin = {};
+        audioPlugin['canHandle'] = function audioPlugin_canHandle(name) {
+          return !Module['noAudioDecoding'] && name.slice(-4) in { '.ogg': 1, '.wav': 1, '.mp3': 1 };
+        };
+        audioPlugin['handle'] = async function audioPlugin_handle(byteArray, name) {
+          return new Promise((resolve, reject) => {
+            var done = false;
+            function finish(audio) {
+              if (done) return;
+              done = true;
+              Browser.preloadedAudios[name] = audio;
+              resolve(byteArray);
+            }
+            var b = new Blob([byteArray], { type: Browser.getMimetype(name) });
+            var url = URL.createObjectURL(b); // XXX we never revoke this!
+            var audio = new Audio();
+            audio.addEventListener('canplaythrough', () => finish(audio), false); // use addEventListener due to chromium bug 124926
+            audio.onerror = function audio_onerror(event) {
+              if (done) return;
+              err(`warning: browser could not fully decode audio ${name}, trying slower base64 approach`);
+              function encode64(data) {
+                var BASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+                var PAD = '=';
+                var ret = '';
+                var leftchar = 0;
+                var leftbits = 0;
+                for (var i = 0; i < data.length; i++) {
+                  leftchar = (leftchar << 8) | data[i];
+                  leftbits += 8;
+                  while (leftbits >= 6) {
+                    var curr = (leftchar >> (leftbits-6)) & 0x3f;
+                    leftbits -= 6;
+                    ret += BASE[curr];
+                  }
+                }
+                if (leftbits == 2) {
+                  ret += BASE[(leftchar&3) << 4];
+                  ret += PAD + PAD;
+                } else if (leftbits == 4) {
+                  ret += BASE[(leftchar&0xf) << 2];
+                  ret += PAD;
+                }
+                return ret;
+              }
+              audio.src = 'data:audio/x-' + name.slice(-3) + ';base64,' + encode64(byteArray);
+              finish(audio); // we don't wait for confirmation this worked - but it's worth trying
+            };
+            audio.src = url;
+            // workaround for chrome bug 124926 - we do not always get oncanplaythrough or onerror
+            safeSetTimeout(() => {
+              finish(audio); // try to use it even though it is not necessarily ready to play
+            }, 10000);
+          });
+        };
+        preloadPlugins.push(audioPlugin);
+  
+        // Canvas event setup
+  
+        function pointerLockChange() {
+          var canvas = Browser.getCanvas();
+          Browser.pointerLock = document.pointerLockElement === canvas;
+        }
+        var canvas = Browser.getCanvas();
+        if (canvas) {
+          // forced aspect ratio can be enabled by defining 'forcedAspectRatio' on Module
+          // Module['forcedAspectRatio'] = 4 / 3;
+  
+          document.addEventListener('pointerlockchange', pointerLockChange, false);
+  
+          if (Module['elementPointerLock']) {
+            canvas.addEventListener("click", (ev) => {
+              if (!Browser.pointerLock && Browser.getCanvas().requestPointerLock) {
+                Browser.getCanvas().requestPointerLock();
+                ev.preventDefault();
+              }
+            }, false);
+          }
+        }
+      },
+  createContext(/** @type {HTMLCanvasElement} */ canvas, useWebGL, setInModule, webGLContextAttributes) {
+        if (useWebGL && Module['ctx'] && canvas == Browser.getCanvas()) return Module['ctx']; // no need to recreate GL context if it's already been created for this canvas.
+  
+        var ctx;
+        var contextHandle;
+        if (useWebGL) {
+          // For GLES2/desktop GL compatibility, adjust a few defaults to be different to WebGL defaults, so that they align better with the desktop defaults.
+          var contextAttributes = {
+            antialias: false,
+            alpha: false,
+            majorVersion: 1,
+          };
+  
+          if (webGLContextAttributes) {
+            for (var attribute in webGLContextAttributes) {
+              contextAttributes[attribute] = webGLContextAttributes[attribute];
+            }
+          }
+  
+          // This check of existence of GL is here to satisfy Closure compiler, which yells if variable GL is referenced below but GL object is not
+          // actually compiled in because application is not doing any GL operations. TODO: Ideally if GL is not being used, this function
+          // Browser.createContext() should not even be emitted.
+          if (typeof GL != 'undefined') {
+            contextHandle = GL.createContext(canvas, contextAttributes);
+            if (contextHandle) {
+              ctx = GL.getContext(contextHandle).GLctx;
+            }
+          }
+        } else {
+          ctx = canvas.getContext('2d');
+        }
+  
+        if (!ctx) return null;
+  
+        if (setInModule) {
+          if (!useWebGL) assert(typeof GLctx == 'undefined', 'cannot set in module if GLctx is used, but we are a non-GL context that would replace it');
+          Module['ctx'] = ctx;
+          if (useWebGL) GL.makeContextCurrent(contextHandle);
+          Browser.useWebGL = useWebGL;
+          Browser.moduleContextCreatedCallbacks.forEach((callback) => callback());
+          Browser.init();
+        }
+        return ctx;
+      },
+  fullscreenHandlersInstalled:false,
+  lockPointer:undefined,
+  resizeCanvas:undefined,
+  requestFullscreen(lockPointer, resizeCanvas) {
+        Browser.lockPointer = lockPointer;
+        Browser.resizeCanvas = resizeCanvas;
+        if (typeof Browser.lockPointer == 'undefined') Browser.lockPointer = true;
+        if (typeof Browser.resizeCanvas == 'undefined') Browser.resizeCanvas = false;
+  
+        var canvas = Browser.getCanvas();
+        function fullscreenChange() {
+          Browser.isFullscreen = false;
+          var canvasContainer = canvas.parentNode;
+          if (getFullscreenElement() === canvasContainer) {
+            canvas.exitFullscreen = Browser.exitFullscreen;
+            if (Browser.lockPointer) canvas.requestPointerLock();
+            Browser.isFullscreen = true;
+            if (Browser.resizeCanvas) {
+              Browser.setFullscreenCanvasSize();
+            } else {
+              Browser.updateCanvasDimensions(canvas);
+            }
+          } else {
+            // remove the full screen specific parent of the canvas again to restore the HTML structure from before going full screen
+            canvasContainer.parentNode.insertBefore(canvas, canvasContainer);
+            canvasContainer.parentNode.removeChild(canvasContainer);
+  
+            if (Browser.resizeCanvas) {
+              Browser.setWindowedCanvasSize();
+            } else {
+              Browser.updateCanvasDimensions(canvas);
+            }
+          }
+          Module['onFullScreen']?.(Browser.isFullscreen);
+          Module['onFullscreen']?.(Browser.isFullscreen);
+        }
+  
+        if (!Browser.fullscreenHandlersInstalled) {
+          Browser.fullscreenHandlersInstalled = true;
+          document.addEventListener('fullscreenchange', fullscreenChange, false);
+          document.addEventListener('mozfullscreenchange', fullscreenChange, false);
+          document.addEventListener('webkitfullscreenchange', fullscreenChange, false);
+          document.addEventListener('MSFullscreenChange', fullscreenChange, false);
+        }
+  
+        // create a new parent to ensure the canvas has no siblings. this allows browsers to optimize full screen performance when its parent is the full screen root
+        var canvasContainer = document.createElement("div");
+        canvas.parentNode.insertBefore(canvasContainer, canvas);
+        canvasContainer.appendChild(canvas);
+  
+        // use parent of canvas as full screen root to allow aspect ratio correction (Firefox stretches the root to screen size)
+        canvasContainer.requestFullscreen = canvasContainer['requestFullscreen'] ||
+                                            canvasContainer['mozRequestFullScreen'] ||
+                                            canvasContainer['msRequestFullscreen'] ||
+                                           (canvasContainer['webkitRequestFullscreen'] ? () => canvasContainer['webkitRequestFullscreen'](Element['ALLOW_KEYBOARD_INPUT']) : null) ||
+                                           (canvasContainer['webkitRequestFullScreen'] ? () => canvasContainer['webkitRequestFullScreen'](Element['ALLOW_KEYBOARD_INPUT']) : null);
+  
+        canvasContainer.requestFullscreen();
+      },
+  requestFullScreen() {
+        abort('Module.requestFullScreen has been replaced by Module.requestFullscreen (without a capital S)');
+      },
+  exitFullscreen() {
+        // This is workaround for chrome. Trying to exit from fullscreen
+        // not in fullscreen state will cause "TypeError: Document not active"
+        // in chrome. See https://github.com/emscripten-core/emscripten/pull/8236
+        if (!Browser.isFullscreen) {
+          return false;
+        }
+  
+        var CFS = document['exitFullscreen'] ||
+                  document['cancelFullScreen'] ||
+                  document['mozCancelFullScreen'] ||
+                  document['msExitFullscreen'] ||
+                  document['webkitCancelFullScreen'] ||
+            (() => {});
+        CFS.apply(document, []);
+        return true;
+      },
+  safeSetTimeout(func, timeout) {
+        // Legacy function, this is used by the SDL2 port so we need to keep it
+        // around at least until that is updated.
+        // See https://github.com/libsdl-org/SDL/pull/6304
+        return safeSetTimeout(func, timeout);
+      },
+  getMimetype(name) {
+        return {
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'bmp': 'image/bmp',
+          'ogg': 'audio/ogg',
+          'wav': 'audio/wav',
+          'mp3': 'audio/mpeg'
+        }[name.slice(name.lastIndexOf('.')+1)];
+      },
+  getUserMedia(func) {
+        window.getUserMedia ||= navigator['getUserMedia'] ||
+                                navigator['mozGetUserMedia'];
+        window.getUserMedia(func);
+      },
+  getMovementX(event) {
+        return event['movementX'] ||
+               event['mozMovementX'] ||
+               event['webkitMovementX'] ||
+               0;
+      },
+  getMovementY(event) {
+        return event['movementY'] ||
+               event['mozMovementY'] ||
+               event['webkitMovementY'] ||
+               0;
+      },
+  getMouseWheelDelta(event) {
+        var delta = 0;
+        switch (event.type) {
+          case 'DOMMouseScroll':
+            // 3 lines make up a step
+            delta = event.detail / 3;
+            break;
+          case 'mousewheel':
+            // 120 units make up a step
+            delta = event.wheelDelta / 120;
+            break;
+          case 'wheel':
+            delta = event.deltaY
+            switch (event.deltaMode) {
+              case 0:
+                // DOM_DELTA_PIXEL: 100 pixels make up a step
+                delta /= 100;
+                break;
+              case 1:
+                // DOM_DELTA_LINE: 3 lines make up a step
+                delta /= 3;
+                break;
+              case 2:
+                // DOM_DELTA_PAGE: A page makes up 80 steps
+                delta *= 80;
+                break;
+              default:
+                abort('unrecognized mouse wheel delta mode: ' + event.deltaMode);
+            }
+            break;
+          default:
+            abort('unrecognized mouse wheel event: ' + event.type);
+        }
+        return delta;
+      },
+  mouseX:0,
+  mouseY:0,
+  mouseMovementX:0,
+  mouseMovementY:0,
+  touches:{
+  },
+  lastTouches:{
+  },
+  calculateMouseCoords(pageX, pageY) {
+        // Calculate the movement based on the changes
+        // in the coordinates.
+        var canvas = Browser.getCanvas();
+        var rect = canvas.getBoundingClientRect();
+  
+        // Neither .scrollX or .pageXOffset are defined in a spec, but
+        // we prefer .scrollX because it is currently in a spec draft.
+        // (see: http://www.w3.org/TR/2013/WD-cssom-view-20131217/)
+        var scrollX = ((typeof window.scrollX != 'undefined') ? window.scrollX : window.pageXOffset);
+        var scrollY = ((typeof window.scrollY != 'undefined') ? window.scrollY : window.pageYOffset);
+        // If this assert lands, it's likely because the browser doesn't support scrollX or pageXOffset
+        // and we have no viable fallback.
+        assert((typeof scrollX != 'undefined') && (typeof scrollY != 'undefined'), 'Unable to retrieve scroll position, mouse positions likely broken.');
+        var adjustedX = pageX - (scrollX + rect.left);
+        var adjustedY = pageY - (scrollY + rect.top);
+  
+        // the canvas might be CSS-scaled compared to its backbuffer;
+        // SDL-using content will want mouse coordinates in terms
+        // of backbuffer units.
+        adjustedX = adjustedX * (canvas.width / rect.width);
+        adjustedY = adjustedY * (canvas.height / rect.height);
+  
+        return { x: adjustedX, y: adjustedY };
+      },
+  setMouseCoords(pageX, pageY) {
+        const {x, y} = Browser.calculateMouseCoords(pageX, pageY);
+        Browser.mouseMovementX = x - Browser.mouseX;
+        Browser.mouseMovementY = y - Browser.mouseY;
+        Browser.mouseX = x;
+        Browser.mouseY = y;
+      },
+  calculateMouseEvent(event) { // event should be mousemove, mousedown or mouseup
+        if (Browser.pointerLock) {
+          // When the pointer is locked, calculate the coordinates
+          // based on the movement of the mouse.
+          // Workaround for Firefox bug 764498
+          if (event.type != 'mousemove' &&
+              ('mozMovementX' in event)) {
+            Browser.mouseMovementX = Browser.mouseMovementY = 0;
+          } else {
+            Browser.mouseMovementX = Browser.getMovementX(event);
+            Browser.mouseMovementY = Browser.getMovementY(event);
+          }
+  
+          // add the mouse delta to the current absolute mouse position
+          Browser.mouseX += Browser.mouseMovementX;
+          Browser.mouseY += Browser.mouseMovementY;
+        } else {
+          if (event.type === 'touchstart' || event.type === 'touchend' || event.type === 'touchmove') {
+            var touch = event.touch;
+            if (touch === undefined) {
+              return; // the "touch" property is only defined in SDL
+  
+            }
+            var coords = Browser.calculateMouseCoords(touch.pageX, touch.pageY);
+  
+            if (event.type === 'touchstart') {
+              Browser.lastTouches[touch.identifier] = coords;
+              Browser.touches[touch.identifier] = coords;
+            } else if (event.type === 'touchend' || event.type === 'touchmove') {
+              var last = Browser.touches[touch.identifier];
+              last ||= coords;
+              Browser.lastTouches[touch.identifier] = last;
+              Browser.touches[touch.identifier] = coords;
+            }
+            return;
+          }
+  
+          Browser.setMouseCoords(event.pageX, event.pageY);
+        }
+      },
+  resizeListeners:[],
+  updateResizeListeners() {
+        var canvas = Browser.getCanvas();
+        Browser.resizeListeners.forEach((listener) => listener(canvas.width, canvas.height));
+      },
+  setCanvasSize(width, height, noUpdates) {
+        var canvas = Browser.getCanvas();
+        Browser.updateCanvasDimensions(canvas, width, height);
+        if (!noUpdates) Browser.updateResizeListeners();
+      },
+  windowedWidth:0,
+  windowedHeight:0,
+  setFullscreenCanvasSize() {
+        // check if SDL is available
+        if (typeof SDL != "undefined") {
+          var flags = HEAPU32[((SDL.screen)>>2)];
+          flags = flags | 0x00800000; // set SDL_FULLSCREEN flag
+          HEAP32[((SDL.screen)>>2)] = flags;
+        }
+        Browser.updateCanvasDimensions(Browser.getCanvas());
+        Browser.updateResizeListeners();
+      },
+  setWindowedCanvasSize() {
+        // check if SDL is available
+        if (typeof SDL != "undefined") {
+          var flags = HEAPU32[((SDL.screen)>>2)];
+          flags = flags & ~0x00800000; // clear SDL_FULLSCREEN flag
+          HEAP32[((SDL.screen)>>2)] = flags;
+        }
+        Browser.updateCanvasDimensions(Browser.getCanvas());
+        Browser.updateResizeListeners();
+      },
+  updateCanvasDimensions(canvas, wNative, hNative) {
+        if (wNative && hNative) {
+          canvas.widthNative = wNative;
+          canvas.heightNative = hNative;
+        } else {
+          wNative = canvas.widthNative;
+          hNative = canvas.heightNative;
+        }
+        var w = wNative;
+        var h = hNative;
+        if (Module['forcedAspectRatio'] > 0) {
+          if (w/h < Module['forcedAspectRatio']) {
+            w = Math.round(h * Module['forcedAspectRatio']);
+          } else {
+            h = Math.round(w / Module['forcedAspectRatio']);
+          }
+        }
+        if ((getFullscreenElement() === canvas.parentNode) && (typeof screen != 'undefined')) {
+           var factor = Math.min(screen.width / w, screen.height / h);
+           w = Math.round(w * factor);
+           h = Math.round(h * factor);
+        }
+        if (Browser.resizeCanvas) {
+          if (canvas.width  != w) canvas.width  = w;
+          if (canvas.height != h) canvas.height = h;
+          if (typeof canvas.style != 'undefined') {
+            canvas.style.removeProperty( "width");
+            canvas.style.removeProperty("height");
+          }
+        } else {
+          if (canvas.width  != wNative) canvas.width  = wNative;
+          if (canvas.height != hNative) canvas.height = hNative;
+          if (typeof canvas.style != 'undefined') {
+            if (w != wNative || h != hNative) {
+              canvas.style.setProperty( "width", w + "px", "important");
+              canvas.style.setProperty("height", h + "px", "important");
+            } else {
+              canvas.style.removeProperty( "width");
+              canvas.style.removeProperty("height");
+            }
+          }
+        }
+      },
   };
-  var readMode = 292/*292*/ | 73/*73*/;
-  var writeMode = 146/*146*/;
-  Object.defineProperties(FSNode.prototype, {
-   read: {
-    get: /** @this{FSNode} */function() {
-     return (this.mode & readMode) === readMode;
-    },
-    set: /** @this{FSNode} */function(val) {
-     val ? this.mode |= readMode : this.mode &= ~readMode;
-    }
-   },
-   write: {
-    get: /** @this{FSNode} */function() {
-     return (this.mode & writeMode) === writeMode;
-    },
-    set: /** @this{FSNode} */function(val) {
-     val ? this.mode |= writeMode : this.mode &= ~writeMode;
-    }
-   },
-   isFolder: {
-    get: /** @this{FSNode} */function() {
-     return FS.isDir(this.mode);
-    }
-   },
-   isDevice: {
-    get: /** @this{FSNode} */function() {
-     return FS.isChrdev(this.mode);
-    }
-   }
-  });
-  FS.FSNode = FSNode;
+  var requestFullscreen = Browser.requestFullscreen;
+
   FS.createPreloadedFile = FS_createPreloadedFile;
+  FS.preloadFile = FS_preloadFile;
   FS.staticInit();;
-ERRNO_CODES = {
-      'EPERM': 63,
-      'ENOENT': 44,
-      'ESRCH': 71,
-      'EINTR': 27,
-      'EIO': 29,
-      'ENXIO': 60,
-      'E2BIG': 1,
-      'ENOEXEC': 45,
-      'EBADF': 8,
-      'ECHILD': 12,
-      'EAGAIN': 6,
-      'EWOULDBLOCK': 6,
-      'ENOMEM': 48,
-      'EACCES': 2,
-      'EFAULT': 21,
-      'ENOTBLK': 105,
-      'EBUSY': 10,
-      'EEXIST': 20,
-      'EXDEV': 75,
-      'ENODEV': 43,
-      'ENOTDIR': 54,
-      'EISDIR': 31,
-      'EINVAL': 28,
-      'ENFILE': 41,
-      'EMFILE': 33,
-      'ENOTTY': 59,
-      'ETXTBSY': 74,
-      'EFBIG': 22,
-      'ENOSPC': 51,
-      'ESPIPE': 70,
-      'EROFS': 69,
-      'EMLINK': 34,
-      'EPIPE': 64,
-      'EDOM': 18,
-      'ERANGE': 68,
-      'ENOMSG': 49,
-      'EIDRM': 24,
-      'ECHRNG': 106,
-      'EL2NSYNC': 156,
-      'EL3HLT': 107,
-      'EL3RST': 108,
-      'ELNRNG': 109,
-      'EUNATCH': 110,
-      'ENOCSI': 111,
-      'EL2HLT': 112,
-      'EDEADLK': 16,
-      'ENOLCK': 46,
-      'EBADE': 113,
-      'EBADR': 114,
-      'EXFULL': 115,
-      'ENOANO': 104,
-      'EBADRQC': 103,
-      'EBADSLT': 102,
-      'EDEADLOCK': 16,
-      'EBFONT': 101,
-      'ENOSTR': 100,
-      'ENODATA': 116,
-      'ETIME': 117,
-      'ENOSR': 118,
-      'ENONET': 119,
-      'ENOPKG': 120,
-      'EREMOTE': 121,
-      'ENOLINK': 47,
-      'EADV': 122,
-      'ESRMNT': 123,
-      'ECOMM': 124,
-      'EPROTO': 65,
-      'EMULTIHOP': 36,
-      'EDOTDOT': 125,
-      'EBADMSG': 9,
-      'ENOTUNIQ': 126,
-      'EBADFD': 127,
-      'EREMCHG': 128,
-      'ELIBACC': 129,
-      'ELIBBAD': 130,
-      'ELIBSCN': 131,
-      'ELIBMAX': 132,
-      'ELIBEXEC': 133,
-      'ENOSYS': 52,
-      'ENOTEMPTY': 55,
-      'ENAMETOOLONG': 37,
-      'ELOOP': 32,
-      'EOPNOTSUPP': 138,
-      'EPFNOSUPPORT': 139,
-      'ECONNRESET': 15,
-      'ENOBUFS': 42,
-      'EAFNOSUPPORT': 5,
-      'EPROTOTYPE': 67,
-      'ENOTSOCK': 57,
-      'ENOPROTOOPT': 50,
-      'ESHUTDOWN': 140,
-      'ECONNREFUSED': 14,
-      'EADDRINUSE': 3,
-      'ECONNABORTED': 13,
-      'ENETUNREACH': 40,
-      'ENETDOWN': 38,
-      'ETIMEDOUT': 73,
-      'EHOSTDOWN': 142,
-      'EHOSTUNREACH': 23,
-      'EINPROGRESS': 26,
-      'EALREADY': 7,
-      'EDESTADDRREQ': 17,
-      'EMSGSIZE': 35,
-      'EPROTONOSUPPORT': 66,
-      'ESOCKTNOSUPPORT': 137,
-      'EADDRNOTAVAIL': 4,
-      'ENETRESET': 39,
-      'EISCONN': 30,
-      'ENOTCONN': 53,
-      'ETOOMANYREFS': 141,
-      'EUSERS': 136,
-      'EDQUOT': 19,
-      'ESTALE': 72,
-      'ENOTSUP': 138,
-      'ENOMEDIUM': 148,
-      'EILSEQ': 25,
-      'EOVERFLOW': 61,
-      'ECANCELED': 11,
-      'ENOTRECOVERABLE': 56,
-      'EOWNERDEAD': 62,
-      'ESTRPIPE': 135,
-    };;
-function checkIncomingModuleAPI() {
-  ignoredModuleProp('fetchSettings');
+// End JS library code
+
+// include: postlibrary.js
+// This file is included after the automatically-generated JS library code
+// but before the wasm module is created.
+
+{
+
+  // Begin ATMODULES hooks
+  if (Module['noExitRuntime']) noExitRuntime = Module['noExitRuntime'];
+if (Module['preloadPlugins']) preloadPlugins = Module['preloadPlugins'];
+if (Module['print']) out = Module['print'];
+if (Module['printErr']) err = Module['printErr'];
+if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
+  // End ATMODULES hooks
+
+  checkIncomingModuleAPI();
+
+  if (Module['arguments']) arguments_ = Module['arguments'];
+  if (Module['thisProgram']) thisProgram = Module['thisProgram'];
+
+  // Assertions on removed incoming Module JS APIs.
+  assert(typeof Module['memoryInitializerPrefixURL'] == 'undefined', 'Module.memoryInitializerPrefixURL option was removed, use Module.locateFile instead');
+  assert(typeof Module['pthreadMainPrefixURL'] == 'undefined', 'Module.pthreadMainPrefixURL option was removed, use Module.locateFile instead');
+  assert(typeof Module['cdInitializerPrefixURL'] == 'undefined', 'Module.cdInitializerPrefixURL option was removed, use Module.locateFile instead');
+  assert(typeof Module['filePackagePrefixURL'] == 'undefined', 'Module.filePackagePrefixURL option was removed, use Module.locateFile instead');
+  assert(typeof Module['read'] == 'undefined', 'Module.read option was removed');
+  assert(typeof Module['readAsync'] == 'undefined', 'Module.readAsync option was removed (modify readAsync in JS)');
+  assert(typeof Module['readBinary'] == 'undefined', 'Module.readBinary option was removed (modify readBinary in JS)');
+  assert(typeof Module['setWindowTitle'] == 'undefined', 'Module.setWindowTitle option was removed (modify emscripten_set_window_title in JS)');
+  assert(typeof Module['TOTAL_MEMORY'] == 'undefined', 'Module.TOTAL_MEMORY has been renamed Module.INITIAL_MEMORY');
+  assert(typeof Module['ENVIRONMENT'] == 'undefined', 'Module.ENVIRONMENT has been deprecated. To force the environment, use the ENVIRONMENT compile-time option (for example, -sENVIRONMENT=web or -sENVIRONMENT=node)');
+  assert(typeof Module['STACK_SIZE'] == 'undefined', 'STACK_SIZE can no longer be set at runtime.  Use -sSTACK_SIZE at link time')
+  // If memory is defined in wasm, the user can't provide it, or set INITIAL_MEMORY
+  assert(typeof Module['wasmMemory'] == 'undefined', 'Use of `wasmMemory` detected.  Use -sIMPORTED_MEMORY to define wasmMemory externally');
+  assert(typeof Module['INITIAL_MEMORY'] == 'undefined', 'Detected runtime INITIAL_MEMORY setting.  Use -sIMPORTED_MEMORY to define wasmMemory dynamically');
+
+  if (Module['preInit']) {
+    if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
+    while (Module['preInit'].length > 0) {
+      Module['preInit'].shift()();
+    }
+  }
+  consumedModuleProp('preInit');
 }
-var wasmImports = {
-  /** @export */
-  __assert_fail: ___assert_fail,
-  /** @export */
-  __cxa_throw: ___cxa_throw,
-  /** @export */
-  __syscall_fcntl64: ___syscall_fcntl64,
-  /** @export */
-  __syscall_getdents64: ___syscall_getdents64,
-  /** @export */
-  __syscall_ioctl: ___syscall_ioctl,
-  /** @export */
-  __syscall_openat: ___syscall_openat,
-  /** @export */
-  _emscripten_get_now_is_monotonic: __emscripten_get_now_is_monotonic,
-  /** @export */
-  abort: _abort,
-  /** @export */
-  emscripten_asm_const_int: _emscripten_asm_const_int,
-  /** @export */
-  emscripten_date_now: _emscripten_date_now,
-  /** @export */
-  emscripten_force_exit: _emscripten_force_exit,
-  /** @export */
-  emscripten_get_now: _emscripten_get_now,
-  /** @export */
-  emscripten_memcpy_js: _emscripten_memcpy_js,
-  /** @export */
-  emscripten_resize_heap: _emscripten_resize_heap,
-  /** @export */
-  fd_close: _fd_close,
-  /** @export */
-  fd_read: _fd_read,
-  /** @export */
-  fd_seek: _fd_seek,
-  /** @export */
-  fd_write: _fd_write
-};
-var wasmExports = createWasm();
-var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors');
-var _lv_disp_flush_ready = Module['_lv_disp_flush_ready'] = createExportWrapper('lv_disp_flush_ready');
-var _lv_mem_alloc = Module['_lv_mem_alloc'] = createExportWrapper('lv_mem_alloc');
-var _lv_mem_free = Module['_lv_mem_free'] = createExportWrapper('lv_mem_free');
-var _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = createExportWrapper('lvglSetEncoderGroup');
-var _lv_indev_set_group = Module['_lv_indev_set_group'] = createExportWrapper('lv_indev_set_group');
-var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup');
-var _init = Module['_init'] = createExportWrapper('init');
-var _lv_init = Module['_lv_init'] = createExportWrapper('lv_init');
-var _malloc = Module['_malloc'] = createExportWrapper('malloc');
-var _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = createExportWrapper('lv_disp_draw_buf_init');
-var _lv_disp_drv_init = Module['_lv_disp_drv_init'] = createExportWrapper('lv_disp_drv_init');
-var _lv_disp_drv_register = Module['_lv_disp_drv_register'] = createExportWrapper('lv_disp_drv_register');
-var _lv_indev_drv_init = Module['_lv_indev_drv_init'] = createExportWrapper('lv_indev_drv_init');
-var _lv_indev_drv_register = Module['_lv_indev_drv_register'] = createExportWrapper('lv_indev_drv_register');
-var _lv_fs_drv_init = Module['_lv_fs_drv_init'] = createExportWrapper('lv_fs_drv_init');
-var _lv_fs_drv_register = Module['_lv_fs_drv_register'] = createExportWrapper('lv_fs_drv_register');
-var _lv_disp_get_default = Module['_lv_disp_get_default'] = createExportWrapper('lv_disp_get_default');
-var _lv_palette_main = Module['_lv_palette_main'] = createExportWrapper('lv_palette_main');
-var _lv_theme_default_init = Module['_lv_theme_default_init'] = createExportWrapper('lv_theme_default_init');
-var _lv_disp_set_theme = Module['_lv_disp_set_theme'] = createExportWrapper('lv_disp_set_theme');
-var _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop');
-var _lv_timer_handler = Module['_lv_timer_handler'] = createExportWrapper('lv_timer_handler');
-var _getSyncedBuffer = Module['_getSyncedBuffer'] = createExportWrapper('getSyncedBuffer');
-var _isRTL = Module['_isRTL'] = createExportWrapper('isRTL');
-var _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent');
-var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent');
-var _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed');
-var _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = createExportWrapper('lv_obj_get_style_prop');
-var _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = createExportWrapper('lv_obj_set_local_style_prop');
-var _lv_event_get_code = Module['_lv_event_get_code'] = createExportWrapper('lv_event_get_code');
-var _lv_event_get_target = Module['_lv_event_get_target'] = createExportWrapper('lv_event_get_target');
-var _lv_obj_has_state = Module['_lv_obj_has_state'] = createExportWrapper('lv_obj_has_state');
-var __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWrapper('_assignBooleanProperty');
-var _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = createExportWrapper('lv_event_get_draw_part_dsc');
-var __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty');
-var __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty');
-var _lv_obj_add_state = Module['_lv_obj_add_state'] = createExportWrapper('lv_obj_add_state');
-var _lv_obj_clear_state = Module['_lv_obj_clear_state'] = createExportWrapper('lv_obj_clear_state');
-var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag');
-var _lv_obj_add_flag = Module['_lv_obj_add_flag'] = createExportWrapper('lv_obj_add_flag');
-var _lv_obj_clear_flag = Module['_lv_obj_clear_flag'] = createExportWrapper('lv_obj_clear_flag');
-var _stopScript = Module['_stopScript'] = createExportWrapper('stopScript');
-var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger');
-var _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState');
-var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter');
-var _setObjectIndex = Module['_setObjectIndex'] = createExportWrapper('setObjectIndex');
-var _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = createExportWrapper('getLvglObjectFromIndex');
-var _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = createExportWrapper('lv_group_remove_all_objs');
-var _lv_group_add_obj = Module['_lv_group_add_obj'] = createExportWrapper('lv_group_add_obj');
-var _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup');
-var _lv_group_create = Module['_lv_group_create'] = createExportWrapper('lv_group_create');
-var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler');
-var _lv_obj_add_event_cb = Module['_lv_obj_add_event_cb'] = createExportWrapper('lv_obj_add_event_cb');
-var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject');
-var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = createExportWrapper('lvglGroupRemoveObjectsForScreen');
-var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler');
-var _lv_event_get_user_data = Module['_lv_event_get_user_data'] = createExportWrapper('lv_event_get_user_data');
-var _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen');
-var _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create');
-var _lv_obj_set_pos = Module['_lv_obj_set_pos'] = createExportWrapper('lv_obj_set_pos');
-var _lv_obj_set_size = Module['_lv_obj_set_size'] = createExportWrapper('lv_obj_set_size');
-var _lv_obj_update_layout = Module['_lv_obj_update_layout'] = createExportWrapper('lv_obj_update_layout');
-var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget');
-var _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad');
-var _lv_scr_load_anim = Module['_lv_scr_load_anim'] = createExportWrapper('lv_scr_load_anim');
-var _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject');
-var _lv_obj_del = Module['_lv_obj_del'] = createExportWrapper('lv_obj_del');
-var _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = createExportWrapper('lv_disp_get_scr_act');
-var _lv_disp_load_scr = Module['_lv_disp_load_scr'] = createExportWrapper('lv_disp_load_scr');
-var _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = createExportWrapper('lvglDeleteObjectIndex');
-var _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = createExportWrapper('lvglDeletePageFlowState');
-var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag');
-var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglObjClearFlag');
-var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag');
-var _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState');
-var _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState');
-var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor');
-var _lv_obj_get_state = Module['_lv_obj_get_state'] = createExportWrapper('lv_obj_get_state');
-var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum');
-var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor');
-var _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = createExportWrapper('lvglObjSetLocalStylePropNum');
-var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = createExportWrapper('lvglObjSetLocalStylePropPtr');
-var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont');
-var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr');
-var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont');
-var _lvglStyleCreate = Module['_lvglStyleCreate'] = createExportWrapper('lvglStyleCreate');
-var _lv_style_init = Module['_lv_style_init'] = createExportWrapper('lv_style_init');
-var _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = createExportWrapper('lvglStyleSetPropColor');
-var _lv_style_set_prop = Module['_lv_style_set_prop'] = createExportWrapper('lv_style_set_prop');
-var _lvglSetStylePropBuiltInFont = Module['_lvglSetStylePropBuiltInFont'] = createExportWrapper('lvglSetStylePropBuiltInFont');
-var _lvglSetStylePropPtr = Module['_lvglSetStylePropPtr'] = createExportWrapper('lvglSetStylePropPtr');
-var _lvglSetStylePropNum = Module['_lvglSetStylePropNum'] = createExportWrapper('lvglSetStylePropNum');
-var _lvglStyleDelete = Module['_lvglStyleDelete'] = createExportWrapper('lvglStyleDelete');
-var _lvglObjAddStyle = Module['_lvglObjAddStyle'] = createExportWrapper('lvglObjAddStyle');
-var _lv_obj_add_style = Module['_lv_obj_add_style'] = createExportWrapper('lv_obj_add_style');
-var _lvglObjRemoveStyle = Module['_lvglObjRemoveStyle'] = createExportWrapper('lvglObjRemoveStyle');
-var _lv_obj_remove_style = Module['_lv_obj_remove_style'] = createExportWrapper('lv_obj_remove_style');
-var _lvglGetObjRelX = Module['_lvglGetObjRelX'] = createExportWrapper('lvglGetObjRelX');
-var _lv_obj_get_parent = Module['_lv_obj_get_parent'] = createExportWrapper('lv_obj_get_parent');
-var _lvglGetObjRelY = Module['_lvglGetObjRelY'] = createExportWrapper('lvglGetObjRelY');
-var _lvglGetObjWidth = Module['_lvglGetObjWidth'] = createExportWrapper('lvglGetObjWidth');
-var _lv_obj_get_width = Module['_lv_obj_get_width'] = createExportWrapper('lv_obj_get_width');
-var _lvglGetObjHeight = Module['_lvglGetObjHeight'] = createExportWrapper('lvglGetObjHeight');
-var _lv_obj_get_height = Module['_lv_obj_get_height'] = createExportWrapper('lv_obj_get_height');
-var _lvglLoadFont = Module['_lvglLoadFont'] = createExportWrapper('lvglLoadFont');
-var _lv_font_load = Module['_lv_font_load'] = createExportWrapper('lv_font_load');
-var _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont');
-var _lv_font_free = Module['_lv_font_free'] = createExportWrapper('lv_font_free');
-var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback');
-var _lvglLedGetColor = Module['_lvglLedGetColor'] = createExportWrapper('lvglLedGetColor');
-var _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = createExportWrapper('lvglMeterIndicatorNeedleLineSetColor');
-var _lv_obj_invalidate = Module['_lv_obj_invalidate'] = createExportWrapper('lv_obj_invalidate');
-var _lvglMeterIndicatorScaleLinesSetColorStart = Module['_lvglMeterIndicatorScaleLinesSetColorStart'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorStart');
-var _lvglMeterIndicatorScaleLinesSetColorEnd = Module['_lvglMeterIndicatorScaleLinesSetColorEnd'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorEnd');
-var _lvglMeterIndicatorArcSetColor = Module['_lvglMeterIndicatorArcSetColor'] = createExportWrapper('lvglMeterIndicatorArcSetColor');
-var _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'] = createExportWrapper('lvglMeterScaleSetMinorTickColor');
-var _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = createExportWrapper('lvglMeterScaleSetMajorTickColor');
-var _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = createExportWrapper('lvglGetIndicator_start_value');
-var _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = createExportWrapper('lvglGetIndicator_end_value');
-var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState');
-var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState');
-var _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = createExportWrapper('lvglUpdateHiddenFlag');
-var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExportWrapper('lvglUpdateClickableFlag');
-var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe');
-var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition');
-var _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline');
-var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode');
-var _lv_obj_set_scrollbar_mode = Module['_lv_obj_set_scrollbar_mode'] = createExportWrapper('lv_obj_set_scrollbar_mode');
-var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir');
-var _lv_obj_set_scroll_dir = Module['_lv_obj_set_scroll_dir'] = createExportWrapper('lv_obj_set_scroll_dir');
-var _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = createExportWrapper('lvglSetScrollSnapX');
-var _lv_obj_set_scroll_snap_x = Module['_lv_obj_set_scroll_snap_x'] = createExportWrapper('lv_obj_set_scroll_snap_x');
-var _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = createExportWrapper('lvglSetScrollSnapY');
-var _lv_obj_set_scroll_snap_y = Module['_lv_obj_set_scroll_snap_y'] = createExportWrapper('lv_obj_set_scroll_snap_y');
-var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints');
-var _lv_line_set_points = Module['_lv_line_set_points'] = createExportWrapper('lv_line_set_points');
-var _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo');
-var _lv_obj_scroll_to = Module['_lv_obj_scroll_to'] = createExportWrapper('lv_obj_scroll_to');
-var _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX');
-var _lv_obj_get_scroll_x = Module['_lv_obj_get_scroll_x'] = createExportWrapper('lv_obj_get_scroll_x');
-var _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY');
-var _lv_obj_get_scroll_y = Module['_lv_obj_get_scroll_y'] = createExportWrapper('lv_obj_get_scroll_y');
-var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate');
-var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = createExportWrapper('lvglDeleteScreenOnUnload');
-var _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTabName');
-var _v8_lv_slider_get_min_value = Module['_v8_lv_slider_get_min_value'] = createExportWrapper('v8_lv_slider_get_min_value');
-var _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = createExportWrapper('lv_bar_get_min_value');
-var _v8_lv_slider_get_max_value = Module['_v8_lv_slider_get_max_value'] = createExportWrapper('v8_lv_slider_get_max_value');
-var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value');
-var _v8_lv_slider_set_range = Module['_v8_lv_slider_set_range'] = createExportWrapper('v8_lv_slider_set_range');
-var _lv_bar_set_range = Module['_lv_bar_set_range'] = createExportWrapper('lv_bar_set_range');
-var _v8_lv_slider_set_mode = Module['_v8_lv_slider_set_mode'] = createExportWrapper('v8_lv_slider_set_mode');
-var _lv_bar_set_mode = Module['_lv_bar_set_mode'] = createExportWrapper('lv_bar_set_mode');
-var _v8_lv_slider_set_value = Module['_v8_lv_slider_set_value'] = createExportWrapper('v8_lv_slider_set_value');
-var _lv_bar_set_value = Module['_lv_bar_set_value'] = createExportWrapper('lv_bar_set_value');
-var _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = createExportWrapper('v8_lv_slider_get_value');
-var _lv_bar_get_value = Module['_lv_bar_get_value'] = createExportWrapper('lv_bar_get_value');
-var _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = createExportWrapper('v8_lv_slider_set_left_value');
-var _lv_bar_set_start_value = Module['_lv_bar_set_start_value'] = createExportWrapper('lv_bar_set_start_value');
-var _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = createExportWrapper('v8_lv_slider_get_left_value');
-var _lv_bar_get_start_value = Module['_lv_bar_get_start_value'] = createExportWrapper('lv_bar_get_start_value');
-var _to_lvgl_color = Module['_to_lvgl_color'] = createExportWrapper('to_lvgl_color');
-var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev');
-var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp');
-var _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del');
-var _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = createExportWrapper('lv_obj_remove_local_style_prop');
-var _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init');
-var _lv_disp_get_hor_res = Module['_lv_disp_get_hor_res'] = createExportWrapper('lv_disp_get_hor_res');
-var _lv_disp_get_ver_res = Module['_lv_disp_get_ver_res'] = createExportWrapper('lv_disp_get_ver_res');
-var _lv_event_send = Module['_lv_event_send'] = createExportWrapper('lv_event_send');
-var _lv_anim_start = Module['_lv_anim_start'] = createExportWrapper('lv_anim_start');
-var _lv_disp_get_layer_top = Module['_lv_disp_get_layer_top'] = createExportWrapper('lv_disp_get_layer_top');
-var _lv_disp_get_layer_sys = Module['_lv_disp_get_layer_sys'] = createExportWrapper('lv_disp_get_layer_sys');
-var _lv_obj_get_child_cnt = Module['_lv_obj_get_child_cnt'] = createExportWrapper('lv_obj_get_child_cnt');
-var _lv_theme_apply = Module['_lv_theme_apply'] = createExportWrapper('lv_theme_apply');
-var _lv_disp_get_theme = Module['_lv_disp_get_theme'] = createExportWrapper('lv_disp_get_theme');
-var _lv_disp_set_bg_color = Module['_lv_disp_set_bg_color'] = createExportWrapper('lv_disp_set_bg_color');
-var _lv_area_set = Module['_lv_area_set'] = createExportWrapper('lv_area_set');
-var _lv_disp_set_bg_image = Module['_lv_disp_set_bg_image'] = createExportWrapper('lv_disp_set_bg_image');
-var _lv_disp_set_bg_opa = Module['_lv_disp_set_bg_opa'] = createExportWrapper('lv_disp_set_bg_opa');
-var _lv_obj_set_x = Module['_lv_obj_set_x'] = createExportWrapper('lv_obj_set_x');
-var _lv_obj_set_y = Module['_lv_obj_set_y'] = createExportWrapper('lv_obj_set_y');
-var _lv_obj_set_style_opa = Module['_lv_obj_set_style_opa'] = createExportWrapper('lv_obj_set_style_opa');
-var _lv_disp_get_inactive_time = Module['_lv_disp_get_inactive_time'] = createExportWrapper('lv_disp_get_inactive_time');
-var _lv_tick_elaps = Module['_lv_tick_elaps'] = createExportWrapper('lv_tick_elaps');
-var _lv_disp_get_next = Module['_lv_disp_get_next'] = createExportWrapper('lv_disp_get_next');
-var _lv_disp_trig_activity = Module['_lv_disp_trig_activity'] = createExportWrapper('lv_disp_trig_activity');
-var _lv_tick_get = Module['_lv_tick_get'] = createExportWrapper('lv_tick_get');
-var _lv_disp_clean_dcache = Module['_lv_disp_clean_dcache'] = createExportWrapper('lv_disp_clean_dcache');
-var _lv_disp_enable_invalidation = Module['_lv_disp_enable_invalidation'] = createExportWrapper('lv_disp_enable_invalidation');
-var _lv_disp_is_invalidation_enabled = Module['_lv_disp_is_invalidation_enabled'] = createExportWrapper('lv_disp_is_invalidation_enabled');
-var _lv_indev_get_act = Module['_lv_indev_get_act'] = createExportWrapper('lv_indev_get_act');
-var _lv_obj_event_base = Module['_lv_obj_event_base'] = createExportWrapper('lv_obj_event_base');
-var _lv_event_get_current_target = Module['_lv_event_get_current_target'] = createExportWrapper('lv_event_get_current_target');
-var _lv_event_get_param = Module['_lv_event_get_param'] = createExportWrapper('lv_event_get_param');
-var _lv_event_stop_bubbling = Module['_lv_event_stop_bubbling'] = createExportWrapper('lv_event_stop_bubbling');
-var _lv_event_stop_processing = Module['_lv_event_stop_processing'] = createExportWrapper('lv_event_stop_processing');
-var _lv_event_register_id = Module['_lv_event_register_id'] = createExportWrapper('lv_event_register_id');
-var _lv_obj_allocate_spec_attr = Module['_lv_obj_allocate_spec_attr'] = createExportWrapper('lv_obj_allocate_spec_attr');
-var _lv_mem_realloc = Module['_lv_mem_realloc'] = createExportWrapper('lv_mem_realloc');
-var _lv_obj_remove_event_cb = Module['_lv_obj_remove_event_cb'] = createExportWrapper('lv_obj_remove_event_cb');
-var _lv_obj_remove_event_cb_with_user_data = Module['_lv_obj_remove_event_cb_with_user_data'] = createExportWrapper('lv_obj_remove_event_cb_with_user_data');
-var _lv_obj_remove_event_dsc = Module['_lv_obj_remove_event_dsc'] = createExportWrapper('lv_obj_remove_event_dsc');
-var _lv_obj_get_event_user_data = Module['_lv_obj_get_event_user_data'] = createExportWrapper('lv_obj_get_event_user_data');
-var _lv_event_get_indev = Module['_lv_event_get_indev'] = createExportWrapper('lv_event_get_indev');
-var _lv_event_get_draw_ctx = Module['_lv_event_get_draw_ctx'] = createExportWrapper('lv_event_get_draw_ctx');
-var _lv_event_get_old_size = Module['_lv_event_get_old_size'] = createExportWrapper('lv_event_get_old_size');
-var _lv_event_get_key = Module['_lv_event_get_key'] = createExportWrapper('lv_event_get_key');
-var _lv_event_get_scroll_anim = Module['_lv_event_get_scroll_anim'] = createExportWrapper('lv_event_get_scroll_anim');
-var _lv_event_set_ext_draw_size = Module['_lv_event_set_ext_draw_size'] = createExportWrapper('lv_event_set_ext_draw_size');
-var _lv_event_get_self_size_info = Module['_lv_event_get_self_size_info'] = createExportWrapper('lv_event_get_self_size_info');
-var _lv_event_get_hit_test_info = Module['_lv_event_get_hit_test_info'] = createExportWrapper('lv_event_get_hit_test_info');
-var _lv_event_get_cover_area = Module['_lv_event_get_cover_area'] = createExportWrapper('lv_event_get_cover_area');
-var _lv_event_set_cover_res = Module['_lv_event_set_cover_res'] = createExportWrapper('lv_event_set_cover_res');
-var _lv_group_del = Module['_lv_group_del'] = createExportWrapper('lv_group_del');
-var _lv_indev_get_next = Module['_lv_indev_get_next'] = createExportWrapper('lv_indev_get_next');
-var _lv_indev_get_type = Module['_lv_indev_get_type'] = createExportWrapper('lv_indev_get_type');
-var _lv_group_set_default = Module['_lv_group_set_default'] = createExportWrapper('lv_group_set_default');
-var _lv_group_get_default = Module['_lv_group_get_default'] = createExportWrapper('lv_group_get_default');
-var _lv_group_remove_obj = Module['_lv_group_remove_obj'] = createExportWrapper('lv_group_remove_obj');
-var _lv_obj_get_group = Module['_lv_obj_get_group'] = createExportWrapper('lv_obj_get_group');
-var _lv_group_swap_obj = Module['_lv_group_swap_obj'] = createExportWrapper('lv_group_swap_obj');
-var _lv_group_focus_obj = Module['_lv_group_focus_obj'] = createExportWrapper('lv_group_focus_obj');
-var _lv_group_get_focused = Module['_lv_group_get_focused'] = createExportWrapper('lv_group_get_focused');
-var _lv_group_set_editing = Module['_lv_group_set_editing'] = createExportWrapper('lv_group_set_editing');
-var _lv_group_focus_next = Module['_lv_group_focus_next'] = createExportWrapper('lv_group_focus_next');
-var _lv_group_focus_prev = Module['_lv_group_focus_prev'] = createExportWrapper('lv_group_focus_prev');
-var _lv_group_focus_freeze = Module['_lv_group_focus_freeze'] = createExportWrapper('lv_group_focus_freeze');
-var _lv_group_send_data = Module['_lv_group_send_data'] = createExportWrapper('lv_group_send_data');
-var _lv_group_set_focus_cb = Module['_lv_group_set_focus_cb'] = createExportWrapper('lv_group_set_focus_cb');
-var _lv_group_set_edge_cb = Module['_lv_group_set_edge_cb'] = createExportWrapper('lv_group_set_edge_cb');
-var _lv_group_set_refocus_policy = Module['_lv_group_set_refocus_policy'] = createExportWrapper('lv_group_set_refocus_policy');
-var _lv_group_set_wrap = Module['_lv_group_set_wrap'] = createExportWrapper('lv_group_set_wrap');
-var _lv_group_get_focus_cb = Module['_lv_group_get_focus_cb'] = createExportWrapper('lv_group_get_focus_cb');
-var _lv_group_get_edge_cb = Module['_lv_group_get_edge_cb'] = createExportWrapper('lv_group_get_edge_cb');
-var _lv_group_get_editing = Module['_lv_group_get_editing'] = createExportWrapper('lv_group_get_editing');
-var _lv_group_get_wrap = Module['_lv_group_get_wrap'] = createExportWrapper('lv_group_get_wrap');
-var _lv_group_get_obj_count = Module['_lv_group_get_obj_count'] = createExportWrapper('lv_group_get_obj_count');
-var _lv_indev_read_timer_cb = Module['_lv_indev_read_timer_cb'] = createExportWrapper('lv_indev_read_timer_cb');
-var _lv_indev_enable = Module['_lv_indev_enable'] = createExportWrapper('lv_indev_enable');
-var _lv_obj_is_editable = Module['_lv_obj_is_editable'] = createExportWrapper('lv_obj_is_editable');
-var _lv_indev_reset = Module['_lv_indev_reset'] = createExportWrapper('lv_indev_reset');
-var _lv_indev_reset_long_press = Module['_lv_indev_reset_long_press'] = createExportWrapper('lv_indev_reset_long_press');
-var _lv_indev_set_cursor = Module['_lv_indev_set_cursor'] = createExportWrapper('lv_indev_set_cursor');
-var _lv_obj_set_parent = Module['_lv_obj_set_parent'] = createExportWrapper('lv_obj_set_parent');
-var _lv_indev_set_button_points = Module['_lv_indev_set_button_points'] = createExportWrapper('lv_indev_set_button_points');
-var _lv_indev_get_point = Module['_lv_indev_get_point'] = createExportWrapper('lv_indev_get_point');
-var _lv_indev_get_gesture_dir = Module['_lv_indev_get_gesture_dir'] = createExportWrapper('lv_indev_get_gesture_dir');
-var _lv_indev_get_key = Module['_lv_indev_get_key'] = createExportWrapper('lv_indev_get_key');
-var _lv_indev_get_scroll_dir = Module['_lv_indev_get_scroll_dir'] = createExportWrapper('lv_indev_get_scroll_dir');
-var _lv_indev_get_scroll_obj = Module['_lv_indev_get_scroll_obj'] = createExportWrapper('lv_indev_get_scroll_obj');
-var _lv_indev_get_vect = Module['_lv_indev_get_vect'] = createExportWrapper('lv_indev_get_vect');
-var _lv_indev_wait_release = Module['_lv_indev_wait_release'] = createExportWrapper('lv_indev_wait_release');
-var _lv_indev_get_obj_act = Module['_lv_indev_get_obj_act'] = createExportWrapper('lv_indev_get_obj_act');
-var _lv_indev_get_read_timer = Module['_lv_indev_get_read_timer'] = createExportWrapper('lv_indev_get_read_timer');
-var _lv_indev_search_obj = Module['_lv_indev_search_obj'] = createExportWrapper('lv_indev_search_obj');
-var _lv_obj_transform_point = Module['_lv_obj_transform_point'] = createExportWrapper('lv_obj_transform_point');
-var _lv_obj_hit_test = Module['_lv_obj_hit_test'] = createExportWrapper('lv_obj_hit_test');
-var _lv_point_transform = Module['_lv_point_transform'] = createExportWrapper('lv_point_transform');
-var _lv_obj_get_scroll_dir = Module['_lv_obj_get_scroll_dir'] = createExportWrapper('lv_obj_get_scroll_dir');
-var _lv_obj_get_scroll_top = Module['_lv_obj_get_scroll_top'] = createExportWrapper('lv_obj_get_scroll_top');
-var _lv_obj_get_scroll_bottom = Module['_lv_obj_get_scroll_bottom'] = createExportWrapper('lv_obj_get_scroll_bottom');
-var _lv_obj_get_scroll_left = Module['_lv_obj_get_scroll_left'] = createExportWrapper('lv_obj_get_scroll_left');
-var _lv_obj_get_scroll_right = Module['_lv_obj_get_scroll_right'] = createExportWrapper('lv_obj_get_scroll_right');
-var _lv_obj_get_scroll_snap_y = Module['_lv_obj_get_scroll_snap_y'] = createExportWrapper('lv_obj_get_scroll_snap_y');
-var _lv_obj_get_scroll_snap_x = Module['_lv_obj_get_scroll_snap_x'] = createExportWrapper('lv_obj_get_scroll_snap_x');
-var _lv_obj_scroll_by = Module['_lv_obj_scroll_by'] = createExportWrapper('lv_obj_scroll_by');
-var _lv_obj_has_flag_any = Module['_lv_obj_has_flag_any'] = createExportWrapper('lv_obj_has_flag_any');
-var _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = createExportWrapper('lv_indev_scroll_throw_predict');
-var _lv_indev_scroll_get_snap_dist = Module['_lv_indev_scroll_get_snap_dist'] = createExportWrapper('lv_indev_scroll_get_snap_dist');
-var _lv_is_initialized = Module['_lv_is_initialized'] = createExportWrapper('lv_is_initialized');
-var _lv_obj_enable_style_refresh = Module['_lv_obj_enable_style_refresh'] = createExportWrapper('lv_obj_enable_style_refresh');
-var _lv_obj_mark_layout_as_dirty = Module['_lv_obj_mark_layout_as_dirty'] = createExportWrapper('lv_obj_mark_layout_as_dirty');
-var _lv_obj_scroll_to_y = Module['_lv_obj_scroll_to_y'] = createExportWrapper('lv_obj_scroll_to_y');
-var _lv_obj_scroll_to_x = Module['_lv_obj_scroll_to_x'] = createExportWrapper('lv_obj_scroll_to_x');
-var _lv_obj_scroll_to_view_recursive = Module['_lv_obj_scroll_to_view_recursive'] = createExportWrapper('lv_obj_scroll_to_view_recursive');
-var _lv_obj_get_scrollbar_mode = Module['_lv_obj_get_scrollbar_mode'] = createExportWrapper('lv_obj_get_scrollbar_mode');
-var _lv_obj_get_scrollbar_area = Module['_lv_obj_get_scrollbar_area'] = createExportWrapper('lv_obj_get_scrollbar_area');
-var _lv_obj_invalidate_area = Module['_lv_obj_invalidate_area'] = createExportWrapper('lv_obj_invalidate_area');
-var _lv_obj_calculate_ext_draw_size = Module['_lv_obj_calculate_ext_draw_size'] = createExportWrapper('lv_obj_calculate_ext_draw_size');
-var _lv_draw_rect_dsc_init = Module['_lv_draw_rect_dsc_init'] = createExportWrapper('lv_draw_rect_dsc_init');
-var _lv_obj_init_draw_rect_dsc = Module['_lv_obj_init_draw_rect_dsc'] = createExportWrapper('lv_obj_init_draw_rect_dsc');
-var _lv_obj_draw_dsc_init = Module['_lv_obj_draw_dsc_init'] = createExportWrapper('lv_obj_draw_dsc_init');
-var _lv_draw_rect = Module['_lv_draw_rect'] = createExportWrapper('lv_draw_rect');
-var _lv_mem_buf_get = Module['_lv_mem_buf_get'] = createExportWrapper('lv_mem_buf_get');
-var _lv_draw_mask_radius_init = Module['_lv_draw_mask_radius_init'] = createExportWrapper('lv_draw_mask_radius_init');
-var _lv_draw_mask_add = Module['_lv_draw_mask_add'] = createExportWrapper('lv_draw_mask_add');
-var _lv_area_get_size = Module['_lv_area_get_size'] = createExportWrapper('lv_area_get_size');
-var _lv_obj_get_style_opa_recursive = Module['_lv_obj_get_style_opa_recursive'] = createExportWrapper('lv_obj_get_style_opa_recursive');
-var _lv_draw_mask_remove_custom = Module['_lv_draw_mask_remove_custom'] = createExportWrapper('lv_draw_mask_remove_custom');
-var _lv_draw_mask_free_param = Module['_lv_draw_mask_free_param'] = createExportWrapper('lv_draw_mask_free_param');
-var _lv_mem_buf_release = Module['_lv_mem_buf_release'] = createExportWrapper('lv_mem_buf_release');
-var _lv_mem_init = Module['_lv_mem_init'] = createExportWrapper('lv_mem_init');
-var _lv_draw_init = Module['_lv_draw_init'] = createExportWrapper('lv_draw_init');
-var _lv_extra_init = Module['_lv_extra_init'] = createExportWrapper('lv_extra_init');
-var _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit');
-var _lv_disp_set_default = Module['_lv_disp_set_default'] = createExportWrapper('lv_disp_set_default');
-var _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit');
-var _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = createExportWrapper('lv_log_register_print_cb');
-var _lv_obj_class_create_obj = Module['_lv_obj_class_create_obj'] = createExportWrapper('lv_obj_class_create_obj');
-var _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = createExportWrapper('lv_obj_class_init_obj');
-var _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = createExportWrapper('lv_obj_is_layout_positioned');
-var _lv_obj_style_get_selector_state = Module['_lv_obj_style_get_selector_state'] = createExportWrapper('lv_obj_style_get_selector_state');
-var _lv_obj_style_get_selector_part = Module['_lv_obj_style_get_selector_part'] = createExportWrapper('lv_obj_style_get_selector_part');
-var _lv_style_prop_get_default = Module['_lv_style_prop_get_default'] = createExportWrapper('lv_style_prop_get_default');
-var _lv_obj_refresh_style = Module['_lv_obj_refresh_style'] = createExportWrapper('lv_obj_refresh_style');
-var _lv_obj_refresh_ext_draw_size = Module['_lv_obj_refresh_ext_draw_size'] = createExportWrapper('lv_obj_refresh_ext_draw_size');
-var _lv_obj_check_type = Module['_lv_obj_check_type'] = createExportWrapper('lv_obj_check_type');
-var _lv_obj_has_class = Module['_lv_obj_has_class'] = createExportWrapper('lv_obj_has_class');
-var _lv_obj_get_class = Module['_lv_obj_get_class'] = createExportWrapper('lv_obj_get_class');
-var _lv_obj_is_valid = Module['_lv_obj_is_valid'] = createExportWrapper('lv_obj_is_valid');
-var _lv_obj_refresh_self_size = Module['_lv_obj_refresh_self_size'] = createExportWrapper('lv_obj_refresh_self_size');
-var _lv_obj_is_group_def = Module['_lv_obj_is_group_def'] = createExportWrapper('lv_obj_is_group_def');
-var _lv_img_src_get_type = Module['_lv_img_src_get_type'] = createExportWrapper('lv_img_src_get_type');
-var _lv_obj_init_draw_label_dsc = Module['_lv_obj_init_draw_label_dsc'] = createExportWrapper('lv_obj_init_draw_label_dsc');
-var _lv_obj_init_draw_img_dsc = Module['_lv_obj_init_draw_img_dsc'] = createExportWrapper('lv_obj_init_draw_img_dsc');
-var _lv_obj_init_draw_line_dsc = Module['_lv_obj_init_draw_line_dsc'] = createExportWrapper('lv_obj_init_draw_line_dsc');
-var _lv_obj_init_draw_arc_dsc = Module['_lv_obj_init_draw_arc_dsc'] = createExportWrapper('lv_obj_init_draw_arc_dsc');
-var _lv_obj_draw_part_check_type = Module['_lv_obj_draw_part_check_type'] = createExportWrapper('lv_obj_draw_part_check_type');
-var _lv_obj_get_local_style_prop = Module['_lv_obj_get_local_style_prop'] = createExportWrapper('lv_obj_get_local_style_prop');
-var _lv_obj_set_style_x = Module['_lv_obj_set_style_x'] = createExportWrapper('lv_obj_set_style_x');
-var _lv_obj_set_style_y = Module['_lv_obj_set_style_y'] = createExportWrapper('lv_obj_set_style_y');
-var _lv_obj_refr_size = Module['_lv_obj_refr_size'] = createExportWrapper('lv_obj_refr_size');
-var _lv_obj_get_content_coords = Module['_lv_obj_get_content_coords'] = createExportWrapper('lv_obj_get_content_coords');
-var _lv_obj_scrollbar_invalidate = Module['_lv_obj_scrollbar_invalidate'] = createExportWrapper('lv_obj_scrollbar_invalidate');
-var _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = createExportWrapper('lv_obj_get_content_width');
-var _lv_clamp_width = Module['_lv_clamp_width'] = createExportWrapper('lv_clamp_width');
-var _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = createExportWrapper('lv_obj_get_content_height');
-var _lv_clamp_height = Module['_lv_clamp_height'] = createExportWrapper('lv_clamp_height');
-var _lv_obj_area_is_visible = Module['_lv_obj_area_is_visible'] = createExportWrapper('lv_obj_area_is_visible');
-var _lv_obj_get_coords = Module['_lv_obj_get_coords'] = createExportWrapper('lv_obj_get_coords');
-var _lv_area_increase = Module['_lv_area_increase'] = createExportWrapper('lv_area_increase');
-var _lv_obj_set_style_width = Module['_lv_obj_set_style_width'] = createExportWrapper('lv_obj_set_style_width');
-var _lv_obj_set_style_height = Module['_lv_obj_set_style_height'] = createExportWrapper('lv_obj_set_style_height');
-var _lv_obj_set_width = Module['_lv_obj_set_width'] = createExportWrapper('lv_obj_set_width');
-var _lv_obj_set_height = Module['_lv_obj_set_height'] = createExportWrapper('lv_obj_set_height');
-var _lv_obj_set_content_width = Module['_lv_obj_set_content_width'] = createExportWrapper('lv_obj_set_content_width');
-var _lv_obj_set_content_height = Module['_lv_obj_set_content_height'] = createExportWrapper('lv_obj_set_content_height');
-var _lv_obj_set_layout = Module['_lv_obj_set_layout'] = createExportWrapper('lv_obj_set_layout');
-var _lv_obj_set_style_layout = Module['_lv_obj_set_style_layout'] = createExportWrapper('lv_obj_set_style_layout');
-var _lv_obj_get_screen = Module['_lv_obj_get_screen'] = createExportWrapper('lv_obj_get_screen');
-var _lv_timer_resume = Module['_lv_timer_resume'] = createExportWrapper('lv_timer_resume');
-var _lv_obj_refr_pos = Module['_lv_obj_refr_pos'] = createExportWrapper('lv_obj_refr_pos');
-var _lv_obj_readjust_scroll = Module['_lv_obj_readjust_scroll'] = createExportWrapper('lv_obj_readjust_scroll');
-var _lv_layout_register = Module['_lv_layout_register'] = createExportWrapper('lv_layout_register');
-var _lv_obj_set_align = Module['_lv_obj_set_align'] = createExportWrapper('lv_obj_set_align');
-var _lv_obj_set_style_align = Module['_lv_obj_set_style_align'] = createExportWrapper('lv_obj_set_style_align');
-var _lv_obj_align = Module['_lv_obj_align'] = createExportWrapper('lv_obj_align');
-var _lv_obj_align_to = Module['_lv_obj_align_to'] = createExportWrapper('lv_obj_align_to');
-var _lv_obj_get_x = Module['_lv_obj_get_x'] = createExportWrapper('lv_obj_get_x');
-var _lv_obj_get_x2 = Module['_lv_obj_get_x2'] = createExportWrapper('lv_obj_get_x2');
-var _lv_obj_get_y = Module['_lv_obj_get_y'] = createExportWrapper('lv_obj_get_y');
-var _lv_obj_get_y2 = Module['_lv_obj_get_y2'] = createExportWrapper('lv_obj_get_y2');
-var _lv_obj_get_x_aligned = Module['_lv_obj_get_x_aligned'] = createExportWrapper('lv_obj_get_x_aligned');
-var _lv_obj_get_y_aligned = Module['_lv_obj_get_y_aligned'] = createExportWrapper('lv_obj_get_y_aligned');
-var _lv_obj_get_self_width = Module['_lv_obj_get_self_width'] = createExportWrapper('lv_obj_get_self_width');
-var _lv_obj_get_self_height = Module['_lv_obj_get_self_height'] = createExportWrapper('lv_obj_get_self_height');
-var _lv_obj_move_to = Module['_lv_obj_move_to'] = createExportWrapper('lv_obj_move_to');
-var _lv_obj_move_children_by = Module['_lv_obj_move_children_by'] = createExportWrapper('lv_obj_move_children_by');
-var _lv_obj_get_transformed_area = Module['_lv_obj_get_transformed_area'] = createExportWrapper('lv_obj_get_transformed_area');
-var _lv_obj_is_visible = Module['_lv_obj_is_visible'] = createExportWrapper('lv_obj_is_visible');
-var _lv_obj_set_ext_click_area = Module['_lv_obj_set_ext_click_area'] = createExportWrapper('lv_obj_set_ext_click_area');
-var _lv_obj_get_click_area = Module['_lv_obj_get_click_area'] = createExportWrapper('lv_obj_get_click_area');
-var _lv_obj_get_scroll_end = Module['_lv_obj_get_scroll_end'] = createExportWrapper('lv_obj_get_scroll_end');
-var _lv_anim_get = Module['_lv_anim_get'] = createExportWrapper('lv_anim_get');
-var _lv_obj_scroll_by_bounded = Module['_lv_obj_scroll_by_bounded'] = createExportWrapper('lv_obj_scroll_by_bounded');
-var _lv_anim_speed_to_time = Module['_lv_anim_speed_to_time'] = createExportWrapper('lv_anim_speed_to_time');
-var _lv_anim_path_ease_out = Module['_lv_anim_path_ease_out'] = createExportWrapper('lv_anim_path_ease_out');
-var _lv_obj_scroll_to_view = Module['_lv_obj_scroll_to_view'] = createExportWrapper('lv_obj_scroll_to_view');
-var _lv_obj_is_scrolling = Module['_lv_obj_is_scrolling'] = createExportWrapper('lv_obj_is_scrolling');
-var _lv_obj_update_snap = Module['_lv_obj_update_snap'] = createExportWrapper('lv_obj_update_snap');
-var _lv_disp_get_dpi = Module['_lv_disp_get_dpi'] = createExportWrapper('lv_disp_get_dpi');
-var _lv_style_remove_prop = Module['_lv_style_remove_prop'] = createExportWrapper('lv_style_remove_prop');
-var _lv_style_reset = Module['_lv_style_reset'] = createExportWrapper('lv_style_reset');
-var _lv_obj_report_style_change = Module['_lv_obj_report_style_change'] = createExportWrapper('lv_obj_report_style_change');
-var _lv_style_get_prop = Module['_lv_style_get_prop'] = createExportWrapper('lv_style_get_prop');
-var _lv_obj_set_local_style_prop_meta = Module['_lv_obj_set_local_style_prop_meta'] = createExportWrapper('lv_obj_set_local_style_prop_meta');
-var _lv_style_set_prop_meta = Module['_lv_style_set_prop_meta'] = createExportWrapper('lv_style_set_prop_meta');
-var _lv_style_is_empty = Module['_lv_style_is_empty'] = createExportWrapper('lv_style_is_empty');
-var _lv_obj_fade_in = Module['_lv_obj_fade_in'] = createExportWrapper('lv_obj_fade_in');
-var _lv_obj_fade_out = Module['_lv_obj_fade_out'] = createExportWrapper('lv_obj_fade_out');
-var _lv_obj_calculate_style_text_align = Module['_lv_obj_calculate_style_text_align'] = createExportWrapper('lv_obj_calculate_style_text_align');
-var _lv_bidi_calculate_align = Module['_lv_bidi_calculate_align'] = createExportWrapper('lv_bidi_calculate_align');
-var _lv_obj_set_style_min_width = Module['_lv_obj_set_style_min_width'] = createExportWrapper('lv_obj_set_style_min_width');
-var _lv_obj_set_style_max_width = Module['_lv_obj_set_style_max_width'] = createExportWrapper('lv_obj_set_style_max_width');
-var _lv_obj_set_style_min_height = Module['_lv_obj_set_style_min_height'] = createExportWrapper('lv_obj_set_style_min_height');
-var _lv_obj_set_style_max_height = Module['_lv_obj_set_style_max_height'] = createExportWrapper('lv_obj_set_style_max_height');
-var _lv_obj_set_style_transform_width = Module['_lv_obj_set_style_transform_width'] = createExportWrapper('lv_obj_set_style_transform_width');
-var _lv_obj_set_style_transform_height = Module['_lv_obj_set_style_transform_height'] = createExportWrapper('lv_obj_set_style_transform_height');
-var _lv_obj_set_style_translate_x = Module['_lv_obj_set_style_translate_x'] = createExportWrapper('lv_obj_set_style_translate_x');
-var _lv_obj_set_style_translate_y = Module['_lv_obj_set_style_translate_y'] = createExportWrapper('lv_obj_set_style_translate_y');
-var _lv_obj_set_style_transform_zoom = Module['_lv_obj_set_style_transform_zoom'] = createExportWrapper('lv_obj_set_style_transform_zoom');
-var _lv_obj_set_style_transform_angle = Module['_lv_obj_set_style_transform_angle'] = createExportWrapper('lv_obj_set_style_transform_angle');
-var _lv_obj_set_style_transform_pivot_x = Module['_lv_obj_set_style_transform_pivot_x'] = createExportWrapper('lv_obj_set_style_transform_pivot_x');
-var _lv_obj_set_style_transform_pivot_y = Module['_lv_obj_set_style_transform_pivot_y'] = createExportWrapper('lv_obj_set_style_transform_pivot_y');
-var _lv_obj_set_style_pad_top = Module['_lv_obj_set_style_pad_top'] = createExportWrapper('lv_obj_set_style_pad_top');
-var _lv_obj_set_style_pad_bottom = Module['_lv_obj_set_style_pad_bottom'] = createExportWrapper('lv_obj_set_style_pad_bottom');
-var _lv_obj_set_style_pad_left = Module['_lv_obj_set_style_pad_left'] = createExportWrapper('lv_obj_set_style_pad_left');
-var _lv_obj_set_style_pad_right = Module['_lv_obj_set_style_pad_right'] = createExportWrapper('lv_obj_set_style_pad_right');
-var _lv_obj_set_style_pad_row = Module['_lv_obj_set_style_pad_row'] = createExportWrapper('lv_obj_set_style_pad_row');
-var _lv_obj_set_style_pad_column = Module['_lv_obj_set_style_pad_column'] = createExportWrapper('lv_obj_set_style_pad_column');
-var _lv_obj_set_style_bg_color = Module['_lv_obj_set_style_bg_color'] = createExportWrapper('lv_obj_set_style_bg_color');
-var _lv_obj_set_style_bg_opa = Module['_lv_obj_set_style_bg_opa'] = createExportWrapper('lv_obj_set_style_bg_opa');
-var _lv_obj_set_style_bg_grad_color = Module['_lv_obj_set_style_bg_grad_color'] = createExportWrapper('lv_obj_set_style_bg_grad_color');
-var _lv_obj_set_style_bg_grad_dir = Module['_lv_obj_set_style_bg_grad_dir'] = createExportWrapper('lv_obj_set_style_bg_grad_dir');
-var _lv_obj_set_style_bg_main_stop = Module['_lv_obj_set_style_bg_main_stop'] = createExportWrapper('lv_obj_set_style_bg_main_stop');
-var _lv_obj_set_style_bg_grad_stop = Module['_lv_obj_set_style_bg_grad_stop'] = createExportWrapper('lv_obj_set_style_bg_grad_stop');
-var _lv_obj_set_style_bg_grad = Module['_lv_obj_set_style_bg_grad'] = createExportWrapper('lv_obj_set_style_bg_grad');
-var _lv_obj_set_style_bg_dither_mode = Module['_lv_obj_set_style_bg_dither_mode'] = createExportWrapper('lv_obj_set_style_bg_dither_mode');
-var _lv_obj_set_style_bg_img_src = Module['_lv_obj_set_style_bg_img_src'] = createExportWrapper('lv_obj_set_style_bg_img_src');
-var _lv_obj_set_style_bg_img_opa = Module['_lv_obj_set_style_bg_img_opa'] = createExportWrapper('lv_obj_set_style_bg_img_opa');
-var _lv_obj_set_style_bg_img_recolor = Module['_lv_obj_set_style_bg_img_recolor'] = createExportWrapper('lv_obj_set_style_bg_img_recolor');
-var _lv_obj_set_style_bg_img_recolor_opa = Module['_lv_obj_set_style_bg_img_recolor_opa'] = createExportWrapper('lv_obj_set_style_bg_img_recolor_opa');
-var _lv_obj_set_style_bg_img_tiled = Module['_lv_obj_set_style_bg_img_tiled'] = createExportWrapper('lv_obj_set_style_bg_img_tiled');
-var _lv_obj_set_style_border_color = Module['_lv_obj_set_style_border_color'] = createExportWrapper('lv_obj_set_style_border_color');
-var _lv_obj_set_style_border_opa = Module['_lv_obj_set_style_border_opa'] = createExportWrapper('lv_obj_set_style_border_opa');
-var _lv_obj_set_style_border_width = Module['_lv_obj_set_style_border_width'] = createExportWrapper('lv_obj_set_style_border_width');
-var _lv_obj_set_style_border_side = Module['_lv_obj_set_style_border_side'] = createExportWrapper('lv_obj_set_style_border_side');
-var _lv_obj_set_style_border_post = Module['_lv_obj_set_style_border_post'] = createExportWrapper('lv_obj_set_style_border_post');
-var _lv_obj_set_style_outline_width = Module['_lv_obj_set_style_outline_width'] = createExportWrapper('lv_obj_set_style_outline_width');
-var _lv_obj_set_style_outline_color = Module['_lv_obj_set_style_outline_color'] = createExportWrapper('lv_obj_set_style_outline_color');
-var _lv_obj_set_style_outline_opa = Module['_lv_obj_set_style_outline_opa'] = createExportWrapper('lv_obj_set_style_outline_opa');
-var _lv_obj_set_style_outline_pad = Module['_lv_obj_set_style_outline_pad'] = createExportWrapper('lv_obj_set_style_outline_pad');
-var _lv_obj_set_style_shadow_width = Module['_lv_obj_set_style_shadow_width'] = createExportWrapper('lv_obj_set_style_shadow_width');
-var _lv_obj_set_style_shadow_ofs_x = Module['_lv_obj_set_style_shadow_ofs_x'] = createExportWrapper('lv_obj_set_style_shadow_ofs_x');
-var _lv_obj_set_style_shadow_ofs_y = Module['_lv_obj_set_style_shadow_ofs_y'] = createExportWrapper('lv_obj_set_style_shadow_ofs_y');
-var _lv_obj_set_style_shadow_spread = Module['_lv_obj_set_style_shadow_spread'] = createExportWrapper('lv_obj_set_style_shadow_spread');
-var _lv_obj_set_style_shadow_color = Module['_lv_obj_set_style_shadow_color'] = createExportWrapper('lv_obj_set_style_shadow_color');
-var _lv_obj_set_style_shadow_opa = Module['_lv_obj_set_style_shadow_opa'] = createExportWrapper('lv_obj_set_style_shadow_opa');
-var _lv_obj_set_style_img_opa = Module['_lv_obj_set_style_img_opa'] = createExportWrapper('lv_obj_set_style_img_opa');
-var _lv_obj_set_style_img_recolor = Module['_lv_obj_set_style_img_recolor'] = createExportWrapper('lv_obj_set_style_img_recolor');
-var _lv_obj_set_style_img_recolor_opa = Module['_lv_obj_set_style_img_recolor_opa'] = createExportWrapper('lv_obj_set_style_img_recolor_opa');
-var _lv_obj_set_style_line_width = Module['_lv_obj_set_style_line_width'] = createExportWrapper('lv_obj_set_style_line_width');
-var _lv_obj_set_style_line_dash_width = Module['_lv_obj_set_style_line_dash_width'] = createExportWrapper('lv_obj_set_style_line_dash_width');
-var _lv_obj_set_style_line_dash_gap = Module['_lv_obj_set_style_line_dash_gap'] = createExportWrapper('lv_obj_set_style_line_dash_gap');
-var _lv_obj_set_style_line_rounded = Module['_lv_obj_set_style_line_rounded'] = createExportWrapper('lv_obj_set_style_line_rounded');
-var _lv_obj_set_style_line_color = Module['_lv_obj_set_style_line_color'] = createExportWrapper('lv_obj_set_style_line_color');
-var _lv_obj_set_style_line_opa = Module['_lv_obj_set_style_line_opa'] = createExportWrapper('lv_obj_set_style_line_opa');
-var _lv_obj_set_style_arc_width = Module['_lv_obj_set_style_arc_width'] = createExportWrapper('lv_obj_set_style_arc_width');
-var _lv_obj_set_style_arc_rounded = Module['_lv_obj_set_style_arc_rounded'] = createExportWrapper('lv_obj_set_style_arc_rounded');
-var _lv_obj_set_style_arc_color = Module['_lv_obj_set_style_arc_color'] = createExportWrapper('lv_obj_set_style_arc_color');
-var _lv_obj_set_style_arc_opa = Module['_lv_obj_set_style_arc_opa'] = createExportWrapper('lv_obj_set_style_arc_opa');
-var _lv_obj_set_style_arc_img_src = Module['_lv_obj_set_style_arc_img_src'] = createExportWrapper('lv_obj_set_style_arc_img_src');
-var _lv_obj_set_style_text_color = Module['_lv_obj_set_style_text_color'] = createExportWrapper('lv_obj_set_style_text_color');
-var _lv_obj_set_style_text_opa = Module['_lv_obj_set_style_text_opa'] = createExportWrapper('lv_obj_set_style_text_opa');
-var _lv_obj_set_style_text_font = Module['_lv_obj_set_style_text_font'] = createExportWrapper('lv_obj_set_style_text_font');
-var _lv_obj_set_style_text_letter_space = Module['_lv_obj_set_style_text_letter_space'] = createExportWrapper('lv_obj_set_style_text_letter_space');
-var _lv_obj_set_style_text_line_space = Module['_lv_obj_set_style_text_line_space'] = createExportWrapper('lv_obj_set_style_text_line_space');
-var _lv_obj_set_style_text_decor = Module['_lv_obj_set_style_text_decor'] = createExportWrapper('lv_obj_set_style_text_decor');
-var _lv_obj_set_style_text_align = Module['_lv_obj_set_style_text_align'] = createExportWrapper('lv_obj_set_style_text_align');
-var _lv_obj_set_style_radius = Module['_lv_obj_set_style_radius'] = createExportWrapper('lv_obj_set_style_radius');
-var _lv_obj_set_style_clip_corner = Module['_lv_obj_set_style_clip_corner'] = createExportWrapper('lv_obj_set_style_clip_corner');
-var _lv_obj_set_style_opa_layered = Module['_lv_obj_set_style_opa_layered'] = createExportWrapper('lv_obj_set_style_opa_layered');
-var _lv_obj_set_style_color_filter_dsc = Module['_lv_obj_set_style_color_filter_dsc'] = createExportWrapper('lv_obj_set_style_color_filter_dsc');
-var _lv_obj_set_style_color_filter_opa = Module['_lv_obj_set_style_color_filter_opa'] = createExportWrapper('lv_obj_set_style_color_filter_opa');
-var _lv_obj_set_style_anim = Module['_lv_obj_set_style_anim'] = createExportWrapper('lv_obj_set_style_anim');
-var _lv_obj_set_style_anim_time = Module['_lv_obj_set_style_anim_time'] = createExportWrapper('lv_obj_set_style_anim_time');
-var _lv_obj_set_style_anim_speed = Module['_lv_obj_set_style_anim_speed'] = createExportWrapper('lv_obj_set_style_anim_speed');
-var _lv_obj_set_style_transition = Module['_lv_obj_set_style_transition'] = createExportWrapper('lv_obj_set_style_transition');
-var _lv_obj_set_style_blend_mode = Module['_lv_obj_set_style_blend_mode'] = createExportWrapper('lv_obj_set_style_blend_mode');
-var _lv_obj_set_style_base_dir = Module['_lv_obj_set_style_base_dir'] = createExportWrapper('lv_obj_set_style_base_dir');
-var _lv_obj_clean = Module['_lv_obj_clean'] = createExportWrapper('lv_obj_clean');
-var _lv_obj_get_child = Module['_lv_obj_get_child'] = createExportWrapper('lv_obj_get_child');
-var _lv_obj_del_delayed = Module['_lv_obj_del_delayed'] = createExportWrapper('lv_obj_del_delayed');
-var _lv_obj_del_anim_ready_cb = Module['_lv_obj_del_anim_ready_cb'] = createExportWrapper('lv_obj_del_anim_ready_cb');
-var _lv_obj_del_async = Module['_lv_obj_del_async'] = createExportWrapper('lv_obj_del_async');
-var _lv_async_call = Module['_lv_async_call'] = createExportWrapper('lv_async_call');
-var _lv_obj_get_index = Module['_lv_obj_get_index'] = createExportWrapper('lv_obj_get_index');
-var _lv_obj_move_to_index = Module['_lv_obj_move_to_index'] = createExportWrapper('lv_obj_move_to_index');
-var _lv_obj_swap = Module['_lv_obj_swap'] = createExportWrapper('lv_obj_swap');
-var _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = createExportWrapper('lv_obj_tree_walk');
-var _lv_refr_now = Module['_lv_refr_now'] = createExportWrapper('lv_refr_now');
-var _lv_anim_refr_now = Module['_lv_anim_refr_now'] = createExportWrapper('lv_anim_refr_now');
-var _lv_timer_pause = Module['_lv_timer_pause'] = createExportWrapper('lv_timer_pause');
-var _lv_mem_buf_free_all = Module['_lv_mem_buf_free_all'] = createExportWrapper('lv_mem_buf_free_all');
-var _lv_obj_redraw = Module['_lv_obj_redraw'] = createExportWrapper('lv_obj_redraw');
-var _lv_draw_layer_create = Module['_lv_draw_layer_create'] = createExportWrapper('lv_draw_layer_create');
-var _lv_draw_img_dsc_init = Module['_lv_draw_img_dsc_init'] = createExportWrapper('lv_draw_img_dsc_init');
-var _lv_draw_layer_adjust = Module['_lv_draw_layer_adjust'] = createExportWrapper('lv_draw_layer_adjust');
-var _lv_draw_layer_blend = Module['_lv_draw_layer_blend'] = createExportWrapper('lv_draw_layer_blend');
-var _lv_draw_layer_destroy = Module['_lv_draw_layer_destroy'] = createExportWrapper('lv_draw_layer_destroy');
-var _lv_disp_get_draw_buf = Module['_lv_disp_get_draw_buf'] = createExportWrapper('lv_disp_get_draw_buf');
-var _lv_img_decoder_get_info = Module['_lv_img_decoder_get_info'] = createExportWrapper('lv_img_decoder_get_info');
-var _lv_draw_img = Module['_lv_draw_img'] = createExportWrapper('lv_draw_img');
-var _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = createExportWrapper('lv_theme_get_from_obj');
-var _lv_theme_set_parent = Module['_lv_theme_set_parent'] = createExportWrapper('lv_theme_set_parent');
-var _lv_theme_set_apply_cb = Module['_lv_theme_set_apply_cb'] = createExportWrapper('lv_theme_set_apply_cb');
-var _lv_theme_get_font_small = Module['_lv_theme_get_font_small'] = createExportWrapper('lv_theme_get_font_small');
-var _lv_theme_get_font_normal = Module['_lv_theme_get_font_normal'] = createExportWrapper('lv_theme_get_font_normal');
-var _lv_theme_get_font_large = Module['_lv_theme_get_font_large'] = createExportWrapper('lv_theme_get_font_large');
-var _lv_theme_get_color_primary = Module['_lv_theme_get_color_primary'] = createExportWrapper('lv_theme_get_color_primary');
-var _lv_theme_get_color_secondary = Module['_lv_theme_get_color_secondary'] = createExportWrapper('lv_theme_get_color_secondary');
-var _lv_draw_wait_for_finish = Module['_lv_draw_wait_for_finish'] = createExportWrapper('lv_draw_wait_for_finish');
-var _lv_draw_arc_dsc_init = Module['_lv_draw_arc_dsc_init'] = createExportWrapper('lv_draw_arc_dsc_init');
-var _lv_draw_arc = Module['_lv_draw_arc'] = createExportWrapper('lv_draw_arc');
-var _lv_draw_arc_get_area = Module['_lv_draw_arc_get_area'] = createExportWrapper('lv_draw_arc_get_area');
-var _lv_draw_label_dsc_init = Module['_lv_draw_label_dsc_init'] = createExportWrapper('lv_draw_label_dsc_init');
-var _lv_draw_label = Module['_lv_draw_label'] = createExportWrapper('lv_draw_label');
-var _lv_img_decoder_close = Module['_lv_img_decoder_close'] = createExportWrapper('lv_img_decoder_close');
-var _lv_area_set_height = Module['_lv_area_set_height'] = createExportWrapper('lv_area_set_height');
-var _lv_img_decoder_read_line = Module['_lv_img_decoder_read_line'] = createExportWrapper('lv_img_decoder_read_line');
-var _lv_img_cf_get_px_size = Module['_lv_img_cf_get_px_size'] = createExportWrapper('lv_img_cf_get_px_size');
-var _lv_img_cf_is_chroma_keyed = Module['_lv_img_cf_is_chroma_keyed'] = createExportWrapper('lv_img_cf_is_chroma_keyed');
-var _lv_img_cf_has_alpha = Module['_lv_img_cf_has_alpha'] = createExportWrapper('lv_img_cf_has_alpha');
-var _lv_draw_img_decoded = Module['_lv_draw_img_decoded'] = createExportWrapper('lv_draw_img_decoded');
-var _lv_txt_get_size = Module['_lv_txt_get_size'] = createExportWrapper('lv_txt_get_size');
-var _lv_txt_get_width = Module['_lv_txt_get_width'] = createExportWrapper('lv_txt_get_width');
-var _lv_draw_line_dsc_init = Module['_lv_draw_line_dsc_init'] = createExportWrapper('lv_draw_line_dsc_init');
-var _lv_font_get_glyph_width = Module['_lv_font_get_glyph_width'] = createExportWrapper('lv_font_get_glyph_width');
-var _lv_draw_line = Module['_lv_draw_line'] = createExportWrapper('lv_draw_line');
-var _lv_draw_letter = Module['_lv_draw_letter'] = createExportWrapper('lv_draw_letter');
-var _lv_draw_mask_apply = Module['_lv_draw_mask_apply'] = createExportWrapper('lv_draw_mask_apply');
-var _lv_draw_mask_apply_ids = Module['_lv_draw_mask_apply_ids'] = createExportWrapper('lv_draw_mask_apply_ids');
-var _lv_draw_mask_remove_id = Module['_lv_draw_mask_remove_id'] = createExportWrapper('lv_draw_mask_remove_id');
-var _lv_draw_mask_get_cnt = Module['_lv_draw_mask_get_cnt'] = createExportWrapper('lv_draw_mask_get_cnt');
-var _lv_draw_mask_is_any = Module['_lv_draw_mask_is_any'] = createExportWrapper('lv_draw_mask_is_any');
-var _lv_draw_mask_line_points_init = Module['_lv_draw_mask_line_points_init'] = createExportWrapper('lv_draw_mask_line_points_init');
-var _lv_draw_mask_line_angle_init = Module['_lv_draw_mask_line_angle_init'] = createExportWrapper('lv_draw_mask_line_angle_init');
-var _lv_trigo_sin = Module['_lv_trigo_sin'] = createExportWrapper('lv_trigo_sin');
-var _lv_draw_mask_angle_init = Module['_lv_draw_mask_angle_init'] = createExportWrapper('lv_draw_mask_angle_init');
-var _lv_draw_mask_fade_init = Module['_lv_draw_mask_fade_init'] = createExportWrapper('lv_draw_mask_fade_init');
-var _lv_draw_mask_map_init = Module['_lv_draw_mask_map_init'] = createExportWrapper('lv_draw_mask_map_init');
-var _lv_draw_mask_polygon_init = Module['_lv_draw_mask_polygon_init'] = createExportWrapper('lv_draw_mask_polygon_init');
-var _lv_draw_transform = Module['_lv_draw_transform'] = createExportWrapper('lv_draw_transform');
-var _lv_draw_polygon = Module['_lv_draw_polygon'] = createExportWrapper('lv_draw_polygon');
-var _lv_draw_triangle = Module['_lv_draw_triangle'] = createExportWrapper('lv_draw_triangle');
-var _lv_img_buf_get_px_color = Module['_lv_img_buf_get_px_color'] = createExportWrapper('lv_img_buf_get_px_color');
-var _lv_img_buf_get_px_alpha = Module['_lv_img_buf_get_px_alpha'] = createExportWrapper('lv_img_buf_get_px_alpha');
-var _lv_img_buf_set_px_alpha = Module['_lv_img_buf_set_px_alpha'] = createExportWrapper('lv_img_buf_set_px_alpha');
-var _lv_img_buf_set_px_color = Module['_lv_img_buf_set_px_color'] = createExportWrapper('lv_img_buf_set_px_color');
-var _lv_img_buf_set_palette = Module['_lv_img_buf_set_palette'] = createExportWrapper('lv_img_buf_set_palette');
-var _lv_img_buf_alloc = Module['_lv_img_buf_alloc'] = createExportWrapper('lv_img_buf_alloc');
-var _lv_img_buf_get_img_size = Module['_lv_img_buf_get_img_size'] = createExportWrapper('lv_img_buf_get_img_size');
-var _lv_img_buf_free = Module['_lv_img_buf_free'] = createExportWrapper('lv_img_buf_free');
-var _lv_img_decoder_open = Module['_lv_img_decoder_open'] = createExportWrapper('lv_img_decoder_open');
-var _lv_img_cache_set_size = Module['_lv_img_cache_set_size'] = createExportWrapper('lv_img_cache_set_size');
-var _lv_img_cache_invalidate_src = Module['_lv_img_cache_invalidate_src'] = createExportWrapper('lv_img_cache_invalidate_src');
-var _lv_img_decoder_built_in_close = Module['_lv_img_decoder_built_in_close'] = createExportWrapper('lv_img_decoder_built_in_close');
-var _lv_img_decoder_built_in_read_line = Module['_lv_img_decoder_built_in_read_line'] = createExportWrapper('lv_img_decoder_built_in_read_line');
-var _lv_img_decoder_built_in_open = Module['_lv_img_decoder_built_in_open'] = createExportWrapper('lv_img_decoder_built_in_open');
-var _lv_img_decoder_built_in_info = Module['_lv_img_decoder_built_in_info'] = createExportWrapper('lv_img_decoder_built_in_info');
-var _lv_img_decoder_create = Module['_lv_img_decoder_create'] = createExportWrapper('lv_img_decoder_create');
-var _lv_img_decoder_set_info_cb = Module['_lv_img_decoder_set_info_cb'] = createExportWrapper('lv_img_decoder_set_info_cb');
-var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext');
-var _strcmp = Module['_strcmp'] = createExportWrapper('strcmp');
-var _lv_fs_open = Module['_lv_fs_open'] = createExportWrapper('lv_fs_open');
-var _lv_fs_read = Module['_lv_fs_read'] = createExportWrapper('lv_fs_read');
-var _lv_fs_close = Module['_lv_fs_close'] = createExportWrapper('lv_fs_close');
-var _lv_img_decoder_set_open_cb = Module['_lv_img_decoder_set_open_cb'] = createExportWrapper('lv_img_decoder_set_open_cb');
-var _lv_fs_seek = Module['_lv_fs_seek'] = createExportWrapper('lv_fs_seek');
-var _lv_img_decoder_set_read_line_cb = Module['_lv_img_decoder_set_read_line_cb'] = createExportWrapper('lv_img_decoder_set_read_line_cb');
-var _lv_img_decoder_set_close_cb = Module['_lv_img_decoder_set_close_cb'] = createExportWrapper('lv_img_decoder_set_close_cb');
-var _lv_img_decoder_delete = Module['_lv_img_decoder_delete'] = createExportWrapper('lv_img_decoder_delete');
-var _lv_draw_sw_init_ctx = Module['_lv_draw_sw_init_ctx'] = createExportWrapper('lv_draw_sw_init_ctx');
-var _lv_draw_sw_buffer_copy = Module['_lv_draw_sw_buffer_copy'] = createExportWrapper('lv_draw_sw_buffer_copy');
-var _lv_draw_sw_wait_for_finish = Module['_lv_draw_sw_wait_for_finish'] = createExportWrapper('lv_draw_sw_wait_for_finish');
-var _lv_draw_sw_deinit_ctx = Module['_lv_draw_sw_deinit_ctx'] = createExportWrapper('lv_draw_sw_deinit_ctx');
-var _lv_draw_sw_arc = Module['_lv_draw_sw_arc'] = createExportWrapper('lv_draw_sw_arc');
-var _lv_draw_sw_blend = Module['_lv_draw_sw_blend'] = createExportWrapper('lv_draw_sw_blend');
-var _lv_draw_sw_blend_basic = Module['_lv_draw_sw_blend_basic'] = createExportWrapper('lv_draw_sw_blend_basic');
-var _lv_gradient_free_cache = Module['_lv_gradient_free_cache'] = createExportWrapper('lv_gradient_free_cache');
-var _lv_gradient_set_cache_size = Module['_lv_gradient_set_cache_size'] = createExportWrapper('lv_gradient_set_cache_size');
-var _lv_gradient_get = Module['_lv_gradient_get'] = createExportWrapper('lv_gradient_get');
-var _lv_gradient_calculate = Module['_lv_gradient_calculate'] = createExportWrapper('lv_gradient_calculate');
-var _lv_gradient_cleanup = Module['_lv_gradient_cleanup'] = createExportWrapper('lv_gradient_cleanup');
-var _lv_draw_sw_img_decoded = Module['_lv_draw_sw_img_decoded'] = createExportWrapper('lv_draw_sw_img_decoded');
-var _lv_draw_sw_layer_create = Module['_lv_draw_sw_layer_create'] = createExportWrapper('lv_draw_sw_layer_create');
-var _lv_draw_sw_layer_adjust = Module['_lv_draw_sw_layer_adjust'] = createExportWrapper('lv_draw_sw_layer_adjust');
-var _lv_draw_sw_layer_blend = Module['_lv_draw_sw_layer_blend'] = createExportWrapper('lv_draw_sw_layer_blend');
-var _lv_draw_sw_layer_destroy = Module['_lv_draw_sw_layer_destroy'] = createExportWrapper('lv_draw_sw_layer_destroy');
-var _lv_draw_sw_letter = Module['_lv_draw_sw_letter'] = createExportWrapper('lv_draw_sw_letter');
-var _lv_draw_sw_line = Module['_lv_draw_sw_line'] = createExportWrapper('lv_draw_sw_line');
-var _lv_draw_sw_polygon = Module['_lv_draw_sw_polygon'] = createExportWrapper('lv_draw_sw_polygon');
-var _lv_draw_sw_rect = Module['_lv_draw_sw_rect'] = createExportWrapper('lv_draw_sw_rect');
-var _lv_draw_sw_bg = Module['_lv_draw_sw_bg'] = createExportWrapper('lv_draw_sw_bg');
-var _lv_draw_sw_transform = Module['_lv_draw_sw_transform'] = createExportWrapper('lv_draw_sw_transform');
-var _lv_flex_init = Module['_lv_flex_init'] = createExportWrapper('lv_flex_init');
-var _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = createExportWrapper('lv_obj_set_flex_flow');
-var _lv_obj_set_style_flex_flow = Module['_lv_obj_set_style_flex_flow'] = createExportWrapper('lv_obj_set_style_flex_flow');
-var _lv_obj_set_flex_align = Module['_lv_obj_set_flex_align'] = createExportWrapper('lv_obj_set_flex_align');
-var _lv_obj_set_style_flex_main_place = Module['_lv_obj_set_style_flex_main_place'] = createExportWrapper('lv_obj_set_style_flex_main_place');
-var _lv_obj_set_style_flex_cross_place = Module['_lv_obj_set_style_flex_cross_place'] = createExportWrapper('lv_obj_set_style_flex_cross_place');
-var _lv_obj_set_style_flex_track_place = Module['_lv_obj_set_style_flex_track_place'] = createExportWrapper('lv_obj_set_style_flex_track_place');
-var _lv_obj_set_flex_grow = Module['_lv_obj_set_flex_grow'] = createExportWrapper('lv_obj_set_flex_grow');
-var _lv_obj_set_style_flex_grow = Module['_lv_obj_set_style_flex_grow'] = createExportWrapper('lv_obj_set_style_flex_grow');
-var _lv_style_set_flex_flow = Module['_lv_style_set_flex_flow'] = createExportWrapper('lv_style_set_flex_flow');
-var _lv_style_set_flex_main_place = Module['_lv_style_set_flex_main_place'] = createExportWrapper('lv_style_set_flex_main_place');
-var _lv_style_set_flex_cross_place = Module['_lv_style_set_flex_cross_place'] = createExportWrapper('lv_style_set_flex_cross_place');
-var _lv_style_set_flex_track_place = Module['_lv_style_set_flex_track_place'] = createExportWrapper('lv_style_set_flex_track_place');
-var _lv_style_set_flex_grow = Module['_lv_style_set_flex_grow'] = createExportWrapper('lv_style_set_flex_grow');
-var _lv_grid_init = Module['_lv_grid_init'] = createExportWrapper('lv_grid_init');
-var _lv_obj_set_grid_dsc_array = Module['_lv_obj_set_grid_dsc_array'] = createExportWrapper('lv_obj_set_grid_dsc_array');
-var _lv_obj_set_style_grid_column_dsc_array = Module['_lv_obj_set_style_grid_column_dsc_array'] = createExportWrapper('lv_obj_set_style_grid_column_dsc_array');
-var _lv_obj_set_style_grid_row_dsc_array = Module['_lv_obj_set_style_grid_row_dsc_array'] = createExportWrapper('lv_obj_set_style_grid_row_dsc_array');
-var _lv_obj_set_grid_align = Module['_lv_obj_set_grid_align'] = createExportWrapper('lv_obj_set_grid_align');
-var _lv_obj_set_style_grid_column_align = Module['_lv_obj_set_style_grid_column_align'] = createExportWrapper('lv_obj_set_style_grid_column_align');
-var _lv_obj_set_style_grid_row_align = Module['_lv_obj_set_style_grid_row_align'] = createExportWrapper('lv_obj_set_style_grid_row_align');
-var _lv_obj_set_grid_cell = Module['_lv_obj_set_grid_cell'] = createExportWrapper('lv_obj_set_grid_cell');
-var _lv_obj_set_style_grid_cell_column_pos = Module['_lv_obj_set_style_grid_cell_column_pos'] = createExportWrapper('lv_obj_set_style_grid_cell_column_pos');
-var _lv_obj_set_style_grid_cell_row_pos = Module['_lv_obj_set_style_grid_cell_row_pos'] = createExportWrapper('lv_obj_set_style_grid_cell_row_pos');
-var _lv_obj_set_style_grid_cell_x_align = Module['_lv_obj_set_style_grid_cell_x_align'] = createExportWrapper('lv_obj_set_style_grid_cell_x_align');
-var _lv_obj_set_style_grid_cell_column_span = Module['_lv_obj_set_style_grid_cell_column_span'] = createExportWrapper('lv_obj_set_style_grid_cell_column_span');
-var _lv_obj_set_style_grid_cell_row_span = Module['_lv_obj_set_style_grid_cell_row_span'] = createExportWrapper('lv_obj_set_style_grid_cell_row_span');
-var _lv_obj_set_style_grid_cell_y_align = Module['_lv_obj_set_style_grid_cell_y_align'] = createExportWrapper('lv_obj_set_style_grid_cell_y_align');
-var _lv_style_set_grid_row_dsc_array = Module['_lv_style_set_grid_row_dsc_array'] = createExportWrapper('lv_style_set_grid_row_dsc_array');
-var _lv_style_set_grid_column_dsc_array = Module['_lv_style_set_grid_column_dsc_array'] = createExportWrapper('lv_style_set_grid_column_dsc_array');
-var _lv_style_set_grid_row_align = Module['_lv_style_set_grid_row_align'] = createExportWrapper('lv_style_set_grid_row_align');
-var _lv_style_set_grid_column_align = Module['_lv_style_set_grid_column_align'] = createExportWrapper('lv_style_set_grid_column_align');
-var _lv_style_set_grid_cell_column_pos = Module['_lv_style_set_grid_cell_column_pos'] = createExportWrapper('lv_style_set_grid_cell_column_pos');
-var _lv_style_set_grid_cell_column_span = Module['_lv_style_set_grid_cell_column_span'] = createExportWrapper('lv_style_set_grid_cell_column_span');
-var _lv_style_set_grid_cell_row_pos = Module['_lv_style_set_grid_cell_row_pos'] = createExportWrapper('lv_style_set_grid_cell_row_pos');
-var _lv_style_set_grid_cell_row_span = Module['_lv_style_set_grid_cell_row_span'] = createExportWrapper('lv_style_set_grid_cell_row_span');
-var _lv_style_set_grid_cell_x_align = Module['_lv_style_set_grid_cell_x_align'] = createExportWrapper('lv_style_set_grid_cell_x_align');
-var _lv_style_set_grid_cell_y_align = Module['_lv_style_set_grid_cell_y_align'] = createExportWrapper('lv_style_set_grid_cell_y_align');
-var _lv_bmp_init = Module['_lv_bmp_init'] = createExportWrapper('lv_bmp_init');
-var _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = createExportWrapper('lv_fs_stdio_init');
-var _lv_gif_create = Module['_lv_gif_create'] = createExportWrapper('lv_gif_create');
-var _lv_gif_set_src = Module['_lv_gif_set_src'] = createExportWrapper('lv_gif_set_src');
-var _lv_gif_restart = Module['_lv_gif_restart'] = createExportWrapper('lv_gif_restart');
-var _lv_png_init = Module['_lv_png_init'] = createExportWrapper('lv_png_init');
-var _lv_qrcode_create = Module['_lv_qrcode_create'] = createExportWrapper('lv_qrcode_create');
-var _lv_qrcode_update = Module['_lv_qrcode_update'] = createExportWrapper('lv_qrcode_update');
-var _lv_qrcode_delete = Module['_lv_qrcode_delete'] = createExportWrapper('lv_qrcode_delete');
-var _lv_split_jpeg_init = Module['_lv_split_jpeg_init'] = createExportWrapper('lv_split_jpeg_init');
-var _lv_tiny_ttf_create_file_ex = Module['_lv_tiny_ttf_create_file_ex'] = createExportWrapper('lv_tiny_ttf_create_file_ex');
-var _lv_tiny_ttf_set_size = Module['_lv_tiny_ttf_set_size'] = createExportWrapper('lv_tiny_ttf_set_size');
-var _lv_tiny_ttf_create_file = Module['_lv_tiny_ttf_create_file'] = createExportWrapper('lv_tiny_ttf_create_file');
-var _lv_tiny_ttf_create_data_ex = Module['_lv_tiny_ttf_create_data_ex'] = createExportWrapper('lv_tiny_ttf_create_data_ex');
-var _lv_tiny_ttf_create_data = Module['_lv_tiny_ttf_create_data'] = createExportWrapper('lv_tiny_ttf_create_data');
-var _lv_tiny_ttf_destroy = Module['_lv_tiny_ttf_destroy'] = createExportWrapper('lv_tiny_ttf_destroy');
-var _lv_style_register_prop = Module['_lv_style_register_prop'] = createExportWrapper('lv_style_register_prop');
-var _lv_area_set_width = Module['_lv_area_set_width'] = createExportWrapper('lv_area_set_width');
-var _lv_msg_init = Module['_lv_msg_init'] = createExportWrapper('lv_msg_init');
-var _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf');
-var _lv_fs_tell = Module['_lv_fs_tell'] = createExportWrapper('lv_fs_tell');
-var _lv_fs_write = Module['_lv_fs_write'] = createExportWrapper('lv_fs_write');
-var _strncmp = Module['_strncmp'] = createExportWrapper('strncmp');
-var _lv_fragment_create = Module['_lv_fragment_create'] = createExportWrapper('lv_fragment_create');
-var _lv_fragment_del = Module['_lv_fragment_del'] = createExportWrapper('lv_fragment_del');
-var _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = createExportWrapper('lv_fragment_del_obj');
-var _lv_fragment_get_manager = Module['_lv_fragment_get_manager'] = createExportWrapper('lv_fragment_get_manager');
-var _lv_fragment_get_container = Module['_lv_fragment_get_container'] = createExportWrapper('lv_fragment_get_container');
-var _lv_fragment_get_parent = Module['_lv_fragment_get_parent'] = createExportWrapper('lv_fragment_get_parent');
-var _lv_fragment_create_obj = Module['_lv_fragment_create_obj'] = createExportWrapper('lv_fragment_create_obj');
-var _lv_fragment_recreate_obj = Module['_lv_fragment_recreate_obj'] = createExportWrapper('lv_fragment_recreate_obj');
-var _lv_fragment_manager_create = Module['_lv_fragment_manager_create'] = createExportWrapper('lv_fragment_manager_create');
-var _lv_fragment_manager_del = Module['_lv_fragment_manager_del'] = createExportWrapper('lv_fragment_manager_del');
-var _lv_fragment_manager_create_obj = Module['_lv_fragment_manager_create_obj'] = createExportWrapper('lv_fragment_manager_create_obj');
-var _lv_fragment_manager_del_obj = Module['_lv_fragment_manager_del_obj'] = createExportWrapper('lv_fragment_manager_del_obj');
-var _lv_fragment_manager_add = Module['_lv_fragment_manager_add'] = createExportWrapper('lv_fragment_manager_add');
-var _lv_fragment_manager_remove = Module['_lv_fragment_manager_remove'] = createExportWrapper('lv_fragment_manager_remove');
-var _lv_fragment_manager_push = Module['_lv_fragment_manager_push'] = createExportWrapper('lv_fragment_manager_push');
-var _lv_fragment_manager_pop = Module['_lv_fragment_manager_pop'] = createExportWrapper('lv_fragment_manager_pop');
-var _lv_fragment_manager_get_top = Module['_lv_fragment_manager_get_top'] = createExportWrapper('lv_fragment_manager_get_top');
-var _lv_fragment_manager_replace = Module['_lv_fragment_manager_replace'] = createExportWrapper('lv_fragment_manager_replace');
-var _lv_fragment_manager_find_by_container = Module['_lv_fragment_manager_find_by_container'] = createExportWrapper('lv_fragment_manager_find_by_container');
-var _lv_fragment_manager_send_event = Module['_lv_fragment_manager_send_event'] = createExportWrapper('lv_fragment_manager_send_event');
-var _lv_fragment_manager_get_stack_size = Module['_lv_fragment_manager_get_stack_size'] = createExportWrapper('lv_fragment_manager_get_stack_size');
-var _lv_fragment_manager_get_parent_fragment = Module['_lv_fragment_manager_get_parent_fragment'] = createExportWrapper('lv_fragment_manager_get_parent_fragment');
-var _lv_gridnav_add = Module['_lv_gridnav_add'] = createExportWrapper('lv_gridnav_add');
-var _lv_gridnav_remove = Module['_lv_gridnav_remove'] = createExportWrapper('lv_gridnav_remove');
-var _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = createExportWrapper('lv_gridnav_set_focused');
-var _lv_monkey_config_init = Module['_lv_monkey_config_init'] = createExportWrapper('lv_monkey_config_init');
-var _lv_monkey_create = Module['_lv_monkey_create'] = createExportWrapper('lv_monkey_create');
-var _lv_monkey_get_indev = Module['_lv_monkey_get_indev'] = createExportWrapper('lv_monkey_get_indev');
-var _lv_monkey_set_enable = Module['_lv_monkey_set_enable'] = createExportWrapper('lv_monkey_set_enable');
-var _lv_monkey_get_enable = Module['_lv_monkey_get_enable'] = createExportWrapper('lv_monkey_get_enable');
-var _lv_monkey_set_user_data = Module['_lv_monkey_set_user_data'] = createExportWrapper('lv_monkey_set_user_data');
-var _lv_monkey_get_user_data = Module['_lv_monkey_get_user_data'] = createExportWrapper('lv_monkey_get_user_data');
-var _lv_monkey_del = Module['_lv_monkey_del'] = createExportWrapper('lv_monkey_del');
-var _lv_msg_subsribe = Module['_lv_msg_subsribe'] = createExportWrapper('lv_msg_subsribe');
-var _lv_msg_subsribe_obj = Module['_lv_msg_subsribe_obj'] = createExportWrapper('lv_msg_subsribe_obj');
-var _lv_msg_unsubscribe = Module['_lv_msg_unsubscribe'] = createExportWrapper('lv_msg_unsubscribe');
-var _lv_msg_unsubscribe_obj = Module['_lv_msg_unsubscribe_obj'] = createExportWrapper('lv_msg_unsubscribe_obj');
-var _lv_msg_send = Module['_lv_msg_send'] = createExportWrapper('lv_msg_send');
-var _lv_msg_get_id = Module['_lv_msg_get_id'] = createExportWrapper('lv_msg_get_id');
-var _lv_msg_get_payload = Module['_lv_msg_get_payload'] = createExportWrapper('lv_msg_get_payload');
-var _lv_msg_get_user_data = Module['_lv_msg_get_user_data'] = createExportWrapper('lv_msg_get_user_data');
-var _lv_event_get_msg = Module['_lv_event_get_msg'] = createExportWrapper('lv_event_get_msg');
-var _lv_snapshot_buf_size_needed = Module['_lv_snapshot_buf_size_needed'] = createExportWrapper('lv_snapshot_buf_size_needed');
-var _lv_snapshot_take_to_buf = Module['_lv_snapshot_take_to_buf'] = createExportWrapper('lv_snapshot_take_to_buf');
-var _lv_snapshot_take = Module['_lv_snapshot_take'] = createExportWrapper('lv_snapshot_take');
-var _lv_snapshot_free = Module['_lv_snapshot_free'] = createExportWrapper('lv_snapshot_free');
-var _lv_theme_basic_is_inited = Module['_lv_theme_basic_is_inited'] = createExportWrapper('lv_theme_basic_is_inited');
-var _lv_theme_basic_init = Module['_lv_theme_basic_init'] = createExportWrapper('lv_theme_basic_init');
-var _lv_theme_default_is_inited = Module['_lv_theme_default_is_inited'] = createExportWrapper('lv_theme_default_is_inited');
-var _lv_palette_lighten = Module['_lv_palette_lighten'] = createExportWrapper('lv_palette_lighten');
-var _lv_palette_darken = Module['_lv_palette_darken'] = createExportWrapper('lv_palette_darken');
-var _lv_anim_path_linear = Module['_lv_anim_path_linear'] = createExportWrapper('lv_anim_path_linear');
-var _lv_style_transition_dsc_init = Module['_lv_style_transition_dsc_init'] = createExportWrapper('lv_style_transition_dsc_init');
-var _lv_style_set_transition = Module['_lv_style_set_transition'] = createExportWrapper('lv_style_set_transition');
-var _lv_style_set_bg_color = Module['_lv_style_set_bg_color'] = createExportWrapper('lv_style_set_bg_color');
-var _lv_style_set_radius = Module['_lv_style_set_radius'] = createExportWrapper('lv_style_set_radius');
-var _lv_style_set_pad_left = Module['_lv_style_set_pad_left'] = createExportWrapper('lv_style_set_pad_left');
-var _lv_style_set_pad_right = Module['_lv_style_set_pad_right'] = createExportWrapper('lv_style_set_pad_right');
-var _lv_style_set_pad_top = Module['_lv_style_set_pad_top'] = createExportWrapper('lv_style_set_pad_top');
-var _lv_style_set_pad_bottom = Module['_lv_style_set_pad_bottom'] = createExportWrapper('lv_style_set_pad_bottom');
-var _lv_style_set_width = Module['_lv_style_set_width'] = createExportWrapper('lv_style_set_width');
-var _lv_style_set_bg_opa = Module['_lv_style_set_bg_opa'] = createExportWrapper('lv_style_set_bg_opa');
-var _lv_style_set_text_color = Module['_lv_style_set_text_color'] = createExportWrapper('lv_style_set_text_color');
-var _lv_style_set_pad_row = Module['_lv_style_set_pad_row'] = createExportWrapper('lv_style_set_pad_row');
-var _lv_style_set_pad_column = Module['_lv_style_set_pad_column'] = createExportWrapper('lv_style_set_pad_column');
-var _lv_style_set_border_color = Module['_lv_style_set_border_color'] = createExportWrapper('lv_style_set_border_color');
-var _lv_style_set_border_width = Module['_lv_style_set_border_width'] = createExportWrapper('lv_style_set_border_width');
-var _lv_style_set_border_post = Module['_lv_style_set_border_post'] = createExportWrapper('lv_style_set_border_post');
-var _lv_style_set_line_color = Module['_lv_style_set_line_color'] = createExportWrapper('lv_style_set_line_color');
-var _lv_style_set_line_width = Module['_lv_style_set_line_width'] = createExportWrapper('lv_style_set_line_width');
-var _lv_style_set_outline_color = Module['_lv_style_set_outline_color'] = createExportWrapper('lv_style_set_outline_color');
-var _lv_style_set_outline_width = Module['_lv_style_set_outline_width'] = createExportWrapper('lv_style_set_outline_width');
-var _lv_style_set_outline_pad = Module['_lv_style_set_outline_pad'] = createExportWrapper('lv_style_set_outline_pad');
-var _lv_style_set_outline_opa = Module['_lv_style_set_outline_opa'] = createExportWrapper('lv_style_set_outline_opa');
-var _lv_style_set_shadow_color = Module['_lv_style_set_shadow_color'] = createExportWrapper('lv_style_set_shadow_color');
-var _lv_style_set_shadow_width = Module['_lv_style_set_shadow_width'] = createExportWrapper('lv_style_set_shadow_width');
-var _lv_style_set_shadow_opa = Module['_lv_style_set_shadow_opa'] = createExportWrapper('lv_style_set_shadow_opa');
-var _lv_style_set_shadow_ofs_y = Module['_lv_style_set_shadow_ofs_y'] = createExportWrapper('lv_style_set_shadow_ofs_y');
-var _lv_style_set_color_filter_dsc = Module['_lv_style_set_color_filter_dsc'] = createExportWrapper('lv_style_set_color_filter_dsc');
-var _lv_style_set_color_filter_opa = Module['_lv_style_set_color_filter_opa'] = createExportWrapper('lv_style_set_color_filter_opa');
-var _lv_style_set_clip_corner = Module['_lv_style_set_clip_corner'] = createExportWrapper('lv_style_set_clip_corner');
-var _lv_style_set_text_line_space = Module['_lv_style_set_text_line_space'] = createExportWrapper('lv_style_set_text_line_space');
-var _lv_style_set_text_align = Module['_lv_style_set_text_align'] = createExportWrapper('lv_style_set_text_align');
-var _lv_style_set_transform_width = Module['_lv_style_set_transform_width'] = createExportWrapper('lv_style_set_transform_width');
-var _lv_style_set_transform_height = Module['_lv_style_set_transform_height'] = createExportWrapper('lv_style_set_transform_height');
-var _lv_style_set_anim_time = Module['_lv_style_set_anim_time'] = createExportWrapper('lv_style_set_anim_time');
-var _lv_style_set_arc_color = Module['_lv_style_set_arc_color'] = createExportWrapper('lv_style_set_arc_color');
-var _lv_style_set_arc_width = Module['_lv_style_set_arc_width'] = createExportWrapper('lv_style_set_arc_width');
-var _lv_style_set_arc_rounded = Module['_lv_style_set_arc_rounded'] = createExportWrapper('lv_style_set_arc_rounded');
-var _lv_style_set_max_height = Module['_lv_style_set_max_height'] = createExportWrapper('lv_style_set_max_height');
-var _lv_style_set_bg_img_src = Module['_lv_style_set_bg_img_src'] = createExportWrapper('lv_style_set_bg_img_src');
-var _lv_style_set_text_font = Module['_lv_style_set_text_font'] = createExportWrapper('lv_style_set_text_font');
-var _lv_style_set_height = Module['_lv_style_set_height'] = createExportWrapper('lv_style_set_height');
-var _lv_style_set_border_side = Module['_lv_style_set_border_side'] = createExportWrapper('lv_style_set_border_side');
-var _lv_style_set_border_opa = Module['_lv_style_set_border_opa'] = createExportWrapper('lv_style_set_border_opa');
-var _lv_style_set_max_width = Module['_lv_style_set_max_width'] = createExportWrapper('lv_style_set_max_width');
-var _lv_style_set_bg_grad_color = Module['_lv_style_set_bg_grad_color'] = createExportWrapper('lv_style_set_bg_grad_color');
-var _lv_style_set_shadow_spread = Module['_lv_style_set_shadow_spread'] = createExportWrapper('lv_style_set_shadow_spread');
-var _lv_theme_default_get = Module['_lv_theme_default_get'] = createExportWrapper('lv_theme_default_get');
-var _lv_color_darken = Module['_lv_color_darken'] = createExportWrapper('lv_color_darken');
-var _lv_theme_mono_is_inited = Module['_lv_theme_mono_is_inited'] = createExportWrapper('lv_theme_mono_is_inited');
-var _lv_theme_mono_init = Module['_lv_theme_mono_init'] = createExportWrapper('lv_theme_mono_init');
-var _lv_animimg_create = Module['_lv_animimg_create'] = createExportWrapper('lv_animimg_create');
-var _lv_animimg_set_src = Module['_lv_animimg_set_src'] = createExportWrapper('lv_animimg_set_src');
-var _lv_animimg_start = Module['_lv_animimg_start'] = createExportWrapper('lv_animimg_start');
-var _lv_animimg_set_duration = Module['_lv_animimg_set_duration'] = createExportWrapper('lv_animimg_set_duration');
-var _lv_animimg_set_repeat_count = Module['_lv_animimg_set_repeat_count'] = createExportWrapper('lv_animimg_set_repeat_count');
-var _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = createExportWrapper('lv_calendar_set_showed_date');
-var _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create');
-var _lv_btnmatrix_create = Module['_lv_btnmatrix_create'] = createExportWrapper('lv_btnmatrix_create');
-var _lv_btnmatrix_set_map = Module['_lv_btnmatrix_set_map'] = createExportWrapper('lv_btnmatrix_set_map');
-var _lv_btnmatrix_set_btn_ctrl_all = Module['_lv_btnmatrix_set_btn_ctrl_all'] = createExportWrapper('lv_btnmatrix_set_btn_ctrl_all');
-var _lv_calendar_set_day_names = Module['_lv_calendar_set_day_names'] = createExportWrapper('lv_calendar_set_day_names');
-var _lv_calendar_set_today_date = Module['_lv_calendar_set_today_date'] = createExportWrapper('lv_calendar_set_today_date');
-var _lv_btnmatrix_clear_btn_ctrl_all = Module['_lv_btnmatrix_clear_btn_ctrl_all'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl_all');
-var _lv_btnmatrix_set_btn_ctrl = Module['_lv_btnmatrix_set_btn_ctrl'] = createExportWrapper('lv_btnmatrix_set_btn_ctrl');
-var _lv_calendar_set_highlighted_dates = Module['_lv_calendar_set_highlighted_dates'] = createExportWrapper('lv_calendar_set_highlighted_dates');
-var _lv_btnmatrix_get_selected_btn = Module['_lv_btnmatrix_get_selected_btn'] = createExportWrapper('lv_btnmatrix_get_selected_btn');
-var _lv_btnmatrix_set_selected_btn = Module['_lv_btnmatrix_set_selected_btn'] = createExportWrapper('lv_btnmatrix_set_selected_btn');
-var _lv_calendar_get_btnmatrix = Module['_lv_calendar_get_btnmatrix'] = createExportWrapper('lv_calendar_get_btnmatrix');
-var _lv_calendar_get_today_date = Module['_lv_calendar_get_today_date'] = createExportWrapper('lv_calendar_get_today_date');
-var _lv_calendar_get_showed_date = Module['_lv_calendar_get_showed_date'] = createExportWrapper('lv_calendar_get_showed_date');
-var _lv_calendar_get_highlighted_dates = Module['_lv_calendar_get_highlighted_dates'] = createExportWrapper('lv_calendar_get_highlighted_dates');
-var _lv_calendar_get_highlighted_dates_num = Module['_lv_calendar_get_highlighted_dates_num'] = createExportWrapper('lv_calendar_get_highlighted_dates_num');
-var _lv_calendar_get_pressed_date = Module['_lv_calendar_get_pressed_date'] = createExportWrapper('lv_calendar_get_pressed_date');
-var _lv_btnmatrix_get_btn_text = Module['_lv_btnmatrix_get_btn_text'] = createExportWrapper('lv_btnmatrix_get_btn_text');
-var _lv_btnmatrix_has_btn_ctrl = Module['_lv_btnmatrix_has_btn_ctrl'] = createExportWrapper('lv_btnmatrix_has_btn_ctrl');
-var _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = createExportWrapper('lv_calendar_header_arrow_create');
-var _lv_btn_create = Module['_lv_btn_create'] = createExportWrapper('lv_btn_create');
-var _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create');
-var _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = createExportWrapper('lv_label_set_long_mode');
-var _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = createExportWrapper('lv_label_set_text_fmt');
-var _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = createExportWrapper('lv_calendar_header_dropdown_create');
-var _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create');
-var _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = createExportWrapper('lv_dropdown_set_options');
-var _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = createExportWrapper('lv_calendar_header_dropdown_set_year_list');
-var _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = createExportWrapper('lv_dropdown_clear_options');
-var _lv_dropdown_get_selected = Module['_lv_dropdown_get_selected'] = createExportWrapper('lv_dropdown_get_selected');
-var _lv_dropdown_get_options = Module['_lv_dropdown_get_options'] = createExportWrapper('lv_dropdown_get_options');
-var _lv_dropdown_set_selected = Module['_lv_dropdown_set_selected'] = createExportWrapper('lv_dropdown_set_selected');
-var _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = createExportWrapper('lv_chart_get_point_pos_by_id');
-var _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create');
-var _lv_chart_set_type = Module['_lv_chart_set_type'] = createExportWrapper('lv_chart_set_type');
-var _lv_chart_refresh = Module['_lv_chart_refresh'] = createExportWrapper('lv_chart_refresh');
-var _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = createExportWrapper('lv_chart_set_point_count');
-var _lv_chart_set_range = Module['_lv_chart_set_range'] = createExportWrapper('lv_chart_set_range');
-var _lv_chart_set_update_mode = Module['_lv_chart_set_update_mode'] = createExportWrapper('lv_chart_set_update_mode');
-var _lv_chart_set_div_line_count = Module['_lv_chart_set_div_line_count'] = createExportWrapper('lv_chart_set_div_line_count');
-var _lv_chart_set_zoom_x = Module['_lv_chart_set_zoom_x'] = createExportWrapper('lv_chart_set_zoom_x');
-var _lv_chart_set_zoom_y = Module['_lv_chart_set_zoom_y'] = createExportWrapper('lv_chart_set_zoom_y');
-var _lv_chart_get_zoom_x = Module['_lv_chart_get_zoom_x'] = createExportWrapper('lv_chart_get_zoom_x');
-var _lv_chart_get_zoom_y = Module['_lv_chart_get_zoom_y'] = createExportWrapper('lv_chart_get_zoom_y');
-var _lv_chart_set_axis_tick = Module['_lv_chart_set_axis_tick'] = createExportWrapper('lv_chart_set_axis_tick');
-var _lv_chart_get_type = Module['_lv_chart_get_type'] = createExportWrapper('lv_chart_get_type');
-var _lv_chart_get_point_count = Module['_lv_chart_get_point_count'] = createExportWrapper('lv_chart_get_point_count');
-var _lv_chart_get_x_start_point = Module['_lv_chart_get_x_start_point'] = createExportWrapper('lv_chart_get_x_start_point');
-var _lv_map = Module['_lv_map'] = createExportWrapper('lv_map');
-var _lv_chart_add_series = Module['_lv_chart_add_series'] = createExportWrapper('lv_chart_add_series');
-var _lv_chart_remove_series = Module['_lv_chart_remove_series'] = createExportWrapper('lv_chart_remove_series');
-var _lv_chart_hide_series = Module['_lv_chart_hide_series'] = createExportWrapper('lv_chart_hide_series');
-var _lv_chart_set_series_color = Module['_lv_chart_set_series_color'] = createExportWrapper('lv_chart_set_series_color');
-var _lv_chart_set_x_start_point = Module['_lv_chart_set_x_start_point'] = createExportWrapper('lv_chart_set_x_start_point');
-var _lv_chart_get_series_next = Module['_lv_chart_get_series_next'] = createExportWrapper('lv_chart_get_series_next');
-var _lv_chart_add_cursor = Module['_lv_chart_add_cursor'] = createExportWrapper('lv_chart_add_cursor');
-var _lv_chart_set_cursor_pos = Module['_lv_chart_set_cursor_pos'] = createExportWrapper('lv_chart_set_cursor_pos');
-var _lv_chart_set_cursor_point = Module['_lv_chart_set_cursor_point'] = createExportWrapper('lv_chart_set_cursor_point');
-var _lv_chart_get_cursor_point = Module['_lv_chart_get_cursor_point'] = createExportWrapper('lv_chart_get_cursor_point');
-var _lv_chart_set_all_value = Module['_lv_chart_set_all_value'] = createExportWrapper('lv_chart_set_all_value');
-var _lv_chart_set_next_value = Module['_lv_chart_set_next_value'] = createExportWrapper('lv_chart_set_next_value');
-var _lv_chart_set_next_value2 = Module['_lv_chart_set_next_value2'] = createExportWrapper('lv_chart_set_next_value2');
-var _lv_chart_set_value_by_id = Module['_lv_chart_set_value_by_id'] = createExportWrapper('lv_chart_set_value_by_id');
-var _lv_chart_set_value_by_id2 = Module['_lv_chart_set_value_by_id2'] = createExportWrapper('lv_chart_set_value_by_id2');
-var _lv_chart_set_ext_y_array = Module['_lv_chart_set_ext_y_array'] = createExportWrapper('lv_chart_set_ext_y_array');
-var _lv_chart_set_ext_x_array = Module['_lv_chart_set_ext_x_array'] = createExportWrapper('lv_chart_set_ext_x_array');
-var _lv_chart_get_y_array = Module['_lv_chart_get_y_array'] = createExportWrapper('lv_chart_get_y_array');
-var _lv_chart_get_x_array = Module['_lv_chart_get_x_array'] = createExportWrapper('lv_chart_get_x_array');
-var _lv_chart_get_pressed_point = Module['_lv_chart_get_pressed_point'] = createExportWrapper('lv_chart_get_pressed_point');
-var _lv_colorwheel_set_hsv = Module['_lv_colorwheel_set_hsv'] = createExportWrapper('lv_colorwheel_set_hsv');
-var _lv_atan2 = Module['_lv_atan2'] = createExportWrapper('lv_atan2');
-var _lv_color_hsv_to_rgb = Module['_lv_color_hsv_to_rgb'] = createExportWrapper('lv_color_hsv_to_rgb');
-var _lv_colorwheel_create = Module['_lv_colorwheel_create'] = createExportWrapper('lv_colorwheel_create');
-var _lv_colorwheel_set_rgb = Module['_lv_colorwheel_set_rgb'] = createExportWrapper('lv_colorwheel_set_rgb');
-var _lv_color_rgb_to_hsv = Module['_lv_color_rgb_to_hsv'] = createExportWrapper('lv_color_rgb_to_hsv');
-var _lv_colorwheel_set_mode = Module['_lv_colorwheel_set_mode'] = createExportWrapper('lv_colorwheel_set_mode');
-var _lv_colorwheel_set_mode_fixed = Module['_lv_colorwheel_set_mode_fixed'] = createExportWrapper('lv_colorwheel_set_mode_fixed');
-var _lv_colorwheel_get_hsv = Module['_lv_colorwheel_get_hsv'] = createExportWrapper('lv_colorwheel_get_hsv');
-var _lv_colorwheel_get_rgb = Module['_lv_colorwheel_get_rgb'] = createExportWrapper('lv_colorwheel_get_rgb');
-var _lv_colorwheel_get_color_mode = Module['_lv_colorwheel_get_color_mode'] = createExportWrapper('lv_colorwheel_get_color_mode');
-var _lv_colorwheel_get_color_mode_fixed = Module['_lv_colorwheel_get_color_mode_fixed'] = createExportWrapper('lv_colorwheel_get_color_mode_fixed');
-var _lv_imgbtn_create = Module['_lv_imgbtn_create'] = createExportWrapper('lv_imgbtn_create');
-var _lv_imgbtn_set_src = Module['_lv_imgbtn_set_src'] = createExportWrapper('lv_imgbtn_set_src');
-var _lv_imgbtn_set_state = Module['_lv_imgbtn_set_state'] = createExportWrapper('lv_imgbtn_set_state');
-var _lv_imgbtn_get_src_left = Module['_lv_imgbtn_get_src_left'] = createExportWrapper('lv_imgbtn_get_src_left');
-var _lv_imgbtn_get_src_middle = Module['_lv_imgbtn_get_src_middle'] = createExportWrapper('lv_imgbtn_get_src_middle');
-var _lv_imgbtn_get_src_right = Module['_lv_imgbtn_get_src_right'] = createExportWrapper('lv_imgbtn_get_src_right');
-var _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = createExportWrapper('lv_keyboard_def_event_cb');
-var _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create');
-var _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = createExportWrapper('lv_keyboard_set_textarea');
-var _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = createExportWrapper('lv_keyboard_set_mode');
-var _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = createExportWrapper('lv_keyboard_set_popovers');
-var _lv_btnmatrix_set_ctrl_map = Module['_lv_btnmatrix_set_ctrl_map'] = createExportWrapper('lv_btnmatrix_set_ctrl_map');
-var _lv_keyboard_set_map = Module['_lv_keyboard_set_map'] = createExportWrapper('lv_keyboard_set_map');
-var _lv_keyboard_get_textarea = Module['_lv_keyboard_get_textarea'] = createExportWrapper('lv_keyboard_get_textarea');
-var _lv_keyboard_get_mode = Module['_lv_keyboard_get_mode'] = createExportWrapper('lv_keyboard_get_mode');
-var _lv_btnmatrix_get_popovers = Module['_lv_btnmatrix_get_popovers'] = createExportWrapper('lv_btnmatrix_get_popovers');
-var _lv_textarea_add_char = Module['_lv_textarea_add_char'] = createExportWrapper('lv_textarea_add_char');
-var _lv_textarea_get_one_line = Module['_lv_textarea_get_one_line'] = createExportWrapper('lv_textarea_get_one_line');
-var _lv_textarea_cursor_left = Module['_lv_textarea_cursor_left'] = createExportWrapper('lv_textarea_cursor_left');
-var _lv_textarea_cursor_right = Module['_lv_textarea_cursor_right'] = createExportWrapper('lv_textarea_cursor_right');
-var _lv_textarea_del_char = Module['_lv_textarea_del_char'] = createExportWrapper('lv_textarea_del_char');
-var _lv_textarea_get_cursor_pos = Module['_lv_textarea_get_cursor_pos'] = createExportWrapper('lv_textarea_get_cursor_pos');
-var _lv_textarea_get_text = Module['_lv_textarea_get_text'] = createExportWrapper('lv_textarea_get_text');
-var _lv_textarea_set_cursor_pos = Module['_lv_textarea_set_cursor_pos'] = createExportWrapper('lv_textarea_set_cursor_pos');
-var _lv_textarea_add_text = Module['_lv_textarea_add_text'] = createExportWrapper('lv_textarea_add_text');
-var _lv_led_create = Module['_lv_led_create'] = createExportWrapper('lv_led_create');
-var _lv_led_set_color = Module['_lv_led_set_color'] = createExportWrapper('lv_led_set_color');
-var _lv_led_set_brightness = Module['_lv_led_set_brightness'] = createExportWrapper('lv_led_set_brightness');
-var _lv_led_on = Module['_lv_led_on'] = createExportWrapper('lv_led_on');
-var _lv_led_off = Module['_lv_led_off'] = createExportWrapper('lv_led_off');
-var _lv_led_toggle = Module['_lv_led_toggle'] = createExportWrapper('lv_led_toggle');
-var _lv_led_get_brightness = Module['_lv_led_get_brightness'] = createExportWrapper('lv_led_get_brightness');
-var _lv_list_create = Module['_lv_list_create'] = createExportWrapper('lv_list_create');
-var _lv_list_add_text = Module['_lv_list_add_text'] = createExportWrapper('lv_list_add_text');
-var _lv_label_set_text = Module['_lv_label_set_text'] = createExportWrapper('lv_label_set_text');
-var _lv_list_add_btn = Module['_lv_list_add_btn'] = createExportWrapper('lv_list_add_btn');
-var _lv_img_create = Module['_lv_img_create'] = createExportWrapper('lv_img_create');
-var _lv_img_set_src = Module['_lv_img_set_src'] = createExportWrapper('lv_img_set_src');
-var _lv_list_get_btn_text = Module['_lv_list_get_btn_text'] = createExportWrapper('lv_list_get_btn_text');
-var _lv_label_get_text = Module['_lv_label_get_text'] = createExportWrapper('lv_label_get_text');
-var _lv_menu_create = Module['_lv_menu_create'] = createExportWrapper('lv_menu_create');
-var _lv_menu_page_create = Module['_lv_menu_page_create'] = createExportWrapper('lv_menu_page_create');
-var _lv_menu_cont_create = Module['_lv_menu_cont_create'] = createExportWrapper('lv_menu_cont_create');
-var _lv_menu_section_create = Module['_lv_menu_section_create'] = createExportWrapper('lv_menu_section_create');
-var _lv_menu_separator_create = Module['_lv_menu_separator_create'] = createExportWrapper('lv_menu_separator_create');
-var _lv_menu_set_page = Module['_lv_menu_set_page'] = createExportWrapper('lv_menu_set_page');
-var _lv_menu_clear_history = Module['_lv_menu_clear_history'] = createExportWrapper('lv_menu_clear_history');
-var _lv_menu_set_sidebar_page = Module['_lv_menu_set_sidebar_page'] = createExportWrapper('lv_menu_set_sidebar_page');
-var _lv_menu_set_mode_header = Module['_lv_menu_set_mode_header'] = createExportWrapper('lv_menu_set_mode_header');
-var _lv_menu_set_mode_root_back_btn = Module['_lv_menu_set_mode_root_back_btn'] = createExportWrapper('lv_menu_set_mode_root_back_btn');
-var _lv_menu_set_load_page_event = Module['_lv_menu_set_load_page_event'] = createExportWrapper('lv_menu_set_load_page_event');
-var _lv_menu_get_cur_main_page = Module['_lv_menu_get_cur_main_page'] = createExportWrapper('lv_menu_get_cur_main_page');
-var _lv_menu_get_cur_sidebar_page = Module['_lv_menu_get_cur_sidebar_page'] = createExportWrapper('lv_menu_get_cur_sidebar_page');
-var _lv_menu_get_main_header = Module['_lv_menu_get_main_header'] = createExportWrapper('lv_menu_get_main_header');
-var _lv_menu_get_main_header_back_btn = Module['_lv_menu_get_main_header_back_btn'] = createExportWrapper('lv_menu_get_main_header_back_btn');
-var _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = createExportWrapper('lv_menu_get_sidebar_header');
-var _lv_menu_get_sidebar_header_back_btn = Module['_lv_menu_get_sidebar_header_back_btn'] = createExportWrapper('lv_menu_get_sidebar_header_back_btn');
-var _lv_menu_back_btn_is_root = Module['_lv_menu_back_btn_is_root'] = createExportWrapper('lv_menu_back_btn_is_root');
-var _lv_meter_create = Module['_lv_meter_create'] = createExportWrapper('lv_meter_create');
-var _lv_meter_add_scale = Module['_lv_meter_add_scale'] = createExportWrapper('lv_meter_add_scale');
-var _lv_meter_set_scale_ticks = Module['_lv_meter_set_scale_ticks'] = createExportWrapper('lv_meter_set_scale_ticks');
-var _lv_meter_set_scale_major_ticks = Module['_lv_meter_set_scale_major_ticks'] = createExportWrapper('lv_meter_set_scale_major_ticks');
-var _lv_meter_set_scale_range = Module['_lv_meter_set_scale_range'] = createExportWrapper('lv_meter_set_scale_range');
-var _lv_meter_add_needle_line = Module['_lv_meter_add_needle_line'] = createExportWrapper('lv_meter_add_needle_line');
-var _lv_meter_add_needle_img = Module['_lv_meter_add_needle_img'] = createExportWrapper('lv_meter_add_needle_img');
-var _lv_meter_add_arc = Module['_lv_meter_add_arc'] = createExportWrapper('lv_meter_add_arc');
-var _lv_meter_add_scale_lines = Module['_lv_meter_add_scale_lines'] = createExportWrapper('lv_meter_add_scale_lines');
-var _lv_meter_set_indicator_value = Module['_lv_meter_set_indicator_value'] = createExportWrapper('lv_meter_set_indicator_value');
-var _lv_meter_set_indicator_start_value = Module['_lv_meter_set_indicator_start_value'] = createExportWrapper('lv_meter_set_indicator_start_value');
-var _lv_meter_set_indicator_end_value = Module['_lv_meter_set_indicator_end_value'] = createExportWrapper('lv_meter_set_indicator_end_value');
-var _lv_msgbox_create = Module['_lv_msgbox_create'] = createExportWrapper('lv_msgbox_create');
-var _lv_msgbox_get_title = Module['_lv_msgbox_get_title'] = createExportWrapper('lv_msgbox_get_title');
-var _lv_msgbox_get_close_btn = Module['_lv_msgbox_get_close_btn'] = createExportWrapper('lv_msgbox_get_close_btn');
-var _lv_msgbox_get_text = Module['_lv_msgbox_get_text'] = createExportWrapper('lv_msgbox_get_text');
-var _lv_msgbox_get_content = Module['_lv_msgbox_get_content'] = createExportWrapper('lv_msgbox_get_content');
-var _lv_msgbox_get_btns = Module['_lv_msgbox_get_btns'] = createExportWrapper('lv_msgbox_get_btns');
-var _lv_msgbox_get_active_btn = Module['_lv_msgbox_get_active_btn'] = createExportWrapper('lv_msgbox_get_active_btn');
-var _lv_msgbox_get_active_btn_text = Module['_lv_msgbox_get_active_btn_text'] = createExportWrapper('lv_msgbox_get_active_btn_text');
-var _lv_msgbox_close = Module['_lv_msgbox_close'] = createExportWrapper('lv_msgbox_close');
-var _lv_msgbox_close_async = Module['_lv_msgbox_close_async'] = createExportWrapper('lv_msgbox_close_async');
-var _lv_spangroup_get_expand_width = Module['_lv_spangroup_get_expand_width'] = createExportWrapper('lv_spangroup_get_expand_width');
-var _lv_spangroup_get_max_line_h = Module['_lv_spangroup_get_max_line_h'] = createExportWrapper('lv_spangroup_get_max_line_h');
-var _lv_spangroup_get_expand_height = Module['_lv_spangroup_get_expand_height'] = createExportWrapper('lv_spangroup_get_expand_height');
-var _lv_spangroup_create = Module['_lv_spangroup_create'] = createExportWrapper('lv_spangroup_create');
-var _lv_spangroup_new_span = Module['_lv_spangroup_new_span'] = createExportWrapper('lv_spangroup_new_span');
-var _lv_spangroup_del_span = Module['_lv_spangroup_del_span'] = createExportWrapper('lv_spangroup_del_span');
-var _lv_span_set_text = Module['_lv_span_set_text'] = createExportWrapper('lv_span_set_text');
-var _lv_span_set_text_static = Module['_lv_span_set_text_static'] = createExportWrapper('lv_span_set_text_static');
-var _lv_spangroup_set_align = Module['_lv_spangroup_set_align'] = createExportWrapper('lv_spangroup_set_align');
-var _lv_spangroup_set_overflow = Module['_lv_spangroup_set_overflow'] = createExportWrapper('lv_spangroup_set_overflow');
-var _lv_spangroup_set_indent = Module['_lv_spangroup_set_indent'] = createExportWrapper('lv_spangroup_set_indent');
-var _lv_spangroup_set_mode = Module['_lv_spangroup_set_mode'] = createExportWrapper('lv_spangroup_set_mode');
-var _lv_spangroup_refr_mode = Module['_lv_spangroup_refr_mode'] = createExportWrapper('lv_spangroup_refr_mode');
-var _lv_spangroup_set_lines = Module['_lv_spangroup_set_lines'] = createExportWrapper('lv_spangroup_set_lines');
-var _lv_spangroup_get_child = Module['_lv_spangroup_get_child'] = createExportWrapper('lv_spangroup_get_child');
-var _lv_spangroup_get_child_cnt = Module['_lv_spangroup_get_child_cnt'] = createExportWrapper('lv_spangroup_get_child_cnt');
-var _lv_spangroup_get_align = Module['_lv_spangroup_get_align'] = createExportWrapper('lv_spangroup_get_align');
-var _lv_spangroup_get_overflow = Module['_lv_spangroup_get_overflow'] = createExportWrapper('lv_spangroup_get_overflow');
-var _lv_spangroup_get_indent = Module['_lv_spangroup_get_indent'] = createExportWrapper('lv_spangroup_get_indent');
-var _lv_spangroup_get_mode = Module['_lv_spangroup_get_mode'] = createExportWrapper('lv_spangroup_get_mode');
-var _lv_spangroup_get_lines = Module['_lv_spangroup_get_lines'] = createExportWrapper('lv_spangroup_get_lines');
-var _lv_textarea_set_one_line = Module['_lv_textarea_set_one_line'] = createExportWrapper('lv_textarea_set_one_line');
-var _lv_textarea_set_cursor_click_pos = Module['_lv_textarea_set_cursor_click_pos'] = createExportWrapper('lv_textarea_set_cursor_click_pos');
-var _lv_pow = Module['_lv_pow'] = createExportWrapper('lv_pow');
-var _lv_spinbox_step_prev = Module['_lv_spinbox_step_prev'] = createExportWrapper('lv_spinbox_step_prev');
-var _lv_spinbox_increment = Module['_lv_spinbox_increment'] = createExportWrapper('lv_spinbox_increment');
-var _lv_spinbox_decrement = Module['_lv_spinbox_decrement'] = createExportWrapper('lv_spinbox_decrement');
-var _lv_spinbox_create = Module['_lv_spinbox_create'] = createExportWrapper('lv_spinbox_create');
-var _lv_spinbox_set_value = Module['_lv_spinbox_set_value'] = createExportWrapper('lv_spinbox_set_value');
-var _lv_textarea_set_text = Module['_lv_textarea_set_text'] = createExportWrapper('lv_textarea_set_text');
-var _lv_spinbox_set_rollover = Module['_lv_spinbox_set_rollover'] = createExportWrapper('lv_spinbox_set_rollover');
-var _lv_spinbox_set_digit_format = Module['_lv_spinbox_set_digit_format'] = createExportWrapper('lv_spinbox_set_digit_format');
-var _lv_spinbox_set_step = Module['_lv_spinbox_set_step'] = createExportWrapper('lv_spinbox_set_step');
-var _lv_spinbox_set_range = Module['_lv_spinbox_set_range'] = createExportWrapper('lv_spinbox_set_range');
-var _lv_spinbox_set_cursor_pos = Module['_lv_spinbox_set_cursor_pos'] = createExportWrapper('lv_spinbox_set_cursor_pos');
-var _lv_spinbox_set_digit_step_direction = Module['_lv_spinbox_set_digit_step_direction'] = createExportWrapper('lv_spinbox_set_digit_step_direction');
-var _lv_spinbox_get_value = Module['_lv_spinbox_get_value'] = createExportWrapper('lv_spinbox_get_value');
-var _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = createExportWrapper('lv_spinbox_get_step');
-var _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = createExportWrapper('lv_spinbox_step_next');
-var _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = createExportWrapper('lv_spinbox_get_rollover');
-var _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create');
-var _lv_anim_path_ease_in_out = Module['_lv_anim_path_ease_in_out'] = createExportWrapper('lv_anim_path_ease_in_out');
-var _lv_arc_set_bg_angles = Module['_lv_arc_set_bg_angles'] = createExportWrapper('lv_arc_set_bg_angles');
-var _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = createExportWrapper('lv_arc_set_rotation');
-var _lv_arc_set_end_angle = Module['_lv_arc_set_end_angle'] = createExportWrapper('lv_arc_set_end_angle');
-var _lv_arc_set_start_angle = Module['_lv_arc_set_start_angle'] = createExportWrapper('lv_arc_set_start_angle');
-var _lv_btnmatrix_set_one_checked = Module['_lv_btnmatrix_set_one_checked'] = createExportWrapper('lv_btnmatrix_set_one_checked');
-var _lv_tabview_set_act = Module['_lv_tabview_set_act'] = createExportWrapper('lv_tabview_set_act');
-var _lv_tabview_create = Module['_lv_tabview_create'] = createExportWrapper('lv_tabview_create');
-var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab');
-var _lv_tabview_get_content = Module['_lv_tabview_get_content'] = createExportWrapper('lv_tabview_get_content');
-var _lv_tabview_get_tab_btns = Module['_lv_tabview_get_tab_btns'] = createExportWrapper('lv_tabview_get_tab_btns');
-var _lv_tabview_rename_tab = Module['_lv_tabview_rename_tab'] = createExportWrapper('lv_tabview_rename_tab');
-var _lv_tabview_get_tab_act = Module['_lv_tabview_get_tab_act'] = createExportWrapper('lv_tabview_get_tab_act');
-var _lv_tileview_create = Module['_lv_tileview_create'] = createExportWrapper('lv_tileview_create');
-var _lv_tileview_add_tile = Module['_lv_tileview_add_tile'] = createExportWrapper('lv_tileview_add_tile');
-var _lv_obj_set_tile = Module['_lv_obj_set_tile'] = createExportWrapper('lv_obj_set_tile');
-var _lv_obj_set_tile_id = Module['_lv_obj_set_tile_id'] = createExportWrapper('lv_obj_set_tile_id');
-var _lv_tileview_get_tile_act = Module['_lv_tileview_get_tile_act'] = createExportWrapper('lv_tileview_get_tile_act');
-var _lv_win_create = Module['_lv_win_create'] = createExportWrapper('lv_win_create');
-var _lv_win_add_title = Module['_lv_win_add_title'] = createExportWrapper('lv_win_add_title');
-var _lv_win_get_header = Module['_lv_win_get_header'] = createExportWrapper('lv_win_get_header');
-var _lv_win_add_btn = Module['_lv_win_add_btn'] = createExportWrapper('lv_win_add_btn');
-var _lv_win_get_content = Module['_lv_win_get_content'] = createExportWrapper('lv_win_get_content');
-var _lv_font_get_glyph_bitmap = Module['_lv_font_get_glyph_bitmap'] = createExportWrapper('lv_font_get_glyph_bitmap');
-var _lv_font_get_glyph_dsc = Module['_lv_font_get_glyph_dsc'] = createExportWrapper('lv_font_get_glyph_dsc');
-var _lv_font_get_bitmap_fmt_txt = Module['_lv_font_get_bitmap_fmt_txt'] = createExportWrapper('lv_font_get_bitmap_fmt_txt');
-var _lv_font_get_glyph_dsc_fmt_txt = Module['_lv_font_get_glyph_dsc_fmt_txt'] = createExportWrapper('lv_font_get_glyph_dsc_fmt_txt');
-var _lv_area_move = Module['_lv_area_move'] = createExportWrapper('lv_area_move');
-var _lv_color_fill = Module['_lv_color_fill'] = createExportWrapper('lv_color_fill');
-var _lv_timer_create = Module['_lv_timer_create'] = createExportWrapper('lv_timer_create');
-var _lv_timer_ready = Module['_lv_timer_ready'] = createExportWrapper('lv_timer_ready');
-var _lv_disp_drv_update = Module['_lv_disp_drv_update'] = createExportWrapper('lv_disp_drv_update');
-var _lv_disp_remove = Module['_lv_disp_remove'] = createExportWrapper('lv_disp_remove');
-var _lv_timer_del = Module['_lv_timer_del'] = createExportWrapper('lv_timer_del');
-var _lv_disp_get_physical_hor_res = Module['_lv_disp_get_physical_hor_res'] = createExportWrapper('lv_disp_get_physical_hor_res');
-var _lv_disp_get_physical_ver_res = Module['_lv_disp_get_physical_ver_res'] = createExportWrapper('lv_disp_get_physical_ver_res');
-var _lv_disp_get_offset_x = Module['_lv_disp_get_offset_x'] = createExportWrapper('lv_disp_get_offset_x');
-var _lv_disp_get_offset_y = Module['_lv_disp_get_offset_y'] = createExportWrapper('lv_disp_get_offset_y');
-var _lv_disp_get_antialiasing = Module['_lv_disp_get_antialiasing'] = createExportWrapper('lv_disp_get_antialiasing');
-var _lv_disp_flush_is_last = Module['_lv_disp_flush_is_last'] = createExportWrapper('lv_disp_flush_is_last');
-var _lv_disp_set_rotation = Module['_lv_disp_set_rotation'] = createExportWrapper('lv_disp_set_rotation');
-var _lv_disp_get_rotation = Module['_lv_disp_get_rotation'] = createExportWrapper('lv_disp_get_rotation');
-var _lv_disp_drv_use_generic_set_px_cb = Module['_lv_disp_drv_use_generic_set_px_cb'] = createExportWrapper('lv_disp_drv_use_generic_set_px_cb');
-var _lv_indev_drv_update = Module['_lv_indev_drv_update'] = createExportWrapper('lv_indev_drv_update');
-var _lv_indev_delete = Module['_lv_indev_delete'] = createExportWrapper('lv_indev_delete');
-var _lv_anim_get_playtime = Module['_lv_anim_get_playtime'] = createExportWrapper('lv_anim_get_playtime');
-var _lv_anim_del_all = Module['_lv_anim_del_all'] = createExportWrapper('lv_anim_del_all');
-var _lv_anim_get_timer = Module['_lv_anim_get_timer'] = createExportWrapper('lv_anim_get_timer');
-var _lv_anim_count_running = Module['_lv_anim_count_running'] = createExportWrapper('lv_anim_count_running');
-var _lv_anim_path_ease_in = Module['_lv_anim_path_ease_in'] = createExportWrapper('lv_anim_path_ease_in');
-var _lv_bezier3 = Module['_lv_bezier3'] = createExportWrapper('lv_bezier3');
-var _lv_anim_path_overshoot = Module['_lv_anim_path_overshoot'] = createExportWrapper('lv_anim_path_overshoot');
-var _lv_anim_path_bounce = Module['_lv_anim_path_bounce'] = createExportWrapper('lv_anim_path_bounce');
-var _lv_anim_path_step = Module['_lv_anim_path_step'] = createExportWrapper('lv_anim_path_step');
-var _lv_anim_timeline_create = Module['_lv_anim_timeline_create'] = createExportWrapper('lv_anim_timeline_create');
-var _lv_anim_timeline_del = Module['_lv_anim_timeline_del'] = createExportWrapper('lv_anim_timeline_del');
-var _lv_anim_timeline_stop = Module['_lv_anim_timeline_stop'] = createExportWrapper('lv_anim_timeline_stop');
-var _lv_anim_timeline_add = Module['_lv_anim_timeline_add'] = createExportWrapper('lv_anim_timeline_add');
-var _lv_anim_timeline_start = Module['_lv_anim_timeline_start'] = createExportWrapper('lv_anim_timeline_start');
-var _lv_anim_timeline_get_playtime = Module['_lv_anim_timeline_get_playtime'] = createExportWrapper('lv_anim_timeline_get_playtime');
-var _lv_anim_timeline_set_reverse = Module['_lv_anim_timeline_set_reverse'] = createExportWrapper('lv_anim_timeline_set_reverse');
-var _lv_anim_timeline_set_progress = Module['_lv_anim_timeline_set_progress'] = createExportWrapper('lv_anim_timeline_set_progress');
-var _lv_anim_timeline_get_reverse = Module['_lv_anim_timeline_get_reverse'] = createExportWrapper('lv_anim_timeline_get_reverse');
-var _lv_area_align = Module['_lv_area_align'] = createExportWrapper('lv_area_align');
-var _lv_timer_set_repeat_count = Module['_lv_timer_set_repeat_count'] = createExportWrapper('lv_timer_set_repeat_count');
-var _lv_async_call_cancel = Module['_lv_async_call_cancel'] = createExportWrapper('lv_async_call_cancel');
-var _lv_timer_get_next = Module['_lv_timer_get_next'] = createExportWrapper('lv_timer_get_next');
-var _lv_color_lighten = Module['_lv_color_lighten'] = createExportWrapper('lv_color_lighten');
-var _lv_color_change_lightness = Module['_lv_color_change_lightness'] = createExportWrapper('lv_color_change_lightness');
-var _lv_color_to_hsv = Module['_lv_color_to_hsv'] = createExportWrapper('lv_color_to_hsv');
-var _lv_fs_is_ready = Module['_lv_fs_is_ready'] = createExportWrapper('lv_fs_is_ready');
-var _lv_fs_get_drv = Module['_lv_fs_get_drv'] = createExportWrapper('lv_fs_get_drv');
-var _lv_fs_dir_open = Module['_lv_fs_dir_open'] = createExportWrapper('lv_fs_dir_open');
-var _lv_fs_dir_read = Module['_lv_fs_dir_read'] = createExportWrapper('lv_fs_dir_read');
-var _lv_fs_dir_close = Module['_lv_fs_dir_close'] = createExportWrapper('lv_fs_dir_close');
-var _lv_fs_get_letters = Module['_lv_fs_get_letters'] = createExportWrapper('lv_fs_get_letters');
-var _lv_fs_up = Module['_lv_fs_up'] = createExportWrapper('lv_fs_up');
-var _lv_fs_get_last = Module['_lv_fs_get_last'] = createExportWrapper('lv_fs_get_last');
-var _lv_log = Module['_lv_log'] = createExportWrapper('lv_log');
-var _lv_lru_create = Module['_lv_lru_create'] = createExportWrapper('lv_lru_create');
-var _lv_lru_del = Module['_lv_lru_del'] = createExportWrapper('lv_lru_del');
-var _lv_lru_set = Module['_lv_lru_set'] = createExportWrapper('lv_lru_set');
-var _lv_lru_remove_lru_item = Module['_lv_lru_remove_lru_item'] = createExportWrapper('lv_lru_remove_lru_item');
-var _lv_lru_get = Module['_lv_lru_get'] = createExportWrapper('lv_lru_get');
-var _lv_lru_remove = Module['_lv_lru_remove'] = createExportWrapper('lv_lru_remove');
-var _lv_sqrt = Module['_lv_sqrt'] = createExportWrapper('lv_sqrt');
-var _lv_rand = Module['_lv_rand'] = createExportWrapper('lv_rand');
-var _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = createExportWrapper('lv_tlsf_create_with_pool');
-var _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = createExportWrapper('lv_tlsf_destroy');
-var _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = createExportWrapper('lv_tlsf_malloc');
-var _lv_tlsf_free = Module['_lv_tlsf_free'] = createExportWrapper('lv_tlsf_free');
-var _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = createExportWrapper('lv_tlsf_realloc');
-var _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test');
-var _lv_tlsf_check = Module['_lv_tlsf_check'] = createExportWrapper('lv_tlsf_check');
-var _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = createExportWrapper('lv_tlsf_get_pool');
-var _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = createExportWrapper('lv_tlsf_check_pool');
-var _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor');
-var _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = createExportWrapper('lv_tlsf_walk_pool');
-var _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf');
-var _lv_style_get_num_custom_props = Module['_lv_style_get_num_custom_props'] = createExportWrapper('lv_style_get_num_custom_props');
-var _lv_style_set_min_width = Module['_lv_style_set_min_width'] = createExportWrapper('lv_style_set_min_width');
-var _lv_style_set_min_height = Module['_lv_style_set_min_height'] = createExportWrapper('lv_style_set_min_height');
-var _lv_style_set_x = Module['_lv_style_set_x'] = createExportWrapper('lv_style_set_x');
-var _lv_style_set_y = Module['_lv_style_set_y'] = createExportWrapper('lv_style_set_y');
-var _lv_style_set_align = Module['_lv_style_set_align'] = createExportWrapper('lv_style_set_align');
-var _lv_style_set_translate_x = Module['_lv_style_set_translate_x'] = createExportWrapper('lv_style_set_translate_x');
-var _lv_style_set_translate_y = Module['_lv_style_set_translate_y'] = createExportWrapper('lv_style_set_translate_y');
-var _lv_style_set_transform_zoom = Module['_lv_style_set_transform_zoom'] = createExportWrapper('lv_style_set_transform_zoom');
-var _lv_style_set_transform_angle = Module['_lv_style_set_transform_angle'] = createExportWrapper('lv_style_set_transform_angle');
-var _lv_style_set_transform_pivot_x = Module['_lv_style_set_transform_pivot_x'] = createExportWrapper('lv_style_set_transform_pivot_x');
-var _lv_style_set_transform_pivot_y = Module['_lv_style_set_transform_pivot_y'] = createExportWrapper('lv_style_set_transform_pivot_y');
-var _lv_style_set_bg_grad_dir = Module['_lv_style_set_bg_grad_dir'] = createExportWrapper('lv_style_set_bg_grad_dir');
-var _lv_style_set_bg_main_stop = Module['_lv_style_set_bg_main_stop'] = createExportWrapper('lv_style_set_bg_main_stop');
-var _lv_style_set_bg_grad_stop = Module['_lv_style_set_bg_grad_stop'] = createExportWrapper('lv_style_set_bg_grad_stop');
-var _lv_style_set_bg_grad = Module['_lv_style_set_bg_grad'] = createExportWrapper('lv_style_set_bg_grad');
-var _lv_style_set_bg_dither_mode = Module['_lv_style_set_bg_dither_mode'] = createExportWrapper('lv_style_set_bg_dither_mode');
-var _lv_style_set_bg_img_opa = Module['_lv_style_set_bg_img_opa'] = createExportWrapper('lv_style_set_bg_img_opa');
-var _lv_style_set_bg_img_recolor = Module['_lv_style_set_bg_img_recolor'] = createExportWrapper('lv_style_set_bg_img_recolor');
-var _lv_style_set_bg_img_recolor_opa = Module['_lv_style_set_bg_img_recolor_opa'] = createExportWrapper('lv_style_set_bg_img_recolor_opa');
-var _lv_style_set_bg_img_tiled = Module['_lv_style_set_bg_img_tiled'] = createExportWrapper('lv_style_set_bg_img_tiled');
-var _lv_style_set_shadow_ofs_x = Module['_lv_style_set_shadow_ofs_x'] = createExportWrapper('lv_style_set_shadow_ofs_x');
-var _lv_style_set_img_opa = Module['_lv_style_set_img_opa'] = createExportWrapper('lv_style_set_img_opa');
-var _lv_style_set_img_recolor = Module['_lv_style_set_img_recolor'] = createExportWrapper('lv_style_set_img_recolor');
-var _lv_style_set_img_recolor_opa = Module['_lv_style_set_img_recolor_opa'] = createExportWrapper('lv_style_set_img_recolor_opa');
-var _lv_style_set_line_dash_width = Module['_lv_style_set_line_dash_width'] = createExportWrapper('lv_style_set_line_dash_width');
-var _lv_style_set_line_dash_gap = Module['_lv_style_set_line_dash_gap'] = createExportWrapper('lv_style_set_line_dash_gap');
-var _lv_style_set_line_rounded = Module['_lv_style_set_line_rounded'] = createExportWrapper('lv_style_set_line_rounded');
-var _lv_style_set_line_opa = Module['_lv_style_set_line_opa'] = createExportWrapper('lv_style_set_line_opa');
-var _lv_style_set_arc_opa = Module['_lv_style_set_arc_opa'] = createExportWrapper('lv_style_set_arc_opa');
-var _lv_style_set_arc_img_src = Module['_lv_style_set_arc_img_src'] = createExportWrapper('lv_style_set_arc_img_src');
-var _lv_style_set_text_opa = Module['_lv_style_set_text_opa'] = createExportWrapper('lv_style_set_text_opa');
-var _lv_style_set_text_letter_space = Module['_lv_style_set_text_letter_space'] = createExportWrapper('lv_style_set_text_letter_space');
-var _lv_style_set_text_decor = Module['_lv_style_set_text_decor'] = createExportWrapper('lv_style_set_text_decor');
-var _lv_style_set_opa = Module['_lv_style_set_opa'] = createExportWrapper('lv_style_set_opa');
-var _lv_style_set_opa_layered = Module['_lv_style_set_opa_layered'] = createExportWrapper('lv_style_set_opa_layered');
-var _lv_style_set_anim = Module['_lv_style_set_anim'] = createExportWrapper('lv_style_set_anim');
-var _lv_style_set_anim_speed = Module['_lv_style_set_anim_speed'] = createExportWrapper('lv_style_set_anim_speed');
-var _lv_style_set_blend_mode = Module['_lv_style_set_blend_mode'] = createExportWrapper('lv_style_set_blend_mode');
-var _lv_style_set_layout = Module['_lv_style_set_layout'] = createExportWrapper('lv_style_set_layout');
-var _lv_style_set_base_dir = Module['_lv_style_set_base_dir'] = createExportWrapper('lv_style_set_base_dir');
-var _lv_timer_enable = Module['_lv_timer_enable'] = createExportWrapper('lv_timer_enable');
-var _lv_timer_create_basic = Module['_lv_timer_create_basic'] = createExportWrapper('lv_timer_create_basic');
-var _lv_timer_set_cb = Module['_lv_timer_set_cb'] = createExportWrapper('lv_timer_set_cb');
-var _lv_timer_set_period = Module['_lv_timer_set_period'] = createExportWrapper('lv_timer_set_period');
-var _lv_timer_reset = Module['_lv_timer_reset'] = createExportWrapper('lv_timer_reset');
-var _lv_timer_get_idle = Module['_lv_timer_get_idle'] = createExportWrapper('lv_timer_get_idle');
-var _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = createExportWrapper('lv_tlsf_block_size');
-var _lv_tlsf_size = Module['_lv_tlsf_size'] = createExportWrapper('lv_tlsf_size');
-var _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = createExportWrapper('lv_tlsf_align_size');
-var _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = createExportWrapper('lv_tlsf_block_size_min');
-var _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = createExportWrapper('lv_tlsf_block_size_max');
-var _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = createExportWrapper('lv_tlsf_pool_overhead');
-var _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = createExportWrapper('lv_tlsf_alloc_overhead');
-var _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = createExportWrapper('lv_tlsf_add_pool');
-var _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = createExportWrapper('lv_tlsf_remove_pool');
-var _lv_tlsf_create = Module['_lv_tlsf_create'] = createExportWrapper('lv_tlsf_create');
-var _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = createExportWrapper('lv_tlsf_memalign');
-var _lv_arc_set_value = Module['_lv_arc_set_value'] = createExportWrapper('lv_arc_set_value');
-var _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create');
-var _lv_arc_set_angles = Module['_lv_arc_set_angles'] = createExportWrapper('lv_arc_set_angles');
-var _lv_arc_set_bg_start_angle = Module['_lv_arc_set_bg_start_angle'] = createExportWrapper('lv_arc_set_bg_start_angle');
-var _lv_arc_set_bg_end_angle = Module['_lv_arc_set_bg_end_angle'] = createExportWrapper('lv_arc_set_bg_end_angle');
-var _lv_arc_set_mode = Module['_lv_arc_set_mode'] = createExportWrapper('lv_arc_set_mode');
-var _lv_arc_set_range = Module['_lv_arc_set_range'] = createExportWrapper('lv_arc_set_range');
-var _lv_arc_set_change_rate = Module['_lv_arc_set_change_rate'] = createExportWrapper('lv_arc_set_change_rate');
-var _lv_arc_get_angle_start = Module['_lv_arc_get_angle_start'] = createExportWrapper('lv_arc_get_angle_start');
-var _lv_arc_get_angle_end = Module['_lv_arc_get_angle_end'] = createExportWrapper('lv_arc_get_angle_end');
-var _lv_arc_get_bg_angle_start = Module['_lv_arc_get_bg_angle_start'] = createExportWrapper('lv_arc_get_bg_angle_start');
-var _lv_arc_get_bg_angle_end = Module['_lv_arc_get_bg_angle_end'] = createExportWrapper('lv_arc_get_bg_angle_end');
-var _lv_arc_get_value = Module['_lv_arc_get_value'] = createExportWrapper('lv_arc_get_value');
-var _lv_arc_get_min_value = Module['_lv_arc_get_min_value'] = createExportWrapper('lv_arc_get_min_value');
-var _lv_arc_get_max_value = Module['_lv_arc_get_max_value'] = createExportWrapper('lv_arc_get_max_value');
-var _lv_arc_get_mode = Module['_lv_arc_get_mode'] = createExportWrapper('lv_arc_get_mode');
-var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createExportWrapper('lv_arc_align_obj_to_angle');
-var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle');
-var _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create');
-var _lv_bar_get_mode = Module['_lv_bar_get_mode'] = createExportWrapper('lv_bar_get_mode');
-var _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl');
-var _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = createExportWrapper('lv_btnmatrix_set_btn_width');
-var _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = createExportWrapper('lv_btnmatrix_get_map');
-var _lv_btnmatrix_get_one_checked = Module['_lv_btnmatrix_get_one_checked'] = createExportWrapper('lv_btnmatrix_get_one_checked');
-var _lv_canvas_create = Module['_lv_canvas_create'] = createExportWrapper('lv_canvas_create');
-var _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = createExportWrapper('lv_canvas_set_buffer');
-var _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = createExportWrapper('lv_canvas_set_px_color');
-var _lv_canvas_set_px_opa = Module['_lv_canvas_set_px_opa'] = createExportWrapper('lv_canvas_set_px_opa');
-var _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = createExportWrapper('lv_canvas_set_palette');
-var _lv_canvas_get_px = Module['_lv_canvas_get_px'] = createExportWrapper('lv_canvas_get_px');
-var _lv_canvas_get_img = Module['_lv_canvas_get_img'] = createExportWrapper('lv_canvas_get_img');
-var _lv_canvas_copy_buf = Module['_lv_canvas_copy_buf'] = createExportWrapper('lv_canvas_copy_buf');
-var _lv_canvas_transform = Module['_lv_canvas_transform'] = createExportWrapper('lv_canvas_transform');
-var _lv_canvas_blur_hor = Module['_lv_canvas_blur_hor'] = createExportWrapper('lv_canvas_blur_hor');
-var _lv_canvas_blur_ver = Module['_lv_canvas_blur_ver'] = createExportWrapper('lv_canvas_blur_ver');
-var _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = createExportWrapper('lv_canvas_fill_bg');
-var _lv_canvas_draw_rect = Module['_lv_canvas_draw_rect'] = createExportWrapper('lv_canvas_draw_rect');
-var _lv_canvas_draw_text = Module['_lv_canvas_draw_text'] = createExportWrapper('lv_canvas_draw_text');
-var _lv_canvas_draw_img = Module['_lv_canvas_draw_img'] = createExportWrapper('lv_canvas_draw_img');
-var _lv_canvas_draw_line = Module['_lv_canvas_draw_line'] = createExportWrapper('lv_canvas_draw_line');
-var _lv_canvas_draw_polygon = Module['_lv_canvas_draw_polygon'] = createExportWrapper('lv_canvas_draw_polygon');
-var _lv_canvas_draw_arc = Module['_lv_canvas_draw_arc'] = createExportWrapper('lv_canvas_draw_arc');
-var _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create');
-var _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = createExportWrapper('lv_checkbox_set_text');
-var _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = createExportWrapper('lv_checkbox_set_text_static');
-var _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = createExportWrapper('lv_checkbox_get_text');
-var _lv_dropdown_set_options_static = Module['_lv_dropdown_set_options_static'] = createExportWrapper('lv_dropdown_set_options_static');
-var _lv_dropdown_open = Module['_lv_dropdown_open'] = createExportWrapper('lv_dropdown_open');
-var _lv_dropdown_close = Module['_lv_dropdown_close'] = createExportWrapper('lv_dropdown_close');
-var _lv_dropdown_set_text = Module['_lv_dropdown_set_text'] = createExportWrapper('lv_dropdown_set_text');
-var _lv_dropdown_add_option = Module['_lv_dropdown_add_option'] = createExportWrapper('lv_dropdown_add_option');
-var _lv_dropdown_set_dir = Module['_lv_dropdown_set_dir'] = createExportWrapper('lv_dropdown_set_dir');
-var _lv_dropdown_set_symbol = Module['_lv_dropdown_set_symbol'] = createExportWrapper('lv_dropdown_set_symbol');
-var _lv_dropdown_set_selected_highlight = Module['_lv_dropdown_set_selected_highlight'] = createExportWrapper('lv_dropdown_set_selected_highlight');
-var _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = createExportWrapper('lv_dropdown_get_list');
-var _lv_dropdown_get_text = Module['_lv_dropdown_get_text'] = createExportWrapper('lv_dropdown_get_text');
-var _lv_dropdown_get_option_cnt = Module['_lv_dropdown_get_option_cnt'] = createExportWrapper('lv_dropdown_get_option_cnt');
-var _lv_dropdown_get_selected_str = Module['_lv_dropdown_get_selected_str'] = createExportWrapper('lv_dropdown_get_selected_str');
-var _lv_dropdown_get_option_index = Module['_lv_dropdown_get_option_index'] = createExportWrapper('lv_dropdown_get_option_index');
-var _lv_dropdown_get_symbol = Module['_lv_dropdown_get_symbol'] = createExportWrapper('lv_dropdown_get_symbol');
-var _lv_dropdown_get_selected_highlight = Module['_lv_dropdown_get_selected_highlight'] = createExportWrapper('lv_dropdown_get_selected_highlight');
-var _lv_dropdown_get_dir = Module['_lv_dropdown_get_dir'] = createExportWrapper('lv_dropdown_get_dir');
-var _lv_label_set_text_static = Module['_lv_label_set_text_static'] = createExportWrapper('lv_label_set_text_static');
-var _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = createExportWrapper('lv_dropdown_is_open');
-var _lv_img_set_offset_x = Module['_lv_img_set_offset_x'] = createExportWrapper('lv_img_set_offset_x');
-var _lv_img_set_offset_y = Module['_lv_img_set_offset_y'] = createExportWrapper('lv_img_set_offset_y');
-var _lv_img_set_angle = Module['_lv_img_set_angle'] = createExportWrapper('lv_img_set_angle');
-var _lv_img_set_pivot = Module['_lv_img_set_pivot'] = createExportWrapper('lv_img_set_pivot');
-var _lv_img_set_zoom = Module['_lv_img_set_zoom'] = createExportWrapper('lv_img_set_zoom');
-var _lv_img_set_antialias = Module['_lv_img_set_antialias'] = createExportWrapper('lv_img_set_antialias');
-var _lv_img_set_size_mode = Module['_lv_img_set_size_mode'] = createExportWrapper('lv_img_set_size_mode');
-var _lv_img_get_src = Module['_lv_img_get_src'] = createExportWrapper('lv_img_get_src');
-var _lv_img_get_offset_x = Module['_lv_img_get_offset_x'] = createExportWrapper('lv_img_get_offset_x');
-var _lv_img_get_offset_y = Module['_lv_img_get_offset_y'] = createExportWrapper('lv_img_get_offset_y');
-var _lv_img_get_angle = Module['_lv_img_get_angle'] = createExportWrapper('lv_img_get_angle');
-var _lv_img_get_pivot = Module['_lv_img_get_pivot'] = createExportWrapper('lv_img_get_pivot');
-var _lv_img_get_zoom = Module['_lv_img_get_zoom'] = createExportWrapper('lv_img_get_zoom');
-var _lv_img_get_antialias = Module['_lv_img_get_antialias'] = createExportWrapper('lv_img_get_antialias');
-var _lv_img_get_size_mode = Module['_lv_img_get_size_mode'] = createExportWrapper('lv_img_get_size_mode');
-var _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = createExportWrapper('lv_label_get_letter_on');
-var _lv_label_set_recolor = Module['_lv_label_set_recolor'] = createExportWrapper('lv_label_set_recolor');
-var _lv_label_set_text_sel_start = Module['_lv_label_set_text_sel_start'] = createExportWrapper('lv_label_set_text_sel_start');
-var _lv_label_set_text_sel_end = Module['_lv_label_set_text_sel_end'] = createExportWrapper('lv_label_set_text_sel_end');
-var _lv_label_get_long_mode = Module['_lv_label_get_long_mode'] = createExportWrapper('lv_label_get_long_mode');
-var _lv_label_get_recolor = Module['_lv_label_get_recolor'] = createExportWrapper('lv_label_get_recolor');
-var _lv_label_get_letter_pos = Module['_lv_label_get_letter_pos'] = createExportWrapper('lv_label_get_letter_pos');
-var _lv_label_is_char_under_pos = Module['_lv_label_is_char_under_pos'] = createExportWrapper('lv_label_is_char_under_pos');
-var _lv_label_get_text_selection_start = Module['_lv_label_get_text_selection_start'] = createExportWrapper('lv_label_get_text_selection_start');
-var _lv_label_get_text_selection_end = Module['_lv_label_get_text_selection_end'] = createExportWrapper('lv_label_get_text_selection_end');
-var _lv_label_ins_text = Module['_lv_label_ins_text'] = createExportWrapper('lv_label_ins_text');
-var _lv_label_cut_text = Module['_lv_label_cut_text'] = createExportWrapper('lv_label_cut_text');
-var _lv_line_create = Module['_lv_line_create'] = createExportWrapper('lv_line_create');
-var _lv_line_set_y_invert = Module['_lv_line_set_y_invert'] = createExportWrapper('lv_line_set_y_invert');
-var _lv_line_get_y_invert = Module['_lv_line_get_y_invert'] = createExportWrapper('lv_line_get_y_invert');
-var _lv_roller_set_options = Module['_lv_roller_set_options'] = createExportWrapper('lv_roller_set_options');
-var _lv_roller_set_selected = Module['_lv_roller_set_selected'] = createExportWrapper('lv_roller_set_selected');
-var _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create');
-var _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = createExportWrapper('lv_roller_set_visible_row_count');
-var _lv_roller_get_selected = Module['_lv_roller_get_selected'] = createExportWrapper('lv_roller_get_selected');
-var _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = createExportWrapper('lv_roller_get_selected_str');
-var _lv_roller_get_options = Module['_lv_roller_get_options'] = createExportWrapper('lv_roller_get_options');
-var _lv_roller_get_option_cnt = Module['_lv_roller_get_option_cnt'] = createExportWrapper('lv_roller_get_option_cnt');
-var _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create');
-var _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = createExportWrapper('lv_slider_is_dragged');
-var _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create');
-var _lv_table_create = Module['_lv_table_create'] = createExportWrapper('lv_table_create');
-var _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = createExportWrapper('lv_table_set_cell_value');
-var _lv_table_set_col_cnt = Module['_lv_table_set_col_cnt'] = createExportWrapper('lv_table_set_col_cnt');
-var _lv_table_set_row_cnt = Module['_lv_table_set_row_cnt'] = createExportWrapper('lv_table_set_row_cnt');
-var _lv_table_set_cell_value_fmt = Module['_lv_table_set_cell_value_fmt'] = createExportWrapper('lv_table_set_cell_value_fmt');
-var _lv_table_set_col_width = Module['_lv_table_set_col_width'] = createExportWrapper('lv_table_set_col_width');
-var _lv_table_add_cell_ctrl = Module['_lv_table_add_cell_ctrl'] = createExportWrapper('lv_table_add_cell_ctrl');
-var _lv_table_clear_cell_ctrl = Module['_lv_table_clear_cell_ctrl'] = createExportWrapper('lv_table_clear_cell_ctrl');
-var _lv_table_set_cell_user_data = Module['_lv_table_set_cell_user_data'] = createExportWrapper('lv_table_set_cell_user_data');
-var _lv_table_get_cell_value = Module['_lv_table_get_cell_value'] = createExportWrapper('lv_table_get_cell_value');
-var _lv_table_get_row_cnt = Module['_lv_table_get_row_cnt'] = createExportWrapper('lv_table_get_row_cnt');
-var _lv_table_get_col_cnt = Module['_lv_table_get_col_cnt'] = createExportWrapper('lv_table_get_col_cnt');
-var _lv_table_get_col_width = Module['_lv_table_get_col_width'] = createExportWrapper('lv_table_get_col_width');
-var _lv_table_has_cell_ctrl = Module['_lv_table_has_cell_ctrl'] = createExportWrapper('lv_table_has_cell_ctrl');
-var _lv_table_get_selected_cell = Module['_lv_table_get_selected_cell'] = createExportWrapper('lv_table_get_selected_cell');
-var _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = createExportWrapper('lv_table_get_cell_user_data');
-var _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = createExportWrapper('lv_textarea_cursor_up');
-var _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = createExportWrapper('lv_textarea_cursor_down');
-var _lv_textarea_del_char_forward = Module['_lv_textarea_del_char_forward'] = createExportWrapper('lv_textarea_del_char_forward');
-var _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create');
-var _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = createExportWrapper('lv_textarea_clear_selection');
-var _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = createExportWrapper('lv_textarea_get_accepted_chars');
-var _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = createExportWrapper('lv_textarea_get_max_length');
-var _lv_textarea_set_placeholder_text = Module['_lv_textarea_set_placeholder_text'] = createExportWrapper('lv_textarea_set_placeholder_text');
-var _lv_textarea_set_password_mode = Module['_lv_textarea_set_password_mode'] = createExportWrapper('lv_textarea_set_password_mode');
-var _lv_textarea_set_password_bullet = Module['_lv_textarea_set_password_bullet'] = createExportWrapper('lv_textarea_set_password_bullet');
-var _lv_textarea_set_accepted_chars = Module['_lv_textarea_set_accepted_chars'] = createExportWrapper('lv_textarea_set_accepted_chars');
-var _lv_textarea_set_max_length = Module['_lv_textarea_set_max_length'] = createExportWrapper('lv_textarea_set_max_length');
-var _lv_textarea_set_insert_replace = Module['_lv_textarea_set_insert_replace'] = createExportWrapper('lv_textarea_set_insert_replace');
-var _lv_textarea_set_text_selection = Module['_lv_textarea_set_text_selection'] = createExportWrapper('lv_textarea_set_text_selection');
-var _lv_textarea_set_password_show_time = Module['_lv_textarea_set_password_show_time'] = createExportWrapper('lv_textarea_set_password_show_time');
-var _lv_textarea_set_align = Module['_lv_textarea_set_align'] = createExportWrapper('lv_textarea_set_align');
-var _lv_textarea_get_label = Module['_lv_textarea_get_label'] = createExportWrapper('lv_textarea_get_label');
-var _lv_textarea_get_placeholder_text = Module['_lv_textarea_get_placeholder_text'] = createExportWrapper('lv_textarea_get_placeholder_text');
-var _lv_textarea_get_cursor_click_pos = Module['_lv_textarea_get_cursor_click_pos'] = createExportWrapper('lv_textarea_get_cursor_click_pos');
-var _lv_textarea_get_password_mode = Module['_lv_textarea_get_password_mode'] = createExportWrapper('lv_textarea_get_password_mode');
-var _lv_textarea_get_password_bullet = Module['_lv_textarea_get_password_bullet'] = createExportWrapper('lv_textarea_get_password_bullet');
-var _lv_textarea_text_is_selected = Module['_lv_textarea_text_is_selected'] = createExportWrapper('lv_textarea_text_is_selected');
-var _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = createExportWrapper('lv_textarea_get_text_selection');
-var _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = createExportWrapper('lv_textarea_get_password_show_time');
-var _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent');
-var __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty');
-var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty');
-var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin');
-var __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty');
-var __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty');
-var _compareRollerOptions = Module['_compareRollerOptions'] = createExportWrapper('compareRollerOptions');
-var _free = Module['_free'] = createExportWrapper('free');
-var ___errno_location = createExportWrapper('__errno_location');
-var _fflush = Module['_fflush'] = createExportWrapper('fflush');
-var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
-var _emscripten_stack_get_free = () => (_emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'])();
-var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();
-var _emscripten_stack_get_end = () => (_emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'])();
-var stackSave = createExportWrapper('stackSave');
-var stackRestore = createExportWrapper('stackRestore');
-var stackAlloc = createExportWrapper('stackAlloc');
-var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
-var ___cxa_demangle = createExportWrapper('__cxa_demangle');
-var ___cxa_is_pointer_type = createExportWrapper('__cxa_is_pointer_type');
-var dynCall_jiji = Module['dynCall_jiji'] = createExportWrapper('dynCall_jiji');
 
-
-// include: postamble.js
-// === Auto-generated postamble setup entry stuff ===
-
-Module['UTF8ToString'] = UTF8ToString;
-Module['AsciiToString'] = AsciiToString;
-Module['allocateUTF8'] = allocateUTF8;
-var missingLibrarySymbols = [
+// Begin runtime exports
+  Module['UTF8ToString'] = UTF8ToString;
+  Module['AsciiToString'] = AsciiToString;
+  Module['requestFullscreen'] = requestFullscreen;
+  Module['allocateUTF8'] = allocateUTF8;
+  var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
   'writeI53ToI64Signaling',
@@ -6001,60 +4891,46 @@ var missingLibrarySymbols = [
   'readI53FromI64',
   'readI53FromU64',
   'convertI32PairToI53',
+  'convertI32PairToI53Checked',
   'convertU32PairToI53',
-  'isLeapYear',
-  'ydayFromDate',
-  'arraySum',
-  'addDays',
+  'stackAlloc',
+  'getTempRet0',
+  'setTempRet0',
+  'createNamedFunction',
+  'zeroMemory',
+  'withStackSave',
   'inetPton4',
   'inetNtop4',
   'inetPton6',
   'inetNtop6',
   'readSockaddr',
   'writeSockaddr',
-  'getHostByName',
-  'getCallstack',
-  'emscriptenLog',
-  'convertPCtoSourceLocation',
   'runMainThreadEmAsm',
   'jstoi_q',
-  'jstoi_s',
   'getExecutableName',
-  'listenOnce',
   'autoResumeAudioContext',
-  'dynCallLegacy',
   'getDynCaller',
   'dynCall',
-  'handleException',
   'runtimeKeepalivePush',
   'runtimeKeepalivePop',
-  'callUserCallback',
-  'maybeExit',
   'asmjsMangle',
-  'handleAllocatorInit',
   'HandleAllocator',
-  'getNativeTypeSize',
+  'addOnInit',
+  'addOnPostCtor',
+  'addOnPreMain',
+  'addOnExit',
   'STACK_SIZE',
   'STACK_ALIGN',
   'POINTER_SIZE',
   'ASSERTIONS',
-  'getCFunc',
   'ccall',
   'cwrap',
-  'uleb128Encode',
-  'sigToWasmTypes',
-  'generateFuncType',
   'convertJsFunctionToWasm',
   'getEmptyTableSlot',
   'updateTableMap',
   'getFunctionAddress',
   'addFunction',
   'removeFunction',
-  'reallyNegative',
-  'unSign',
-  'strLen',
-  'reSign',
-  'formatString',
   'intArrayToString',
   'stringToAscii',
   'UTF16ToString',
@@ -6063,6 +4939,7 @@ var missingLibrarySymbols = [
   'UTF32ToString',
   'stringToUTF32',
   'lengthBytesUTF32',
+  'stringToUTF8OnStack',
   'writeArrayToMemory',
   'registerKeyEventCallback',
   'findEventTarget',
@@ -6101,41 +4978,47 @@ var missingLibrarySymbols = [
   'registerGamepadEventCallback',
   'registerBeforeUnloadEventCallback',
   'fillBatteryEventData',
-  'battery',
   'registerBatteryEventCallback',
   'setCanvasElementSize',
   'getCanvasElementSize',
+  'jsStackTrace',
+  'getCallstack',
+  'convertPCtoSourceLocation',
   'getEnvStrings',
-  'checkWasiClock',
   'wasiRightsToMuslOFlags',
   'wasiOFlagsToMuslOFlags',
-  'createDyncallWrapper',
-  'safeSetTimeout',
   'setImmediateWrapped',
+  'safeRequestAnimationFrame',
   'clearImmediateWrapped',
-  'polyfillSetImmediate',
+  'registerPostMainLoop',
+  'registerPreMainLoop',
   'getPromise',
   'makePromise',
   'idsToPromises',
   'makePromiseCallback',
   'findMatchingCatch',
-  'setMainLoop',
+  'Browser_asyncPrepareDataCounter',
+  'isLeapYear',
+  'ydayFromDate',
+  'arraySum',
+  'addDays',
   'getSocketFromFD',
   'getSocketAddress',
-  'FS_unlink',
   'FS_mkdirTree',
   '_setNetworkCallback',
   'heapObjectForWebGLType',
-  'heapAccessShiftForWebGLHeap',
+  'toTypedArrayIndex',
   'webgl_enable_ANGLE_instanced_arrays',
   'webgl_enable_OES_vertex_array_object',
   'webgl_enable_WEBGL_draw_buffers',
   'webgl_enable_WEBGL_multi_draw',
+  'webgl_enable_EXT_polygon_offset_clamp',
+  'webgl_enable_EXT_clip_control',
+  'webgl_enable_WEBGL_polygon_mode',
   'emscriptenWebGLGet',
   'computeUnpackAlignedImageSize',
   'colorChannelsInGlTextureFormat',
   'emscriptenWebGLGetTexPixelData',
-  '__glGenObject',
   'emscriptenWebGLGetUniform',
   'webglGetUniformLocation',
   'webglPrepareUniformLocationsBeforeFirstUse',
@@ -6145,76 +5028,64 @@ var missingLibrarySymbols = [
   'writeGLArray',
   'registerWebGlEventCallback',
   'runAndAbortIfError',
-  'SDL_unicode',
-  'SDL_ttfContext',
-  'SDL_audio',
   'ALLOC_NORMAL',
   'ALLOC_STACK',
   'allocate',
   'writeStringToMemory',
   'writeAsciiToMemory',
+  'allocateUTF8OnStack',
+  'demangle',
+  'stackTrace',
+  'getNativeTypeSize',
 ];
 missingLibrarySymbols.forEach(missingLibrarySymbol)
 
-var unexportedSymbols = [
+  var unexportedSymbols = [
   'run',
-  'addOnPreRun',
-  'addOnInit',
-  'addOnPreMain',
-  'addOnExit',
-  'addOnPostRun',
-  'addRunDependency',
-  'removeRunDependency',
-  'FS_createFolder',
-  'FS_createPath',
-  'FS_createLazyFile',
-  'FS_createLink',
-  'FS_createDevice',
-  'FS_readFile',
   'out',
   'err',
   'callMain',
   'abort',
-  'wasmMemory',
   'wasmExports',
-  'stackAlloc',
-  'stackSave',
-  'stackRestore',
-  'getTempRet0',
-  'setTempRet0',
+  'HEAP64',
+  'HEAPU64',
   'writeStackCookie',
   'checkStackCookie',
-  'convertI32PairToI53Checked',
+  'INT53_MAX',
+  'INT53_MIN',
+  'bigintToI53Checked',
+  'stackSave',
+  'stackRestore',
   'ptrToString',
-  'zeroMemory',
   'exitJS',
   'getHeapMax',
   'growMemory',
   'ENV',
-  'MONTH_DAYS_REGULAR',
-  'MONTH_DAYS_LEAP',
-  'MONTH_DAYS_REGULAR_CUMULATIVE',
-  'MONTH_DAYS_LEAP_CUMULATIVE',
   'ERRNO_CODES',
-  'ERRNO_MESSAGES',
-  'setErrNo',
+  'strError',
   'DNS',
   'Protocols',
   'Sockets',
-  'initRandomFill',
-  'randomFill',
   'timers',
   'warnOnce',
-  'UNWIND_CACHE',
   'readEmAsmArgsArray',
   'readEmAsmArgs',
   'runEmAsmFunction',
+  'handleException',
   'keepRuntimeAlive',
+  'callUserCallback',
+  'maybeExit',
   'asyncLoad',
   'alignMemory',
   'mmapAlloc',
   'wasmTable',
+  'wasmMemory',
+  'getUniqueRunDependency',
   'noExitRuntime',
+  'addRunDependency',
+  'removeRunDependency',
+  'addOnPreRun',
+  'addOnPostRun',
   'freeTableIndexes',
   'functionsInTableMap',
   'setValue',
@@ -6229,34 +5100,162 @@ var unexportedSymbols = [
   'intArrayFromString',
   'UTF16Decoder',
   'stringToNewUTF8',
-  'stringToUTF8OnStack',
   'JSEvents',
   'specialHTMLTargets',
   'currentFullscreenStrategy',
   'restoreOldWindowedStyle',
-  'demangle',
-  'demangleAll',
-  'jsStackTrace',
-  'stackTrace',
+  'UNWIND_CACHE',
   'ExitStatus',
+  'checkWasiClock',
   'doReadv',
   'doWritev',
+  'initRandomFill',
+  'randomFill',
+  'safeSetTimeout',
+  'emSetImmediate',
+  'emClearImmediate_deps',
+  'emClearImmediate',
   'promiseMap',
   'uncaughtExceptionCount',
   'exceptionLast',
   'exceptionCaught',
   'ExceptionInfo',
   'Browser',
+  'requestFullScreen',
+  'setCanvasSize',
+  'getUserMedia',
+  'createContext',
+  'getPreloadedImageData__data',
   'wget',
+  'MONTH_DAYS_REGULAR',
+  'MONTH_DAYS_LEAP',
+  'MONTH_DAYS_REGULAR_CUMULATIVE',
+  'MONTH_DAYS_LEAP_CUMULATIVE',
   'SYSCALLS',
   'preloadPlugins',
   'FS_createPreloadedFile',
+  'FS_preloadFile',
   'FS_modeStringToFlags',
   'FS_getMode',
   'FS_stdin_getChar_buffer',
   'FS_stdin_getChar',
+  'FS_unlink',
+  'FS_createPath',
+  'FS_createDevice',
+  'FS_readFile',
   'FS',
+  'FS_root',
+  'FS_mounts',
+  'FS_devices',
+  'FS_streams',
+  'FS_nextInode',
+  'FS_nameTable',
+  'FS_currentPath',
+  'FS_initialized',
+  'FS_ignorePermissions',
+  'FS_filesystems',
+  'FS_syncFSRequests',
+  'FS_readFiles',
+  'FS_lookupPath',
+  'FS_getPath',
+  'FS_hashName',
+  'FS_hashAddNode',
+  'FS_hashRemoveNode',
+  'FS_lookupNode',
+  'FS_createNode',
+  'FS_destroyNode',
+  'FS_isRoot',
+  'FS_isMountpoint',
+  'FS_isFile',
+  'FS_isDir',
+  'FS_isLink',
+  'FS_isChrdev',
+  'FS_isBlkdev',
+  'FS_isFIFO',
+  'FS_isSocket',
+  'FS_flagsToPermissionString',
+  'FS_nodePermissions',
+  'FS_mayLookup',
+  'FS_mayCreate',
+  'FS_mayDelete',
+  'FS_mayOpen',
+  'FS_checkOpExists',
+  'FS_nextfd',
+  'FS_getStreamChecked',
+  'FS_getStream',
+  'FS_createStream',
+  'FS_closeStream',
+  'FS_dupStream',
+  'FS_doSetAttr',
+  'FS_chrdev_stream_ops',
+  'FS_major',
+  'FS_minor',
+  'FS_makedev',
+  'FS_registerDevice',
+  'FS_getDevice',
+  'FS_getMounts',
+  'FS_syncfs',
+  'FS_mount',
+  'FS_unmount',
+  'FS_lookup',
+  'FS_mknod',
+  'FS_statfs',
+  'FS_statfsStream',
+  'FS_statfsNode',
+  'FS_create',
+  'FS_mkdir',
+  'FS_mkdev',
+  'FS_symlink',
+  'FS_rename',
+  'FS_rmdir',
+  'FS_readdir',
+  'FS_readlink',
+  'FS_stat',
+  'FS_fstat',
+  'FS_lstat',
+  'FS_doChmod',
+  'FS_chmod',
+  'FS_lchmod',
+  'FS_fchmod',
+  'FS_doChown',
+  'FS_chown',
+  'FS_lchown',
+  'FS_fchown',
+  'FS_doTruncate',
+  'FS_truncate',
+  'FS_ftruncate',
+  'FS_utime',
+  'FS_open',
+  'FS_close',
+  'FS_isClosed',
+  'FS_llseek',
+  'FS_read',
+  'FS_write',
+  'FS_mmap',
+  'FS_msync',
+  'FS_ioctl',
+  'FS_writeFile',
+  'FS_cwd',
+  'FS_chdir',
+  'FS_createDefaultDirectories',
+  'FS_createDefaultDevices',
+  'FS_createSpecialDirectories',
+  'FS_createStandardStreams',
+  'FS_staticInit',
+  'FS_init',
+  'FS_quit',
+  'FS_findObject',
+  'FS_analyzePath',
+  'FS_createFile',
   'FS_createDataFile',
+  'FS_forceLoadFile',
+  'FS_createLazyFile',
+  'FS_absolutePath',
+  'FS_createFolder',
+  'FS_createLink',
+  'FS_joinPath',
+  'FS_mmapAlloc',
+  'FS_standardizePath',
   'MEMFS',
   'TTY',
   'PIPEFS',
@@ -6265,7 +5264,6 @@ var unexportedSymbols = [
   'miniTempWebGLFloatBuffers',
   'miniTempWebGLIntBuffers',
   'GL',
-  'emscripten_webgl_power_preferences',
   'AL',
   'GLUT',
   'EGL',
@@ -6273,19 +5271,3897 @@ var unexportedSymbols = [
   'IDBStore',
   'SDL',
   'SDL_gfx',
-  'allocateUTF8OnStack',
+  'print',
+  'printErr',
+  'jstoi_s',
 ];
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
+  // End runtime exports
+  // Begin JS library exports
+  // End JS library exports
 
+// end include: postlibrary.js
+
+function checkIncomingModuleAPI() {
+  ignoredModuleProp('fetchSettings');
+}
+var ASM_CONSTS = {
+  1036128: ($0) => { startToDebuggerMessage($0); },  
+ 1036160: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036235: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1036310: ($0) => { finishToDebuggerMessage($0); },  
+ 1036343: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1036373: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1036403: ($0) => { lvglScreenTick($0); },  
+ 1036427: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1036467: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1036521: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1036575: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1036628: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1036681: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1036734: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1036767: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1036803: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1036848: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1036954: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1036990: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1037027: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1037067: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1037124: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1037183: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+};
+
+// Imports from the Wasm binary.
+var _lv_disp_flush_ready = Module['_lv_disp_flush_ready'] = makeInvalidEarlyAccess('_lv_disp_flush_ready');
+var _lv_mem_alloc = Module['_lv_mem_alloc'] = makeInvalidEarlyAccess('_lv_mem_alloc');
+var _lv_mem_free = Module['_lv_mem_free'] = makeInvalidEarlyAccess('_lv_mem_free');
+var _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = makeInvalidEarlyAccess('_lvglSetEncoderGroup');
+var _lv_indev_set_group = Module['_lv_indev_set_group'] = makeInvalidEarlyAccess('_lv_indev_set_group');
+var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = makeInvalidEarlyAccess('_lvglSetKeyboardGroup');
+var _init = Module['_init'] = makeInvalidEarlyAccess('_init');
+var _lv_init = Module['_lv_init'] = makeInvalidEarlyAccess('_lv_init');
+var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
+var _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = makeInvalidEarlyAccess('_lv_disp_draw_buf_init');
+var _lv_disp_drv_init = Module['_lv_disp_drv_init'] = makeInvalidEarlyAccess('_lv_disp_drv_init');
+var _lv_disp_drv_register = Module['_lv_disp_drv_register'] = makeInvalidEarlyAccess('_lv_disp_drv_register');
+var _lv_indev_drv_init = Module['_lv_indev_drv_init'] = makeInvalidEarlyAccess('_lv_indev_drv_init');
+var _lv_indev_drv_register = Module['_lv_indev_drv_register'] = makeInvalidEarlyAccess('_lv_indev_drv_register');
+var _lv_fs_drv_init = Module['_lv_fs_drv_init'] = makeInvalidEarlyAccess('_lv_fs_drv_init');
+var _lv_fs_drv_register = Module['_lv_fs_drv_register'] = makeInvalidEarlyAccess('_lv_fs_drv_register');
+var _lv_disp_get_default = Module['_lv_disp_get_default'] = makeInvalidEarlyAccess('_lv_disp_get_default');
+var _lv_palette_main = Module['_lv_palette_main'] = makeInvalidEarlyAccess('_lv_palette_main');
+var _lv_theme_default_init = Module['_lv_theme_default_init'] = makeInvalidEarlyAccess('_lv_theme_default_init');
+var _lv_disp_set_theme = Module['_lv_disp_set_theme'] = makeInvalidEarlyAccess('_lv_disp_set_theme');
+var _mainLoop = Module['_mainLoop'] = makeInvalidEarlyAccess('_mainLoop');
+var _lv_timer_handler = Module['_lv_timer_handler'] = makeInvalidEarlyAccess('_lv_timer_handler');
+var _getSyncedBuffer = Module['_getSyncedBuffer'] = makeInvalidEarlyAccess('_getSyncedBuffer');
+var _isRTL = Module['_isRTL'] = makeInvalidEarlyAccess('_isRTL');
+var _onPointerEvent = Module['_onPointerEvent'] = makeInvalidEarlyAccess('_onPointerEvent');
+var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = makeInvalidEarlyAccess('_onMouseWheelEvent');
+var _onKeyPressed = Module['_onKeyPressed'] = makeInvalidEarlyAccess('_onKeyPressed');
+var _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = makeInvalidEarlyAccess('_lv_obj_get_style_prop');
+var _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_set_local_style_prop');
+var _lv_event_get_code = Module['_lv_event_get_code'] = makeInvalidEarlyAccess('_lv_event_get_code');
+var _lv_event_get_target = Module['_lv_event_get_target'] = makeInvalidEarlyAccess('_lv_event_get_target');
+var _lv_obj_has_state = Module['_lv_obj_has_state'] = makeInvalidEarlyAccess('_lv_obj_has_state');
+var __assignBooleanProperty = Module['__assignBooleanProperty'] = makeInvalidEarlyAccess('__assignBooleanProperty');
+var _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = makeInvalidEarlyAccess('_lv_event_get_draw_part_dsc');
+var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('__evalTextProperty');
+var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
+var _lv_obj_add_state = Module['_lv_obj_add_state'] = makeInvalidEarlyAccess('_lv_obj_add_state');
+var _lv_obj_clear_state = Module['_lv_obj_clear_state'] = makeInvalidEarlyAccess('_lv_obj_clear_state');
+var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = makeInvalidEarlyAccess('_lv_obj_has_flag');
+var _lv_obj_add_flag = Module['_lv_obj_add_flag'] = makeInvalidEarlyAccess('_lv_obj_add_flag');
+var _lv_obj_clear_flag = Module['_lv_obj_clear_flag'] = makeInvalidEarlyAccess('_lv_obj_clear_flag');
+var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
+var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = makeInvalidEarlyAccess('_onMessageFromDebugger');
+var _lvglGetFlowState = Module['_lvglGetFlowState'] = makeInvalidEarlyAccess('_lvglGetFlowState');
+var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = makeInvalidEarlyAccess('_setDebuggerMessageSubsciptionFilter');
+var _setObjectIndex = Module['_setObjectIndex'] = makeInvalidEarlyAccess('_setObjectIndex');
+var _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = makeInvalidEarlyAccess('_getLvglObjectFromIndex');
+var _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = makeInvalidEarlyAccess('_lv_group_remove_all_objs');
+var _lv_group_add_obj = Module['_lv_group_add_obj'] = makeInvalidEarlyAccess('_lv_group_add_obj');
+var _lvglCreateGroup = Module['_lvglCreateGroup'] = makeInvalidEarlyAccess('_lvglCreateGroup');
+var _lv_group_create = Module['_lv_group_create'] = makeInvalidEarlyAccess('_lv_group_create');
+var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = makeInvalidEarlyAccess('_lvglAddScreenLoadedEventHandler');
+var _lv_obj_add_event_cb = Module['_lv_obj_add_event_cb'] = makeInvalidEarlyAccess('_lv_obj_add_event_cb');
+var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = makeInvalidEarlyAccess('_lvglGroupAddObject');
+var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = makeInvalidEarlyAccess('_lvglGroupRemoveObjectsForScreen');
+var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = makeInvalidEarlyAccess('_lvglAddEventHandler');
+var _lv_event_get_user_data = Module['_lv_event_get_user_data'] = makeInvalidEarlyAccess('_lv_event_get_user_data');
+var _lvglCreateScreen = Module['_lvglCreateScreen'] = makeInvalidEarlyAccess('_lvglCreateScreen');
+var _lv_obj_create = Module['_lv_obj_create'] = makeInvalidEarlyAccess('_lv_obj_create');
+var _lv_obj_set_pos = Module['_lv_obj_set_pos'] = makeInvalidEarlyAccess('_lv_obj_set_pos');
+var _lv_obj_set_size = Module['_lv_obj_set_size'] = makeInvalidEarlyAccess('_lv_obj_set_size');
+var _lv_obj_update_layout = Module['_lv_obj_update_layout'] = makeInvalidEarlyAccess('_lv_obj_update_layout');
+var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = makeInvalidEarlyAccess('_lvglCreateUserWidget');
+var _lvglScreenLoad = Module['_lvglScreenLoad'] = makeInvalidEarlyAccess('_lvglScreenLoad');
+var _lv_scr_load_anim = Module['_lv_scr_load_anim'] = makeInvalidEarlyAccess('_lv_scr_load_anim');
+var _lvglDeleteObject = Module['_lvglDeleteObject'] = makeInvalidEarlyAccess('_lvglDeleteObject');
+var _lv_obj_del = Module['_lv_obj_del'] = makeInvalidEarlyAccess('_lv_obj_del');
+var _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = makeInvalidEarlyAccess('_lv_disp_get_scr_act');
+var _lv_disp_load_scr = Module['_lv_disp_load_scr'] = makeInvalidEarlyAccess('_lv_disp_load_scr');
+var _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = makeInvalidEarlyAccess('_lvglDeleteObjectIndex');
+var _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = makeInvalidEarlyAccess('_lvglDeletePageFlowState');
+var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = makeInvalidEarlyAccess('_lvglObjAddFlag');
+var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = makeInvalidEarlyAccess('_lvglObjClearFlag');
+var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = makeInvalidEarlyAccess('_lvglObjHasFlag');
+var _lvglObjAddState = Module['_lvglObjAddState'] = makeInvalidEarlyAccess('_lvglObjAddState');
+var _lvglObjClearState = Module['_lvglObjClearState'] = makeInvalidEarlyAccess('_lvglObjClearState');
+var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = makeInvalidEarlyAccess('_lvglObjGetStylePropColor');
+var _lv_obj_get_state = Module['_lv_obj_get_state'] = makeInvalidEarlyAccess('_lv_obj_get_state');
+var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = makeInvalidEarlyAccess('_lvglObjGetStylePropNum');
+var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropColor');
+var _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropNum');
+var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropPtr');
+var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = makeInvalidEarlyAccess('_lvglObjGetStylePropBuiltInFont');
+var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = makeInvalidEarlyAccess('_lvglObjGetStylePropFontAddr');
+var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropBuiltInFont');
+var _lvglStyleCreate = Module['_lvglStyleCreate'] = makeInvalidEarlyAccess('_lvglStyleCreate');
+var _lv_style_init = Module['_lv_style_init'] = makeInvalidEarlyAccess('_lv_style_init');
+var _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = makeInvalidEarlyAccess('_lvglStyleSetPropColor');
+var _lv_style_set_prop = Module['_lv_style_set_prop'] = makeInvalidEarlyAccess('_lv_style_set_prop');
+var _lvglSetStylePropBuiltInFont = Module['_lvglSetStylePropBuiltInFont'] = makeInvalidEarlyAccess('_lvglSetStylePropBuiltInFont');
+var _lvglSetStylePropPtr = Module['_lvglSetStylePropPtr'] = makeInvalidEarlyAccess('_lvglSetStylePropPtr');
+var _lvglSetStylePropNum = Module['_lvglSetStylePropNum'] = makeInvalidEarlyAccess('_lvglSetStylePropNum');
+var _lvglStyleDelete = Module['_lvglStyleDelete'] = makeInvalidEarlyAccess('_lvglStyleDelete');
+var _lvglObjAddStyle = Module['_lvglObjAddStyle'] = makeInvalidEarlyAccess('_lvglObjAddStyle');
+var _lv_obj_add_style = Module['_lv_obj_add_style'] = makeInvalidEarlyAccess('_lv_obj_add_style');
+var _lvglObjRemoveStyle = Module['_lvglObjRemoveStyle'] = makeInvalidEarlyAccess('_lvglObjRemoveStyle');
+var _lv_obj_remove_style = Module['_lv_obj_remove_style'] = makeInvalidEarlyAccess('_lv_obj_remove_style');
+var _lvglGetObjRelX = Module['_lvglGetObjRelX'] = makeInvalidEarlyAccess('_lvglGetObjRelX');
+var _lv_obj_get_parent = Module['_lv_obj_get_parent'] = makeInvalidEarlyAccess('_lv_obj_get_parent');
+var _lvglGetObjRelY = Module['_lvglGetObjRelY'] = makeInvalidEarlyAccess('_lvglGetObjRelY');
+var _lvglGetObjWidth = Module['_lvglGetObjWidth'] = makeInvalidEarlyAccess('_lvglGetObjWidth');
+var _lv_obj_get_width = Module['_lv_obj_get_width'] = makeInvalidEarlyAccess('_lv_obj_get_width');
+var _lvglGetObjHeight = Module['_lvglGetObjHeight'] = makeInvalidEarlyAccess('_lvglGetObjHeight');
+var _lv_obj_get_height = Module['_lv_obj_get_height'] = makeInvalidEarlyAccess('_lv_obj_get_height');
+var _lvglLoadFont = Module['_lvglLoadFont'] = makeInvalidEarlyAccess('_lvglLoadFont');
+var _lv_font_load = Module['_lv_font_load'] = makeInvalidEarlyAccess('_lv_font_load');
+var _lvglFreeFont = Module['_lvglFreeFont'] = makeInvalidEarlyAccess('_lvglFreeFont');
+var _lv_font_free = Module['_lv_font_free'] = makeInvalidEarlyAccess('_lv_font_free');
+var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = makeInvalidEarlyAccess('_lvglAddObjectFlowCallback');
+var _lvglLedGetColor = Module['_lvglLedGetColor'] = makeInvalidEarlyAccess('_lvglLedGetColor');
+var _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = makeInvalidEarlyAccess('_lvglMeterIndicatorNeedleLineSetColor');
+var _lv_obj_invalidate = Module['_lv_obj_invalidate'] = makeInvalidEarlyAccess('_lv_obj_invalidate');
+var _lvglMeterIndicatorScaleLinesSetColorStart = Module['_lvglMeterIndicatorScaleLinesSetColorStart'] = makeInvalidEarlyAccess('_lvglMeterIndicatorScaleLinesSetColorStart');
+var _lvglMeterIndicatorScaleLinesSetColorEnd = Module['_lvglMeterIndicatorScaleLinesSetColorEnd'] = makeInvalidEarlyAccess('_lvglMeterIndicatorScaleLinesSetColorEnd');
+var _lvglMeterIndicatorArcSetColor = Module['_lvglMeterIndicatorArcSetColor'] = makeInvalidEarlyAccess('_lvglMeterIndicatorArcSetColor');
+var _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'] = makeInvalidEarlyAccess('_lvglMeterScaleSetMinorTickColor');
+var _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = makeInvalidEarlyAccess('_lvglMeterScaleSetMajorTickColor');
+var _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_start_value');
+var _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_end_value');
+var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = makeInvalidEarlyAccess('_lvglUpdateCheckedState');
+var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = makeInvalidEarlyAccess('_lvglUpdateDisabledState');
+var _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = makeInvalidEarlyAccess('_lvglUpdateHiddenFlag');
+var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = makeInvalidEarlyAccess('_lvglUpdateClickableFlag');
+var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = makeInvalidEarlyAccess('_lvglAddTimelineKeyframe');
+var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = makeInvalidEarlyAccess('_lvglSetTimelinePosition');
+var _lvglClearTimeline = Module['_lvglClearTimeline'] = makeInvalidEarlyAccess('_lvglClearTimeline');
+var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = makeInvalidEarlyAccess('_lvglSetScrollBarMode');
+var _lv_obj_set_scrollbar_mode = Module['_lv_obj_set_scrollbar_mode'] = makeInvalidEarlyAccess('_lv_obj_set_scrollbar_mode');
+var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = makeInvalidEarlyAccess('_lvglSetScrollDir');
+var _lv_obj_set_scroll_dir = Module['_lv_obj_set_scroll_dir'] = makeInvalidEarlyAccess('_lv_obj_set_scroll_dir');
+var _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = makeInvalidEarlyAccess('_lvglSetScrollSnapX');
+var _lv_obj_set_scroll_snap_x = Module['_lv_obj_set_scroll_snap_x'] = makeInvalidEarlyAccess('_lv_obj_set_scroll_snap_x');
+var _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = makeInvalidEarlyAccess('_lvglSetScrollSnapY');
+var _lv_obj_set_scroll_snap_y = Module['_lv_obj_set_scroll_snap_y'] = makeInvalidEarlyAccess('_lv_obj_set_scroll_snap_y');
+var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = makeInvalidEarlyAccess('_lvglLineSetPoints');
+var _lv_line_set_points = Module['_lv_line_set_points'] = makeInvalidEarlyAccess('_lv_line_set_points');
+var _lvglScrollTo = Module['_lvglScrollTo'] = makeInvalidEarlyAccess('_lvglScrollTo');
+var _lv_obj_scroll_to = Module['_lv_obj_scroll_to'] = makeInvalidEarlyAccess('_lv_obj_scroll_to');
+var _lvglGetScrollX = Module['_lvglGetScrollX'] = makeInvalidEarlyAccess('_lvglGetScrollX');
+var _lv_obj_get_scroll_x = Module['_lv_obj_get_scroll_x'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_x');
+var _lvglGetScrollY = Module['_lvglGetScrollY'] = makeInvalidEarlyAccess('_lvglGetScrollY');
+var _lv_obj_get_scroll_y = Module['_lv_obj_get_scroll_y'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_y');
+var _lvglObjInvalidate = Module['_lvglObjInvalidate'] = makeInvalidEarlyAccess('_lvglObjInvalidate');
+var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = makeInvalidEarlyAccess('_lvglDeleteScreenOnUnload');
+var _lvglGetTabName = Module['_lvglGetTabName'] = makeInvalidEarlyAccess('_lvglGetTabName');
+var _v8_lv_slider_get_min_value = Module['_v8_lv_slider_get_min_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_min_value');
+var _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = makeInvalidEarlyAccess('_lv_bar_get_min_value');
+var _v8_lv_slider_get_max_value = Module['_v8_lv_slider_get_max_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_max_value');
+var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = makeInvalidEarlyAccess('_lv_bar_get_max_value');
+var _v8_lv_slider_set_range = Module['_v8_lv_slider_set_range'] = makeInvalidEarlyAccess('_v8_lv_slider_set_range');
+var _lv_bar_set_range = Module['_lv_bar_set_range'] = makeInvalidEarlyAccess('_lv_bar_set_range');
+var _v8_lv_slider_set_mode = Module['_v8_lv_slider_set_mode'] = makeInvalidEarlyAccess('_v8_lv_slider_set_mode');
+var _lv_bar_set_mode = Module['_lv_bar_set_mode'] = makeInvalidEarlyAccess('_lv_bar_set_mode');
+var _v8_lv_slider_set_value = Module['_v8_lv_slider_set_value'] = makeInvalidEarlyAccess('_v8_lv_slider_set_value');
+var _lv_bar_set_value = Module['_lv_bar_set_value'] = makeInvalidEarlyAccess('_lv_bar_set_value');
+var _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_value');
+var _lv_bar_get_value = Module['_lv_bar_get_value'] = makeInvalidEarlyAccess('_lv_bar_get_value');
+var _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_set_left_value');
+var _lv_bar_set_start_value = Module['_lv_bar_set_start_value'] = makeInvalidEarlyAccess('_lv_bar_set_start_value');
+var _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_left_value');
+var _lv_bar_get_start_value = Module['_lv_bar_get_start_value'] = makeInvalidEarlyAccess('_lv_bar_get_start_value');
+var _to_lvgl_color = Module['_to_lvgl_color'] = makeInvalidEarlyAccess('_to_lvgl_color');
+var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = makeInvalidEarlyAccess('_lv_disp_get_scr_prev');
+var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = makeInvalidEarlyAccess('_lv_obj_get_disp');
+var _lv_anim_del = Module['_lv_anim_del'] = makeInvalidEarlyAccess('_lv_anim_del');
+var _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_remove_local_style_prop');
+var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
+var _lv_disp_get_hor_res = Module['_lv_disp_get_hor_res'] = makeInvalidEarlyAccess('_lv_disp_get_hor_res');
+var _lv_disp_get_ver_res = Module['_lv_disp_get_ver_res'] = makeInvalidEarlyAccess('_lv_disp_get_ver_res');
+var _lv_event_send = Module['_lv_event_send'] = makeInvalidEarlyAccess('_lv_event_send');
+var _lv_anim_start = Module['_lv_anim_start'] = makeInvalidEarlyAccess('_lv_anim_start');
+var _lv_disp_get_layer_top = Module['_lv_disp_get_layer_top'] = makeInvalidEarlyAccess('_lv_disp_get_layer_top');
+var _lv_disp_get_layer_sys = Module['_lv_disp_get_layer_sys'] = makeInvalidEarlyAccess('_lv_disp_get_layer_sys');
+var _lv_obj_get_child_cnt = Module['_lv_obj_get_child_cnt'] = makeInvalidEarlyAccess('_lv_obj_get_child_cnt');
+var _lv_theme_apply = Module['_lv_theme_apply'] = makeInvalidEarlyAccess('_lv_theme_apply');
+var _lv_disp_get_theme = Module['_lv_disp_get_theme'] = makeInvalidEarlyAccess('_lv_disp_get_theme');
+var _lv_disp_set_bg_color = Module['_lv_disp_set_bg_color'] = makeInvalidEarlyAccess('_lv_disp_set_bg_color');
+var _lv_area_set = Module['_lv_area_set'] = makeInvalidEarlyAccess('_lv_area_set');
+var _lv_disp_set_bg_image = Module['_lv_disp_set_bg_image'] = makeInvalidEarlyAccess('_lv_disp_set_bg_image');
+var _lv_disp_set_bg_opa = Module['_lv_disp_set_bg_opa'] = makeInvalidEarlyAccess('_lv_disp_set_bg_opa');
+var _lv_obj_set_x = Module['_lv_obj_set_x'] = makeInvalidEarlyAccess('_lv_obj_set_x');
+var _lv_obj_set_y = Module['_lv_obj_set_y'] = makeInvalidEarlyAccess('_lv_obj_set_y');
+var _lv_obj_set_style_opa = Module['_lv_obj_set_style_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_opa');
+var _lv_disp_get_inactive_time = Module['_lv_disp_get_inactive_time'] = makeInvalidEarlyAccess('_lv_disp_get_inactive_time');
+var _lv_tick_elaps = Module['_lv_tick_elaps'] = makeInvalidEarlyAccess('_lv_tick_elaps');
+var _lv_disp_get_next = Module['_lv_disp_get_next'] = makeInvalidEarlyAccess('_lv_disp_get_next');
+var _lv_disp_trig_activity = Module['_lv_disp_trig_activity'] = makeInvalidEarlyAccess('_lv_disp_trig_activity');
+var _lv_tick_get = Module['_lv_tick_get'] = makeInvalidEarlyAccess('_lv_tick_get');
+var _lv_disp_clean_dcache = Module['_lv_disp_clean_dcache'] = makeInvalidEarlyAccess('_lv_disp_clean_dcache');
+var _lv_disp_enable_invalidation = Module['_lv_disp_enable_invalidation'] = makeInvalidEarlyAccess('_lv_disp_enable_invalidation');
+var _lv_disp_is_invalidation_enabled = Module['_lv_disp_is_invalidation_enabled'] = makeInvalidEarlyAccess('_lv_disp_is_invalidation_enabled');
+var _lv_indev_get_act = Module['_lv_indev_get_act'] = makeInvalidEarlyAccess('_lv_indev_get_act');
+var _lv_obj_event_base = Module['_lv_obj_event_base'] = makeInvalidEarlyAccess('_lv_obj_event_base');
+var _lv_event_get_current_target = Module['_lv_event_get_current_target'] = makeInvalidEarlyAccess('_lv_event_get_current_target');
+var _lv_event_get_param = Module['_lv_event_get_param'] = makeInvalidEarlyAccess('_lv_event_get_param');
+var _lv_event_stop_bubbling = Module['_lv_event_stop_bubbling'] = makeInvalidEarlyAccess('_lv_event_stop_bubbling');
+var _lv_event_stop_processing = Module['_lv_event_stop_processing'] = makeInvalidEarlyAccess('_lv_event_stop_processing');
+var _lv_event_register_id = Module['_lv_event_register_id'] = makeInvalidEarlyAccess('_lv_event_register_id');
+var _lv_obj_allocate_spec_attr = Module['_lv_obj_allocate_spec_attr'] = makeInvalidEarlyAccess('_lv_obj_allocate_spec_attr');
+var _lv_mem_realloc = Module['_lv_mem_realloc'] = makeInvalidEarlyAccess('_lv_mem_realloc');
+var _lv_obj_remove_event_cb = Module['_lv_obj_remove_event_cb'] = makeInvalidEarlyAccess('_lv_obj_remove_event_cb');
+var _lv_obj_remove_event_cb_with_user_data = Module['_lv_obj_remove_event_cb_with_user_data'] = makeInvalidEarlyAccess('_lv_obj_remove_event_cb_with_user_data');
+var _lv_obj_remove_event_dsc = Module['_lv_obj_remove_event_dsc'] = makeInvalidEarlyAccess('_lv_obj_remove_event_dsc');
+var _lv_obj_get_event_user_data = Module['_lv_obj_get_event_user_data'] = makeInvalidEarlyAccess('_lv_obj_get_event_user_data');
+var _lv_event_get_indev = Module['_lv_event_get_indev'] = makeInvalidEarlyAccess('_lv_event_get_indev');
+var _lv_event_get_draw_ctx = Module['_lv_event_get_draw_ctx'] = makeInvalidEarlyAccess('_lv_event_get_draw_ctx');
+var _lv_event_get_old_size = Module['_lv_event_get_old_size'] = makeInvalidEarlyAccess('_lv_event_get_old_size');
+var _lv_event_get_key = Module['_lv_event_get_key'] = makeInvalidEarlyAccess('_lv_event_get_key');
+var _lv_event_get_scroll_anim = Module['_lv_event_get_scroll_anim'] = makeInvalidEarlyAccess('_lv_event_get_scroll_anim');
+var _lv_event_set_ext_draw_size = Module['_lv_event_set_ext_draw_size'] = makeInvalidEarlyAccess('_lv_event_set_ext_draw_size');
+var _lv_event_get_self_size_info = Module['_lv_event_get_self_size_info'] = makeInvalidEarlyAccess('_lv_event_get_self_size_info');
+var _lv_event_get_hit_test_info = Module['_lv_event_get_hit_test_info'] = makeInvalidEarlyAccess('_lv_event_get_hit_test_info');
+var _lv_event_get_cover_area = Module['_lv_event_get_cover_area'] = makeInvalidEarlyAccess('_lv_event_get_cover_area');
+var _lv_event_set_cover_res = Module['_lv_event_set_cover_res'] = makeInvalidEarlyAccess('_lv_event_set_cover_res');
+var _lv_group_del = Module['_lv_group_del'] = makeInvalidEarlyAccess('_lv_group_del');
+var _lv_indev_get_next = Module['_lv_indev_get_next'] = makeInvalidEarlyAccess('_lv_indev_get_next');
+var _lv_indev_get_type = Module['_lv_indev_get_type'] = makeInvalidEarlyAccess('_lv_indev_get_type');
+var _lv_group_set_default = Module['_lv_group_set_default'] = makeInvalidEarlyAccess('_lv_group_set_default');
+var _lv_group_get_default = Module['_lv_group_get_default'] = makeInvalidEarlyAccess('_lv_group_get_default');
+var _lv_group_remove_obj = Module['_lv_group_remove_obj'] = makeInvalidEarlyAccess('_lv_group_remove_obj');
+var _lv_obj_get_group = Module['_lv_obj_get_group'] = makeInvalidEarlyAccess('_lv_obj_get_group');
+var _lv_group_swap_obj = Module['_lv_group_swap_obj'] = makeInvalidEarlyAccess('_lv_group_swap_obj');
+var _lv_group_focus_obj = Module['_lv_group_focus_obj'] = makeInvalidEarlyAccess('_lv_group_focus_obj');
+var _lv_group_get_focused = Module['_lv_group_get_focused'] = makeInvalidEarlyAccess('_lv_group_get_focused');
+var _lv_group_set_editing = Module['_lv_group_set_editing'] = makeInvalidEarlyAccess('_lv_group_set_editing');
+var _lv_group_focus_next = Module['_lv_group_focus_next'] = makeInvalidEarlyAccess('_lv_group_focus_next');
+var _lv_group_focus_prev = Module['_lv_group_focus_prev'] = makeInvalidEarlyAccess('_lv_group_focus_prev');
+var _lv_group_focus_freeze = Module['_lv_group_focus_freeze'] = makeInvalidEarlyAccess('_lv_group_focus_freeze');
+var _lv_group_send_data = Module['_lv_group_send_data'] = makeInvalidEarlyAccess('_lv_group_send_data');
+var _lv_group_set_focus_cb = Module['_lv_group_set_focus_cb'] = makeInvalidEarlyAccess('_lv_group_set_focus_cb');
+var _lv_group_set_edge_cb = Module['_lv_group_set_edge_cb'] = makeInvalidEarlyAccess('_lv_group_set_edge_cb');
+var _lv_group_set_refocus_policy = Module['_lv_group_set_refocus_policy'] = makeInvalidEarlyAccess('_lv_group_set_refocus_policy');
+var _lv_group_set_wrap = Module['_lv_group_set_wrap'] = makeInvalidEarlyAccess('_lv_group_set_wrap');
+var _lv_group_get_focus_cb = Module['_lv_group_get_focus_cb'] = makeInvalidEarlyAccess('_lv_group_get_focus_cb');
+var _lv_group_get_edge_cb = Module['_lv_group_get_edge_cb'] = makeInvalidEarlyAccess('_lv_group_get_edge_cb');
+var _lv_group_get_editing = Module['_lv_group_get_editing'] = makeInvalidEarlyAccess('_lv_group_get_editing');
+var _lv_group_get_wrap = Module['_lv_group_get_wrap'] = makeInvalidEarlyAccess('_lv_group_get_wrap');
+var _lv_group_get_obj_count = Module['_lv_group_get_obj_count'] = makeInvalidEarlyAccess('_lv_group_get_obj_count');
+var _lv_indev_read_timer_cb = Module['_lv_indev_read_timer_cb'] = makeInvalidEarlyAccess('_lv_indev_read_timer_cb');
+var _lv_indev_enable = Module['_lv_indev_enable'] = makeInvalidEarlyAccess('_lv_indev_enable');
+var _lv_obj_is_editable = Module['_lv_obj_is_editable'] = makeInvalidEarlyAccess('_lv_obj_is_editable');
+var _lv_indev_reset = Module['_lv_indev_reset'] = makeInvalidEarlyAccess('_lv_indev_reset');
+var _lv_indev_reset_long_press = Module['_lv_indev_reset_long_press'] = makeInvalidEarlyAccess('_lv_indev_reset_long_press');
+var _lv_indev_set_cursor = Module['_lv_indev_set_cursor'] = makeInvalidEarlyAccess('_lv_indev_set_cursor');
+var _lv_obj_set_parent = Module['_lv_obj_set_parent'] = makeInvalidEarlyAccess('_lv_obj_set_parent');
+var _lv_indev_set_button_points = Module['_lv_indev_set_button_points'] = makeInvalidEarlyAccess('_lv_indev_set_button_points');
+var _lv_indev_get_point = Module['_lv_indev_get_point'] = makeInvalidEarlyAccess('_lv_indev_get_point');
+var _lv_indev_get_gesture_dir = Module['_lv_indev_get_gesture_dir'] = makeInvalidEarlyAccess('_lv_indev_get_gesture_dir');
+var _lv_indev_get_key = Module['_lv_indev_get_key'] = makeInvalidEarlyAccess('_lv_indev_get_key');
+var _lv_indev_get_scroll_dir = Module['_lv_indev_get_scroll_dir'] = makeInvalidEarlyAccess('_lv_indev_get_scroll_dir');
+var _lv_indev_get_scroll_obj = Module['_lv_indev_get_scroll_obj'] = makeInvalidEarlyAccess('_lv_indev_get_scroll_obj');
+var _lv_indev_get_vect = Module['_lv_indev_get_vect'] = makeInvalidEarlyAccess('_lv_indev_get_vect');
+var _lv_indev_wait_release = Module['_lv_indev_wait_release'] = makeInvalidEarlyAccess('_lv_indev_wait_release');
+var _lv_indev_get_obj_act = Module['_lv_indev_get_obj_act'] = makeInvalidEarlyAccess('_lv_indev_get_obj_act');
+var _lv_indev_get_read_timer = Module['_lv_indev_get_read_timer'] = makeInvalidEarlyAccess('_lv_indev_get_read_timer');
+var _lv_indev_search_obj = Module['_lv_indev_search_obj'] = makeInvalidEarlyAccess('_lv_indev_search_obj');
+var _lv_obj_transform_point = Module['_lv_obj_transform_point'] = makeInvalidEarlyAccess('_lv_obj_transform_point');
+var _lv_obj_hit_test = Module['_lv_obj_hit_test'] = makeInvalidEarlyAccess('_lv_obj_hit_test');
+var _lv_point_transform = Module['_lv_point_transform'] = makeInvalidEarlyAccess('_lv_point_transform');
+var _lv_obj_get_scroll_dir = Module['_lv_obj_get_scroll_dir'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_dir');
+var _lv_obj_get_scroll_top = Module['_lv_obj_get_scroll_top'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_top');
+var _lv_obj_get_scroll_bottom = Module['_lv_obj_get_scroll_bottom'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_bottom');
+var _lv_obj_get_scroll_left = Module['_lv_obj_get_scroll_left'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_left');
+var _lv_obj_get_scroll_right = Module['_lv_obj_get_scroll_right'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_right');
+var _lv_obj_get_scroll_snap_y = Module['_lv_obj_get_scroll_snap_y'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_snap_y');
+var _lv_obj_get_scroll_snap_x = Module['_lv_obj_get_scroll_snap_x'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_snap_x');
+var _lv_obj_scroll_by = Module['_lv_obj_scroll_by'] = makeInvalidEarlyAccess('_lv_obj_scroll_by');
+var _lv_obj_has_flag_any = Module['_lv_obj_has_flag_any'] = makeInvalidEarlyAccess('_lv_obj_has_flag_any');
+var _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = makeInvalidEarlyAccess('_lv_indev_scroll_throw_predict');
+var _lv_indev_scroll_get_snap_dist = Module['_lv_indev_scroll_get_snap_dist'] = makeInvalidEarlyAccess('_lv_indev_scroll_get_snap_dist');
+var _lv_is_initialized = Module['_lv_is_initialized'] = makeInvalidEarlyAccess('_lv_is_initialized');
+var _lv_obj_enable_style_refresh = Module['_lv_obj_enable_style_refresh'] = makeInvalidEarlyAccess('_lv_obj_enable_style_refresh');
+var _lv_obj_mark_layout_as_dirty = Module['_lv_obj_mark_layout_as_dirty'] = makeInvalidEarlyAccess('_lv_obj_mark_layout_as_dirty');
+var _lv_obj_scroll_to_y = Module['_lv_obj_scroll_to_y'] = makeInvalidEarlyAccess('_lv_obj_scroll_to_y');
+var _lv_obj_scroll_to_x = Module['_lv_obj_scroll_to_x'] = makeInvalidEarlyAccess('_lv_obj_scroll_to_x');
+var _lv_obj_scroll_to_view_recursive = Module['_lv_obj_scroll_to_view_recursive'] = makeInvalidEarlyAccess('_lv_obj_scroll_to_view_recursive');
+var _lv_obj_get_scrollbar_mode = Module['_lv_obj_get_scrollbar_mode'] = makeInvalidEarlyAccess('_lv_obj_get_scrollbar_mode');
+var _lv_obj_get_scrollbar_area = Module['_lv_obj_get_scrollbar_area'] = makeInvalidEarlyAccess('_lv_obj_get_scrollbar_area');
+var _lv_obj_invalidate_area = Module['_lv_obj_invalidate_area'] = makeInvalidEarlyAccess('_lv_obj_invalidate_area');
+var _lv_obj_calculate_ext_draw_size = Module['_lv_obj_calculate_ext_draw_size'] = makeInvalidEarlyAccess('_lv_obj_calculate_ext_draw_size');
+var _lv_draw_rect_dsc_init = Module['_lv_draw_rect_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_rect_dsc_init');
+var _lv_obj_init_draw_rect_dsc = Module['_lv_obj_init_draw_rect_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_rect_dsc');
+var _lv_obj_draw_dsc_init = Module['_lv_obj_draw_dsc_init'] = makeInvalidEarlyAccess('_lv_obj_draw_dsc_init');
+var _lv_draw_rect = Module['_lv_draw_rect'] = makeInvalidEarlyAccess('_lv_draw_rect');
+var _lv_mem_buf_get = Module['_lv_mem_buf_get'] = makeInvalidEarlyAccess('_lv_mem_buf_get');
+var _lv_draw_mask_radius_init = Module['_lv_draw_mask_radius_init'] = makeInvalidEarlyAccess('_lv_draw_mask_radius_init');
+var _lv_draw_mask_add = Module['_lv_draw_mask_add'] = makeInvalidEarlyAccess('_lv_draw_mask_add');
+var _lv_area_get_size = Module['_lv_area_get_size'] = makeInvalidEarlyAccess('_lv_area_get_size');
+var _lv_obj_get_style_opa_recursive = Module['_lv_obj_get_style_opa_recursive'] = makeInvalidEarlyAccess('_lv_obj_get_style_opa_recursive');
+var _lv_draw_mask_remove_custom = Module['_lv_draw_mask_remove_custom'] = makeInvalidEarlyAccess('_lv_draw_mask_remove_custom');
+var _lv_draw_mask_free_param = Module['_lv_draw_mask_free_param'] = makeInvalidEarlyAccess('_lv_draw_mask_free_param');
+var _lv_mem_buf_release = Module['_lv_mem_buf_release'] = makeInvalidEarlyAccess('_lv_mem_buf_release');
+var _lv_mem_init = Module['_lv_mem_init'] = makeInvalidEarlyAccess('_lv_mem_init');
+var _lv_draw_init = Module['_lv_draw_init'] = makeInvalidEarlyAccess('_lv_draw_init');
+var _lv_extra_init = Module['_lv_extra_init'] = makeInvalidEarlyAccess('_lv_extra_init');
+var _lv_deinit = Module['_lv_deinit'] = makeInvalidEarlyAccess('_lv_deinit');
+var _lv_disp_set_default = Module['_lv_disp_set_default'] = makeInvalidEarlyAccess('_lv_disp_set_default');
+var _lv_mem_deinit = Module['_lv_mem_deinit'] = makeInvalidEarlyAccess('_lv_mem_deinit');
+var _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = makeInvalidEarlyAccess('_lv_log_register_print_cb');
+var _lv_obj_class_create_obj = Module['_lv_obj_class_create_obj'] = makeInvalidEarlyAccess('_lv_obj_class_create_obj');
+var _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = makeInvalidEarlyAccess('_lv_obj_class_init_obj');
+var _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = makeInvalidEarlyAccess('_lv_obj_is_layout_positioned');
+var _lv_obj_style_get_selector_state = Module['_lv_obj_style_get_selector_state'] = makeInvalidEarlyAccess('_lv_obj_style_get_selector_state');
+var _lv_obj_style_get_selector_part = Module['_lv_obj_style_get_selector_part'] = makeInvalidEarlyAccess('_lv_obj_style_get_selector_part');
+var _lv_style_prop_get_default = Module['_lv_style_prop_get_default'] = makeInvalidEarlyAccess('_lv_style_prop_get_default');
+var _lv_obj_refresh_style = Module['_lv_obj_refresh_style'] = makeInvalidEarlyAccess('_lv_obj_refresh_style');
+var _lv_obj_refresh_ext_draw_size = Module['_lv_obj_refresh_ext_draw_size'] = makeInvalidEarlyAccess('_lv_obj_refresh_ext_draw_size');
+var _lv_obj_check_type = Module['_lv_obj_check_type'] = makeInvalidEarlyAccess('_lv_obj_check_type');
+var _lv_obj_has_class = Module['_lv_obj_has_class'] = makeInvalidEarlyAccess('_lv_obj_has_class');
+var _lv_obj_get_class = Module['_lv_obj_get_class'] = makeInvalidEarlyAccess('_lv_obj_get_class');
+var _lv_obj_is_valid = Module['_lv_obj_is_valid'] = makeInvalidEarlyAccess('_lv_obj_is_valid');
+var _lv_obj_refresh_self_size = Module['_lv_obj_refresh_self_size'] = makeInvalidEarlyAccess('_lv_obj_refresh_self_size');
+var _lv_obj_is_group_def = Module['_lv_obj_is_group_def'] = makeInvalidEarlyAccess('_lv_obj_is_group_def');
+var _lv_img_src_get_type = Module['_lv_img_src_get_type'] = makeInvalidEarlyAccess('_lv_img_src_get_type');
+var _lv_obj_init_draw_label_dsc = Module['_lv_obj_init_draw_label_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_label_dsc');
+var _lv_obj_init_draw_img_dsc = Module['_lv_obj_init_draw_img_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_img_dsc');
+var _lv_obj_init_draw_line_dsc = Module['_lv_obj_init_draw_line_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_line_dsc');
+var _lv_obj_init_draw_arc_dsc = Module['_lv_obj_init_draw_arc_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_arc_dsc');
+var _lv_obj_draw_part_check_type = Module['_lv_obj_draw_part_check_type'] = makeInvalidEarlyAccess('_lv_obj_draw_part_check_type');
+var _lv_obj_get_local_style_prop = Module['_lv_obj_get_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_get_local_style_prop');
+var _lv_obj_set_style_x = Module['_lv_obj_set_style_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_x');
+var _lv_obj_set_style_y = Module['_lv_obj_set_style_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_y');
+var _lv_obj_refr_size = Module['_lv_obj_refr_size'] = makeInvalidEarlyAccess('_lv_obj_refr_size');
+var _lv_obj_get_content_coords = Module['_lv_obj_get_content_coords'] = makeInvalidEarlyAccess('_lv_obj_get_content_coords');
+var _lv_obj_scrollbar_invalidate = Module['_lv_obj_scrollbar_invalidate'] = makeInvalidEarlyAccess('_lv_obj_scrollbar_invalidate');
+var _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = makeInvalidEarlyAccess('_lv_obj_get_content_width');
+var _lv_clamp_width = Module['_lv_clamp_width'] = makeInvalidEarlyAccess('_lv_clamp_width');
+var _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = makeInvalidEarlyAccess('_lv_obj_get_content_height');
+var _lv_clamp_height = Module['_lv_clamp_height'] = makeInvalidEarlyAccess('_lv_clamp_height');
+var _lv_obj_area_is_visible = Module['_lv_obj_area_is_visible'] = makeInvalidEarlyAccess('_lv_obj_area_is_visible');
+var _lv_obj_get_coords = Module['_lv_obj_get_coords'] = makeInvalidEarlyAccess('_lv_obj_get_coords');
+var _lv_area_increase = Module['_lv_area_increase'] = makeInvalidEarlyAccess('_lv_area_increase');
+var _lv_obj_set_style_width = Module['_lv_obj_set_style_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_width');
+var _lv_obj_set_style_height = Module['_lv_obj_set_style_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_height');
+var _lv_obj_set_width = Module['_lv_obj_set_width'] = makeInvalidEarlyAccess('_lv_obj_set_width');
+var _lv_obj_set_height = Module['_lv_obj_set_height'] = makeInvalidEarlyAccess('_lv_obj_set_height');
+var _lv_obj_set_content_width = Module['_lv_obj_set_content_width'] = makeInvalidEarlyAccess('_lv_obj_set_content_width');
+var _lv_obj_set_content_height = Module['_lv_obj_set_content_height'] = makeInvalidEarlyAccess('_lv_obj_set_content_height');
+var _lv_obj_set_layout = Module['_lv_obj_set_layout'] = makeInvalidEarlyAccess('_lv_obj_set_layout');
+var _lv_obj_set_style_layout = Module['_lv_obj_set_style_layout'] = makeInvalidEarlyAccess('_lv_obj_set_style_layout');
+var _lv_obj_get_screen = Module['_lv_obj_get_screen'] = makeInvalidEarlyAccess('_lv_obj_get_screen');
+var _lv_timer_resume = Module['_lv_timer_resume'] = makeInvalidEarlyAccess('_lv_timer_resume');
+var _lv_obj_refr_pos = Module['_lv_obj_refr_pos'] = makeInvalidEarlyAccess('_lv_obj_refr_pos');
+var _lv_obj_readjust_scroll = Module['_lv_obj_readjust_scroll'] = makeInvalidEarlyAccess('_lv_obj_readjust_scroll');
+var _lv_layout_register = Module['_lv_layout_register'] = makeInvalidEarlyAccess('_lv_layout_register');
+var _lv_obj_set_align = Module['_lv_obj_set_align'] = makeInvalidEarlyAccess('_lv_obj_set_align');
+var _lv_obj_set_style_align = Module['_lv_obj_set_style_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_align');
+var _lv_obj_align = Module['_lv_obj_align'] = makeInvalidEarlyAccess('_lv_obj_align');
+var _lv_obj_align_to = Module['_lv_obj_align_to'] = makeInvalidEarlyAccess('_lv_obj_align_to');
+var _lv_obj_get_x = Module['_lv_obj_get_x'] = makeInvalidEarlyAccess('_lv_obj_get_x');
+var _lv_obj_get_x2 = Module['_lv_obj_get_x2'] = makeInvalidEarlyAccess('_lv_obj_get_x2');
+var _lv_obj_get_y = Module['_lv_obj_get_y'] = makeInvalidEarlyAccess('_lv_obj_get_y');
+var _lv_obj_get_y2 = Module['_lv_obj_get_y2'] = makeInvalidEarlyAccess('_lv_obj_get_y2');
+var _lv_obj_get_x_aligned = Module['_lv_obj_get_x_aligned'] = makeInvalidEarlyAccess('_lv_obj_get_x_aligned');
+var _lv_obj_get_y_aligned = Module['_lv_obj_get_y_aligned'] = makeInvalidEarlyAccess('_lv_obj_get_y_aligned');
+var _lv_obj_get_self_width = Module['_lv_obj_get_self_width'] = makeInvalidEarlyAccess('_lv_obj_get_self_width');
+var _lv_obj_get_self_height = Module['_lv_obj_get_self_height'] = makeInvalidEarlyAccess('_lv_obj_get_self_height');
+var _lv_obj_move_to = Module['_lv_obj_move_to'] = makeInvalidEarlyAccess('_lv_obj_move_to');
+var _lv_obj_move_children_by = Module['_lv_obj_move_children_by'] = makeInvalidEarlyAccess('_lv_obj_move_children_by');
+var _lv_obj_get_transformed_area = Module['_lv_obj_get_transformed_area'] = makeInvalidEarlyAccess('_lv_obj_get_transformed_area');
+var _lv_obj_is_visible = Module['_lv_obj_is_visible'] = makeInvalidEarlyAccess('_lv_obj_is_visible');
+var _lv_obj_set_ext_click_area = Module['_lv_obj_set_ext_click_area'] = makeInvalidEarlyAccess('_lv_obj_set_ext_click_area');
+var _lv_obj_get_click_area = Module['_lv_obj_get_click_area'] = makeInvalidEarlyAccess('_lv_obj_get_click_area');
+var _lv_obj_get_scroll_end = Module['_lv_obj_get_scroll_end'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_end');
+var _lv_anim_get = Module['_lv_anim_get'] = makeInvalidEarlyAccess('_lv_anim_get');
+var _lv_obj_scroll_by_bounded = Module['_lv_obj_scroll_by_bounded'] = makeInvalidEarlyAccess('_lv_obj_scroll_by_bounded');
+var _lv_anim_speed_to_time = Module['_lv_anim_speed_to_time'] = makeInvalidEarlyAccess('_lv_anim_speed_to_time');
+var _lv_anim_path_ease_out = Module['_lv_anim_path_ease_out'] = makeInvalidEarlyAccess('_lv_anim_path_ease_out');
+var _lv_obj_scroll_to_view = Module['_lv_obj_scroll_to_view'] = makeInvalidEarlyAccess('_lv_obj_scroll_to_view');
+var _lv_obj_is_scrolling = Module['_lv_obj_is_scrolling'] = makeInvalidEarlyAccess('_lv_obj_is_scrolling');
+var _lv_obj_update_snap = Module['_lv_obj_update_snap'] = makeInvalidEarlyAccess('_lv_obj_update_snap');
+var _lv_disp_get_dpi = Module['_lv_disp_get_dpi'] = makeInvalidEarlyAccess('_lv_disp_get_dpi');
+var _lv_style_remove_prop = Module['_lv_style_remove_prop'] = makeInvalidEarlyAccess('_lv_style_remove_prop');
+var _lv_style_reset = Module['_lv_style_reset'] = makeInvalidEarlyAccess('_lv_style_reset');
+var _lv_obj_report_style_change = Module['_lv_obj_report_style_change'] = makeInvalidEarlyAccess('_lv_obj_report_style_change');
+var _lv_style_get_prop = Module['_lv_style_get_prop'] = makeInvalidEarlyAccess('_lv_style_get_prop');
+var _lv_obj_set_local_style_prop_meta = Module['_lv_obj_set_local_style_prop_meta'] = makeInvalidEarlyAccess('_lv_obj_set_local_style_prop_meta');
+var _lv_style_set_prop_meta = Module['_lv_style_set_prop_meta'] = makeInvalidEarlyAccess('_lv_style_set_prop_meta');
+var _lv_style_is_empty = Module['_lv_style_is_empty'] = makeInvalidEarlyAccess('_lv_style_is_empty');
+var _lv_obj_fade_in = Module['_lv_obj_fade_in'] = makeInvalidEarlyAccess('_lv_obj_fade_in');
+var _lv_obj_fade_out = Module['_lv_obj_fade_out'] = makeInvalidEarlyAccess('_lv_obj_fade_out');
+var _lv_obj_calculate_style_text_align = Module['_lv_obj_calculate_style_text_align'] = makeInvalidEarlyAccess('_lv_obj_calculate_style_text_align');
+var _lv_bidi_calculate_align = Module['_lv_bidi_calculate_align'] = makeInvalidEarlyAccess('_lv_bidi_calculate_align');
+var _lv_obj_set_style_min_width = Module['_lv_obj_set_style_min_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_min_width');
+var _lv_obj_set_style_max_width = Module['_lv_obj_set_style_max_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_max_width');
+var _lv_obj_set_style_min_height = Module['_lv_obj_set_style_min_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_min_height');
+var _lv_obj_set_style_max_height = Module['_lv_obj_set_style_max_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_max_height');
+var _lv_obj_set_style_transform_width = Module['_lv_obj_set_style_transform_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_width');
+var _lv_obj_set_style_transform_height = Module['_lv_obj_set_style_transform_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_height');
+var _lv_obj_set_style_translate_x = Module['_lv_obj_set_style_translate_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_translate_x');
+var _lv_obj_set_style_translate_y = Module['_lv_obj_set_style_translate_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_translate_y');
+var _lv_obj_set_style_transform_zoom = Module['_lv_obj_set_style_transform_zoom'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_zoom');
+var _lv_obj_set_style_transform_angle = Module['_lv_obj_set_style_transform_angle'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_angle');
+var _lv_obj_set_style_transform_pivot_x = Module['_lv_obj_set_style_transform_pivot_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_pivot_x');
+var _lv_obj_set_style_transform_pivot_y = Module['_lv_obj_set_style_transform_pivot_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_transform_pivot_y');
+var _lv_obj_set_style_pad_top = Module['_lv_obj_set_style_pad_top'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_top');
+var _lv_obj_set_style_pad_bottom = Module['_lv_obj_set_style_pad_bottom'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_bottom');
+var _lv_obj_set_style_pad_left = Module['_lv_obj_set_style_pad_left'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_left');
+var _lv_obj_set_style_pad_right = Module['_lv_obj_set_style_pad_right'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_right');
+var _lv_obj_set_style_pad_row = Module['_lv_obj_set_style_pad_row'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_row');
+var _lv_obj_set_style_pad_column = Module['_lv_obj_set_style_pad_column'] = makeInvalidEarlyAccess('_lv_obj_set_style_pad_column');
+var _lv_obj_set_style_bg_color = Module['_lv_obj_set_style_bg_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_color');
+var _lv_obj_set_style_bg_opa = Module['_lv_obj_set_style_bg_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_opa');
+var _lv_obj_set_style_bg_grad_color = Module['_lv_obj_set_style_bg_grad_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_grad_color');
+var _lv_obj_set_style_bg_grad_dir = Module['_lv_obj_set_style_bg_grad_dir'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_grad_dir');
+var _lv_obj_set_style_bg_main_stop = Module['_lv_obj_set_style_bg_main_stop'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_main_stop');
+var _lv_obj_set_style_bg_grad_stop = Module['_lv_obj_set_style_bg_grad_stop'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_grad_stop');
+var _lv_obj_set_style_bg_grad = Module['_lv_obj_set_style_bg_grad'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_grad');
+var _lv_obj_set_style_bg_dither_mode = Module['_lv_obj_set_style_bg_dither_mode'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_dither_mode');
+var _lv_obj_set_style_bg_img_src = Module['_lv_obj_set_style_bg_img_src'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_img_src');
+var _lv_obj_set_style_bg_img_opa = Module['_lv_obj_set_style_bg_img_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_img_opa');
+var _lv_obj_set_style_bg_img_recolor = Module['_lv_obj_set_style_bg_img_recolor'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_img_recolor');
+var _lv_obj_set_style_bg_img_recolor_opa = Module['_lv_obj_set_style_bg_img_recolor_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_img_recolor_opa');
+var _lv_obj_set_style_bg_img_tiled = Module['_lv_obj_set_style_bg_img_tiled'] = makeInvalidEarlyAccess('_lv_obj_set_style_bg_img_tiled');
+var _lv_obj_set_style_border_color = Module['_lv_obj_set_style_border_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_border_color');
+var _lv_obj_set_style_border_opa = Module['_lv_obj_set_style_border_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_border_opa');
+var _lv_obj_set_style_border_width = Module['_lv_obj_set_style_border_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_border_width');
+var _lv_obj_set_style_border_side = Module['_lv_obj_set_style_border_side'] = makeInvalidEarlyAccess('_lv_obj_set_style_border_side');
+var _lv_obj_set_style_border_post = Module['_lv_obj_set_style_border_post'] = makeInvalidEarlyAccess('_lv_obj_set_style_border_post');
+var _lv_obj_set_style_outline_width = Module['_lv_obj_set_style_outline_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_outline_width');
+var _lv_obj_set_style_outline_color = Module['_lv_obj_set_style_outline_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_outline_color');
+var _lv_obj_set_style_outline_opa = Module['_lv_obj_set_style_outline_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_outline_opa');
+var _lv_obj_set_style_outline_pad = Module['_lv_obj_set_style_outline_pad'] = makeInvalidEarlyAccess('_lv_obj_set_style_outline_pad');
+var _lv_obj_set_style_shadow_width = Module['_lv_obj_set_style_shadow_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_width');
+var _lv_obj_set_style_shadow_ofs_x = Module['_lv_obj_set_style_shadow_ofs_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_ofs_x');
+var _lv_obj_set_style_shadow_ofs_y = Module['_lv_obj_set_style_shadow_ofs_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_ofs_y');
+var _lv_obj_set_style_shadow_spread = Module['_lv_obj_set_style_shadow_spread'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_spread');
+var _lv_obj_set_style_shadow_color = Module['_lv_obj_set_style_shadow_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_color');
+var _lv_obj_set_style_shadow_opa = Module['_lv_obj_set_style_shadow_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_shadow_opa');
+var _lv_obj_set_style_img_opa = Module['_lv_obj_set_style_img_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_img_opa');
+var _lv_obj_set_style_img_recolor = Module['_lv_obj_set_style_img_recolor'] = makeInvalidEarlyAccess('_lv_obj_set_style_img_recolor');
+var _lv_obj_set_style_img_recolor_opa = Module['_lv_obj_set_style_img_recolor_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_img_recolor_opa');
+var _lv_obj_set_style_line_width = Module['_lv_obj_set_style_line_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_width');
+var _lv_obj_set_style_line_dash_width = Module['_lv_obj_set_style_line_dash_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_dash_width');
+var _lv_obj_set_style_line_dash_gap = Module['_lv_obj_set_style_line_dash_gap'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_dash_gap');
+var _lv_obj_set_style_line_rounded = Module['_lv_obj_set_style_line_rounded'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_rounded');
+var _lv_obj_set_style_line_color = Module['_lv_obj_set_style_line_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_color');
+var _lv_obj_set_style_line_opa = Module['_lv_obj_set_style_line_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_line_opa');
+var _lv_obj_set_style_arc_width = Module['_lv_obj_set_style_arc_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_arc_width');
+var _lv_obj_set_style_arc_rounded = Module['_lv_obj_set_style_arc_rounded'] = makeInvalidEarlyAccess('_lv_obj_set_style_arc_rounded');
+var _lv_obj_set_style_arc_color = Module['_lv_obj_set_style_arc_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_arc_color');
+var _lv_obj_set_style_arc_opa = Module['_lv_obj_set_style_arc_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_arc_opa');
+var _lv_obj_set_style_arc_img_src = Module['_lv_obj_set_style_arc_img_src'] = makeInvalidEarlyAccess('_lv_obj_set_style_arc_img_src');
+var _lv_obj_set_style_text_color = Module['_lv_obj_set_style_text_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_color');
+var _lv_obj_set_style_text_opa = Module['_lv_obj_set_style_text_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_opa');
+var _lv_obj_set_style_text_font = Module['_lv_obj_set_style_text_font'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_font');
+var _lv_obj_set_style_text_letter_space = Module['_lv_obj_set_style_text_letter_space'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_letter_space');
+var _lv_obj_set_style_text_line_space = Module['_lv_obj_set_style_text_line_space'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_line_space');
+var _lv_obj_set_style_text_decor = Module['_lv_obj_set_style_text_decor'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_decor');
+var _lv_obj_set_style_text_align = Module['_lv_obj_set_style_text_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_align');
+var _lv_obj_set_style_radius = Module['_lv_obj_set_style_radius'] = makeInvalidEarlyAccess('_lv_obj_set_style_radius');
+var _lv_obj_set_style_clip_corner = Module['_lv_obj_set_style_clip_corner'] = makeInvalidEarlyAccess('_lv_obj_set_style_clip_corner');
+var _lv_obj_set_style_opa_layered = Module['_lv_obj_set_style_opa_layered'] = makeInvalidEarlyAccess('_lv_obj_set_style_opa_layered');
+var _lv_obj_set_style_color_filter_dsc = Module['_lv_obj_set_style_color_filter_dsc'] = makeInvalidEarlyAccess('_lv_obj_set_style_color_filter_dsc');
+var _lv_obj_set_style_color_filter_opa = Module['_lv_obj_set_style_color_filter_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_color_filter_opa');
+var _lv_obj_set_style_anim = Module['_lv_obj_set_style_anim'] = makeInvalidEarlyAccess('_lv_obj_set_style_anim');
+var _lv_obj_set_style_anim_time = Module['_lv_obj_set_style_anim_time'] = makeInvalidEarlyAccess('_lv_obj_set_style_anim_time');
+var _lv_obj_set_style_anim_speed = Module['_lv_obj_set_style_anim_speed'] = makeInvalidEarlyAccess('_lv_obj_set_style_anim_speed');
+var _lv_obj_set_style_transition = Module['_lv_obj_set_style_transition'] = makeInvalidEarlyAccess('_lv_obj_set_style_transition');
+var _lv_obj_set_style_blend_mode = Module['_lv_obj_set_style_blend_mode'] = makeInvalidEarlyAccess('_lv_obj_set_style_blend_mode');
+var _lv_obj_set_style_base_dir = Module['_lv_obj_set_style_base_dir'] = makeInvalidEarlyAccess('_lv_obj_set_style_base_dir');
+var _lv_obj_clean = Module['_lv_obj_clean'] = makeInvalidEarlyAccess('_lv_obj_clean');
+var _lv_obj_get_child = Module['_lv_obj_get_child'] = makeInvalidEarlyAccess('_lv_obj_get_child');
+var _lv_obj_del_delayed = Module['_lv_obj_del_delayed'] = makeInvalidEarlyAccess('_lv_obj_del_delayed');
+var _lv_obj_del_anim_ready_cb = Module['_lv_obj_del_anim_ready_cb'] = makeInvalidEarlyAccess('_lv_obj_del_anim_ready_cb');
+var _lv_obj_del_async = Module['_lv_obj_del_async'] = makeInvalidEarlyAccess('_lv_obj_del_async');
+var _lv_async_call = Module['_lv_async_call'] = makeInvalidEarlyAccess('_lv_async_call');
+var _lv_obj_get_index = Module['_lv_obj_get_index'] = makeInvalidEarlyAccess('_lv_obj_get_index');
+var _lv_obj_move_to_index = Module['_lv_obj_move_to_index'] = makeInvalidEarlyAccess('_lv_obj_move_to_index');
+var _lv_obj_swap = Module['_lv_obj_swap'] = makeInvalidEarlyAccess('_lv_obj_swap');
+var _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = makeInvalidEarlyAccess('_lv_obj_tree_walk');
+var _lv_refr_now = Module['_lv_refr_now'] = makeInvalidEarlyAccess('_lv_refr_now');
+var _lv_anim_refr_now = Module['_lv_anim_refr_now'] = makeInvalidEarlyAccess('_lv_anim_refr_now');
+var _lv_timer_pause = Module['_lv_timer_pause'] = makeInvalidEarlyAccess('_lv_timer_pause');
+var _lv_mem_buf_free_all = Module['_lv_mem_buf_free_all'] = makeInvalidEarlyAccess('_lv_mem_buf_free_all');
+var _lv_obj_redraw = Module['_lv_obj_redraw'] = makeInvalidEarlyAccess('_lv_obj_redraw');
+var _lv_draw_layer_create = Module['_lv_draw_layer_create'] = makeInvalidEarlyAccess('_lv_draw_layer_create');
+var _lv_draw_img_dsc_init = Module['_lv_draw_img_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_img_dsc_init');
+var _lv_draw_layer_adjust = Module['_lv_draw_layer_adjust'] = makeInvalidEarlyAccess('_lv_draw_layer_adjust');
+var _lv_draw_layer_blend = Module['_lv_draw_layer_blend'] = makeInvalidEarlyAccess('_lv_draw_layer_blend');
+var _lv_draw_layer_destroy = Module['_lv_draw_layer_destroy'] = makeInvalidEarlyAccess('_lv_draw_layer_destroy');
+var _lv_disp_get_draw_buf = Module['_lv_disp_get_draw_buf'] = makeInvalidEarlyAccess('_lv_disp_get_draw_buf');
+var _lv_img_decoder_get_info = Module['_lv_img_decoder_get_info'] = makeInvalidEarlyAccess('_lv_img_decoder_get_info');
+var _lv_draw_img = Module['_lv_draw_img'] = makeInvalidEarlyAccess('_lv_draw_img');
+var _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = makeInvalidEarlyAccess('_lv_theme_get_from_obj');
+var _lv_theme_set_parent = Module['_lv_theme_set_parent'] = makeInvalidEarlyAccess('_lv_theme_set_parent');
+var _lv_theme_set_apply_cb = Module['_lv_theme_set_apply_cb'] = makeInvalidEarlyAccess('_lv_theme_set_apply_cb');
+var _lv_theme_get_font_small = Module['_lv_theme_get_font_small'] = makeInvalidEarlyAccess('_lv_theme_get_font_small');
+var _lv_theme_get_font_normal = Module['_lv_theme_get_font_normal'] = makeInvalidEarlyAccess('_lv_theme_get_font_normal');
+var _lv_theme_get_font_large = Module['_lv_theme_get_font_large'] = makeInvalidEarlyAccess('_lv_theme_get_font_large');
+var _lv_theme_get_color_primary = Module['_lv_theme_get_color_primary'] = makeInvalidEarlyAccess('_lv_theme_get_color_primary');
+var _lv_theme_get_color_secondary = Module['_lv_theme_get_color_secondary'] = makeInvalidEarlyAccess('_lv_theme_get_color_secondary');
+var _lv_draw_wait_for_finish = Module['_lv_draw_wait_for_finish'] = makeInvalidEarlyAccess('_lv_draw_wait_for_finish');
+var _lv_draw_arc_dsc_init = Module['_lv_draw_arc_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_arc_dsc_init');
+var _lv_draw_arc = Module['_lv_draw_arc'] = makeInvalidEarlyAccess('_lv_draw_arc');
+var _lv_draw_arc_get_area = Module['_lv_draw_arc_get_area'] = makeInvalidEarlyAccess('_lv_draw_arc_get_area');
+var _lv_draw_label_dsc_init = Module['_lv_draw_label_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_label_dsc_init');
+var _lv_draw_label = Module['_lv_draw_label'] = makeInvalidEarlyAccess('_lv_draw_label');
+var _lv_img_decoder_close = Module['_lv_img_decoder_close'] = makeInvalidEarlyAccess('_lv_img_decoder_close');
+var _lv_area_set_height = Module['_lv_area_set_height'] = makeInvalidEarlyAccess('_lv_area_set_height');
+var _lv_img_decoder_read_line = Module['_lv_img_decoder_read_line'] = makeInvalidEarlyAccess('_lv_img_decoder_read_line');
+var _lv_img_cf_get_px_size = Module['_lv_img_cf_get_px_size'] = makeInvalidEarlyAccess('_lv_img_cf_get_px_size');
+var _lv_img_cf_is_chroma_keyed = Module['_lv_img_cf_is_chroma_keyed'] = makeInvalidEarlyAccess('_lv_img_cf_is_chroma_keyed');
+var _lv_img_cf_has_alpha = Module['_lv_img_cf_has_alpha'] = makeInvalidEarlyAccess('_lv_img_cf_has_alpha');
+var _lv_draw_img_decoded = Module['_lv_draw_img_decoded'] = makeInvalidEarlyAccess('_lv_draw_img_decoded');
+var _lv_txt_get_size = Module['_lv_txt_get_size'] = makeInvalidEarlyAccess('_lv_txt_get_size');
+var _lv_txt_get_width = Module['_lv_txt_get_width'] = makeInvalidEarlyAccess('_lv_txt_get_width');
+var _lv_draw_line_dsc_init = Module['_lv_draw_line_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_line_dsc_init');
+var _lv_font_get_glyph_width = Module['_lv_font_get_glyph_width'] = makeInvalidEarlyAccess('_lv_font_get_glyph_width');
+var _lv_draw_line = Module['_lv_draw_line'] = makeInvalidEarlyAccess('_lv_draw_line');
+var _lv_draw_letter = Module['_lv_draw_letter'] = makeInvalidEarlyAccess('_lv_draw_letter');
+var _lv_draw_mask_apply = Module['_lv_draw_mask_apply'] = makeInvalidEarlyAccess('_lv_draw_mask_apply');
+var _lv_draw_mask_apply_ids = Module['_lv_draw_mask_apply_ids'] = makeInvalidEarlyAccess('_lv_draw_mask_apply_ids');
+var _lv_draw_mask_remove_id = Module['_lv_draw_mask_remove_id'] = makeInvalidEarlyAccess('_lv_draw_mask_remove_id');
+var _lv_draw_mask_get_cnt = Module['_lv_draw_mask_get_cnt'] = makeInvalidEarlyAccess('_lv_draw_mask_get_cnt');
+var _lv_draw_mask_is_any = Module['_lv_draw_mask_is_any'] = makeInvalidEarlyAccess('_lv_draw_mask_is_any');
+var _lv_draw_mask_line_points_init = Module['_lv_draw_mask_line_points_init'] = makeInvalidEarlyAccess('_lv_draw_mask_line_points_init');
+var _lv_draw_mask_line_angle_init = Module['_lv_draw_mask_line_angle_init'] = makeInvalidEarlyAccess('_lv_draw_mask_line_angle_init');
+var _lv_trigo_sin = Module['_lv_trigo_sin'] = makeInvalidEarlyAccess('_lv_trigo_sin');
+var _lv_draw_mask_angle_init = Module['_lv_draw_mask_angle_init'] = makeInvalidEarlyAccess('_lv_draw_mask_angle_init');
+var _lv_draw_mask_fade_init = Module['_lv_draw_mask_fade_init'] = makeInvalidEarlyAccess('_lv_draw_mask_fade_init');
+var _lv_draw_mask_map_init = Module['_lv_draw_mask_map_init'] = makeInvalidEarlyAccess('_lv_draw_mask_map_init');
+var _lv_draw_mask_polygon_init = Module['_lv_draw_mask_polygon_init'] = makeInvalidEarlyAccess('_lv_draw_mask_polygon_init');
+var _lv_draw_transform = Module['_lv_draw_transform'] = makeInvalidEarlyAccess('_lv_draw_transform');
+var _lv_draw_polygon = Module['_lv_draw_polygon'] = makeInvalidEarlyAccess('_lv_draw_polygon');
+var _lv_draw_triangle = Module['_lv_draw_triangle'] = makeInvalidEarlyAccess('_lv_draw_triangle');
+var _lv_img_buf_get_px_color = Module['_lv_img_buf_get_px_color'] = makeInvalidEarlyAccess('_lv_img_buf_get_px_color');
+var _lv_img_buf_get_px_alpha = Module['_lv_img_buf_get_px_alpha'] = makeInvalidEarlyAccess('_lv_img_buf_get_px_alpha');
+var _lv_img_buf_set_px_alpha = Module['_lv_img_buf_set_px_alpha'] = makeInvalidEarlyAccess('_lv_img_buf_set_px_alpha');
+var _lv_img_buf_set_px_color = Module['_lv_img_buf_set_px_color'] = makeInvalidEarlyAccess('_lv_img_buf_set_px_color');
+var _lv_img_buf_set_palette = Module['_lv_img_buf_set_palette'] = makeInvalidEarlyAccess('_lv_img_buf_set_palette');
+var _lv_img_buf_alloc = Module['_lv_img_buf_alloc'] = makeInvalidEarlyAccess('_lv_img_buf_alloc');
+var _lv_img_buf_get_img_size = Module['_lv_img_buf_get_img_size'] = makeInvalidEarlyAccess('_lv_img_buf_get_img_size');
+var _lv_img_buf_free = Module['_lv_img_buf_free'] = makeInvalidEarlyAccess('_lv_img_buf_free');
+var _lv_img_decoder_open = Module['_lv_img_decoder_open'] = makeInvalidEarlyAccess('_lv_img_decoder_open');
+var _lv_img_cache_set_size = Module['_lv_img_cache_set_size'] = makeInvalidEarlyAccess('_lv_img_cache_set_size');
+var _lv_img_cache_invalidate_src = Module['_lv_img_cache_invalidate_src'] = makeInvalidEarlyAccess('_lv_img_cache_invalidate_src');
+var _lv_img_decoder_built_in_close = Module['_lv_img_decoder_built_in_close'] = makeInvalidEarlyAccess('_lv_img_decoder_built_in_close');
+var _lv_img_decoder_built_in_read_line = Module['_lv_img_decoder_built_in_read_line'] = makeInvalidEarlyAccess('_lv_img_decoder_built_in_read_line');
+var _lv_img_decoder_built_in_open = Module['_lv_img_decoder_built_in_open'] = makeInvalidEarlyAccess('_lv_img_decoder_built_in_open');
+var _lv_img_decoder_built_in_info = Module['_lv_img_decoder_built_in_info'] = makeInvalidEarlyAccess('_lv_img_decoder_built_in_info');
+var _lv_img_decoder_create = Module['_lv_img_decoder_create'] = makeInvalidEarlyAccess('_lv_img_decoder_create');
+var _lv_img_decoder_set_info_cb = Module['_lv_img_decoder_set_info_cb'] = makeInvalidEarlyAccess('_lv_img_decoder_set_info_cb');
+var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = makeInvalidEarlyAccess('_lv_fs_get_ext');
+var _strcmp = Module['_strcmp'] = makeInvalidEarlyAccess('_strcmp');
+var _lv_fs_open = Module['_lv_fs_open'] = makeInvalidEarlyAccess('_lv_fs_open');
+var _lv_fs_read = Module['_lv_fs_read'] = makeInvalidEarlyAccess('_lv_fs_read');
+var _lv_fs_close = Module['_lv_fs_close'] = makeInvalidEarlyAccess('_lv_fs_close');
+var _lv_img_decoder_set_open_cb = Module['_lv_img_decoder_set_open_cb'] = makeInvalidEarlyAccess('_lv_img_decoder_set_open_cb');
+var _lv_fs_seek = Module['_lv_fs_seek'] = makeInvalidEarlyAccess('_lv_fs_seek');
+var _lv_img_decoder_set_read_line_cb = Module['_lv_img_decoder_set_read_line_cb'] = makeInvalidEarlyAccess('_lv_img_decoder_set_read_line_cb');
+var _lv_img_decoder_set_close_cb = Module['_lv_img_decoder_set_close_cb'] = makeInvalidEarlyAccess('_lv_img_decoder_set_close_cb');
+var _lv_img_decoder_delete = Module['_lv_img_decoder_delete'] = makeInvalidEarlyAccess('_lv_img_decoder_delete');
+var _lv_draw_sw_init_ctx = Module['_lv_draw_sw_init_ctx'] = makeInvalidEarlyAccess('_lv_draw_sw_init_ctx');
+var _lv_draw_sw_buffer_copy = Module['_lv_draw_sw_buffer_copy'] = makeInvalidEarlyAccess('_lv_draw_sw_buffer_copy');
+var _lv_draw_sw_wait_for_finish = Module['_lv_draw_sw_wait_for_finish'] = makeInvalidEarlyAccess('_lv_draw_sw_wait_for_finish');
+var _lv_draw_sw_deinit_ctx = Module['_lv_draw_sw_deinit_ctx'] = makeInvalidEarlyAccess('_lv_draw_sw_deinit_ctx');
+var _lv_draw_sw_arc = Module['_lv_draw_sw_arc'] = makeInvalidEarlyAccess('_lv_draw_sw_arc');
+var _lv_draw_sw_blend = Module['_lv_draw_sw_blend'] = makeInvalidEarlyAccess('_lv_draw_sw_blend');
+var _lv_draw_sw_blend_basic = Module['_lv_draw_sw_blend_basic'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_basic');
+var _lv_gradient_free_cache = Module['_lv_gradient_free_cache'] = makeInvalidEarlyAccess('_lv_gradient_free_cache');
+var _lv_gradient_set_cache_size = Module['_lv_gradient_set_cache_size'] = makeInvalidEarlyAccess('_lv_gradient_set_cache_size');
+var _lv_gradient_get = Module['_lv_gradient_get'] = makeInvalidEarlyAccess('_lv_gradient_get');
+var _lv_gradient_calculate = Module['_lv_gradient_calculate'] = makeInvalidEarlyAccess('_lv_gradient_calculate');
+var _lv_gradient_cleanup = Module['_lv_gradient_cleanup'] = makeInvalidEarlyAccess('_lv_gradient_cleanup');
+var _lv_draw_sw_img_decoded = Module['_lv_draw_sw_img_decoded'] = makeInvalidEarlyAccess('_lv_draw_sw_img_decoded');
+var _lv_draw_sw_layer_create = Module['_lv_draw_sw_layer_create'] = makeInvalidEarlyAccess('_lv_draw_sw_layer_create');
+var _lv_draw_sw_layer_adjust = Module['_lv_draw_sw_layer_adjust'] = makeInvalidEarlyAccess('_lv_draw_sw_layer_adjust');
+var _lv_draw_sw_layer_blend = Module['_lv_draw_sw_layer_blend'] = makeInvalidEarlyAccess('_lv_draw_sw_layer_blend');
+var _lv_draw_sw_layer_destroy = Module['_lv_draw_sw_layer_destroy'] = makeInvalidEarlyAccess('_lv_draw_sw_layer_destroy');
+var _lv_draw_sw_letter = Module['_lv_draw_sw_letter'] = makeInvalidEarlyAccess('_lv_draw_sw_letter');
+var _lv_draw_sw_line = Module['_lv_draw_sw_line'] = makeInvalidEarlyAccess('_lv_draw_sw_line');
+var _lv_draw_sw_polygon = Module['_lv_draw_sw_polygon'] = makeInvalidEarlyAccess('_lv_draw_sw_polygon');
+var _lv_draw_sw_rect = Module['_lv_draw_sw_rect'] = makeInvalidEarlyAccess('_lv_draw_sw_rect');
+var _lv_draw_sw_bg = Module['_lv_draw_sw_bg'] = makeInvalidEarlyAccess('_lv_draw_sw_bg');
+var _lv_draw_sw_transform = Module['_lv_draw_sw_transform'] = makeInvalidEarlyAccess('_lv_draw_sw_transform');
+var _lv_flex_init = Module['_lv_flex_init'] = makeInvalidEarlyAccess('_lv_flex_init');
+var _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = makeInvalidEarlyAccess('_lv_obj_set_flex_flow');
+var _lv_obj_set_style_flex_flow = Module['_lv_obj_set_style_flex_flow'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_flow');
+var _lv_obj_set_flex_align = Module['_lv_obj_set_flex_align'] = makeInvalidEarlyAccess('_lv_obj_set_flex_align');
+var _lv_obj_set_style_flex_main_place = Module['_lv_obj_set_style_flex_main_place'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_main_place');
+var _lv_obj_set_style_flex_cross_place = Module['_lv_obj_set_style_flex_cross_place'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_cross_place');
+var _lv_obj_set_style_flex_track_place = Module['_lv_obj_set_style_flex_track_place'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_track_place');
+var _lv_obj_set_flex_grow = Module['_lv_obj_set_flex_grow'] = makeInvalidEarlyAccess('_lv_obj_set_flex_grow');
+var _lv_obj_set_style_flex_grow = Module['_lv_obj_set_style_flex_grow'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_grow');
+var _lv_style_set_flex_flow = Module['_lv_style_set_flex_flow'] = makeInvalidEarlyAccess('_lv_style_set_flex_flow');
+var _lv_style_set_flex_main_place = Module['_lv_style_set_flex_main_place'] = makeInvalidEarlyAccess('_lv_style_set_flex_main_place');
+var _lv_style_set_flex_cross_place = Module['_lv_style_set_flex_cross_place'] = makeInvalidEarlyAccess('_lv_style_set_flex_cross_place');
+var _lv_style_set_flex_track_place = Module['_lv_style_set_flex_track_place'] = makeInvalidEarlyAccess('_lv_style_set_flex_track_place');
+var _lv_style_set_flex_grow = Module['_lv_style_set_flex_grow'] = makeInvalidEarlyAccess('_lv_style_set_flex_grow');
+var _lv_grid_init = Module['_lv_grid_init'] = makeInvalidEarlyAccess('_lv_grid_init');
+var _lv_obj_set_grid_dsc_array = Module['_lv_obj_set_grid_dsc_array'] = makeInvalidEarlyAccess('_lv_obj_set_grid_dsc_array');
+var _lv_obj_set_style_grid_column_dsc_array = Module['_lv_obj_set_style_grid_column_dsc_array'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_column_dsc_array');
+var _lv_obj_set_style_grid_row_dsc_array = Module['_lv_obj_set_style_grid_row_dsc_array'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_row_dsc_array');
+var _lv_obj_set_grid_align = Module['_lv_obj_set_grid_align'] = makeInvalidEarlyAccess('_lv_obj_set_grid_align');
+var _lv_obj_set_style_grid_column_align = Module['_lv_obj_set_style_grid_column_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_column_align');
+var _lv_obj_set_style_grid_row_align = Module['_lv_obj_set_style_grid_row_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_row_align');
+var _lv_obj_set_grid_cell = Module['_lv_obj_set_grid_cell'] = makeInvalidEarlyAccess('_lv_obj_set_grid_cell');
+var _lv_obj_set_style_grid_cell_column_pos = Module['_lv_obj_set_style_grid_cell_column_pos'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_column_pos');
+var _lv_obj_set_style_grid_cell_row_pos = Module['_lv_obj_set_style_grid_cell_row_pos'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_row_pos');
+var _lv_obj_set_style_grid_cell_x_align = Module['_lv_obj_set_style_grid_cell_x_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_x_align');
+var _lv_obj_set_style_grid_cell_column_span = Module['_lv_obj_set_style_grid_cell_column_span'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_column_span');
+var _lv_obj_set_style_grid_cell_row_span = Module['_lv_obj_set_style_grid_cell_row_span'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_row_span');
+var _lv_obj_set_style_grid_cell_y_align = Module['_lv_obj_set_style_grid_cell_y_align'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_cell_y_align');
+var _lv_style_set_grid_row_dsc_array = Module['_lv_style_set_grid_row_dsc_array'] = makeInvalidEarlyAccess('_lv_style_set_grid_row_dsc_array');
+var _lv_style_set_grid_column_dsc_array = Module['_lv_style_set_grid_column_dsc_array'] = makeInvalidEarlyAccess('_lv_style_set_grid_column_dsc_array');
+var _lv_style_set_grid_row_align = Module['_lv_style_set_grid_row_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_row_align');
+var _lv_style_set_grid_column_align = Module['_lv_style_set_grid_column_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_column_align');
+var _lv_style_set_grid_cell_column_pos = Module['_lv_style_set_grid_cell_column_pos'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_column_pos');
+var _lv_style_set_grid_cell_column_span = Module['_lv_style_set_grid_cell_column_span'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_column_span');
+var _lv_style_set_grid_cell_row_pos = Module['_lv_style_set_grid_cell_row_pos'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_row_pos');
+var _lv_style_set_grid_cell_row_span = Module['_lv_style_set_grid_cell_row_span'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_row_span');
+var _lv_style_set_grid_cell_x_align = Module['_lv_style_set_grid_cell_x_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_x_align');
+var _lv_style_set_grid_cell_y_align = Module['_lv_style_set_grid_cell_y_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_y_align');
+var _lv_bmp_init = Module['_lv_bmp_init'] = makeInvalidEarlyAccess('_lv_bmp_init');
+var _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = makeInvalidEarlyAccess('_lv_fs_stdio_init');
+var _lv_gif_create = Module['_lv_gif_create'] = makeInvalidEarlyAccess('_lv_gif_create');
+var _lv_gif_set_src = Module['_lv_gif_set_src'] = makeInvalidEarlyAccess('_lv_gif_set_src');
+var _lv_gif_restart = Module['_lv_gif_restart'] = makeInvalidEarlyAccess('_lv_gif_restart');
+var _lv_png_init = Module['_lv_png_init'] = makeInvalidEarlyAccess('_lv_png_init');
+var _lv_qrcode_create = Module['_lv_qrcode_create'] = makeInvalidEarlyAccess('_lv_qrcode_create');
+var _lv_qrcode_update = Module['_lv_qrcode_update'] = makeInvalidEarlyAccess('_lv_qrcode_update');
+var _lv_qrcode_delete = Module['_lv_qrcode_delete'] = makeInvalidEarlyAccess('_lv_qrcode_delete');
+var _lv_split_jpeg_init = Module['_lv_split_jpeg_init'] = makeInvalidEarlyAccess('_lv_split_jpeg_init');
+var _lv_tiny_ttf_create_file_ex = Module['_lv_tiny_ttf_create_file_ex'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_file_ex');
+var _lv_tiny_ttf_set_size = Module['_lv_tiny_ttf_set_size'] = makeInvalidEarlyAccess('_lv_tiny_ttf_set_size');
+var _lv_tiny_ttf_create_file = Module['_lv_tiny_ttf_create_file'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_file');
+var _lv_tiny_ttf_create_data_ex = Module['_lv_tiny_ttf_create_data_ex'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_data_ex');
+var _lv_tiny_ttf_create_data = Module['_lv_tiny_ttf_create_data'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_data');
+var _lv_tiny_ttf_destroy = Module['_lv_tiny_ttf_destroy'] = makeInvalidEarlyAccess('_lv_tiny_ttf_destroy');
+var _lv_style_register_prop = Module['_lv_style_register_prop'] = makeInvalidEarlyAccess('_lv_style_register_prop');
+var _lv_area_set_width = Module['_lv_area_set_width'] = makeInvalidEarlyAccess('_lv_area_set_width');
+var _lv_msg_init = Module['_lv_msg_init'] = makeInvalidEarlyAccess('_lv_msg_init');
+var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
+var _lv_fs_tell = Module['_lv_fs_tell'] = makeInvalidEarlyAccess('_lv_fs_tell');
+var _lv_fs_write = Module['_lv_fs_write'] = makeInvalidEarlyAccess('_lv_fs_write');
+var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
+var _lv_fragment_create = Module['_lv_fragment_create'] = makeInvalidEarlyAccess('_lv_fragment_create');
+var _lv_fragment_del = Module['_lv_fragment_del'] = makeInvalidEarlyAccess('_lv_fragment_del');
+var _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = makeInvalidEarlyAccess('_lv_fragment_del_obj');
+var _lv_fragment_get_manager = Module['_lv_fragment_get_manager'] = makeInvalidEarlyAccess('_lv_fragment_get_manager');
+var _lv_fragment_get_container = Module['_lv_fragment_get_container'] = makeInvalidEarlyAccess('_lv_fragment_get_container');
+var _lv_fragment_get_parent = Module['_lv_fragment_get_parent'] = makeInvalidEarlyAccess('_lv_fragment_get_parent');
+var _lv_fragment_create_obj = Module['_lv_fragment_create_obj'] = makeInvalidEarlyAccess('_lv_fragment_create_obj');
+var _lv_fragment_recreate_obj = Module['_lv_fragment_recreate_obj'] = makeInvalidEarlyAccess('_lv_fragment_recreate_obj');
+var _lv_fragment_manager_create = Module['_lv_fragment_manager_create'] = makeInvalidEarlyAccess('_lv_fragment_manager_create');
+var _lv_fragment_manager_del = Module['_lv_fragment_manager_del'] = makeInvalidEarlyAccess('_lv_fragment_manager_del');
+var _lv_fragment_manager_create_obj = Module['_lv_fragment_manager_create_obj'] = makeInvalidEarlyAccess('_lv_fragment_manager_create_obj');
+var _lv_fragment_manager_del_obj = Module['_lv_fragment_manager_del_obj'] = makeInvalidEarlyAccess('_lv_fragment_manager_del_obj');
+var _lv_fragment_manager_add = Module['_lv_fragment_manager_add'] = makeInvalidEarlyAccess('_lv_fragment_manager_add');
+var _lv_fragment_manager_remove = Module['_lv_fragment_manager_remove'] = makeInvalidEarlyAccess('_lv_fragment_manager_remove');
+var _lv_fragment_manager_push = Module['_lv_fragment_manager_push'] = makeInvalidEarlyAccess('_lv_fragment_manager_push');
+var _lv_fragment_manager_pop = Module['_lv_fragment_manager_pop'] = makeInvalidEarlyAccess('_lv_fragment_manager_pop');
+var _lv_fragment_manager_get_top = Module['_lv_fragment_manager_get_top'] = makeInvalidEarlyAccess('_lv_fragment_manager_get_top');
+var _lv_fragment_manager_replace = Module['_lv_fragment_manager_replace'] = makeInvalidEarlyAccess('_lv_fragment_manager_replace');
+var _lv_fragment_manager_find_by_container = Module['_lv_fragment_manager_find_by_container'] = makeInvalidEarlyAccess('_lv_fragment_manager_find_by_container');
+var _lv_fragment_manager_send_event = Module['_lv_fragment_manager_send_event'] = makeInvalidEarlyAccess('_lv_fragment_manager_send_event');
+var _lv_fragment_manager_get_stack_size = Module['_lv_fragment_manager_get_stack_size'] = makeInvalidEarlyAccess('_lv_fragment_manager_get_stack_size');
+var _lv_fragment_manager_get_parent_fragment = Module['_lv_fragment_manager_get_parent_fragment'] = makeInvalidEarlyAccess('_lv_fragment_manager_get_parent_fragment');
+var _lv_gridnav_add = Module['_lv_gridnav_add'] = makeInvalidEarlyAccess('_lv_gridnav_add');
+var _lv_gridnav_remove = Module['_lv_gridnav_remove'] = makeInvalidEarlyAccess('_lv_gridnav_remove');
+var _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = makeInvalidEarlyAccess('_lv_gridnav_set_focused');
+var _lv_monkey_config_init = Module['_lv_monkey_config_init'] = makeInvalidEarlyAccess('_lv_monkey_config_init');
+var _lv_monkey_create = Module['_lv_monkey_create'] = makeInvalidEarlyAccess('_lv_monkey_create');
+var _lv_monkey_get_indev = Module['_lv_monkey_get_indev'] = makeInvalidEarlyAccess('_lv_monkey_get_indev');
+var _lv_monkey_set_enable = Module['_lv_monkey_set_enable'] = makeInvalidEarlyAccess('_lv_monkey_set_enable');
+var _lv_monkey_get_enable = Module['_lv_monkey_get_enable'] = makeInvalidEarlyAccess('_lv_monkey_get_enable');
+var _lv_monkey_set_user_data = Module['_lv_monkey_set_user_data'] = makeInvalidEarlyAccess('_lv_monkey_set_user_data');
+var _lv_monkey_get_user_data = Module['_lv_monkey_get_user_data'] = makeInvalidEarlyAccess('_lv_monkey_get_user_data');
+var _lv_monkey_del = Module['_lv_monkey_del'] = makeInvalidEarlyAccess('_lv_monkey_del');
+var _lv_msg_subsribe = Module['_lv_msg_subsribe'] = makeInvalidEarlyAccess('_lv_msg_subsribe');
+var _lv_msg_subsribe_obj = Module['_lv_msg_subsribe_obj'] = makeInvalidEarlyAccess('_lv_msg_subsribe_obj');
+var _lv_msg_unsubscribe = Module['_lv_msg_unsubscribe'] = makeInvalidEarlyAccess('_lv_msg_unsubscribe');
+var _lv_msg_unsubscribe_obj = Module['_lv_msg_unsubscribe_obj'] = makeInvalidEarlyAccess('_lv_msg_unsubscribe_obj');
+var _lv_msg_send = Module['_lv_msg_send'] = makeInvalidEarlyAccess('_lv_msg_send');
+var _lv_msg_get_id = Module['_lv_msg_get_id'] = makeInvalidEarlyAccess('_lv_msg_get_id');
+var _lv_msg_get_payload = Module['_lv_msg_get_payload'] = makeInvalidEarlyAccess('_lv_msg_get_payload');
+var _lv_msg_get_user_data = Module['_lv_msg_get_user_data'] = makeInvalidEarlyAccess('_lv_msg_get_user_data');
+var _lv_event_get_msg = Module['_lv_event_get_msg'] = makeInvalidEarlyAccess('_lv_event_get_msg');
+var _lv_snapshot_buf_size_needed = Module['_lv_snapshot_buf_size_needed'] = makeInvalidEarlyAccess('_lv_snapshot_buf_size_needed');
+var _lv_snapshot_take_to_buf = Module['_lv_snapshot_take_to_buf'] = makeInvalidEarlyAccess('_lv_snapshot_take_to_buf');
+var _lv_snapshot_take = Module['_lv_snapshot_take'] = makeInvalidEarlyAccess('_lv_snapshot_take');
+var _lv_snapshot_free = Module['_lv_snapshot_free'] = makeInvalidEarlyAccess('_lv_snapshot_free');
+var _lv_theme_basic_is_inited = Module['_lv_theme_basic_is_inited'] = makeInvalidEarlyAccess('_lv_theme_basic_is_inited');
+var _lv_theme_basic_init = Module['_lv_theme_basic_init'] = makeInvalidEarlyAccess('_lv_theme_basic_init');
+var _lv_theme_default_is_inited = Module['_lv_theme_default_is_inited'] = makeInvalidEarlyAccess('_lv_theme_default_is_inited');
+var _lv_palette_lighten = Module['_lv_palette_lighten'] = makeInvalidEarlyAccess('_lv_palette_lighten');
+var _lv_palette_darken = Module['_lv_palette_darken'] = makeInvalidEarlyAccess('_lv_palette_darken');
+var _lv_anim_path_linear = Module['_lv_anim_path_linear'] = makeInvalidEarlyAccess('_lv_anim_path_linear');
+var _lv_style_transition_dsc_init = Module['_lv_style_transition_dsc_init'] = makeInvalidEarlyAccess('_lv_style_transition_dsc_init');
+var _lv_style_set_transition = Module['_lv_style_set_transition'] = makeInvalidEarlyAccess('_lv_style_set_transition');
+var _lv_style_set_bg_color = Module['_lv_style_set_bg_color'] = makeInvalidEarlyAccess('_lv_style_set_bg_color');
+var _lv_style_set_radius = Module['_lv_style_set_radius'] = makeInvalidEarlyAccess('_lv_style_set_radius');
+var _lv_style_set_pad_left = Module['_lv_style_set_pad_left'] = makeInvalidEarlyAccess('_lv_style_set_pad_left');
+var _lv_style_set_pad_right = Module['_lv_style_set_pad_right'] = makeInvalidEarlyAccess('_lv_style_set_pad_right');
+var _lv_style_set_pad_top = Module['_lv_style_set_pad_top'] = makeInvalidEarlyAccess('_lv_style_set_pad_top');
+var _lv_style_set_pad_bottom = Module['_lv_style_set_pad_bottom'] = makeInvalidEarlyAccess('_lv_style_set_pad_bottom');
+var _lv_style_set_width = Module['_lv_style_set_width'] = makeInvalidEarlyAccess('_lv_style_set_width');
+var _lv_style_set_bg_opa = Module['_lv_style_set_bg_opa'] = makeInvalidEarlyAccess('_lv_style_set_bg_opa');
+var _lv_style_set_text_color = Module['_lv_style_set_text_color'] = makeInvalidEarlyAccess('_lv_style_set_text_color');
+var _lv_style_set_pad_row = Module['_lv_style_set_pad_row'] = makeInvalidEarlyAccess('_lv_style_set_pad_row');
+var _lv_style_set_pad_column = Module['_lv_style_set_pad_column'] = makeInvalidEarlyAccess('_lv_style_set_pad_column');
+var _lv_style_set_border_color = Module['_lv_style_set_border_color'] = makeInvalidEarlyAccess('_lv_style_set_border_color');
+var _lv_style_set_border_width = Module['_lv_style_set_border_width'] = makeInvalidEarlyAccess('_lv_style_set_border_width');
+var _lv_style_set_border_post = Module['_lv_style_set_border_post'] = makeInvalidEarlyAccess('_lv_style_set_border_post');
+var _lv_style_set_line_color = Module['_lv_style_set_line_color'] = makeInvalidEarlyAccess('_lv_style_set_line_color');
+var _lv_style_set_line_width = Module['_lv_style_set_line_width'] = makeInvalidEarlyAccess('_lv_style_set_line_width');
+var _lv_style_set_outline_color = Module['_lv_style_set_outline_color'] = makeInvalidEarlyAccess('_lv_style_set_outline_color');
+var _lv_style_set_outline_width = Module['_lv_style_set_outline_width'] = makeInvalidEarlyAccess('_lv_style_set_outline_width');
+var _lv_style_set_outline_pad = Module['_lv_style_set_outline_pad'] = makeInvalidEarlyAccess('_lv_style_set_outline_pad');
+var _lv_style_set_outline_opa = Module['_lv_style_set_outline_opa'] = makeInvalidEarlyAccess('_lv_style_set_outline_opa');
+var _lv_style_set_shadow_color = Module['_lv_style_set_shadow_color'] = makeInvalidEarlyAccess('_lv_style_set_shadow_color');
+var _lv_style_set_shadow_width = Module['_lv_style_set_shadow_width'] = makeInvalidEarlyAccess('_lv_style_set_shadow_width');
+var _lv_style_set_shadow_opa = Module['_lv_style_set_shadow_opa'] = makeInvalidEarlyAccess('_lv_style_set_shadow_opa');
+var _lv_style_set_shadow_ofs_y = Module['_lv_style_set_shadow_ofs_y'] = makeInvalidEarlyAccess('_lv_style_set_shadow_ofs_y');
+var _lv_style_set_color_filter_dsc = Module['_lv_style_set_color_filter_dsc'] = makeInvalidEarlyAccess('_lv_style_set_color_filter_dsc');
+var _lv_style_set_color_filter_opa = Module['_lv_style_set_color_filter_opa'] = makeInvalidEarlyAccess('_lv_style_set_color_filter_opa');
+var _lv_style_set_clip_corner = Module['_lv_style_set_clip_corner'] = makeInvalidEarlyAccess('_lv_style_set_clip_corner');
+var _lv_style_set_text_line_space = Module['_lv_style_set_text_line_space'] = makeInvalidEarlyAccess('_lv_style_set_text_line_space');
+var _lv_style_set_text_align = Module['_lv_style_set_text_align'] = makeInvalidEarlyAccess('_lv_style_set_text_align');
+var _lv_style_set_transform_width = Module['_lv_style_set_transform_width'] = makeInvalidEarlyAccess('_lv_style_set_transform_width');
+var _lv_style_set_transform_height = Module['_lv_style_set_transform_height'] = makeInvalidEarlyAccess('_lv_style_set_transform_height');
+var _lv_style_set_anim_time = Module['_lv_style_set_anim_time'] = makeInvalidEarlyAccess('_lv_style_set_anim_time');
+var _lv_style_set_arc_color = Module['_lv_style_set_arc_color'] = makeInvalidEarlyAccess('_lv_style_set_arc_color');
+var _lv_style_set_arc_width = Module['_lv_style_set_arc_width'] = makeInvalidEarlyAccess('_lv_style_set_arc_width');
+var _lv_style_set_arc_rounded = Module['_lv_style_set_arc_rounded'] = makeInvalidEarlyAccess('_lv_style_set_arc_rounded');
+var _lv_style_set_max_height = Module['_lv_style_set_max_height'] = makeInvalidEarlyAccess('_lv_style_set_max_height');
+var _lv_style_set_bg_img_src = Module['_lv_style_set_bg_img_src'] = makeInvalidEarlyAccess('_lv_style_set_bg_img_src');
+var _lv_style_set_text_font = Module['_lv_style_set_text_font'] = makeInvalidEarlyAccess('_lv_style_set_text_font');
+var _lv_style_set_height = Module['_lv_style_set_height'] = makeInvalidEarlyAccess('_lv_style_set_height');
+var _lv_style_set_border_side = Module['_lv_style_set_border_side'] = makeInvalidEarlyAccess('_lv_style_set_border_side');
+var _lv_style_set_border_opa = Module['_lv_style_set_border_opa'] = makeInvalidEarlyAccess('_lv_style_set_border_opa');
+var _lv_style_set_max_width = Module['_lv_style_set_max_width'] = makeInvalidEarlyAccess('_lv_style_set_max_width');
+var _lv_style_set_bg_grad_color = Module['_lv_style_set_bg_grad_color'] = makeInvalidEarlyAccess('_lv_style_set_bg_grad_color');
+var _lv_style_set_shadow_spread = Module['_lv_style_set_shadow_spread'] = makeInvalidEarlyAccess('_lv_style_set_shadow_spread');
+var _lv_theme_default_get = Module['_lv_theme_default_get'] = makeInvalidEarlyAccess('_lv_theme_default_get');
+var _lv_color_darken = Module['_lv_color_darken'] = makeInvalidEarlyAccess('_lv_color_darken');
+var _lv_theme_mono_is_inited = Module['_lv_theme_mono_is_inited'] = makeInvalidEarlyAccess('_lv_theme_mono_is_inited');
+var _lv_theme_mono_init = Module['_lv_theme_mono_init'] = makeInvalidEarlyAccess('_lv_theme_mono_init');
+var _lv_animimg_create = Module['_lv_animimg_create'] = makeInvalidEarlyAccess('_lv_animimg_create');
+var _lv_animimg_set_src = Module['_lv_animimg_set_src'] = makeInvalidEarlyAccess('_lv_animimg_set_src');
+var _lv_animimg_start = Module['_lv_animimg_start'] = makeInvalidEarlyAccess('_lv_animimg_start');
+var _lv_animimg_set_duration = Module['_lv_animimg_set_duration'] = makeInvalidEarlyAccess('_lv_animimg_set_duration');
+var _lv_animimg_set_repeat_count = Module['_lv_animimg_set_repeat_count'] = makeInvalidEarlyAccess('_lv_animimg_set_repeat_count');
+var _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = makeInvalidEarlyAccess('_lv_calendar_set_showed_date');
+var _lv_calendar_create = Module['_lv_calendar_create'] = makeInvalidEarlyAccess('_lv_calendar_create');
+var _lv_btnmatrix_create = Module['_lv_btnmatrix_create'] = makeInvalidEarlyAccess('_lv_btnmatrix_create');
+var _lv_btnmatrix_set_map = Module['_lv_btnmatrix_set_map'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_map');
+var _lv_btnmatrix_set_btn_ctrl_all = Module['_lv_btnmatrix_set_btn_ctrl_all'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_btn_ctrl_all');
+var _lv_calendar_set_day_names = Module['_lv_calendar_set_day_names'] = makeInvalidEarlyAccess('_lv_calendar_set_day_names');
+var _lv_calendar_set_today_date = Module['_lv_calendar_set_today_date'] = makeInvalidEarlyAccess('_lv_calendar_set_today_date');
+var _lv_btnmatrix_clear_btn_ctrl_all = Module['_lv_btnmatrix_clear_btn_ctrl_all'] = makeInvalidEarlyAccess('_lv_btnmatrix_clear_btn_ctrl_all');
+var _lv_btnmatrix_set_btn_ctrl = Module['_lv_btnmatrix_set_btn_ctrl'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_btn_ctrl');
+var _lv_calendar_set_highlighted_dates = Module['_lv_calendar_set_highlighted_dates'] = makeInvalidEarlyAccess('_lv_calendar_set_highlighted_dates');
+var _lv_btnmatrix_get_selected_btn = Module['_lv_btnmatrix_get_selected_btn'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_selected_btn');
+var _lv_btnmatrix_set_selected_btn = Module['_lv_btnmatrix_set_selected_btn'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_selected_btn');
+var _lv_calendar_get_btnmatrix = Module['_lv_calendar_get_btnmatrix'] = makeInvalidEarlyAccess('_lv_calendar_get_btnmatrix');
+var _lv_calendar_get_today_date = Module['_lv_calendar_get_today_date'] = makeInvalidEarlyAccess('_lv_calendar_get_today_date');
+var _lv_calendar_get_showed_date = Module['_lv_calendar_get_showed_date'] = makeInvalidEarlyAccess('_lv_calendar_get_showed_date');
+var _lv_calendar_get_highlighted_dates = Module['_lv_calendar_get_highlighted_dates'] = makeInvalidEarlyAccess('_lv_calendar_get_highlighted_dates');
+var _lv_calendar_get_highlighted_dates_num = Module['_lv_calendar_get_highlighted_dates_num'] = makeInvalidEarlyAccess('_lv_calendar_get_highlighted_dates_num');
+var _lv_calendar_get_pressed_date = Module['_lv_calendar_get_pressed_date'] = makeInvalidEarlyAccess('_lv_calendar_get_pressed_date');
+var _lv_btnmatrix_get_btn_text = Module['_lv_btnmatrix_get_btn_text'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_btn_text');
+var _lv_btnmatrix_has_btn_ctrl = Module['_lv_btnmatrix_has_btn_ctrl'] = makeInvalidEarlyAccess('_lv_btnmatrix_has_btn_ctrl');
+var _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = makeInvalidEarlyAccess('_lv_calendar_header_arrow_create');
+var _lv_btn_create = Module['_lv_btn_create'] = makeInvalidEarlyAccess('_lv_btn_create');
+var _lv_label_create = Module['_lv_label_create'] = makeInvalidEarlyAccess('_lv_label_create');
+var _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = makeInvalidEarlyAccess('_lv_label_set_long_mode');
+var _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = makeInvalidEarlyAccess('_lv_label_set_text_fmt');
+var _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = makeInvalidEarlyAccess('_lv_calendar_header_dropdown_create');
+var _lv_dropdown_create = Module['_lv_dropdown_create'] = makeInvalidEarlyAccess('_lv_dropdown_create');
+var _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = makeInvalidEarlyAccess('_lv_dropdown_set_options');
+var _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = makeInvalidEarlyAccess('_lv_calendar_header_dropdown_set_year_list');
+var _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = makeInvalidEarlyAccess('_lv_dropdown_clear_options');
+var _lv_dropdown_get_selected = Module['_lv_dropdown_get_selected'] = makeInvalidEarlyAccess('_lv_dropdown_get_selected');
+var _lv_dropdown_get_options = Module['_lv_dropdown_get_options'] = makeInvalidEarlyAccess('_lv_dropdown_get_options');
+var _lv_dropdown_set_selected = Module['_lv_dropdown_set_selected'] = makeInvalidEarlyAccess('_lv_dropdown_set_selected');
+var _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = makeInvalidEarlyAccess('_lv_chart_get_point_pos_by_id');
+var _lv_chart_create = Module['_lv_chart_create'] = makeInvalidEarlyAccess('_lv_chart_create');
+var _lv_chart_set_type = Module['_lv_chart_set_type'] = makeInvalidEarlyAccess('_lv_chart_set_type');
+var _lv_chart_refresh = Module['_lv_chart_refresh'] = makeInvalidEarlyAccess('_lv_chart_refresh');
+var _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = makeInvalidEarlyAccess('_lv_chart_set_point_count');
+var _lv_chart_set_range = Module['_lv_chart_set_range'] = makeInvalidEarlyAccess('_lv_chart_set_range');
+var _lv_chart_set_update_mode = Module['_lv_chart_set_update_mode'] = makeInvalidEarlyAccess('_lv_chart_set_update_mode');
+var _lv_chart_set_div_line_count = Module['_lv_chart_set_div_line_count'] = makeInvalidEarlyAccess('_lv_chart_set_div_line_count');
+var _lv_chart_set_zoom_x = Module['_lv_chart_set_zoom_x'] = makeInvalidEarlyAccess('_lv_chart_set_zoom_x');
+var _lv_chart_set_zoom_y = Module['_lv_chart_set_zoom_y'] = makeInvalidEarlyAccess('_lv_chart_set_zoom_y');
+var _lv_chart_get_zoom_x = Module['_lv_chart_get_zoom_x'] = makeInvalidEarlyAccess('_lv_chart_get_zoom_x');
+var _lv_chart_get_zoom_y = Module['_lv_chart_get_zoom_y'] = makeInvalidEarlyAccess('_lv_chart_get_zoom_y');
+var _lv_chart_set_axis_tick = Module['_lv_chart_set_axis_tick'] = makeInvalidEarlyAccess('_lv_chart_set_axis_tick');
+var _lv_chart_get_type = Module['_lv_chart_get_type'] = makeInvalidEarlyAccess('_lv_chart_get_type');
+var _lv_chart_get_point_count = Module['_lv_chart_get_point_count'] = makeInvalidEarlyAccess('_lv_chart_get_point_count');
+var _lv_chart_get_x_start_point = Module['_lv_chart_get_x_start_point'] = makeInvalidEarlyAccess('_lv_chart_get_x_start_point');
+var _lv_map = Module['_lv_map'] = makeInvalidEarlyAccess('_lv_map');
+var _lv_chart_add_series = Module['_lv_chart_add_series'] = makeInvalidEarlyAccess('_lv_chart_add_series');
+var _lv_chart_remove_series = Module['_lv_chart_remove_series'] = makeInvalidEarlyAccess('_lv_chart_remove_series');
+var _lv_chart_hide_series = Module['_lv_chart_hide_series'] = makeInvalidEarlyAccess('_lv_chart_hide_series');
+var _lv_chart_set_series_color = Module['_lv_chart_set_series_color'] = makeInvalidEarlyAccess('_lv_chart_set_series_color');
+var _lv_chart_set_x_start_point = Module['_lv_chart_set_x_start_point'] = makeInvalidEarlyAccess('_lv_chart_set_x_start_point');
+var _lv_chart_get_series_next = Module['_lv_chart_get_series_next'] = makeInvalidEarlyAccess('_lv_chart_get_series_next');
+var _lv_chart_add_cursor = Module['_lv_chart_add_cursor'] = makeInvalidEarlyAccess('_lv_chart_add_cursor');
+var _lv_chart_set_cursor_pos = Module['_lv_chart_set_cursor_pos'] = makeInvalidEarlyAccess('_lv_chart_set_cursor_pos');
+var _lv_chart_set_cursor_point = Module['_lv_chart_set_cursor_point'] = makeInvalidEarlyAccess('_lv_chart_set_cursor_point');
+var _lv_chart_get_cursor_point = Module['_lv_chart_get_cursor_point'] = makeInvalidEarlyAccess('_lv_chart_get_cursor_point');
+var _lv_chart_set_all_value = Module['_lv_chart_set_all_value'] = makeInvalidEarlyAccess('_lv_chart_set_all_value');
+var _lv_chart_set_next_value = Module['_lv_chart_set_next_value'] = makeInvalidEarlyAccess('_lv_chart_set_next_value');
+var _lv_chart_set_next_value2 = Module['_lv_chart_set_next_value2'] = makeInvalidEarlyAccess('_lv_chart_set_next_value2');
+var _lv_chart_set_value_by_id = Module['_lv_chart_set_value_by_id'] = makeInvalidEarlyAccess('_lv_chart_set_value_by_id');
+var _lv_chart_set_value_by_id2 = Module['_lv_chart_set_value_by_id2'] = makeInvalidEarlyAccess('_lv_chart_set_value_by_id2');
+var _lv_chart_set_ext_y_array = Module['_lv_chart_set_ext_y_array'] = makeInvalidEarlyAccess('_lv_chart_set_ext_y_array');
+var _lv_chart_set_ext_x_array = Module['_lv_chart_set_ext_x_array'] = makeInvalidEarlyAccess('_lv_chart_set_ext_x_array');
+var _lv_chart_get_y_array = Module['_lv_chart_get_y_array'] = makeInvalidEarlyAccess('_lv_chart_get_y_array');
+var _lv_chart_get_x_array = Module['_lv_chart_get_x_array'] = makeInvalidEarlyAccess('_lv_chart_get_x_array');
+var _lv_chart_get_pressed_point = Module['_lv_chart_get_pressed_point'] = makeInvalidEarlyAccess('_lv_chart_get_pressed_point');
+var _lv_colorwheel_set_hsv = Module['_lv_colorwheel_set_hsv'] = makeInvalidEarlyAccess('_lv_colorwheel_set_hsv');
+var _lv_atan2 = Module['_lv_atan2'] = makeInvalidEarlyAccess('_lv_atan2');
+var _lv_color_hsv_to_rgb = Module['_lv_color_hsv_to_rgb'] = makeInvalidEarlyAccess('_lv_color_hsv_to_rgb');
+var _lv_colorwheel_create = Module['_lv_colorwheel_create'] = makeInvalidEarlyAccess('_lv_colorwheel_create');
+var _lv_colorwheel_set_rgb = Module['_lv_colorwheel_set_rgb'] = makeInvalidEarlyAccess('_lv_colorwheel_set_rgb');
+var _lv_color_rgb_to_hsv = Module['_lv_color_rgb_to_hsv'] = makeInvalidEarlyAccess('_lv_color_rgb_to_hsv');
+var _lv_colorwheel_set_mode = Module['_lv_colorwheel_set_mode'] = makeInvalidEarlyAccess('_lv_colorwheel_set_mode');
+var _lv_colorwheel_set_mode_fixed = Module['_lv_colorwheel_set_mode_fixed'] = makeInvalidEarlyAccess('_lv_colorwheel_set_mode_fixed');
+var _lv_colorwheel_get_hsv = Module['_lv_colorwheel_get_hsv'] = makeInvalidEarlyAccess('_lv_colorwheel_get_hsv');
+var _lv_colorwheel_get_rgb = Module['_lv_colorwheel_get_rgb'] = makeInvalidEarlyAccess('_lv_colorwheel_get_rgb');
+var _lv_colorwheel_get_color_mode = Module['_lv_colorwheel_get_color_mode'] = makeInvalidEarlyAccess('_lv_colorwheel_get_color_mode');
+var _lv_colorwheel_get_color_mode_fixed = Module['_lv_colorwheel_get_color_mode_fixed'] = makeInvalidEarlyAccess('_lv_colorwheel_get_color_mode_fixed');
+var _lv_imgbtn_create = Module['_lv_imgbtn_create'] = makeInvalidEarlyAccess('_lv_imgbtn_create');
+var _lv_imgbtn_set_src = Module['_lv_imgbtn_set_src'] = makeInvalidEarlyAccess('_lv_imgbtn_set_src');
+var _lv_imgbtn_set_state = Module['_lv_imgbtn_set_state'] = makeInvalidEarlyAccess('_lv_imgbtn_set_state');
+var _lv_imgbtn_get_src_left = Module['_lv_imgbtn_get_src_left'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_left');
+var _lv_imgbtn_get_src_middle = Module['_lv_imgbtn_get_src_middle'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_middle');
+var _lv_imgbtn_get_src_right = Module['_lv_imgbtn_get_src_right'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_right');
+var _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = makeInvalidEarlyAccess('_lv_keyboard_def_event_cb');
+var _lv_keyboard_create = Module['_lv_keyboard_create'] = makeInvalidEarlyAccess('_lv_keyboard_create');
+var _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = makeInvalidEarlyAccess('_lv_keyboard_set_textarea');
+var _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = makeInvalidEarlyAccess('_lv_keyboard_set_mode');
+var _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = makeInvalidEarlyAccess('_lv_keyboard_set_popovers');
+var _lv_btnmatrix_set_ctrl_map = Module['_lv_btnmatrix_set_ctrl_map'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_ctrl_map');
+var _lv_keyboard_set_map = Module['_lv_keyboard_set_map'] = makeInvalidEarlyAccess('_lv_keyboard_set_map');
+var _lv_keyboard_get_textarea = Module['_lv_keyboard_get_textarea'] = makeInvalidEarlyAccess('_lv_keyboard_get_textarea');
+var _lv_keyboard_get_mode = Module['_lv_keyboard_get_mode'] = makeInvalidEarlyAccess('_lv_keyboard_get_mode');
+var _lv_btnmatrix_get_popovers = Module['_lv_btnmatrix_get_popovers'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_popovers');
+var _lv_textarea_add_char = Module['_lv_textarea_add_char'] = makeInvalidEarlyAccess('_lv_textarea_add_char');
+var _lv_textarea_get_one_line = Module['_lv_textarea_get_one_line'] = makeInvalidEarlyAccess('_lv_textarea_get_one_line');
+var _lv_textarea_cursor_left = Module['_lv_textarea_cursor_left'] = makeInvalidEarlyAccess('_lv_textarea_cursor_left');
+var _lv_textarea_cursor_right = Module['_lv_textarea_cursor_right'] = makeInvalidEarlyAccess('_lv_textarea_cursor_right');
+var _lv_textarea_del_char = Module['_lv_textarea_del_char'] = makeInvalidEarlyAccess('_lv_textarea_del_char');
+var _lv_textarea_get_cursor_pos = Module['_lv_textarea_get_cursor_pos'] = makeInvalidEarlyAccess('_lv_textarea_get_cursor_pos');
+var _lv_textarea_get_text = Module['_lv_textarea_get_text'] = makeInvalidEarlyAccess('_lv_textarea_get_text');
+var _lv_textarea_set_cursor_pos = Module['_lv_textarea_set_cursor_pos'] = makeInvalidEarlyAccess('_lv_textarea_set_cursor_pos');
+var _lv_textarea_add_text = Module['_lv_textarea_add_text'] = makeInvalidEarlyAccess('_lv_textarea_add_text');
+var _lv_led_create = Module['_lv_led_create'] = makeInvalidEarlyAccess('_lv_led_create');
+var _lv_led_set_color = Module['_lv_led_set_color'] = makeInvalidEarlyAccess('_lv_led_set_color');
+var _lv_led_set_brightness = Module['_lv_led_set_brightness'] = makeInvalidEarlyAccess('_lv_led_set_brightness');
+var _lv_led_on = Module['_lv_led_on'] = makeInvalidEarlyAccess('_lv_led_on');
+var _lv_led_off = Module['_lv_led_off'] = makeInvalidEarlyAccess('_lv_led_off');
+var _lv_led_toggle = Module['_lv_led_toggle'] = makeInvalidEarlyAccess('_lv_led_toggle');
+var _lv_led_get_brightness = Module['_lv_led_get_brightness'] = makeInvalidEarlyAccess('_lv_led_get_brightness');
+var _lv_list_create = Module['_lv_list_create'] = makeInvalidEarlyAccess('_lv_list_create');
+var _lv_list_add_text = Module['_lv_list_add_text'] = makeInvalidEarlyAccess('_lv_list_add_text');
+var _lv_label_set_text = Module['_lv_label_set_text'] = makeInvalidEarlyAccess('_lv_label_set_text');
+var _lv_list_add_btn = Module['_lv_list_add_btn'] = makeInvalidEarlyAccess('_lv_list_add_btn');
+var _lv_img_create = Module['_lv_img_create'] = makeInvalidEarlyAccess('_lv_img_create');
+var _lv_img_set_src = Module['_lv_img_set_src'] = makeInvalidEarlyAccess('_lv_img_set_src');
+var _lv_list_get_btn_text = Module['_lv_list_get_btn_text'] = makeInvalidEarlyAccess('_lv_list_get_btn_text');
+var _lv_label_get_text = Module['_lv_label_get_text'] = makeInvalidEarlyAccess('_lv_label_get_text');
+var _lv_menu_create = Module['_lv_menu_create'] = makeInvalidEarlyAccess('_lv_menu_create');
+var _lv_menu_page_create = Module['_lv_menu_page_create'] = makeInvalidEarlyAccess('_lv_menu_page_create');
+var _lv_menu_cont_create = Module['_lv_menu_cont_create'] = makeInvalidEarlyAccess('_lv_menu_cont_create');
+var _lv_menu_section_create = Module['_lv_menu_section_create'] = makeInvalidEarlyAccess('_lv_menu_section_create');
+var _lv_menu_separator_create = Module['_lv_menu_separator_create'] = makeInvalidEarlyAccess('_lv_menu_separator_create');
+var _lv_menu_set_page = Module['_lv_menu_set_page'] = makeInvalidEarlyAccess('_lv_menu_set_page');
+var _lv_menu_clear_history = Module['_lv_menu_clear_history'] = makeInvalidEarlyAccess('_lv_menu_clear_history');
+var _lv_menu_set_sidebar_page = Module['_lv_menu_set_sidebar_page'] = makeInvalidEarlyAccess('_lv_menu_set_sidebar_page');
+var _lv_menu_set_mode_header = Module['_lv_menu_set_mode_header'] = makeInvalidEarlyAccess('_lv_menu_set_mode_header');
+var _lv_menu_set_mode_root_back_btn = Module['_lv_menu_set_mode_root_back_btn'] = makeInvalidEarlyAccess('_lv_menu_set_mode_root_back_btn');
+var _lv_menu_set_load_page_event = Module['_lv_menu_set_load_page_event'] = makeInvalidEarlyAccess('_lv_menu_set_load_page_event');
+var _lv_menu_get_cur_main_page = Module['_lv_menu_get_cur_main_page'] = makeInvalidEarlyAccess('_lv_menu_get_cur_main_page');
+var _lv_menu_get_cur_sidebar_page = Module['_lv_menu_get_cur_sidebar_page'] = makeInvalidEarlyAccess('_lv_menu_get_cur_sidebar_page');
+var _lv_menu_get_main_header = Module['_lv_menu_get_main_header'] = makeInvalidEarlyAccess('_lv_menu_get_main_header');
+var _lv_menu_get_main_header_back_btn = Module['_lv_menu_get_main_header_back_btn'] = makeInvalidEarlyAccess('_lv_menu_get_main_header_back_btn');
+var _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header');
+var _lv_menu_get_sidebar_header_back_btn = Module['_lv_menu_get_sidebar_header_back_btn'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header_back_btn');
+var _lv_menu_back_btn_is_root = Module['_lv_menu_back_btn_is_root'] = makeInvalidEarlyAccess('_lv_menu_back_btn_is_root');
+var _lv_meter_create = Module['_lv_meter_create'] = makeInvalidEarlyAccess('_lv_meter_create');
+var _lv_meter_add_scale = Module['_lv_meter_add_scale'] = makeInvalidEarlyAccess('_lv_meter_add_scale');
+var _lv_meter_set_scale_ticks = Module['_lv_meter_set_scale_ticks'] = makeInvalidEarlyAccess('_lv_meter_set_scale_ticks');
+var _lv_meter_set_scale_major_ticks = Module['_lv_meter_set_scale_major_ticks'] = makeInvalidEarlyAccess('_lv_meter_set_scale_major_ticks');
+var _lv_meter_set_scale_range = Module['_lv_meter_set_scale_range'] = makeInvalidEarlyAccess('_lv_meter_set_scale_range');
+var _lv_meter_add_needle_line = Module['_lv_meter_add_needle_line'] = makeInvalidEarlyAccess('_lv_meter_add_needle_line');
+var _lv_meter_add_needle_img = Module['_lv_meter_add_needle_img'] = makeInvalidEarlyAccess('_lv_meter_add_needle_img');
+var _lv_meter_add_arc = Module['_lv_meter_add_arc'] = makeInvalidEarlyAccess('_lv_meter_add_arc');
+var _lv_meter_add_scale_lines = Module['_lv_meter_add_scale_lines'] = makeInvalidEarlyAccess('_lv_meter_add_scale_lines');
+var _lv_meter_set_indicator_value = Module['_lv_meter_set_indicator_value'] = makeInvalidEarlyAccess('_lv_meter_set_indicator_value');
+var _lv_meter_set_indicator_start_value = Module['_lv_meter_set_indicator_start_value'] = makeInvalidEarlyAccess('_lv_meter_set_indicator_start_value');
+var _lv_meter_set_indicator_end_value = Module['_lv_meter_set_indicator_end_value'] = makeInvalidEarlyAccess('_lv_meter_set_indicator_end_value');
+var _lv_msgbox_create = Module['_lv_msgbox_create'] = makeInvalidEarlyAccess('_lv_msgbox_create');
+var _lv_msgbox_get_title = Module['_lv_msgbox_get_title'] = makeInvalidEarlyAccess('_lv_msgbox_get_title');
+var _lv_msgbox_get_close_btn = Module['_lv_msgbox_get_close_btn'] = makeInvalidEarlyAccess('_lv_msgbox_get_close_btn');
+var _lv_msgbox_get_text = Module['_lv_msgbox_get_text'] = makeInvalidEarlyAccess('_lv_msgbox_get_text');
+var _lv_msgbox_get_content = Module['_lv_msgbox_get_content'] = makeInvalidEarlyAccess('_lv_msgbox_get_content');
+var _lv_msgbox_get_btns = Module['_lv_msgbox_get_btns'] = makeInvalidEarlyAccess('_lv_msgbox_get_btns');
+var _lv_msgbox_get_active_btn = Module['_lv_msgbox_get_active_btn'] = makeInvalidEarlyAccess('_lv_msgbox_get_active_btn');
+var _lv_msgbox_get_active_btn_text = Module['_lv_msgbox_get_active_btn_text'] = makeInvalidEarlyAccess('_lv_msgbox_get_active_btn_text');
+var _lv_msgbox_close = Module['_lv_msgbox_close'] = makeInvalidEarlyAccess('_lv_msgbox_close');
+var _lv_msgbox_close_async = Module['_lv_msgbox_close_async'] = makeInvalidEarlyAccess('_lv_msgbox_close_async');
+var _lv_spangroup_get_expand_width = Module['_lv_spangroup_get_expand_width'] = makeInvalidEarlyAccess('_lv_spangroup_get_expand_width');
+var _lv_spangroup_get_max_line_h = Module['_lv_spangroup_get_max_line_h'] = makeInvalidEarlyAccess('_lv_spangroup_get_max_line_h');
+var _lv_spangroup_get_expand_height = Module['_lv_spangroup_get_expand_height'] = makeInvalidEarlyAccess('_lv_spangroup_get_expand_height');
+var _lv_spangroup_create = Module['_lv_spangroup_create'] = makeInvalidEarlyAccess('_lv_spangroup_create');
+var _lv_spangroup_new_span = Module['_lv_spangroup_new_span'] = makeInvalidEarlyAccess('_lv_spangroup_new_span');
+var _lv_spangroup_del_span = Module['_lv_spangroup_del_span'] = makeInvalidEarlyAccess('_lv_spangroup_del_span');
+var _lv_span_set_text = Module['_lv_span_set_text'] = makeInvalidEarlyAccess('_lv_span_set_text');
+var _lv_span_set_text_static = Module['_lv_span_set_text_static'] = makeInvalidEarlyAccess('_lv_span_set_text_static');
+var _lv_spangroup_set_align = Module['_lv_spangroup_set_align'] = makeInvalidEarlyAccess('_lv_spangroup_set_align');
+var _lv_spangroup_set_overflow = Module['_lv_spangroup_set_overflow'] = makeInvalidEarlyAccess('_lv_spangroup_set_overflow');
+var _lv_spangroup_set_indent = Module['_lv_spangroup_set_indent'] = makeInvalidEarlyAccess('_lv_spangroup_set_indent');
+var _lv_spangroup_set_mode = Module['_lv_spangroup_set_mode'] = makeInvalidEarlyAccess('_lv_spangroup_set_mode');
+var _lv_spangroup_refr_mode = Module['_lv_spangroup_refr_mode'] = makeInvalidEarlyAccess('_lv_spangroup_refr_mode');
+var _lv_spangroup_set_lines = Module['_lv_spangroup_set_lines'] = makeInvalidEarlyAccess('_lv_spangroup_set_lines');
+var _lv_spangroup_get_child = Module['_lv_spangroup_get_child'] = makeInvalidEarlyAccess('_lv_spangroup_get_child');
+var _lv_spangroup_get_child_cnt = Module['_lv_spangroup_get_child_cnt'] = makeInvalidEarlyAccess('_lv_spangroup_get_child_cnt');
+var _lv_spangroup_get_align = Module['_lv_spangroup_get_align'] = makeInvalidEarlyAccess('_lv_spangroup_get_align');
+var _lv_spangroup_get_overflow = Module['_lv_spangroup_get_overflow'] = makeInvalidEarlyAccess('_lv_spangroup_get_overflow');
+var _lv_spangroup_get_indent = Module['_lv_spangroup_get_indent'] = makeInvalidEarlyAccess('_lv_spangroup_get_indent');
+var _lv_spangroup_get_mode = Module['_lv_spangroup_get_mode'] = makeInvalidEarlyAccess('_lv_spangroup_get_mode');
+var _lv_spangroup_get_lines = Module['_lv_spangroup_get_lines'] = makeInvalidEarlyAccess('_lv_spangroup_get_lines');
+var _lv_textarea_set_one_line = Module['_lv_textarea_set_one_line'] = makeInvalidEarlyAccess('_lv_textarea_set_one_line');
+var _lv_textarea_set_cursor_click_pos = Module['_lv_textarea_set_cursor_click_pos'] = makeInvalidEarlyAccess('_lv_textarea_set_cursor_click_pos');
+var _lv_pow = Module['_lv_pow'] = makeInvalidEarlyAccess('_lv_pow');
+var _lv_spinbox_step_prev = Module['_lv_spinbox_step_prev'] = makeInvalidEarlyAccess('_lv_spinbox_step_prev');
+var _lv_spinbox_increment = Module['_lv_spinbox_increment'] = makeInvalidEarlyAccess('_lv_spinbox_increment');
+var _lv_spinbox_decrement = Module['_lv_spinbox_decrement'] = makeInvalidEarlyAccess('_lv_spinbox_decrement');
+var _lv_spinbox_create = Module['_lv_spinbox_create'] = makeInvalidEarlyAccess('_lv_spinbox_create');
+var _lv_spinbox_set_value = Module['_lv_spinbox_set_value'] = makeInvalidEarlyAccess('_lv_spinbox_set_value');
+var _lv_textarea_set_text = Module['_lv_textarea_set_text'] = makeInvalidEarlyAccess('_lv_textarea_set_text');
+var _lv_spinbox_set_rollover = Module['_lv_spinbox_set_rollover'] = makeInvalidEarlyAccess('_lv_spinbox_set_rollover');
+var _lv_spinbox_set_digit_format = Module['_lv_spinbox_set_digit_format'] = makeInvalidEarlyAccess('_lv_spinbox_set_digit_format');
+var _lv_spinbox_set_step = Module['_lv_spinbox_set_step'] = makeInvalidEarlyAccess('_lv_spinbox_set_step');
+var _lv_spinbox_set_range = Module['_lv_spinbox_set_range'] = makeInvalidEarlyAccess('_lv_spinbox_set_range');
+var _lv_spinbox_set_cursor_pos = Module['_lv_spinbox_set_cursor_pos'] = makeInvalidEarlyAccess('_lv_spinbox_set_cursor_pos');
+var _lv_spinbox_set_digit_step_direction = Module['_lv_spinbox_set_digit_step_direction'] = makeInvalidEarlyAccess('_lv_spinbox_set_digit_step_direction');
+var _lv_spinbox_get_value = Module['_lv_spinbox_get_value'] = makeInvalidEarlyAccess('_lv_spinbox_get_value');
+var _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = makeInvalidEarlyAccess('_lv_spinbox_get_step');
+var _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = makeInvalidEarlyAccess('_lv_spinbox_step_next');
+var _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = makeInvalidEarlyAccess('_lv_spinbox_get_rollover');
+var _lv_spinner_create = Module['_lv_spinner_create'] = makeInvalidEarlyAccess('_lv_spinner_create');
+var _lv_anim_path_ease_in_out = Module['_lv_anim_path_ease_in_out'] = makeInvalidEarlyAccess('_lv_anim_path_ease_in_out');
+var _lv_arc_set_bg_angles = Module['_lv_arc_set_bg_angles'] = makeInvalidEarlyAccess('_lv_arc_set_bg_angles');
+var _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = makeInvalidEarlyAccess('_lv_arc_set_rotation');
+var _lv_arc_set_end_angle = Module['_lv_arc_set_end_angle'] = makeInvalidEarlyAccess('_lv_arc_set_end_angle');
+var _lv_arc_set_start_angle = Module['_lv_arc_set_start_angle'] = makeInvalidEarlyAccess('_lv_arc_set_start_angle');
+var _lv_btnmatrix_set_one_checked = Module['_lv_btnmatrix_set_one_checked'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_one_checked');
+var _lv_tabview_set_act = Module['_lv_tabview_set_act'] = makeInvalidEarlyAccess('_lv_tabview_set_act');
+var _lv_tabview_create = Module['_lv_tabview_create'] = makeInvalidEarlyAccess('_lv_tabview_create');
+var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = makeInvalidEarlyAccess('_lv_tabview_add_tab');
+var _lv_tabview_get_content = Module['_lv_tabview_get_content'] = makeInvalidEarlyAccess('_lv_tabview_get_content');
+var _lv_tabview_get_tab_btns = Module['_lv_tabview_get_tab_btns'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_btns');
+var _lv_tabview_rename_tab = Module['_lv_tabview_rename_tab'] = makeInvalidEarlyAccess('_lv_tabview_rename_tab');
+var _lv_tabview_get_tab_act = Module['_lv_tabview_get_tab_act'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_act');
+var _lv_tileview_create = Module['_lv_tileview_create'] = makeInvalidEarlyAccess('_lv_tileview_create');
+var _lv_tileview_add_tile = Module['_lv_tileview_add_tile'] = makeInvalidEarlyAccess('_lv_tileview_add_tile');
+var _lv_obj_set_tile = Module['_lv_obj_set_tile'] = makeInvalidEarlyAccess('_lv_obj_set_tile');
+var _lv_obj_set_tile_id = Module['_lv_obj_set_tile_id'] = makeInvalidEarlyAccess('_lv_obj_set_tile_id');
+var _lv_tileview_get_tile_act = Module['_lv_tileview_get_tile_act'] = makeInvalidEarlyAccess('_lv_tileview_get_tile_act');
+var _lv_win_create = Module['_lv_win_create'] = makeInvalidEarlyAccess('_lv_win_create');
+var _lv_win_add_title = Module['_lv_win_add_title'] = makeInvalidEarlyAccess('_lv_win_add_title');
+var _lv_win_get_header = Module['_lv_win_get_header'] = makeInvalidEarlyAccess('_lv_win_get_header');
+var _lv_win_add_btn = Module['_lv_win_add_btn'] = makeInvalidEarlyAccess('_lv_win_add_btn');
+var _lv_win_get_content = Module['_lv_win_get_content'] = makeInvalidEarlyAccess('_lv_win_get_content');
+var _lv_font_get_glyph_bitmap = Module['_lv_font_get_glyph_bitmap'] = makeInvalidEarlyAccess('_lv_font_get_glyph_bitmap');
+var _lv_font_get_glyph_dsc = Module['_lv_font_get_glyph_dsc'] = makeInvalidEarlyAccess('_lv_font_get_glyph_dsc');
+var _lv_font_get_bitmap_fmt_txt = Module['_lv_font_get_bitmap_fmt_txt'] = makeInvalidEarlyAccess('_lv_font_get_bitmap_fmt_txt');
+var _lv_font_get_glyph_dsc_fmt_txt = Module['_lv_font_get_glyph_dsc_fmt_txt'] = makeInvalidEarlyAccess('_lv_font_get_glyph_dsc_fmt_txt');
+var _lv_area_move = Module['_lv_area_move'] = makeInvalidEarlyAccess('_lv_area_move');
+var _lv_color_fill = Module['_lv_color_fill'] = makeInvalidEarlyAccess('_lv_color_fill');
+var _lv_timer_create = Module['_lv_timer_create'] = makeInvalidEarlyAccess('_lv_timer_create');
+var _lv_timer_ready = Module['_lv_timer_ready'] = makeInvalidEarlyAccess('_lv_timer_ready');
+var _lv_disp_drv_update = Module['_lv_disp_drv_update'] = makeInvalidEarlyAccess('_lv_disp_drv_update');
+var _lv_disp_remove = Module['_lv_disp_remove'] = makeInvalidEarlyAccess('_lv_disp_remove');
+var _lv_timer_del = Module['_lv_timer_del'] = makeInvalidEarlyAccess('_lv_timer_del');
+var _lv_disp_get_physical_hor_res = Module['_lv_disp_get_physical_hor_res'] = makeInvalidEarlyAccess('_lv_disp_get_physical_hor_res');
+var _lv_disp_get_physical_ver_res = Module['_lv_disp_get_physical_ver_res'] = makeInvalidEarlyAccess('_lv_disp_get_physical_ver_res');
+var _lv_disp_get_offset_x = Module['_lv_disp_get_offset_x'] = makeInvalidEarlyAccess('_lv_disp_get_offset_x');
+var _lv_disp_get_offset_y = Module['_lv_disp_get_offset_y'] = makeInvalidEarlyAccess('_lv_disp_get_offset_y');
+var _lv_disp_get_antialiasing = Module['_lv_disp_get_antialiasing'] = makeInvalidEarlyAccess('_lv_disp_get_antialiasing');
+var _lv_disp_flush_is_last = Module['_lv_disp_flush_is_last'] = makeInvalidEarlyAccess('_lv_disp_flush_is_last');
+var _lv_disp_set_rotation = Module['_lv_disp_set_rotation'] = makeInvalidEarlyAccess('_lv_disp_set_rotation');
+var _lv_disp_get_rotation = Module['_lv_disp_get_rotation'] = makeInvalidEarlyAccess('_lv_disp_get_rotation');
+var _lv_disp_drv_use_generic_set_px_cb = Module['_lv_disp_drv_use_generic_set_px_cb'] = makeInvalidEarlyAccess('_lv_disp_drv_use_generic_set_px_cb');
+var _lv_indev_drv_update = Module['_lv_indev_drv_update'] = makeInvalidEarlyAccess('_lv_indev_drv_update');
+var _lv_indev_delete = Module['_lv_indev_delete'] = makeInvalidEarlyAccess('_lv_indev_delete');
+var _lv_anim_get_playtime = Module['_lv_anim_get_playtime'] = makeInvalidEarlyAccess('_lv_anim_get_playtime');
+var _lv_anim_del_all = Module['_lv_anim_del_all'] = makeInvalidEarlyAccess('_lv_anim_del_all');
+var _lv_anim_get_timer = Module['_lv_anim_get_timer'] = makeInvalidEarlyAccess('_lv_anim_get_timer');
+var _lv_anim_count_running = Module['_lv_anim_count_running'] = makeInvalidEarlyAccess('_lv_anim_count_running');
+var _lv_anim_path_ease_in = Module['_lv_anim_path_ease_in'] = makeInvalidEarlyAccess('_lv_anim_path_ease_in');
+var _lv_bezier3 = Module['_lv_bezier3'] = makeInvalidEarlyAccess('_lv_bezier3');
+var _lv_anim_path_overshoot = Module['_lv_anim_path_overshoot'] = makeInvalidEarlyAccess('_lv_anim_path_overshoot');
+var _lv_anim_path_bounce = Module['_lv_anim_path_bounce'] = makeInvalidEarlyAccess('_lv_anim_path_bounce');
+var _lv_anim_path_step = Module['_lv_anim_path_step'] = makeInvalidEarlyAccess('_lv_anim_path_step');
+var _lv_anim_timeline_create = Module['_lv_anim_timeline_create'] = makeInvalidEarlyAccess('_lv_anim_timeline_create');
+var _lv_anim_timeline_del = Module['_lv_anim_timeline_del'] = makeInvalidEarlyAccess('_lv_anim_timeline_del');
+var _lv_anim_timeline_stop = Module['_lv_anim_timeline_stop'] = makeInvalidEarlyAccess('_lv_anim_timeline_stop');
+var _lv_anim_timeline_add = Module['_lv_anim_timeline_add'] = makeInvalidEarlyAccess('_lv_anim_timeline_add');
+var _lv_anim_timeline_start = Module['_lv_anim_timeline_start'] = makeInvalidEarlyAccess('_lv_anim_timeline_start');
+var _lv_anim_timeline_get_playtime = Module['_lv_anim_timeline_get_playtime'] = makeInvalidEarlyAccess('_lv_anim_timeline_get_playtime');
+var _lv_anim_timeline_set_reverse = Module['_lv_anim_timeline_set_reverse'] = makeInvalidEarlyAccess('_lv_anim_timeline_set_reverse');
+var _lv_anim_timeline_set_progress = Module['_lv_anim_timeline_set_progress'] = makeInvalidEarlyAccess('_lv_anim_timeline_set_progress');
+var _lv_anim_timeline_get_reverse = Module['_lv_anim_timeline_get_reverse'] = makeInvalidEarlyAccess('_lv_anim_timeline_get_reverse');
+var _lv_area_align = Module['_lv_area_align'] = makeInvalidEarlyAccess('_lv_area_align');
+var _lv_timer_set_repeat_count = Module['_lv_timer_set_repeat_count'] = makeInvalidEarlyAccess('_lv_timer_set_repeat_count');
+var _lv_async_call_cancel = Module['_lv_async_call_cancel'] = makeInvalidEarlyAccess('_lv_async_call_cancel');
+var _lv_timer_get_next = Module['_lv_timer_get_next'] = makeInvalidEarlyAccess('_lv_timer_get_next');
+var _lv_color_lighten = Module['_lv_color_lighten'] = makeInvalidEarlyAccess('_lv_color_lighten');
+var _lv_color_change_lightness = Module['_lv_color_change_lightness'] = makeInvalidEarlyAccess('_lv_color_change_lightness');
+var _lv_color_to_hsv = Module['_lv_color_to_hsv'] = makeInvalidEarlyAccess('_lv_color_to_hsv');
+var _lv_fs_is_ready = Module['_lv_fs_is_ready'] = makeInvalidEarlyAccess('_lv_fs_is_ready');
+var _lv_fs_get_drv = Module['_lv_fs_get_drv'] = makeInvalidEarlyAccess('_lv_fs_get_drv');
+var _lv_fs_dir_open = Module['_lv_fs_dir_open'] = makeInvalidEarlyAccess('_lv_fs_dir_open');
+var _lv_fs_dir_read = Module['_lv_fs_dir_read'] = makeInvalidEarlyAccess('_lv_fs_dir_read');
+var _lv_fs_dir_close = Module['_lv_fs_dir_close'] = makeInvalidEarlyAccess('_lv_fs_dir_close');
+var _lv_fs_get_letters = Module['_lv_fs_get_letters'] = makeInvalidEarlyAccess('_lv_fs_get_letters');
+var _lv_fs_up = Module['_lv_fs_up'] = makeInvalidEarlyAccess('_lv_fs_up');
+var _lv_fs_get_last = Module['_lv_fs_get_last'] = makeInvalidEarlyAccess('_lv_fs_get_last');
+var _lv_log = Module['_lv_log'] = makeInvalidEarlyAccess('_lv_log');
+var _lv_lru_create = Module['_lv_lru_create'] = makeInvalidEarlyAccess('_lv_lru_create');
+var _lv_lru_del = Module['_lv_lru_del'] = makeInvalidEarlyAccess('_lv_lru_del');
+var _lv_lru_set = Module['_lv_lru_set'] = makeInvalidEarlyAccess('_lv_lru_set');
+var _lv_lru_remove_lru_item = Module['_lv_lru_remove_lru_item'] = makeInvalidEarlyAccess('_lv_lru_remove_lru_item');
+var _lv_lru_get = Module['_lv_lru_get'] = makeInvalidEarlyAccess('_lv_lru_get');
+var _lv_lru_remove = Module['_lv_lru_remove'] = makeInvalidEarlyAccess('_lv_lru_remove');
+var _lv_sqrt = Module['_lv_sqrt'] = makeInvalidEarlyAccess('_lv_sqrt');
+var _lv_rand = Module['_lv_rand'] = makeInvalidEarlyAccess('_lv_rand');
+var _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = makeInvalidEarlyAccess('_lv_tlsf_create_with_pool');
+var _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = makeInvalidEarlyAccess('_lv_tlsf_destroy');
+var _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = makeInvalidEarlyAccess('_lv_tlsf_malloc');
+var _lv_tlsf_free = Module['_lv_tlsf_free'] = makeInvalidEarlyAccess('_lv_tlsf_free');
+var _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = makeInvalidEarlyAccess('_lv_tlsf_realloc');
+var _lv_mem_test = Module['_lv_mem_test'] = makeInvalidEarlyAccess('_lv_mem_test');
+var _lv_tlsf_check = Module['_lv_tlsf_check'] = makeInvalidEarlyAccess('_lv_tlsf_check');
+var _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = makeInvalidEarlyAccess('_lv_tlsf_get_pool');
+var _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = makeInvalidEarlyAccess('_lv_tlsf_check_pool');
+var _lv_mem_monitor = Module['_lv_mem_monitor'] = makeInvalidEarlyAccess('_lv_mem_monitor');
+var _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = makeInvalidEarlyAccess('_lv_tlsf_walk_pool');
+var _lv_vsnprintf = Module['_lv_vsnprintf'] = makeInvalidEarlyAccess('_lv_vsnprintf');
+var _lv_style_get_num_custom_props = Module['_lv_style_get_num_custom_props'] = makeInvalidEarlyAccess('_lv_style_get_num_custom_props');
+var _lv_style_set_min_width = Module['_lv_style_set_min_width'] = makeInvalidEarlyAccess('_lv_style_set_min_width');
+var _lv_style_set_min_height = Module['_lv_style_set_min_height'] = makeInvalidEarlyAccess('_lv_style_set_min_height');
+var _lv_style_set_x = Module['_lv_style_set_x'] = makeInvalidEarlyAccess('_lv_style_set_x');
+var _lv_style_set_y = Module['_lv_style_set_y'] = makeInvalidEarlyAccess('_lv_style_set_y');
+var _lv_style_set_align = Module['_lv_style_set_align'] = makeInvalidEarlyAccess('_lv_style_set_align');
+var _lv_style_set_translate_x = Module['_lv_style_set_translate_x'] = makeInvalidEarlyAccess('_lv_style_set_translate_x');
+var _lv_style_set_translate_y = Module['_lv_style_set_translate_y'] = makeInvalidEarlyAccess('_lv_style_set_translate_y');
+var _lv_style_set_transform_zoom = Module['_lv_style_set_transform_zoom'] = makeInvalidEarlyAccess('_lv_style_set_transform_zoom');
+var _lv_style_set_transform_angle = Module['_lv_style_set_transform_angle'] = makeInvalidEarlyAccess('_lv_style_set_transform_angle');
+var _lv_style_set_transform_pivot_x = Module['_lv_style_set_transform_pivot_x'] = makeInvalidEarlyAccess('_lv_style_set_transform_pivot_x');
+var _lv_style_set_transform_pivot_y = Module['_lv_style_set_transform_pivot_y'] = makeInvalidEarlyAccess('_lv_style_set_transform_pivot_y');
+var _lv_style_set_bg_grad_dir = Module['_lv_style_set_bg_grad_dir'] = makeInvalidEarlyAccess('_lv_style_set_bg_grad_dir');
+var _lv_style_set_bg_main_stop = Module['_lv_style_set_bg_main_stop'] = makeInvalidEarlyAccess('_lv_style_set_bg_main_stop');
+var _lv_style_set_bg_grad_stop = Module['_lv_style_set_bg_grad_stop'] = makeInvalidEarlyAccess('_lv_style_set_bg_grad_stop');
+var _lv_style_set_bg_grad = Module['_lv_style_set_bg_grad'] = makeInvalidEarlyAccess('_lv_style_set_bg_grad');
+var _lv_style_set_bg_dither_mode = Module['_lv_style_set_bg_dither_mode'] = makeInvalidEarlyAccess('_lv_style_set_bg_dither_mode');
+var _lv_style_set_bg_img_opa = Module['_lv_style_set_bg_img_opa'] = makeInvalidEarlyAccess('_lv_style_set_bg_img_opa');
+var _lv_style_set_bg_img_recolor = Module['_lv_style_set_bg_img_recolor'] = makeInvalidEarlyAccess('_lv_style_set_bg_img_recolor');
+var _lv_style_set_bg_img_recolor_opa = Module['_lv_style_set_bg_img_recolor_opa'] = makeInvalidEarlyAccess('_lv_style_set_bg_img_recolor_opa');
+var _lv_style_set_bg_img_tiled = Module['_lv_style_set_bg_img_tiled'] = makeInvalidEarlyAccess('_lv_style_set_bg_img_tiled');
+var _lv_style_set_shadow_ofs_x = Module['_lv_style_set_shadow_ofs_x'] = makeInvalidEarlyAccess('_lv_style_set_shadow_ofs_x');
+var _lv_style_set_img_opa = Module['_lv_style_set_img_opa'] = makeInvalidEarlyAccess('_lv_style_set_img_opa');
+var _lv_style_set_img_recolor = Module['_lv_style_set_img_recolor'] = makeInvalidEarlyAccess('_lv_style_set_img_recolor');
+var _lv_style_set_img_recolor_opa = Module['_lv_style_set_img_recolor_opa'] = makeInvalidEarlyAccess('_lv_style_set_img_recolor_opa');
+var _lv_style_set_line_dash_width = Module['_lv_style_set_line_dash_width'] = makeInvalidEarlyAccess('_lv_style_set_line_dash_width');
+var _lv_style_set_line_dash_gap = Module['_lv_style_set_line_dash_gap'] = makeInvalidEarlyAccess('_lv_style_set_line_dash_gap');
+var _lv_style_set_line_rounded = Module['_lv_style_set_line_rounded'] = makeInvalidEarlyAccess('_lv_style_set_line_rounded');
+var _lv_style_set_line_opa = Module['_lv_style_set_line_opa'] = makeInvalidEarlyAccess('_lv_style_set_line_opa');
+var _lv_style_set_arc_opa = Module['_lv_style_set_arc_opa'] = makeInvalidEarlyAccess('_lv_style_set_arc_opa');
+var _lv_style_set_arc_img_src = Module['_lv_style_set_arc_img_src'] = makeInvalidEarlyAccess('_lv_style_set_arc_img_src');
+var _lv_style_set_text_opa = Module['_lv_style_set_text_opa'] = makeInvalidEarlyAccess('_lv_style_set_text_opa');
+var _lv_style_set_text_letter_space = Module['_lv_style_set_text_letter_space'] = makeInvalidEarlyAccess('_lv_style_set_text_letter_space');
+var _lv_style_set_text_decor = Module['_lv_style_set_text_decor'] = makeInvalidEarlyAccess('_lv_style_set_text_decor');
+var _lv_style_set_opa = Module['_lv_style_set_opa'] = makeInvalidEarlyAccess('_lv_style_set_opa');
+var _lv_style_set_opa_layered = Module['_lv_style_set_opa_layered'] = makeInvalidEarlyAccess('_lv_style_set_opa_layered');
+var _lv_style_set_anim = Module['_lv_style_set_anim'] = makeInvalidEarlyAccess('_lv_style_set_anim');
+var _lv_style_set_anim_speed = Module['_lv_style_set_anim_speed'] = makeInvalidEarlyAccess('_lv_style_set_anim_speed');
+var _lv_style_set_blend_mode = Module['_lv_style_set_blend_mode'] = makeInvalidEarlyAccess('_lv_style_set_blend_mode');
+var _lv_style_set_layout = Module['_lv_style_set_layout'] = makeInvalidEarlyAccess('_lv_style_set_layout');
+var _lv_style_set_base_dir = Module['_lv_style_set_base_dir'] = makeInvalidEarlyAccess('_lv_style_set_base_dir');
+var _lv_timer_enable = Module['_lv_timer_enable'] = makeInvalidEarlyAccess('_lv_timer_enable');
+var _lv_timer_create_basic = Module['_lv_timer_create_basic'] = makeInvalidEarlyAccess('_lv_timer_create_basic');
+var _lv_timer_set_cb = Module['_lv_timer_set_cb'] = makeInvalidEarlyAccess('_lv_timer_set_cb');
+var _lv_timer_set_period = Module['_lv_timer_set_period'] = makeInvalidEarlyAccess('_lv_timer_set_period');
+var _lv_timer_reset = Module['_lv_timer_reset'] = makeInvalidEarlyAccess('_lv_timer_reset');
+var _lv_timer_get_idle = Module['_lv_timer_get_idle'] = makeInvalidEarlyAccess('_lv_timer_get_idle');
+var _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = makeInvalidEarlyAccess('_lv_tlsf_block_size');
+var _lv_tlsf_size = Module['_lv_tlsf_size'] = makeInvalidEarlyAccess('_lv_tlsf_size');
+var _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = makeInvalidEarlyAccess('_lv_tlsf_align_size');
+var _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_min');
+var _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_max');
+var _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_pool_overhead');
+var _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_alloc_overhead');
+var _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = makeInvalidEarlyAccess('_lv_tlsf_add_pool');
+var _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = makeInvalidEarlyAccess('_lv_tlsf_remove_pool');
+var _lv_tlsf_create = Module['_lv_tlsf_create'] = makeInvalidEarlyAccess('_lv_tlsf_create');
+var _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = makeInvalidEarlyAccess('_lv_tlsf_memalign');
+var _lv_arc_set_value = Module['_lv_arc_set_value'] = makeInvalidEarlyAccess('_lv_arc_set_value');
+var _lv_arc_create = Module['_lv_arc_create'] = makeInvalidEarlyAccess('_lv_arc_create');
+var _lv_arc_set_angles = Module['_lv_arc_set_angles'] = makeInvalidEarlyAccess('_lv_arc_set_angles');
+var _lv_arc_set_bg_start_angle = Module['_lv_arc_set_bg_start_angle'] = makeInvalidEarlyAccess('_lv_arc_set_bg_start_angle');
+var _lv_arc_set_bg_end_angle = Module['_lv_arc_set_bg_end_angle'] = makeInvalidEarlyAccess('_lv_arc_set_bg_end_angle');
+var _lv_arc_set_mode = Module['_lv_arc_set_mode'] = makeInvalidEarlyAccess('_lv_arc_set_mode');
+var _lv_arc_set_range = Module['_lv_arc_set_range'] = makeInvalidEarlyAccess('_lv_arc_set_range');
+var _lv_arc_set_change_rate = Module['_lv_arc_set_change_rate'] = makeInvalidEarlyAccess('_lv_arc_set_change_rate');
+var _lv_arc_get_angle_start = Module['_lv_arc_get_angle_start'] = makeInvalidEarlyAccess('_lv_arc_get_angle_start');
+var _lv_arc_get_angle_end = Module['_lv_arc_get_angle_end'] = makeInvalidEarlyAccess('_lv_arc_get_angle_end');
+var _lv_arc_get_bg_angle_start = Module['_lv_arc_get_bg_angle_start'] = makeInvalidEarlyAccess('_lv_arc_get_bg_angle_start');
+var _lv_arc_get_bg_angle_end = Module['_lv_arc_get_bg_angle_end'] = makeInvalidEarlyAccess('_lv_arc_get_bg_angle_end');
+var _lv_arc_get_value = Module['_lv_arc_get_value'] = makeInvalidEarlyAccess('_lv_arc_get_value');
+var _lv_arc_get_min_value = Module['_lv_arc_get_min_value'] = makeInvalidEarlyAccess('_lv_arc_get_min_value');
+var _lv_arc_get_max_value = Module['_lv_arc_get_max_value'] = makeInvalidEarlyAccess('_lv_arc_get_max_value');
+var _lv_arc_get_mode = Module['_lv_arc_get_mode'] = makeInvalidEarlyAccess('_lv_arc_get_mode');
+var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_align_obj_to_angle');
+var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_rotate_obj_to_angle');
+var _lv_bar_create = Module['_lv_bar_create'] = makeInvalidEarlyAccess('_lv_bar_create');
+var _lv_bar_get_mode = Module['_lv_bar_get_mode'] = makeInvalidEarlyAccess('_lv_bar_get_mode');
+var _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = makeInvalidEarlyAccess('_lv_btnmatrix_clear_btn_ctrl');
+var _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_btn_width');
+var _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_map');
+var _lv_btnmatrix_get_one_checked = Module['_lv_btnmatrix_get_one_checked'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_one_checked');
+var _lv_canvas_create = Module['_lv_canvas_create'] = makeInvalidEarlyAccess('_lv_canvas_create');
+var _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = makeInvalidEarlyAccess('_lv_canvas_set_buffer');
+var _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = makeInvalidEarlyAccess('_lv_canvas_set_px_color');
+var _lv_canvas_set_px_opa = Module['_lv_canvas_set_px_opa'] = makeInvalidEarlyAccess('_lv_canvas_set_px_opa');
+var _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = makeInvalidEarlyAccess('_lv_canvas_set_palette');
+var _lv_canvas_get_px = Module['_lv_canvas_get_px'] = makeInvalidEarlyAccess('_lv_canvas_get_px');
+var _lv_canvas_get_img = Module['_lv_canvas_get_img'] = makeInvalidEarlyAccess('_lv_canvas_get_img');
+var _lv_canvas_copy_buf = Module['_lv_canvas_copy_buf'] = makeInvalidEarlyAccess('_lv_canvas_copy_buf');
+var _lv_canvas_transform = Module['_lv_canvas_transform'] = makeInvalidEarlyAccess('_lv_canvas_transform');
+var _lv_canvas_blur_hor = Module['_lv_canvas_blur_hor'] = makeInvalidEarlyAccess('_lv_canvas_blur_hor');
+var _lv_canvas_blur_ver = Module['_lv_canvas_blur_ver'] = makeInvalidEarlyAccess('_lv_canvas_blur_ver');
+var _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = makeInvalidEarlyAccess('_lv_canvas_fill_bg');
+var _lv_canvas_draw_rect = Module['_lv_canvas_draw_rect'] = makeInvalidEarlyAccess('_lv_canvas_draw_rect');
+var _lv_canvas_draw_text = Module['_lv_canvas_draw_text'] = makeInvalidEarlyAccess('_lv_canvas_draw_text');
+var _lv_canvas_draw_img = Module['_lv_canvas_draw_img'] = makeInvalidEarlyAccess('_lv_canvas_draw_img');
+var _lv_canvas_draw_line = Module['_lv_canvas_draw_line'] = makeInvalidEarlyAccess('_lv_canvas_draw_line');
+var _lv_canvas_draw_polygon = Module['_lv_canvas_draw_polygon'] = makeInvalidEarlyAccess('_lv_canvas_draw_polygon');
+var _lv_canvas_draw_arc = Module['_lv_canvas_draw_arc'] = makeInvalidEarlyAccess('_lv_canvas_draw_arc');
+var _lv_checkbox_create = Module['_lv_checkbox_create'] = makeInvalidEarlyAccess('_lv_checkbox_create');
+var _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = makeInvalidEarlyAccess('_lv_checkbox_set_text');
+var _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = makeInvalidEarlyAccess('_lv_checkbox_set_text_static');
+var _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = makeInvalidEarlyAccess('_lv_checkbox_get_text');
+var _lv_dropdown_set_options_static = Module['_lv_dropdown_set_options_static'] = makeInvalidEarlyAccess('_lv_dropdown_set_options_static');
+var _lv_dropdown_open = Module['_lv_dropdown_open'] = makeInvalidEarlyAccess('_lv_dropdown_open');
+var _lv_dropdown_close = Module['_lv_dropdown_close'] = makeInvalidEarlyAccess('_lv_dropdown_close');
+var _lv_dropdown_set_text = Module['_lv_dropdown_set_text'] = makeInvalidEarlyAccess('_lv_dropdown_set_text');
+var _lv_dropdown_add_option = Module['_lv_dropdown_add_option'] = makeInvalidEarlyAccess('_lv_dropdown_add_option');
+var _lv_dropdown_set_dir = Module['_lv_dropdown_set_dir'] = makeInvalidEarlyAccess('_lv_dropdown_set_dir');
+var _lv_dropdown_set_symbol = Module['_lv_dropdown_set_symbol'] = makeInvalidEarlyAccess('_lv_dropdown_set_symbol');
+var _lv_dropdown_set_selected_highlight = Module['_lv_dropdown_set_selected_highlight'] = makeInvalidEarlyAccess('_lv_dropdown_set_selected_highlight');
+var _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = makeInvalidEarlyAccess('_lv_dropdown_get_list');
+var _lv_dropdown_get_text = Module['_lv_dropdown_get_text'] = makeInvalidEarlyAccess('_lv_dropdown_get_text');
+var _lv_dropdown_get_option_cnt = Module['_lv_dropdown_get_option_cnt'] = makeInvalidEarlyAccess('_lv_dropdown_get_option_cnt');
+var _lv_dropdown_get_selected_str = Module['_lv_dropdown_get_selected_str'] = makeInvalidEarlyAccess('_lv_dropdown_get_selected_str');
+var _lv_dropdown_get_option_index = Module['_lv_dropdown_get_option_index'] = makeInvalidEarlyAccess('_lv_dropdown_get_option_index');
+var _lv_dropdown_get_symbol = Module['_lv_dropdown_get_symbol'] = makeInvalidEarlyAccess('_lv_dropdown_get_symbol');
+var _lv_dropdown_get_selected_highlight = Module['_lv_dropdown_get_selected_highlight'] = makeInvalidEarlyAccess('_lv_dropdown_get_selected_highlight');
+var _lv_dropdown_get_dir = Module['_lv_dropdown_get_dir'] = makeInvalidEarlyAccess('_lv_dropdown_get_dir');
+var _lv_label_set_text_static = Module['_lv_label_set_text_static'] = makeInvalidEarlyAccess('_lv_label_set_text_static');
+var _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = makeInvalidEarlyAccess('_lv_dropdown_is_open');
+var _lv_img_set_offset_x = Module['_lv_img_set_offset_x'] = makeInvalidEarlyAccess('_lv_img_set_offset_x');
+var _lv_img_set_offset_y = Module['_lv_img_set_offset_y'] = makeInvalidEarlyAccess('_lv_img_set_offset_y');
+var _lv_img_set_angle = Module['_lv_img_set_angle'] = makeInvalidEarlyAccess('_lv_img_set_angle');
+var _lv_img_set_pivot = Module['_lv_img_set_pivot'] = makeInvalidEarlyAccess('_lv_img_set_pivot');
+var _lv_img_set_zoom = Module['_lv_img_set_zoom'] = makeInvalidEarlyAccess('_lv_img_set_zoom');
+var _lv_img_set_antialias = Module['_lv_img_set_antialias'] = makeInvalidEarlyAccess('_lv_img_set_antialias');
+var _lv_img_set_size_mode = Module['_lv_img_set_size_mode'] = makeInvalidEarlyAccess('_lv_img_set_size_mode');
+var _lv_img_get_src = Module['_lv_img_get_src'] = makeInvalidEarlyAccess('_lv_img_get_src');
+var _lv_img_get_offset_x = Module['_lv_img_get_offset_x'] = makeInvalidEarlyAccess('_lv_img_get_offset_x');
+var _lv_img_get_offset_y = Module['_lv_img_get_offset_y'] = makeInvalidEarlyAccess('_lv_img_get_offset_y');
+var _lv_img_get_angle = Module['_lv_img_get_angle'] = makeInvalidEarlyAccess('_lv_img_get_angle');
+var _lv_img_get_pivot = Module['_lv_img_get_pivot'] = makeInvalidEarlyAccess('_lv_img_get_pivot');
+var _lv_img_get_zoom = Module['_lv_img_get_zoom'] = makeInvalidEarlyAccess('_lv_img_get_zoom');
+var _lv_img_get_antialias = Module['_lv_img_get_antialias'] = makeInvalidEarlyAccess('_lv_img_get_antialias');
+var _lv_img_get_size_mode = Module['_lv_img_get_size_mode'] = makeInvalidEarlyAccess('_lv_img_get_size_mode');
+var _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = makeInvalidEarlyAccess('_lv_label_get_letter_on');
+var _lv_label_set_recolor = Module['_lv_label_set_recolor'] = makeInvalidEarlyAccess('_lv_label_set_recolor');
+var _lv_label_set_text_sel_start = Module['_lv_label_set_text_sel_start'] = makeInvalidEarlyAccess('_lv_label_set_text_sel_start');
+var _lv_label_set_text_sel_end = Module['_lv_label_set_text_sel_end'] = makeInvalidEarlyAccess('_lv_label_set_text_sel_end');
+var _lv_label_get_long_mode = Module['_lv_label_get_long_mode'] = makeInvalidEarlyAccess('_lv_label_get_long_mode');
+var _lv_label_get_recolor = Module['_lv_label_get_recolor'] = makeInvalidEarlyAccess('_lv_label_get_recolor');
+var _lv_label_get_letter_pos = Module['_lv_label_get_letter_pos'] = makeInvalidEarlyAccess('_lv_label_get_letter_pos');
+var _lv_label_is_char_under_pos = Module['_lv_label_is_char_under_pos'] = makeInvalidEarlyAccess('_lv_label_is_char_under_pos');
+var _lv_label_get_text_selection_start = Module['_lv_label_get_text_selection_start'] = makeInvalidEarlyAccess('_lv_label_get_text_selection_start');
+var _lv_label_get_text_selection_end = Module['_lv_label_get_text_selection_end'] = makeInvalidEarlyAccess('_lv_label_get_text_selection_end');
+var _lv_label_ins_text = Module['_lv_label_ins_text'] = makeInvalidEarlyAccess('_lv_label_ins_text');
+var _lv_label_cut_text = Module['_lv_label_cut_text'] = makeInvalidEarlyAccess('_lv_label_cut_text');
+var _lv_line_create = Module['_lv_line_create'] = makeInvalidEarlyAccess('_lv_line_create');
+var _lv_line_set_y_invert = Module['_lv_line_set_y_invert'] = makeInvalidEarlyAccess('_lv_line_set_y_invert');
+var _lv_line_get_y_invert = Module['_lv_line_get_y_invert'] = makeInvalidEarlyAccess('_lv_line_get_y_invert');
+var _lv_roller_set_options = Module['_lv_roller_set_options'] = makeInvalidEarlyAccess('_lv_roller_set_options');
+var _lv_roller_set_selected = Module['_lv_roller_set_selected'] = makeInvalidEarlyAccess('_lv_roller_set_selected');
+var _lv_roller_create = Module['_lv_roller_create'] = makeInvalidEarlyAccess('_lv_roller_create');
+var _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = makeInvalidEarlyAccess('_lv_roller_set_visible_row_count');
+var _lv_roller_get_selected = Module['_lv_roller_get_selected'] = makeInvalidEarlyAccess('_lv_roller_get_selected');
+var _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = makeInvalidEarlyAccess('_lv_roller_get_selected_str');
+var _lv_roller_get_options = Module['_lv_roller_get_options'] = makeInvalidEarlyAccess('_lv_roller_get_options');
+var _lv_roller_get_option_cnt = Module['_lv_roller_get_option_cnt'] = makeInvalidEarlyAccess('_lv_roller_get_option_cnt');
+var _lv_slider_create = Module['_lv_slider_create'] = makeInvalidEarlyAccess('_lv_slider_create');
+var _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = makeInvalidEarlyAccess('_lv_slider_is_dragged');
+var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
+var _lv_table_create = Module['_lv_table_create'] = makeInvalidEarlyAccess('_lv_table_create');
+var _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = makeInvalidEarlyAccess('_lv_table_set_cell_value');
+var _lv_table_set_col_cnt = Module['_lv_table_set_col_cnt'] = makeInvalidEarlyAccess('_lv_table_set_col_cnt');
+var _lv_table_set_row_cnt = Module['_lv_table_set_row_cnt'] = makeInvalidEarlyAccess('_lv_table_set_row_cnt');
+var _lv_table_set_cell_value_fmt = Module['_lv_table_set_cell_value_fmt'] = makeInvalidEarlyAccess('_lv_table_set_cell_value_fmt');
+var _lv_table_set_col_width = Module['_lv_table_set_col_width'] = makeInvalidEarlyAccess('_lv_table_set_col_width');
+var _lv_table_add_cell_ctrl = Module['_lv_table_add_cell_ctrl'] = makeInvalidEarlyAccess('_lv_table_add_cell_ctrl');
+var _lv_table_clear_cell_ctrl = Module['_lv_table_clear_cell_ctrl'] = makeInvalidEarlyAccess('_lv_table_clear_cell_ctrl');
+var _lv_table_set_cell_user_data = Module['_lv_table_set_cell_user_data'] = makeInvalidEarlyAccess('_lv_table_set_cell_user_data');
+var _lv_table_get_cell_value = Module['_lv_table_get_cell_value'] = makeInvalidEarlyAccess('_lv_table_get_cell_value');
+var _lv_table_get_row_cnt = Module['_lv_table_get_row_cnt'] = makeInvalidEarlyAccess('_lv_table_get_row_cnt');
+var _lv_table_get_col_cnt = Module['_lv_table_get_col_cnt'] = makeInvalidEarlyAccess('_lv_table_get_col_cnt');
+var _lv_table_get_col_width = Module['_lv_table_get_col_width'] = makeInvalidEarlyAccess('_lv_table_get_col_width');
+var _lv_table_has_cell_ctrl = Module['_lv_table_has_cell_ctrl'] = makeInvalidEarlyAccess('_lv_table_has_cell_ctrl');
+var _lv_table_get_selected_cell = Module['_lv_table_get_selected_cell'] = makeInvalidEarlyAccess('_lv_table_get_selected_cell');
+var _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = makeInvalidEarlyAccess('_lv_table_get_cell_user_data');
+var _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = makeInvalidEarlyAccess('_lv_textarea_cursor_up');
+var _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = makeInvalidEarlyAccess('_lv_textarea_cursor_down');
+var _lv_textarea_del_char_forward = Module['_lv_textarea_del_char_forward'] = makeInvalidEarlyAccess('_lv_textarea_del_char_forward');
+var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
+var _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = makeInvalidEarlyAccess('_lv_textarea_clear_selection');
+var _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = makeInvalidEarlyAccess('_lv_textarea_get_accepted_chars');
+var _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = makeInvalidEarlyAccess('_lv_textarea_get_max_length');
+var _lv_textarea_set_placeholder_text = Module['_lv_textarea_set_placeholder_text'] = makeInvalidEarlyAccess('_lv_textarea_set_placeholder_text');
+var _lv_textarea_set_password_mode = Module['_lv_textarea_set_password_mode'] = makeInvalidEarlyAccess('_lv_textarea_set_password_mode');
+var _lv_textarea_set_password_bullet = Module['_lv_textarea_set_password_bullet'] = makeInvalidEarlyAccess('_lv_textarea_set_password_bullet');
+var _lv_textarea_set_accepted_chars = Module['_lv_textarea_set_accepted_chars'] = makeInvalidEarlyAccess('_lv_textarea_set_accepted_chars');
+var _lv_textarea_set_max_length = Module['_lv_textarea_set_max_length'] = makeInvalidEarlyAccess('_lv_textarea_set_max_length');
+var _lv_textarea_set_insert_replace = Module['_lv_textarea_set_insert_replace'] = makeInvalidEarlyAccess('_lv_textarea_set_insert_replace');
+var _lv_textarea_set_text_selection = Module['_lv_textarea_set_text_selection'] = makeInvalidEarlyAccess('_lv_textarea_set_text_selection');
+var _lv_textarea_set_password_show_time = Module['_lv_textarea_set_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_set_password_show_time');
+var _lv_textarea_set_align = Module['_lv_textarea_set_align'] = makeInvalidEarlyAccess('_lv_textarea_set_align');
+var _lv_textarea_get_label = Module['_lv_textarea_get_label'] = makeInvalidEarlyAccess('_lv_textarea_get_label');
+var _lv_textarea_get_placeholder_text = Module['_lv_textarea_get_placeholder_text'] = makeInvalidEarlyAccess('_lv_textarea_get_placeholder_text');
+var _lv_textarea_get_cursor_click_pos = Module['_lv_textarea_get_cursor_click_pos'] = makeInvalidEarlyAccess('_lv_textarea_get_cursor_click_pos');
+var _lv_textarea_get_password_mode = Module['_lv_textarea_get_password_mode'] = makeInvalidEarlyAccess('_lv_textarea_get_password_mode');
+var _lv_textarea_get_password_bullet = Module['_lv_textarea_get_password_bullet'] = makeInvalidEarlyAccess('_lv_textarea_get_password_bullet');
+var _lv_textarea_text_is_selected = Module['_lv_textarea_text_is_selected'] = makeInvalidEarlyAccess('_lv_textarea_text_is_selected');
+var _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = makeInvalidEarlyAccess('_lv_textarea_get_text_selection');
+var _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_get_password_show_time');
+var _onMqttEvent = Module['_onMqttEvent'] = makeInvalidEarlyAccess('_onMqttEvent');
+var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
+var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
+var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = makeInvalidEarlyAccess('__evalStringArrayPropertyAndJoin');
+var __assignStringProperty = Module['__assignStringProperty'] = makeInvalidEarlyAccess('__assignStringProperty');
+var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEarlyAccess('__assignIntegerProperty');
+var _compareRollerOptions = Module['_compareRollerOptions'] = makeInvalidEarlyAccess('_compareRollerOptions');
+var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
+var _fflush = makeInvalidEarlyAccess('_fflush');
+var _strerror = makeInvalidEarlyAccess('_strerror');
+var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
+var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
+var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
+var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
+var __emscripten_stack_restore = makeInvalidEarlyAccess('__emscripten_stack_restore');
+var __emscripten_stack_alloc = makeInvalidEarlyAccess('__emscripten_stack_alloc');
+var _emscripten_stack_get_current = makeInvalidEarlyAccess('_emscripten_stack_get_current');
+var memory = makeInvalidEarlyAccess('memory');
+var __indirect_function_table = makeInvalidEarlyAccess('__indirect_function_table');
+var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
+
+function assignWasmExports(wasmExports) {
+  assert(typeof wasmExports['lv_disp_flush_ready'] != 'undefined', 'missing Wasm export: lv_disp_flush_ready');
+  _lv_disp_flush_ready = Module['_lv_disp_flush_ready'] = createExportWrapper('lv_disp_flush_ready', 1);
+  assert(typeof wasmExports['lv_mem_alloc'] != 'undefined', 'missing Wasm export: lv_mem_alloc');
+  _lv_mem_alloc = Module['_lv_mem_alloc'] = createExportWrapper('lv_mem_alloc', 1);
+  assert(typeof wasmExports['lv_mem_free'] != 'undefined', 'missing Wasm export: lv_mem_free');
+  _lv_mem_free = Module['_lv_mem_free'] = createExportWrapper('lv_mem_free', 1);
+  assert(typeof wasmExports['lvglSetEncoderGroup'] != 'undefined', 'missing Wasm export: lvglSetEncoderGroup');
+  _lvglSetEncoderGroup = Module['_lvglSetEncoderGroup'] = createExportWrapper('lvglSetEncoderGroup', 1);
+  assert(typeof wasmExports['lv_indev_set_group'] != 'undefined', 'missing Wasm export: lv_indev_set_group');
+  _lv_indev_set_group = Module['_lv_indev_set_group'] = createExportWrapper('lv_indev_set_group', 2);
+  assert(typeof wasmExports['lvglSetKeyboardGroup'] != 'undefined', 'missing Wasm export: lvglSetKeyboardGroup');
+  _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup', 1);
+  assert(typeof wasmExports['init'] != 'undefined', 'missing Wasm export: init');
+  _init = Module['_init'] = createExportWrapper('init', 9);
+  assert(typeof wasmExports['lv_init'] != 'undefined', 'missing Wasm export: lv_init');
+  _lv_init = Module['_lv_init'] = createExportWrapper('lv_init', 0);
+  assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
+  _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);
+  assert(typeof wasmExports['lv_disp_draw_buf_init'] != 'undefined', 'missing Wasm export: lv_disp_draw_buf_init');
+  _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = createExportWrapper('lv_disp_draw_buf_init', 4);
+  assert(typeof wasmExports['lv_disp_drv_init'] != 'undefined', 'missing Wasm export: lv_disp_drv_init');
+  _lv_disp_drv_init = Module['_lv_disp_drv_init'] = createExportWrapper('lv_disp_drv_init', 1);
+  assert(typeof wasmExports['lv_disp_drv_register'] != 'undefined', 'missing Wasm export: lv_disp_drv_register');
+  _lv_disp_drv_register = Module['_lv_disp_drv_register'] = createExportWrapper('lv_disp_drv_register', 1);
+  assert(typeof wasmExports['lv_indev_drv_init'] != 'undefined', 'missing Wasm export: lv_indev_drv_init');
+  _lv_indev_drv_init = Module['_lv_indev_drv_init'] = createExportWrapper('lv_indev_drv_init', 1);
+  assert(typeof wasmExports['lv_indev_drv_register'] != 'undefined', 'missing Wasm export: lv_indev_drv_register');
+  _lv_indev_drv_register = Module['_lv_indev_drv_register'] = createExportWrapper('lv_indev_drv_register', 1);
+  assert(typeof wasmExports['lv_fs_drv_init'] != 'undefined', 'missing Wasm export: lv_fs_drv_init');
+  _lv_fs_drv_init = Module['_lv_fs_drv_init'] = createExportWrapper('lv_fs_drv_init', 1);
+  assert(typeof wasmExports['lv_fs_drv_register'] != 'undefined', 'missing Wasm export: lv_fs_drv_register');
+  _lv_fs_drv_register = Module['_lv_fs_drv_register'] = createExportWrapper('lv_fs_drv_register', 1);
+  assert(typeof wasmExports['lv_disp_get_default'] != 'undefined', 'missing Wasm export: lv_disp_get_default');
+  _lv_disp_get_default = Module['_lv_disp_get_default'] = createExportWrapper('lv_disp_get_default', 0);
+  assert(typeof wasmExports['lv_palette_main'] != 'undefined', 'missing Wasm export: lv_palette_main');
+  _lv_palette_main = Module['_lv_palette_main'] = createExportWrapper('lv_palette_main', 2);
+  assert(typeof wasmExports['lv_theme_default_init'] != 'undefined', 'missing Wasm export: lv_theme_default_init');
+  _lv_theme_default_init = Module['_lv_theme_default_init'] = createExportWrapper('lv_theme_default_init', 5);
+  assert(typeof wasmExports['lv_disp_set_theme'] != 'undefined', 'missing Wasm export: lv_disp_set_theme');
+  _lv_disp_set_theme = Module['_lv_disp_set_theme'] = createExportWrapper('lv_disp_set_theme', 2);
+  assert(typeof wasmExports['mainLoop'] != 'undefined', 'missing Wasm export: mainLoop');
+  _mainLoop = Module['_mainLoop'] = createExportWrapper('mainLoop', 0);
+  assert(typeof wasmExports['lv_timer_handler'] != 'undefined', 'missing Wasm export: lv_timer_handler');
+  _lv_timer_handler = Module['_lv_timer_handler'] = createExportWrapper('lv_timer_handler', 0);
+  assert(typeof wasmExports['getSyncedBuffer'] != 'undefined', 'missing Wasm export: getSyncedBuffer');
+  _getSyncedBuffer = Module['_getSyncedBuffer'] = createExportWrapper('getSyncedBuffer', 0);
+  assert(typeof wasmExports['isRTL'] != 'undefined', 'missing Wasm export: isRTL');
+  _isRTL = Module['_isRTL'] = createExportWrapper('isRTL', 0);
+  assert(typeof wasmExports['onPointerEvent'] != 'undefined', 'missing Wasm export: onPointerEvent');
+  _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent', 3);
+  assert(typeof wasmExports['onMouseWheelEvent'] != 'undefined', 'missing Wasm export: onMouseWheelEvent');
+  _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent', 2);
+  assert(typeof wasmExports['onKeyPressed'] != 'undefined', 'missing Wasm export: onKeyPressed');
+  _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed', 1);
+  assert(typeof wasmExports['lv_obj_get_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_get_style_prop');
+  _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = createExportWrapper('lv_obj_get_style_prop', 4);
+  assert(typeof wasmExports['lv_obj_set_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_set_local_style_prop');
+  _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = createExportWrapper('lv_obj_set_local_style_prop', 4);
+  assert(typeof wasmExports['lv_event_get_code'] != 'undefined', 'missing Wasm export: lv_event_get_code');
+  _lv_event_get_code = Module['_lv_event_get_code'] = createExportWrapper('lv_event_get_code', 1);
+  assert(typeof wasmExports['lv_event_get_target'] != 'undefined', 'missing Wasm export: lv_event_get_target');
+  _lv_event_get_target = Module['_lv_event_get_target'] = createExportWrapper('lv_event_get_target', 1);
+  assert(typeof wasmExports['lv_obj_has_state'] != 'undefined', 'missing Wasm export: lv_obj_has_state');
+  _lv_obj_has_state = Module['_lv_obj_has_state'] = createExportWrapper('lv_obj_has_state', 2);
+  assert(typeof wasmExports['_assignBooleanProperty'] != 'undefined', 'missing Wasm export: _assignBooleanProperty');
+  __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWrapper('_assignBooleanProperty', 7);
+  assert(typeof wasmExports['lv_event_get_draw_part_dsc'] != 'undefined', 'missing Wasm export: lv_event_get_draw_part_dsc');
+  _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = createExportWrapper('lv_event_get_draw_part_dsc', 1);
+  assert(typeof wasmExports['_evalTextProperty'] != 'undefined', 'missing Wasm export: _evalTextProperty');
+  __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty', 6);
+  assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
+  __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
+  assert(typeof wasmExports['lv_obj_add_state'] != 'undefined', 'missing Wasm export: lv_obj_add_state');
+  _lv_obj_add_state = Module['_lv_obj_add_state'] = createExportWrapper('lv_obj_add_state', 2);
+  assert(typeof wasmExports['lv_obj_clear_state'] != 'undefined', 'missing Wasm export: lv_obj_clear_state');
+  _lv_obj_clear_state = Module['_lv_obj_clear_state'] = createExportWrapper('lv_obj_clear_state', 2);
+  assert(typeof wasmExports['lv_obj_has_flag'] != 'undefined', 'missing Wasm export: lv_obj_has_flag');
+  _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag', 2);
+  assert(typeof wasmExports['lv_obj_add_flag'] != 'undefined', 'missing Wasm export: lv_obj_add_flag');
+  _lv_obj_add_flag = Module['_lv_obj_add_flag'] = createExportWrapper('lv_obj_add_flag', 2);
+  assert(typeof wasmExports['lv_obj_clear_flag'] != 'undefined', 'missing Wasm export: lv_obj_clear_flag');
+  _lv_obj_clear_flag = Module['_lv_obj_clear_flag'] = createExportWrapper('lv_obj_clear_flag', 2);
+  assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
+  _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
+  assert(typeof wasmExports['onMessageFromDebugger'] != 'undefined', 'missing Wasm export: onMessageFromDebugger');
+  _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
+  assert(typeof wasmExports['lvglGetFlowState'] != 'undefined', 'missing Wasm export: lvglGetFlowState');
+  _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState', 2);
+  assert(typeof wasmExports['setDebuggerMessageSubsciptionFilter'] != 'undefined', 'missing Wasm export: setDebuggerMessageSubsciptionFilter');
+  _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter', 1);
+  assert(typeof wasmExports['setObjectIndex'] != 'undefined', 'missing Wasm export: setObjectIndex');
+  _setObjectIndex = Module['_setObjectIndex'] = createExportWrapper('setObjectIndex', 2);
+  assert(typeof wasmExports['getLvglObjectFromIndex'] != 'undefined', 'missing Wasm export: getLvglObjectFromIndex');
+  _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = createExportWrapper('getLvglObjectFromIndex', 1);
+  assert(typeof wasmExports['lv_group_remove_all_objs'] != 'undefined', 'missing Wasm export: lv_group_remove_all_objs');
+  _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = createExportWrapper('lv_group_remove_all_objs', 1);
+  assert(typeof wasmExports['lv_group_add_obj'] != 'undefined', 'missing Wasm export: lv_group_add_obj');
+  _lv_group_add_obj = Module['_lv_group_add_obj'] = createExportWrapper('lv_group_add_obj', 2);
+  assert(typeof wasmExports['lvglCreateGroup'] != 'undefined', 'missing Wasm export: lvglCreateGroup');
+  _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup', 0);
+  assert(typeof wasmExports['lv_group_create'] != 'undefined', 'missing Wasm export: lv_group_create');
+  _lv_group_create = Module['_lv_group_create'] = createExportWrapper('lv_group_create', 0);
+  assert(typeof wasmExports['lvglAddScreenLoadedEventHandler'] != 'undefined', 'missing Wasm export: lvglAddScreenLoadedEventHandler');
+  _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler', 1);
+  assert(typeof wasmExports['lv_obj_add_event_cb'] != 'undefined', 'missing Wasm export: lv_obj_add_event_cb');
+  _lv_obj_add_event_cb = Module['_lv_obj_add_event_cb'] = createExportWrapper('lv_obj_add_event_cb', 4);
+  assert(typeof wasmExports['lvglGroupAddObject'] != 'undefined', 'missing Wasm export: lvglGroupAddObject');
+  _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject', 3);
+  assert(typeof wasmExports['lvglGroupRemoveObjectsForScreen'] != 'undefined', 'missing Wasm export: lvglGroupRemoveObjectsForScreen');
+  _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = createExportWrapper('lvglGroupRemoveObjectsForScreen', 1);
+  assert(typeof wasmExports['lvglAddEventHandler'] != 'undefined', 'missing Wasm export: lvglAddEventHandler');
+  _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 2);
+  assert(typeof wasmExports['lv_event_get_user_data'] != 'undefined', 'missing Wasm export: lv_event_get_user_data');
+  _lv_event_get_user_data = Module['_lv_event_get_user_data'] = createExportWrapper('lv_event_get_user_data', 1);
+  assert(typeof wasmExports['lvglCreateScreen'] != 'undefined', 'missing Wasm export: lvglCreateScreen');
+  _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
+  assert(typeof wasmExports['lv_obj_create'] != 'undefined', 'missing Wasm export: lv_obj_create');
+  _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create', 1);
+  assert(typeof wasmExports['lv_obj_set_pos'] != 'undefined', 'missing Wasm export: lv_obj_set_pos');
+  _lv_obj_set_pos = Module['_lv_obj_set_pos'] = createExportWrapper('lv_obj_set_pos', 3);
+  assert(typeof wasmExports['lv_obj_set_size'] != 'undefined', 'missing Wasm export: lv_obj_set_size');
+  _lv_obj_set_size = Module['_lv_obj_set_size'] = createExportWrapper('lv_obj_set_size', 3);
+  assert(typeof wasmExports['lv_obj_update_layout'] != 'undefined', 'missing Wasm export: lv_obj_update_layout');
+  _lv_obj_update_layout = Module['_lv_obj_update_layout'] = createExportWrapper('lv_obj_update_layout', 1);
+  assert(typeof wasmExports['lvglCreateUserWidget'] != 'undefined', 'missing Wasm export: lvglCreateUserWidget');
+  _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget', 6);
+  assert(typeof wasmExports['lvglScreenLoad'] != 'undefined', 'missing Wasm export: lvglScreenLoad');
+  _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad', 2);
+  assert(typeof wasmExports['lv_scr_load_anim'] != 'undefined', 'missing Wasm export: lv_scr_load_anim');
+  _lv_scr_load_anim = Module['_lv_scr_load_anim'] = createExportWrapper('lv_scr_load_anim', 5);
+  assert(typeof wasmExports['lvglDeleteObject'] != 'undefined', 'missing Wasm export: lvglDeleteObject');
+  _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject', 1);
+  assert(typeof wasmExports['lv_obj_del'] != 'undefined', 'missing Wasm export: lv_obj_del');
+  _lv_obj_del = Module['_lv_obj_del'] = createExportWrapper('lv_obj_del', 1);
+  assert(typeof wasmExports['lv_disp_get_scr_act'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_act');
+  _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = createExportWrapper('lv_disp_get_scr_act', 1);
+  assert(typeof wasmExports['lv_disp_load_scr'] != 'undefined', 'missing Wasm export: lv_disp_load_scr');
+  _lv_disp_load_scr = Module['_lv_disp_load_scr'] = createExportWrapper('lv_disp_load_scr', 1);
+  assert(typeof wasmExports['lvglDeleteObjectIndex'] != 'undefined', 'missing Wasm export: lvglDeleteObjectIndex');
+  _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = createExportWrapper('lvglDeleteObjectIndex', 1);
+  assert(typeof wasmExports['lvglDeletePageFlowState'] != 'undefined', 'missing Wasm export: lvglDeletePageFlowState');
+  _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = createExportWrapper('lvglDeletePageFlowState', 1);
+  assert(typeof wasmExports['lvglObjAddFlag'] != 'undefined', 'missing Wasm export: lvglObjAddFlag');
+  _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag', 2);
+  assert(typeof wasmExports['lvglObjClearFlag'] != 'undefined', 'missing Wasm export: lvglObjClearFlag');
+  _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglObjClearFlag', 2);
+  assert(typeof wasmExports['lvglObjHasFlag'] != 'undefined', 'missing Wasm export: lvglObjHasFlag');
+  _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag', 2);
+  assert(typeof wasmExports['lvglObjAddState'] != 'undefined', 'missing Wasm export: lvglObjAddState');
+  _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState', 2);
+  assert(typeof wasmExports['lvglObjClearState'] != 'undefined', 'missing Wasm export: lvglObjClearState');
+  _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState', 2);
+  assert(typeof wasmExports['lvglObjGetStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropColor');
+  _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor', 4);
+  assert(typeof wasmExports['lv_obj_get_state'] != 'undefined', 'missing Wasm export: lv_obj_get_state');
+  _lv_obj_get_state = Module['_lv_obj_get_state'] = createExportWrapper('lv_obj_get_state', 1);
+  assert(typeof wasmExports['lvglObjGetStylePropNum'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropNum');
+  _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum', 4);
+  assert(typeof wasmExports['lvglObjSetLocalStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropColor');
+  _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor', 4);
+  assert(typeof wasmExports['lvglObjSetLocalStylePropNum'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropNum');
+  _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = createExportWrapper('lvglObjSetLocalStylePropNum', 4);
+  assert(typeof wasmExports['lvglObjSetLocalStylePropPtr'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropPtr');
+  _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = createExportWrapper('lvglObjSetLocalStylePropPtr', 4);
+  assert(typeof wasmExports['lvglObjGetStylePropBuiltInFont'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropBuiltInFont');
+  _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont', 4);
+  assert(typeof wasmExports['lvglObjGetStylePropFontAddr'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropFontAddr');
+  _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr', 4);
+  assert(typeof wasmExports['lvglObjSetLocalStylePropBuiltInFont'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropBuiltInFont');
+  _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont', 4);
+  assert(typeof wasmExports['lvglStyleCreate'] != 'undefined', 'missing Wasm export: lvglStyleCreate');
+  _lvglStyleCreate = Module['_lvglStyleCreate'] = createExportWrapper('lvglStyleCreate', 0);
+  assert(typeof wasmExports['lv_style_init'] != 'undefined', 'missing Wasm export: lv_style_init');
+  _lv_style_init = Module['_lv_style_init'] = createExportWrapper('lv_style_init', 1);
+  assert(typeof wasmExports['lvglStyleSetPropColor'] != 'undefined', 'missing Wasm export: lvglStyleSetPropColor');
+  _lvglStyleSetPropColor = Module['_lvglStyleSetPropColor'] = createExportWrapper('lvglStyleSetPropColor', 3);
+  assert(typeof wasmExports['lv_style_set_prop'] != 'undefined', 'missing Wasm export: lv_style_set_prop');
+  _lv_style_set_prop = Module['_lv_style_set_prop'] = createExportWrapper('lv_style_set_prop', 3);
+  assert(typeof wasmExports['lvglSetStylePropBuiltInFont'] != 'undefined', 'missing Wasm export: lvglSetStylePropBuiltInFont');
+  _lvglSetStylePropBuiltInFont = Module['_lvglSetStylePropBuiltInFont'] = createExportWrapper('lvglSetStylePropBuiltInFont', 3);
+  assert(typeof wasmExports['lvglSetStylePropPtr'] != 'undefined', 'missing Wasm export: lvglSetStylePropPtr');
+  _lvglSetStylePropPtr = Module['_lvglSetStylePropPtr'] = createExportWrapper('lvglSetStylePropPtr', 3);
+  assert(typeof wasmExports['lvglSetStylePropNum'] != 'undefined', 'missing Wasm export: lvglSetStylePropNum');
+  _lvglSetStylePropNum = Module['_lvglSetStylePropNum'] = createExportWrapper('lvglSetStylePropNum', 3);
+  assert(typeof wasmExports['lvglStyleDelete'] != 'undefined', 'missing Wasm export: lvglStyleDelete');
+  _lvglStyleDelete = Module['_lvglStyleDelete'] = createExportWrapper('lvglStyleDelete', 1);
+  assert(typeof wasmExports['lvglObjAddStyle'] != 'undefined', 'missing Wasm export: lvglObjAddStyle');
+  _lvglObjAddStyle = Module['_lvglObjAddStyle'] = createExportWrapper('lvglObjAddStyle', 3);
+  assert(typeof wasmExports['lv_obj_add_style'] != 'undefined', 'missing Wasm export: lv_obj_add_style');
+  _lv_obj_add_style = Module['_lv_obj_add_style'] = createExportWrapper('lv_obj_add_style', 3);
+  assert(typeof wasmExports['lvglObjRemoveStyle'] != 'undefined', 'missing Wasm export: lvglObjRemoveStyle');
+  _lvglObjRemoveStyle = Module['_lvglObjRemoveStyle'] = createExportWrapper('lvglObjRemoveStyle', 3);
+  assert(typeof wasmExports['lv_obj_remove_style'] != 'undefined', 'missing Wasm export: lv_obj_remove_style');
+  _lv_obj_remove_style = Module['_lv_obj_remove_style'] = createExportWrapper('lv_obj_remove_style', 3);
+  assert(typeof wasmExports['lvglGetObjRelX'] != 'undefined', 'missing Wasm export: lvglGetObjRelX');
+  _lvglGetObjRelX = Module['_lvglGetObjRelX'] = createExportWrapper('lvglGetObjRelX', 1);
+  assert(typeof wasmExports['lv_obj_get_parent'] != 'undefined', 'missing Wasm export: lv_obj_get_parent');
+  _lv_obj_get_parent = Module['_lv_obj_get_parent'] = createExportWrapper('lv_obj_get_parent', 1);
+  assert(typeof wasmExports['lvglGetObjRelY'] != 'undefined', 'missing Wasm export: lvglGetObjRelY');
+  _lvglGetObjRelY = Module['_lvglGetObjRelY'] = createExportWrapper('lvglGetObjRelY', 1);
+  assert(typeof wasmExports['lvglGetObjWidth'] != 'undefined', 'missing Wasm export: lvglGetObjWidth');
+  _lvglGetObjWidth = Module['_lvglGetObjWidth'] = createExportWrapper('lvglGetObjWidth', 1);
+  assert(typeof wasmExports['lv_obj_get_width'] != 'undefined', 'missing Wasm export: lv_obj_get_width');
+  _lv_obj_get_width = Module['_lv_obj_get_width'] = createExportWrapper('lv_obj_get_width', 1);
+  assert(typeof wasmExports['lvglGetObjHeight'] != 'undefined', 'missing Wasm export: lvglGetObjHeight');
+  _lvglGetObjHeight = Module['_lvglGetObjHeight'] = createExportWrapper('lvglGetObjHeight', 1);
+  assert(typeof wasmExports['lv_obj_get_height'] != 'undefined', 'missing Wasm export: lv_obj_get_height');
+  _lv_obj_get_height = Module['_lv_obj_get_height'] = createExportWrapper('lv_obj_get_height', 1);
+  assert(typeof wasmExports['lvglLoadFont'] != 'undefined', 'missing Wasm export: lvglLoadFont');
+  _lvglLoadFont = Module['_lvglLoadFont'] = createExportWrapper('lvglLoadFont', 3);
+  assert(typeof wasmExports['lv_font_load'] != 'undefined', 'missing Wasm export: lv_font_load');
+  _lv_font_load = Module['_lv_font_load'] = createExportWrapper('lv_font_load', 1);
+  assert(typeof wasmExports['lvglFreeFont'] != 'undefined', 'missing Wasm export: lvglFreeFont');
+  _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont', 1);
+  assert(typeof wasmExports['lv_font_free'] != 'undefined', 'missing Wasm export: lv_font_free');
+  _lv_font_free = Module['_lv_font_free'] = createExportWrapper('lv_font_free', 1);
+  assert(typeof wasmExports['lvglAddObjectFlowCallback'] != 'undefined', 'missing Wasm export: lvglAddObjectFlowCallback');
+  _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback', 6);
+  assert(typeof wasmExports['lvglLedGetColor'] != 'undefined', 'missing Wasm export: lvglLedGetColor');
+  _lvglLedGetColor = Module['_lvglLedGetColor'] = createExportWrapper('lvglLedGetColor', 1);
+  assert(typeof wasmExports['lvglMeterIndicatorNeedleLineSetColor'] != 'undefined', 'missing Wasm export: lvglMeterIndicatorNeedleLineSetColor');
+  _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = createExportWrapper('lvglMeterIndicatorNeedleLineSetColor', 3);
+  assert(typeof wasmExports['lv_obj_invalidate'] != 'undefined', 'missing Wasm export: lv_obj_invalidate');
+  _lv_obj_invalidate = Module['_lv_obj_invalidate'] = createExportWrapper('lv_obj_invalidate', 1);
+  assert(typeof wasmExports['lvglMeterIndicatorScaleLinesSetColorStart'] != 'undefined', 'missing Wasm export: lvglMeterIndicatorScaleLinesSetColorStart');
+  _lvglMeterIndicatorScaleLinesSetColorStart = Module['_lvglMeterIndicatorScaleLinesSetColorStart'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorStart', 3);
+  assert(typeof wasmExports['lvglMeterIndicatorScaleLinesSetColorEnd'] != 'undefined', 'missing Wasm export: lvglMeterIndicatorScaleLinesSetColorEnd');
+  _lvglMeterIndicatorScaleLinesSetColorEnd = Module['_lvglMeterIndicatorScaleLinesSetColorEnd'] = createExportWrapper('lvglMeterIndicatorScaleLinesSetColorEnd', 3);
+  assert(typeof wasmExports['lvglMeterIndicatorArcSetColor'] != 'undefined', 'missing Wasm export: lvglMeterIndicatorArcSetColor');
+  _lvglMeterIndicatorArcSetColor = Module['_lvglMeterIndicatorArcSetColor'] = createExportWrapper('lvglMeterIndicatorArcSetColor', 3);
+  assert(typeof wasmExports['lvglMeterScaleSetMinorTickColor'] != 'undefined', 'missing Wasm export: lvglMeterScaleSetMinorTickColor');
+  _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'] = createExportWrapper('lvglMeterScaleSetMinorTickColor', 3);
+  assert(typeof wasmExports['lvglMeterScaleSetMajorTickColor'] != 'undefined', 'missing Wasm export: lvglMeterScaleSetMajorTickColor');
+  _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = createExportWrapper('lvglMeterScaleSetMajorTickColor', 3);
+  assert(typeof wasmExports['lvglGetIndicator_start_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_start_value');
+  _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = createExportWrapper('lvglGetIndicator_start_value', 1);
+  assert(typeof wasmExports['lvglGetIndicator_end_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_end_value');
+  _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = createExportWrapper('lvglGetIndicator_end_value', 1);
+  assert(typeof wasmExports['lvglUpdateCheckedState'] != 'undefined', 'missing Wasm export: lvglUpdateCheckedState');
+  _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState', 4);
+  assert(typeof wasmExports['lvglUpdateDisabledState'] != 'undefined', 'missing Wasm export: lvglUpdateDisabledState');
+  _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState', 4);
+  assert(typeof wasmExports['lvglUpdateHiddenFlag'] != 'undefined', 'missing Wasm export: lvglUpdateHiddenFlag');
+  _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = createExportWrapper('lvglUpdateHiddenFlag', 4);
+  assert(typeof wasmExports['lvglUpdateClickableFlag'] != 'undefined', 'missing Wasm export: lvglUpdateClickableFlag');
+  _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExportWrapper('lvglUpdateClickableFlag', 4);
+  assert(typeof wasmExports['lvglAddTimelineKeyframe'] != 'undefined', 'missing Wasm export: lvglAddTimelineKeyframe');
+  _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe', 23);
+  assert(typeof wasmExports['lvglSetTimelinePosition'] != 'undefined', 'missing Wasm export: lvglSetTimelinePosition');
+  _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition', 1);
+  assert(typeof wasmExports['lvglClearTimeline'] != 'undefined', 'missing Wasm export: lvglClearTimeline');
+  _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline', 0);
+  assert(typeof wasmExports['lvglSetScrollBarMode'] != 'undefined', 'missing Wasm export: lvglSetScrollBarMode');
+  _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode', 2);
+  assert(typeof wasmExports['lv_obj_set_scrollbar_mode'] != 'undefined', 'missing Wasm export: lv_obj_set_scrollbar_mode');
+  _lv_obj_set_scrollbar_mode = Module['_lv_obj_set_scrollbar_mode'] = createExportWrapper('lv_obj_set_scrollbar_mode', 2);
+  assert(typeof wasmExports['lvglSetScrollDir'] != 'undefined', 'missing Wasm export: lvglSetScrollDir');
+  _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir', 2);
+  assert(typeof wasmExports['lv_obj_set_scroll_dir'] != 'undefined', 'missing Wasm export: lv_obj_set_scroll_dir');
+  _lv_obj_set_scroll_dir = Module['_lv_obj_set_scroll_dir'] = createExportWrapper('lv_obj_set_scroll_dir', 2);
+  assert(typeof wasmExports['lvglSetScrollSnapX'] != 'undefined', 'missing Wasm export: lvglSetScrollSnapX');
+  _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = createExportWrapper('lvglSetScrollSnapX', 2);
+  assert(typeof wasmExports['lv_obj_set_scroll_snap_x'] != 'undefined', 'missing Wasm export: lv_obj_set_scroll_snap_x');
+  _lv_obj_set_scroll_snap_x = Module['_lv_obj_set_scroll_snap_x'] = createExportWrapper('lv_obj_set_scroll_snap_x', 2);
+  assert(typeof wasmExports['lvglSetScrollSnapY'] != 'undefined', 'missing Wasm export: lvglSetScrollSnapY');
+  _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = createExportWrapper('lvglSetScrollSnapY', 2);
+  assert(typeof wasmExports['lv_obj_set_scroll_snap_y'] != 'undefined', 'missing Wasm export: lv_obj_set_scroll_snap_y');
+  _lv_obj_set_scroll_snap_y = Module['_lv_obj_set_scroll_snap_y'] = createExportWrapper('lv_obj_set_scroll_snap_y', 2);
+  assert(typeof wasmExports['lvglLineSetPoints'] != 'undefined', 'missing Wasm export: lvglLineSetPoints');
+  _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints', 3);
+  assert(typeof wasmExports['lv_line_set_points'] != 'undefined', 'missing Wasm export: lv_line_set_points');
+  _lv_line_set_points = Module['_lv_line_set_points'] = createExportWrapper('lv_line_set_points', 3);
+  assert(typeof wasmExports['lvglScrollTo'] != 'undefined', 'missing Wasm export: lvglScrollTo');
+  _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo', 4);
+  assert(typeof wasmExports['lv_obj_scroll_to'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to');
+  _lv_obj_scroll_to = Module['_lv_obj_scroll_to'] = createExportWrapper('lv_obj_scroll_to', 4);
+  assert(typeof wasmExports['lvglGetScrollX'] != 'undefined', 'missing Wasm export: lvglGetScrollX');
+  _lvglGetScrollX = Module['_lvglGetScrollX'] = createExportWrapper('lvglGetScrollX', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_x'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_x');
+  _lv_obj_get_scroll_x = Module['_lv_obj_get_scroll_x'] = createExportWrapper('lv_obj_get_scroll_x', 1);
+  assert(typeof wasmExports['lvglGetScrollY'] != 'undefined', 'missing Wasm export: lvglGetScrollY');
+  _lvglGetScrollY = Module['_lvglGetScrollY'] = createExportWrapper('lvglGetScrollY', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_y'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_y');
+  _lv_obj_get_scroll_y = Module['_lv_obj_get_scroll_y'] = createExportWrapper('lv_obj_get_scroll_y', 1);
+  assert(typeof wasmExports['lvglObjInvalidate'] != 'undefined', 'missing Wasm export: lvglObjInvalidate');
+  _lvglObjInvalidate = Module['_lvglObjInvalidate'] = createExportWrapper('lvglObjInvalidate', 1);
+  assert(typeof wasmExports['lvglDeleteScreenOnUnload'] != 'undefined', 'missing Wasm export: lvglDeleteScreenOnUnload');
+  _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = createExportWrapper('lvglDeleteScreenOnUnload', 1);
+  assert(typeof wasmExports['lvglGetTabName'] != 'undefined', 'missing Wasm export: lvglGetTabName');
+  _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTabName', 3);
+  assert(typeof wasmExports['v8_lv_slider_get_min_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_min_value');
+  _v8_lv_slider_get_min_value = Module['_v8_lv_slider_get_min_value'] = createExportWrapper('v8_lv_slider_get_min_value', 1);
+  assert(typeof wasmExports['lv_bar_get_min_value'] != 'undefined', 'missing Wasm export: lv_bar_get_min_value');
+  _lv_bar_get_min_value = Module['_lv_bar_get_min_value'] = createExportWrapper('lv_bar_get_min_value', 1);
+  assert(typeof wasmExports['v8_lv_slider_get_max_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_max_value');
+  _v8_lv_slider_get_max_value = Module['_v8_lv_slider_get_max_value'] = createExportWrapper('v8_lv_slider_get_max_value', 1);
+  assert(typeof wasmExports['lv_bar_get_max_value'] != 'undefined', 'missing Wasm export: lv_bar_get_max_value');
+  _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value', 1);
+  assert(typeof wasmExports['v8_lv_slider_set_range'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_range');
+  _v8_lv_slider_set_range = Module['_v8_lv_slider_set_range'] = createExportWrapper('v8_lv_slider_set_range', 3);
+  assert(typeof wasmExports['lv_bar_set_range'] != 'undefined', 'missing Wasm export: lv_bar_set_range');
+  _lv_bar_set_range = Module['_lv_bar_set_range'] = createExportWrapper('lv_bar_set_range', 3);
+  assert(typeof wasmExports['v8_lv_slider_set_mode'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_mode');
+  _v8_lv_slider_set_mode = Module['_v8_lv_slider_set_mode'] = createExportWrapper('v8_lv_slider_set_mode', 2);
+  assert(typeof wasmExports['lv_bar_set_mode'] != 'undefined', 'missing Wasm export: lv_bar_set_mode');
+  _lv_bar_set_mode = Module['_lv_bar_set_mode'] = createExportWrapper('lv_bar_set_mode', 2);
+  assert(typeof wasmExports['v8_lv_slider_set_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_value');
+  _v8_lv_slider_set_value = Module['_v8_lv_slider_set_value'] = createExportWrapper('v8_lv_slider_set_value', 3);
+  assert(typeof wasmExports['lv_bar_set_value'] != 'undefined', 'missing Wasm export: lv_bar_set_value');
+  _lv_bar_set_value = Module['_lv_bar_set_value'] = createExportWrapper('lv_bar_set_value', 3);
+  assert(typeof wasmExports['v8_lv_slider_get_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_value');
+  _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = createExportWrapper('v8_lv_slider_get_value', 1);
+  assert(typeof wasmExports['lv_bar_get_value'] != 'undefined', 'missing Wasm export: lv_bar_get_value');
+  _lv_bar_get_value = Module['_lv_bar_get_value'] = createExportWrapper('lv_bar_get_value', 1);
+  assert(typeof wasmExports['v8_lv_slider_set_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_left_value');
+  _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = createExportWrapper('v8_lv_slider_set_left_value', 3);
+  assert(typeof wasmExports['lv_bar_set_start_value'] != 'undefined', 'missing Wasm export: lv_bar_set_start_value');
+  _lv_bar_set_start_value = Module['_lv_bar_set_start_value'] = createExportWrapper('lv_bar_set_start_value', 3);
+  assert(typeof wasmExports['v8_lv_slider_get_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_left_value');
+  _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = createExportWrapper('v8_lv_slider_get_left_value', 1);
+  assert(typeof wasmExports['lv_bar_get_start_value'] != 'undefined', 'missing Wasm export: lv_bar_get_start_value');
+  _lv_bar_get_start_value = Module['_lv_bar_get_start_value'] = createExportWrapper('lv_bar_get_start_value', 1);
+  assert(typeof wasmExports['to_lvgl_color'] != 'undefined', 'missing Wasm export: to_lvgl_color');
+  _to_lvgl_color = Module['_to_lvgl_color'] = createExportWrapper('to_lvgl_color', 1);
+  assert(typeof wasmExports['lv_disp_get_scr_prev'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_prev');
+  _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
+  assert(typeof wasmExports['lv_obj_get_disp'] != 'undefined', 'missing Wasm export: lv_obj_get_disp');
+  _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
+  assert(typeof wasmExports['lv_anim_del'] != 'undefined', 'missing Wasm export: lv_anim_del');
+  _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del', 2);
+  assert(typeof wasmExports['lv_obj_remove_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_remove_local_style_prop');
+  _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = createExportWrapper('lv_obj_remove_local_style_prop', 3);
+  assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
+  _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
+  assert(typeof wasmExports['lv_disp_get_hor_res'] != 'undefined', 'missing Wasm export: lv_disp_get_hor_res');
+  _lv_disp_get_hor_res = Module['_lv_disp_get_hor_res'] = createExportWrapper('lv_disp_get_hor_res', 1);
+  assert(typeof wasmExports['lv_disp_get_ver_res'] != 'undefined', 'missing Wasm export: lv_disp_get_ver_res');
+  _lv_disp_get_ver_res = Module['_lv_disp_get_ver_res'] = createExportWrapper('lv_disp_get_ver_res', 1);
+  assert(typeof wasmExports['lv_event_send'] != 'undefined', 'missing Wasm export: lv_event_send');
+  _lv_event_send = Module['_lv_event_send'] = createExportWrapper('lv_event_send', 3);
+  assert(typeof wasmExports['lv_anim_start'] != 'undefined', 'missing Wasm export: lv_anim_start');
+  _lv_anim_start = Module['_lv_anim_start'] = createExportWrapper('lv_anim_start', 1);
+  assert(typeof wasmExports['lv_disp_get_layer_top'] != 'undefined', 'missing Wasm export: lv_disp_get_layer_top');
+  _lv_disp_get_layer_top = Module['_lv_disp_get_layer_top'] = createExportWrapper('lv_disp_get_layer_top', 1);
+  assert(typeof wasmExports['lv_disp_get_layer_sys'] != 'undefined', 'missing Wasm export: lv_disp_get_layer_sys');
+  _lv_disp_get_layer_sys = Module['_lv_disp_get_layer_sys'] = createExportWrapper('lv_disp_get_layer_sys', 1);
+  assert(typeof wasmExports['lv_obj_get_child_cnt'] != 'undefined', 'missing Wasm export: lv_obj_get_child_cnt');
+  _lv_obj_get_child_cnt = Module['_lv_obj_get_child_cnt'] = createExportWrapper('lv_obj_get_child_cnt', 1);
+  assert(typeof wasmExports['lv_theme_apply'] != 'undefined', 'missing Wasm export: lv_theme_apply');
+  _lv_theme_apply = Module['_lv_theme_apply'] = createExportWrapper('lv_theme_apply', 1);
+  assert(typeof wasmExports['lv_disp_get_theme'] != 'undefined', 'missing Wasm export: lv_disp_get_theme');
+  _lv_disp_get_theme = Module['_lv_disp_get_theme'] = createExportWrapper('lv_disp_get_theme', 1);
+  assert(typeof wasmExports['lv_disp_set_bg_color'] != 'undefined', 'missing Wasm export: lv_disp_set_bg_color');
+  _lv_disp_set_bg_color = Module['_lv_disp_set_bg_color'] = createExportWrapper('lv_disp_set_bg_color', 2);
+  assert(typeof wasmExports['lv_area_set'] != 'undefined', 'missing Wasm export: lv_area_set');
+  _lv_area_set = Module['_lv_area_set'] = createExportWrapper('lv_area_set', 5);
+  assert(typeof wasmExports['lv_disp_set_bg_image'] != 'undefined', 'missing Wasm export: lv_disp_set_bg_image');
+  _lv_disp_set_bg_image = Module['_lv_disp_set_bg_image'] = createExportWrapper('lv_disp_set_bg_image', 2);
+  assert(typeof wasmExports['lv_disp_set_bg_opa'] != 'undefined', 'missing Wasm export: lv_disp_set_bg_opa');
+  _lv_disp_set_bg_opa = Module['_lv_disp_set_bg_opa'] = createExportWrapper('lv_disp_set_bg_opa', 2);
+  assert(typeof wasmExports['lv_obj_set_x'] != 'undefined', 'missing Wasm export: lv_obj_set_x');
+  _lv_obj_set_x = Module['_lv_obj_set_x'] = createExportWrapper('lv_obj_set_x', 2);
+  assert(typeof wasmExports['lv_obj_set_y'] != 'undefined', 'missing Wasm export: lv_obj_set_y');
+  _lv_obj_set_y = Module['_lv_obj_set_y'] = createExportWrapper('lv_obj_set_y', 2);
+  assert(typeof wasmExports['lv_obj_set_style_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_opa');
+  _lv_obj_set_style_opa = Module['_lv_obj_set_style_opa'] = createExportWrapper('lv_obj_set_style_opa', 3);
+  assert(typeof wasmExports['lv_disp_get_inactive_time'] != 'undefined', 'missing Wasm export: lv_disp_get_inactive_time');
+  _lv_disp_get_inactive_time = Module['_lv_disp_get_inactive_time'] = createExportWrapper('lv_disp_get_inactive_time', 1);
+  assert(typeof wasmExports['lv_tick_elaps'] != 'undefined', 'missing Wasm export: lv_tick_elaps');
+  _lv_tick_elaps = Module['_lv_tick_elaps'] = createExportWrapper('lv_tick_elaps', 1);
+  assert(typeof wasmExports['lv_disp_get_next'] != 'undefined', 'missing Wasm export: lv_disp_get_next');
+  _lv_disp_get_next = Module['_lv_disp_get_next'] = createExportWrapper('lv_disp_get_next', 1);
+  assert(typeof wasmExports['lv_disp_trig_activity'] != 'undefined', 'missing Wasm export: lv_disp_trig_activity');
+  _lv_disp_trig_activity = Module['_lv_disp_trig_activity'] = createExportWrapper('lv_disp_trig_activity', 1);
+  assert(typeof wasmExports['lv_tick_get'] != 'undefined', 'missing Wasm export: lv_tick_get');
+  _lv_tick_get = Module['_lv_tick_get'] = createExportWrapper('lv_tick_get', 0);
+  assert(typeof wasmExports['lv_disp_clean_dcache'] != 'undefined', 'missing Wasm export: lv_disp_clean_dcache');
+  _lv_disp_clean_dcache = Module['_lv_disp_clean_dcache'] = createExportWrapper('lv_disp_clean_dcache', 1);
+  assert(typeof wasmExports['lv_disp_enable_invalidation'] != 'undefined', 'missing Wasm export: lv_disp_enable_invalidation');
+  _lv_disp_enable_invalidation = Module['_lv_disp_enable_invalidation'] = createExportWrapper('lv_disp_enable_invalidation', 2);
+  assert(typeof wasmExports['lv_disp_is_invalidation_enabled'] != 'undefined', 'missing Wasm export: lv_disp_is_invalidation_enabled');
+  _lv_disp_is_invalidation_enabled = Module['_lv_disp_is_invalidation_enabled'] = createExportWrapper('lv_disp_is_invalidation_enabled', 1);
+  assert(typeof wasmExports['lv_indev_get_act'] != 'undefined', 'missing Wasm export: lv_indev_get_act');
+  _lv_indev_get_act = Module['_lv_indev_get_act'] = createExportWrapper('lv_indev_get_act', 0);
+  assert(typeof wasmExports['lv_obj_event_base'] != 'undefined', 'missing Wasm export: lv_obj_event_base');
+  _lv_obj_event_base = Module['_lv_obj_event_base'] = createExportWrapper('lv_obj_event_base', 2);
+  assert(typeof wasmExports['lv_event_get_current_target'] != 'undefined', 'missing Wasm export: lv_event_get_current_target');
+  _lv_event_get_current_target = Module['_lv_event_get_current_target'] = createExportWrapper('lv_event_get_current_target', 1);
+  assert(typeof wasmExports['lv_event_get_param'] != 'undefined', 'missing Wasm export: lv_event_get_param');
+  _lv_event_get_param = Module['_lv_event_get_param'] = createExportWrapper('lv_event_get_param', 1);
+  assert(typeof wasmExports['lv_event_stop_bubbling'] != 'undefined', 'missing Wasm export: lv_event_stop_bubbling');
+  _lv_event_stop_bubbling = Module['_lv_event_stop_bubbling'] = createExportWrapper('lv_event_stop_bubbling', 1);
+  assert(typeof wasmExports['lv_event_stop_processing'] != 'undefined', 'missing Wasm export: lv_event_stop_processing');
+  _lv_event_stop_processing = Module['_lv_event_stop_processing'] = createExportWrapper('lv_event_stop_processing', 1);
+  assert(typeof wasmExports['lv_event_register_id'] != 'undefined', 'missing Wasm export: lv_event_register_id');
+  _lv_event_register_id = Module['_lv_event_register_id'] = createExportWrapper('lv_event_register_id', 0);
+  assert(typeof wasmExports['lv_obj_allocate_spec_attr'] != 'undefined', 'missing Wasm export: lv_obj_allocate_spec_attr');
+  _lv_obj_allocate_spec_attr = Module['_lv_obj_allocate_spec_attr'] = createExportWrapper('lv_obj_allocate_spec_attr', 1);
+  assert(typeof wasmExports['lv_mem_realloc'] != 'undefined', 'missing Wasm export: lv_mem_realloc');
+  _lv_mem_realloc = Module['_lv_mem_realloc'] = createExportWrapper('lv_mem_realloc', 2);
+  assert(typeof wasmExports['lv_obj_remove_event_cb'] != 'undefined', 'missing Wasm export: lv_obj_remove_event_cb');
+  _lv_obj_remove_event_cb = Module['_lv_obj_remove_event_cb'] = createExportWrapper('lv_obj_remove_event_cb', 2);
+  assert(typeof wasmExports['lv_obj_remove_event_cb_with_user_data'] != 'undefined', 'missing Wasm export: lv_obj_remove_event_cb_with_user_data');
+  _lv_obj_remove_event_cb_with_user_data = Module['_lv_obj_remove_event_cb_with_user_data'] = createExportWrapper('lv_obj_remove_event_cb_with_user_data', 3);
+  assert(typeof wasmExports['lv_obj_remove_event_dsc'] != 'undefined', 'missing Wasm export: lv_obj_remove_event_dsc');
+  _lv_obj_remove_event_dsc = Module['_lv_obj_remove_event_dsc'] = createExportWrapper('lv_obj_remove_event_dsc', 2);
+  assert(typeof wasmExports['lv_obj_get_event_user_data'] != 'undefined', 'missing Wasm export: lv_obj_get_event_user_data');
+  _lv_obj_get_event_user_data = Module['_lv_obj_get_event_user_data'] = createExportWrapper('lv_obj_get_event_user_data', 2);
+  assert(typeof wasmExports['lv_event_get_indev'] != 'undefined', 'missing Wasm export: lv_event_get_indev');
+  _lv_event_get_indev = Module['_lv_event_get_indev'] = createExportWrapper('lv_event_get_indev', 1);
+  assert(typeof wasmExports['lv_event_get_draw_ctx'] != 'undefined', 'missing Wasm export: lv_event_get_draw_ctx');
+  _lv_event_get_draw_ctx = Module['_lv_event_get_draw_ctx'] = createExportWrapper('lv_event_get_draw_ctx', 1);
+  assert(typeof wasmExports['lv_event_get_old_size'] != 'undefined', 'missing Wasm export: lv_event_get_old_size');
+  _lv_event_get_old_size = Module['_lv_event_get_old_size'] = createExportWrapper('lv_event_get_old_size', 1);
+  assert(typeof wasmExports['lv_event_get_key'] != 'undefined', 'missing Wasm export: lv_event_get_key');
+  _lv_event_get_key = Module['_lv_event_get_key'] = createExportWrapper('lv_event_get_key', 1);
+  assert(typeof wasmExports['lv_event_get_scroll_anim'] != 'undefined', 'missing Wasm export: lv_event_get_scroll_anim');
+  _lv_event_get_scroll_anim = Module['_lv_event_get_scroll_anim'] = createExportWrapper('lv_event_get_scroll_anim', 1);
+  assert(typeof wasmExports['lv_event_set_ext_draw_size'] != 'undefined', 'missing Wasm export: lv_event_set_ext_draw_size');
+  _lv_event_set_ext_draw_size = Module['_lv_event_set_ext_draw_size'] = createExportWrapper('lv_event_set_ext_draw_size', 2);
+  assert(typeof wasmExports['lv_event_get_self_size_info'] != 'undefined', 'missing Wasm export: lv_event_get_self_size_info');
+  _lv_event_get_self_size_info = Module['_lv_event_get_self_size_info'] = createExportWrapper('lv_event_get_self_size_info', 1);
+  assert(typeof wasmExports['lv_event_get_hit_test_info'] != 'undefined', 'missing Wasm export: lv_event_get_hit_test_info');
+  _lv_event_get_hit_test_info = Module['_lv_event_get_hit_test_info'] = createExportWrapper('lv_event_get_hit_test_info', 1);
+  assert(typeof wasmExports['lv_event_get_cover_area'] != 'undefined', 'missing Wasm export: lv_event_get_cover_area');
+  _lv_event_get_cover_area = Module['_lv_event_get_cover_area'] = createExportWrapper('lv_event_get_cover_area', 1);
+  assert(typeof wasmExports['lv_event_set_cover_res'] != 'undefined', 'missing Wasm export: lv_event_set_cover_res');
+  _lv_event_set_cover_res = Module['_lv_event_set_cover_res'] = createExportWrapper('lv_event_set_cover_res', 2);
+  assert(typeof wasmExports['lv_group_del'] != 'undefined', 'missing Wasm export: lv_group_del');
+  _lv_group_del = Module['_lv_group_del'] = createExportWrapper('lv_group_del', 1);
+  assert(typeof wasmExports['lv_indev_get_next'] != 'undefined', 'missing Wasm export: lv_indev_get_next');
+  _lv_indev_get_next = Module['_lv_indev_get_next'] = createExportWrapper('lv_indev_get_next', 1);
+  assert(typeof wasmExports['lv_indev_get_type'] != 'undefined', 'missing Wasm export: lv_indev_get_type');
+  _lv_indev_get_type = Module['_lv_indev_get_type'] = createExportWrapper('lv_indev_get_type', 1);
+  assert(typeof wasmExports['lv_group_set_default'] != 'undefined', 'missing Wasm export: lv_group_set_default');
+  _lv_group_set_default = Module['_lv_group_set_default'] = createExportWrapper('lv_group_set_default', 1);
+  assert(typeof wasmExports['lv_group_get_default'] != 'undefined', 'missing Wasm export: lv_group_get_default');
+  _lv_group_get_default = Module['_lv_group_get_default'] = createExportWrapper('lv_group_get_default', 0);
+  assert(typeof wasmExports['lv_group_remove_obj'] != 'undefined', 'missing Wasm export: lv_group_remove_obj');
+  _lv_group_remove_obj = Module['_lv_group_remove_obj'] = createExportWrapper('lv_group_remove_obj', 1);
+  assert(typeof wasmExports['lv_obj_get_group'] != 'undefined', 'missing Wasm export: lv_obj_get_group');
+  _lv_obj_get_group = Module['_lv_obj_get_group'] = createExportWrapper('lv_obj_get_group', 1);
+  assert(typeof wasmExports['lv_group_swap_obj'] != 'undefined', 'missing Wasm export: lv_group_swap_obj');
+  _lv_group_swap_obj = Module['_lv_group_swap_obj'] = createExportWrapper('lv_group_swap_obj', 2);
+  assert(typeof wasmExports['lv_group_focus_obj'] != 'undefined', 'missing Wasm export: lv_group_focus_obj');
+  _lv_group_focus_obj = Module['_lv_group_focus_obj'] = createExportWrapper('lv_group_focus_obj', 1);
+  assert(typeof wasmExports['lv_group_get_focused'] != 'undefined', 'missing Wasm export: lv_group_get_focused');
+  _lv_group_get_focused = Module['_lv_group_get_focused'] = createExportWrapper('lv_group_get_focused', 1);
+  assert(typeof wasmExports['lv_group_set_editing'] != 'undefined', 'missing Wasm export: lv_group_set_editing');
+  _lv_group_set_editing = Module['_lv_group_set_editing'] = createExportWrapper('lv_group_set_editing', 2);
+  assert(typeof wasmExports['lv_group_focus_next'] != 'undefined', 'missing Wasm export: lv_group_focus_next');
+  _lv_group_focus_next = Module['_lv_group_focus_next'] = createExportWrapper('lv_group_focus_next', 1);
+  assert(typeof wasmExports['lv_group_focus_prev'] != 'undefined', 'missing Wasm export: lv_group_focus_prev');
+  _lv_group_focus_prev = Module['_lv_group_focus_prev'] = createExportWrapper('lv_group_focus_prev', 1);
+  assert(typeof wasmExports['lv_group_focus_freeze'] != 'undefined', 'missing Wasm export: lv_group_focus_freeze');
+  _lv_group_focus_freeze = Module['_lv_group_focus_freeze'] = createExportWrapper('lv_group_focus_freeze', 2);
+  assert(typeof wasmExports['lv_group_send_data'] != 'undefined', 'missing Wasm export: lv_group_send_data');
+  _lv_group_send_data = Module['_lv_group_send_data'] = createExportWrapper('lv_group_send_data', 2);
+  assert(typeof wasmExports['lv_group_set_focus_cb'] != 'undefined', 'missing Wasm export: lv_group_set_focus_cb');
+  _lv_group_set_focus_cb = Module['_lv_group_set_focus_cb'] = createExportWrapper('lv_group_set_focus_cb', 2);
+  assert(typeof wasmExports['lv_group_set_edge_cb'] != 'undefined', 'missing Wasm export: lv_group_set_edge_cb');
+  _lv_group_set_edge_cb = Module['_lv_group_set_edge_cb'] = createExportWrapper('lv_group_set_edge_cb', 2);
+  assert(typeof wasmExports['lv_group_set_refocus_policy'] != 'undefined', 'missing Wasm export: lv_group_set_refocus_policy');
+  _lv_group_set_refocus_policy = Module['_lv_group_set_refocus_policy'] = createExportWrapper('lv_group_set_refocus_policy', 2);
+  assert(typeof wasmExports['lv_group_set_wrap'] != 'undefined', 'missing Wasm export: lv_group_set_wrap');
+  _lv_group_set_wrap = Module['_lv_group_set_wrap'] = createExportWrapper('lv_group_set_wrap', 2);
+  assert(typeof wasmExports['lv_group_get_focus_cb'] != 'undefined', 'missing Wasm export: lv_group_get_focus_cb');
+  _lv_group_get_focus_cb = Module['_lv_group_get_focus_cb'] = createExportWrapper('lv_group_get_focus_cb', 1);
+  assert(typeof wasmExports['lv_group_get_edge_cb'] != 'undefined', 'missing Wasm export: lv_group_get_edge_cb');
+  _lv_group_get_edge_cb = Module['_lv_group_get_edge_cb'] = createExportWrapper('lv_group_get_edge_cb', 1);
+  assert(typeof wasmExports['lv_group_get_editing'] != 'undefined', 'missing Wasm export: lv_group_get_editing');
+  _lv_group_get_editing = Module['_lv_group_get_editing'] = createExportWrapper('lv_group_get_editing', 1);
+  assert(typeof wasmExports['lv_group_get_wrap'] != 'undefined', 'missing Wasm export: lv_group_get_wrap');
+  _lv_group_get_wrap = Module['_lv_group_get_wrap'] = createExportWrapper('lv_group_get_wrap', 1);
+  assert(typeof wasmExports['lv_group_get_obj_count'] != 'undefined', 'missing Wasm export: lv_group_get_obj_count');
+  _lv_group_get_obj_count = Module['_lv_group_get_obj_count'] = createExportWrapper('lv_group_get_obj_count', 1);
+  assert(typeof wasmExports['lv_indev_read_timer_cb'] != 'undefined', 'missing Wasm export: lv_indev_read_timer_cb');
+  _lv_indev_read_timer_cb = Module['_lv_indev_read_timer_cb'] = createExportWrapper('lv_indev_read_timer_cb', 1);
+  assert(typeof wasmExports['lv_indev_enable'] != 'undefined', 'missing Wasm export: lv_indev_enable');
+  _lv_indev_enable = Module['_lv_indev_enable'] = createExportWrapper('lv_indev_enable', 2);
+  assert(typeof wasmExports['lv_obj_is_editable'] != 'undefined', 'missing Wasm export: lv_obj_is_editable');
+  _lv_obj_is_editable = Module['_lv_obj_is_editable'] = createExportWrapper('lv_obj_is_editable', 1);
+  assert(typeof wasmExports['lv_indev_reset'] != 'undefined', 'missing Wasm export: lv_indev_reset');
+  _lv_indev_reset = Module['_lv_indev_reset'] = createExportWrapper('lv_indev_reset', 2);
+  assert(typeof wasmExports['lv_indev_reset_long_press'] != 'undefined', 'missing Wasm export: lv_indev_reset_long_press');
+  _lv_indev_reset_long_press = Module['_lv_indev_reset_long_press'] = createExportWrapper('lv_indev_reset_long_press', 1);
+  assert(typeof wasmExports['lv_indev_set_cursor'] != 'undefined', 'missing Wasm export: lv_indev_set_cursor');
+  _lv_indev_set_cursor = Module['_lv_indev_set_cursor'] = createExportWrapper('lv_indev_set_cursor', 2);
+  assert(typeof wasmExports['lv_obj_set_parent'] != 'undefined', 'missing Wasm export: lv_obj_set_parent');
+  _lv_obj_set_parent = Module['_lv_obj_set_parent'] = createExportWrapper('lv_obj_set_parent', 2);
+  assert(typeof wasmExports['lv_indev_set_button_points'] != 'undefined', 'missing Wasm export: lv_indev_set_button_points');
+  _lv_indev_set_button_points = Module['_lv_indev_set_button_points'] = createExportWrapper('lv_indev_set_button_points', 2);
+  assert(typeof wasmExports['lv_indev_get_point'] != 'undefined', 'missing Wasm export: lv_indev_get_point');
+  _lv_indev_get_point = Module['_lv_indev_get_point'] = createExportWrapper('lv_indev_get_point', 2);
+  assert(typeof wasmExports['lv_indev_get_gesture_dir'] != 'undefined', 'missing Wasm export: lv_indev_get_gesture_dir');
+  _lv_indev_get_gesture_dir = Module['_lv_indev_get_gesture_dir'] = createExportWrapper('lv_indev_get_gesture_dir', 1);
+  assert(typeof wasmExports['lv_indev_get_key'] != 'undefined', 'missing Wasm export: lv_indev_get_key');
+  _lv_indev_get_key = Module['_lv_indev_get_key'] = createExportWrapper('lv_indev_get_key', 1);
+  assert(typeof wasmExports['lv_indev_get_scroll_dir'] != 'undefined', 'missing Wasm export: lv_indev_get_scroll_dir');
+  _lv_indev_get_scroll_dir = Module['_lv_indev_get_scroll_dir'] = createExportWrapper('lv_indev_get_scroll_dir', 1);
+  assert(typeof wasmExports['lv_indev_get_scroll_obj'] != 'undefined', 'missing Wasm export: lv_indev_get_scroll_obj');
+  _lv_indev_get_scroll_obj = Module['_lv_indev_get_scroll_obj'] = createExportWrapper('lv_indev_get_scroll_obj', 1);
+  assert(typeof wasmExports['lv_indev_get_vect'] != 'undefined', 'missing Wasm export: lv_indev_get_vect');
+  _lv_indev_get_vect = Module['_lv_indev_get_vect'] = createExportWrapper('lv_indev_get_vect', 2);
+  assert(typeof wasmExports['lv_indev_wait_release'] != 'undefined', 'missing Wasm export: lv_indev_wait_release');
+  _lv_indev_wait_release = Module['_lv_indev_wait_release'] = createExportWrapper('lv_indev_wait_release', 1);
+  assert(typeof wasmExports['lv_indev_get_obj_act'] != 'undefined', 'missing Wasm export: lv_indev_get_obj_act');
+  _lv_indev_get_obj_act = Module['_lv_indev_get_obj_act'] = createExportWrapper('lv_indev_get_obj_act', 0);
+  assert(typeof wasmExports['lv_indev_get_read_timer'] != 'undefined', 'missing Wasm export: lv_indev_get_read_timer');
+  _lv_indev_get_read_timer = Module['_lv_indev_get_read_timer'] = createExportWrapper('lv_indev_get_read_timer', 1);
+  assert(typeof wasmExports['lv_indev_search_obj'] != 'undefined', 'missing Wasm export: lv_indev_search_obj');
+  _lv_indev_search_obj = Module['_lv_indev_search_obj'] = createExportWrapper('lv_indev_search_obj', 2);
+  assert(typeof wasmExports['lv_obj_transform_point'] != 'undefined', 'missing Wasm export: lv_obj_transform_point');
+  _lv_obj_transform_point = Module['_lv_obj_transform_point'] = createExportWrapper('lv_obj_transform_point', 4);
+  assert(typeof wasmExports['lv_obj_hit_test'] != 'undefined', 'missing Wasm export: lv_obj_hit_test');
+  _lv_obj_hit_test = Module['_lv_obj_hit_test'] = createExportWrapper('lv_obj_hit_test', 2);
+  assert(typeof wasmExports['lv_point_transform'] != 'undefined', 'missing Wasm export: lv_point_transform');
+  _lv_point_transform = Module['_lv_point_transform'] = createExportWrapper('lv_point_transform', 4);
+  assert(typeof wasmExports['lv_obj_get_scroll_dir'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_dir');
+  _lv_obj_get_scroll_dir = Module['_lv_obj_get_scroll_dir'] = createExportWrapper('lv_obj_get_scroll_dir', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_top'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_top');
+  _lv_obj_get_scroll_top = Module['_lv_obj_get_scroll_top'] = createExportWrapper('lv_obj_get_scroll_top', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_bottom'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_bottom');
+  _lv_obj_get_scroll_bottom = Module['_lv_obj_get_scroll_bottom'] = createExportWrapper('lv_obj_get_scroll_bottom', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_left'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_left');
+  _lv_obj_get_scroll_left = Module['_lv_obj_get_scroll_left'] = createExportWrapper('lv_obj_get_scroll_left', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_right'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_right');
+  _lv_obj_get_scroll_right = Module['_lv_obj_get_scroll_right'] = createExportWrapper('lv_obj_get_scroll_right', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_snap_y'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_snap_y');
+  _lv_obj_get_scroll_snap_y = Module['_lv_obj_get_scroll_snap_y'] = createExportWrapper('lv_obj_get_scroll_snap_y', 1);
+  assert(typeof wasmExports['lv_obj_get_scroll_snap_x'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_snap_x');
+  _lv_obj_get_scroll_snap_x = Module['_lv_obj_get_scroll_snap_x'] = createExportWrapper('lv_obj_get_scroll_snap_x', 1);
+  assert(typeof wasmExports['lv_obj_scroll_by'] != 'undefined', 'missing Wasm export: lv_obj_scroll_by');
+  _lv_obj_scroll_by = Module['_lv_obj_scroll_by'] = createExportWrapper('lv_obj_scroll_by', 4);
+  assert(typeof wasmExports['lv_obj_has_flag_any'] != 'undefined', 'missing Wasm export: lv_obj_has_flag_any');
+  _lv_obj_has_flag_any = Module['_lv_obj_has_flag_any'] = createExportWrapper('lv_obj_has_flag_any', 2);
+  assert(typeof wasmExports['lv_indev_scroll_throw_predict'] != 'undefined', 'missing Wasm export: lv_indev_scroll_throw_predict');
+  _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = createExportWrapper('lv_indev_scroll_throw_predict', 2);
+  assert(typeof wasmExports['lv_indev_scroll_get_snap_dist'] != 'undefined', 'missing Wasm export: lv_indev_scroll_get_snap_dist');
+  _lv_indev_scroll_get_snap_dist = Module['_lv_indev_scroll_get_snap_dist'] = createExportWrapper('lv_indev_scroll_get_snap_dist', 2);
+  assert(typeof wasmExports['lv_is_initialized'] != 'undefined', 'missing Wasm export: lv_is_initialized');
+  _lv_is_initialized = Module['_lv_is_initialized'] = createExportWrapper('lv_is_initialized', 0);
+  assert(typeof wasmExports['lv_obj_enable_style_refresh'] != 'undefined', 'missing Wasm export: lv_obj_enable_style_refresh');
+  _lv_obj_enable_style_refresh = Module['_lv_obj_enable_style_refresh'] = createExportWrapper('lv_obj_enable_style_refresh', 1);
+  assert(typeof wasmExports['lv_obj_mark_layout_as_dirty'] != 'undefined', 'missing Wasm export: lv_obj_mark_layout_as_dirty');
+  _lv_obj_mark_layout_as_dirty = Module['_lv_obj_mark_layout_as_dirty'] = createExportWrapper('lv_obj_mark_layout_as_dirty', 1);
+  assert(typeof wasmExports['lv_obj_scroll_to_y'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to_y');
+  _lv_obj_scroll_to_y = Module['_lv_obj_scroll_to_y'] = createExportWrapper('lv_obj_scroll_to_y', 3);
+  assert(typeof wasmExports['lv_obj_scroll_to_x'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to_x');
+  _lv_obj_scroll_to_x = Module['_lv_obj_scroll_to_x'] = createExportWrapper('lv_obj_scroll_to_x', 3);
+  assert(typeof wasmExports['lv_obj_scroll_to_view_recursive'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to_view_recursive');
+  _lv_obj_scroll_to_view_recursive = Module['_lv_obj_scroll_to_view_recursive'] = createExportWrapper('lv_obj_scroll_to_view_recursive', 2);
+  assert(typeof wasmExports['lv_obj_get_scrollbar_mode'] != 'undefined', 'missing Wasm export: lv_obj_get_scrollbar_mode');
+  _lv_obj_get_scrollbar_mode = Module['_lv_obj_get_scrollbar_mode'] = createExportWrapper('lv_obj_get_scrollbar_mode', 1);
+  assert(typeof wasmExports['lv_obj_get_scrollbar_area'] != 'undefined', 'missing Wasm export: lv_obj_get_scrollbar_area');
+  _lv_obj_get_scrollbar_area = Module['_lv_obj_get_scrollbar_area'] = createExportWrapper('lv_obj_get_scrollbar_area', 3);
+  assert(typeof wasmExports['lv_obj_invalidate_area'] != 'undefined', 'missing Wasm export: lv_obj_invalidate_area');
+  _lv_obj_invalidate_area = Module['_lv_obj_invalidate_area'] = createExportWrapper('lv_obj_invalidate_area', 2);
+  assert(typeof wasmExports['lv_obj_calculate_ext_draw_size'] != 'undefined', 'missing Wasm export: lv_obj_calculate_ext_draw_size');
+  _lv_obj_calculate_ext_draw_size = Module['_lv_obj_calculate_ext_draw_size'] = createExportWrapper('lv_obj_calculate_ext_draw_size', 2);
+  assert(typeof wasmExports['lv_draw_rect_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_rect_dsc_init');
+  _lv_draw_rect_dsc_init = Module['_lv_draw_rect_dsc_init'] = createExportWrapper('lv_draw_rect_dsc_init', 1);
+  assert(typeof wasmExports['lv_obj_init_draw_rect_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_rect_dsc');
+  _lv_obj_init_draw_rect_dsc = Module['_lv_obj_init_draw_rect_dsc'] = createExportWrapper('lv_obj_init_draw_rect_dsc', 3);
+  assert(typeof wasmExports['lv_obj_draw_dsc_init'] != 'undefined', 'missing Wasm export: lv_obj_draw_dsc_init');
+  _lv_obj_draw_dsc_init = Module['_lv_obj_draw_dsc_init'] = createExportWrapper('lv_obj_draw_dsc_init', 2);
+  assert(typeof wasmExports['lv_draw_rect'] != 'undefined', 'missing Wasm export: lv_draw_rect');
+  _lv_draw_rect = Module['_lv_draw_rect'] = createExportWrapper('lv_draw_rect', 3);
+  assert(typeof wasmExports['lv_mem_buf_get'] != 'undefined', 'missing Wasm export: lv_mem_buf_get');
+  _lv_mem_buf_get = Module['_lv_mem_buf_get'] = createExportWrapper('lv_mem_buf_get', 1);
+  assert(typeof wasmExports['lv_draw_mask_radius_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_radius_init');
+  _lv_draw_mask_radius_init = Module['_lv_draw_mask_radius_init'] = createExportWrapper('lv_draw_mask_radius_init', 4);
+  assert(typeof wasmExports['lv_draw_mask_add'] != 'undefined', 'missing Wasm export: lv_draw_mask_add');
+  _lv_draw_mask_add = Module['_lv_draw_mask_add'] = createExportWrapper('lv_draw_mask_add', 2);
+  assert(typeof wasmExports['lv_area_get_size'] != 'undefined', 'missing Wasm export: lv_area_get_size');
+  _lv_area_get_size = Module['_lv_area_get_size'] = createExportWrapper('lv_area_get_size', 1);
+  assert(typeof wasmExports['lv_obj_get_style_opa_recursive'] != 'undefined', 'missing Wasm export: lv_obj_get_style_opa_recursive');
+  _lv_obj_get_style_opa_recursive = Module['_lv_obj_get_style_opa_recursive'] = createExportWrapper('lv_obj_get_style_opa_recursive', 2);
+  assert(typeof wasmExports['lv_draw_mask_remove_custom'] != 'undefined', 'missing Wasm export: lv_draw_mask_remove_custom');
+  _lv_draw_mask_remove_custom = Module['_lv_draw_mask_remove_custom'] = createExportWrapper('lv_draw_mask_remove_custom', 1);
+  assert(typeof wasmExports['lv_draw_mask_free_param'] != 'undefined', 'missing Wasm export: lv_draw_mask_free_param');
+  _lv_draw_mask_free_param = Module['_lv_draw_mask_free_param'] = createExportWrapper('lv_draw_mask_free_param', 1);
+  assert(typeof wasmExports['lv_mem_buf_release'] != 'undefined', 'missing Wasm export: lv_mem_buf_release');
+  _lv_mem_buf_release = Module['_lv_mem_buf_release'] = createExportWrapper('lv_mem_buf_release', 1);
+  assert(typeof wasmExports['lv_mem_init'] != 'undefined', 'missing Wasm export: lv_mem_init');
+  _lv_mem_init = Module['_lv_mem_init'] = createExportWrapper('lv_mem_init', 0);
+  assert(typeof wasmExports['lv_draw_init'] != 'undefined', 'missing Wasm export: lv_draw_init');
+  _lv_draw_init = Module['_lv_draw_init'] = createExportWrapper('lv_draw_init', 0);
+  assert(typeof wasmExports['lv_extra_init'] != 'undefined', 'missing Wasm export: lv_extra_init');
+  _lv_extra_init = Module['_lv_extra_init'] = createExportWrapper('lv_extra_init', 0);
+  assert(typeof wasmExports['lv_deinit'] != 'undefined', 'missing Wasm export: lv_deinit');
+  _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit', 0);
+  assert(typeof wasmExports['lv_disp_set_default'] != 'undefined', 'missing Wasm export: lv_disp_set_default');
+  _lv_disp_set_default = Module['_lv_disp_set_default'] = createExportWrapper('lv_disp_set_default', 1);
+  assert(typeof wasmExports['lv_mem_deinit'] != 'undefined', 'missing Wasm export: lv_mem_deinit');
+  _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit', 0);
+  assert(typeof wasmExports['lv_log_register_print_cb'] != 'undefined', 'missing Wasm export: lv_log_register_print_cb');
+  _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = createExportWrapper('lv_log_register_print_cb', 1);
+  assert(typeof wasmExports['lv_obj_class_create_obj'] != 'undefined', 'missing Wasm export: lv_obj_class_create_obj');
+  _lv_obj_class_create_obj = Module['_lv_obj_class_create_obj'] = createExportWrapper('lv_obj_class_create_obj', 2);
+  assert(typeof wasmExports['lv_obj_class_init_obj'] != 'undefined', 'missing Wasm export: lv_obj_class_init_obj');
+  _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = createExportWrapper('lv_obj_class_init_obj', 1);
+  assert(typeof wasmExports['lv_obj_is_layout_positioned'] != 'undefined', 'missing Wasm export: lv_obj_is_layout_positioned');
+  _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = createExportWrapper('lv_obj_is_layout_positioned', 1);
+  assert(typeof wasmExports['lv_obj_style_get_selector_state'] != 'undefined', 'missing Wasm export: lv_obj_style_get_selector_state');
+  _lv_obj_style_get_selector_state = Module['_lv_obj_style_get_selector_state'] = createExportWrapper('lv_obj_style_get_selector_state', 1);
+  assert(typeof wasmExports['lv_obj_style_get_selector_part'] != 'undefined', 'missing Wasm export: lv_obj_style_get_selector_part');
+  _lv_obj_style_get_selector_part = Module['_lv_obj_style_get_selector_part'] = createExportWrapper('lv_obj_style_get_selector_part', 1);
+  assert(typeof wasmExports['lv_style_prop_get_default'] != 'undefined', 'missing Wasm export: lv_style_prop_get_default');
+  _lv_style_prop_get_default = Module['_lv_style_prop_get_default'] = createExportWrapper('lv_style_prop_get_default', 2);
+  assert(typeof wasmExports['lv_obj_refresh_style'] != 'undefined', 'missing Wasm export: lv_obj_refresh_style');
+  _lv_obj_refresh_style = Module['_lv_obj_refresh_style'] = createExportWrapper('lv_obj_refresh_style', 3);
+  assert(typeof wasmExports['lv_obj_refresh_ext_draw_size'] != 'undefined', 'missing Wasm export: lv_obj_refresh_ext_draw_size');
+  _lv_obj_refresh_ext_draw_size = Module['_lv_obj_refresh_ext_draw_size'] = createExportWrapper('lv_obj_refresh_ext_draw_size', 1);
+  assert(typeof wasmExports['lv_obj_check_type'] != 'undefined', 'missing Wasm export: lv_obj_check_type');
+  _lv_obj_check_type = Module['_lv_obj_check_type'] = createExportWrapper('lv_obj_check_type', 2);
+  assert(typeof wasmExports['lv_obj_has_class'] != 'undefined', 'missing Wasm export: lv_obj_has_class');
+  _lv_obj_has_class = Module['_lv_obj_has_class'] = createExportWrapper('lv_obj_has_class', 2);
+  assert(typeof wasmExports['lv_obj_get_class'] != 'undefined', 'missing Wasm export: lv_obj_get_class');
+  _lv_obj_get_class = Module['_lv_obj_get_class'] = createExportWrapper('lv_obj_get_class', 1);
+  assert(typeof wasmExports['lv_obj_is_valid'] != 'undefined', 'missing Wasm export: lv_obj_is_valid');
+  _lv_obj_is_valid = Module['_lv_obj_is_valid'] = createExportWrapper('lv_obj_is_valid', 1);
+  assert(typeof wasmExports['lv_obj_refresh_self_size'] != 'undefined', 'missing Wasm export: lv_obj_refresh_self_size');
+  _lv_obj_refresh_self_size = Module['_lv_obj_refresh_self_size'] = createExportWrapper('lv_obj_refresh_self_size', 1);
+  assert(typeof wasmExports['lv_obj_is_group_def'] != 'undefined', 'missing Wasm export: lv_obj_is_group_def');
+  _lv_obj_is_group_def = Module['_lv_obj_is_group_def'] = createExportWrapper('lv_obj_is_group_def', 1);
+  assert(typeof wasmExports['lv_img_src_get_type'] != 'undefined', 'missing Wasm export: lv_img_src_get_type');
+  _lv_img_src_get_type = Module['_lv_img_src_get_type'] = createExportWrapper('lv_img_src_get_type', 1);
+  assert(typeof wasmExports['lv_obj_init_draw_label_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_label_dsc');
+  _lv_obj_init_draw_label_dsc = Module['_lv_obj_init_draw_label_dsc'] = createExportWrapper('lv_obj_init_draw_label_dsc', 3);
+  assert(typeof wasmExports['lv_obj_init_draw_img_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_img_dsc');
+  _lv_obj_init_draw_img_dsc = Module['_lv_obj_init_draw_img_dsc'] = createExportWrapper('lv_obj_init_draw_img_dsc', 3);
+  assert(typeof wasmExports['lv_obj_init_draw_line_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_line_dsc');
+  _lv_obj_init_draw_line_dsc = Module['_lv_obj_init_draw_line_dsc'] = createExportWrapper('lv_obj_init_draw_line_dsc', 3);
+  assert(typeof wasmExports['lv_obj_init_draw_arc_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_arc_dsc');
+  _lv_obj_init_draw_arc_dsc = Module['_lv_obj_init_draw_arc_dsc'] = createExportWrapper('lv_obj_init_draw_arc_dsc', 3);
+  assert(typeof wasmExports['lv_obj_draw_part_check_type'] != 'undefined', 'missing Wasm export: lv_obj_draw_part_check_type');
+  _lv_obj_draw_part_check_type = Module['_lv_obj_draw_part_check_type'] = createExportWrapper('lv_obj_draw_part_check_type', 3);
+  assert(typeof wasmExports['lv_obj_get_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_get_local_style_prop');
+  _lv_obj_get_local_style_prop = Module['_lv_obj_get_local_style_prop'] = createExportWrapper('lv_obj_get_local_style_prop', 4);
+  assert(typeof wasmExports['lv_obj_set_style_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_x');
+  _lv_obj_set_style_x = Module['_lv_obj_set_style_x'] = createExportWrapper('lv_obj_set_style_x', 3);
+  assert(typeof wasmExports['lv_obj_set_style_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_y');
+  _lv_obj_set_style_y = Module['_lv_obj_set_style_y'] = createExportWrapper('lv_obj_set_style_y', 3);
+  assert(typeof wasmExports['lv_obj_refr_size'] != 'undefined', 'missing Wasm export: lv_obj_refr_size');
+  _lv_obj_refr_size = Module['_lv_obj_refr_size'] = createExportWrapper('lv_obj_refr_size', 1);
+  assert(typeof wasmExports['lv_obj_get_content_coords'] != 'undefined', 'missing Wasm export: lv_obj_get_content_coords');
+  _lv_obj_get_content_coords = Module['_lv_obj_get_content_coords'] = createExportWrapper('lv_obj_get_content_coords', 2);
+  assert(typeof wasmExports['lv_obj_scrollbar_invalidate'] != 'undefined', 'missing Wasm export: lv_obj_scrollbar_invalidate');
+  _lv_obj_scrollbar_invalidate = Module['_lv_obj_scrollbar_invalidate'] = createExportWrapper('lv_obj_scrollbar_invalidate', 1);
+  assert(typeof wasmExports['lv_obj_get_content_width'] != 'undefined', 'missing Wasm export: lv_obj_get_content_width');
+  _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = createExportWrapper('lv_obj_get_content_width', 1);
+  assert(typeof wasmExports['lv_clamp_width'] != 'undefined', 'missing Wasm export: lv_clamp_width');
+  _lv_clamp_width = Module['_lv_clamp_width'] = createExportWrapper('lv_clamp_width', 4);
+  assert(typeof wasmExports['lv_obj_get_content_height'] != 'undefined', 'missing Wasm export: lv_obj_get_content_height');
+  _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = createExportWrapper('lv_obj_get_content_height', 1);
+  assert(typeof wasmExports['lv_clamp_height'] != 'undefined', 'missing Wasm export: lv_clamp_height');
+  _lv_clamp_height = Module['_lv_clamp_height'] = createExportWrapper('lv_clamp_height', 4);
+  assert(typeof wasmExports['lv_obj_area_is_visible'] != 'undefined', 'missing Wasm export: lv_obj_area_is_visible');
+  _lv_obj_area_is_visible = Module['_lv_obj_area_is_visible'] = createExportWrapper('lv_obj_area_is_visible', 2);
+  assert(typeof wasmExports['lv_obj_get_coords'] != 'undefined', 'missing Wasm export: lv_obj_get_coords');
+  _lv_obj_get_coords = Module['_lv_obj_get_coords'] = createExportWrapper('lv_obj_get_coords', 2);
+  assert(typeof wasmExports['lv_area_increase'] != 'undefined', 'missing Wasm export: lv_area_increase');
+  _lv_area_increase = Module['_lv_area_increase'] = createExportWrapper('lv_area_increase', 3);
+  assert(typeof wasmExports['lv_obj_set_style_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_width');
+  _lv_obj_set_style_width = Module['_lv_obj_set_style_width'] = createExportWrapper('lv_obj_set_style_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_height');
+  _lv_obj_set_style_height = Module['_lv_obj_set_style_height'] = createExportWrapper('lv_obj_set_style_height', 3);
+  assert(typeof wasmExports['lv_obj_set_width'] != 'undefined', 'missing Wasm export: lv_obj_set_width');
+  _lv_obj_set_width = Module['_lv_obj_set_width'] = createExportWrapper('lv_obj_set_width', 2);
+  assert(typeof wasmExports['lv_obj_set_height'] != 'undefined', 'missing Wasm export: lv_obj_set_height');
+  _lv_obj_set_height = Module['_lv_obj_set_height'] = createExportWrapper('lv_obj_set_height', 2);
+  assert(typeof wasmExports['lv_obj_set_content_width'] != 'undefined', 'missing Wasm export: lv_obj_set_content_width');
+  _lv_obj_set_content_width = Module['_lv_obj_set_content_width'] = createExportWrapper('lv_obj_set_content_width', 2);
+  assert(typeof wasmExports['lv_obj_set_content_height'] != 'undefined', 'missing Wasm export: lv_obj_set_content_height');
+  _lv_obj_set_content_height = Module['_lv_obj_set_content_height'] = createExportWrapper('lv_obj_set_content_height', 2);
+  assert(typeof wasmExports['lv_obj_set_layout'] != 'undefined', 'missing Wasm export: lv_obj_set_layout');
+  _lv_obj_set_layout = Module['_lv_obj_set_layout'] = createExportWrapper('lv_obj_set_layout', 2);
+  assert(typeof wasmExports['lv_obj_set_style_layout'] != 'undefined', 'missing Wasm export: lv_obj_set_style_layout');
+  _lv_obj_set_style_layout = Module['_lv_obj_set_style_layout'] = createExportWrapper('lv_obj_set_style_layout', 3);
+  assert(typeof wasmExports['lv_obj_get_screen'] != 'undefined', 'missing Wasm export: lv_obj_get_screen');
+  _lv_obj_get_screen = Module['_lv_obj_get_screen'] = createExportWrapper('lv_obj_get_screen', 1);
+  assert(typeof wasmExports['lv_timer_resume'] != 'undefined', 'missing Wasm export: lv_timer_resume');
+  _lv_timer_resume = Module['_lv_timer_resume'] = createExportWrapper('lv_timer_resume', 1);
+  assert(typeof wasmExports['lv_obj_refr_pos'] != 'undefined', 'missing Wasm export: lv_obj_refr_pos');
+  _lv_obj_refr_pos = Module['_lv_obj_refr_pos'] = createExportWrapper('lv_obj_refr_pos', 1);
+  assert(typeof wasmExports['lv_obj_readjust_scroll'] != 'undefined', 'missing Wasm export: lv_obj_readjust_scroll');
+  _lv_obj_readjust_scroll = Module['_lv_obj_readjust_scroll'] = createExportWrapper('lv_obj_readjust_scroll', 2);
+  assert(typeof wasmExports['lv_layout_register'] != 'undefined', 'missing Wasm export: lv_layout_register');
+  _lv_layout_register = Module['_lv_layout_register'] = createExportWrapper('lv_layout_register', 2);
+  assert(typeof wasmExports['lv_obj_set_align'] != 'undefined', 'missing Wasm export: lv_obj_set_align');
+  _lv_obj_set_align = Module['_lv_obj_set_align'] = createExportWrapper('lv_obj_set_align', 2);
+  assert(typeof wasmExports['lv_obj_set_style_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_align');
+  _lv_obj_set_style_align = Module['_lv_obj_set_style_align'] = createExportWrapper('lv_obj_set_style_align', 3);
+  assert(typeof wasmExports['lv_obj_align'] != 'undefined', 'missing Wasm export: lv_obj_align');
+  _lv_obj_align = Module['_lv_obj_align'] = createExportWrapper('lv_obj_align', 4);
+  assert(typeof wasmExports['lv_obj_align_to'] != 'undefined', 'missing Wasm export: lv_obj_align_to');
+  _lv_obj_align_to = Module['_lv_obj_align_to'] = createExportWrapper('lv_obj_align_to', 5);
+  assert(typeof wasmExports['lv_obj_get_x'] != 'undefined', 'missing Wasm export: lv_obj_get_x');
+  _lv_obj_get_x = Module['_lv_obj_get_x'] = createExportWrapper('lv_obj_get_x', 1);
+  assert(typeof wasmExports['lv_obj_get_x2'] != 'undefined', 'missing Wasm export: lv_obj_get_x2');
+  _lv_obj_get_x2 = Module['_lv_obj_get_x2'] = createExportWrapper('lv_obj_get_x2', 1);
+  assert(typeof wasmExports['lv_obj_get_y'] != 'undefined', 'missing Wasm export: lv_obj_get_y');
+  _lv_obj_get_y = Module['_lv_obj_get_y'] = createExportWrapper('lv_obj_get_y', 1);
+  assert(typeof wasmExports['lv_obj_get_y2'] != 'undefined', 'missing Wasm export: lv_obj_get_y2');
+  _lv_obj_get_y2 = Module['_lv_obj_get_y2'] = createExportWrapper('lv_obj_get_y2', 1);
+  assert(typeof wasmExports['lv_obj_get_x_aligned'] != 'undefined', 'missing Wasm export: lv_obj_get_x_aligned');
+  _lv_obj_get_x_aligned = Module['_lv_obj_get_x_aligned'] = createExportWrapper('lv_obj_get_x_aligned', 1);
+  assert(typeof wasmExports['lv_obj_get_y_aligned'] != 'undefined', 'missing Wasm export: lv_obj_get_y_aligned');
+  _lv_obj_get_y_aligned = Module['_lv_obj_get_y_aligned'] = createExportWrapper('lv_obj_get_y_aligned', 1);
+  assert(typeof wasmExports['lv_obj_get_self_width'] != 'undefined', 'missing Wasm export: lv_obj_get_self_width');
+  _lv_obj_get_self_width = Module['_lv_obj_get_self_width'] = createExportWrapper('lv_obj_get_self_width', 1);
+  assert(typeof wasmExports['lv_obj_get_self_height'] != 'undefined', 'missing Wasm export: lv_obj_get_self_height');
+  _lv_obj_get_self_height = Module['_lv_obj_get_self_height'] = createExportWrapper('lv_obj_get_self_height', 1);
+  assert(typeof wasmExports['lv_obj_move_to'] != 'undefined', 'missing Wasm export: lv_obj_move_to');
+  _lv_obj_move_to = Module['_lv_obj_move_to'] = createExportWrapper('lv_obj_move_to', 3);
+  assert(typeof wasmExports['lv_obj_move_children_by'] != 'undefined', 'missing Wasm export: lv_obj_move_children_by');
+  _lv_obj_move_children_by = Module['_lv_obj_move_children_by'] = createExportWrapper('lv_obj_move_children_by', 4);
+  assert(typeof wasmExports['lv_obj_get_transformed_area'] != 'undefined', 'missing Wasm export: lv_obj_get_transformed_area');
+  _lv_obj_get_transformed_area = Module['_lv_obj_get_transformed_area'] = createExportWrapper('lv_obj_get_transformed_area', 4);
+  assert(typeof wasmExports['lv_obj_is_visible'] != 'undefined', 'missing Wasm export: lv_obj_is_visible');
+  _lv_obj_is_visible = Module['_lv_obj_is_visible'] = createExportWrapper('lv_obj_is_visible', 1);
+  assert(typeof wasmExports['lv_obj_set_ext_click_area'] != 'undefined', 'missing Wasm export: lv_obj_set_ext_click_area');
+  _lv_obj_set_ext_click_area = Module['_lv_obj_set_ext_click_area'] = createExportWrapper('lv_obj_set_ext_click_area', 2);
+  assert(typeof wasmExports['lv_obj_get_click_area'] != 'undefined', 'missing Wasm export: lv_obj_get_click_area');
+  _lv_obj_get_click_area = Module['_lv_obj_get_click_area'] = createExportWrapper('lv_obj_get_click_area', 2);
+  assert(typeof wasmExports['lv_obj_get_scroll_end'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_end');
+  _lv_obj_get_scroll_end = Module['_lv_obj_get_scroll_end'] = createExportWrapper('lv_obj_get_scroll_end', 2);
+  assert(typeof wasmExports['lv_anim_get'] != 'undefined', 'missing Wasm export: lv_anim_get');
+  _lv_anim_get = Module['_lv_anim_get'] = createExportWrapper('lv_anim_get', 2);
+  assert(typeof wasmExports['lv_obj_scroll_by_bounded'] != 'undefined', 'missing Wasm export: lv_obj_scroll_by_bounded');
+  _lv_obj_scroll_by_bounded = Module['_lv_obj_scroll_by_bounded'] = createExportWrapper('lv_obj_scroll_by_bounded', 4);
+  assert(typeof wasmExports['lv_anim_speed_to_time'] != 'undefined', 'missing Wasm export: lv_anim_speed_to_time');
+  _lv_anim_speed_to_time = Module['_lv_anim_speed_to_time'] = createExportWrapper('lv_anim_speed_to_time', 3);
+  assert(typeof wasmExports['lv_anim_path_ease_out'] != 'undefined', 'missing Wasm export: lv_anim_path_ease_out');
+  _lv_anim_path_ease_out = Module['_lv_anim_path_ease_out'] = createExportWrapper('lv_anim_path_ease_out', 1);
+  assert(typeof wasmExports['lv_obj_scroll_to_view'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to_view');
+  _lv_obj_scroll_to_view = Module['_lv_obj_scroll_to_view'] = createExportWrapper('lv_obj_scroll_to_view', 2);
+  assert(typeof wasmExports['lv_obj_is_scrolling'] != 'undefined', 'missing Wasm export: lv_obj_is_scrolling');
+  _lv_obj_is_scrolling = Module['_lv_obj_is_scrolling'] = createExportWrapper('lv_obj_is_scrolling', 1);
+  assert(typeof wasmExports['lv_obj_update_snap'] != 'undefined', 'missing Wasm export: lv_obj_update_snap');
+  _lv_obj_update_snap = Module['_lv_obj_update_snap'] = createExportWrapper('lv_obj_update_snap', 2);
+  assert(typeof wasmExports['lv_disp_get_dpi'] != 'undefined', 'missing Wasm export: lv_disp_get_dpi');
+  _lv_disp_get_dpi = Module['_lv_disp_get_dpi'] = createExportWrapper('lv_disp_get_dpi', 1);
+  assert(typeof wasmExports['lv_style_remove_prop'] != 'undefined', 'missing Wasm export: lv_style_remove_prop');
+  _lv_style_remove_prop = Module['_lv_style_remove_prop'] = createExportWrapper('lv_style_remove_prop', 2);
+  assert(typeof wasmExports['lv_style_reset'] != 'undefined', 'missing Wasm export: lv_style_reset');
+  _lv_style_reset = Module['_lv_style_reset'] = createExportWrapper('lv_style_reset', 1);
+  assert(typeof wasmExports['lv_obj_report_style_change'] != 'undefined', 'missing Wasm export: lv_obj_report_style_change');
+  _lv_obj_report_style_change = Module['_lv_obj_report_style_change'] = createExportWrapper('lv_obj_report_style_change', 1);
+  assert(typeof wasmExports['lv_style_get_prop'] != 'undefined', 'missing Wasm export: lv_style_get_prop');
+  _lv_style_get_prop = Module['_lv_style_get_prop'] = createExportWrapper('lv_style_get_prop', 3);
+  assert(typeof wasmExports['lv_obj_set_local_style_prop_meta'] != 'undefined', 'missing Wasm export: lv_obj_set_local_style_prop_meta');
+  _lv_obj_set_local_style_prop_meta = Module['_lv_obj_set_local_style_prop_meta'] = createExportWrapper('lv_obj_set_local_style_prop_meta', 4);
+  assert(typeof wasmExports['lv_style_set_prop_meta'] != 'undefined', 'missing Wasm export: lv_style_set_prop_meta');
+  _lv_style_set_prop_meta = Module['_lv_style_set_prop_meta'] = createExportWrapper('lv_style_set_prop_meta', 3);
+  assert(typeof wasmExports['lv_style_is_empty'] != 'undefined', 'missing Wasm export: lv_style_is_empty');
+  _lv_style_is_empty = Module['_lv_style_is_empty'] = createExportWrapper('lv_style_is_empty', 1);
+  assert(typeof wasmExports['lv_obj_fade_in'] != 'undefined', 'missing Wasm export: lv_obj_fade_in');
+  _lv_obj_fade_in = Module['_lv_obj_fade_in'] = createExportWrapper('lv_obj_fade_in', 3);
+  assert(typeof wasmExports['lv_obj_fade_out'] != 'undefined', 'missing Wasm export: lv_obj_fade_out');
+  _lv_obj_fade_out = Module['_lv_obj_fade_out'] = createExportWrapper('lv_obj_fade_out', 3);
+  assert(typeof wasmExports['lv_obj_calculate_style_text_align'] != 'undefined', 'missing Wasm export: lv_obj_calculate_style_text_align');
+  _lv_obj_calculate_style_text_align = Module['_lv_obj_calculate_style_text_align'] = createExportWrapper('lv_obj_calculate_style_text_align', 3);
+  assert(typeof wasmExports['lv_bidi_calculate_align'] != 'undefined', 'missing Wasm export: lv_bidi_calculate_align');
+  _lv_bidi_calculate_align = Module['_lv_bidi_calculate_align'] = createExportWrapper('lv_bidi_calculate_align', 3);
+  assert(typeof wasmExports['lv_obj_set_style_min_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_min_width');
+  _lv_obj_set_style_min_width = Module['_lv_obj_set_style_min_width'] = createExportWrapper('lv_obj_set_style_min_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_max_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_max_width');
+  _lv_obj_set_style_max_width = Module['_lv_obj_set_style_max_width'] = createExportWrapper('lv_obj_set_style_max_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_min_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_min_height');
+  _lv_obj_set_style_min_height = Module['_lv_obj_set_style_min_height'] = createExportWrapper('lv_obj_set_style_min_height', 3);
+  assert(typeof wasmExports['lv_obj_set_style_max_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_max_height');
+  _lv_obj_set_style_max_height = Module['_lv_obj_set_style_max_height'] = createExportWrapper('lv_obj_set_style_max_height', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_width');
+  _lv_obj_set_style_transform_width = Module['_lv_obj_set_style_transform_width'] = createExportWrapper('lv_obj_set_style_transform_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_height');
+  _lv_obj_set_style_transform_height = Module['_lv_obj_set_style_transform_height'] = createExportWrapper('lv_obj_set_style_transform_height', 3);
+  assert(typeof wasmExports['lv_obj_set_style_translate_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_translate_x');
+  _lv_obj_set_style_translate_x = Module['_lv_obj_set_style_translate_x'] = createExportWrapper('lv_obj_set_style_translate_x', 3);
+  assert(typeof wasmExports['lv_obj_set_style_translate_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_translate_y');
+  _lv_obj_set_style_translate_y = Module['_lv_obj_set_style_translate_y'] = createExportWrapper('lv_obj_set_style_translate_y', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_zoom'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_zoom');
+  _lv_obj_set_style_transform_zoom = Module['_lv_obj_set_style_transform_zoom'] = createExportWrapper('lv_obj_set_style_transform_zoom', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_angle'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_angle');
+  _lv_obj_set_style_transform_angle = Module['_lv_obj_set_style_transform_angle'] = createExportWrapper('lv_obj_set_style_transform_angle', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_pivot_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_pivot_x');
+  _lv_obj_set_style_transform_pivot_x = Module['_lv_obj_set_style_transform_pivot_x'] = createExportWrapper('lv_obj_set_style_transform_pivot_x', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transform_pivot_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transform_pivot_y');
+  _lv_obj_set_style_transform_pivot_y = Module['_lv_obj_set_style_transform_pivot_y'] = createExportWrapper('lv_obj_set_style_transform_pivot_y', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_top'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_top');
+  _lv_obj_set_style_pad_top = Module['_lv_obj_set_style_pad_top'] = createExportWrapper('lv_obj_set_style_pad_top', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_bottom'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_bottom');
+  _lv_obj_set_style_pad_bottom = Module['_lv_obj_set_style_pad_bottom'] = createExportWrapper('lv_obj_set_style_pad_bottom', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_left'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_left');
+  _lv_obj_set_style_pad_left = Module['_lv_obj_set_style_pad_left'] = createExportWrapper('lv_obj_set_style_pad_left', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_right'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_right');
+  _lv_obj_set_style_pad_right = Module['_lv_obj_set_style_pad_right'] = createExportWrapper('lv_obj_set_style_pad_right', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_row'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_row');
+  _lv_obj_set_style_pad_row = Module['_lv_obj_set_style_pad_row'] = createExportWrapper('lv_obj_set_style_pad_row', 3);
+  assert(typeof wasmExports['lv_obj_set_style_pad_column'] != 'undefined', 'missing Wasm export: lv_obj_set_style_pad_column');
+  _lv_obj_set_style_pad_column = Module['_lv_obj_set_style_pad_column'] = createExportWrapper('lv_obj_set_style_pad_column', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_color');
+  _lv_obj_set_style_bg_color = Module['_lv_obj_set_style_bg_color'] = createExportWrapper('lv_obj_set_style_bg_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_opa');
+  _lv_obj_set_style_bg_opa = Module['_lv_obj_set_style_bg_opa'] = createExportWrapper('lv_obj_set_style_bg_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_grad_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_grad_color');
+  _lv_obj_set_style_bg_grad_color = Module['_lv_obj_set_style_bg_grad_color'] = createExportWrapper('lv_obj_set_style_bg_grad_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_grad_dir'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_grad_dir');
+  _lv_obj_set_style_bg_grad_dir = Module['_lv_obj_set_style_bg_grad_dir'] = createExportWrapper('lv_obj_set_style_bg_grad_dir', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_main_stop'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_main_stop');
+  _lv_obj_set_style_bg_main_stop = Module['_lv_obj_set_style_bg_main_stop'] = createExportWrapper('lv_obj_set_style_bg_main_stop', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_grad_stop'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_grad_stop');
+  _lv_obj_set_style_bg_grad_stop = Module['_lv_obj_set_style_bg_grad_stop'] = createExportWrapper('lv_obj_set_style_bg_grad_stop', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_grad'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_grad');
+  _lv_obj_set_style_bg_grad = Module['_lv_obj_set_style_bg_grad'] = createExportWrapper('lv_obj_set_style_bg_grad', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_dither_mode'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_dither_mode');
+  _lv_obj_set_style_bg_dither_mode = Module['_lv_obj_set_style_bg_dither_mode'] = createExportWrapper('lv_obj_set_style_bg_dither_mode', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_img_src'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_img_src');
+  _lv_obj_set_style_bg_img_src = Module['_lv_obj_set_style_bg_img_src'] = createExportWrapper('lv_obj_set_style_bg_img_src', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_img_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_img_opa');
+  _lv_obj_set_style_bg_img_opa = Module['_lv_obj_set_style_bg_img_opa'] = createExportWrapper('lv_obj_set_style_bg_img_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_img_recolor'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_img_recolor');
+  _lv_obj_set_style_bg_img_recolor = Module['_lv_obj_set_style_bg_img_recolor'] = createExportWrapper('lv_obj_set_style_bg_img_recolor', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_img_recolor_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_img_recolor_opa');
+  _lv_obj_set_style_bg_img_recolor_opa = Module['_lv_obj_set_style_bg_img_recolor_opa'] = createExportWrapper('lv_obj_set_style_bg_img_recolor_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_bg_img_tiled'] != 'undefined', 'missing Wasm export: lv_obj_set_style_bg_img_tiled');
+  _lv_obj_set_style_bg_img_tiled = Module['_lv_obj_set_style_bg_img_tiled'] = createExportWrapper('lv_obj_set_style_bg_img_tiled', 3);
+  assert(typeof wasmExports['lv_obj_set_style_border_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_border_color');
+  _lv_obj_set_style_border_color = Module['_lv_obj_set_style_border_color'] = createExportWrapper('lv_obj_set_style_border_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_border_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_border_opa');
+  _lv_obj_set_style_border_opa = Module['_lv_obj_set_style_border_opa'] = createExportWrapper('lv_obj_set_style_border_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_border_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_border_width');
+  _lv_obj_set_style_border_width = Module['_lv_obj_set_style_border_width'] = createExportWrapper('lv_obj_set_style_border_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_border_side'] != 'undefined', 'missing Wasm export: lv_obj_set_style_border_side');
+  _lv_obj_set_style_border_side = Module['_lv_obj_set_style_border_side'] = createExportWrapper('lv_obj_set_style_border_side', 3);
+  assert(typeof wasmExports['lv_obj_set_style_border_post'] != 'undefined', 'missing Wasm export: lv_obj_set_style_border_post');
+  _lv_obj_set_style_border_post = Module['_lv_obj_set_style_border_post'] = createExportWrapper('lv_obj_set_style_border_post', 3);
+  assert(typeof wasmExports['lv_obj_set_style_outline_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_outline_width');
+  _lv_obj_set_style_outline_width = Module['_lv_obj_set_style_outline_width'] = createExportWrapper('lv_obj_set_style_outline_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_outline_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_outline_color');
+  _lv_obj_set_style_outline_color = Module['_lv_obj_set_style_outline_color'] = createExportWrapper('lv_obj_set_style_outline_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_outline_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_outline_opa');
+  _lv_obj_set_style_outline_opa = Module['_lv_obj_set_style_outline_opa'] = createExportWrapper('lv_obj_set_style_outline_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_outline_pad'] != 'undefined', 'missing Wasm export: lv_obj_set_style_outline_pad');
+  _lv_obj_set_style_outline_pad = Module['_lv_obj_set_style_outline_pad'] = createExportWrapper('lv_obj_set_style_outline_pad', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_width');
+  _lv_obj_set_style_shadow_width = Module['_lv_obj_set_style_shadow_width'] = createExportWrapper('lv_obj_set_style_shadow_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_ofs_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_ofs_x');
+  _lv_obj_set_style_shadow_ofs_x = Module['_lv_obj_set_style_shadow_ofs_x'] = createExportWrapper('lv_obj_set_style_shadow_ofs_x', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_ofs_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_ofs_y');
+  _lv_obj_set_style_shadow_ofs_y = Module['_lv_obj_set_style_shadow_ofs_y'] = createExportWrapper('lv_obj_set_style_shadow_ofs_y', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_spread'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_spread');
+  _lv_obj_set_style_shadow_spread = Module['_lv_obj_set_style_shadow_spread'] = createExportWrapper('lv_obj_set_style_shadow_spread', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_color');
+  _lv_obj_set_style_shadow_color = Module['_lv_obj_set_style_shadow_color'] = createExportWrapper('lv_obj_set_style_shadow_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_shadow_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_shadow_opa');
+  _lv_obj_set_style_shadow_opa = Module['_lv_obj_set_style_shadow_opa'] = createExportWrapper('lv_obj_set_style_shadow_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_img_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_img_opa');
+  _lv_obj_set_style_img_opa = Module['_lv_obj_set_style_img_opa'] = createExportWrapper('lv_obj_set_style_img_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_img_recolor'] != 'undefined', 'missing Wasm export: lv_obj_set_style_img_recolor');
+  _lv_obj_set_style_img_recolor = Module['_lv_obj_set_style_img_recolor'] = createExportWrapper('lv_obj_set_style_img_recolor', 3);
+  assert(typeof wasmExports['lv_obj_set_style_img_recolor_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_img_recolor_opa');
+  _lv_obj_set_style_img_recolor_opa = Module['_lv_obj_set_style_img_recolor_opa'] = createExportWrapper('lv_obj_set_style_img_recolor_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_width');
+  _lv_obj_set_style_line_width = Module['_lv_obj_set_style_line_width'] = createExportWrapper('lv_obj_set_style_line_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_dash_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_dash_width');
+  _lv_obj_set_style_line_dash_width = Module['_lv_obj_set_style_line_dash_width'] = createExportWrapper('lv_obj_set_style_line_dash_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_dash_gap'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_dash_gap');
+  _lv_obj_set_style_line_dash_gap = Module['_lv_obj_set_style_line_dash_gap'] = createExportWrapper('lv_obj_set_style_line_dash_gap', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_rounded'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_rounded');
+  _lv_obj_set_style_line_rounded = Module['_lv_obj_set_style_line_rounded'] = createExportWrapper('lv_obj_set_style_line_rounded', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_color');
+  _lv_obj_set_style_line_color = Module['_lv_obj_set_style_line_color'] = createExportWrapper('lv_obj_set_style_line_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_line_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_line_opa');
+  _lv_obj_set_style_line_opa = Module['_lv_obj_set_style_line_opa'] = createExportWrapper('lv_obj_set_style_line_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_arc_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_arc_width');
+  _lv_obj_set_style_arc_width = Module['_lv_obj_set_style_arc_width'] = createExportWrapper('lv_obj_set_style_arc_width', 3);
+  assert(typeof wasmExports['lv_obj_set_style_arc_rounded'] != 'undefined', 'missing Wasm export: lv_obj_set_style_arc_rounded');
+  _lv_obj_set_style_arc_rounded = Module['_lv_obj_set_style_arc_rounded'] = createExportWrapper('lv_obj_set_style_arc_rounded', 3);
+  assert(typeof wasmExports['lv_obj_set_style_arc_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_arc_color');
+  _lv_obj_set_style_arc_color = Module['_lv_obj_set_style_arc_color'] = createExportWrapper('lv_obj_set_style_arc_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_arc_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_arc_opa');
+  _lv_obj_set_style_arc_opa = Module['_lv_obj_set_style_arc_opa'] = createExportWrapper('lv_obj_set_style_arc_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_arc_img_src'] != 'undefined', 'missing Wasm export: lv_obj_set_style_arc_img_src');
+  _lv_obj_set_style_arc_img_src = Module['_lv_obj_set_style_arc_img_src'] = createExportWrapper('lv_obj_set_style_arc_img_src', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_color');
+  _lv_obj_set_style_text_color = Module['_lv_obj_set_style_text_color'] = createExportWrapper('lv_obj_set_style_text_color', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_opa');
+  _lv_obj_set_style_text_opa = Module['_lv_obj_set_style_text_opa'] = createExportWrapper('lv_obj_set_style_text_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_font'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_font');
+  _lv_obj_set_style_text_font = Module['_lv_obj_set_style_text_font'] = createExportWrapper('lv_obj_set_style_text_font', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_letter_space'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_letter_space');
+  _lv_obj_set_style_text_letter_space = Module['_lv_obj_set_style_text_letter_space'] = createExportWrapper('lv_obj_set_style_text_letter_space', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_line_space'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_line_space');
+  _lv_obj_set_style_text_line_space = Module['_lv_obj_set_style_text_line_space'] = createExportWrapper('lv_obj_set_style_text_line_space', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_decor'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_decor');
+  _lv_obj_set_style_text_decor = Module['_lv_obj_set_style_text_decor'] = createExportWrapper('lv_obj_set_style_text_decor', 3);
+  assert(typeof wasmExports['lv_obj_set_style_text_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_align');
+  _lv_obj_set_style_text_align = Module['_lv_obj_set_style_text_align'] = createExportWrapper('lv_obj_set_style_text_align', 3);
+  assert(typeof wasmExports['lv_obj_set_style_radius'] != 'undefined', 'missing Wasm export: lv_obj_set_style_radius');
+  _lv_obj_set_style_radius = Module['_lv_obj_set_style_radius'] = createExportWrapper('lv_obj_set_style_radius', 3);
+  assert(typeof wasmExports['lv_obj_set_style_clip_corner'] != 'undefined', 'missing Wasm export: lv_obj_set_style_clip_corner');
+  _lv_obj_set_style_clip_corner = Module['_lv_obj_set_style_clip_corner'] = createExportWrapper('lv_obj_set_style_clip_corner', 3);
+  assert(typeof wasmExports['lv_obj_set_style_opa_layered'] != 'undefined', 'missing Wasm export: lv_obj_set_style_opa_layered');
+  _lv_obj_set_style_opa_layered = Module['_lv_obj_set_style_opa_layered'] = createExportWrapper('lv_obj_set_style_opa_layered', 3);
+  assert(typeof wasmExports['lv_obj_set_style_color_filter_dsc'] != 'undefined', 'missing Wasm export: lv_obj_set_style_color_filter_dsc');
+  _lv_obj_set_style_color_filter_dsc = Module['_lv_obj_set_style_color_filter_dsc'] = createExportWrapper('lv_obj_set_style_color_filter_dsc', 3);
+  assert(typeof wasmExports['lv_obj_set_style_color_filter_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_color_filter_opa');
+  _lv_obj_set_style_color_filter_opa = Module['_lv_obj_set_style_color_filter_opa'] = createExportWrapper('lv_obj_set_style_color_filter_opa', 3);
+  assert(typeof wasmExports['lv_obj_set_style_anim'] != 'undefined', 'missing Wasm export: lv_obj_set_style_anim');
+  _lv_obj_set_style_anim = Module['_lv_obj_set_style_anim'] = createExportWrapper('lv_obj_set_style_anim', 3);
+  assert(typeof wasmExports['lv_obj_set_style_anim_time'] != 'undefined', 'missing Wasm export: lv_obj_set_style_anim_time');
+  _lv_obj_set_style_anim_time = Module['_lv_obj_set_style_anim_time'] = createExportWrapper('lv_obj_set_style_anim_time', 3);
+  assert(typeof wasmExports['lv_obj_set_style_anim_speed'] != 'undefined', 'missing Wasm export: lv_obj_set_style_anim_speed');
+  _lv_obj_set_style_anim_speed = Module['_lv_obj_set_style_anim_speed'] = createExportWrapper('lv_obj_set_style_anim_speed', 3);
+  assert(typeof wasmExports['lv_obj_set_style_transition'] != 'undefined', 'missing Wasm export: lv_obj_set_style_transition');
+  _lv_obj_set_style_transition = Module['_lv_obj_set_style_transition'] = createExportWrapper('lv_obj_set_style_transition', 3);
+  assert(typeof wasmExports['lv_obj_set_style_blend_mode'] != 'undefined', 'missing Wasm export: lv_obj_set_style_blend_mode');
+  _lv_obj_set_style_blend_mode = Module['_lv_obj_set_style_blend_mode'] = createExportWrapper('lv_obj_set_style_blend_mode', 3);
+  assert(typeof wasmExports['lv_obj_set_style_base_dir'] != 'undefined', 'missing Wasm export: lv_obj_set_style_base_dir');
+  _lv_obj_set_style_base_dir = Module['_lv_obj_set_style_base_dir'] = createExportWrapper('lv_obj_set_style_base_dir', 3);
+  assert(typeof wasmExports['lv_obj_clean'] != 'undefined', 'missing Wasm export: lv_obj_clean');
+  _lv_obj_clean = Module['_lv_obj_clean'] = createExportWrapper('lv_obj_clean', 1);
+  assert(typeof wasmExports['lv_obj_get_child'] != 'undefined', 'missing Wasm export: lv_obj_get_child');
+  _lv_obj_get_child = Module['_lv_obj_get_child'] = createExportWrapper('lv_obj_get_child', 2);
+  assert(typeof wasmExports['lv_obj_del_delayed'] != 'undefined', 'missing Wasm export: lv_obj_del_delayed');
+  _lv_obj_del_delayed = Module['_lv_obj_del_delayed'] = createExportWrapper('lv_obj_del_delayed', 2);
+  assert(typeof wasmExports['lv_obj_del_anim_ready_cb'] != 'undefined', 'missing Wasm export: lv_obj_del_anim_ready_cb');
+  _lv_obj_del_anim_ready_cb = Module['_lv_obj_del_anim_ready_cb'] = createExportWrapper('lv_obj_del_anim_ready_cb', 1);
+  assert(typeof wasmExports['lv_obj_del_async'] != 'undefined', 'missing Wasm export: lv_obj_del_async');
+  _lv_obj_del_async = Module['_lv_obj_del_async'] = createExportWrapper('lv_obj_del_async', 1);
+  assert(typeof wasmExports['lv_async_call'] != 'undefined', 'missing Wasm export: lv_async_call');
+  _lv_async_call = Module['_lv_async_call'] = createExportWrapper('lv_async_call', 2);
+  assert(typeof wasmExports['lv_obj_get_index'] != 'undefined', 'missing Wasm export: lv_obj_get_index');
+  _lv_obj_get_index = Module['_lv_obj_get_index'] = createExportWrapper('lv_obj_get_index', 1);
+  assert(typeof wasmExports['lv_obj_move_to_index'] != 'undefined', 'missing Wasm export: lv_obj_move_to_index');
+  _lv_obj_move_to_index = Module['_lv_obj_move_to_index'] = createExportWrapper('lv_obj_move_to_index', 2);
+  assert(typeof wasmExports['lv_obj_swap'] != 'undefined', 'missing Wasm export: lv_obj_swap');
+  _lv_obj_swap = Module['_lv_obj_swap'] = createExportWrapper('lv_obj_swap', 2);
+  assert(typeof wasmExports['lv_obj_tree_walk'] != 'undefined', 'missing Wasm export: lv_obj_tree_walk');
+  _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = createExportWrapper('lv_obj_tree_walk', 3);
+  assert(typeof wasmExports['lv_refr_now'] != 'undefined', 'missing Wasm export: lv_refr_now');
+  _lv_refr_now = Module['_lv_refr_now'] = createExportWrapper('lv_refr_now', 1);
+  assert(typeof wasmExports['lv_anim_refr_now'] != 'undefined', 'missing Wasm export: lv_anim_refr_now');
+  _lv_anim_refr_now = Module['_lv_anim_refr_now'] = createExportWrapper('lv_anim_refr_now', 0);
+  assert(typeof wasmExports['lv_timer_pause'] != 'undefined', 'missing Wasm export: lv_timer_pause');
+  _lv_timer_pause = Module['_lv_timer_pause'] = createExportWrapper('lv_timer_pause', 1);
+  assert(typeof wasmExports['lv_mem_buf_free_all'] != 'undefined', 'missing Wasm export: lv_mem_buf_free_all');
+  _lv_mem_buf_free_all = Module['_lv_mem_buf_free_all'] = createExportWrapper('lv_mem_buf_free_all', 0);
+  assert(typeof wasmExports['lv_obj_redraw'] != 'undefined', 'missing Wasm export: lv_obj_redraw');
+  _lv_obj_redraw = Module['_lv_obj_redraw'] = createExportWrapper('lv_obj_redraw', 2);
+  assert(typeof wasmExports['lv_draw_layer_create'] != 'undefined', 'missing Wasm export: lv_draw_layer_create');
+  _lv_draw_layer_create = Module['_lv_draw_layer_create'] = createExportWrapper('lv_draw_layer_create', 3);
+  assert(typeof wasmExports['lv_draw_img_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_img_dsc_init');
+  _lv_draw_img_dsc_init = Module['_lv_draw_img_dsc_init'] = createExportWrapper('lv_draw_img_dsc_init', 1);
+  assert(typeof wasmExports['lv_draw_layer_adjust'] != 'undefined', 'missing Wasm export: lv_draw_layer_adjust');
+  _lv_draw_layer_adjust = Module['_lv_draw_layer_adjust'] = createExportWrapper('lv_draw_layer_adjust', 3);
+  assert(typeof wasmExports['lv_draw_layer_blend'] != 'undefined', 'missing Wasm export: lv_draw_layer_blend');
+  _lv_draw_layer_blend = Module['_lv_draw_layer_blend'] = createExportWrapper('lv_draw_layer_blend', 3);
+  assert(typeof wasmExports['lv_draw_layer_destroy'] != 'undefined', 'missing Wasm export: lv_draw_layer_destroy');
+  _lv_draw_layer_destroy = Module['_lv_draw_layer_destroy'] = createExportWrapper('lv_draw_layer_destroy', 2);
+  assert(typeof wasmExports['lv_disp_get_draw_buf'] != 'undefined', 'missing Wasm export: lv_disp_get_draw_buf');
+  _lv_disp_get_draw_buf = Module['_lv_disp_get_draw_buf'] = createExportWrapper('lv_disp_get_draw_buf', 1);
+  assert(typeof wasmExports['lv_img_decoder_get_info'] != 'undefined', 'missing Wasm export: lv_img_decoder_get_info');
+  _lv_img_decoder_get_info = Module['_lv_img_decoder_get_info'] = createExportWrapper('lv_img_decoder_get_info', 2);
+  assert(typeof wasmExports['lv_draw_img'] != 'undefined', 'missing Wasm export: lv_draw_img');
+  _lv_draw_img = Module['_lv_draw_img'] = createExportWrapper('lv_draw_img', 4);
+  assert(typeof wasmExports['lv_theme_get_from_obj'] != 'undefined', 'missing Wasm export: lv_theme_get_from_obj');
+  _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = createExportWrapper('lv_theme_get_from_obj', 1);
+  assert(typeof wasmExports['lv_theme_set_parent'] != 'undefined', 'missing Wasm export: lv_theme_set_parent');
+  _lv_theme_set_parent = Module['_lv_theme_set_parent'] = createExportWrapper('lv_theme_set_parent', 2);
+  assert(typeof wasmExports['lv_theme_set_apply_cb'] != 'undefined', 'missing Wasm export: lv_theme_set_apply_cb');
+  _lv_theme_set_apply_cb = Module['_lv_theme_set_apply_cb'] = createExportWrapper('lv_theme_set_apply_cb', 2);
+  assert(typeof wasmExports['lv_theme_get_font_small'] != 'undefined', 'missing Wasm export: lv_theme_get_font_small');
+  _lv_theme_get_font_small = Module['_lv_theme_get_font_small'] = createExportWrapper('lv_theme_get_font_small', 1);
+  assert(typeof wasmExports['lv_theme_get_font_normal'] != 'undefined', 'missing Wasm export: lv_theme_get_font_normal');
+  _lv_theme_get_font_normal = Module['_lv_theme_get_font_normal'] = createExportWrapper('lv_theme_get_font_normal', 1);
+  assert(typeof wasmExports['lv_theme_get_font_large'] != 'undefined', 'missing Wasm export: lv_theme_get_font_large');
+  _lv_theme_get_font_large = Module['_lv_theme_get_font_large'] = createExportWrapper('lv_theme_get_font_large', 1);
+  assert(typeof wasmExports['lv_theme_get_color_primary'] != 'undefined', 'missing Wasm export: lv_theme_get_color_primary');
+  _lv_theme_get_color_primary = Module['_lv_theme_get_color_primary'] = createExportWrapper('lv_theme_get_color_primary', 2);
+  assert(typeof wasmExports['lv_theme_get_color_secondary'] != 'undefined', 'missing Wasm export: lv_theme_get_color_secondary');
+  _lv_theme_get_color_secondary = Module['_lv_theme_get_color_secondary'] = createExportWrapper('lv_theme_get_color_secondary', 2);
+  assert(typeof wasmExports['lv_draw_wait_for_finish'] != 'undefined', 'missing Wasm export: lv_draw_wait_for_finish');
+  _lv_draw_wait_for_finish = Module['_lv_draw_wait_for_finish'] = createExportWrapper('lv_draw_wait_for_finish', 1);
+  assert(typeof wasmExports['lv_draw_arc_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_arc_dsc_init');
+  _lv_draw_arc_dsc_init = Module['_lv_draw_arc_dsc_init'] = createExportWrapper('lv_draw_arc_dsc_init', 1);
+  assert(typeof wasmExports['lv_draw_arc'] != 'undefined', 'missing Wasm export: lv_draw_arc');
+  _lv_draw_arc = Module['_lv_draw_arc'] = createExportWrapper('lv_draw_arc', 6);
+  assert(typeof wasmExports['lv_draw_arc_get_area'] != 'undefined', 'missing Wasm export: lv_draw_arc_get_area');
+  _lv_draw_arc_get_area = Module['_lv_draw_arc_get_area'] = createExportWrapper('lv_draw_arc_get_area', 8);
+  assert(typeof wasmExports['lv_draw_label_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_label_dsc_init');
+  _lv_draw_label_dsc_init = Module['_lv_draw_label_dsc_init'] = createExportWrapper('lv_draw_label_dsc_init', 1);
+  assert(typeof wasmExports['lv_draw_label'] != 'undefined', 'missing Wasm export: lv_draw_label');
+  _lv_draw_label = Module['_lv_draw_label'] = createExportWrapper('lv_draw_label', 5);
+  assert(typeof wasmExports['lv_img_decoder_close'] != 'undefined', 'missing Wasm export: lv_img_decoder_close');
+  _lv_img_decoder_close = Module['_lv_img_decoder_close'] = createExportWrapper('lv_img_decoder_close', 1);
+  assert(typeof wasmExports['lv_area_set_height'] != 'undefined', 'missing Wasm export: lv_area_set_height');
+  _lv_area_set_height = Module['_lv_area_set_height'] = createExportWrapper('lv_area_set_height', 2);
+  assert(typeof wasmExports['lv_img_decoder_read_line'] != 'undefined', 'missing Wasm export: lv_img_decoder_read_line');
+  _lv_img_decoder_read_line = Module['_lv_img_decoder_read_line'] = createExportWrapper('lv_img_decoder_read_line', 5);
+  assert(typeof wasmExports['lv_img_cf_get_px_size'] != 'undefined', 'missing Wasm export: lv_img_cf_get_px_size');
+  _lv_img_cf_get_px_size = Module['_lv_img_cf_get_px_size'] = createExportWrapper('lv_img_cf_get_px_size', 1);
+  assert(typeof wasmExports['lv_img_cf_is_chroma_keyed'] != 'undefined', 'missing Wasm export: lv_img_cf_is_chroma_keyed');
+  _lv_img_cf_is_chroma_keyed = Module['_lv_img_cf_is_chroma_keyed'] = createExportWrapper('lv_img_cf_is_chroma_keyed', 1);
+  assert(typeof wasmExports['lv_img_cf_has_alpha'] != 'undefined', 'missing Wasm export: lv_img_cf_has_alpha');
+  _lv_img_cf_has_alpha = Module['_lv_img_cf_has_alpha'] = createExportWrapper('lv_img_cf_has_alpha', 1);
+  assert(typeof wasmExports['lv_draw_img_decoded'] != 'undefined', 'missing Wasm export: lv_draw_img_decoded');
+  _lv_draw_img_decoded = Module['_lv_draw_img_decoded'] = createExportWrapper('lv_draw_img_decoded', 5);
+  assert(typeof wasmExports['lv_txt_get_size'] != 'undefined', 'missing Wasm export: lv_txt_get_size');
+  _lv_txt_get_size = Module['_lv_txt_get_size'] = createExportWrapper('lv_txt_get_size', 7);
+  assert(typeof wasmExports['lv_txt_get_width'] != 'undefined', 'missing Wasm export: lv_txt_get_width');
+  _lv_txt_get_width = Module['_lv_txt_get_width'] = createExportWrapper('lv_txt_get_width', 5);
+  assert(typeof wasmExports['lv_draw_line_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_line_dsc_init');
+  _lv_draw_line_dsc_init = Module['_lv_draw_line_dsc_init'] = createExportWrapper('lv_draw_line_dsc_init', 1);
+  assert(typeof wasmExports['lv_font_get_glyph_width'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_width');
+  _lv_font_get_glyph_width = Module['_lv_font_get_glyph_width'] = createExportWrapper('lv_font_get_glyph_width', 3);
+  assert(typeof wasmExports['lv_draw_line'] != 'undefined', 'missing Wasm export: lv_draw_line');
+  _lv_draw_line = Module['_lv_draw_line'] = createExportWrapper('lv_draw_line', 4);
+  assert(typeof wasmExports['lv_draw_letter'] != 'undefined', 'missing Wasm export: lv_draw_letter');
+  _lv_draw_letter = Module['_lv_draw_letter'] = createExportWrapper('lv_draw_letter', 4);
+  assert(typeof wasmExports['lv_draw_mask_apply'] != 'undefined', 'missing Wasm export: lv_draw_mask_apply');
+  _lv_draw_mask_apply = Module['_lv_draw_mask_apply'] = createExportWrapper('lv_draw_mask_apply', 4);
+  assert(typeof wasmExports['lv_draw_mask_apply_ids'] != 'undefined', 'missing Wasm export: lv_draw_mask_apply_ids');
+  _lv_draw_mask_apply_ids = Module['_lv_draw_mask_apply_ids'] = createExportWrapper('lv_draw_mask_apply_ids', 6);
+  assert(typeof wasmExports['lv_draw_mask_remove_id'] != 'undefined', 'missing Wasm export: lv_draw_mask_remove_id');
+  _lv_draw_mask_remove_id = Module['_lv_draw_mask_remove_id'] = createExportWrapper('lv_draw_mask_remove_id', 1);
+  assert(typeof wasmExports['lv_draw_mask_get_cnt'] != 'undefined', 'missing Wasm export: lv_draw_mask_get_cnt');
+  _lv_draw_mask_get_cnt = Module['_lv_draw_mask_get_cnt'] = createExportWrapper('lv_draw_mask_get_cnt', 0);
+  assert(typeof wasmExports['lv_draw_mask_is_any'] != 'undefined', 'missing Wasm export: lv_draw_mask_is_any');
+  _lv_draw_mask_is_any = Module['_lv_draw_mask_is_any'] = createExportWrapper('lv_draw_mask_is_any', 1);
+  assert(typeof wasmExports['lv_draw_mask_line_points_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_line_points_init');
+  _lv_draw_mask_line_points_init = Module['_lv_draw_mask_line_points_init'] = createExportWrapper('lv_draw_mask_line_points_init', 6);
+  assert(typeof wasmExports['lv_draw_mask_line_angle_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_line_angle_init');
+  _lv_draw_mask_line_angle_init = Module['_lv_draw_mask_line_angle_init'] = createExportWrapper('lv_draw_mask_line_angle_init', 5);
+  assert(typeof wasmExports['lv_trigo_sin'] != 'undefined', 'missing Wasm export: lv_trigo_sin');
+  _lv_trigo_sin = Module['_lv_trigo_sin'] = createExportWrapper('lv_trigo_sin', 1);
+  assert(typeof wasmExports['lv_draw_mask_angle_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_angle_init');
+  _lv_draw_mask_angle_init = Module['_lv_draw_mask_angle_init'] = createExportWrapper('lv_draw_mask_angle_init', 5);
+  assert(typeof wasmExports['lv_draw_mask_fade_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_fade_init');
+  _lv_draw_mask_fade_init = Module['_lv_draw_mask_fade_init'] = createExportWrapper('lv_draw_mask_fade_init', 6);
+  assert(typeof wasmExports['lv_draw_mask_map_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_map_init');
+  _lv_draw_mask_map_init = Module['_lv_draw_mask_map_init'] = createExportWrapper('lv_draw_mask_map_init', 3);
+  assert(typeof wasmExports['lv_draw_mask_polygon_init'] != 'undefined', 'missing Wasm export: lv_draw_mask_polygon_init');
+  _lv_draw_mask_polygon_init = Module['_lv_draw_mask_polygon_init'] = createExportWrapper('lv_draw_mask_polygon_init', 3);
+  assert(typeof wasmExports['lv_draw_transform'] != 'undefined', 'missing Wasm export: lv_draw_transform');
+  _lv_draw_transform = Module['_lv_draw_transform'] = createExportWrapper('lv_draw_transform', 10);
+  assert(typeof wasmExports['lv_draw_polygon'] != 'undefined', 'missing Wasm export: lv_draw_polygon');
+  _lv_draw_polygon = Module['_lv_draw_polygon'] = createExportWrapper('lv_draw_polygon', 4);
+  assert(typeof wasmExports['lv_draw_triangle'] != 'undefined', 'missing Wasm export: lv_draw_triangle');
+  _lv_draw_triangle = Module['_lv_draw_triangle'] = createExportWrapper('lv_draw_triangle', 3);
+  assert(typeof wasmExports['lv_img_buf_get_px_color'] != 'undefined', 'missing Wasm export: lv_img_buf_get_px_color');
+  _lv_img_buf_get_px_color = Module['_lv_img_buf_get_px_color'] = createExportWrapper('lv_img_buf_get_px_color', 5);
+  assert(typeof wasmExports['lv_img_buf_get_px_alpha'] != 'undefined', 'missing Wasm export: lv_img_buf_get_px_alpha');
+  _lv_img_buf_get_px_alpha = Module['_lv_img_buf_get_px_alpha'] = createExportWrapper('lv_img_buf_get_px_alpha', 3);
+  assert(typeof wasmExports['lv_img_buf_set_px_alpha'] != 'undefined', 'missing Wasm export: lv_img_buf_set_px_alpha');
+  _lv_img_buf_set_px_alpha = Module['_lv_img_buf_set_px_alpha'] = createExportWrapper('lv_img_buf_set_px_alpha', 4);
+  assert(typeof wasmExports['lv_img_buf_set_px_color'] != 'undefined', 'missing Wasm export: lv_img_buf_set_px_color');
+  _lv_img_buf_set_px_color = Module['_lv_img_buf_set_px_color'] = createExportWrapper('lv_img_buf_set_px_color', 4);
+  assert(typeof wasmExports['lv_img_buf_set_palette'] != 'undefined', 'missing Wasm export: lv_img_buf_set_palette');
+  _lv_img_buf_set_palette = Module['_lv_img_buf_set_palette'] = createExportWrapper('lv_img_buf_set_palette', 3);
+  assert(typeof wasmExports['lv_img_buf_alloc'] != 'undefined', 'missing Wasm export: lv_img_buf_alloc');
+  _lv_img_buf_alloc = Module['_lv_img_buf_alloc'] = createExportWrapper('lv_img_buf_alloc', 3);
+  assert(typeof wasmExports['lv_img_buf_get_img_size'] != 'undefined', 'missing Wasm export: lv_img_buf_get_img_size');
+  _lv_img_buf_get_img_size = Module['_lv_img_buf_get_img_size'] = createExportWrapper('lv_img_buf_get_img_size', 3);
+  assert(typeof wasmExports['lv_img_buf_free'] != 'undefined', 'missing Wasm export: lv_img_buf_free');
+  _lv_img_buf_free = Module['_lv_img_buf_free'] = createExportWrapper('lv_img_buf_free', 1);
+  assert(typeof wasmExports['lv_img_decoder_open'] != 'undefined', 'missing Wasm export: lv_img_decoder_open');
+  _lv_img_decoder_open = Module['_lv_img_decoder_open'] = createExportWrapper('lv_img_decoder_open', 4);
+  assert(typeof wasmExports['lv_img_cache_set_size'] != 'undefined', 'missing Wasm export: lv_img_cache_set_size');
+  _lv_img_cache_set_size = Module['_lv_img_cache_set_size'] = createExportWrapper('lv_img_cache_set_size', 1);
+  assert(typeof wasmExports['lv_img_cache_invalidate_src'] != 'undefined', 'missing Wasm export: lv_img_cache_invalidate_src');
+  _lv_img_cache_invalidate_src = Module['_lv_img_cache_invalidate_src'] = createExportWrapper('lv_img_cache_invalidate_src', 1);
+  assert(typeof wasmExports['lv_img_decoder_built_in_close'] != 'undefined', 'missing Wasm export: lv_img_decoder_built_in_close');
+  _lv_img_decoder_built_in_close = Module['_lv_img_decoder_built_in_close'] = createExportWrapper('lv_img_decoder_built_in_close', 2);
+  assert(typeof wasmExports['lv_img_decoder_built_in_read_line'] != 'undefined', 'missing Wasm export: lv_img_decoder_built_in_read_line');
+  _lv_img_decoder_built_in_read_line = Module['_lv_img_decoder_built_in_read_line'] = createExportWrapper('lv_img_decoder_built_in_read_line', 6);
+  assert(typeof wasmExports['lv_img_decoder_built_in_open'] != 'undefined', 'missing Wasm export: lv_img_decoder_built_in_open');
+  _lv_img_decoder_built_in_open = Module['_lv_img_decoder_built_in_open'] = createExportWrapper('lv_img_decoder_built_in_open', 2);
+  assert(typeof wasmExports['lv_img_decoder_built_in_info'] != 'undefined', 'missing Wasm export: lv_img_decoder_built_in_info');
+  _lv_img_decoder_built_in_info = Module['_lv_img_decoder_built_in_info'] = createExportWrapper('lv_img_decoder_built_in_info', 3);
+  assert(typeof wasmExports['lv_img_decoder_create'] != 'undefined', 'missing Wasm export: lv_img_decoder_create');
+  _lv_img_decoder_create = Module['_lv_img_decoder_create'] = createExportWrapper('lv_img_decoder_create', 0);
+  assert(typeof wasmExports['lv_img_decoder_set_info_cb'] != 'undefined', 'missing Wasm export: lv_img_decoder_set_info_cb');
+  _lv_img_decoder_set_info_cb = Module['_lv_img_decoder_set_info_cb'] = createExportWrapper('lv_img_decoder_set_info_cb', 2);
+  assert(typeof wasmExports['lv_fs_get_ext'] != 'undefined', 'missing Wasm export: lv_fs_get_ext');
+  _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext', 1);
+  assert(typeof wasmExports['strcmp'] != 'undefined', 'missing Wasm export: strcmp');
+  _strcmp = Module['_strcmp'] = createExportWrapper('strcmp', 2);
+  assert(typeof wasmExports['lv_fs_open'] != 'undefined', 'missing Wasm export: lv_fs_open');
+  _lv_fs_open = Module['_lv_fs_open'] = createExportWrapper('lv_fs_open', 3);
+  assert(typeof wasmExports['lv_fs_read'] != 'undefined', 'missing Wasm export: lv_fs_read');
+  _lv_fs_read = Module['_lv_fs_read'] = createExportWrapper('lv_fs_read', 4);
+  assert(typeof wasmExports['lv_fs_close'] != 'undefined', 'missing Wasm export: lv_fs_close');
+  _lv_fs_close = Module['_lv_fs_close'] = createExportWrapper('lv_fs_close', 1);
+  assert(typeof wasmExports['lv_img_decoder_set_open_cb'] != 'undefined', 'missing Wasm export: lv_img_decoder_set_open_cb');
+  _lv_img_decoder_set_open_cb = Module['_lv_img_decoder_set_open_cb'] = createExportWrapper('lv_img_decoder_set_open_cb', 2);
+  assert(typeof wasmExports['lv_fs_seek'] != 'undefined', 'missing Wasm export: lv_fs_seek');
+  _lv_fs_seek = Module['_lv_fs_seek'] = createExportWrapper('lv_fs_seek', 3);
+  assert(typeof wasmExports['lv_img_decoder_set_read_line_cb'] != 'undefined', 'missing Wasm export: lv_img_decoder_set_read_line_cb');
+  _lv_img_decoder_set_read_line_cb = Module['_lv_img_decoder_set_read_line_cb'] = createExportWrapper('lv_img_decoder_set_read_line_cb', 2);
+  assert(typeof wasmExports['lv_img_decoder_set_close_cb'] != 'undefined', 'missing Wasm export: lv_img_decoder_set_close_cb');
+  _lv_img_decoder_set_close_cb = Module['_lv_img_decoder_set_close_cb'] = createExportWrapper('lv_img_decoder_set_close_cb', 2);
+  assert(typeof wasmExports['lv_img_decoder_delete'] != 'undefined', 'missing Wasm export: lv_img_decoder_delete');
+  _lv_img_decoder_delete = Module['_lv_img_decoder_delete'] = createExportWrapper('lv_img_decoder_delete', 1);
+  assert(typeof wasmExports['lv_draw_sw_init_ctx'] != 'undefined', 'missing Wasm export: lv_draw_sw_init_ctx');
+  _lv_draw_sw_init_ctx = Module['_lv_draw_sw_init_ctx'] = createExportWrapper('lv_draw_sw_init_ctx', 2);
+  assert(typeof wasmExports['lv_draw_sw_buffer_copy'] != 'undefined', 'missing Wasm export: lv_draw_sw_buffer_copy');
+  _lv_draw_sw_buffer_copy = Module['_lv_draw_sw_buffer_copy'] = createExportWrapper('lv_draw_sw_buffer_copy', 7);
+  assert(typeof wasmExports['lv_draw_sw_wait_for_finish'] != 'undefined', 'missing Wasm export: lv_draw_sw_wait_for_finish');
+  _lv_draw_sw_wait_for_finish = Module['_lv_draw_sw_wait_for_finish'] = createExportWrapper('lv_draw_sw_wait_for_finish', 1);
+  assert(typeof wasmExports['lv_draw_sw_deinit_ctx'] != 'undefined', 'missing Wasm export: lv_draw_sw_deinit_ctx');
+  _lv_draw_sw_deinit_ctx = Module['_lv_draw_sw_deinit_ctx'] = createExportWrapper('lv_draw_sw_deinit_ctx', 2);
+  assert(typeof wasmExports['lv_draw_sw_arc'] != 'undefined', 'missing Wasm export: lv_draw_sw_arc');
+  _lv_draw_sw_arc = Module['_lv_draw_sw_arc'] = createExportWrapper('lv_draw_sw_arc', 6);
+  assert(typeof wasmExports['lv_draw_sw_blend'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend');
+  _lv_draw_sw_blend = Module['_lv_draw_sw_blend'] = createExportWrapper('lv_draw_sw_blend', 2);
+  assert(typeof wasmExports['lv_draw_sw_blend_basic'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_basic');
+  _lv_draw_sw_blend_basic = Module['_lv_draw_sw_blend_basic'] = createExportWrapper('lv_draw_sw_blend_basic', 2);
+  assert(typeof wasmExports['lv_gradient_free_cache'] != 'undefined', 'missing Wasm export: lv_gradient_free_cache');
+  _lv_gradient_free_cache = Module['_lv_gradient_free_cache'] = createExportWrapper('lv_gradient_free_cache', 0);
+  assert(typeof wasmExports['lv_gradient_set_cache_size'] != 'undefined', 'missing Wasm export: lv_gradient_set_cache_size');
+  _lv_gradient_set_cache_size = Module['_lv_gradient_set_cache_size'] = createExportWrapper('lv_gradient_set_cache_size', 1);
+  assert(typeof wasmExports['lv_gradient_get'] != 'undefined', 'missing Wasm export: lv_gradient_get');
+  _lv_gradient_get = Module['_lv_gradient_get'] = createExportWrapper('lv_gradient_get', 3);
+  assert(typeof wasmExports['lv_gradient_calculate'] != 'undefined', 'missing Wasm export: lv_gradient_calculate');
+  _lv_gradient_calculate = Module['_lv_gradient_calculate'] = createExportWrapper('lv_gradient_calculate', 4);
+  assert(typeof wasmExports['lv_gradient_cleanup'] != 'undefined', 'missing Wasm export: lv_gradient_cleanup');
+  _lv_gradient_cleanup = Module['_lv_gradient_cleanup'] = createExportWrapper('lv_gradient_cleanup', 1);
+  assert(typeof wasmExports['lv_draw_sw_img_decoded'] != 'undefined', 'missing Wasm export: lv_draw_sw_img_decoded');
+  _lv_draw_sw_img_decoded = Module['_lv_draw_sw_img_decoded'] = createExportWrapper('lv_draw_sw_img_decoded', 5);
+  assert(typeof wasmExports['lv_draw_sw_layer_create'] != 'undefined', 'missing Wasm export: lv_draw_sw_layer_create');
+  _lv_draw_sw_layer_create = Module['_lv_draw_sw_layer_create'] = createExportWrapper('lv_draw_sw_layer_create', 3);
+  assert(typeof wasmExports['lv_draw_sw_layer_adjust'] != 'undefined', 'missing Wasm export: lv_draw_sw_layer_adjust');
+  _lv_draw_sw_layer_adjust = Module['_lv_draw_sw_layer_adjust'] = createExportWrapper('lv_draw_sw_layer_adjust', 3);
+  assert(typeof wasmExports['lv_draw_sw_layer_blend'] != 'undefined', 'missing Wasm export: lv_draw_sw_layer_blend');
+  _lv_draw_sw_layer_blend = Module['_lv_draw_sw_layer_blend'] = createExportWrapper('lv_draw_sw_layer_blend', 3);
+  assert(typeof wasmExports['lv_draw_sw_layer_destroy'] != 'undefined', 'missing Wasm export: lv_draw_sw_layer_destroy');
+  _lv_draw_sw_layer_destroy = Module['_lv_draw_sw_layer_destroy'] = createExportWrapper('lv_draw_sw_layer_destroy', 2);
+  assert(typeof wasmExports['lv_draw_sw_letter'] != 'undefined', 'missing Wasm export: lv_draw_sw_letter');
+  _lv_draw_sw_letter = Module['_lv_draw_sw_letter'] = createExportWrapper('lv_draw_sw_letter', 4);
+  assert(typeof wasmExports['lv_draw_sw_line'] != 'undefined', 'missing Wasm export: lv_draw_sw_line');
+  _lv_draw_sw_line = Module['_lv_draw_sw_line'] = createExportWrapper('lv_draw_sw_line', 4);
+  assert(typeof wasmExports['lv_draw_sw_polygon'] != 'undefined', 'missing Wasm export: lv_draw_sw_polygon');
+  _lv_draw_sw_polygon = Module['_lv_draw_sw_polygon'] = createExportWrapper('lv_draw_sw_polygon', 4);
+  assert(typeof wasmExports['lv_draw_sw_rect'] != 'undefined', 'missing Wasm export: lv_draw_sw_rect');
+  _lv_draw_sw_rect = Module['_lv_draw_sw_rect'] = createExportWrapper('lv_draw_sw_rect', 3);
+  assert(typeof wasmExports['lv_draw_sw_bg'] != 'undefined', 'missing Wasm export: lv_draw_sw_bg');
+  _lv_draw_sw_bg = Module['_lv_draw_sw_bg'] = createExportWrapper('lv_draw_sw_bg', 3);
+  assert(typeof wasmExports['lv_draw_sw_transform'] != 'undefined', 'missing Wasm export: lv_draw_sw_transform');
+  _lv_draw_sw_transform = Module['_lv_draw_sw_transform'] = createExportWrapper('lv_draw_sw_transform', 10);
+  assert(typeof wasmExports['lv_flex_init'] != 'undefined', 'missing Wasm export: lv_flex_init');
+  _lv_flex_init = Module['_lv_flex_init'] = createExportWrapper('lv_flex_init', 0);
+  assert(typeof wasmExports['lv_obj_set_flex_flow'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_flow');
+  _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = createExportWrapper('lv_obj_set_flex_flow', 2);
+  assert(typeof wasmExports['lv_obj_set_style_flex_flow'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_flow');
+  _lv_obj_set_style_flex_flow = Module['_lv_obj_set_style_flex_flow'] = createExportWrapper('lv_obj_set_style_flex_flow', 3);
+  assert(typeof wasmExports['lv_obj_set_flex_align'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_align');
+  _lv_obj_set_flex_align = Module['_lv_obj_set_flex_align'] = createExportWrapper('lv_obj_set_flex_align', 4);
+  assert(typeof wasmExports['lv_obj_set_style_flex_main_place'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_main_place');
+  _lv_obj_set_style_flex_main_place = Module['_lv_obj_set_style_flex_main_place'] = createExportWrapper('lv_obj_set_style_flex_main_place', 3);
+  assert(typeof wasmExports['lv_obj_set_style_flex_cross_place'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_cross_place');
+  _lv_obj_set_style_flex_cross_place = Module['_lv_obj_set_style_flex_cross_place'] = createExportWrapper('lv_obj_set_style_flex_cross_place', 3);
+  assert(typeof wasmExports['lv_obj_set_style_flex_track_place'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_track_place');
+  _lv_obj_set_style_flex_track_place = Module['_lv_obj_set_style_flex_track_place'] = createExportWrapper('lv_obj_set_style_flex_track_place', 3);
+  assert(typeof wasmExports['lv_obj_set_flex_grow'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_grow');
+  _lv_obj_set_flex_grow = Module['_lv_obj_set_flex_grow'] = createExportWrapper('lv_obj_set_flex_grow', 2);
+  assert(typeof wasmExports['lv_obj_set_style_flex_grow'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_grow');
+  _lv_obj_set_style_flex_grow = Module['_lv_obj_set_style_flex_grow'] = createExportWrapper('lv_obj_set_style_flex_grow', 3);
+  assert(typeof wasmExports['lv_style_set_flex_flow'] != 'undefined', 'missing Wasm export: lv_style_set_flex_flow');
+  _lv_style_set_flex_flow = Module['_lv_style_set_flex_flow'] = createExportWrapper('lv_style_set_flex_flow', 2);
+  assert(typeof wasmExports['lv_style_set_flex_main_place'] != 'undefined', 'missing Wasm export: lv_style_set_flex_main_place');
+  _lv_style_set_flex_main_place = Module['_lv_style_set_flex_main_place'] = createExportWrapper('lv_style_set_flex_main_place', 2);
+  assert(typeof wasmExports['lv_style_set_flex_cross_place'] != 'undefined', 'missing Wasm export: lv_style_set_flex_cross_place');
+  _lv_style_set_flex_cross_place = Module['_lv_style_set_flex_cross_place'] = createExportWrapper('lv_style_set_flex_cross_place', 2);
+  assert(typeof wasmExports['lv_style_set_flex_track_place'] != 'undefined', 'missing Wasm export: lv_style_set_flex_track_place');
+  _lv_style_set_flex_track_place = Module['_lv_style_set_flex_track_place'] = createExportWrapper('lv_style_set_flex_track_place', 2);
+  assert(typeof wasmExports['lv_style_set_flex_grow'] != 'undefined', 'missing Wasm export: lv_style_set_flex_grow');
+  _lv_style_set_flex_grow = Module['_lv_style_set_flex_grow'] = createExportWrapper('lv_style_set_flex_grow', 2);
+  assert(typeof wasmExports['lv_grid_init'] != 'undefined', 'missing Wasm export: lv_grid_init');
+  _lv_grid_init = Module['_lv_grid_init'] = createExportWrapper('lv_grid_init', 0);
+  assert(typeof wasmExports['lv_obj_set_grid_dsc_array'] != 'undefined', 'missing Wasm export: lv_obj_set_grid_dsc_array');
+  _lv_obj_set_grid_dsc_array = Module['_lv_obj_set_grid_dsc_array'] = createExportWrapper('lv_obj_set_grid_dsc_array', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_column_dsc_array'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_column_dsc_array');
+  _lv_obj_set_style_grid_column_dsc_array = Module['_lv_obj_set_style_grid_column_dsc_array'] = createExportWrapper('lv_obj_set_style_grid_column_dsc_array', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_row_dsc_array'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_row_dsc_array');
+  _lv_obj_set_style_grid_row_dsc_array = Module['_lv_obj_set_style_grid_row_dsc_array'] = createExportWrapper('lv_obj_set_style_grid_row_dsc_array', 3);
+  assert(typeof wasmExports['lv_obj_set_grid_align'] != 'undefined', 'missing Wasm export: lv_obj_set_grid_align');
+  _lv_obj_set_grid_align = Module['_lv_obj_set_grid_align'] = createExportWrapper('lv_obj_set_grid_align', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_column_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_column_align');
+  _lv_obj_set_style_grid_column_align = Module['_lv_obj_set_style_grid_column_align'] = createExportWrapper('lv_obj_set_style_grid_column_align', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_row_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_row_align');
+  _lv_obj_set_style_grid_row_align = Module['_lv_obj_set_style_grid_row_align'] = createExportWrapper('lv_obj_set_style_grid_row_align', 3);
+  assert(typeof wasmExports['lv_obj_set_grid_cell'] != 'undefined', 'missing Wasm export: lv_obj_set_grid_cell');
+  _lv_obj_set_grid_cell = Module['_lv_obj_set_grid_cell'] = createExportWrapper('lv_obj_set_grid_cell', 7);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_column_pos'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_column_pos');
+  _lv_obj_set_style_grid_cell_column_pos = Module['_lv_obj_set_style_grid_cell_column_pos'] = createExportWrapper('lv_obj_set_style_grid_cell_column_pos', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_row_pos'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_row_pos');
+  _lv_obj_set_style_grid_cell_row_pos = Module['_lv_obj_set_style_grid_cell_row_pos'] = createExportWrapper('lv_obj_set_style_grid_cell_row_pos', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_x_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_x_align');
+  _lv_obj_set_style_grid_cell_x_align = Module['_lv_obj_set_style_grid_cell_x_align'] = createExportWrapper('lv_obj_set_style_grid_cell_x_align', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_column_span'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_column_span');
+  _lv_obj_set_style_grid_cell_column_span = Module['_lv_obj_set_style_grid_cell_column_span'] = createExportWrapper('lv_obj_set_style_grid_cell_column_span', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_row_span'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_row_span');
+  _lv_obj_set_style_grid_cell_row_span = Module['_lv_obj_set_style_grid_cell_row_span'] = createExportWrapper('lv_obj_set_style_grid_cell_row_span', 3);
+  assert(typeof wasmExports['lv_obj_set_style_grid_cell_y_align'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_cell_y_align');
+  _lv_obj_set_style_grid_cell_y_align = Module['_lv_obj_set_style_grid_cell_y_align'] = createExportWrapper('lv_obj_set_style_grid_cell_y_align', 3);
+  assert(typeof wasmExports['lv_style_set_grid_row_dsc_array'] != 'undefined', 'missing Wasm export: lv_style_set_grid_row_dsc_array');
+  _lv_style_set_grid_row_dsc_array = Module['_lv_style_set_grid_row_dsc_array'] = createExportWrapper('lv_style_set_grid_row_dsc_array', 2);
+  assert(typeof wasmExports['lv_style_set_grid_column_dsc_array'] != 'undefined', 'missing Wasm export: lv_style_set_grid_column_dsc_array');
+  _lv_style_set_grid_column_dsc_array = Module['_lv_style_set_grid_column_dsc_array'] = createExportWrapper('lv_style_set_grid_column_dsc_array', 2);
+  assert(typeof wasmExports['lv_style_set_grid_row_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_row_align');
+  _lv_style_set_grid_row_align = Module['_lv_style_set_grid_row_align'] = createExportWrapper('lv_style_set_grid_row_align', 2);
+  assert(typeof wasmExports['lv_style_set_grid_column_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_column_align');
+  _lv_style_set_grid_column_align = Module['_lv_style_set_grid_column_align'] = createExportWrapper('lv_style_set_grid_column_align', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_column_pos'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_column_pos');
+  _lv_style_set_grid_cell_column_pos = Module['_lv_style_set_grid_cell_column_pos'] = createExportWrapper('lv_style_set_grid_cell_column_pos', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_column_span'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_column_span');
+  _lv_style_set_grid_cell_column_span = Module['_lv_style_set_grid_cell_column_span'] = createExportWrapper('lv_style_set_grid_cell_column_span', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_row_pos'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_row_pos');
+  _lv_style_set_grid_cell_row_pos = Module['_lv_style_set_grid_cell_row_pos'] = createExportWrapper('lv_style_set_grid_cell_row_pos', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_row_span'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_row_span');
+  _lv_style_set_grid_cell_row_span = Module['_lv_style_set_grid_cell_row_span'] = createExportWrapper('lv_style_set_grid_cell_row_span', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_x_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_x_align');
+  _lv_style_set_grid_cell_x_align = Module['_lv_style_set_grid_cell_x_align'] = createExportWrapper('lv_style_set_grid_cell_x_align', 2);
+  assert(typeof wasmExports['lv_style_set_grid_cell_y_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_y_align');
+  _lv_style_set_grid_cell_y_align = Module['_lv_style_set_grid_cell_y_align'] = createExportWrapper('lv_style_set_grid_cell_y_align', 2);
+  assert(typeof wasmExports['lv_bmp_init'] != 'undefined', 'missing Wasm export: lv_bmp_init');
+  _lv_bmp_init = Module['_lv_bmp_init'] = createExportWrapper('lv_bmp_init', 0);
+  assert(typeof wasmExports['lv_fs_stdio_init'] != 'undefined', 'missing Wasm export: lv_fs_stdio_init');
+  _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = createExportWrapper('lv_fs_stdio_init', 0);
+  assert(typeof wasmExports['lv_gif_create'] != 'undefined', 'missing Wasm export: lv_gif_create');
+  _lv_gif_create = Module['_lv_gif_create'] = createExportWrapper('lv_gif_create', 1);
+  assert(typeof wasmExports['lv_gif_set_src'] != 'undefined', 'missing Wasm export: lv_gif_set_src');
+  _lv_gif_set_src = Module['_lv_gif_set_src'] = createExportWrapper('lv_gif_set_src', 2);
+  assert(typeof wasmExports['lv_gif_restart'] != 'undefined', 'missing Wasm export: lv_gif_restart');
+  _lv_gif_restart = Module['_lv_gif_restart'] = createExportWrapper('lv_gif_restart', 1);
+  assert(typeof wasmExports['lv_png_init'] != 'undefined', 'missing Wasm export: lv_png_init');
+  _lv_png_init = Module['_lv_png_init'] = createExportWrapper('lv_png_init', 0);
+  assert(typeof wasmExports['lv_qrcode_create'] != 'undefined', 'missing Wasm export: lv_qrcode_create');
+  _lv_qrcode_create = Module['_lv_qrcode_create'] = createExportWrapper('lv_qrcode_create', 4);
+  assert(typeof wasmExports['lv_qrcode_update'] != 'undefined', 'missing Wasm export: lv_qrcode_update');
+  _lv_qrcode_update = Module['_lv_qrcode_update'] = createExportWrapper('lv_qrcode_update', 3);
+  assert(typeof wasmExports['lv_qrcode_delete'] != 'undefined', 'missing Wasm export: lv_qrcode_delete');
+  _lv_qrcode_delete = Module['_lv_qrcode_delete'] = createExportWrapper('lv_qrcode_delete', 1);
+  assert(typeof wasmExports['lv_split_jpeg_init'] != 'undefined', 'missing Wasm export: lv_split_jpeg_init');
+  _lv_split_jpeg_init = Module['_lv_split_jpeg_init'] = createExportWrapper('lv_split_jpeg_init', 0);
+  assert(typeof wasmExports['lv_tiny_ttf_create_file_ex'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_file_ex');
+  _lv_tiny_ttf_create_file_ex = Module['_lv_tiny_ttf_create_file_ex'] = createExportWrapper('lv_tiny_ttf_create_file_ex', 3);
+  assert(typeof wasmExports['lv_tiny_ttf_set_size'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_set_size');
+  _lv_tiny_ttf_set_size = Module['_lv_tiny_ttf_set_size'] = createExportWrapper('lv_tiny_ttf_set_size', 2);
+  assert(typeof wasmExports['lv_tiny_ttf_create_file'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_file');
+  _lv_tiny_ttf_create_file = Module['_lv_tiny_ttf_create_file'] = createExportWrapper('lv_tiny_ttf_create_file', 2);
+  assert(typeof wasmExports['lv_tiny_ttf_create_data_ex'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_data_ex');
+  _lv_tiny_ttf_create_data_ex = Module['_lv_tiny_ttf_create_data_ex'] = createExportWrapper('lv_tiny_ttf_create_data_ex', 4);
+  assert(typeof wasmExports['lv_tiny_ttf_create_data'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_data');
+  _lv_tiny_ttf_create_data = Module['_lv_tiny_ttf_create_data'] = createExportWrapper('lv_tiny_ttf_create_data', 3);
+  assert(typeof wasmExports['lv_tiny_ttf_destroy'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_destroy');
+  _lv_tiny_ttf_destroy = Module['_lv_tiny_ttf_destroy'] = createExportWrapper('lv_tiny_ttf_destroy', 1);
+  assert(typeof wasmExports['lv_style_register_prop'] != 'undefined', 'missing Wasm export: lv_style_register_prop');
+  _lv_style_register_prop = Module['_lv_style_register_prop'] = createExportWrapper('lv_style_register_prop', 1);
+  assert(typeof wasmExports['lv_area_set_width'] != 'undefined', 'missing Wasm export: lv_area_set_width');
+  _lv_area_set_width = Module['_lv_area_set_width'] = createExportWrapper('lv_area_set_width', 2);
+  assert(typeof wasmExports['lv_msg_init'] != 'undefined', 'missing Wasm export: lv_msg_init');
+  _lv_msg_init = Module['_lv_msg_init'] = createExportWrapper('lv_msg_init', 0);
+  assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
+  _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
+  assert(typeof wasmExports['lv_fs_tell'] != 'undefined', 'missing Wasm export: lv_fs_tell');
+  _lv_fs_tell = Module['_lv_fs_tell'] = createExportWrapper('lv_fs_tell', 2);
+  assert(typeof wasmExports['lv_fs_write'] != 'undefined', 'missing Wasm export: lv_fs_write');
+  _lv_fs_write = Module['_lv_fs_write'] = createExportWrapper('lv_fs_write', 4);
+  assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
+  _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
+  assert(typeof wasmExports['lv_fragment_create'] != 'undefined', 'missing Wasm export: lv_fragment_create');
+  _lv_fragment_create = Module['_lv_fragment_create'] = createExportWrapper('lv_fragment_create', 2);
+  assert(typeof wasmExports['lv_fragment_del'] != 'undefined', 'missing Wasm export: lv_fragment_del');
+  _lv_fragment_del = Module['_lv_fragment_del'] = createExportWrapper('lv_fragment_del', 1);
+  assert(typeof wasmExports['lv_fragment_del_obj'] != 'undefined', 'missing Wasm export: lv_fragment_del_obj');
+  _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = createExportWrapper('lv_fragment_del_obj', 1);
+  assert(typeof wasmExports['lv_fragment_get_manager'] != 'undefined', 'missing Wasm export: lv_fragment_get_manager');
+  _lv_fragment_get_manager = Module['_lv_fragment_get_manager'] = createExportWrapper('lv_fragment_get_manager', 1);
+  assert(typeof wasmExports['lv_fragment_get_container'] != 'undefined', 'missing Wasm export: lv_fragment_get_container');
+  _lv_fragment_get_container = Module['_lv_fragment_get_container'] = createExportWrapper('lv_fragment_get_container', 1);
+  assert(typeof wasmExports['lv_fragment_get_parent'] != 'undefined', 'missing Wasm export: lv_fragment_get_parent');
+  _lv_fragment_get_parent = Module['_lv_fragment_get_parent'] = createExportWrapper('lv_fragment_get_parent', 1);
+  assert(typeof wasmExports['lv_fragment_create_obj'] != 'undefined', 'missing Wasm export: lv_fragment_create_obj');
+  _lv_fragment_create_obj = Module['_lv_fragment_create_obj'] = createExportWrapper('lv_fragment_create_obj', 2);
+  assert(typeof wasmExports['lv_fragment_recreate_obj'] != 'undefined', 'missing Wasm export: lv_fragment_recreate_obj');
+  _lv_fragment_recreate_obj = Module['_lv_fragment_recreate_obj'] = createExportWrapper('lv_fragment_recreate_obj', 1);
+  assert(typeof wasmExports['lv_fragment_manager_create'] != 'undefined', 'missing Wasm export: lv_fragment_manager_create');
+  _lv_fragment_manager_create = Module['_lv_fragment_manager_create'] = createExportWrapper('lv_fragment_manager_create', 1);
+  assert(typeof wasmExports['lv_fragment_manager_del'] != 'undefined', 'missing Wasm export: lv_fragment_manager_del');
+  _lv_fragment_manager_del = Module['_lv_fragment_manager_del'] = createExportWrapper('lv_fragment_manager_del', 1);
+  assert(typeof wasmExports['lv_fragment_manager_create_obj'] != 'undefined', 'missing Wasm export: lv_fragment_manager_create_obj');
+  _lv_fragment_manager_create_obj = Module['_lv_fragment_manager_create_obj'] = createExportWrapper('lv_fragment_manager_create_obj', 1);
+  assert(typeof wasmExports['lv_fragment_manager_del_obj'] != 'undefined', 'missing Wasm export: lv_fragment_manager_del_obj');
+  _lv_fragment_manager_del_obj = Module['_lv_fragment_manager_del_obj'] = createExportWrapper('lv_fragment_manager_del_obj', 1);
+  assert(typeof wasmExports['lv_fragment_manager_add'] != 'undefined', 'missing Wasm export: lv_fragment_manager_add');
+  _lv_fragment_manager_add = Module['_lv_fragment_manager_add'] = createExportWrapper('lv_fragment_manager_add', 3);
+  assert(typeof wasmExports['lv_fragment_manager_remove'] != 'undefined', 'missing Wasm export: lv_fragment_manager_remove');
+  _lv_fragment_manager_remove = Module['_lv_fragment_manager_remove'] = createExportWrapper('lv_fragment_manager_remove', 2);
+  assert(typeof wasmExports['lv_fragment_manager_push'] != 'undefined', 'missing Wasm export: lv_fragment_manager_push');
+  _lv_fragment_manager_push = Module['_lv_fragment_manager_push'] = createExportWrapper('lv_fragment_manager_push', 3);
+  assert(typeof wasmExports['lv_fragment_manager_pop'] != 'undefined', 'missing Wasm export: lv_fragment_manager_pop');
+  _lv_fragment_manager_pop = Module['_lv_fragment_manager_pop'] = createExportWrapper('lv_fragment_manager_pop', 1);
+  assert(typeof wasmExports['lv_fragment_manager_get_top'] != 'undefined', 'missing Wasm export: lv_fragment_manager_get_top');
+  _lv_fragment_manager_get_top = Module['_lv_fragment_manager_get_top'] = createExportWrapper('lv_fragment_manager_get_top', 1);
+  assert(typeof wasmExports['lv_fragment_manager_replace'] != 'undefined', 'missing Wasm export: lv_fragment_manager_replace');
+  _lv_fragment_manager_replace = Module['_lv_fragment_manager_replace'] = createExportWrapper('lv_fragment_manager_replace', 3);
+  assert(typeof wasmExports['lv_fragment_manager_find_by_container'] != 'undefined', 'missing Wasm export: lv_fragment_manager_find_by_container');
+  _lv_fragment_manager_find_by_container = Module['_lv_fragment_manager_find_by_container'] = createExportWrapper('lv_fragment_manager_find_by_container', 2);
+  assert(typeof wasmExports['lv_fragment_manager_send_event'] != 'undefined', 'missing Wasm export: lv_fragment_manager_send_event');
+  _lv_fragment_manager_send_event = Module['_lv_fragment_manager_send_event'] = createExportWrapper('lv_fragment_manager_send_event', 3);
+  assert(typeof wasmExports['lv_fragment_manager_get_stack_size'] != 'undefined', 'missing Wasm export: lv_fragment_manager_get_stack_size');
+  _lv_fragment_manager_get_stack_size = Module['_lv_fragment_manager_get_stack_size'] = createExportWrapper('lv_fragment_manager_get_stack_size', 1);
+  assert(typeof wasmExports['lv_fragment_manager_get_parent_fragment'] != 'undefined', 'missing Wasm export: lv_fragment_manager_get_parent_fragment');
+  _lv_fragment_manager_get_parent_fragment = Module['_lv_fragment_manager_get_parent_fragment'] = createExportWrapper('lv_fragment_manager_get_parent_fragment', 1);
+  assert(typeof wasmExports['lv_gridnav_add'] != 'undefined', 'missing Wasm export: lv_gridnav_add');
+  _lv_gridnav_add = Module['_lv_gridnav_add'] = createExportWrapper('lv_gridnav_add', 2);
+  assert(typeof wasmExports['lv_gridnav_remove'] != 'undefined', 'missing Wasm export: lv_gridnav_remove');
+  _lv_gridnav_remove = Module['_lv_gridnav_remove'] = createExportWrapper('lv_gridnav_remove', 1);
+  assert(typeof wasmExports['lv_gridnav_set_focused'] != 'undefined', 'missing Wasm export: lv_gridnav_set_focused');
+  _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = createExportWrapper('lv_gridnav_set_focused', 3);
+  assert(typeof wasmExports['lv_monkey_config_init'] != 'undefined', 'missing Wasm export: lv_monkey_config_init');
+  _lv_monkey_config_init = Module['_lv_monkey_config_init'] = createExportWrapper('lv_monkey_config_init', 1);
+  assert(typeof wasmExports['lv_monkey_create'] != 'undefined', 'missing Wasm export: lv_monkey_create');
+  _lv_monkey_create = Module['_lv_monkey_create'] = createExportWrapper('lv_monkey_create', 1);
+  assert(typeof wasmExports['lv_monkey_get_indev'] != 'undefined', 'missing Wasm export: lv_monkey_get_indev');
+  _lv_monkey_get_indev = Module['_lv_monkey_get_indev'] = createExportWrapper('lv_monkey_get_indev', 1);
+  assert(typeof wasmExports['lv_monkey_set_enable'] != 'undefined', 'missing Wasm export: lv_monkey_set_enable');
+  _lv_monkey_set_enable = Module['_lv_monkey_set_enable'] = createExportWrapper('lv_monkey_set_enable', 2);
+  assert(typeof wasmExports['lv_monkey_get_enable'] != 'undefined', 'missing Wasm export: lv_monkey_get_enable');
+  _lv_monkey_get_enable = Module['_lv_monkey_get_enable'] = createExportWrapper('lv_monkey_get_enable', 1);
+  assert(typeof wasmExports['lv_monkey_set_user_data'] != 'undefined', 'missing Wasm export: lv_monkey_set_user_data');
+  _lv_monkey_set_user_data = Module['_lv_monkey_set_user_data'] = createExportWrapper('lv_monkey_set_user_data', 2);
+  assert(typeof wasmExports['lv_monkey_get_user_data'] != 'undefined', 'missing Wasm export: lv_monkey_get_user_data');
+  _lv_monkey_get_user_data = Module['_lv_monkey_get_user_data'] = createExportWrapper('lv_monkey_get_user_data', 1);
+  assert(typeof wasmExports['lv_monkey_del'] != 'undefined', 'missing Wasm export: lv_monkey_del');
+  _lv_monkey_del = Module['_lv_monkey_del'] = createExportWrapper('lv_monkey_del', 1);
+  assert(typeof wasmExports['lv_msg_subsribe'] != 'undefined', 'missing Wasm export: lv_msg_subsribe');
+  _lv_msg_subsribe = Module['_lv_msg_subsribe'] = createExportWrapper('lv_msg_subsribe', 3);
+  assert(typeof wasmExports['lv_msg_subsribe_obj'] != 'undefined', 'missing Wasm export: lv_msg_subsribe_obj');
+  _lv_msg_subsribe_obj = Module['_lv_msg_subsribe_obj'] = createExportWrapper('lv_msg_subsribe_obj', 3);
+  assert(typeof wasmExports['lv_msg_unsubscribe'] != 'undefined', 'missing Wasm export: lv_msg_unsubscribe');
+  _lv_msg_unsubscribe = Module['_lv_msg_unsubscribe'] = createExportWrapper('lv_msg_unsubscribe', 1);
+  assert(typeof wasmExports['lv_msg_unsubscribe_obj'] != 'undefined', 'missing Wasm export: lv_msg_unsubscribe_obj');
+  _lv_msg_unsubscribe_obj = Module['_lv_msg_unsubscribe_obj'] = createExportWrapper('lv_msg_unsubscribe_obj', 2);
+  assert(typeof wasmExports['lv_msg_send'] != 'undefined', 'missing Wasm export: lv_msg_send');
+  _lv_msg_send = Module['_lv_msg_send'] = createExportWrapper('lv_msg_send', 2);
+  assert(typeof wasmExports['lv_msg_get_id'] != 'undefined', 'missing Wasm export: lv_msg_get_id');
+  _lv_msg_get_id = Module['_lv_msg_get_id'] = createExportWrapper('lv_msg_get_id', 1);
+  assert(typeof wasmExports['lv_msg_get_payload'] != 'undefined', 'missing Wasm export: lv_msg_get_payload');
+  _lv_msg_get_payload = Module['_lv_msg_get_payload'] = createExportWrapper('lv_msg_get_payload', 1);
+  assert(typeof wasmExports['lv_msg_get_user_data'] != 'undefined', 'missing Wasm export: lv_msg_get_user_data');
+  _lv_msg_get_user_data = Module['_lv_msg_get_user_data'] = createExportWrapper('lv_msg_get_user_data', 1);
+  assert(typeof wasmExports['lv_event_get_msg'] != 'undefined', 'missing Wasm export: lv_event_get_msg');
+  _lv_event_get_msg = Module['_lv_event_get_msg'] = createExportWrapper('lv_event_get_msg', 1);
+  assert(typeof wasmExports['lv_snapshot_buf_size_needed'] != 'undefined', 'missing Wasm export: lv_snapshot_buf_size_needed');
+  _lv_snapshot_buf_size_needed = Module['_lv_snapshot_buf_size_needed'] = createExportWrapper('lv_snapshot_buf_size_needed', 2);
+  assert(typeof wasmExports['lv_snapshot_take_to_buf'] != 'undefined', 'missing Wasm export: lv_snapshot_take_to_buf');
+  _lv_snapshot_take_to_buf = Module['_lv_snapshot_take_to_buf'] = createExportWrapper('lv_snapshot_take_to_buf', 5);
+  assert(typeof wasmExports['lv_snapshot_take'] != 'undefined', 'missing Wasm export: lv_snapshot_take');
+  _lv_snapshot_take = Module['_lv_snapshot_take'] = createExportWrapper('lv_snapshot_take', 2);
+  assert(typeof wasmExports['lv_snapshot_free'] != 'undefined', 'missing Wasm export: lv_snapshot_free');
+  _lv_snapshot_free = Module['_lv_snapshot_free'] = createExportWrapper('lv_snapshot_free', 1);
+  assert(typeof wasmExports['lv_theme_basic_is_inited'] != 'undefined', 'missing Wasm export: lv_theme_basic_is_inited');
+  _lv_theme_basic_is_inited = Module['_lv_theme_basic_is_inited'] = createExportWrapper('lv_theme_basic_is_inited', 0);
+  assert(typeof wasmExports['lv_theme_basic_init'] != 'undefined', 'missing Wasm export: lv_theme_basic_init');
+  _lv_theme_basic_init = Module['_lv_theme_basic_init'] = createExportWrapper('lv_theme_basic_init', 1);
+  assert(typeof wasmExports['lv_theme_default_is_inited'] != 'undefined', 'missing Wasm export: lv_theme_default_is_inited');
+  _lv_theme_default_is_inited = Module['_lv_theme_default_is_inited'] = createExportWrapper('lv_theme_default_is_inited', 0);
+  assert(typeof wasmExports['lv_palette_lighten'] != 'undefined', 'missing Wasm export: lv_palette_lighten');
+  _lv_palette_lighten = Module['_lv_palette_lighten'] = createExportWrapper('lv_palette_lighten', 3);
+  assert(typeof wasmExports['lv_palette_darken'] != 'undefined', 'missing Wasm export: lv_palette_darken');
+  _lv_palette_darken = Module['_lv_palette_darken'] = createExportWrapper('lv_palette_darken', 3);
+  assert(typeof wasmExports['lv_anim_path_linear'] != 'undefined', 'missing Wasm export: lv_anim_path_linear');
+  _lv_anim_path_linear = Module['_lv_anim_path_linear'] = createExportWrapper('lv_anim_path_linear', 1);
+  assert(typeof wasmExports['lv_style_transition_dsc_init'] != 'undefined', 'missing Wasm export: lv_style_transition_dsc_init');
+  _lv_style_transition_dsc_init = Module['_lv_style_transition_dsc_init'] = createExportWrapper('lv_style_transition_dsc_init', 6);
+  assert(typeof wasmExports['lv_style_set_transition'] != 'undefined', 'missing Wasm export: lv_style_set_transition');
+  _lv_style_set_transition = Module['_lv_style_set_transition'] = createExportWrapper('lv_style_set_transition', 2);
+  assert(typeof wasmExports['lv_style_set_bg_color'] != 'undefined', 'missing Wasm export: lv_style_set_bg_color');
+  _lv_style_set_bg_color = Module['_lv_style_set_bg_color'] = createExportWrapper('lv_style_set_bg_color', 2);
+  assert(typeof wasmExports['lv_style_set_radius'] != 'undefined', 'missing Wasm export: lv_style_set_radius');
+  _lv_style_set_radius = Module['_lv_style_set_radius'] = createExportWrapper('lv_style_set_radius', 2);
+  assert(typeof wasmExports['lv_style_set_pad_left'] != 'undefined', 'missing Wasm export: lv_style_set_pad_left');
+  _lv_style_set_pad_left = Module['_lv_style_set_pad_left'] = createExportWrapper('lv_style_set_pad_left', 2);
+  assert(typeof wasmExports['lv_style_set_pad_right'] != 'undefined', 'missing Wasm export: lv_style_set_pad_right');
+  _lv_style_set_pad_right = Module['_lv_style_set_pad_right'] = createExportWrapper('lv_style_set_pad_right', 2);
+  assert(typeof wasmExports['lv_style_set_pad_top'] != 'undefined', 'missing Wasm export: lv_style_set_pad_top');
+  _lv_style_set_pad_top = Module['_lv_style_set_pad_top'] = createExportWrapper('lv_style_set_pad_top', 2);
+  assert(typeof wasmExports['lv_style_set_pad_bottom'] != 'undefined', 'missing Wasm export: lv_style_set_pad_bottom');
+  _lv_style_set_pad_bottom = Module['_lv_style_set_pad_bottom'] = createExportWrapper('lv_style_set_pad_bottom', 2);
+  assert(typeof wasmExports['lv_style_set_width'] != 'undefined', 'missing Wasm export: lv_style_set_width');
+  _lv_style_set_width = Module['_lv_style_set_width'] = createExportWrapper('lv_style_set_width', 2);
+  assert(typeof wasmExports['lv_style_set_bg_opa'] != 'undefined', 'missing Wasm export: lv_style_set_bg_opa');
+  _lv_style_set_bg_opa = Module['_lv_style_set_bg_opa'] = createExportWrapper('lv_style_set_bg_opa', 2);
+  assert(typeof wasmExports['lv_style_set_text_color'] != 'undefined', 'missing Wasm export: lv_style_set_text_color');
+  _lv_style_set_text_color = Module['_lv_style_set_text_color'] = createExportWrapper('lv_style_set_text_color', 2);
+  assert(typeof wasmExports['lv_style_set_pad_row'] != 'undefined', 'missing Wasm export: lv_style_set_pad_row');
+  _lv_style_set_pad_row = Module['_lv_style_set_pad_row'] = createExportWrapper('lv_style_set_pad_row', 2);
+  assert(typeof wasmExports['lv_style_set_pad_column'] != 'undefined', 'missing Wasm export: lv_style_set_pad_column');
+  _lv_style_set_pad_column = Module['_lv_style_set_pad_column'] = createExportWrapper('lv_style_set_pad_column', 2);
+  assert(typeof wasmExports['lv_style_set_border_color'] != 'undefined', 'missing Wasm export: lv_style_set_border_color');
+  _lv_style_set_border_color = Module['_lv_style_set_border_color'] = createExportWrapper('lv_style_set_border_color', 2);
+  assert(typeof wasmExports['lv_style_set_border_width'] != 'undefined', 'missing Wasm export: lv_style_set_border_width');
+  _lv_style_set_border_width = Module['_lv_style_set_border_width'] = createExportWrapper('lv_style_set_border_width', 2);
+  assert(typeof wasmExports['lv_style_set_border_post'] != 'undefined', 'missing Wasm export: lv_style_set_border_post');
+  _lv_style_set_border_post = Module['_lv_style_set_border_post'] = createExportWrapper('lv_style_set_border_post', 2);
+  assert(typeof wasmExports['lv_style_set_line_color'] != 'undefined', 'missing Wasm export: lv_style_set_line_color');
+  _lv_style_set_line_color = Module['_lv_style_set_line_color'] = createExportWrapper('lv_style_set_line_color', 2);
+  assert(typeof wasmExports['lv_style_set_line_width'] != 'undefined', 'missing Wasm export: lv_style_set_line_width');
+  _lv_style_set_line_width = Module['_lv_style_set_line_width'] = createExportWrapper('lv_style_set_line_width', 2);
+  assert(typeof wasmExports['lv_style_set_outline_color'] != 'undefined', 'missing Wasm export: lv_style_set_outline_color');
+  _lv_style_set_outline_color = Module['_lv_style_set_outline_color'] = createExportWrapper('lv_style_set_outline_color', 2);
+  assert(typeof wasmExports['lv_style_set_outline_width'] != 'undefined', 'missing Wasm export: lv_style_set_outline_width');
+  _lv_style_set_outline_width = Module['_lv_style_set_outline_width'] = createExportWrapper('lv_style_set_outline_width', 2);
+  assert(typeof wasmExports['lv_style_set_outline_pad'] != 'undefined', 'missing Wasm export: lv_style_set_outline_pad');
+  _lv_style_set_outline_pad = Module['_lv_style_set_outline_pad'] = createExportWrapper('lv_style_set_outline_pad', 2);
+  assert(typeof wasmExports['lv_style_set_outline_opa'] != 'undefined', 'missing Wasm export: lv_style_set_outline_opa');
+  _lv_style_set_outline_opa = Module['_lv_style_set_outline_opa'] = createExportWrapper('lv_style_set_outline_opa', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_color'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_color');
+  _lv_style_set_shadow_color = Module['_lv_style_set_shadow_color'] = createExportWrapper('lv_style_set_shadow_color', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_width'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_width');
+  _lv_style_set_shadow_width = Module['_lv_style_set_shadow_width'] = createExportWrapper('lv_style_set_shadow_width', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_opa'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_opa');
+  _lv_style_set_shadow_opa = Module['_lv_style_set_shadow_opa'] = createExportWrapper('lv_style_set_shadow_opa', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_ofs_y'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_ofs_y');
+  _lv_style_set_shadow_ofs_y = Module['_lv_style_set_shadow_ofs_y'] = createExportWrapper('lv_style_set_shadow_ofs_y', 2);
+  assert(typeof wasmExports['lv_style_set_color_filter_dsc'] != 'undefined', 'missing Wasm export: lv_style_set_color_filter_dsc');
+  _lv_style_set_color_filter_dsc = Module['_lv_style_set_color_filter_dsc'] = createExportWrapper('lv_style_set_color_filter_dsc', 2);
+  assert(typeof wasmExports['lv_style_set_color_filter_opa'] != 'undefined', 'missing Wasm export: lv_style_set_color_filter_opa');
+  _lv_style_set_color_filter_opa = Module['_lv_style_set_color_filter_opa'] = createExportWrapper('lv_style_set_color_filter_opa', 2);
+  assert(typeof wasmExports['lv_style_set_clip_corner'] != 'undefined', 'missing Wasm export: lv_style_set_clip_corner');
+  _lv_style_set_clip_corner = Module['_lv_style_set_clip_corner'] = createExportWrapper('lv_style_set_clip_corner', 2);
+  assert(typeof wasmExports['lv_style_set_text_line_space'] != 'undefined', 'missing Wasm export: lv_style_set_text_line_space');
+  _lv_style_set_text_line_space = Module['_lv_style_set_text_line_space'] = createExportWrapper('lv_style_set_text_line_space', 2);
+  assert(typeof wasmExports['lv_style_set_text_align'] != 'undefined', 'missing Wasm export: lv_style_set_text_align');
+  _lv_style_set_text_align = Module['_lv_style_set_text_align'] = createExportWrapper('lv_style_set_text_align', 2);
+  assert(typeof wasmExports['lv_style_set_transform_width'] != 'undefined', 'missing Wasm export: lv_style_set_transform_width');
+  _lv_style_set_transform_width = Module['_lv_style_set_transform_width'] = createExportWrapper('lv_style_set_transform_width', 2);
+  assert(typeof wasmExports['lv_style_set_transform_height'] != 'undefined', 'missing Wasm export: lv_style_set_transform_height');
+  _lv_style_set_transform_height = Module['_lv_style_set_transform_height'] = createExportWrapper('lv_style_set_transform_height', 2);
+  assert(typeof wasmExports['lv_style_set_anim_time'] != 'undefined', 'missing Wasm export: lv_style_set_anim_time');
+  _lv_style_set_anim_time = Module['_lv_style_set_anim_time'] = createExportWrapper('lv_style_set_anim_time', 2);
+  assert(typeof wasmExports['lv_style_set_arc_color'] != 'undefined', 'missing Wasm export: lv_style_set_arc_color');
+  _lv_style_set_arc_color = Module['_lv_style_set_arc_color'] = createExportWrapper('lv_style_set_arc_color', 2);
+  assert(typeof wasmExports['lv_style_set_arc_width'] != 'undefined', 'missing Wasm export: lv_style_set_arc_width');
+  _lv_style_set_arc_width = Module['_lv_style_set_arc_width'] = createExportWrapper('lv_style_set_arc_width', 2);
+  assert(typeof wasmExports['lv_style_set_arc_rounded'] != 'undefined', 'missing Wasm export: lv_style_set_arc_rounded');
+  _lv_style_set_arc_rounded = Module['_lv_style_set_arc_rounded'] = createExportWrapper('lv_style_set_arc_rounded', 2);
+  assert(typeof wasmExports['lv_style_set_max_height'] != 'undefined', 'missing Wasm export: lv_style_set_max_height');
+  _lv_style_set_max_height = Module['_lv_style_set_max_height'] = createExportWrapper('lv_style_set_max_height', 2);
+  assert(typeof wasmExports['lv_style_set_bg_img_src'] != 'undefined', 'missing Wasm export: lv_style_set_bg_img_src');
+  _lv_style_set_bg_img_src = Module['_lv_style_set_bg_img_src'] = createExportWrapper('lv_style_set_bg_img_src', 2);
+  assert(typeof wasmExports['lv_style_set_text_font'] != 'undefined', 'missing Wasm export: lv_style_set_text_font');
+  _lv_style_set_text_font = Module['_lv_style_set_text_font'] = createExportWrapper('lv_style_set_text_font', 2);
+  assert(typeof wasmExports['lv_style_set_height'] != 'undefined', 'missing Wasm export: lv_style_set_height');
+  _lv_style_set_height = Module['_lv_style_set_height'] = createExportWrapper('lv_style_set_height', 2);
+  assert(typeof wasmExports['lv_style_set_border_side'] != 'undefined', 'missing Wasm export: lv_style_set_border_side');
+  _lv_style_set_border_side = Module['_lv_style_set_border_side'] = createExportWrapper('lv_style_set_border_side', 2);
+  assert(typeof wasmExports['lv_style_set_border_opa'] != 'undefined', 'missing Wasm export: lv_style_set_border_opa');
+  _lv_style_set_border_opa = Module['_lv_style_set_border_opa'] = createExportWrapper('lv_style_set_border_opa', 2);
+  assert(typeof wasmExports['lv_style_set_max_width'] != 'undefined', 'missing Wasm export: lv_style_set_max_width');
+  _lv_style_set_max_width = Module['_lv_style_set_max_width'] = createExportWrapper('lv_style_set_max_width', 2);
+  assert(typeof wasmExports['lv_style_set_bg_grad_color'] != 'undefined', 'missing Wasm export: lv_style_set_bg_grad_color');
+  _lv_style_set_bg_grad_color = Module['_lv_style_set_bg_grad_color'] = createExportWrapper('lv_style_set_bg_grad_color', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_spread'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_spread');
+  _lv_style_set_shadow_spread = Module['_lv_style_set_shadow_spread'] = createExportWrapper('lv_style_set_shadow_spread', 2);
+  assert(typeof wasmExports['lv_theme_default_get'] != 'undefined', 'missing Wasm export: lv_theme_default_get');
+  _lv_theme_default_get = Module['_lv_theme_default_get'] = createExportWrapper('lv_theme_default_get', 0);
+  assert(typeof wasmExports['lv_color_darken'] != 'undefined', 'missing Wasm export: lv_color_darken');
+  _lv_color_darken = Module['_lv_color_darken'] = createExportWrapper('lv_color_darken', 3);
+  assert(typeof wasmExports['lv_theme_mono_is_inited'] != 'undefined', 'missing Wasm export: lv_theme_mono_is_inited');
+  _lv_theme_mono_is_inited = Module['_lv_theme_mono_is_inited'] = createExportWrapper('lv_theme_mono_is_inited', 0);
+  assert(typeof wasmExports['lv_theme_mono_init'] != 'undefined', 'missing Wasm export: lv_theme_mono_init');
+  _lv_theme_mono_init = Module['_lv_theme_mono_init'] = createExportWrapper('lv_theme_mono_init', 3);
+  assert(typeof wasmExports['lv_animimg_create'] != 'undefined', 'missing Wasm export: lv_animimg_create');
+  _lv_animimg_create = Module['_lv_animimg_create'] = createExportWrapper('lv_animimg_create', 1);
+  assert(typeof wasmExports['lv_animimg_set_src'] != 'undefined', 'missing Wasm export: lv_animimg_set_src');
+  _lv_animimg_set_src = Module['_lv_animimg_set_src'] = createExportWrapper('lv_animimg_set_src', 3);
+  assert(typeof wasmExports['lv_animimg_start'] != 'undefined', 'missing Wasm export: lv_animimg_start');
+  _lv_animimg_start = Module['_lv_animimg_start'] = createExportWrapper('lv_animimg_start', 1);
+  assert(typeof wasmExports['lv_animimg_set_duration'] != 'undefined', 'missing Wasm export: lv_animimg_set_duration');
+  _lv_animimg_set_duration = Module['_lv_animimg_set_duration'] = createExportWrapper('lv_animimg_set_duration', 2);
+  assert(typeof wasmExports['lv_animimg_set_repeat_count'] != 'undefined', 'missing Wasm export: lv_animimg_set_repeat_count');
+  _lv_animimg_set_repeat_count = Module['_lv_animimg_set_repeat_count'] = createExportWrapper('lv_animimg_set_repeat_count', 2);
+  assert(typeof wasmExports['lv_calendar_set_showed_date'] != 'undefined', 'missing Wasm export: lv_calendar_set_showed_date');
+  _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = createExportWrapper('lv_calendar_set_showed_date', 3);
+  assert(typeof wasmExports['lv_calendar_create'] != 'undefined', 'missing Wasm export: lv_calendar_create');
+  _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create', 1);
+  assert(typeof wasmExports['lv_btnmatrix_create'] != 'undefined', 'missing Wasm export: lv_btnmatrix_create');
+  _lv_btnmatrix_create = Module['_lv_btnmatrix_create'] = createExportWrapper('lv_btnmatrix_create', 1);
+  assert(typeof wasmExports['lv_btnmatrix_set_map'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_map');
+  _lv_btnmatrix_set_map = Module['_lv_btnmatrix_set_map'] = createExportWrapper('lv_btnmatrix_set_map', 2);
+  assert(typeof wasmExports['lv_btnmatrix_set_btn_ctrl_all'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_btn_ctrl_all');
+  _lv_btnmatrix_set_btn_ctrl_all = Module['_lv_btnmatrix_set_btn_ctrl_all'] = createExportWrapper('lv_btnmatrix_set_btn_ctrl_all', 2);
+  assert(typeof wasmExports['lv_calendar_set_day_names'] != 'undefined', 'missing Wasm export: lv_calendar_set_day_names');
+  _lv_calendar_set_day_names = Module['_lv_calendar_set_day_names'] = createExportWrapper('lv_calendar_set_day_names', 2);
+  assert(typeof wasmExports['lv_calendar_set_today_date'] != 'undefined', 'missing Wasm export: lv_calendar_set_today_date');
+  _lv_calendar_set_today_date = Module['_lv_calendar_set_today_date'] = createExportWrapper('lv_calendar_set_today_date', 4);
+  assert(typeof wasmExports['lv_btnmatrix_clear_btn_ctrl_all'] != 'undefined', 'missing Wasm export: lv_btnmatrix_clear_btn_ctrl_all');
+  _lv_btnmatrix_clear_btn_ctrl_all = Module['_lv_btnmatrix_clear_btn_ctrl_all'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl_all', 2);
+  assert(typeof wasmExports['lv_btnmatrix_set_btn_ctrl'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_btn_ctrl');
+  _lv_btnmatrix_set_btn_ctrl = Module['_lv_btnmatrix_set_btn_ctrl'] = createExportWrapper('lv_btnmatrix_set_btn_ctrl', 3);
+  assert(typeof wasmExports['lv_calendar_set_highlighted_dates'] != 'undefined', 'missing Wasm export: lv_calendar_set_highlighted_dates');
+  _lv_calendar_set_highlighted_dates = Module['_lv_calendar_set_highlighted_dates'] = createExportWrapper('lv_calendar_set_highlighted_dates', 3);
+  assert(typeof wasmExports['lv_btnmatrix_get_selected_btn'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_selected_btn');
+  _lv_btnmatrix_get_selected_btn = Module['_lv_btnmatrix_get_selected_btn'] = createExportWrapper('lv_btnmatrix_get_selected_btn', 1);
+  assert(typeof wasmExports['lv_btnmatrix_set_selected_btn'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_selected_btn');
+  _lv_btnmatrix_set_selected_btn = Module['_lv_btnmatrix_set_selected_btn'] = createExportWrapper('lv_btnmatrix_set_selected_btn', 2);
+  assert(typeof wasmExports['lv_calendar_get_btnmatrix'] != 'undefined', 'missing Wasm export: lv_calendar_get_btnmatrix');
+  _lv_calendar_get_btnmatrix = Module['_lv_calendar_get_btnmatrix'] = createExportWrapper('lv_calendar_get_btnmatrix', 1);
+  assert(typeof wasmExports['lv_calendar_get_today_date'] != 'undefined', 'missing Wasm export: lv_calendar_get_today_date');
+  _lv_calendar_get_today_date = Module['_lv_calendar_get_today_date'] = createExportWrapper('lv_calendar_get_today_date', 1);
+  assert(typeof wasmExports['lv_calendar_get_showed_date'] != 'undefined', 'missing Wasm export: lv_calendar_get_showed_date');
+  _lv_calendar_get_showed_date = Module['_lv_calendar_get_showed_date'] = createExportWrapper('lv_calendar_get_showed_date', 1);
+  assert(typeof wasmExports['lv_calendar_get_highlighted_dates'] != 'undefined', 'missing Wasm export: lv_calendar_get_highlighted_dates');
+  _lv_calendar_get_highlighted_dates = Module['_lv_calendar_get_highlighted_dates'] = createExportWrapper('lv_calendar_get_highlighted_dates', 1);
+  assert(typeof wasmExports['lv_calendar_get_highlighted_dates_num'] != 'undefined', 'missing Wasm export: lv_calendar_get_highlighted_dates_num');
+  _lv_calendar_get_highlighted_dates_num = Module['_lv_calendar_get_highlighted_dates_num'] = createExportWrapper('lv_calendar_get_highlighted_dates_num', 1);
+  assert(typeof wasmExports['lv_calendar_get_pressed_date'] != 'undefined', 'missing Wasm export: lv_calendar_get_pressed_date');
+  _lv_calendar_get_pressed_date = Module['_lv_calendar_get_pressed_date'] = createExportWrapper('lv_calendar_get_pressed_date', 2);
+  assert(typeof wasmExports['lv_btnmatrix_get_btn_text'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_btn_text');
+  _lv_btnmatrix_get_btn_text = Module['_lv_btnmatrix_get_btn_text'] = createExportWrapper('lv_btnmatrix_get_btn_text', 2);
+  assert(typeof wasmExports['lv_btnmatrix_has_btn_ctrl'] != 'undefined', 'missing Wasm export: lv_btnmatrix_has_btn_ctrl');
+  _lv_btnmatrix_has_btn_ctrl = Module['_lv_btnmatrix_has_btn_ctrl'] = createExportWrapper('lv_btnmatrix_has_btn_ctrl', 3);
+  assert(typeof wasmExports['lv_calendar_header_arrow_create'] != 'undefined', 'missing Wasm export: lv_calendar_header_arrow_create');
+  _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = createExportWrapper('lv_calendar_header_arrow_create', 1);
+  assert(typeof wasmExports['lv_btn_create'] != 'undefined', 'missing Wasm export: lv_btn_create');
+  _lv_btn_create = Module['_lv_btn_create'] = createExportWrapper('lv_btn_create', 1);
+  assert(typeof wasmExports['lv_label_create'] != 'undefined', 'missing Wasm export: lv_label_create');
+  _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create', 1);
+  assert(typeof wasmExports['lv_label_set_long_mode'] != 'undefined', 'missing Wasm export: lv_label_set_long_mode');
+  _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = createExportWrapper('lv_label_set_long_mode', 2);
+  assert(typeof wasmExports['lv_label_set_text_fmt'] != 'undefined', 'missing Wasm export: lv_label_set_text_fmt');
+  _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = createExportWrapper('lv_label_set_text_fmt', 3);
+  assert(typeof wasmExports['lv_calendar_header_dropdown_create'] != 'undefined', 'missing Wasm export: lv_calendar_header_dropdown_create');
+  _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = createExportWrapper('lv_calendar_header_dropdown_create', 1);
+  assert(typeof wasmExports['lv_dropdown_create'] != 'undefined', 'missing Wasm export: lv_dropdown_create');
+  _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create', 1);
+  assert(typeof wasmExports['lv_dropdown_set_options'] != 'undefined', 'missing Wasm export: lv_dropdown_set_options');
+  _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = createExportWrapper('lv_dropdown_set_options', 2);
+  assert(typeof wasmExports['lv_calendar_header_dropdown_set_year_list'] != 'undefined', 'missing Wasm export: lv_calendar_header_dropdown_set_year_list');
+  _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = createExportWrapper('lv_calendar_header_dropdown_set_year_list', 2);
+  assert(typeof wasmExports['lv_dropdown_clear_options'] != 'undefined', 'missing Wasm export: lv_dropdown_clear_options');
+  _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = createExportWrapper('lv_dropdown_clear_options', 1);
+  assert(typeof wasmExports['lv_dropdown_get_selected'] != 'undefined', 'missing Wasm export: lv_dropdown_get_selected');
+  _lv_dropdown_get_selected = Module['_lv_dropdown_get_selected'] = createExportWrapper('lv_dropdown_get_selected', 1);
+  assert(typeof wasmExports['lv_dropdown_get_options'] != 'undefined', 'missing Wasm export: lv_dropdown_get_options');
+  _lv_dropdown_get_options = Module['_lv_dropdown_get_options'] = createExportWrapper('lv_dropdown_get_options', 1);
+  assert(typeof wasmExports['lv_dropdown_set_selected'] != 'undefined', 'missing Wasm export: lv_dropdown_set_selected');
+  _lv_dropdown_set_selected = Module['_lv_dropdown_set_selected'] = createExportWrapper('lv_dropdown_set_selected', 2);
+  assert(typeof wasmExports['lv_chart_get_point_pos_by_id'] != 'undefined', 'missing Wasm export: lv_chart_get_point_pos_by_id');
+  _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = createExportWrapper('lv_chart_get_point_pos_by_id', 4);
+  assert(typeof wasmExports['lv_chart_create'] != 'undefined', 'missing Wasm export: lv_chart_create');
+  _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create', 1);
+  assert(typeof wasmExports['lv_chart_set_type'] != 'undefined', 'missing Wasm export: lv_chart_set_type');
+  _lv_chart_set_type = Module['_lv_chart_set_type'] = createExportWrapper('lv_chart_set_type', 2);
+  assert(typeof wasmExports['lv_chart_refresh'] != 'undefined', 'missing Wasm export: lv_chart_refresh');
+  _lv_chart_refresh = Module['_lv_chart_refresh'] = createExportWrapper('lv_chart_refresh', 1);
+  assert(typeof wasmExports['lv_chart_set_point_count'] != 'undefined', 'missing Wasm export: lv_chart_set_point_count');
+  _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = createExportWrapper('lv_chart_set_point_count', 2);
+  assert(typeof wasmExports['lv_chart_set_range'] != 'undefined', 'missing Wasm export: lv_chart_set_range');
+  _lv_chart_set_range = Module['_lv_chart_set_range'] = createExportWrapper('lv_chart_set_range', 4);
+  assert(typeof wasmExports['lv_chart_set_update_mode'] != 'undefined', 'missing Wasm export: lv_chart_set_update_mode');
+  _lv_chart_set_update_mode = Module['_lv_chart_set_update_mode'] = createExportWrapper('lv_chart_set_update_mode', 2);
+  assert(typeof wasmExports['lv_chart_set_div_line_count'] != 'undefined', 'missing Wasm export: lv_chart_set_div_line_count');
+  _lv_chart_set_div_line_count = Module['_lv_chart_set_div_line_count'] = createExportWrapper('lv_chart_set_div_line_count', 3);
+  assert(typeof wasmExports['lv_chart_set_zoom_x'] != 'undefined', 'missing Wasm export: lv_chart_set_zoom_x');
+  _lv_chart_set_zoom_x = Module['_lv_chart_set_zoom_x'] = createExportWrapper('lv_chart_set_zoom_x', 2);
+  assert(typeof wasmExports['lv_chart_set_zoom_y'] != 'undefined', 'missing Wasm export: lv_chart_set_zoom_y');
+  _lv_chart_set_zoom_y = Module['_lv_chart_set_zoom_y'] = createExportWrapper('lv_chart_set_zoom_y', 2);
+  assert(typeof wasmExports['lv_chart_get_zoom_x'] != 'undefined', 'missing Wasm export: lv_chart_get_zoom_x');
+  _lv_chart_get_zoom_x = Module['_lv_chart_get_zoom_x'] = createExportWrapper('lv_chart_get_zoom_x', 1);
+  assert(typeof wasmExports['lv_chart_get_zoom_y'] != 'undefined', 'missing Wasm export: lv_chart_get_zoom_y');
+  _lv_chart_get_zoom_y = Module['_lv_chart_get_zoom_y'] = createExportWrapper('lv_chart_get_zoom_y', 1);
+  assert(typeof wasmExports['lv_chart_set_axis_tick'] != 'undefined', 'missing Wasm export: lv_chart_set_axis_tick');
+  _lv_chart_set_axis_tick = Module['_lv_chart_set_axis_tick'] = createExportWrapper('lv_chart_set_axis_tick', 8);
+  assert(typeof wasmExports['lv_chart_get_type'] != 'undefined', 'missing Wasm export: lv_chart_get_type');
+  _lv_chart_get_type = Module['_lv_chart_get_type'] = createExportWrapper('lv_chart_get_type', 1);
+  assert(typeof wasmExports['lv_chart_get_point_count'] != 'undefined', 'missing Wasm export: lv_chart_get_point_count');
+  _lv_chart_get_point_count = Module['_lv_chart_get_point_count'] = createExportWrapper('lv_chart_get_point_count', 1);
+  assert(typeof wasmExports['lv_chart_get_x_start_point'] != 'undefined', 'missing Wasm export: lv_chart_get_x_start_point');
+  _lv_chart_get_x_start_point = Module['_lv_chart_get_x_start_point'] = createExportWrapper('lv_chart_get_x_start_point', 2);
+  assert(typeof wasmExports['lv_map'] != 'undefined', 'missing Wasm export: lv_map');
+  _lv_map = Module['_lv_map'] = createExportWrapper('lv_map', 5);
+  assert(typeof wasmExports['lv_chart_add_series'] != 'undefined', 'missing Wasm export: lv_chart_add_series');
+  _lv_chart_add_series = Module['_lv_chart_add_series'] = createExportWrapper('lv_chart_add_series', 3);
+  assert(typeof wasmExports['lv_chart_remove_series'] != 'undefined', 'missing Wasm export: lv_chart_remove_series');
+  _lv_chart_remove_series = Module['_lv_chart_remove_series'] = createExportWrapper('lv_chart_remove_series', 2);
+  assert(typeof wasmExports['lv_chart_hide_series'] != 'undefined', 'missing Wasm export: lv_chart_hide_series');
+  _lv_chart_hide_series = Module['_lv_chart_hide_series'] = createExportWrapper('lv_chart_hide_series', 3);
+  assert(typeof wasmExports['lv_chart_set_series_color'] != 'undefined', 'missing Wasm export: lv_chart_set_series_color');
+  _lv_chart_set_series_color = Module['_lv_chart_set_series_color'] = createExportWrapper('lv_chart_set_series_color', 3);
+  assert(typeof wasmExports['lv_chart_set_x_start_point'] != 'undefined', 'missing Wasm export: lv_chart_set_x_start_point');
+  _lv_chart_set_x_start_point = Module['_lv_chart_set_x_start_point'] = createExportWrapper('lv_chart_set_x_start_point', 3);
+  assert(typeof wasmExports['lv_chart_get_series_next'] != 'undefined', 'missing Wasm export: lv_chart_get_series_next');
+  _lv_chart_get_series_next = Module['_lv_chart_get_series_next'] = createExportWrapper('lv_chart_get_series_next', 2);
+  assert(typeof wasmExports['lv_chart_add_cursor'] != 'undefined', 'missing Wasm export: lv_chart_add_cursor');
+  _lv_chart_add_cursor = Module['_lv_chart_add_cursor'] = createExportWrapper('lv_chart_add_cursor', 3);
+  assert(typeof wasmExports['lv_chart_set_cursor_pos'] != 'undefined', 'missing Wasm export: lv_chart_set_cursor_pos');
+  _lv_chart_set_cursor_pos = Module['_lv_chart_set_cursor_pos'] = createExportWrapper('lv_chart_set_cursor_pos', 3);
+  assert(typeof wasmExports['lv_chart_set_cursor_point'] != 'undefined', 'missing Wasm export: lv_chart_set_cursor_point');
+  _lv_chart_set_cursor_point = Module['_lv_chart_set_cursor_point'] = createExportWrapper('lv_chart_set_cursor_point', 4);
+  assert(typeof wasmExports['lv_chart_get_cursor_point'] != 'undefined', 'missing Wasm export: lv_chart_get_cursor_point');
+  _lv_chart_get_cursor_point = Module['_lv_chart_get_cursor_point'] = createExportWrapper('lv_chart_get_cursor_point', 3);
+  assert(typeof wasmExports['lv_chart_set_all_value'] != 'undefined', 'missing Wasm export: lv_chart_set_all_value');
+  _lv_chart_set_all_value = Module['_lv_chart_set_all_value'] = createExportWrapper('lv_chart_set_all_value', 3);
+  assert(typeof wasmExports['lv_chart_set_next_value'] != 'undefined', 'missing Wasm export: lv_chart_set_next_value');
+  _lv_chart_set_next_value = Module['_lv_chart_set_next_value'] = createExportWrapper('lv_chart_set_next_value', 3);
+  assert(typeof wasmExports['lv_chart_set_next_value2'] != 'undefined', 'missing Wasm export: lv_chart_set_next_value2');
+  _lv_chart_set_next_value2 = Module['_lv_chart_set_next_value2'] = createExportWrapper('lv_chart_set_next_value2', 4);
+  assert(typeof wasmExports['lv_chart_set_value_by_id'] != 'undefined', 'missing Wasm export: lv_chart_set_value_by_id');
+  _lv_chart_set_value_by_id = Module['_lv_chart_set_value_by_id'] = createExportWrapper('lv_chart_set_value_by_id', 4);
+  assert(typeof wasmExports['lv_chart_set_value_by_id2'] != 'undefined', 'missing Wasm export: lv_chart_set_value_by_id2');
+  _lv_chart_set_value_by_id2 = Module['_lv_chart_set_value_by_id2'] = createExportWrapper('lv_chart_set_value_by_id2', 5);
+  assert(typeof wasmExports['lv_chart_set_ext_y_array'] != 'undefined', 'missing Wasm export: lv_chart_set_ext_y_array');
+  _lv_chart_set_ext_y_array = Module['_lv_chart_set_ext_y_array'] = createExportWrapper('lv_chart_set_ext_y_array', 3);
+  assert(typeof wasmExports['lv_chart_set_ext_x_array'] != 'undefined', 'missing Wasm export: lv_chart_set_ext_x_array');
+  _lv_chart_set_ext_x_array = Module['_lv_chart_set_ext_x_array'] = createExportWrapper('lv_chart_set_ext_x_array', 3);
+  assert(typeof wasmExports['lv_chart_get_y_array'] != 'undefined', 'missing Wasm export: lv_chart_get_y_array');
+  _lv_chart_get_y_array = Module['_lv_chart_get_y_array'] = createExportWrapper('lv_chart_get_y_array', 2);
+  assert(typeof wasmExports['lv_chart_get_x_array'] != 'undefined', 'missing Wasm export: lv_chart_get_x_array');
+  _lv_chart_get_x_array = Module['_lv_chart_get_x_array'] = createExportWrapper('lv_chart_get_x_array', 2);
+  assert(typeof wasmExports['lv_chart_get_pressed_point'] != 'undefined', 'missing Wasm export: lv_chart_get_pressed_point');
+  _lv_chart_get_pressed_point = Module['_lv_chart_get_pressed_point'] = createExportWrapper('lv_chart_get_pressed_point', 1);
+  assert(typeof wasmExports['lv_colorwheel_set_hsv'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_hsv');
+  _lv_colorwheel_set_hsv = Module['_lv_colorwheel_set_hsv'] = createExportWrapper('lv_colorwheel_set_hsv', 2);
+  assert(typeof wasmExports['lv_atan2'] != 'undefined', 'missing Wasm export: lv_atan2');
+  _lv_atan2 = Module['_lv_atan2'] = createExportWrapper('lv_atan2', 2);
+  assert(typeof wasmExports['lv_color_hsv_to_rgb'] != 'undefined', 'missing Wasm export: lv_color_hsv_to_rgb');
+  _lv_color_hsv_to_rgb = Module['_lv_color_hsv_to_rgb'] = createExportWrapper('lv_color_hsv_to_rgb', 4);
+  assert(typeof wasmExports['lv_colorwheel_create'] != 'undefined', 'missing Wasm export: lv_colorwheel_create');
+  _lv_colorwheel_create = Module['_lv_colorwheel_create'] = createExportWrapper('lv_colorwheel_create', 2);
+  assert(typeof wasmExports['lv_colorwheel_set_rgb'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_rgb');
+  _lv_colorwheel_set_rgb = Module['_lv_colorwheel_set_rgb'] = createExportWrapper('lv_colorwheel_set_rgb', 2);
+  assert(typeof wasmExports['lv_color_rgb_to_hsv'] != 'undefined', 'missing Wasm export: lv_color_rgb_to_hsv');
+  _lv_color_rgb_to_hsv = Module['_lv_color_rgb_to_hsv'] = createExportWrapper('lv_color_rgb_to_hsv', 4);
+  assert(typeof wasmExports['lv_colorwheel_set_mode'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_mode');
+  _lv_colorwheel_set_mode = Module['_lv_colorwheel_set_mode'] = createExportWrapper('lv_colorwheel_set_mode', 2);
+  assert(typeof wasmExports['lv_colorwheel_set_mode_fixed'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_mode_fixed');
+  _lv_colorwheel_set_mode_fixed = Module['_lv_colorwheel_set_mode_fixed'] = createExportWrapper('lv_colorwheel_set_mode_fixed', 2);
+  assert(typeof wasmExports['lv_colorwheel_get_hsv'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_hsv');
+  _lv_colorwheel_get_hsv = Module['_lv_colorwheel_get_hsv'] = createExportWrapper('lv_colorwheel_get_hsv', 2);
+  assert(typeof wasmExports['lv_colorwheel_get_rgb'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_rgb');
+  _lv_colorwheel_get_rgb = Module['_lv_colorwheel_get_rgb'] = createExportWrapper('lv_colorwheel_get_rgb', 2);
+  assert(typeof wasmExports['lv_colorwheel_get_color_mode'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_color_mode');
+  _lv_colorwheel_get_color_mode = Module['_lv_colorwheel_get_color_mode'] = createExportWrapper('lv_colorwheel_get_color_mode', 1);
+  assert(typeof wasmExports['lv_colorwheel_get_color_mode_fixed'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_color_mode_fixed');
+  _lv_colorwheel_get_color_mode_fixed = Module['_lv_colorwheel_get_color_mode_fixed'] = createExportWrapper('lv_colorwheel_get_color_mode_fixed', 1);
+  assert(typeof wasmExports['lv_imgbtn_create'] != 'undefined', 'missing Wasm export: lv_imgbtn_create');
+  _lv_imgbtn_create = Module['_lv_imgbtn_create'] = createExportWrapper('lv_imgbtn_create', 1);
+  assert(typeof wasmExports['lv_imgbtn_set_src'] != 'undefined', 'missing Wasm export: lv_imgbtn_set_src');
+  _lv_imgbtn_set_src = Module['_lv_imgbtn_set_src'] = createExportWrapper('lv_imgbtn_set_src', 5);
+  assert(typeof wasmExports['lv_imgbtn_set_state'] != 'undefined', 'missing Wasm export: lv_imgbtn_set_state');
+  _lv_imgbtn_set_state = Module['_lv_imgbtn_set_state'] = createExportWrapper('lv_imgbtn_set_state', 2);
+  assert(typeof wasmExports['lv_imgbtn_get_src_left'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_left');
+  _lv_imgbtn_get_src_left = Module['_lv_imgbtn_get_src_left'] = createExportWrapper('lv_imgbtn_get_src_left', 2);
+  assert(typeof wasmExports['lv_imgbtn_get_src_middle'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_middle');
+  _lv_imgbtn_get_src_middle = Module['_lv_imgbtn_get_src_middle'] = createExportWrapper('lv_imgbtn_get_src_middle', 2);
+  assert(typeof wasmExports['lv_imgbtn_get_src_right'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_right');
+  _lv_imgbtn_get_src_right = Module['_lv_imgbtn_get_src_right'] = createExportWrapper('lv_imgbtn_get_src_right', 2);
+  assert(typeof wasmExports['lv_keyboard_def_event_cb'] != 'undefined', 'missing Wasm export: lv_keyboard_def_event_cb');
+  _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = createExportWrapper('lv_keyboard_def_event_cb', 1);
+  assert(typeof wasmExports['lv_keyboard_create'] != 'undefined', 'missing Wasm export: lv_keyboard_create');
+  _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create', 1);
+  assert(typeof wasmExports['lv_keyboard_set_textarea'] != 'undefined', 'missing Wasm export: lv_keyboard_set_textarea');
+  _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = createExportWrapper('lv_keyboard_set_textarea', 2);
+  assert(typeof wasmExports['lv_keyboard_set_mode'] != 'undefined', 'missing Wasm export: lv_keyboard_set_mode');
+  _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = createExportWrapper('lv_keyboard_set_mode', 2);
+  assert(typeof wasmExports['lv_keyboard_set_popovers'] != 'undefined', 'missing Wasm export: lv_keyboard_set_popovers');
+  _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = createExportWrapper('lv_keyboard_set_popovers', 2);
+  assert(typeof wasmExports['lv_btnmatrix_set_ctrl_map'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_ctrl_map');
+  _lv_btnmatrix_set_ctrl_map = Module['_lv_btnmatrix_set_ctrl_map'] = createExportWrapper('lv_btnmatrix_set_ctrl_map', 2);
+  assert(typeof wasmExports['lv_keyboard_set_map'] != 'undefined', 'missing Wasm export: lv_keyboard_set_map');
+  _lv_keyboard_set_map = Module['_lv_keyboard_set_map'] = createExportWrapper('lv_keyboard_set_map', 4);
+  assert(typeof wasmExports['lv_keyboard_get_textarea'] != 'undefined', 'missing Wasm export: lv_keyboard_get_textarea');
+  _lv_keyboard_get_textarea = Module['_lv_keyboard_get_textarea'] = createExportWrapper('lv_keyboard_get_textarea', 1);
+  assert(typeof wasmExports['lv_keyboard_get_mode'] != 'undefined', 'missing Wasm export: lv_keyboard_get_mode');
+  _lv_keyboard_get_mode = Module['_lv_keyboard_get_mode'] = createExportWrapper('lv_keyboard_get_mode', 1);
+  assert(typeof wasmExports['lv_btnmatrix_get_popovers'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_popovers');
+  _lv_btnmatrix_get_popovers = Module['_lv_btnmatrix_get_popovers'] = createExportWrapper('lv_btnmatrix_get_popovers', 1);
+  assert(typeof wasmExports['lv_textarea_add_char'] != 'undefined', 'missing Wasm export: lv_textarea_add_char');
+  _lv_textarea_add_char = Module['_lv_textarea_add_char'] = createExportWrapper('lv_textarea_add_char', 2);
+  assert(typeof wasmExports['lv_textarea_get_one_line'] != 'undefined', 'missing Wasm export: lv_textarea_get_one_line');
+  _lv_textarea_get_one_line = Module['_lv_textarea_get_one_line'] = createExportWrapper('lv_textarea_get_one_line', 1);
+  assert(typeof wasmExports['lv_textarea_cursor_left'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_left');
+  _lv_textarea_cursor_left = Module['_lv_textarea_cursor_left'] = createExportWrapper('lv_textarea_cursor_left', 1);
+  assert(typeof wasmExports['lv_textarea_cursor_right'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_right');
+  _lv_textarea_cursor_right = Module['_lv_textarea_cursor_right'] = createExportWrapper('lv_textarea_cursor_right', 1);
+  assert(typeof wasmExports['lv_textarea_del_char'] != 'undefined', 'missing Wasm export: lv_textarea_del_char');
+  _lv_textarea_del_char = Module['_lv_textarea_del_char'] = createExportWrapper('lv_textarea_del_char', 1);
+  assert(typeof wasmExports['lv_textarea_get_cursor_pos'] != 'undefined', 'missing Wasm export: lv_textarea_get_cursor_pos');
+  _lv_textarea_get_cursor_pos = Module['_lv_textarea_get_cursor_pos'] = createExportWrapper('lv_textarea_get_cursor_pos', 1);
+  assert(typeof wasmExports['lv_textarea_get_text'] != 'undefined', 'missing Wasm export: lv_textarea_get_text');
+  _lv_textarea_get_text = Module['_lv_textarea_get_text'] = createExportWrapper('lv_textarea_get_text', 1);
+  assert(typeof wasmExports['lv_textarea_set_cursor_pos'] != 'undefined', 'missing Wasm export: lv_textarea_set_cursor_pos');
+  _lv_textarea_set_cursor_pos = Module['_lv_textarea_set_cursor_pos'] = createExportWrapper('lv_textarea_set_cursor_pos', 2);
+  assert(typeof wasmExports['lv_textarea_add_text'] != 'undefined', 'missing Wasm export: lv_textarea_add_text');
+  _lv_textarea_add_text = Module['_lv_textarea_add_text'] = createExportWrapper('lv_textarea_add_text', 2);
+  assert(typeof wasmExports['lv_led_create'] != 'undefined', 'missing Wasm export: lv_led_create');
+  _lv_led_create = Module['_lv_led_create'] = createExportWrapper('lv_led_create', 1);
+  assert(typeof wasmExports['lv_led_set_color'] != 'undefined', 'missing Wasm export: lv_led_set_color');
+  _lv_led_set_color = Module['_lv_led_set_color'] = createExportWrapper('lv_led_set_color', 2);
+  assert(typeof wasmExports['lv_led_set_brightness'] != 'undefined', 'missing Wasm export: lv_led_set_brightness');
+  _lv_led_set_brightness = Module['_lv_led_set_brightness'] = createExportWrapper('lv_led_set_brightness', 2);
+  assert(typeof wasmExports['lv_led_on'] != 'undefined', 'missing Wasm export: lv_led_on');
+  _lv_led_on = Module['_lv_led_on'] = createExportWrapper('lv_led_on', 1);
+  assert(typeof wasmExports['lv_led_off'] != 'undefined', 'missing Wasm export: lv_led_off');
+  _lv_led_off = Module['_lv_led_off'] = createExportWrapper('lv_led_off', 1);
+  assert(typeof wasmExports['lv_led_toggle'] != 'undefined', 'missing Wasm export: lv_led_toggle');
+  _lv_led_toggle = Module['_lv_led_toggle'] = createExportWrapper('lv_led_toggle', 1);
+  assert(typeof wasmExports['lv_led_get_brightness'] != 'undefined', 'missing Wasm export: lv_led_get_brightness');
+  _lv_led_get_brightness = Module['_lv_led_get_brightness'] = createExportWrapper('lv_led_get_brightness', 1);
+  assert(typeof wasmExports['lv_list_create'] != 'undefined', 'missing Wasm export: lv_list_create');
+  _lv_list_create = Module['_lv_list_create'] = createExportWrapper('lv_list_create', 1);
+  assert(typeof wasmExports['lv_list_add_text'] != 'undefined', 'missing Wasm export: lv_list_add_text');
+  _lv_list_add_text = Module['_lv_list_add_text'] = createExportWrapper('lv_list_add_text', 2);
+  assert(typeof wasmExports['lv_label_set_text'] != 'undefined', 'missing Wasm export: lv_label_set_text');
+  _lv_label_set_text = Module['_lv_label_set_text'] = createExportWrapper('lv_label_set_text', 2);
+  assert(typeof wasmExports['lv_list_add_btn'] != 'undefined', 'missing Wasm export: lv_list_add_btn');
+  _lv_list_add_btn = Module['_lv_list_add_btn'] = createExportWrapper('lv_list_add_btn', 3);
+  assert(typeof wasmExports['lv_img_create'] != 'undefined', 'missing Wasm export: lv_img_create');
+  _lv_img_create = Module['_lv_img_create'] = createExportWrapper('lv_img_create', 1);
+  assert(typeof wasmExports['lv_img_set_src'] != 'undefined', 'missing Wasm export: lv_img_set_src');
+  _lv_img_set_src = Module['_lv_img_set_src'] = createExportWrapper('lv_img_set_src', 2);
+  assert(typeof wasmExports['lv_list_get_btn_text'] != 'undefined', 'missing Wasm export: lv_list_get_btn_text');
+  _lv_list_get_btn_text = Module['_lv_list_get_btn_text'] = createExportWrapper('lv_list_get_btn_text', 2);
+  assert(typeof wasmExports['lv_label_get_text'] != 'undefined', 'missing Wasm export: lv_label_get_text');
+  _lv_label_get_text = Module['_lv_label_get_text'] = createExportWrapper('lv_label_get_text', 1);
+  assert(typeof wasmExports['lv_menu_create'] != 'undefined', 'missing Wasm export: lv_menu_create');
+  _lv_menu_create = Module['_lv_menu_create'] = createExportWrapper('lv_menu_create', 1);
+  assert(typeof wasmExports['lv_menu_page_create'] != 'undefined', 'missing Wasm export: lv_menu_page_create');
+  _lv_menu_page_create = Module['_lv_menu_page_create'] = createExportWrapper('lv_menu_page_create', 2);
+  assert(typeof wasmExports['lv_menu_cont_create'] != 'undefined', 'missing Wasm export: lv_menu_cont_create');
+  _lv_menu_cont_create = Module['_lv_menu_cont_create'] = createExportWrapper('lv_menu_cont_create', 1);
+  assert(typeof wasmExports['lv_menu_section_create'] != 'undefined', 'missing Wasm export: lv_menu_section_create');
+  _lv_menu_section_create = Module['_lv_menu_section_create'] = createExportWrapper('lv_menu_section_create', 1);
+  assert(typeof wasmExports['lv_menu_separator_create'] != 'undefined', 'missing Wasm export: lv_menu_separator_create');
+  _lv_menu_separator_create = Module['_lv_menu_separator_create'] = createExportWrapper('lv_menu_separator_create', 1);
+  assert(typeof wasmExports['lv_menu_set_page'] != 'undefined', 'missing Wasm export: lv_menu_set_page');
+  _lv_menu_set_page = Module['_lv_menu_set_page'] = createExportWrapper('lv_menu_set_page', 2);
+  assert(typeof wasmExports['lv_menu_clear_history'] != 'undefined', 'missing Wasm export: lv_menu_clear_history');
+  _lv_menu_clear_history = Module['_lv_menu_clear_history'] = createExportWrapper('lv_menu_clear_history', 1);
+  assert(typeof wasmExports['lv_menu_set_sidebar_page'] != 'undefined', 'missing Wasm export: lv_menu_set_sidebar_page');
+  _lv_menu_set_sidebar_page = Module['_lv_menu_set_sidebar_page'] = createExportWrapper('lv_menu_set_sidebar_page', 2);
+  assert(typeof wasmExports['lv_menu_set_mode_header'] != 'undefined', 'missing Wasm export: lv_menu_set_mode_header');
+  _lv_menu_set_mode_header = Module['_lv_menu_set_mode_header'] = createExportWrapper('lv_menu_set_mode_header', 2);
+  assert(typeof wasmExports['lv_menu_set_mode_root_back_btn'] != 'undefined', 'missing Wasm export: lv_menu_set_mode_root_back_btn');
+  _lv_menu_set_mode_root_back_btn = Module['_lv_menu_set_mode_root_back_btn'] = createExportWrapper('lv_menu_set_mode_root_back_btn', 2);
+  assert(typeof wasmExports['lv_menu_set_load_page_event'] != 'undefined', 'missing Wasm export: lv_menu_set_load_page_event');
+  _lv_menu_set_load_page_event = Module['_lv_menu_set_load_page_event'] = createExportWrapper('lv_menu_set_load_page_event', 3);
+  assert(typeof wasmExports['lv_menu_get_cur_main_page'] != 'undefined', 'missing Wasm export: lv_menu_get_cur_main_page');
+  _lv_menu_get_cur_main_page = Module['_lv_menu_get_cur_main_page'] = createExportWrapper('lv_menu_get_cur_main_page', 1);
+  assert(typeof wasmExports['lv_menu_get_cur_sidebar_page'] != 'undefined', 'missing Wasm export: lv_menu_get_cur_sidebar_page');
+  _lv_menu_get_cur_sidebar_page = Module['_lv_menu_get_cur_sidebar_page'] = createExportWrapper('lv_menu_get_cur_sidebar_page', 1);
+  assert(typeof wasmExports['lv_menu_get_main_header'] != 'undefined', 'missing Wasm export: lv_menu_get_main_header');
+  _lv_menu_get_main_header = Module['_lv_menu_get_main_header'] = createExportWrapper('lv_menu_get_main_header', 1);
+  assert(typeof wasmExports['lv_menu_get_main_header_back_btn'] != 'undefined', 'missing Wasm export: lv_menu_get_main_header_back_btn');
+  _lv_menu_get_main_header_back_btn = Module['_lv_menu_get_main_header_back_btn'] = createExportWrapper('lv_menu_get_main_header_back_btn', 1);
+  assert(typeof wasmExports['lv_menu_get_sidebar_header'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header');
+  _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = createExportWrapper('lv_menu_get_sidebar_header', 1);
+  assert(typeof wasmExports['lv_menu_get_sidebar_header_back_btn'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header_back_btn');
+  _lv_menu_get_sidebar_header_back_btn = Module['_lv_menu_get_sidebar_header_back_btn'] = createExportWrapper('lv_menu_get_sidebar_header_back_btn', 1);
+  assert(typeof wasmExports['lv_menu_back_btn_is_root'] != 'undefined', 'missing Wasm export: lv_menu_back_btn_is_root');
+  _lv_menu_back_btn_is_root = Module['_lv_menu_back_btn_is_root'] = createExportWrapper('lv_menu_back_btn_is_root', 2);
+  assert(typeof wasmExports['lv_meter_create'] != 'undefined', 'missing Wasm export: lv_meter_create');
+  _lv_meter_create = Module['_lv_meter_create'] = createExportWrapper('lv_meter_create', 1);
+  assert(typeof wasmExports['lv_meter_add_scale'] != 'undefined', 'missing Wasm export: lv_meter_add_scale');
+  _lv_meter_add_scale = Module['_lv_meter_add_scale'] = createExportWrapper('lv_meter_add_scale', 1);
+  assert(typeof wasmExports['lv_meter_set_scale_ticks'] != 'undefined', 'missing Wasm export: lv_meter_set_scale_ticks');
+  _lv_meter_set_scale_ticks = Module['_lv_meter_set_scale_ticks'] = createExportWrapper('lv_meter_set_scale_ticks', 6);
+  assert(typeof wasmExports['lv_meter_set_scale_major_ticks'] != 'undefined', 'missing Wasm export: lv_meter_set_scale_major_ticks');
+  _lv_meter_set_scale_major_ticks = Module['_lv_meter_set_scale_major_ticks'] = createExportWrapper('lv_meter_set_scale_major_ticks', 7);
+  assert(typeof wasmExports['lv_meter_set_scale_range'] != 'undefined', 'missing Wasm export: lv_meter_set_scale_range');
+  _lv_meter_set_scale_range = Module['_lv_meter_set_scale_range'] = createExportWrapper('lv_meter_set_scale_range', 6);
+  assert(typeof wasmExports['lv_meter_add_needle_line'] != 'undefined', 'missing Wasm export: lv_meter_add_needle_line');
+  _lv_meter_add_needle_line = Module['_lv_meter_add_needle_line'] = createExportWrapper('lv_meter_add_needle_line', 5);
+  assert(typeof wasmExports['lv_meter_add_needle_img'] != 'undefined', 'missing Wasm export: lv_meter_add_needle_img');
+  _lv_meter_add_needle_img = Module['_lv_meter_add_needle_img'] = createExportWrapper('lv_meter_add_needle_img', 5);
+  assert(typeof wasmExports['lv_meter_add_arc'] != 'undefined', 'missing Wasm export: lv_meter_add_arc');
+  _lv_meter_add_arc = Module['_lv_meter_add_arc'] = createExportWrapper('lv_meter_add_arc', 5);
+  assert(typeof wasmExports['lv_meter_add_scale_lines'] != 'undefined', 'missing Wasm export: lv_meter_add_scale_lines');
+  _lv_meter_add_scale_lines = Module['_lv_meter_add_scale_lines'] = createExportWrapper('lv_meter_add_scale_lines', 6);
+  assert(typeof wasmExports['lv_meter_set_indicator_value'] != 'undefined', 'missing Wasm export: lv_meter_set_indicator_value');
+  _lv_meter_set_indicator_value = Module['_lv_meter_set_indicator_value'] = createExportWrapper('lv_meter_set_indicator_value', 3);
+  assert(typeof wasmExports['lv_meter_set_indicator_start_value'] != 'undefined', 'missing Wasm export: lv_meter_set_indicator_start_value');
+  _lv_meter_set_indicator_start_value = Module['_lv_meter_set_indicator_start_value'] = createExportWrapper('lv_meter_set_indicator_start_value', 3);
+  assert(typeof wasmExports['lv_meter_set_indicator_end_value'] != 'undefined', 'missing Wasm export: lv_meter_set_indicator_end_value');
+  _lv_meter_set_indicator_end_value = Module['_lv_meter_set_indicator_end_value'] = createExportWrapper('lv_meter_set_indicator_end_value', 3);
+  assert(typeof wasmExports['lv_msgbox_create'] != 'undefined', 'missing Wasm export: lv_msgbox_create');
+  _lv_msgbox_create = Module['_lv_msgbox_create'] = createExportWrapper('lv_msgbox_create', 5);
+  assert(typeof wasmExports['lv_msgbox_get_title'] != 'undefined', 'missing Wasm export: lv_msgbox_get_title');
+  _lv_msgbox_get_title = Module['_lv_msgbox_get_title'] = createExportWrapper('lv_msgbox_get_title', 1);
+  assert(typeof wasmExports['lv_msgbox_get_close_btn'] != 'undefined', 'missing Wasm export: lv_msgbox_get_close_btn');
+  _lv_msgbox_get_close_btn = Module['_lv_msgbox_get_close_btn'] = createExportWrapper('lv_msgbox_get_close_btn', 1);
+  assert(typeof wasmExports['lv_msgbox_get_text'] != 'undefined', 'missing Wasm export: lv_msgbox_get_text');
+  _lv_msgbox_get_text = Module['_lv_msgbox_get_text'] = createExportWrapper('lv_msgbox_get_text', 1);
+  assert(typeof wasmExports['lv_msgbox_get_content'] != 'undefined', 'missing Wasm export: lv_msgbox_get_content');
+  _lv_msgbox_get_content = Module['_lv_msgbox_get_content'] = createExportWrapper('lv_msgbox_get_content', 1);
+  assert(typeof wasmExports['lv_msgbox_get_btns'] != 'undefined', 'missing Wasm export: lv_msgbox_get_btns');
+  _lv_msgbox_get_btns = Module['_lv_msgbox_get_btns'] = createExportWrapper('lv_msgbox_get_btns', 1);
+  assert(typeof wasmExports['lv_msgbox_get_active_btn'] != 'undefined', 'missing Wasm export: lv_msgbox_get_active_btn');
+  _lv_msgbox_get_active_btn = Module['_lv_msgbox_get_active_btn'] = createExportWrapper('lv_msgbox_get_active_btn', 1);
+  assert(typeof wasmExports['lv_msgbox_get_active_btn_text'] != 'undefined', 'missing Wasm export: lv_msgbox_get_active_btn_text');
+  _lv_msgbox_get_active_btn_text = Module['_lv_msgbox_get_active_btn_text'] = createExportWrapper('lv_msgbox_get_active_btn_text', 1);
+  assert(typeof wasmExports['lv_msgbox_close'] != 'undefined', 'missing Wasm export: lv_msgbox_close');
+  _lv_msgbox_close = Module['_lv_msgbox_close'] = createExportWrapper('lv_msgbox_close', 1);
+  assert(typeof wasmExports['lv_msgbox_close_async'] != 'undefined', 'missing Wasm export: lv_msgbox_close_async');
+  _lv_msgbox_close_async = Module['_lv_msgbox_close_async'] = createExportWrapper('lv_msgbox_close_async', 1);
+  assert(typeof wasmExports['lv_spangroup_get_expand_width'] != 'undefined', 'missing Wasm export: lv_spangroup_get_expand_width');
+  _lv_spangroup_get_expand_width = Module['_lv_spangroup_get_expand_width'] = createExportWrapper('lv_spangroup_get_expand_width', 2);
+  assert(typeof wasmExports['lv_spangroup_get_max_line_h'] != 'undefined', 'missing Wasm export: lv_spangroup_get_max_line_h');
+  _lv_spangroup_get_max_line_h = Module['_lv_spangroup_get_max_line_h'] = createExportWrapper('lv_spangroup_get_max_line_h', 1);
+  assert(typeof wasmExports['lv_spangroup_get_expand_height'] != 'undefined', 'missing Wasm export: lv_spangroup_get_expand_height');
+  _lv_spangroup_get_expand_height = Module['_lv_spangroup_get_expand_height'] = createExportWrapper('lv_spangroup_get_expand_height', 2);
+  assert(typeof wasmExports['lv_spangroup_create'] != 'undefined', 'missing Wasm export: lv_spangroup_create');
+  _lv_spangroup_create = Module['_lv_spangroup_create'] = createExportWrapper('lv_spangroup_create', 1);
+  assert(typeof wasmExports['lv_spangroup_new_span'] != 'undefined', 'missing Wasm export: lv_spangroup_new_span');
+  _lv_spangroup_new_span = Module['_lv_spangroup_new_span'] = createExportWrapper('lv_spangroup_new_span', 1);
+  assert(typeof wasmExports['lv_spangroup_del_span'] != 'undefined', 'missing Wasm export: lv_spangroup_del_span');
+  _lv_spangroup_del_span = Module['_lv_spangroup_del_span'] = createExportWrapper('lv_spangroup_del_span', 2);
+  assert(typeof wasmExports['lv_span_set_text'] != 'undefined', 'missing Wasm export: lv_span_set_text');
+  _lv_span_set_text = Module['_lv_span_set_text'] = createExportWrapper('lv_span_set_text', 2);
+  assert(typeof wasmExports['lv_span_set_text_static'] != 'undefined', 'missing Wasm export: lv_span_set_text_static');
+  _lv_span_set_text_static = Module['_lv_span_set_text_static'] = createExportWrapper('lv_span_set_text_static', 2);
+  assert(typeof wasmExports['lv_spangroup_set_align'] != 'undefined', 'missing Wasm export: lv_spangroup_set_align');
+  _lv_spangroup_set_align = Module['_lv_spangroup_set_align'] = createExportWrapper('lv_spangroup_set_align', 2);
+  assert(typeof wasmExports['lv_spangroup_set_overflow'] != 'undefined', 'missing Wasm export: lv_spangroup_set_overflow');
+  _lv_spangroup_set_overflow = Module['_lv_spangroup_set_overflow'] = createExportWrapper('lv_spangroup_set_overflow', 2);
+  assert(typeof wasmExports['lv_spangroup_set_indent'] != 'undefined', 'missing Wasm export: lv_spangroup_set_indent');
+  _lv_spangroup_set_indent = Module['_lv_spangroup_set_indent'] = createExportWrapper('lv_spangroup_set_indent', 2);
+  assert(typeof wasmExports['lv_spangroup_set_mode'] != 'undefined', 'missing Wasm export: lv_spangroup_set_mode');
+  _lv_spangroup_set_mode = Module['_lv_spangroup_set_mode'] = createExportWrapper('lv_spangroup_set_mode', 2);
+  assert(typeof wasmExports['lv_spangroup_refr_mode'] != 'undefined', 'missing Wasm export: lv_spangroup_refr_mode');
+  _lv_spangroup_refr_mode = Module['_lv_spangroup_refr_mode'] = createExportWrapper('lv_spangroup_refr_mode', 1);
+  assert(typeof wasmExports['lv_spangroup_set_lines'] != 'undefined', 'missing Wasm export: lv_spangroup_set_lines');
+  _lv_spangroup_set_lines = Module['_lv_spangroup_set_lines'] = createExportWrapper('lv_spangroup_set_lines', 2);
+  assert(typeof wasmExports['lv_spangroup_get_child'] != 'undefined', 'missing Wasm export: lv_spangroup_get_child');
+  _lv_spangroup_get_child = Module['_lv_spangroup_get_child'] = createExportWrapper('lv_spangroup_get_child', 2);
+  assert(typeof wasmExports['lv_spangroup_get_child_cnt'] != 'undefined', 'missing Wasm export: lv_spangroup_get_child_cnt');
+  _lv_spangroup_get_child_cnt = Module['_lv_spangroup_get_child_cnt'] = createExportWrapper('lv_spangroup_get_child_cnt', 1);
+  assert(typeof wasmExports['lv_spangroup_get_align'] != 'undefined', 'missing Wasm export: lv_spangroup_get_align');
+  _lv_spangroup_get_align = Module['_lv_spangroup_get_align'] = createExportWrapper('lv_spangroup_get_align', 1);
+  assert(typeof wasmExports['lv_spangroup_get_overflow'] != 'undefined', 'missing Wasm export: lv_spangroup_get_overflow');
+  _lv_spangroup_get_overflow = Module['_lv_spangroup_get_overflow'] = createExportWrapper('lv_spangroup_get_overflow', 1);
+  assert(typeof wasmExports['lv_spangroup_get_indent'] != 'undefined', 'missing Wasm export: lv_spangroup_get_indent');
+  _lv_spangroup_get_indent = Module['_lv_spangroup_get_indent'] = createExportWrapper('lv_spangroup_get_indent', 1);
+  assert(typeof wasmExports['lv_spangroup_get_mode'] != 'undefined', 'missing Wasm export: lv_spangroup_get_mode');
+  _lv_spangroup_get_mode = Module['_lv_spangroup_get_mode'] = createExportWrapper('lv_spangroup_get_mode', 1);
+  assert(typeof wasmExports['lv_spangroup_get_lines'] != 'undefined', 'missing Wasm export: lv_spangroup_get_lines');
+  _lv_spangroup_get_lines = Module['_lv_spangroup_get_lines'] = createExportWrapper('lv_spangroup_get_lines', 1);
+  assert(typeof wasmExports['lv_textarea_set_one_line'] != 'undefined', 'missing Wasm export: lv_textarea_set_one_line');
+  _lv_textarea_set_one_line = Module['_lv_textarea_set_one_line'] = createExportWrapper('lv_textarea_set_one_line', 2);
+  assert(typeof wasmExports['lv_textarea_set_cursor_click_pos'] != 'undefined', 'missing Wasm export: lv_textarea_set_cursor_click_pos');
+  _lv_textarea_set_cursor_click_pos = Module['_lv_textarea_set_cursor_click_pos'] = createExportWrapper('lv_textarea_set_cursor_click_pos', 2);
+  assert(typeof wasmExports['lv_pow'] != 'undefined', 'missing Wasm export: lv_pow');
+  _lv_pow = Module['_lv_pow'] = createExportWrapper('lv_pow', 2);
+  assert(typeof wasmExports['lv_spinbox_step_prev'] != 'undefined', 'missing Wasm export: lv_spinbox_step_prev');
+  _lv_spinbox_step_prev = Module['_lv_spinbox_step_prev'] = createExportWrapper('lv_spinbox_step_prev', 1);
+  assert(typeof wasmExports['lv_spinbox_increment'] != 'undefined', 'missing Wasm export: lv_spinbox_increment');
+  _lv_spinbox_increment = Module['_lv_spinbox_increment'] = createExportWrapper('lv_spinbox_increment', 1);
+  assert(typeof wasmExports['lv_spinbox_decrement'] != 'undefined', 'missing Wasm export: lv_spinbox_decrement');
+  _lv_spinbox_decrement = Module['_lv_spinbox_decrement'] = createExportWrapper('lv_spinbox_decrement', 1);
+  assert(typeof wasmExports['lv_spinbox_create'] != 'undefined', 'missing Wasm export: lv_spinbox_create');
+  _lv_spinbox_create = Module['_lv_spinbox_create'] = createExportWrapper('lv_spinbox_create', 1);
+  assert(typeof wasmExports['lv_spinbox_set_value'] != 'undefined', 'missing Wasm export: lv_spinbox_set_value');
+  _lv_spinbox_set_value = Module['_lv_spinbox_set_value'] = createExportWrapper('lv_spinbox_set_value', 2);
+  assert(typeof wasmExports['lv_textarea_set_text'] != 'undefined', 'missing Wasm export: lv_textarea_set_text');
+  _lv_textarea_set_text = Module['_lv_textarea_set_text'] = createExportWrapper('lv_textarea_set_text', 2);
+  assert(typeof wasmExports['lv_spinbox_set_rollover'] != 'undefined', 'missing Wasm export: lv_spinbox_set_rollover');
+  _lv_spinbox_set_rollover = Module['_lv_spinbox_set_rollover'] = createExportWrapper('lv_spinbox_set_rollover', 2);
+  assert(typeof wasmExports['lv_spinbox_set_digit_format'] != 'undefined', 'missing Wasm export: lv_spinbox_set_digit_format');
+  _lv_spinbox_set_digit_format = Module['_lv_spinbox_set_digit_format'] = createExportWrapper('lv_spinbox_set_digit_format', 3);
+  assert(typeof wasmExports['lv_spinbox_set_step'] != 'undefined', 'missing Wasm export: lv_spinbox_set_step');
+  _lv_spinbox_set_step = Module['_lv_spinbox_set_step'] = createExportWrapper('lv_spinbox_set_step', 2);
+  assert(typeof wasmExports['lv_spinbox_set_range'] != 'undefined', 'missing Wasm export: lv_spinbox_set_range');
+  _lv_spinbox_set_range = Module['_lv_spinbox_set_range'] = createExportWrapper('lv_spinbox_set_range', 3);
+  assert(typeof wasmExports['lv_spinbox_set_cursor_pos'] != 'undefined', 'missing Wasm export: lv_spinbox_set_cursor_pos');
+  _lv_spinbox_set_cursor_pos = Module['_lv_spinbox_set_cursor_pos'] = createExportWrapper('lv_spinbox_set_cursor_pos', 2);
+  assert(typeof wasmExports['lv_spinbox_set_digit_step_direction'] != 'undefined', 'missing Wasm export: lv_spinbox_set_digit_step_direction');
+  _lv_spinbox_set_digit_step_direction = Module['_lv_spinbox_set_digit_step_direction'] = createExportWrapper('lv_spinbox_set_digit_step_direction', 2);
+  assert(typeof wasmExports['lv_spinbox_get_value'] != 'undefined', 'missing Wasm export: lv_spinbox_get_value');
+  _lv_spinbox_get_value = Module['_lv_spinbox_get_value'] = createExportWrapper('lv_spinbox_get_value', 1);
+  assert(typeof wasmExports['lv_spinbox_get_step'] != 'undefined', 'missing Wasm export: lv_spinbox_get_step');
+  _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = createExportWrapper('lv_spinbox_get_step', 1);
+  assert(typeof wasmExports['lv_spinbox_step_next'] != 'undefined', 'missing Wasm export: lv_spinbox_step_next');
+  _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = createExportWrapper('lv_spinbox_step_next', 1);
+  assert(typeof wasmExports['lv_spinbox_get_rollover'] != 'undefined', 'missing Wasm export: lv_spinbox_get_rollover');
+  _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = createExportWrapper('lv_spinbox_get_rollover', 1);
+  assert(typeof wasmExports['lv_spinner_create'] != 'undefined', 'missing Wasm export: lv_spinner_create');
+  _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create', 3);
+  assert(typeof wasmExports['lv_anim_path_ease_in_out'] != 'undefined', 'missing Wasm export: lv_anim_path_ease_in_out');
+  _lv_anim_path_ease_in_out = Module['_lv_anim_path_ease_in_out'] = createExportWrapper('lv_anim_path_ease_in_out', 1);
+  assert(typeof wasmExports['lv_arc_set_bg_angles'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_angles');
+  _lv_arc_set_bg_angles = Module['_lv_arc_set_bg_angles'] = createExportWrapper('lv_arc_set_bg_angles', 3);
+  assert(typeof wasmExports['lv_arc_set_rotation'] != 'undefined', 'missing Wasm export: lv_arc_set_rotation');
+  _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = createExportWrapper('lv_arc_set_rotation', 2);
+  assert(typeof wasmExports['lv_arc_set_end_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_end_angle');
+  _lv_arc_set_end_angle = Module['_lv_arc_set_end_angle'] = createExportWrapper('lv_arc_set_end_angle', 2);
+  assert(typeof wasmExports['lv_arc_set_start_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_start_angle');
+  _lv_arc_set_start_angle = Module['_lv_arc_set_start_angle'] = createExportWrapper('lv_arc_set_start_angle', 2);
+  assert(typeof wasmExports['lv_btnmatrix_set_one_checked'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_one_checked');
+  _lv_btnmatrix_set_one_checked = Module['_lv_btnmatrix_set_one_checked'] = createExportWrapper('lv_btnmatrix_set_one_checked', 2);
+  assert(typeof wasmExports['lv_tabview_set_act'] != 'undefined', 'missing Wasm export: lv_tabview_set_act');
+  _lv_tabview_set_act = Module['_lv_tabview_set_act'] = createExportWrapper('lv_tabview_set_act', 3);
+  assert(typeof wasmExports['lv_tabview_create'] != 'undefined', 'missing Wasm export: lv_tabview_create');
+  _lv_tabview_create = Module['_lv_tabview_create'] = createExportWrapper('lv_tabview_create', 3);
+  assert(typeof wasmExports['lv_tabview_add_tab'] != 'undefined', 'missing Wasm export: lv_tabview_add_tab');
+  _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab', 2);
+  assert(typeof wasmExports['lv_tabview_get_content'] != 'undefined', 'missing Wasm export: lv_tabview_get_content');
+  _lv_tabview_get_content = Module['_lv_tabview_get_content'] = createExportWrapper('lv_tabview_get_content', 1);
+  assert(typeof wasmExports['lv_tabview_get_tab_btns'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_btns');
+  _lv_tabview_get_tab_btns = Module['_lv_tabview_get_tab_btns'] = createExportWrapper('lv_tabview_get_tab_btns', 1);
+  assert(typeof wasmExports['lv_tabview_rename_tab'] != 'undefined', 'missing Wasm export: lv_tabview_rename_tab');
+  _lv_tabview_rename_tab = Module['_lv_tabview_rename_tab'] = createExportWrapper('lv_tabview_rename_tab', 3);
+  assert(typeof wasmExports['lv_tabview_get_tab_act'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_act');
+  _lv_tabview_get_tab_act = Module['_lv_tabview_get_tab_act'] = createExportWrapper('lv_tabview_get_tab_act', 1);
+  assert(typeof wasmExports['lv_tileview_create'] != 'undefined', 'missing Wasm export: lv_tileview_create');
+  _lv_tileview_create = Module['_lv_tileview_create'] = createExportWrapper('lv_tileview_create', 1);
+  assert(typeof wasmExports['lv_tileview_add_tile'] != 'undefined', 'missing Wasm export: lv_tileview_add_tile');
+  _lv_tileview_add_tile = Module['_lv_tileview_add_tile'] = createExportWrapper('lv_tileview_add_tile', 4);
+  assert(typeof wasmExports['lv_obj_set_tile'] != 'undefined', 'missing Wasm export: lv_obj_set_tile');
+  _lv_obj_set_tile = Module['_lv_obj_set_tile'] = createExportWrapper('lv_obj_set_tile', 3);
+  assert(typeof wasmExports['lv_obj_set_tile_id'] != 'undefined', 'missing Wasm export: lv_obj_set_tile_id');
+  _lv_obj_set_tile_id = Module['_lv_obj_set_tile_id'] = createExportWrapper('lv_obj_set_tile_id', 4);
+  assert(typeof wasmExports['lv_tileview_get_tile_act'] != 'undefined', 'missing Wasm export: lv_tileview_get_tile_act');
+  _lv_tileview_get_tile_act = Module['_lv_tileview_get_tile_act'] = createExportWrapper('lv_tileview_get_tile_act', 1);
+  assert(typeof wasmExports['lv_win_create'] != 'undefined', 'missing Wasm export: lv_win_create');
+  _lv_win_create = Module['_lv_win_create'] = createExportWrapper('lv_win_create', 2);
+  assert(typeof wasmExports['lv_win_add_title'] != 'undefined', 'missing Wasm export: lv_win_add_title');
+  _lv_win_add_title = Module['_lv_win_add_title'] = createExportWrapper('lv_win_add_title', 2);
+  assert(typeof wasmExports['lv_win_get_header'] != 'undefined', 'missing Wasm export: lv_win_get_header');
+  _lv_win_get_header = Module['_lv_win_get_header'] = createExportWrapper('lv_win_get_header', 1);
+  assert(typeof wasmExports['lv_win_add_btn'] != 'undefined', 'missing Wasm export: lv_win_add_btn');
+  _lv_win_add_btn = Module['_lv_win_add_btn'] = createExportWrapper('lv_win_add_btn', 3);
+  assert(typeof wasmExports['lv_win_get_content'] != 'undefined', 'missing Wasm export: lv_win_get_content');
+  _lv_win_get_content = Module['_lv_win_get_content'] = createExportWrapper('lv_win_get_content', 1);
+  assert(typeof wasmExports['lv_font_get_glyph_bitmap'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_bitmap');
+  _lv_font_get_glyph_bitmap = Module['_lv_font_get_glyph_bitmap'] = createExportWrapper('lv_font_get_glyph_bitmap', 2);
+  assert(typeof wasmExports['lv_font_get_glyph_dsc'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_dsc');
+  _lv_font_get_glyph_dsc = Module['_lv_font_get_glyph_dsc'] = createExportWrapper('lv_font_get_glyph_dsc', 4);
+  assert(typeof wasmExports['lv_font_get_bitmap_fmt_txt'] != 'undefined', 'missing Wasm export: lv_font_get_bitmap_fmt_txt');
+  _lv_font_get_bitmap_fmt_txt = Module['_lv_font_get_bitmap_fmt_txt'] = createExportWrapper('lv_font_get_bitmap_fmt_txt', 2);
+  assert(typeof wasmExports['lv_font_get_glyph_dsc_fmt_txt'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_dsc_fmt_txt');
+  _lv_font_get_glyph_dsc_fmt_txt = Module['_lv_font_get_glyph_dsc_fmt_txt'] = createExportWrapper('lv_font_get_glyph_dsc_fmt_txt', 4);
+  assert(typeof wasmExports['lv_area_move'] != 'undefined', 'missing Wasm export: lv_area_move');
+  _lv_area_move = Module['_lv_area_move'] = createExportWrapper('lv_area_move', 3);
+  assert(typeof wasmExports['lv_color_fill'] != 'undefined', 'missing Wasm export: lv_color_fill');
+  _lv_color_fill = Module['_lv_color_fill'] = createExportWrapper('lv_color_fill', 3);
+  assert(typeof wasmExports['lv_timer_create'] != 'undefined', 'missing Wasm export: lv_timer_create');
+  _lv_timer_create = Module['_lv_timer_create'] = createExportWrapper('lv_timer_create', 3);
+  assert(typeof wasmExports['lv_timer_ready'] != 'undefined', 'missing Wasm export: lv_timer_ready');
+  _lv_timer_ready = Module['_lv_timer_ready'] = createExportWrapper('lv_timer_ready', 1);
+  assert(typeof wasmExports['lv_disp_drv_update'] != 'undefined', 'missing Wasm export: lv_disp_drv_update');
+  _lv_disp_drv_update = Module['_lv_disp_drv_update'] = createExportWrapper('lv_disp_drv_update', 2);
+  assert(typeof wasmExports['lv_disp_remove'] != 'undefined', 'missing Wasm export: lv_disp_remove');
+  _lv_disp_remove = Module['_lv_disp_remove'] = createExportWrapper('lv_disp_remove', 1);
+  assert(typeof wasmExports['lv_timer_del'] != 'undefined', 'missing Wasm export: lv_timer_del');
+  _lv_timer_del = Module['_lv_timer_del'] = createExportWrapper('lv_timer_del', 1);
+  assert(typeof wasmExports['lv_disp_get_physical_hor_res'] != 'undefined', 'missing Wasm export: lv_disp_get_physical_hor_res');
+  _lv_disp_get_physical_hor_res = Module['_lv_disp_get_physical_hor_res'] = createExportWrapper('lv_disp_get_physical_hor_res', 1);
+  assert(typeof wasmExports['lv_disp_get_physical_ver_res'] != 'undefined', 'missing Wasm export: lv_disp_get_physical_ver_res');
+  _lv_disp_get_physical_ver_res = Module['_lv_disp_get_physical_ver_res'] = createExportWrapper('lv_disp_get_physical_ver_res', 1);
+  assert(typeof wasmExports['lv_disp_get_offset_x'] != 'undefined', 'missing Wasm export: lv_disp_get_offset_x');
+  _lv_disp_get_offset_x = Module['_lv_disp_get_offset_x'] = createExportWrapper('lv_disp_get_offset_x', 1);
+  assert(typeof wasmExports['lv_disp_get_offset_y'] != 'undefined', 'missing Wasm export: lv_disp_get_offset_y');
+  _lv_disp_get_offset_y = Module['_lv_disp_get_offset_y'] = createExportWrapper('lv_disp_get_offset_y', 1);
+  assert(typeof wasmExports['lv_disp_get_antialiasing'] != 'undefined', 'missing Wasm export: lv_disp_get_antialiasing');
+  _lv_disp_get_antialiasing = Module['_lv_disp_get_antialiasing'] = createExportWrapper('lv_disp_get_antialiasing', 1);
+  assert(typeof wasmExports['lv_disp_flush_is_last'] != 'undefined', 'missing Wasm export: lv_disp_flush_is_last');
+  _lv_disp_flush_is_last = Module['_lv_disp_flush_is_last'] = createExportWrapper('lv_disp_flush_is_last', 1);
+  assert(typeof wasmExports['lv_disp_set_rotation'] != 'undefined', 'missing Wasm export: lv_disp_set_rotation');
+  _lv_disp_set_rotation = Module['_lv_disp_set_rotation'] = createExportWrapper('lv_disp_set_rotation', 2);
+  assert(typeof wasmExports['lv_disp_get_rotation'] != 'undefined', 'missing Wasm export: lv_disp_get_rotation');
+  _lv_disp_get_rotation = Module['_lv_disp_get_rotation'] = createExportWrapper('lv_disp_get_rotation', 1);
+  assert(typeof wasmExports['lv_disp_drv_use_generic_set_px_cb'] != 'undefined', 'missing Wasm export: lv_disp_drv_use_generic_set_px_cb');
+  _lv_disp_drv_use_generic_set_px_cb = Module['_lv_disp_drv_use_generic_set_px_cb'] = createExportWrapper('lv_disp_drv_use_generic_set_px_cb', 2);
+  assert(typeof wasmExports['lv_indev_drv_update'] != 'undefined', 'missing Wasm export: lv_indev_drv_update');
+  _lv_indev_drv_update = Module['_lv_indev_drv_update'] = createExportWrapper('lv_indev_drv_update', 2);
+  assert(typeof wasmExports['lv_indev_delete'] != 'undefined', 'missing Wasm export: lv_indev_delete');
+  _lv_indev_delete = Module['_lv_indev_delete'] = createExportWrapper('lv_indev_delete', 1);
+  assert(typeof wasmExports['lv_anim_get_playtime'] != 'undefined', 'missing Wasm export: lv_anim_get_playtime');
+  _lv_anim_get_playtime = Module['_lv_anim_get_playtime'] = createExportWrapper('lv_anim_get_playtime', 1);
+  assert(typeof wasmExports['lv_anim_del_all'] != 'undefined', 'missing Wasm export: lv_anim_del_all');
+  _lv_anim_del_all = Module['_lv_anim_del_all'] = createExportWrapper('lv_anim_del_all', 0);
+  assert(typeof wasmExports['lv_anim_get_timer'] != 'undefined', 'missing Wasm export: lv_anim_get_timer');
+  _lv_anim_get_timer = Module['_lv_anim_get_timer'] = createExportWrapper('lv_anim_get_timer', 0);
+  assert(typeof wasmExports['lv_anim_count_running'] != 'undefined', 'missing Wasm export: lv_anim_count_running');
+  _lv_anim_count_running = Module['_lv_anim_count_running'] = createExportWrapper('lv_anim_count_running', 0);
+  assert(typeof wasmExports['lv_anim_path_ease_in'] != 'undefined', 'missing Wasm export: lv_anim_path_ease_in');
+  _lv_anim_path_ease_in = Module['_lv_anim_path_ease_in'] = createExportWrapper('lv_anim_path_ease_in', 1);
+  assert(typeof wasmExports['lv_bezier3'] != 'undefined', 'missing Wasm export: lv_bezier3');
+  _lv_bezier3 = Module['_lv_bezier3'] = createExportWrapper('lv_bezier3', 5);
+  assert(typeof wasmExports['lv_anim_path_overshoot'] != 'undefined', 'missing Wasm export: lv_anim_path_overshoot');
+  _lv_anim_path_overshoot = Module['_lv_anim_path_overshoot'] = createExportWrapper('lv_anim_path_overshoot', 1);
+  assert(typeof wasmExports['lv_anim_path_bounce'] != 'undefined', 'missing Wasm export: lv_anim_path_bounce');
+  _lv_anim_path_bounce = Module['_lv_anim_path_bounce'] = createExportWrapper('lv_anim_path_bounce', 1);
+  assert(typeof wasmExports['lv_anim_path_step'] != 'undefined', 'missing Wasm export: lv_anim_path_step');
+  _lv_anim_path_step = Module['_lv_anim_path_step'] = createExportWrapper('lv_anim_path_step', 1);
+  assert(typeof wasmExports['lv_anim_timeline_create'] != 'undefined', 'missing Wasm export: lv_anim_timeline_create');
+  _lv_anim_timeline_create = Module['_lv_anim_timeline_create'] = createExportWrapper('lv_anim_timeline_create', 0);
+  assert(typeof wasmExports['lv_anim_timeline_del'] != 'undefined', 'missing Wasm export: lv_anim_timeline_del');
+  _lv_anim_timeline_del = Module['_lv_anim_timeline_del'] = createExportWrapper('lv_anim_timeline_del', 1);
+  assert(typeof wasmExports['lv_anim_timeline_stop'] != 'undefined', 'missing Wasm export: lv_anim_timeline_stop');
+  _lv_anim_timeline_stop = Module['_lv_anim_timeline_stop'] = createExportWrapper('lv_anim_timeline_stop', 1);
+  assert(typeof wasmExports['lv_anim_timeline_add'] != 'undefined', 'missing Wasm export: lv_anim_timeline_add');
+  _lv_anim_timeline_add = Module['_lv_anim_timeline_add'] = createExportWrapper('lv_anim_timeline_add', 3);
+  assert(typeof wasmExports['lv_anim_timeline_start'] != 'undefined', 'missing Wasm export: lv_anim_timeline_start');
+  _lv_anim_timeline_start = Module['_lv_anim_timeline_start'] = createExportWrapper('lv_anim_timeline_start', 1);
+  assert(typeof wasmExports['lv_anim_timeline_get_playtime'] != 'undefined', 'missing Wasm export: lv_anim_timeline_get_playtime');
+  _lv_anim_timeline_get_playtime = Module['_lv_anim_timeline_get_playtime'] = createExportWrapper('lv_anim_timeline_get_playtime', 1);
+  assert(typeof wasmExports['lv_anim_timeline_set_reverse'] != 'undefined', 'missing Wasm export: lv_anim_timeline_set_reverse');
+  _lv_anim_timeline_set_reverse = Module['_lv_anim_timeline_set_reverse'] = createExportWrapper('lv_anim_timeline_set_reverse', 2);
+  assert(typeof wasmExports['lv_anim_timeline_set_progress'] != 'undefined', 'missing Wasm export: lv_anim_timeline_set_progress');
+  _lv_anim_timeline_set_progress = Module['_lv_anim_timeline_set_progress'] = createExportWrapper('lv_anim_timeline_set_progress', 2);
+  assert(typeof wasmExports['lv_anim_timeline_get_reverse'] != 'undefined', 'missing Wasm export: lv_anim_timeline_get_reverse');
+  _lv_anim_timeline_get_reverse = Module['_lv_anim_timeline_get_reverse'] = createExportWrapper('lv_anim_timeline_get_reverse', 1);
+  assert(typeof wasmExports['lv_area_align'] != 'undefined', 'missing Wasm export: lv_area_align');
+  _lv_area_align = Module['_lv_area_align'] = createExportWrapper('lv_area_align', 5);
+  assert(typeof wasmExports['lv_timer_set_repeat_count'] != 'undefined', 'missing Wasm export: lv_timer_set_repeat_count');
+  _lv_timer_set_repeat_count = Module['_lv_timer_set_repeat_count'] = createExportWrapper('lv_timer_set_repeat_count', 2);
+  assert(typeof wasmExports['lv_async_call_cancel'] != 'undefined', 'missing Wasm export: lv_async_call_cancel');
+  _lv_async_call_cancel = Module['_lv_async_call_cancel'] = createExportWrapper('lv_async_call_cancel', 2);
+  assert(typeof wasmExports['lv_timer_get_next'] != 'undefined', 'missing Wasm export: lv_timer_get_next');
+  _lv_timer_get_next = Module['_lv_timer_get_next'] = createExportWrapper('lv_timer_get_next', 1);
+  assert(typeof wasmExports['lv_color_lighten'] != 'undefined', 'missing Wasm export: lv_color_lighten');
+  _lv_color_lighten = Module['_lv_color_lighten'] = createExportWrapper('lv_color_lighten', 3);
+  assert(typeof wasmExports['lv_color_change_lightness'] != 'undefined', 'missing Wasm export: lv_color_change_lightness');
+  _lv_color_change_lightness = Module['_lv_color_change_lightness'] = createExportWrapper('lv_color_change_lightness', 3);
+  assert(typeof wasmExports['lv_color_to_hsv'] != 'undefined', 'missing Wasm export: lv_color_to_hsv');
+  _lv_color_to_hsv = Module['_lv_color_to_hsv'] = createExportWrapper('lv_color_to_hsv', 2);
+  assert(typeof wasmExports['lv_fs_is_ready'] != 'undefined', 'missing Wasm export: lv_fs_is_ready');
+  _lv_fs_is_ready = Module['_lv_fs_is_ready'] = createExportWrapper('lv_fs_is_ready', 1);
+  assert(typeof wasmExports['lv_fs_get_drv'] != 'undefined', 'missing Wasm export: lv_fs_get_drv');
+  _lv_fs_get_drv = Module['_lv_fs_get_drv'] = createExportWrapper('lv_fs_get_drv', 1);
+  assert(typeof wasmExports['lv_fs_dir_open'] != 'undefined', 'missing Wasm export: lv_fs_dir_open');
+  _lv_fs_dir_open = Module['_lv_fs_dir_open'] = createExportWrapper('lv_fs_dir_open', 2);
+  assert(typeof wasmExports['lv_fs_dir_read'] != 'undefined', 'missing Wasm export: lv_fs_dir_read');
+  _lv_fs_dir_read = Module['_lv_fs_dir_read'] = createExportWrapper('lv_fs_dir_read', 2);
+  assert(typeof wasmExports['lv_fs_dir_close'] != 'undefined', 'missing Wasm export: lv_fs_dir_close');
+  _lv_fs_dir_close = Module['_lv_fs_dir_close'] = createExportWrapper('lv_fs_dir_close', 1);
+  assert(typeof wasmExports['lv_fs_get_letters'] != 'undefined', 'missing Wasm export: lv_fs_get_letters');
+  _lv_fs_get_letters = Module['_lv_fs_get_letters'] = createExportWrapper('lv_fs_get_letters', 1);
+  assert(typeof wasmExports['lv_fs_up'] != 'undefined', 'missing Wasm export: lv_fs_up');
+  _lv_fs_up = Module['_lv_fs_up'] = createExportWrapper('lv_fs_up', 1);
+  assert(typeof wasmExports['lv_fs_get_last'] != 'undefined', 'missing Wasm export: lv_fs_get_last');
+  _lv_fs_get_last = Module['_lv_fs_get_last'] = createExportWrapper('lv_fs_get_last', 1);
+  assert(typeof wasmExports['lv_log'] != 'undefined', 'missing Wasm export: lv_log');
+  _lv_log = Module['_lv_log'] = createExportWrapper('lv_log', 2);
+  assert(typeof wasmExports['lv_lru_create'] != 'undefined', 'missing Wasm export: lv_lru_create');
+  _lv_lru_create = Module['_lv_lru_create'] = createExportWrapper('lv_lru_create', 4);
+  assert(typeof wasmExports['lv_lru_del'] != 'undefined', 'missing Wasm export: lv_lru_del');
+  _lv_lru_del = Module['_lv_lru_del'] = createExportWrapper('lv_lru_del', 1);
+  assert(typeof wasmExports['lv_lru_set'] != 'undefined', 'missing Wasm export: lv_lru_set');
+  _lv_lru_set = Module['_lv_lru_set'] = createExportWrapper('lv_lru_set', 5);
+  assert(typeof wasmExports['lv_lru_remove_lru_item'] != 'undefined', 'missing Wasm export: lv_lru_remove_lru_item');
+  _lv_lru_remove_lru_item = Module['_lv_lru_remove_lru_item'] = createExportWrapper('lv_lru_remove_lru_item', 1);
+  assert(typeof wasmExports['lv_lru_get'] != 'undefined', 'missing Wasm export: lv_lru_get');
+  _lv_lru_get = Module['_lv_lru_get'] = createExportWrapper('lv_lru_get', 4);
+  assert(typeof wasmExports['lv_lru_remove'] != 'undefined', 'missing Wasm export: lv_lru_remove');
+  _lv_lru_remove = Module['_lv_lru_remove'] = createExportWrapper('lv_lru_remove', 3);
+  assert(typeof wasmExports['lv_sqrt'] != 'undefined', 'missing Wasm export: lv_sqrt');
+  _lv_sqrt = Module['_lv_sqrt'] = createExportWrapper('lv_sqrt', 3);
+  assert(typeof wasmExports['lv_rand'] != 'undefined', 'missing Wasm export: lv_rand');
+  _lv_rand = Module['_lv_rand'] = createExportWrapper('lv_rand', 2);
+  assert(typeof wasmExports['lv_tlsf_create_with_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_create_with_pool');
+  _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = createExportWrapper('lv_tlsf_create_with_pool', 2);
+  assert(typeof wasmExports['lv_tlsf_destroy'] != 'undefined', 'missing Wasm export: lv_tlsf_destroy');
+  _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = createExportWrapper('lv_tlsf_destroy', 1);
+  assert(typeof wasmExports['lv_tlsf_malloc'] != 'undefined', 'missing Wasm export: lv_tlsf_malloc');
+  _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = createExportWrapper('lv_tlsf_malloc', 2);
+  assert(typeof wasmExports['lv_tlsf_free'] != 'undefined', 'missing Wasm export: lv_tlsf_free');
+  _lv_tlsf_free = Module['_lv_tlsf_free'] = createExportWrapper('lv_tlsf_free', 2);
+  assert(typeof wasmExports['lv_tlsf_realloc'] != 'undefined', 'missing Wasm export: lv_tlsf_realloc');
+  _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = createExportWrapper('lv_tlsf_realloc', 3);
+  assert(typeof wasmExports['lv_mem_test'] != 'undefined', 'missing Wasm export: lv_mem_test');
+  _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test', 0);
+  assert(typeof wasmExports['lv_tlsf_check'] != 'undefined', 'missing Wasm export: lv_tlsf_check');
+  _lv_tlsf_check = Module['_lv_tlsf_check'] = createExportWrapper('lv_tlsf_check', 1);
+  assert(typeof wasmExports['lv_tlsf_get_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_get_pool');
+  _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = createExportWrapper('lv_tlsf_get_pool', 1);
+  assert(typeof wasmExports['lv_tlsf_check_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_check_pool');
+  _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = createExportWrapper('lv_tlsf_check_pool', 1);
+  assert(typeof wasmExports['lv_mem_monitor'] != 'undefined', 'missing Wasm export: lv_mem_monitor');
+  _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor', 1);
+  assert(typeof wasmExports['lv_tlsf_walk_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_walk_pool');
+  _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = createExportWrapper('lv_tlsf_walk_pool', 3);
+  assert(typeof wasmExports['lv_vsnprintf'] != 'undefined', 'missing Wasm export: lv_vsnprintf');
+  _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf', 4);
+  assert(typeof wasmExports['lv_style_get_num_custom_props'] != 'undefined', 'missing Wasm export: lv_style_get_num_custom_props');
+  _lv_style_get_num_custom_props = Module['_lv_style_get_num_custom_props'] = createExportWrapper('lv_style_get_num_custom_props', 0);
+  assert(typeof wasmExports['lv_style_set_min_width'] != 'undefined', 'missing Wasm export: lv_style_set_min_width');
+  _lv_style_set_min_width = Module['_lv_style_set_min_width'] = createExportWrapper('lv_style_set_min_width', 2);
+  assert(typeof wasmExports['lv_style_set_min_height'] != 'undefined', 'missing Wasm export: lv_style_set_min_height');
+  _lv_style_set_min_height = Module['_lv_style_set_min_height'] = createExportWrapper('lv_style_set_min_height', 2);
+  assert(typeof wasmExports['lv_style_set_x'] != 'undefined', 'missing Wasm export: lv_style_set_x');
+  _lv_style_set_x = Module['_lv_style_set_x'] = createExportWrapper('lv_style_set_x', 2);
+  assert(typeof wasmExports['lv_style_set_y'] != 'undefined', 'missing Wasm export: lv_style_set_y');
+  _lv_style_set_y = Module['_lv_style_set_y'] = createExportWrapper('lv_style_set_y', 2);
+  assert(typeof wasmExports['lv_style_set_align'] != 'undefined', 'missing Wasm export: lv_style_set_align');
+  _lv_style_set_align = Module['_lv_style_set_align'] = createExportWrapper('lv_style_set_align', 2);
+  assert(typeof wasmExports['lv_style_set_translate_x'] != 'undefined', 'missing Wasm export: lv_style_set_translate_x');
+  _lv_style_set_translate_x = Module['_lv_style_set_translate_x'] = createExportWrapper('lv_style_set_translate_x', 2);
+  assert(typeof wasmExports['lv_style_set_translate_y'] != 'undefined', 'missing Wasm export: lv_style_set_translate_y');
+  _lv_style_set_translate_y = Module['_lv_style_set_translate_y'] = createExportWrapper('lv_style_set_translate_y', 2);
+  assert(typeof wasmExports['lv_style_set_transform_zoom'] != 'undefined', 'missing Wasm export: lv_style_set_transform_zoom');
+  _lv_style_set_transform_zoom = Module['_lv_style_set_transform_zoom'] = createExportWrapper('lv_style_set_transform_zoom', 2);
+  assert(typeof wasmExports['lv_style_set_transform_angle'] != 'undefined', 'missing Wasm export: lv_style_set_transform_angle');
+  _lv_style_set_transform_angle = Module['_lv_style_set_transform_angle'] = createExportWrapper('lv_style_set_transform_angle', 2);
+  assert(typeof wasmExports['lv_style_set_transform_pivot_x'] != 'undefined', 'missing Wasm export: lv_style_set_transform_pivot_x');
+  _lv_style_set_transform_pivot_x = Module['_lv_style_set_transform_pivot_x'] = createExportWrapper('lv_style_set_transform_pivot_x', 2);
+  assert(typeof wasmExports['lv_style_set_transform_pivot_y'] != 'undefined', 'missing Wasm export: lv_style_set_transform_pivot_y');
+  _lv_style_set_transform_pivot_y = Module['_lv_style_set_transform_pivot_y'] = createExportWrapper('lv_style_set_transform_pivot_y', 2);
+  assert(typeof wasmExports['lv_style_set_bg_grad_dir'] != 'undefined', 'missing Wasm export: lv_style_set_bg_grad_dir');
+  _lv_style_set_bg_grad_dir = Module['_lv_style_set_bg_grad_dir'] = createExportWrapper('lv_style_set_bg_grad_dir', 2);
+  assert(typeof wasmExports['lv_style_set_bg_main_stop'] != 'undefined', 'missing Wasm export: lv_style_set_bg_main_stop');
+  _lv_style_set_bg_main_stop = Module['_lv_style_set_bg_main_stop'] = createExportWrapper('lv_style_set_bg_main_stop', 2);
+  assert(typeof wasmExports['lv_style_set_bg_grad_stop'] != 'undefined', 'missing Wasm export: lv_style_set_bg_grad_stop');
+  _lv_style_set_bg_grad_stop = Module['_lv_style_set_bg_grad_stop'] = createExportWrapper('lv_style_set_bg_grad_stop', 2);
+  assert(typeof wasmExports['lv_style_set_bg_grad'] != 'undefined', 'missing Wasm export: lv_style_set_bg_grad');
+  _lv_style_set_bg_grad = Module['_lv_style_set_bg_grad'] = createExportWrapper('lv_style_set_bg_grad', 2);
+  assert(typeof wasmExports['lv_style_set_bg_dither_mode'] != 'undefined', 'missing Wasm export: lv_style_set_bg_dither_mode');
+  _lv_style_set_bg_dither_mode = Module['_lv_style_set_bg_dither_mode'] = createExportWrapper('lv_style_set_bg_dither_mode', 2);
+  assert(typeof wasmExports['lv_style_set_bg_img_opa'] != 'undefined', 'missing Wasm export: lv_style_set_bg_img_opa');
+  _lv_style_set_bg_img_opa = Module['_lv_style_set_bg_img_opa'] = createExportWrapper('lv_style_set_bg_img_opa', 2);
+  assert(typeof wasmExports['lv_style_set_bg_img_recolor'] != 'undefined', 'missing Wasm export: lv_style_set_bg_img_recolor');
+  _lv_style_set_bg_img_recolor = Module['_lv_style_set_bg_img_recolor'] = createExportWrapper('lv_style_set_bg_img_recolor', 2);
+  assert(typeof wasmExports['lv_style_set_bg_img_recolor_opa'] != 'undefined', 'missing Wasm export: lv_style_set_bg_img_recolor_opa');
+  _lv_style_set_bg_img_recolor_opa = Module['_lv_style_set_bg_img_recolor_opa'] = createExportWrapper('lv_style_set_bg_img_recolor_opa', 2);
+  assert(typeof wasmExports['lv_style_set_bg_img_tiled'] != 'undefined', 'missing Wasm export: lv_style_set_bg_img_tiled');
+  _lv_style_set_bg_img_tiled = Module['_lv_style_set_bg_img_tiled'] = createExportWrapper('lv_style_set_bg_img_tiled', 2);
+  assert(typeof wasmExports['lv_style_set_shadow_ofs_x'] != 'undefined', 'missing Wasm export: lv_style_set_shadow_ofs_x');
+  _lv_style_set_shadow_ofs_x = Module['_lv_style_set_shadow_ofs_x'] = createExportWrapper('lv_style_set_shadow_ofs_x', 2);
+  assert(typeof wasmExports['lv_style_set_img_opa'] != 'undefined', 'missing Wasm export: lv_style_set_img_opa');
+  _lv_style_set_img_opa = Module['_lv_style_set_img_opa'] = createExportWrapper('lv_style_set_img_opa', 2);
+  assert(typeof wasmExports['lv_style_set_img_recolor'] != 'undefined', 'missing Wasm export: lv_style_set_img_recolor');
+  _lv_style_set_img_recolor = Module['_lv_style_set_img_recolor'] = createExportWrapper('lv_style_set_img_recolor', 2);
+  assert(typeof wasmExports['lv_style_set_img_recolor_opa'] != 'undefined', 'missing Wasm export: lv_style_set_img_recolor_opa');
+  _lv_style_set_img_recolor_opa = Module['_lv_style_set_img_recolor_opa'] = createExportWrapper('lv_style_set_img_recolor_opa', 2);
+  assert(typeof wasmExports['lv_style_set_line_dash_width'] != 'undefined', 'missing Wasm export: lv_style_set_line_dash_width');
+  _lv_style_set_line_dash_width = Module['_lv_style_set_line_dash_width'] = createExportWrapper('lv_style_set_line_dash_width', 2);
+  assert(typeof wasmExports['lv_style_set_line_dash_gap'] != 'undefined', 'missing Wasm export: lv_style_set_line_dash_gap');
+  _lv_style_set_line_dash_gap = Module['_lv_style_set_line_dash_gap'] = createExportWrapper('lv_style_set_line_dash_gap', 2);
+  assert(typeof wasmExports['lv_style_set_line_rounded'] != 'undefined', 'missing Wasm export: lv_style_set_line_rounded');
+  _lv_style_set_line_rounded = Module['_lv_style_set_line_rounded'] = createExportWrapper('lv_style_set_line_rounded', 2);
+  assert(typeof wasmExports['lv_style_set_line_opa'] != 'undefined', 'missing Wasm export: lv_style_set_line_opa');
+  _lv_style_set_line_opa = Module['_lv_style_set_line_opa'] = createExportWrapper('lv_style_set_line_opa', 2);
+  assert(typeof wasmExports['lv_style_set_arc_opa'] != 'undefined', 'missing Wasm export: lv_style_set_arc_opa');
+  _lv_style_set_arc_opa = Module['_lv_style_set_arc_opa'] = createExportWrapper('lv_style_set_arc_opa', 2);
+  assert(typeof wasmExports['lv_style_set_arc_img_src'] != 'undefined', 'missing Wasm export: lv_style_set_arc_img_src');
+  _lv_style_set_arc_img_src = Module['_lv_style_set_arc_img_src'] = createExportWrapper('lv_style_set_arc_img_src', 2);
+  assert(typeof wasmExports['lv_style_set_text_opa'] != 'undefined', 'missing Wasm export: lv_style_set_text_opa');
+  _lv_style_set_text_opa = Module['_lv_style_set_text_opa'] = createExportWrapper('lv_style_set_text_opa', 2);
+  assert(typeof wasmExports['lv_style_set_text_letter_space'] != 'undefined', 'missing Wasm export: lv_style_set_text_letter_space');
+  _lv_style_set_text_letter_space = Module['_lv_style_set_text_letter_space'] = createExportWrapper('lv_style_set_text_letter_space', 2);
+  assert(typeof wasmExports['lv_style_set_text_decor'] != 'undefined', 'missing Wasm export: lv_style_set_text_decor');
+  _lv_style_set_text_decor = Module['_lv_style_set_text_decor'] = createExportWrapper('lv_style_set_text_decor', 2);
+  assert(typeof wasmExports['lv_style_set_opa'] != 'undefined', 'missing Wasm export: lv_style_set_opa');
+  _lv_style_set_opa = Module['_lv_style_set_opa'] = createExportWrapper('lv_style_set_opa', 2);
+  assert(typeof wasmExports['lv_style_set_opa_layered'] != 'undefined', 'missing Wasm export: lv_style_set_opa_layered');
+  _lv_style_set_opa_layered = Module['_lv_style_set_opa_layered'] = createExportWrapper('lv_style_set_opa_layered', 2);
+  assert(typeof wasmExports['lv_style_set_anim'] != 'undefined', 'missing Wasm export: lv_style_set_anim');
+  _lv_style_set_anim = Module['_lv_style_set_anim'] = createExportWrapper('lv_style_set_anim', 2);
+  assert(typeof wasmExports['lv_style_set_anim_speed'] != 'undefined', 'missing Wasm export: lv_style_set_anim_speed');
+  _lv_style_set_anim_speed = Module['_lv_style_set_anim_speed'] = createExportWrapper('lv_style_set_anim_speed', 2);
+  assert(typeof wasmExports['lv_style_set_blend_mode'] != 'undefined', 'missing Wasm export: lv_style_set_blend_mode');
+  _lv_style_set_blend_mode = Module['_lv_style_set_blend_mode'] = createExportWrapper('lv_style_set_blend_mode', 2);
+  assert(typeof wasmExports['lv_style_set_layout'] != 'undefined', 'missing Wasm export: lv_style_set_layout');
+  _lv_style_set_layout = Module['_lv_style_set_layout'] = createExportWrapper('lv_style_set_layout', 2);
+  assert(typeof wasmExports['lv_style_set_base_dir'] != 'undefined', 'missing Wasm export: lv_style_set_base_dir');
+  _lv_style_set_base_dir = Module['_lv_style_set_base_dir'] = createExportWrapper('lv_style_set_base_dir', 2);
+  assert(typeof wasmExports['lv_timer_enable'] != 'undefined', 'missing Wasm export: lv_timer_enable');
+  _lv_timer_enable = Module['_lv_timer_enable'] = createExportWrapper('lv_timer_enable', 1);
+  assert(typeof wasmExports['lv_timer_create_basic'] != 'undefined', 'missing Wasm export: lv_timer_create_basic');
+  _lv_timer_create_basic = Module['_lv_timer_create_basic'] = createExportWrapper('lv_timer_create_basic', 0);
+  assert(typeof wasmExports['lv_timer_set_cb'] != 'undefined', 'missing Wasm export: lv_timer_set_cb');
+  _lv_timer_set_cb = Module['_lv_timer_set_cb'] = createExportWrapper('lv_timer_set_cb', 2);
+  assert(typeof wasmExports['lv_timer_set_period'] != 'undefined', 'missing Wasm export: lv_timer_set_period');
+  _lv_timer_set_period = Module['_lv_timer_set_period'] = createExportWrapper('lv_timer_set_period', 2);
+  assert(typeof wasmExports['lv_timer_reset'] != 'undefined', 'missing Wasm export: lv_timer_reset');
+  _lv_timer_reset = Module['_lv_timer_reset'] = createExportWrapper('lv_timer_reset', 1);
+  assert(typeof wasmExports['lv_timer_get_idle'] != 'undefined', 'missing Wasm export: lv_timer_get_idle');
+  _lv_timer_get_idle = Module['_lv_timer_get_idle'] = createExportWrapper('lv_timer_get_idle', 0);
+  assert(typeof wasmExports['lv_tlsf_block_size'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size');
+  _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = createExportWrapper('lv_tlsf_block_size', 1);
+  assert(typeof wasmExports['lv_tlsf_size'] != 'undefined', 'missing Wasm export: lv_tlsf_size');
+  _lv_tlsf_size = Module['_lv_tlsf_size'] = createExportWrapper('lv_tlsf_size', 0);
+  assert(typeof wasmExports['lv_tlsf_align_size'] != 'undefined', 'missing Wasm export: lv_tlsf_align_size');
+  _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = createExportWrapper('lv_tlsf_align_size', 0);
+  assert(typeof wasmExports['lv_tlsf_block_size_min'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_min');
+  _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = createExportWrapper('lv_tlsf_block_size_min', 0);
+  assert(typeof wasmExports['lv_tlsf_block_size_max'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_max');
+  _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = createExportWrapper('lv_tlsf_block_size_max', 0);
+  assert(typeof wasmExports['lv_tlsf_pool_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_pool_overhead');
+  _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = createExportWrapper('lv_tlsf_pool_overhead', 0);
+  assert(typeof wasmExports['lv_tlsf_alloc_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_alloc_overhead');
+  _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = createExportWrapper('lv_tlsf_alloc_overhead', 0);
+  assert(typeof wasmExports['lv_tlsf_add_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_add_pool');
+  _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = createExportWrapper('lv_tlsf_add_pool', 3);
+  assert(typeof wasmExports['lv_tlsf_remove_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_remove_pool');
+  _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = createExportWrapper('lv_tlsf_remove_pool', 2);
+  assert(typeof wasmExports['lv_tlsf_create'] != 'undefined', 'missing Wasm export: lv_tlsf_create');
+  _lv_tlsf_create = Module['_lv_tlsf_create'] = createExportWrapper('lv_tlsf_create', 1);
+  assert(typeof wasmExports['lv_tlsf_memalign'] != 'undefined', 'missing Wasm export: lv_tlsf_memalign');
+  _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = createExportWrapper('lv_tlsf_memalign', 3);
+  assert(typeof wasmExports['lv_arc_set_value'] != 'undefined', 'missing Wasm export: lv_arc_set_value');
+  _lv_arc_set_value = Module['_lv_arc_set_value'] = createExportWrapper('lv_arc_set_value', 2);
+  assert(typeof wasmExports['lv_arc_create'] != 'undefined', 'missing Wasm export: lv_arc_create');
+  _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create', 1);
+  assert(typeof wasmExports['lv_arc_set_angles'] != 'undefined', 'missing Wasm export: lv_arc_set_angles');
+  _lv_arc_set_angles = Module['_lv_arc_set_angles'] = createExportWrapper('lv_arc_set_angles', 3);
+  assert(typeof wasmExports['lv_arc_set_bg_start_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_start_angle');
+  _lv_arc_set_bg_start_angle = Module['_lv_arc_set_bg_start_angle'] = createExportWrapper('lv_arc_set_bg_start_angle', 2);
+  assert(typeof wasmExports['lv_arc_set_bg_end_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_end_angle');
+  _lv_arc_set_bg_end_angle = Module['_lv_arc_set_bg_end_angle'] = createExportWrapper('lv_arc_set_bg_end_angle', 2);
+  assert(typeof wasmExports['lv_arc_set_mode'] != 'undefined', 'missing Wasm export: lv_arc_set_mode');
+  _lv_arc_set_mode = Module['_lv_arc_set_mode'] = createExportWrapper('lv_arc_set_mode', 2);
+  assert(typeof wasmExports['lv_arc_set_range'] != 'undefined', 'missing Wasm export: lv_arc_set_range');
+  _lv_arc_set_range = Module['_lv_arc_set_range'] = createExportWrapper('lv_arc_set_range', 3);
+  assert(typeof wasmExports['lv_arc_set_change_rate'] != 'undefined', 'missing Wasm export: lv_arc_set_change_rate');
+  _lv_arc_set_change_rate = Module['_lv_arc_set_change_rate'] = createExportWrapper('lv_arc_set_change_rate', 2);
+  assert(typeof wasmExports['lv_arc_get_angle_start'] != 'undefined', 'missing Wasm export: lv_arc_get_angle_start');
+  _lv_arc_get_angle_start = Module['_lv_arc_get_angle_start'] = createExportWrapper('lv_arc_get_angle_start', 1);
+  assert(typeof wasmExports['lv_arc_get_angle_end'] != 'undefined', 'missing Wasm export: lv_arc_get_angle_end');
+  _lv_arc_get_angle_end = Module['_lv_arc_get_angle_end'] = createExportWrapper('lv_arc_get_angle_end', 1);
+  assert(typeof wasmExports['lv_arc_get_bg_angle_start'] != 'undefined', 'missing Wasm export: lv_arc_get_bg_angle_start');
+  _lv_arc_get_bg_angle_start = Module['_lv_arc_get_bg_angle_start'] = createExportWrapper('lv_arc_get_bg_angle_start', 1);
+  assert(typeof wasmExports['lv_arc_get_bg_angle_end'] != 'undefined', 'missing Wasm export: lv_arc_get_bg_angle_end');
+  _lv_arc_get_bg_angle_end = Module['_lv_arc_get_bg_angle_end'] = createExportWrapper('lv_arc_get_bg_angle_end', 1);
+  assert(typeof wasmExports['lv_arc_get_value'] != 'undefined', 'missing Wasm export: lv_arc_get_value');
+  _lv_arc_get_value = Module['_lv_arc_get_value'] = createExportWrapper('lv_arc_get_value', 1);
+  assert(typeof wasmExports['lv_arc_get_min_value'] != 'undefined', 'missing Wasm export: lv_arc_get_min_value');
+  _lv_arc_get_min_value = Module['_lv_arc_get_min_value'] = createExportWrapper('lv_arc_get_min_value', 1);
+  assert(typeof wasmExports['lv_arc_get_max_value'] != 'undefined', 'missing Wasm export: lv_arc_get_max_value');
+  _lv_arc_get_max_value = Module['_lv_arc_get_max_value'] = createExportWrapper('lv_arc_get_max_value', 1);
+  assert(typeof wasmExports['lv_arc_get_mode'] != 'undefined', 'missing Wasm export: lv_arc_get_mode');
+  _lv_arc_get_mode = Module['_lv_arc_get_mode'] = createExportWrapper('lv_arc_get_mode', 1);
+  assert(typeof wasmExports['lv_arc_align_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_align_obj_to_angle');
+  _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createExportWrapper('lv_arc_align_obj_to_angle', 3);
+  assert(typeof wasmExports['lv_arc_rotate_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_rotate_obj_to_angle');
+  _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle', 3);
+  assert(typeof wasmExports['lv_bar_create'] != 'undefined', 'missing Wasm export: lv_bar_create');
+  _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create', 1);
+  assert(typeof wasmExports['lv_bar_get_mode'] != 'undefined', 'missing Wasm export: lv_bar_get_mode');
+  _lv_bar_get_mode = Module['_lv_bar_get_mode'] = createExportWrapper('lv_bar_get_mode', 1);
+  assert(typeof wasmExports['lv_btnmatrix_clear_btn_ctrl'] != 'undefined', 'missing Wasm export: lv_btnmatrix_clear_btn_ctrl');
+  _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl', 3);
+  assert(typeof wasmExports['lv_btnmatrix_set_btn_width'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_btn_width');
+  _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = createExportWrapper('lv_btnmatrix_set_btn_width', 3);
+  assert(typeof wasmExports['lv_btnmatrix_get_map'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_map');
+  _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = createExportWrapper('lv_btnmatrix_get_map', 1);
+  assert(typeof wasmExports['lv_btnmatrix_get_one_checked'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_one_checked');
+  _lv_btnmatrix_get_one_checked = Module['_lv_btnmatrix_get_one_checked'] = createExportWrapper('lv_btnmatrix_get_one_checked', 1);
+  assert(typeof wasmExports['lv_canvas_create'] != 'undefined', 'missing Wasm export: lv_canvas_create');
+  _lv_canvas_create = Module['_lv_canvas_create'] = createExportWrapper('lv_canvas_create', 1);
+  assert(typeof wasmExports['lv_canvas_set_buffer'] != 'undefined', 'missing Wasm export: lv_canvas_set_buffer');
+  _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = createExportWrapper('lv_canvas_set_buffer', 5);
+  assert(typeof wasmExports['lv_canvas_set_px_color'] != 'undefined', 'missing Wasm export: lv_canvas_set_px_color');
+  _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = createExportWrapper('lv_canvas_set_px_color', 4);
+  assert(typeof wasmExports['lv_canvas_set_px_opa'] != 'undefined', 'missing Wasm export: lv_canvas_set_px_opa');
+  _lv_canvas_set_px_opa = Module['_lv_canvas_set_px_opa'] = createExportWrapper('lv_canvas_set_px_opa', 4);
+  assert(typeof wasmExports['lv_canvas_set_palette'] != 'undefined', 'missing Wasm export: lv_canvas_set_palette');
+  _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = createExportWrapper('lv_canvas_set_palette', 3);
+  assert(typeof wasmExports['lv_canvas_get_px'] != 'undefined', 'missing Wasm export: lv_canvas_get_px');
+  _lv_canvas_get_px = Module['_lv_canvas_get_px'] = createExportWrapper('lv_canvas_get_px', 4);
+  assert(typeof wasmExports['lv_canvas_get_img'] != 'undefined', 'missing Wasm export: lv_canvas_get_img');
+  _lv_canvas_get_img = Module['_lv_canvas_get_img'] = createExportWrapper('lv_canvas_get_img', 1);
+  assert(typeof wasmExports['lv_canvas_copy_buf'] != 'undefined', 'missing Wasm export: lv_canvas_copy_buf');
+  _lv_canvas_copy_buf = Module['_lv_canvas_copy_buf'] = createExportWrapper('lv_canvas_copy_buf', 6);
+  assert(typeof wasmExports['lv_canvas_transform'] != 'undefined', 'missing Wasm export: lv_canvas_transform');
+  _lv_canvas_transform = Module['_lv_canvas_transform'] = createExportWrapper('lv_canvas_transform', 9);
+  assert(typeof wasmExports['lv_canvas_blur_hor'] != 'undefined', 'missing Wasm export: lv_canvas_blur_hor');
+  _lv_canvas_blur_hor = Module['_lv_canvas_blur_hor'] = createExportWrapper('lv_canvas_blur_hor', 3);
+  assert(typeof wasmExports['lv_canvas_blur_ver'] != 'undefined', 'missing Wasm export: lv_canvas_blur_ver');
+  _lv_canvas_blur_ver = Module['_lv_canvas_blur_ver'] = createExportWrapper('lv_canvas_blur_ver', 3);
+  assert(typeof wasmExports['lv_canvas_fill_bg'] != 'undefined', 'missing Wasm export: lv_canvas_fill_bg');
+  _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = createExportWrapper('lv_canvas_fill_bg', 3);
+  assert(typeof wasmExports['lv_canvas_draw_rect'] != 'undefined', 'missing Wasm export: lv_canvas_draw_rect');
+  _lv_canvas_draw_rect = Module['_lv_canvas_draw_rect'] = createExportWrapper('lv_canvas_draw_rect', 6);
+  assert(typeof wasmExports['lv_canvas_draw_text'] != 'undefined', 'missing Wasm export: lv_canvas_draw_text');
+  _lv_canvas_draw_text = Module['_lv_canvas_draw_text'] = createExportWrapper('lv_canvas_draw_text', 6);
+  assert(typeof wasmExports['lv_canvas_draw_img'] != 'undefined', 'missing Wasm export: lv_canvas_draw_img');
+  _lv_canvas_draw_img = Module['_lv_canvas_draw_img'] = createExportWrapper('lv_canvas_draw_img', 5);
+  assert(typeof wasmExports['lv_canvas_draw_line'] != 'undefined', 'missing Wasm export: lv_canvas_draw_line');
+  _lv_canvas_draw_line = Module['_lv_canvas_draw_line'] = createExportWrapper('lv_canvas_draw_line', 4);
+  assert(typeof wasmExports['lv_canvas_draw_polygon'] != 'undefined', 'missing Wasm export: lv_canvas_draw_polygon');
+  _lv_canvas_draw_polygon = Module['_lv_canvas_draw_polygon'] = createExportWrapper('lv_canvas_draw_polygon', 4);
+  assert(typeof wasmExports['lv_canvas_draw_arc'] != 'undefined', 'missing Wasm export: lv_canvas_draw_arc');
+  _lv_canvas_draw_arc = Module['_lv_canvas_draw_arc'] = createExportWrapper('lv_canvas_draw_arc', 7);
+  assert(typeof wasmExports['lv_checkbox_create'] != 'undefined', 'missing Wasm export: lv_checkbox_create');
+  _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create', 1);
+  assert(typeof wasmExports['lv_checkbox_set_text'] != 'undefined', 'missing Wasm export: lv_checkbox_set_text');
+  _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = createExportWrapper('lv_checkbox_set_text', 2);
+  assert(typeof wasmExports['lv_checkbox_set_text_static'] != 'undefined', 'missing Wasm export: lv_checkbox_set_text_static');
+  _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = createExportWrapper('lv_checkbox_set_text_static', 2);
+  assert(typeof wasmExports['lv_checkbox_get_text'] != 'undefined', 'missing Wasm export: lv_checkbox_get_text');
+  _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = createExportWrapper('lv_checkbox_get_text', 1);
+  assert(typeof wasmExports['lv_dropdown_set_options_static'] != 'undefined', 'missing Wasm export: lv_dropdown_set_options_static');
+  _lv_dropdown_set_options_static = Module['_lv_dropdown_set_options_static'] = createExportWrapper('lv_dropdown_set_options_static', 2);
+  assert(typeof wasmExports['lv_dropdown_open'] != 'undefined', 'missing Wasm export: lv_dropdown_open');
+  _lv_dropdown_open = Module['_lv_dropdown_open'] = createExportWrapper('lv_dropdown_open', 1);
+  assert(typeof wasmExports['lv_dropdown_close'] != 'undefined', 'missing Wasm export: lv_dropdown_close');
+  _lv_dropdown_close = Module['_lv_dropdown_close'] = createExportWrapper('lv_dropdown_close', 1);
+  assert(typeof wasmExports['lv_dropdown_set_text'] != 'undefined', 'missing Wasm export: lv_dropdown_set_text');
+  _lv_dropdown_set_text = Module['_lv_dropdown_set_text'] = createExportWrapper('lv_dropdown_set_text', 2);
+  assert(typeof wasmExports['lv_dropdown_add_option'] != 'undefined', 'missing Wasm export: lv_dropdown_add_option');
+  _lv_dropdown_add_option = Module['_lv_dropdown_add_option'] = createExportWrapper('lv_dropdown_add_option', 3);
+  assert(typeof wasmExports['lv_dropdown_set_dir'] != 'undefined', 'missing Wasm export: lv_dropdown_set_dir');
+  _lv_dropdown_set_dir = Module['_lv_dropdown_set_dir'] = createExportWrapper('lv_dropdown_set_dir', 2);
+  assert(typeof wasmExports['lv_dropdown_set_symbol'] != 'undefined', 'missing Wasm export: lv_dropdown_set_symbol');
+  _lv_dropdown_set_symbol = Module['_lv_dropdown_set_symbol'] = createExportWrapper('lv_dropdown_set_symbol', 2);
+  assert(typeof wasmExports['lv_dropdown_set_selected_highlight'] != 'undefined', 'missing Wasm export: lv_dropdown_set_selected_highlight');
+  _lv_dropdown_set_selected_highlight = Module['_lv_dropdown_set_selected_highlight'] = createExportWrapper('lv_dropdown_set_selected_highlight', 2);
+  assert(typeof wasmExports['lv_dropdown_get_list'] != 'undefined', 'missing Wasm export: lv_dropdown_get_list');
+  _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = createExportWrapper('lv_dropdown_get_list', 1);
+  assert(typeof wasmExports['lv_dropdown_get_text'] != 'undefined', 'missing Wasm export: lv_dropdown_get_text');
+  _lv_dropdown_get_text = Module['_lv_dropdown_get_text'] = createExportWrapper('lv_dropdown_get_text', 1);
+  assert(typeof wasmExports['lv_dropdown_get_option_cnt'] != 'undefined', 'missing Wasm export: lv_dropdown_get_option_cnt');
+  _lv_dropdown_get_option_cnt = Module['_lv_dropdown_get_option_cnt'] = createExportWrapper('lv_dropdown_get_option_cnt', 1);
+  assert(typeof wasmExports['lv_dropdown_get_selected_str'] != 'undefined', 'missing Wasm export: lv_dropdown_get_selected_str');
+  _lv_dropdown_get_selected_str = Module['_lv_dropdown_get_selected_str'] = createExportWrapper('lv_dropdown_get_selected_str', 3);
+  assert(typeof wasmExports['lv_dropdown_get_option_index'] != 'undefined', 'missing Wasm export: lv_dropdown_get_option_index');
+  _lv_dropdown_get_option_index = Module['_lv_dropdown_get_option_index'] = createExportWrapper('lv_dropdown_get_option_index', 2);
+  assert(typeof wasmExports['lv_dropdown_get_symbol'] != 'undefined', 'missing Wasm export: lv_dropdown_get_symbol');
+  _lv_dropdown_get_symbol = Module['_lv_dropdown_get_symbol'] = createExportWrapper('lv_dropdown_get_symbol', 1);
+  assert(typeof wasmExports['lv_dropdown_get_selected_highlight'] != 'undefined', 'missing Wasm export: lv_dropdown_get_selected_highlight');
+  _lv_dropdown_get_selected_highlight = Module['_lv_dropdown_get_selected_highlight'] = createExportWrapper('lv_dropdown_get_selected_highlight', 1);
+  assert(typeof wasmExports['lv_dropdown_get_dir'] != 'undefined', 'missing Wasm export: lv_dropdown_get_dir');
+  _lv_dropdown_get_dir = Module['_lv_dropdown_get_dir'] = createExportWrapper('lv_dropdown_get_dir', 1);
+  assert(typeof wasmExports['lv_label_set_text_static'] != 'undefined', 'missing Wasm export: lv_label_set_text_static');
+  _lv_label_set_text_static = Module['_lv_label_set_text_static'] = createExportWrapper('lv_label_set_text_static', 2);
+  assert(typeof wasmExports['lv_dropdown_is_open'] != 'undefined', 'missing Wasm export: lv_dropdown_is_open');
+  _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = createExportWrapper('lv_dropdown_is_open', 1);
+  assert(typeof wasmExports['lv_img_set_offset_x'] != 'undefined', 'missing Wasm export: lv_img_set_offset_x');
+  _lv_img_set_offset_x = Module['_lv_img_set_offset_x'] = createExportWrapper('lv_img_set_offset_x', 2);
+  assert(typeof wasmExports['lv_img_set_offset_y'] != 'undefined', 'missing Wasm export: lv_img_set_offset_y');
+  _lv_img_set_offset_y = Module['_lv_img_set_offset_y'] = createExportWrapper('lv_img_set_offset_y', 2);
+  assert(typeof wasmExports['lv_img_set_angle'] != 'undefined', 'missing Wasm export: lv_img_set_angle');
+  _lv_img_set_angle = Module['_lv_img_set_angle'] = createExportWrapper('lv_img_set_angle', 2);
+  assert(typeof wasmExports['lv_img_set_pivot'] != 'undefined', 'missing Wasm export: lv_img_set_pivot');
+  _lv_img_set_pivot = Module['_lv_img_set_pivot'] = createExportWrapper('lv_img_set_pivot', 3);
+  assert(typeof wasmExports['lv_img_set_zoom'] != 'undefined', 'missing Wasm export: lv_img_set_zoom');
+  _lv_img_set_zoom = Module['_lv_img_set_zoom'] = createExportWrapper('lv_img_set_zoom', 2);
+  assert(typeof wasmExports['lv_img_set_antialias'] != 'undefined', 'missing Wasm export: lv_img_set_antialias');
+  _lv_img_set_antialias = Module['_lv_img_set_antialias'] = createExportWrapper('lv_img_set_antialias', 2);
+  assert(typeof wasmExports['lv_img_set_size_mode'] != 'undefined', 'missing Wasm export: lv_img_set_size_mode');
+  _lv_img_set_size_mode = Module['_lv_img_set_size_mode'] = createExportWrapper('lv_img_set_size_mode', 2);
+  assert(typeof wasmExports['lv_img_get_src'] != 'undefined', 'missing Wasm export: lv_img_get_src');
+  _lv_img_get_src = Module['_lv_img_get_src'] = createExportWrapper('lv_img_get_src', 1);
+  assert(typeof wasmExports['lv_img_get_offset_x'] != 'undefined', 'missing Wasm export: lv_img_get_offset_x');
+  _lv_img_get_offset_x = Module['_lv_img_get_offset_x'] = createExportWrapper('lv_img_get_offset_x', 1);
+  assert(typeof wasmExports['lv_img_get_offset_y'] != 'undefined', 'missing Wasm export: lv_img_get_offset_y');
+  _lv_img_get_offset_y = Module['_lv_img_get_offset_y'] = createExportWrapper('lv_img_get_offset_y', 1);
+  assert(typeof wasmExports['lv_img_get_angle'] != 'undefined', 'missing Wasm export: lv_img_get_angle');
+  _lv_img_get_angle = Module['_lv_img_get_angle'] = createExportWrapper('lv_img_get_angle', 1);
+  assert(typeof wasmExports['lv_img_get_pivot'] != 'undefined', 'missing Wasm export: lv_img_get_pivot');
+  _lv_img_get_pivot = Module['_lv_img_get_pivot'] = createExportWrapper('lv_img_get_pivot', 2);
+  assert(typeof wasmExports['lv_img_get_zoom'] != 'undefined', 'missing Wasm export: lv_img_get_zoom');
+  _lv_img_get_zoom = Module['_lv_img_get_zoom'] = createExportWrapper('lv_img_get_zoom', 1);
+  assert(typeof wasmExports['lv_img_get_antialias'] != 'undefined', 'missing Wasm export: lv_img_get_antialias');
+  _lv_img_get_antialias = Module['_lv_img_get_antialias'] = createExportWrapper('lv_img_get_antialias', 1);
+  assert(typeof wasmExports['lv_img_get_size_mode'] != 'undefined', 'missing Wasm export: lv_img_get_size_mode');
+  _lv_img_get_size_mode = Module['_lv_img_get_size_mode'] = createExportWrapper('lv_img_get_size_mode', 1);
+  assert(typeof wasmExports['lv_label_get_letter_on'] != 'undefined', 'missing Wasm export: lv_label_get_letter_on');
+  _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = createExportWrapper('lv_label_get_letter_on', 2);
+  assert(typeof wasmExports['lv_label_set_recolor'] != 'undefined', 'missing Wasm export: lv_label_set_recolor');
+  _lv_label_set_recolor = Module['_lv_label_set_recolor'] = createExportWrapper('lv_label_set_recolor', 2);
+  assert(typeof wasmExports['lv_label_set_text_sel_start'] != 'undefined', 'missing Wasm export: lv_label_set_text_sel_start');
+  _lv_label_set_text_sel_start = Module['_lv_label_set_text_sel_start'] = createExportWrapper('lv_label_set_text_sel_start', 2);
+  assert(typeof wasmExports['lv_label_set_text_sel_end'] != 'undefined', 'missing Wasm export: lv_label_set_text_sel_end');
+  _lv_label_set_text_sel_end = Module['_lv_label_set_text_sel_end'] = createExportWrapper('lv_label_set_text_sel_end', 2);
+  assert(typeof wasmExports['lv_label_get_long_mode'] != 'undefined', 'missing Wasm export: lv_label_get_long_mode');
+  _lv_label_get_long_mode = Module['_lv_label_get_long_mode'] = createExportWrapper('lv_label_get_long_mode', 1);
+  assert(typeof wasmExports['lv_label_get_recolor'] != 'undefined', 'missing Wasm export: lv_label_get_recolor');
+  _lv_label_get_recolor = Module['_lv_label_get_recolor'] = createExportWrapper('lv_label_get_recolor', 1);
+  assert(typeof wasmExports['lv_label_get_letter_pos'] != 'undefined', 'missing Wasm export: lv_label_get_letter_pos');
+  _lv_label_get_letter_pos = Module['_lv_label_get_letter_pos'] = createExportWrapper('lv_label_get_letter_pos', 3);
+  assert(typeof wasmExports['lv_label_is_char_under_pos'] != 'undefined', 'missing Wasm export: lv_label_is_char_under_pos');
+  _lv_label_is_char_under_pos = Module['_lv_label_is_char_under_pos'] = createExportWrapper('lv_label_is_char_under_pos', 2);
+  assert(typeof wasmExports['lv_label_get_text_selection_start'] != 'undefined', 'missing Wasm export: lv_label_get_text_selection_start');
+  _lv_label_get_text_selection_start = Module['_lv_label_get_text_selection_start'] = createExportWrapper('lv_label_get_text_selection_start', 1);
+  assert(typeof wasmExports['lv_label_get_text_selection_end'] != 'undefined', 'missing Wasm export: lv_label_get_text_selection_end');
+  _lv_label_get_text_selection_end = Module['_lv_label_get_text_selection_end'] = createExportWrapper('lv_label_get_text_selection_end', 1);
+  assert(typeof wasmExports['lv_label_ins_text'] != 'undefined', 'missing Wasm export: lv_label_ins_text');
+  _lv_label_ins_text = Module['_lv_label_ins_text'] = createExportWrapper('lv_label_ins_text', 3);
+  assert(typeof wasmExports['lv_label_cut_text'] != 'undefined', 'missing Wasm export: lv_label_cut_text');
+  _lv_label_cut_text = Module['_lv_label_cut_text'] = createExportWrapper('lv_label_cut_text', 3);
+  assert(typeof wasmExports['lv_line_create'] != 'undefined', 'missing Wasm export: lv_line_create');
+  _lv_line_create = Module['_lv_line_create'] = createExportWrapper('lv_line_create', 1);
+  assert(typeof wasmExports['lv_line_set_y_invert'] != 'undefined', 'missing Wasm export: lv_line_set_y_invert');
+  _lv_line_set_y_invert = Module['_lv_line_set_y_invert'] = createExportWrapper('lv_line_set_y_invert', 2);
+  assert(typeof wasmExports['lv_line_get_y_invert'] != 'undefined', 'missing Wasm export: lv_line_get_y_invert');
+  _lv_line_get_y_invert = Module['_lv_line_get_y_invert'] = createExportWrapper('lv_line_get_y_invert', 1);
+  assert(typeof wasmExports['lv_roller_set_options'] != 'undefined', 'missing Wasm export: lv_roller_set_options');
+  _lv_roller_set_options = Module['_lv_roller_set_options'] = createExportWrapper('lv_roller_set_options', 3);
+  assert(typeof wasmExports['lv_roller_set_selected'] != 'undefined', 'missing Wasm export: lv_roller_set_selected');
+  _lv_roller_set_selected = Module['_lv_roller_set_selected'] = createExportWrapper('lv_roller_set_selected', 3);
+  assert(typeof wasmExports['lv_roller_create'] != 'undefined', 'missing Wasm export: lv_roller_create');
+  _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create', 1);
+  assert(typeof wasmExports['lv_roller_set_visible_row_count'] != 'undefined', 'missing Wasm export: lv_roller_set_visible_row_count');
+  _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = createExportWrapper('lv_roller_set_visible_row_count', 2);
+  assert(typeof wasmExports['lv_roller_get_selected'] != 'undefined', 'missing Wasm export: lv_roller_get_selected');
+  _lv_roller_get_selected = Module['_lv_roller_get_selected'] = createExportWrapper('lv_roller_get_selected', 1);
+  assert(typeof wasmExports['lv_roller_get_selected_str'] != 'undefined', 'missing Wasm export: lv_roller_get_selected_str');
+  _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = createExportWrapper('lv_roller_get_selected_str', 3);
+  assert(typeof wasmExports['lv_roller_get_options'] != 'undefined', 'missing Wasm export: lv_roller_get_options');
+  _lv_roller_get_options = Module['_lv_roller_get_options'] = createExportWrapper('lv_roller_get_options', 1);
+  assert(typeof wasmExports['lv_roller_get_option_cnt'] != 'undefined', 'missing Wasm export: lv_roller_get_option_cnt');
+  _lv_roller_get_option_cnt = Module['_lv_roller_get_option_cnt'] = createExportWrapper('lv_roller_get_option_cnt', 1);
+  assert(typeof wasmExports['lv_slider_create'] != 'undefined', 'missing Wasm export: lv_slider_create');
+  _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create', 1);
+  assert(typeof wasmExports['lv_slider_is_dragged'] != 'undefined', 'missing Wasm export: lv_slider_is_dragged');
+  _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = createExportWrapper('lv_slider_is_dragged', 1);
+  assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
+  _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
+  assert(typeof wasmExports['lv_table_create'] != 'undefined', 'missing Wasm export: lv_table_create');
+  _lv_table_create = Module['_lv_table_create'] = createExportWrapper('lv_table_create', 1);
+  assert(typeof wasmExports['lv_table_set_cell_value'] != 'undefined', 'missing Wasm export: lv_table_set_cell_value');
+  _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = createExportWrapper('lv_table_set_cell_value', 4);
+  assert(typeof wasmExports['lv_table_set_col_cnt'] != 'undefined', 'missing Wasm export: lv_table_set_col_cnt');
+  _lv_table_set_col_cnt = Module['_lv_table_set_col_cnt'] = createExportWrapper('lv_table_set_col_cnt', 2);
+  assert(typeof wasmExports['lv_table_set_row_cnt'] != 'undefined', 'missing Wasm export: lv_table_set_row_cnt');
+  _lv_table_set_row_cnt = Module['_lv_table_set_row_cnt'] = createExportWrapper('lv_table_set_row_cnt', 2);
+  assert(typeof wasmExports['lv_table_set_cell_value_fmt'] != 'undefined', 'missing Wasm export: lv_table_set_cell_value_fmt');
+  _lv_table_set_cell_value_fmt = Module['_lv_table_set_cell_value_fmt'] = createExportWrapper('lv_table_set_cell_value_fmt', 5);
+  assert(typeof wasmExports['lv_table_set_col_width'] != 'undefined', 'missing Wasm export: lv_table_set_col_width');
+  _lv_table_set_col_width = Module['_lv_table_set_col_width'] = createExportWrapper('lv_table_set_col_width', 3);
+  assert(typeof wasmExports['lv_table_add_cell_ctrl'] != 'undefined', 'missing Wasm export: lv_table_add_cell_ctrl');
+  _lv_table_add_cell_ctrl = Module['_lv_table_add_cell_ctrl'] = createExportWrapper('lv_table_add_cell_ctrl', 4);
+  assert(typeof wasmExports['lv_table_clear_cell_ctrl'] != 'undefined', 'missing Wasm export: lv_table_clear_cell_ctrl');
+  _lv_table_clear_cell_ctrl = Module['_lv_table_clear_cell_ctrl'] = createExportWrapper('lv_table_clear_cell_ctrl', 4);
+  assert(typeof wasmExports['lv_table_set_cell_user_data'] != 'undefined', 'missing Wasm export: lv_table_set_cell_user_data');
+  _lv_table_set_cell_user_data = Module['_lv_table_set_cell_user_data'] = createExportWrapper('lv_table_set_cell_user_data', 4);
+  assert(typeof wasmExports['lv_table_get_cell_value'] != 'undefined', 'missing Wasm export: lv_table_get_cell_value');
+  _lv_table_get_cell_value = Module['_lv_table_get_cell_value'] = createExportWrapper('lv_table_get_cell_value', 3);
+  assert(typeof wasmExports['lv_table_get_row_cnt'] != 'undefined', 'missing Wasm export: lv_table_get_row_cnt');
+  _lv_table_get_row_cnt = Module['_lv_table_get_row_cnt'] = createExportWrapper('lv_table_get_row_cnt', 1);
+  assert(typeof wasmExports['lv_table_get_col_cnt'] != 'undefined', 'missing Wasm export: lv_table_get_col_cnt');
+  _lv_table_get_col_cnt = Module['_lv_table_get_col_cnt'] = createExportWrapper('lv_table_get_col_cnt', 1);
+  assert(typeof wasmExports['lv_table_get_col_width'] != 'undefined', 'missing Wasm export: lv_table_get_col_width');
+  _lv_table_get_col_width = Module['_lv_table_get_col_width'] = createExportWrapper('lv_table_get_col_width', 2);
+  assert(typeof wasmExports['lv_table_has_cell_ctrl'] != 'undefined', 'missing Wasm export: lv_table_has_cell_ctrl');
+  _lv_table_has_cell_ctrl = Module['_lv_table_has_cell_ctrl'] = createExportWrapper('lv_table_has_cell_ctrl', 4);
+  assert(typeof wasmExports['lv_table_get_selected_cell'] != 'undefined', 'missing Wasm export: lv_table_get_selected_cell');
+  _lv_table_get_selected_cell = Module['_lv_table_get_selected_cell'] = createExportWrapper('lv_table_get_selected_cell', 3);
+  assert(typeof wasmExports['lv_table_get_cell_user_data'] != 'undefined', 'missing Wasm export: lv_table_get_cell_user_data');
+  _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = createExportWrapper('lv_table_get_cell_user_data', 3);
+  assert(typeof wasmExports['lv_textarea_cursor_up'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_up');
+  _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = createExportWrapper('lv_textarea_cursor_up', 1);
+  assert(typeof wasmExports['lv_textarea_cursor_down'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_down');
+  _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = createExportWrapper('lv_textarea_cursor_down', 1);
+  assert(typeof wasmExports['lv_textarea_del_char_forward'] != 'undefined', 'missing Wasm export: lv_textarea_del_char_forward');
+  _lv_textarea_del_char_forward = Module['_lv_textarea_del_char_forward'] = createExportWrapper('lv_textarea_del_char_forward', 1);
+  assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
+  _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
+  assert(typeof wasmExports['lv_textarea_clear_selection'] != 'undefined', 'missing Wasm export: lv_textarea_clear_selection');
+  _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = createExportWrapper('lv_textarea_clear_selection', 1);
+  assert(typeof wasmExports['lv_textarea_get_accepted_chars'] != 'undefined', 'missing Wasm export: lv_textarea_get_accepted_chars');
+  _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = createExportWrapper('lv_textarea_get_accepted_chars', 1);
+  assert(typeof wasmExports['lv_textarea_get_max_length'] != 'undefined', 'missing Wasm export: lv_textarea_get_max_length');
+  _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = createExportWrapper('lv_textarea_get_max_length', 1);
+  assert(typeof wasmExports['lv_textarea_set_placeholder_text'] != 'undefined', 'missing Wasm export: lv_textarea_set_placeholder_text');
+  _lv_textarea_set_placeholder_text = Module['_lv_textarea_set_placeholder_text'] = createExportWrapper('lv_textarea_set_placeholder_text', 2);
+  assert(typeof wasmExports['lv_textarea_set_password_mode'] != 'undefined', 'missing Wasm export: lv_textarea_set_password_mode');
+  _lv_textarea_set_password_mode = Module['_lv_textarea_set_password_mode'] = createExportWrapper('lv_textarea_set_password_mode', 2);
+  assert(typeof wasmExports['lv_textarea_set_password_bullet'] != 'undefined', 'missing Wasm export: lv_textarea_set_password_bullet');
+  _lv_textarea_set_password_bullet = Module['_lv_textarea_set_password_bullet'] = createExportWrapper('lv_textarea_set_password_bullet', 2);
+  assert(typeof wasmExports['lv_textarea_set_accepted_chars'] != 'undefined', 'missing Wasm export: lv_textarea_set_accepted_chars');
+  _lv_textarea_set_accepted_chars = Module['_lv_textarea_set_accepted_chars'] = createExportWrapper('lv_textarea_set_accepted_chars', 2);
+  assert(typeof wasmExports['lv_textarea_set_max_length'] != 'undefined', 'missing Wasm export: lv_textarea_set_max_length');
+  _lv_textarea_set_max_length = Module['_lv_textarea_set_max_length'] = createExportWrapper('lv_textarea_set_max_length', 2);
+  assert(typeof wasmExports['lv_textarea_set_insert_replace'] != 'undefined', 'missing Wasm export: lv_textarea_set_insert_replace');
+  _lv_textarea_set_insert_replace = Module['_lv_textarea_set_insert_replace'] = createExportWrapper('lv_textarea_set_insert_replace', 2);
+  assert(typeof wasmExports['lv_textarea_set_text_selection'] != 'undefined', 'missing Wasm export: lv_textarea_set_text_selection');
+  _lv_textarea_set_text_selection = Module['_lv_textarea_set_text_selection'] = createExportWrapper('lv_textarea_set_text_selection', 2);
+  assert(typeof wasmExports['lv_textarea_set_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_set_password_show_time');
+  _lv_textarea_set_password_show_time = Module['_lv_textarea_set_password_show_time'] = createExportWrapper('lv_textarea_set_password_show_time', 2);
+  assert(typeof wasmExports['lv_textarea_set_align'] != 'undefined', 'missing Wasm export: lv_textarea_set_align');
+  _lv_textarea_set_align = Module['_lv_textarea_set_align'] = createExportWrapper('lv_textarea_set_align', 2);
+  assert(typeof wasmExports['lv_textarea_get_label'] != 'undefined', 'missing Wasm export: lv_textarea_get_label');
+  _lv_textarea_get_label = Module['_lv_textarea_get_label'] = createExportWrapper('lv_textarea_get_label', 1);
+  assert(typeof wasmExports['lv_textarea_get_placeholder_text'] != 'undefined', 'missing Wasm export: lv_textarea_get_placeholder_text');
+  _lv_textarea_get_placeholder_text = Module['_lv_textarea_get_placeholder_text'] = createExportWrapper('lv_textarea_get_placeholder_text', 1);
+  assert(typeof wasmExports['lv_textarea_get_cursor_click_pos'] != 'undefined', 'missing Wasm export: lv_textarea_get_cursor_click_pos');
+  _lv_textarea_get_cursor_click_pos = Module['_lv_textarea_get_cursor_click_pos'] = createExportWrapper('lv_textarea_get_cursor_click_pos', 1);
+  assert(typeof wasmExports['lv_textarea_get_password_mode'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_mode');
+  _lv_textarea_get_password_mode = Module['_lv_textarea_get_password_mode'] = createExportWrapper('lv_textarea_get_password_mode', 1);
+  assert(typeof wasmExports['lv_textarea_get_password_bullet'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_bullet');
+  _lv_textarea_get_password_bullet = Module['_lv_textarea_get_password_bullet'] = createExportWrapper('lv_textarea_get_password_bullet', 1);
+  assert(typeof wasmExports['lv_textarea_text_is_selected'] != 'undefined', 'missing Wasm export: lv_textarea_text_is_selected');
+  _lv_textarea_text_is_selected = Module['_lv_textarea_text_is_selected'] = createExportWrapper('lv_textarea_text_is_selected', 1);
+  assert(typeof wasmExports['lv_textarea_get_text_selection'] != 'undefined', 'missing Wasm export: lv_textarea_get_text_selection');
+  _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = createExportWrapper('lv_textarea_get_text_selection', 1);
+  assert(typeof wasmExports['lv_textarea_get_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_show_time');
+  _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = createExportWrapper('lv_textarea_get_password_show_time', 1);
+  assert(typeof wasmExports['onMqttEvent'] != 'undefined', 'missing Wasm export: onMqttEvent');
+  _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
+  assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
+  __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
+  assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
+  __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
+  assert(typeof wasmExports['_evalStringArrayPropertyAndJoin'] != 'undefined', 'missing Wasm export: _evalStringArrayPropertyAndJoin');
+  __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin', 7);
+  assert(typeof wasmExports['_assignStringProperty'] != 'undefined', 'missing Wasm export: _assignStringProperty');
+  __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty', 7);
+  assert(typeof wasmExports['_assignIntegerProperty'] != 'undefined', 'missing Wasm export: _assignIntegerProperty');
+  __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty', 7);
+  assert(typeof wasmExports['compareRollerOptions'] != 'undefined', 'missing Wasm export: compareRollerOptions');
+  _compareRollerOptions = Module['_compareRollerOptions'] = createExportWrapper('compareRollerOptions', 4);
+  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
+  _free = Module['_free'] = createExportWrapper('free', 1);
+  assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
+  _fflush = createExportWrapper('fflush', 1);
+  assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
+  _strerror = createExportWrapper('strerror', 1);
+  assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
+  _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
+  assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
+  _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
+  assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
+  _emscripten_stack_init = wasmExports['emscripten_stack_init'];
+  assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
+  _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
+  assert(typeof wasmExports['_emscripten_stack_restore'] != 'undefined', 'missing Wasm export: _emscripten_stack_restore');
+  __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
+  assert(typeof wasmExports['_emscripten_stack_alloc'] != 'undefined', 'missing Wasm export: _emscripten_stack_alloc');
+  __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'];
+  assert(typeof wasmExports['emscripten_stack_get_current'] != 'undefined', 'missing Wasm export: emscripten_stack_get_current');
+  _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'];
+  assert(typeof wasmExports['memory'] != 'undefined', 'missing Wasm export: memory');
+  memory = wasmMemory = wasmExports['memory'];
+  assert(typeof wasmExports['__indirect_function_table'] != 'undefined', 'missing Wasm export: __indirect_function_table');
+  __indirect_function_table = wasmExports['__indirect_function_table'];
+}
+
+var wasmImports = {
+  /** @export */
+  __assert_fail: ___assert_fail,
+  /** @export */
+  __cxa_throw: ___cxa_throw,
+  /** @export */
+  __syscall_fcntl64: ___syscall_fcntl64,
+  /** @export */
+  __syscall_getdents64: ___syscall_getdents64,
+  /** @export */
+  __syscall_ioctl: ___syscall_ioctl,
+  /** @export */
+  __syscall_openat: ___syscall_openat,
+  /** @export */
+  _abort_js: __abort_js,
+  /** @export */
+  clock_time_get: _clock_time_get,
+  /** @export */
+  emscripten_asm_const_int: _emscripten_asm_const_int,
+  /** @export */
+  emscripten_force_exit: _emscripten_force_exit,
+  /** @export */
+  emscripten_get_now: _emscripten_get_now,
+  /** @export */
+  emscripten_resize_heap: _emscripten_resize_heap,
+  /** @export */
+  fd_close: _fd_close,
+  /** @export */
+  fd_read: _fd_read,
+  /** @export */
+  fd_seek: _fd_seek,
+  /** @export */
+  fd_write: _fd_write
+};
+
+
+// include: postamble.js
+// === Auto-generated postamble setup entry stuff ===
 
 var calledRun;
-
-dependenciesFulfilled = function runCaller() {
-  // If run has never been called, and we should call run (INVOKE_RUN is true, and Module.noInitialRun is not false)
-  if (!calledRun) run();
-  if (!calledRun) dependenciesFulfilled = runCaller; // try this again later, after new deps are fulfilled
-};
 
 function stackCheckInit() {
   // This is normally called automatically during __wasm_call_ctors but need to
@@ -6299,22 +9175,24 @@ function stackCheckInit() {
 function run() {
 
   if (runDependencies > 0) {
+    dependenciesFulfilled = run;
     return;
   }
 
-    stackCheckInit();
+  stackCheckInit();
 
   preRun();
 
   // a preRun added a dependency, run will be called later
   if (runDependencies > 0) {
+    dependenciesFulfilled = run;
     return;
   }
 
   function doRun() {
     // run may have just been called through dependencies being fulfilled just in this very frame,
     // or while the async setStatus time below was happening
-    if (calledRun) return;
+    assert(!calledRun);
     calledRun = true;
     Module['calledRun'] = true;
 
@@ -6322,7 +9200,8 @@ function run() {
 
     initRuntime();
 
-    if (Module['onRuntimeInitialized']) Module['onRuntimeInitialized']();
+    Module['onRuntimeInitialized']?.();
+    consumedModuleProp('onRuntimeInitialized');
 
     assert(!Module['_main'], 'compiled without a main, but one is present. if you added it from JS, use Module["onRuntimeInitialized"]');
 
@@ -6331,10 +9210,8 @@ function run() {
 
   if (Module['setStatus']) {
     Module['setStatus']('Running...');
-    setTimeout(function() {
-      setTimeout(function() {
-        Module['setStatus']('');
-      }, 1);
+    setTimeout(() => {
+      setTimeout(() => Module['setStatus'](''), 1);
       doRun();
     }, 1);
   } else
@@ -6365,13 +9242,13 @@ function checkUnflushedContent() {
   try { // it doesn't matter if it fails
     _fflush(0);
     // also flush in the JS FS layer
-    ['stdout', 'stderr'].forEach(function(name) {
+    ['stdout', 'stderr'].forEach((name) => {
       var info = FS.analyzePath('/dev/' + name);
       if (!info) return;
       var stream = info.object;
       var rdev = stream.rdev;
       var tty = TTY.ttys[rdev];
-      if (tty && tty.output && tty.output.length) {
+      if (tty?.output?.length) {
         has = true;
       }
     });
@@ -6383,18 +9260,17 @@ function checkUnflushedContent() {
   }
 }
 
-if (Module['preInit']) {
-  if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
-  while (Module['preInit'].length > 0) {
-    Module['preInit'].pop()();
-  }
-}
+var wasmExports;
+
+// With async instantation wasmExports is assigned asynchronously when the
+// instance is received.
+createWasm();
 
 run();
 
-
 // end include: postamble.js
-// include: /mnt/c/work/eez/studio/wasm/lvgl-runtime/common/post.js
-}
 
-// end include: /mnt/c/work/eez/studio/wasm/lvgl-runtime/common/post.js
+// include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/post.js
+}
+// end include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/post.js
+
