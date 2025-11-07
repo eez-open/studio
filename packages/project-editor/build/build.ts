@@ -13,7 +13,8 @@ import {
     IEezObject,
     IMessage,
     getPropertyInfo,
-    MessageType
+    MessageType,
+    ProjectType
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -72,7 +73,7 @@ class BuildException {
     constructor(
         public message: string,
         public object?: IEezObject | undefined
-    ) {}
+    ) { }
 }
 
 async function getBuildResults(
@@ -101,7 +102,7 @@ async function getBuildResults(
 const sectionNamesRegexp = /\/\/\$\{eez-studio (\w*)\s*(\w*)\}/g;
 
 function getSectionNames(projectStore: ProjectStore): string[] {
-    if (projectStore.masterProject) {
+    if (projectStore.masterProject && projectStore.project.settings.general.projectType != ProjectType.FIRMWARE) {
         return ["GUI_ASSETS_DATA", "GUI_ASSETS_DATA_MAP"];
     }
 
@@ -138,7 +139,7 @@ async function generateFile(
             (_1, part, configurationName) => {
                 const buildResults =
                     configurationBuildResults[
-                        configurationName || defaultConfigurationName
+                    configurationName || defaultConfigurationName
                     ];
 
                 parts = {};
@@ -195,7 +196,7 @@ async function generateFiles(
 
     const project = projectStore.project;
 
-    if (projectStore.masterProject) {
+    if (projectStore.masterProject && project.settings.general.projectType != ProjectType.FIRMWARE) {
         parts = generateFile(
             projectStore,
             configurationBuildResults,
@@ -204,17 +205,17 @@ async function generateFiles(
                 : "default",
             undefined,
             destinationFolderPath +
-                "/" +
-                path.basename(projectStore.filePath || "", ".eez-project") +
-                (project.projectTypeTraits.isApplet ? ".app" : ".res")
+            "/" +
+            path.basename(projectStore.filePath || "", ".eez-project") +
+            (project.projectTypeTraits.isApplet ? ".app" : ".res")
         );
 
         if (project.projectTypeTraits.isResource && project.micropython) {
             await writeTextFile(
                 destinationFolderPath +
-                    "/" +
-                    path.basename(projectStore.filePath || "", ".eez-project") +
-                    ".py",
+                "/" +
+                path.basename(projectStore.filePath || "", ".eez-project") +
+                ".py",
                 project.micropython.code
             );
         }
@@ -231,11 +232,11 @@ async function generateFiles(
                             configuration.name,
                             buildFile.template,
                             destinationFolderPath +
-                                "/" +
-                                buildFile.fileName.replace(
-                                    "<configuration>",
-                                    configuration.name
-                                )
+                            "/" +
+                            buildFile.fileName.replace(
+                                "<configuration>",
+                                configuration.name
+                            )
                         );
                     } catch (err) {
                         await new Promise(resolve => setTimeout(resolve, 10));
@@ -246,11 +247,11 @@ async function generateFiles(
                             configuration.name,
                             buildFile.template,
                             destinationFolderPath +
-                                "/" +
-                                buildFile.fileName.replace(
-                                    "<configuration>",
-                                    configuration.name
-                                )
+                            "/" +
+                            buildFile.fileName.replace(
+                                "<configuration>",
+                                configuration.name
+                            )
                         );
                     }
                 }
@@ -334,7 +335,7 @@ export async function build(
         if (
             project.settings.general.projectVersion !== "v1" &&
             project.settings.build.configurations.length > 0 &&
-            !projectStore.masterProject
+            (!projectStore.masterProject || projectStore.project.settings.general.projectType == ProjectType.FIRMWARE)
         ) {
             for (const configuration of project.settings.build.configurations) {
                 OutputSections.openGroup(
@@ -404,8 +405,7 @@ export async function build(
             OutputSections.write(
                 Section.OUTPUT,
                 MessageType.INFO,
-                `Build duration: ${
-                    (new Date().getTime() - timeStart) / 1000
+                `Build duration: ${(new Date().getTime() - timeStart) / 1000
                 } seconds`
             );
 
@@ -430,7 +430,7 @@ export async function build(
                     project,
                     destinationFolderPath || "",
                     configurationBuildResults["Default"]?.[0]?.[
-                        "EEZ_FLOW_IS_USING_CRYPTO_SHA256"
+                    "EEZ_FLOW_IS_USING_CRYPTO_SHA256"
                     ] as any as boolean
                 );
             }
@@ -506,8 +506,7 @@ export async function build(
         OutputSections.write(
             Section.OUTPUT,
             MessageType.INFO,
-            `Build duration: ${
-                (new Date().getTime() - timeStart) / 1000
+            `Build duration: ${(new Date().getTime() - timeStart) / 1000
             } seconds`
         );
 
@@ -581,8 +580,7 @@ export async function buildExtensions(projectStore: ProjectStore) {
         OutputSections.write(
             Section.OUTPUT,
             MessageType.INFO,
-            `Build duration: ${
-                (new Date().getTime() - timeStart) / 1000
+            `Build duration: ${(new Date().getTime() - timeStart) / 1000
             } seconds`
         );
 

@@ -611,7 +611,7 @@ export const ExtensionDirectiveCustomUI = observer((props: PropertyProps) => {
         <Button
             color="primary"
             size="small"
-            onClick={() => {}}
+            onClick={() => { }}
             style={{ marginTop: 10 }}
         >
             Install
@@ -918,7 +918,8 @@ export class General extends EezObject {
                 disabled: (general: General) => {
                     return !(
                         general.projectType == ProjectType.RESOURCE ||
-                        general.projectType == ProjectType.APPLET
+                        general.projectType == ProjectType.APPLET ||
+                        general.projectType == ProjectType.FIRMWARE
                     );
                 }
             },
@@ -1316,6 +1317,7 @@ export class Settings extends EezObject {
                     return (
                         !projectStore.projectTypeTraits.isDashboard &&
                         !projectStore.masterProjectEnabled
+                        || projectStore.project.settings.general.projectType == ProjectType.FIRMWARE
                     );
                 }
             }
