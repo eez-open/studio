@@ -452,12 +452,12 @@ export class Page extends Flow {
                     jsObject.width = Math.floor(
                         (jsObject.width *
                             __eezProjectMigration.displayTargetWidth) /
-                            __eezProjectMigration.displaySourceWidth
+                        __eezProjectMigration.displaySourceWidth
                     );
                     jsObject.height = Math.floor(
                         (jsObject.height *
                             __eezProjectMigration.displayTargetHeight) /
-                            __eezProjectMigration.displaySourceHeight
+                        __eezProjectMigration.displaySourceHeight
                     );
                 }
             }
@@ -587,7 +587,7 @@ export class Page extends Flow {
                 values: {
                     name:
                         parent == project.userPages &&
-                        project.userPages.length == 0
+                            project.userPages.length == 0
                             ? "Main"
                             : ""
                 }
@@ -600,11 +600,11 @@ export class Page extends Flow {
                 width: project.projectTypeTraits.isDashboard
                     ? 800
                     : project._store.project.settings.general.displayWidth ??
-                      480,
+                    480,
                 height: project.projectTypeTraits.isDashboard
                     ? 450
                     : project._store.project.settings.general.displayHeight ??
-                      272,
+                    272,
                 components: [],
                 isUsedAsUserWidget: parent == project.userWidgets
             };
@@ -649,8 +649,7 @@ export class Page extends Flow {
             }
 
             if (
-                projectStore.projectTypeTraits.hasDisplaySizeProperty &&
-                !page.isUsedAsUserWidget
+                projectStore.projectTypeTraits.hasDisplaySizeProperty && !page.isUsedAsUserWidget && !projectStore.projectTypeTraits.isFirmware
             ) {
                 const isSimulatorPage =
                     page.usedIn &&
@@ -660,9 +659,9 @@ export class Page extends Flow {
                 if (
                     !isSimulatorPage &&
                     projectStore.project.settings.general.displayWidth !=
-                        undefined &&
+                    undefined &&
                     page.width !=
-                        projectStore.project.settings.general.displayWidth &&
+                    projectStore.project.settings.general.displayWidth &&
                     !(page.scaleToFit || page.isUsedAsUserWidget)
                 ) {
                     messages.push(
@@ -690,9 +689,9 @@ export class Page extends Flow {
                 if (
                     !isSimulatorPage &&
                     projectStore.project.settings.general.displayHeight !=
-                        undefined &&
+                    undefined &&
                     page.height !=
-                        projectStore.project.settings.general.displayHeight &&
+                    projectStore.project.settings.general.displayHeight &&
                     !(page.scaleToFit || page.isUsedAsUserWidget)
                 ) {
                     messages.push(
@@ -876,8 +875,8 @@ export class Page extends Flow {
                             flowContext.flowState
                                 ? flowContext
                                 : flowContext.overrideDataContext(
-                                      this.dataContextOverridesObject
-                                  )
+                                    this.dataContextOverridesObject
+                                )
                         }
                     />
                 )}
@@ -936,8 +935,8 @@ export class Page extends Flow {
                         flowContext.flowState
                             ? flowContext
                             : flowContext.overrideDataContext(
-                                  this.dataContextOverridesObject
-                              )
+                                this.dataContextOverridesObject
+                            )
                     }
                     width={width}
                     height={height}
@@ -998,8 +997,8 @@ export class Page extends Flow {
         const widgets = assets.projectStore.projectTypeTraits.isDashboard
             ? []
             : (this.components.filter(
-                  widget => widget instanceof Widget
-              ) as Widget[]);
+                widget => widget instanceof Widget
+            ) as Widget[]);
 
         dataBuffer.writeArray(widgets, widget =>
             buildWidget(widget, assets, dataBuffer)
@@ -1048,8 +1047,8 @@ export class Page extends Flow {
             !ProjectEditor.getProject(this).projectTypeTraits.isLVGL
             ? undefined
             : (this.components.find(
-                  component => component instanceof Widget
-              ) as LVGLWidget);
+                component => component instanceof Widget
+            ) as LVGLWidget);
     }
 
     lvglCreate(
@@ -1068,21 +1067,21 @@ export class Page extends Flow {
         } else {
             const obj = customWidget
                 ? runtime.wasm._lvglCreateUserWidget(
-                      parentObj,
-                      customWidget.widgetIndex,
-                      customWidget.left,
-                      customWidget.top,
-                      customWidget.width,
-                      customWidget.height
-                  )
+                    parentObj,
+                    customWidget.widgetIndex,
+                    customWidget.left,
+                    customWidget.top,
+                    customWidget.width,
+                    customWidget.height
+                )
                 : runtime.wasm._lvglCreateScreen(
-                      parentObj,
-                      runtime.getCreateWidgetIndex(this),
-                      this.left,
-                      this.top,
-                      this.width,
-                      this.height
-                  );
+                    parentObj,
+                    runtime.getCreateWidgetIndex(this),
+                    this.left,
+                    this.top,
+                    this.width,
+                    this.height
+                );
 
             this.components
                 .filter(component => component instanceof Widget)

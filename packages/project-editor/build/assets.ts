@@ -278,19 +278,20 @@ export class Assets {
         this.flows.forEach(flow => flow && this.getFlowState(flow));
 
         //
+
+        const hasFlowSupport = this.projectStore.projectTypeTraits.hasFlowSupport;
+
+        //
         // global variables
         //
-        const nonNativeVariables = this.getAssets<Variable>(
+        const nonNativeVariables = hasFlowSupport ? this.getAssets<Variable>(
             project =>
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                !(
-                    (this.option == "buildFiles" ||
-                        globalVariable.id != undefined) &&
-                    globalVariable.native
-                )
-        );
+                ((this.option != "buildFiles" && globalVariable.id == undefined) ||
+                    !globalVariable.native)
+        ) : [];
 
         const nativeVariables: Variable[] = [];
         this.getAssets<Variable>(
@@ -298,7 +299,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                globalVariable.native &&
+                (!hasFlowSupport || globalVariable.native) &&
                 globalVariable.id != undefined
         ).forEach(
             globalVariable =>
@@ -311,7 +312,7 @@ export class Assets {
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
                 this.option == "buildFiles" &&
-                globalVariable.native &&
+                (!hasFlowSupport || globalVariable.native) &&
                 globalVariable.id == undefined
         ).forEach(globalVariable => nativeVariables.push(globalVariable));
 
@@ -342,20 +343,20 @@ export class Assets {
         //
         // actions
         //
-        const nonNativeActions = this.getAssets<Action>(
+        const nonNativeActions = hasFlowSupport ? this.getAssets<Action>(
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
                 ((this.option != "buildFiles" && action.id == undefined) ||
                     action.implementationType != "native")
-        );
+        ) : [];
 
         const nativeActions: Action[] = [];
         this.getAssets<Action>(
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
-                action.implementationType == "native" &&
+                (!hasFlowSupport || action.implementationType == "native") &&
                 action.id != undefined
         ).forEach(action => (nativeActions[action.id! - 1] = action));
 
@@ -364,7 +365,7 @@ export class Assets {
             action =>
                 assetIncludePredicate(action) &&
                 this.option == "buildFiles" &&
-                action.implementationType == "native" &&
+                (!hasFlowSupport || action.implementationType == "native") &&
                 action.id == undefined
         ).forEach(action => nativeActions.push(action));
 
@@ -520,7 +521,18 @@ export class Assets {
                     getProject(asset) == this.projectStore.masterProject;
 
                 if (isMasterProjectAsset) {
-                    // TODO
+                    if (collection as any == this.globalVariables) {
+                        if (this.projectStore.masterProject.variables) {
+                            for (const variable of this.projectStore.masterProject.variables.globalVariables) {
+                                if (variable.name == assetName && variable.id != undefined) {
+                                    return this.globalVariables.length + variable.id;
+                                }
+                            }
+                        }
+                    } else {
+                        console.error("TODO getAssetIndexByAssetName", object, assetName, collection);
+                    }
+
                     return 0;
                 } else {
                     collection.push(asset);
@@ -801,18 +813,26 @@ export class Assets {
         }
 
         if (this.projectStore.project.masterProject) {
-            return 0;
-        }
-
-        for (let i = 0; i < this.colors.length; i++) {
-            if (this.colors[i] == color) {
-                return colors.length + i;
+            for (let i = 0; i < this.colors.length; i++) {
+                if (this.colors[i] == color) {
+                    return 65534 - i;
+                }
             }
+
+            this.colors.push(color);
+
+            return 65534 - this.colors.length;
+        } else {
+            for (let i = 0; i < this.colors.length; i++) {
+                if (this.colors[i] == color) {
+                    return colors.length + i;
+                }
+            }
+
+            this.colors.push(color);
+
+            return colors.length + this.colors.length - 1;
         }
-
-        this.colors.push(color);
-
-        return colors.length + this.colors.length - 1;
     }
 
     getColorIndex(
@@ -1144,28 +1164,36 @@ export class Assets {
                 return 0;
             }
 
-            if (this.projectStore.projectTypeTraits.hasFlowSupport) {
-                const action = this.actions.find(
-                    action => action.name == actionName
-                );
-                if (!action) {
-                    return 0;
+            const action = this.actions.find(
+                action => action.name == actionName
+            );
+            if (!action) {
+                if (this.projectStore.masterProject) {
+                    const action = this.projectStore.masterProject.actions.find(
+                        action => action.name == actionName
+                    );
+
+                    if (action && action.id != undefined) {
+                        return action.id;
+                    }
                 }
 
-                if (
-                    (this.option == "buildFiles" || action.id != undefined) &&
-                    action.implementationType === "native"
-                ) {
-                    const actionIndex = this.actions
-                        .filter(
-                            action =>
-                                (this.option == "buildFiles" ||
-                                    action.id != undefined) &&
-                                action.implementationType === "native"
-                        )
-                        .findIndex(action => action.name == actionName);
-                    return actionIndex + 1;
-                }
+                return 0;
+            }
+
+            if (
+                (this.option == "buildFiles" || action.id != undefined) &&
+                action.implementationType === "native"
+            ) {
+                const actionIndex = this.actions
+                    .filter(
+                        action =>
+                            (this.option == "buildFiles" ||
+                                action.id != undefined) &&
+                            action.implementationType === "native"
+                    )
+                    .findIndex(action => action.name == actionName);
+                return actionIndex + 1;
             }
         }
 
@@ -1849,14 +1877,13 @@ export async function buildAssets(
 export function buildGuiPagesEnum(assets: Assets) {
     let pages = assets.pages.map(
         (page, i) =>
-            `${TAB}${
-                page
-                    ? getName(
-                          "PAGE_ID_",
-                          page,
-                          NamingConvention.UnderscoreUpperCase
-                      )
-                    : `PAGE_ID_${i}`
+            `${TAB}${page
+                ? getName(
+                    "PAGE_ID_",
+                    page,
+                    NamingConvention.UnderscoreUpperCase
+                )
+                : `PAGE_ID_${i}`
             } = ${i + 1}`
     );
 
@@ -1886,7 +1913,6 @@ function buildGuiAssetsDecl(data: Buffer) {
 }
 
 function buildGuiAssetsDef(data: Buffer) {
-    return `// ASSETS DEFINITION\nconst uint8_t assets[${
-        data.length
-    }] = {${dumpData(data)}};`;
+    return `// ASSETS DEFINITION\nconst uint8_t assets[${data.length
+        }] = {${dumpData(data)}};`;
 }

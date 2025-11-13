@@ -1838,6 +1838,16 @@ export class Project extends EezObject {
             }
         }
 
+        if (this.masterProject) {
+            if (this.masterProject.variables) {
+                for (const variable of this.masterProject.variables.globalVariables) {
+                    if (variable.id != undefined) {
+                        allVariables.push(variable);
+                    }
+                }
+            }
+        }
+
         return allVariables;
     }
 
@@ -1850,6 +1860,15 @@ export class Project extends EezObject {
                 allVariables.push(
                     ...importDirective.project.variables.globalVariables
                 );
+            }
+        }
+        if (this.masterProject) {
+            if (this.masterProject.variables) {
+                for (const variable of this.masterProject.variables.globalVariables) {
+                    if (variable.id != undefined) {
+                        allVariables.push(variable);
+                    }
+                }
             }
         }
         return allVariables;

@@ -431,7 +431,7 @@ export const builtInFunctions: {
             return (
                 expressionContext.flowState &&
                 expressionContext.flowState.flow ==
-                    expressionContext.flowState.runtime.selectedPage
+                expressionContext.flowState.runtime.selectedPage
             );
         },
         getValueType: (...args: ValueType[]) => {
@@ -1077,7 +1077,7 @@ export const builtInFunctions: {
 
     "String.substring": {
         operationIndex: 48,
-        arity: { min: 2 },
+        arity: { min: 2, max: 3 },
         args: ["string", "start", "end"],
         eval: (
             expressionContext: IExpressionContext | undefined,
@@ -1580,7 +1580,7 @@ const lvglConstants: BuiltInConstantsType = {
 export const builtInConstants: (
     projectStore: ProjectStore
 ) => BuiltInConstantsType = (projectStore: ProjectStore) =>
-    projectStore.projectTypeTraits.isLVGL ? lvglConstants : commonConstants;
+        projectStore.projectTypeTraits.isLVGL ? lvglConstants : commonConstants;
 
 export const operationIndexes: { [key: string]: number } = {};
 

@@ -34,10 +34,9 @@ export function buildGuiColorsEnum(assets: Assets) {
 
         ...assets.colors.map(
             (color, i) =>
-                `\tCOLOR_ID_CUSTOM_${
-                    color == undefined
-                        ? "UNDEFINED"
-                        : color.slice(1).toUpperCase()
+                `\tCOLOR_ID_CUSTOM_${color == undefined
+                    ? "UNDEFINED"
+                    : color.slice(1).toUpperCase()
                 } = ${assets.rootProject.buildColors.length + i}`
         )
     ];
@@ -67,6 +66,15 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
             dataBuffer.writeNumberArray(assets.colors, buildColor);
         });
     } else {
-        dataBuffer.writeUint32(0);
+        dataBuffer.writeObjectOffset(() => {
+            // themes
+            dataBuffer.writeArray(
+                [],
+                buildTheme
+            );
+
+            // colors
+            dataBuffer.writeNumberArray(assets.colors, buildColor);
+        });
     }
 }

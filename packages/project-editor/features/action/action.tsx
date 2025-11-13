@@ -96,8 +96,7 @@ export const NativeActionImplementationInfoPropertyUI = observer(
             build.line("");
 
             build.line(
-                `${
-                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                `${this.implementationLanguage == "C++" ? `extern "C" ` : ""
                 }void ${"action_" + actionName}(lv_event_t *e) {`
             );
             build.indent();
@@ -132,8 +131,8 @@ export const NativeActionImplementationInfoPropertyUI = observer(
                                 className="form-select"
                                 value={this.implementationLanguage}
                                 onChange={event =>
-                                    (this.implementationLanguage =
-                                        event.target.value)
+                                (this.implementationLanguage =
+                                    event.target.value)
                                 }
                             >
                                 <option value="C">C</option>
@@ -153,7 +152,7 @@ export const NativeActionImplementationInfoPropertyUI = observer(
                         ref={this.codeEditorRef}
                         mode="c_cpp"
                         value={code}
-                        onChange={() => {}}
+                        onChange={() => { }}
                         readOnly={true}
                         className="form-control"
                         minLines={2}
@@ -223,9 +222,11 @@ export class Action extends Flow {
                 enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup,
                 disabled: (action: Action) => {
+                    const projectStore = getProjectStore(action);
                     return (
                         (isNotV1Project(action) && !hasFlowSupport(action)) ||
-                        isDashboardProject(action)
+                        isDashboardProject(action) ||
+                        projectStore.masterProject != null
                     );
                 }
             },
@@ -328,7 +329,7 @@ export class Action extends Flow {
                             ],
                             visible: () =>
                                 !projectStore.projectTypeTraits.isDashboard &&
-                                projectStore.projectTypeTraits.hasFlowSupport
+                                projectStore.projectTypeTraits.hasFlowSupport && !projectStore.masterProject
                         }
                     ]
                 },
@@ -343,10 +344,10 @@ export class Action extends Flow {
                 },
                 projectStore.projectTypeTraits.hasFlowSupport
                     ? ({
-                          implementationType: result.values.implementationType,
-                          components: [],
-                          connectionLine: []
-                      } as Partial<Action>)
+                        implementationType: result.values.implementationType,
+                        components: [],
+                        connectionLine: []
+                    } as Partial<Action>)
                     : {}
             );
 
