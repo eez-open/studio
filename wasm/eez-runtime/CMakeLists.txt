@@ -12,7 +12,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NODEJS_CATCH_EXIT=0 -s 
 
 # debug:
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-const-variable -Wno-nested-anon-types -Wno-dollar-in-identifier-extension -O2 --no-entry -g")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s DEMANGLE_SUPPORT=1 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=83886080 -s LLD_REPORT_UNDEFINED -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/pre.js --post-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/post.js")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=83886080 -s LLD_REPORT_UNDEFINED -s ASSERTIONS=1 -s EXPORTED_FUNCTIONS=_malloc,_free -s EXPORTED_RUNTIME_METHODS=allocateUTF8,AsciiToString,UTF8ToString,HEAP8,HEAPU8,HEAP16,HEAPU16,HEAP32,HEAPU32,HEAPF32,HEAPF64 --bind -lidbfs.js --pre-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/pre.js --post-js ${PROJECT_SOURCE_DIR}/platform/simulator/emscripten/post.js")
 # add_definitions(-DEMCC_DEBUG)
 add_definitions(-DEEZ_FLOW_QUEUE_SIZE=100000)
 

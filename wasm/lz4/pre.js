@@ -13,6 +13,11 @@ module["exports"] = function (onRuntimeInitialized) {
         console.error("From LZ4:", args);
     };
 
+    Module.locateFile = function (path, scriptDirectory) {
+        if (scriptDirectory) return scriptDirectory + path;
+        return __dirname + "/" + path;
+    };
+
     runWasmModule(Module);
 
     return Module;

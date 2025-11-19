@@ -15,6 +15,11 @@ module["exports"] = function (postWorkerToRendererMessage) {
         console.error("From LVGL-WASM flow runtime:", args);
     };
 
+    Module.locateFile = function (path, scriptDirectory) {
+        if (scriptDirectory) return scriptDirectory + path;
+        return __dirname + "/" + path;
+    };
+
     runWasmModule(Module);
 
     return Module;
