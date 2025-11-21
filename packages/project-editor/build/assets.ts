@@ -1867,6 +1867,9 @@ export async function buildAssets(
 
     result.EEZ_FLOW_IS_USING_CRYPTO_SHA256 = assets.isUsingCrypyoSha256;
 
+    // Include assets object for MicroPython build
+    result.assets = assets;
+
     return Object.assign(
         result,
         await buildVariables(assets, sectionNames),

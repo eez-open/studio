@@ -36,6 +36,7 @@ import {
 import { buildAssets } from "project-editor/build/assets";
 import { buildScpi } from "project-editor/build/scpi";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
+import { buildMicroPythonLVGL } from "project-editor/lvgl/micropython-build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -433,6 +434,42 @@ export async function build(
                     "EEZ_FLOW_IS_USING_CRYPTO_SHA256"
                     ] as any as boolean
                 );
+
+                // Generate MicroPython code if enabled
+                if (project.settings.build.generateMicroPython) {
+                    try {
+                        // Get assets from the first available configuration
+                        const configNames = Object.keys(configurationBuildResults);
+                        const firstConfigResults = configNames.length > 0
+                            ? configurationBuildResults[configNames[0]]
+                            : undefined;
+                        const assets = firstConfigResults?.[0]?.assets;
+
+                        if (assets) {
+                            const micropythonCode = await buildMicroPythonLVGL(assets);
+                            const baseName = path.basename(
+                                projectStore.filePath || "",
+                                ".eez-project"
+                            );
+                            const micropythonFilePath =
+                                (destinationFolderPath || "") + "/" + baseName + "_ui.py";
+
+                            await writeTextFile(micropythonFilePath, micropythonCode);
+
+                            OutputSections.write(
+                                Section.OUTPUT,
+                                MessageType.INFO,
+                                `MicroPython code generated: ${micropythonFilePath}`
+                            );
+                        }
+                    } catch (err: any) {
+                        OutputSections.write(
+                            Section.OUTPUT,
+                            MessageType.WARNING,
+                            `MicroPython generation failed: ${err.message || err}`
+                        );
+                    }
+                }
             }
         } else {
             const baseName = path.basename(

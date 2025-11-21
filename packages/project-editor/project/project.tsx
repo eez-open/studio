@@ -275,6 +275,7 @@ export class Build extends EezObject {
     lvglInclude: string;
     screensLifetimeSupport: boolean;
     generateSourceCodeForEezFramework: boolean;
+    generateMicroPython: boolean;
     compressFlowDefinition: boolean;
     executionQueueSize: number;
     expressionEvaluatorStackSize: number;
@@ -375,6 +376,16 @@ export class Build extends EezObject {
                     !getProject(object).projectTypeTraits.hasFlowSupport
             },
             {
+                name: "generateMicroPython",
+                displayName:
+                    "Generate MicroPython code (LVGL 9.x bindings)",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: object =>
+                    isNotLVGLProject(object) ||
+                    getProject(object).settings.general.lvglVersion != "9.0"
+            },
+            {
                 name: "compressFlowDefinition",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
@@ -408,6 +419,10 @@ export class Build extends EezObject {
 
             if (jsObject.generateSourceCodeForEezFramework == undefined) {
                 jsObject.generateSourceCodeForEezFramework = false;
+            }
+
+            if (jsObject.generateMicroPython == undefined) {
+                jsObject.generateMicroPython = false;
             }
 
             if (jsObject.compressFlowDefinition == undefined) {
@@ -481,6 +496,7 @@ export class Build extends EezObject {
             lvglInclude: observable,
             screensLifetimeSupport: observable,
             generateSourceCodeForEezFramework: observable,
+            generateMicroPython: observable,
             compressFlowDefinition: observable,
             executionQueueSize: observable,
             expressionEvaluatorStackSize: observable
