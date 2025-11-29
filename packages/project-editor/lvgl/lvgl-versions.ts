@@ -303,7 +303,7 @@ const versions = {
                 await fs.promises.writeFile(bitmapFilePath, bin);
             }
 
-            return new Promise<string>((resolve, reject) => {
+            return new Promise<string | Buffer>((resolve, reject) => {
                 const { PythonShell } =
                     require("python-shell") as typeof import("python-shell");
 
@@ -357,7 +357,7 @@ const versions = {
                                 `${tempDir}/${fileName}.${
                                     binFile ? "bin" : "c"
                                 }`,
-                                binFile ? "binary" : "utf-8"
+                                binFile ? null : "utf-8"
                             );
 
                             resolve(cFile);
