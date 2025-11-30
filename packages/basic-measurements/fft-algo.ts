@@ -1,3 +1,7 @@
+// Copyright (c) 2018 Project Nayuki. (MIT License)
+//
+// SPDX-License-Identifier: MIT
+
 /*
  * Free FFT and convolution (TypeScript)
  *
