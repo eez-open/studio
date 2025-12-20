@@ -27,7 +27,9 @@ jobs:
 
             - name: Additional step for ubuntu
               if: startsWith(matrix.os, 'ubuntu')
-              run: sudo apt-get install libudev-dev
+              run: |
+                sudo apt update
+                sudo apt-get install libudev-dev
 
             #- name: Install Snapcraft
             #  uses: samuelmeuli/action-snapcraft@v1
