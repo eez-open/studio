@@ -804,6 +804,8 @@ export class General extends EezObject {
     hiddenWidgetLines: "visible" | "dimmed" | "hidden";
     dimmedLinesOpacity: number;
 
+    embedFonts: boolean;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -1040,6 +1042,15 @@ export class General extends EezObject {
                 }
             },
             {
+                name: "embedFonts",
+                displayName: "Embed fonts inside eez-project file",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (general: General) => {
+                    return general.projectType != ProjectType.LVGL;
+                }
+            },
+            {
                 name: "title",
                 type: PropertyType.String,
                 disabled: isNotDashboardProject
@@ -1235,6 +1246,10 @@ export class General extends EezObject {
             if (jsObject.dimmedLinesOpacity == undefined) {
                 jsObject.dimmedLinesOpacity = "20";
             }
+
+            if (jsObject.embedFonts == undefined) {
+                jsObject.embedFonts = true;
+            }
         },
 
         updateObjectValueHook: (general: General, values: Partial<General>) => {
@@ -1282,7 +1297,8 @@ export class General extends EezObject {
             resourceFiles: observable,
             commandsProtocol: observable,
             hiddenWidgetLines: observable,
-            dimmedLinesOpacity: observable
+            dimmedLinesOpacity: observable,
+            embedFonts: observable
         });
     }
 }

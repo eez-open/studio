@@ -178,6 +178,15 @@ function loadObjectInternal(
             ? JSON.parse(jsObjectOrString)
             : jsObjectOrString;
 
+    if (isLoadProject && aClass == ProjectEditor.ProjectClass) {
+        let projectFeatures = ProjectEditor.extensions;
+        for (let projectFeature of projectFeatures) {
+            if (projectFeature.fromJsHook) {
+                projectFeature.fromJsHook(jsObject);
+            }
+        }
+    }
+
     if (isArray(jsObject)) {
         return loadArrayObject(jsObject, parent, {
             type: PropertyType.Array,

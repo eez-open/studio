@@ -54,6 +54,7 @@ export interface ProjectEditorFeature {
         extensionDefinition: ExtensionDefinition,
         properties: any
     ) => void;
+    fromJsHook?: (jsObject: any) => void;
     toJsHook?: (jsObject: any, object: IEezObject) => void;
     afterLoadProject?: (project: Project) => void;
     enumerable?:

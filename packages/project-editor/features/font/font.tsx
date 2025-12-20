@@ -2,7 +2,6 @@ import React from "react";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage } from "@electron/remote";
 import { observable, computed, makeObservable, runInAction } from "mobx";
-import path from "path";
 import fs from "fs";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
@@ -30,7 +29,8 @@ import {
     IOnSelectParams,
     setParent,
     PropertyProps,
-    IMessage
+    IMessage,
+    ProjectType
 } from "project-editor/core/object";
 import {
     getLabel,
@@ -1413,9 +1413,8 @@ export class Font extends EezObject {
         },
         afterLoadHook: (font: Font, project) => {
             try {
-                font.migrateLvglFont(project._store);
                 font.loadLvglGlyphs(project._store);
-            } catch (err) {}
+            } catch (err) { }
         },
         check: (font: Font, messages: IMessage[]) => {
             const projectStore = getProjectStore(font);
@@ -1794,6 +1793,8 @@ export class Font extends EezObject {
         });
 
         runInAction(() => {
+            this.lvglBinFile = fontProperties.lvglBinFile;
+
             this.glyphs.splice(0, this.glyphs.length);
             for (const glyphProperties of fontProperties.glyphs) {
                 const glyph = createObject<Glyph>(
@@ -1804,50 +1805,6 @@ export class Font extends EezObject {
                 setParent(glyph, this.glyphs);
                 this.glyphs.push(glyph);
             }
-        });
-    }
-
-    async migrateLvglFont(projectStore: ProjectStore) {
-        if (!this.lvglRanges && !this.lvglSymbols) {
-            return;
-        }
-
-        if (this.embeddedFontFile) {
-            return;
-        }
-
-        const { encodings, symbols } = getLvglEncodingsAndSymbols(
-            this.lvglRanges,
-            this.lvglSymbols
-        );
-
-        // migrate from assets folder to the embedded asset
-
-        const absoluteFilePath = projectStore.getAbsoluteFilePath(
-            this.source!.filePath
-        );
-
-        const fontProperties = await extractFont({
-            name: this.name,
-            absoluteFilePath,
-            relativeFilePath: this.source!.filePath,
-            renderingEngine: this.renderingEngine,
-            bpp: this.bpp,
-            size: this.source!.size!,
-            threshold: this.threshold,
-            createGlyphs: true,
-            encodings,
-            symbols,
-            createBlankGlyphs: false,
-            doNotAddGlyphIfNotFound: false,
-            getAllGlyphs: true
-        });
-
-        runInAction(() => {
-            this.source!.filePath = path.basename(absoluteFilePath);
-            this.embeddedFontFile = fontProperties.embeddedFontFile;
-            this.lvglBinFile = fontProperties.lvglBinFile;
-            projectStore.setModified(Symbol());
         });
     }
 
@@ -2210,19 +2167,58 @@ const feature: ProjectEditorFeature = {
             );
         }
     },
-    toJsHook: (jsObject: Project, project: Project) => {
-        jsObject.fonts?.forEach(font => {
-            if (font.lvglRanges || font.lvglSymbols) {
-                font.glyphs = [];
-            } else {
-                font.glyphs.forEach(glyph => {
-                    if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
-                        (glyph.glyphBitmap as any).pixelArray =
-                            serializePixelArray(glyph.glyphBitmap.pixelArray);
-                    }
-                });
+    fromJsHook: (jsObject: Project) => {
+        if (jsObject.fonts) {
+            for (let fontIndex = 0; fontIndex < jsObject.fonts.length; fontIndex++) {
+                const font: any = jsObject.fonts[fontIndex];
+
+                if (font.embeddedFontFileIndex != undefined) {
+                    font.embeddedFontFile = jsObject.fonts[font.embeddedFontFileIndex].embeddedFontFile
+                    delete font.embeddedFontFileIndex;
+                }
             }
-        });
+        }
+    },
+    toJsHook: (jsObject: Project, project: Project) => {
+        if (jsObject.fonts) {
+            for (let fontIndex = 0; fontIndex < jsObject.fonts.length; fontIndex++) {
+                const font = jsObject.fonts[fontIndex];
+
+                if (font.lvglRanges || font.lvglSymbols) {
+                    font.glyphs = [];
+                } else {
+                    font.glyphs.forEach(glyph => {
+                        if (glyph.glyphBitmap && glyph.glyphBitmap.pixelArray) {
+                            (glyph.glyphBitmap as any).pixelArray =
+                                serializePixelArray(glyph.glyphBitmap.pixelArray);
+                        }
+                    });
+                }
+
+                delete font.lvglBinFile;
+
+                if (project.settings.general.projectType != ProjectType.LVGL || project.settings.general.embedFonts) {
+                    if (font.embeddedFontFile) {
+                        let embeddedFontFileIndex = -1;
+
+                        for (let prevFontIndex = 0; prevFontIndex < fontIndex; prevFontIndex++) {
+                            const prevFont = jsObject.fonts[prevFontIndex];
+                            if (prevFont.embeddedFontFile == font.embeddedFontFile) {
+                                embeddedFontFileIndex = prevFontIndex;
+                                break;
+                            }
+                        }
+
+                        if (embeddedFontFileIndex != -1) {
+                            delete font.embeddedFontFile;
+                            (font as any).embeddedFontFileIndex = embeddedFontFileIndex;
+                        }
+                    }
+                } else {
+                    font.embeddedFontFile = undefined;
+                }
+            }
+        }
     }
 };
 
