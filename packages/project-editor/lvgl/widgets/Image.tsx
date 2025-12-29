@@ -99,7 +99,7 @@ export class LVGLImageWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (widget: LVGLImageWidget) =>
                     ProjectEditor.getProject(widget).settings.general
-                        .lvglVersion != "9.0"
+                        .lvglVersion.startsWith("8.")
             }
         ],
 

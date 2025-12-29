@@ -15,7 +15,7 @@ export class LVGLLottieWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
             projectType === ProjectType.LVGL &&
             (!projectStore ||
-                projectStore.project.settings.general.lvglVersion == "9.0"),
+                projectStore.project.settings.general.lvglVersion.startsWith("9.")),
 
         componentPaletteGroupName: "!1Visualiser",
 

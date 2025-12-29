@@ -132,7 +132,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         expectedTypes?: ValueType | ValueType[]
     ) {
         const errorMessagePtr =
-            this.WasmFlowRuntime.allocateUTF8(errorMesssage);
+            this.WasmFlowRuntime.stringToNewUTF8(errorMesssage);
 
         const valuePtr = this.WasmFlowRuntime._evalListParamElementExpression(
             this.flowStateIndex,
@@ -442,7 +442,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     logInfo(infoMessage: string) {
-        const infoMessagePtr = this.WasmFlowRuntime.allocateUTF8(infoMessage);
+        const infoMessagePtr = this.WasmFlowRuntime.stringToNewUTF8(infoMessage);
         this.WasmFlowRuntime._logInfo(
             this.flowStateIndex,
             this.componentIndex,
@@ -452,7 +452,7 @@ export class DashboardComponentContext implements IDashboardComponentContext {
     }
 
     throwError(errorMessage: string) {
-        const errorMessagePtr = this.WasmFlowRuntime.allocateUTF8(errorMessage);
+        const errorMessagePtr = this.WasmFlowRuntime.stringToNewUTF8(errorMessage);
         this.WasmFlowRuntime._throwError(
             this.flowStateIndex,
             this.componentIndex,

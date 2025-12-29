@@ -1821,7 +1821,7 @@ class ComponentProperties {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function arrayBufferToBinaryString(data: ArrayBuffer) {
+function arrayBufferToBinaryString(data: Uint8Array) {
     const buffer = Buffer.from(data);
     return buffer.toString("binary");
 }

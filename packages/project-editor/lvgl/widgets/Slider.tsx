@@ -171,7 +171,7 @@ export class LVGLSliderWidget extends LVGLWidget {
             return {
                 parts: ["MAIN", "INDICATOR", "KNOB"],
                 defaultFlags:
-                    project.settings.general.lvglVersion == "9.0"
+                    project.settings.general.lvglVersion.startsWith("9.")
                         ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
                         : "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
                 states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],

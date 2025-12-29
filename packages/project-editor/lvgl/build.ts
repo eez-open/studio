@@ -367,7 +367,7 @@ export class LVGLBuild extends Build {
     }
 
     get isV9() {
-        return this.project.settings.general.lvglVersion == "9.0";
+        return this.project.settings.general.lvglVersion.startsWith("9.");
     }
 
     getStylePropName(stylePropName: string) {

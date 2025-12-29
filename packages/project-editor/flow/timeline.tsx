@@ -3240,7 +3240,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
             name: "scale",
             lvglName: "scale",
             lvglStylePropName:
-                build.project.settings.general.lvglVersion == "9.0"
+                build.project.settings.general.lvglVersion.startsWith("9.")
                     ? "TRANSFORM_SCALE_X"
                     : "TRANSFORM_ZOOM"
         },
@@ -3248,7 +3248,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
             name: "rotate",
             lvglName: "rotate",
             lvglStylePropName:
-                build.project.settings.general.lvglVersion == "9.0"
+                build.project.settings.general.lvglVersion.startsWith("9.")
                     ? "TRANSFORM_ROTATION"
                     : "TRANSFORM_ANGLE",
             lvglFromValue: (value: string) => value,

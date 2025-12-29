@@ -184,7 +184,7 @@ export function checkWidgetTypeLvglVersion(
     lvglVersion: string
 ) {
     const projectStore = getProjectStore(widget);
-    if (projectStore.project.settings.general.lvglVersion != lvglVersion) {
+    if (!projectStore.project.settings.general.lvglVersion.startsWith(lvglVersion)) {
         messages.push(
             new Message(
                 MessageType.ERROR,

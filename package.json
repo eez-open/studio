@@ -44,8 +44,6 @@
         "publish-types": "cd packages/eez-studio-types && npm publish",
         "pubdoc-dev": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/dev.json",
         "pubdoc-prod": "cd tools/pubdoc && tsc && cd build && node pubdoc.js --config ../config/prod.json",
-        "eez-framework-amalgamation-dev": "cd tools/eez-framework-amalgamation && tsc && cd build && node index.js dev",
-        "eez-framework-amalgamation": "cd tools/eez-framework-amalgamation && tsc && cd build && node index.js",
         "npm-module-publish": "node npm-module-publish.js",
         "generate-license-file": "npx generate-license-file",
         "madge-circular": "madge --circular packages/home/main.tsx > circular.txt",

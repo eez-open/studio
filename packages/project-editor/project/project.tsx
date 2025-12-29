@@ -770,11 +770,13 @@ export const PROJECT_TYPE_NAMES = {
     [ProjectType.IEXT]: "IEXT"
 };
 
+export type LVGLVersion = "8.4.0" | "9.2.2" | "9.3.0" | "9.4.0";
+
 export class General extends EezObject {
     projectVersion: ProjectVersion = "v3";
     projectType: ProjectType;
     commandsProtocol: CommandsProtocolType;
-    lvglVersion: "8.3" | "9.0";
+    lvglVersion: LVGLVersion;
     commandsDocFolder?: string;
     masterProject: string;
     extensions: ExtensionDirective[];
@@ -891,8 +893,10 @@ export class General extends EezObject {
                 displayName: "LVGL version",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "8.3", label: "8.x" },
-                    { id: "9.0", label: "9.x" }
+                    { id: "8.4.0", label: "8.4.0" },
+                    { id: "9.2.2", label: "9.2.2" },
+                    { id: "9.3.0", label: "9.3.0" },
+                    { id: "9.4.0", label: "9.4.0" },
                 ],
                 enumDisallowUndefined: true,
                 disabled: (general: General) =>
@@ -1195,7 +1199,12 @@ export class General extends EezObject {
 
             if (jsObject.projectType == "lvgl") {
                 if (jsObject.lvglVersion == undefined) {
-                    jsObject.lvglVersion = "8.3";
+                    jsObject.lvglVersion = "8.4.0";
+                }
+                if (jsObject.lvglVersion == "8.3") {
+                    jsObject.lvglVersion = "8.4.0"
+                } else if (jsObject.lvglVersion == "9.0") {
+                    jsObject.lvglVersion = "9.2.2";
                 }
             }
 

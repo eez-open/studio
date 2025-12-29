@@ -1,12 +1,12 @@
 import { visitObjects } from "project-editor/core/search";
-import { Project } from "project-editor/project/project";
+import type { LVGLVersion, Project } from "project-editor/project/project";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { lvglPropertiesMap } from "project-editor/lvgl/style-catalog";
 import { updateObject } from "project-editor/store";
 
 export function migrateLvglVersion(
     project: Project,
-    newLvglVersion: "8.3" | "9.0"
+    newLvglVersion: LVGLVersion
 ) {
     if (project.settings.general.lvglVersion == newLvglVersion) {
         return;

@@ -71,7 +71,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/pre.js
+// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/pre.js
 module["exports"] = function (postWorkerToRendererMessage) {
     var Module = {};
 
@@ -101,7 +101,7 @@ module["exports"] = function (postWorkerToRendererMessage) {
 
 function runWasmModule(Module) {
 
-// end include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/pre.js
+// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/pre.js
 
 
 var arguments_ = [];
@@ -624,7 +624,7 @@ function createExportWrapper(name, nargs) {
 var wasmBinaryFile;
 
 function findWasmBinary() {
-  return locateFile('lvgl_runtime_v8.3.wasm');
+  return locateFile('lvgl_runtime_v8.4.0.wasm');
 }
 
 function getBinarySync(file) {
@@ -4280,8 +4280,6 @@ async function createWasm() {
       if (ret) stringToUTF8(str, ret, size);
       return ret;
     };
-  
-  var allocateUTF8 = (...args) => stringToNewUTF8(...args);
 
   var AsciiToString = (ptr) => {
       var str = '';
@@ -4889,8 +4887,8 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
 // Begin runtime exports
   Module['UTF8ToString'] = UTF8ToString;
   Module['AsciiToString'] = AsciiToString;
+  Module['stringToNewUTF8'] = stringToNewUTF8;
   Module['requestFullscreen'] = requestFullscreen;
-  Module['allocateUTF8'] = allocateUTF8;
   var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -5042,6 +5040,7 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'allocate',
   'writeStringToMemory',
   'writeAsciiToMemory',
+  'allocateUTF8',
   'allocateUTF8OnStack',
   'demangle',
   'stackTrace',
@@ -5108,7 +5107,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'lengthBytesUTF8',
   'intArrayFromString',
   'UTF16Decoder',
-  'stringToNewUTF8',
   'JSEvents',
   'specialHTMLTargets',
   'currentFullscreenStrategy',
@@ -5296,29 +5294,29 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1036048: ($0) => { startToDebuggerMessage($0); },  
- 1036080: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036155: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1036230: ($0) => { finishToDebuggerMessage($0); },  
- 1036263: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1036293: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1036323: ($0) => { lvglScreenTick($0); },  
- 1036347: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1036387: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1036441: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1036495: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1036548: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1036601: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1036654: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1036687: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1036723: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1036768: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1036874: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1036910: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1036947: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1036987: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1037044: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1037103: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1045904: ($0) => { startToDebuggerMessage($0); },  
+ 1045936: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1046011: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1046086: ($0) => { finishToDebuggerMessage($0); },  
+ 1046119: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1046149: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1046179: ($0) => { lvglScreenTick($0); },  
+ 1046203: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1046243: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1046297: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1046351: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1046404: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1046457: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1046510: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1046543: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1046579: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1046624: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1046730: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1046766: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1046803: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1046843: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1046900: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1046959: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5330,14 +5328,6 @@ var _lv_indev_set_group = Module['_lv_indev_set_group'] = makeInvalidEarlyAccess
 var _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = makeInvalidEarlyAccess('_lvglSetKeyboardGroup');
 var _init = Module['_init'] = makeInvalidEarlyAccess('_init');
 var _lv_init = Module['_lv_init'] = makeInvalidEarlyAccess('_lv_init');
-var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
-var _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = makeInvalidEarlyAccess('_lv_disp_draw_buf_init');
-var _lv_disp_drv_init = Module['_lv_disp_drv_init'] = makeInvalidEarlyAccess('_lv_disp_drv_init');
-var _lv_disp_drv_register = Module['_lv_disp_drv_register'] = makeInvalidEarlyAccess('_lv_disp_drv_register');
-var _lv_indev_drv_init = Module['_lv_indev_drv_init'] = makeInvalidEarlyAccess('_lv_indev_drv_init');
-var _lv_indev_drv_register = Module['_lv_indev_drv_register'] = makeInvalidEarlyAccess('_lv_indev_drv_register');
-var _lv_fs_drv_init = Module['_lv_fs_drv_init'] = makeInvalidEarlyAccess('_lv_fs_drv_init');
-var _lv_fs_drv_register = Module['_lv_fs_drv_register'] = makeInvalidEarlyAccess('_lv_fs_drv_register');
 var _lv_disp_get_default = Module['_lv_disp_get_default'] = makeInvalidEarlyAccess('_lv_disp_get_default');
 var _lv_palette_main = Module['_lv_palette_main'] = makeInvalidEarlyAccess('_lv_palette_main');
 var _lv_theme_default_init = Module['_lv_theme_default_init'] = makeInvalidEarlyAccess('_lv_theme_default_init');
@@ -5349,6 +5339,38 @@ var _isRTL = Module['_isRTL'] = makeInvalidEarlyAccess('_isRTL');
 var _onPointerEvent = Module['_onPointerEvent'] = makeInvalidEarlyAccess('_onPointerEvent');
 var _onMouseWheelEvent = Module['_onMouseWheelEvent'] = makeInvalidEarlyAccess('_onMouseWheelEvent');
 var _onKeyPressed = Module['_onKeyPressed'] = makeInvalidEarlyAccess('_onKeyPressed');
+var _lv_spinner_create = Module['_lv_spinner_create'] = makeInvalidEarlyAccess('_lv_spinner_create');
+var _lv_colorwheel_create = Module['_lv_colorwheel_create'] = makeInvalidEarlyAccess('_lv_colorwheel_create');
+var _lv_qrcode_create = Module['_lv_qrcode_create'] = makeInvalidEarlyAccess('_lv_qrcode_create');
+var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = makeInvalidEarlyAccess('_lv_obj_has_flag');
+var _lv_obj_del = Module['_lv_obj_del'] = makeInvalidEarlyAccess('_lv_obj_del');
+var _getStudioSymbols = Module['_getStudioSymbols'] = makeInvalidEarlyAccess('_getStudioSymbols');
+var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
+var _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = makeInvalidEarlyAccess('_lv_disp_draw_buf_init');
+var _lv_disp_drv_init = Module['_lv_disp_drv_init'] = makeInvalidEarlyAccess('_lv_disp_drv_init');
+var _lv_disp_drv_register = Module['_lv_disp_drv_register'] = makeInvalidEarlyAccess('_lv_disp_drv_register');
+var _lv_indev_drv_init = Module['_lv_indev_drv_init'] = makeInvalidEarlyAccess('_lv_indev_drv_init');
+var _lv_indev_drv_register = Module['_lv_indev_drv_register'] = makeInvalidEarlyAccess('_lv_indev_drv_register');
+var _lv_fs_drv_init = Module['_lv_fs_drv_init'] = makeInvalidEarlyAccess('_lv_fs_drv_init');
+var _lv_fs_drv_register = Module['_lv_fs_drv_register'] = makeInvalidEarlyAccess('_lv_fs_drv_register');
+var _lv_obj_create = Module['_lv_obj_create'] = makeInvalidEarlyAccess('_lv_obj_create');
+var _lv_label_create = Module['_lv_label_create'] = makeInvalidEarlyAccess('_lv_label_create');
+var _lv_btn_create = Module['_lv_btn_create'] = makeInvalidEarlyAccess('_lv_btn_create');
+var _lv_img_create = Module['_lv_img_create'] = makeInvalidEarlyAccess('_lv_img_create');
+var _lv_slider_create = Module['_lv_slider_create'] = makeInvalidEarlyAccess('_lv_slider_create');
+var _lv_roller_create = Module['_lv_roller_create'] = makeInvalidEarlyAccess('_lv_roller_create');
+var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
+var _lv_bar_create = Module['_lv_bar_create'] = makeInvalidEarlyAccess('_lv_bar_create');
+var _lv_dropdown_create = Module['_lv_dropdown_create'] = makeInvalidEarlyAccess('_lv_dropdown_create');
+var _lv_arc_create = Module['_lv_arc_create'] = makeInvalidEarlyAccess('_lv_arc_create');
+var _lv_checkbox_create = Module['_lv_checkbox_create'] = makeInvalidEarlyAccess('_lv_checkbox_create');
+var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
+var _lv_keyboard_create = Module['_lv_keyboard_create'] = makeInvalidEarlyAccess('_lv_keyboard_create');
+var _lv_chart_create = Module['_lv_chart_create'] = makeInvalidEarlyAccess('_lv_chart_create');
+var _lv_calendar_create = Module['_lv_calendar_create'] = makeInvalidEarlyAccess('_lv_calendar_create');
+var _lv_imgbtn_create = Module['_lv_imgbtn_create'] = makeInvalidEarlyAccess('_lv_imgbtn_create');
+var _lv_meter_create = Module['_lv_meter_create'] = makeInvalidEarlyAccess('_lv_meter_create');
+var _lv_spinbox_create = Module['_lv_spinbox_create'] = makeInvalidEarlyAccess('_lv_spinbox_create');
 var _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = makeInvalidEarlyAccess('_lv_obj_get_style_prop');
 var _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_set_local_style_prop');
 var _lv_event_get_code = Module['_lv_event_get_code'] = makeInvalidEarlyAccess('_lv_event_get_code');
@@ -5360,7 +5382,6 @@ var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('
 var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var _lv_obj_add_state = Module['_lv_obj_add_state'] = makeInvalidEarlyAccess('_lv_obj_add_state');
 var _lv_obj_clear_state = Module['_lv_obj_clear_state'] = makeInvalidEarlyAccess('_lv_obj_clear_state');
-var _lv_obj_has_flag = Module['_lv_obj_has_flag'] = makeInvalidEarlyAccess('_lv_obj_has_flag');
 var _lv_obj_add_flag = Module['_lv_obj_add_flag'] = makeInvalidEarlyAccess('_lv_obj_add_flag');
 var _lv_obj_clear_flag = Module['_lv_obj_clear_flag'] = makeInvalidEarlyAccess('_lv_obj_clear_flag');
 var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
@@ -5380,7 +5401,6 @@ var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'
 var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = makeInvalidEarlyAccess('_lvglAddEventHandler');
 var _lv_event_get_user_data = Module['_lv_event_get_user_data'] = makeInvalidEarlyAccess('_lv_event_get_user_data');
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = makeInvalidEarlyAccess('_lvglCreateScreen');
-var _lv_obj_create = Module['_lv_obj_create'] = makeInvalidEarlyAccess('_lv_obj_create');
 var _lv_obj_set_pos = Module['_lv_obj_set_pos'] = makeInvalidEarlyAccess('_lv_obj_set_pos');
 var _lv_obj_set_size = Module['_lv_obj_set_size'] = makeInvalidEarlyAccess('_lv_obj_set_size');
 var _lv_obj_update_layout = Module['_lv_obj_update_layout'] = makeInvalidEarlyAccess('_lv_obj_update_layout');
@@ -5388,7 +5408,6 @@ var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = makeInvalidEarlyAc
 var _lvglScreenLoad = Module['_lvglScreenLoad'] = makeInvalidEarlyAccess('_lvglScreenLoad');
 var _lv_scr_load_anim = Module['_lv_scr_load_anim'] = makeInvalidEarlyAccess('_lv_scr_load_anim');
 var _lvglDeleteObject = Module['_lvglDeleteObject'] = makeInvalidEarlyAccess('_lvglDeleteObject');
-var _lv_obj_del = Module['_lv_obj_del'] = makeInvalidEarlyAccess('_lv_obj_del');
 var _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = makeInvalidEarlyAccess('_lv_disp_get_scr_act');
 var _lv_disp_load_scr = Module['_lv_disp_load_scr'] = makeInvalidEarlyAccess('_lv_disp_load_scr');
 var _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = makeInvalidEarlyAccess('_lvglDeleteObjectIndex');
@@ -5899,6 +5918,7 @@ var _lv_draw_sw_rect = Module['_lv_draw_sw_rect'] = makeInvalidEarlyAccess('_lv_
 var _lv_draw_sw_bg = Module['_lv_draw_sw_bg'] = makeInvalidEarlyAccess('_lv_draw_sw_bg');
 var _lv_draw_sw_transform = Module['_lv_draw_sw_transform'] = makeInvalidEarlyAccess('_lv_draw_sw_transform');
 var _lv_flex_init = Module['_lv_flex_init'] = makeInvalidEarlyAccess('_lv_flex_init');
+var _lv_style_register_prop = Module['_lv_style_register_prop'] = makeInvalidEarlyAccess('_lv_style_register_prop');
 var _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = makeInvalidEarlyAccess('_lv_obj_set_flex_flow');
 var _lv_obj_set_style_flex_flow = Module['_lv_obj_set_style_flex_flow'] = makeInvalidEarlyAccess('_lv_obj_set_style_flex_flow');
 var _lv_obj_set_flex_align = Module['_lv_obj_set_flex_align'] = makeInvalidEarlyAccess('_lv_obj_set_flex_align');
@@ -5912,6 +5932,7 @@ var _lv_style_set_flex_main_place = Module['_lv_style_set_flex_main_place'] = ma
 var _lv_style_set_flex_cross_place = Module['_lv_style_set_flex_cross_place'] = makeInvalidEarlyAccess('_lv_style_set_flex_cross_place');
 var _lv_style_set_flex_track_place = Module['_lv_style_set_flex_track_place'] = makeInvalidEarlyAccess('_lv_style_set_flex_track_place');
 var _lv_style_set_flex_grow = Module['_lv_style_set_flex_grow'] = makeInvalidEarlyAccess('_lv_style_set_flex_grow');
+var _lv_area_set_width = Module['_lv_area_set_width'] = makeInvalidEarlyAccess('_lv_area_set_width');
 var _lv_grid_init = Module['_lv_grid_init'] = makeInvalidEarlyAccess('_lv_grid_init');
 var _lv_obj_set_grid_dsc_array = Module['_lv_obj_set_grid_dsc_array'] = makeInvalidEarlyAccess('_lv_obj_set_grid_dsc_array');
 var _lv_obj_set_style_grid_column_dsc_array = Module['_lv_obj_set_style_grid_column_dsc_array'] = makeInvalidEarlyAccess('_lv_obj_set_style_grid_column_dsc_array');
@@ -5942,8 +5963,12 @@ var _lv_gif_create = Module['_lv_gif_create'] = makeInvalidEarlyAccess('_lv_gif_
 var _lv_gif_set_src = Module['_lv_gif_set_src'] = makeInvalidEarlyAccess('_lv_gif_set_src');
 var _lv_gif_restart = Module['_lv_gif_restart'] = makeInvalidEarlyAccess('_lv_gif_restart');
 var _lv_png_init = Module['_lv_png_init'] = makeInvalidEarlyAccess('_lv_png_init');
-var _lv_qrcode_create = Module['_lv_qrcode_create'] = makeInvalidEarlyAccess('_lv_qrcode_create');
+var _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = makeInvalidEarlyAccess('_lv_canvas_set_buffer');
+var _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = makeInvalidEarlyAccess('_lv_canvas_set_palette');
+var _lv_canvas_get_img = Module['_lv_canvas_get_img'] = makeInvalidEarlyAccess('_lv_canvas_get_img');
 var _lv_qrcode_update = Module['_lv_qrcode_update'] = makeInvalidEarlyAccess('_lv_qrcode_update');
+var _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = makeInvalidEarlyAccess('_lv_canvas_fill_bg');
+var _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = makeInvalidEarlyAccess('_lv_canvas_set_px_color');
 var _lv_qrcode_delete = Module['_lv_qrcode_delete'] = makeInvalidEarlyAccess('_lv_qrcode_delete');
 var _lv_split_jpeg_init = Module['_lv_split_jpeg_init'] = makeInvalidEarlyAccess('_lv_split_jpeg_init');
 var _lv_tiny_ttf_create_file_ex = Module['_lv_tiny_ttf_create_file_ex'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_file_ex');
@@ -5952,8 +5977,6 @@ var _lv_tiny_ttf_create_file = Module['_lv_tiny_ttf_create_file'] = makeInvalidE
 var _lv_tiny_ttf_create_data_ex = Module['_lv_tiny_ttf_create_data_ex'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_data_ex');
 var _lv_tiny_ttf_create_data = Module['_lv_tiny_ttf_create_data'] = makeInvalidEarlyAccess('_lv_tiny_ttf_create_data');
 var _lv_tiny_ttf_destroy = Module['_lv_tiny_ttf_destroy'] = makeInvalidEarlyAccess('_lv_tiny_ttf_destroy');
-var _lv_style_register_prop = Module['_lv_style_register_prop'] = makeInvalidEarlyAccess('_lv_style_register_prop');
-var _lv_area_set_width = Module['_lv_area_set_width'] = makeInvalidEarlyAccess('_lv_area_set_width');
 var _lv_msg_init = Module['_lv_msg_init'] = makeInvalidEarlyAccess('_lv_msg_init');
 var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
 var _lv_fs_tell = Module['_lv_fs_tell'] = makeInvalidEarlyAccess('_lv_fs_tell');
@@ -6067,7 +6090,6 @@ var _lv_animimg_start = Module['_lv_animimg_start'] = makeInvalidEarlyAccess('_l
 var _lv_animimg_set_duration = Module['_lv_animimg_set_duration'] = makeInvalidEarlyAccess('_lv_animimg_set_duration');
 var _lv_animimg_set_repeat_count = Module['_lv_animimg_set_repeat_count'] = makeInvalidEarlyAccess('_lv_animimg_set_repeat_count');
 var _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = makeInvalidEarlyAccess('_lv_calendar_set_showed_date');
-var _lv_calendar_create = Module['_lv_calendar_create'] = makeInvalidEarlyAccess('_lv_calendar_create');
 var _lv_btnmatrix_create = Module['_lv_btnmatrix_create'] = makeInvalidEarlyAccess('_lv_btnmatrix_create');
 var _lv_btnmatrix_set_map = Module['_lv_btnmatrix_set_map'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_map');
 var _lv_btnmatrix_set_btn_ctrl_all = Module['_lv_btnmatrix_set_btn_ctrl_all'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_btn_ctrl_all');
@@ -6087,12 +6109,9 @@ var _lv_calendar_get_pressed_date = Module['_lv_calendar_get_pressed_date'] = ma
 var _lv_btnmatrix_get_btn_text = Module['_lv_btnmatrix_get_btn_text'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_btn_text');
 var _lv_btnmatrix_has_btn_ctrl = Module['_lv_btnmatrix_has_btn_ctrl'] = makeInvalidEarlyAccess('_lv_btnmatrix_has_btn_ctrl');
 var _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = makeInvalidEarlyAccess('_lv_calendar_header_arrow_create');
-var _lv_btn_create = Module['_lv_btn_create'] = makeInvalidEarlyAccess('_lv_btn_create');
-var _lv_label_create = Module['_lv_label_create'] = makeInvalidEarlyAccess('_lv_label_create');
 var _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = makeInvalidEarlyAccess('_lv_label_set_long_mode');
 var _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = makeInvalidEarlyAccess('_lv_label_set_text_fmt');
 var _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = makeInvalidEarlyAccess('_lv_calendar_header_dropdown_create');
-var _lv_dropdown_create = Module['_lv_dropdown_create'] = makeInvalidEarlyAccess('_lv_dropdown_create');
 var _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = makeInvalidEarlyAccess('_lv_dropdown_set_options');
 var _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = makeInvalidEarlyAccess('_lv_calendar_header_dropdown_set_year_list');
 var _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = makeInvalidEarlyAccess('_lv_dropdown_clear_options');
@@ -6100,7 +6119,6 @@ var _lv_dropdown_get_selected = Module['_lv_dropdown_get_selected'] = makeInvali
 var _lv_dropdown_get_options = Module['_lv_dropdown_get_options'] = makeInvalidEarlyAccess('_lv_dropdown_get_options');
 var _lv_dropdown_set_selected = Module['_lv_dropdown_set_selected'] = makeInvalidEarlyAccess('_lv_dropdown_set_selected');
 var _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = makeInvalidEarlyAccess('_lv_chart_get_point_pos_by_id');
-var _lv_chart_create = Module['_lv_chart_create'] = makeInvalidEarlyAccess('_lv_chart_create');
 var _lv_chart_set_type = Module['_lv_chart_set_type'] = makeInvalidEarlyAccess('_lv_chart_set_type');
 var _lv_chart_refresh = Module['_lv_chart_refresh'] = makeInvalidEarlyAccess('_lv_chart_refresh');
 var _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = makeInvalidEarlyAccess('_lv_chart_set_point_count');
@@ -6139,7 +6157,6 @@ var _lv_chart_get_pressed_point = Module['_lv_chart_get_pressed_point'] = makeIn
 var _lv_colorwheel_set_hsv = Module['_lv_colorwheel_set_hsv'] = makeInvalidEarlyAccess('_lv_colorwheel_set_hsv');
 var _lv_atan2 = Module['_lv_atan2'] = makeInvalidEarlyAccess('_lv_atan2');
 var _lv_color_hsv_to_rgb = Module['_lv_color_hsv_to_rgb'] = makeInvalidEarlyAccess('_lv_color_hsv_to_rgb');
-var _lv_colorwheel_create = Module['_lv_colorwheel_create'] = makeInvalidEarlyAccess('_lv_colorwheel_create');
 var _lv_colorwheel_set_rgb = Module['_lv_colorwheel_set_rgb'] = makeInvalidEarlyAccess('_lv_colorwheel_set_rgb');
 var _lv_color_rgb_to_hsv = Module['_lv_color_rgb_to_hsv'] = makeInvalidEarlyAccess('_lv_color_rgb_to_hsv');
 var _lv_colorwheel_set_mode = Module['_lv_colorwheel_set_mode'] = makeInvalidEarlyAccess('_lv_colorwheel_set_mode');
@@ -6148,14 +6165,12 @@ var _lv_colorwheel_get_hsv = Module['_lv_colorwheel_get_hsv'] = makeInvalidEarly
 var _lv_colorwheel_get_rgb = Module['_lv_colorwheel_get_rgb'] = makeInvalidEarlyAccess('_lv_colorwheel_get_rgb');
 var _lv_colorwheel_get_color_mode = Module['_lv_colorwheel_get_color_mode'] = makeInvalidEarlyAccess('_lv_colorwheel_get_color_mode');
 var _lv_colorwheel_get_color_mode_fixed = Module['_lv_colorwheel_get_color_mode_fixed'] = makeInvalidEarlyAccess('_lv_colorwheel_get_color_mode_fixed');
-var _lv_imgbtn_create = Module['_lv_imgbtn_create'] = makeInvalidEarlyAccess('_lv_imgbtn_create');
 var _lv_imgbtn_set_src = Module['_lv_imgbtn_set_src'] = makeInvalidEarlyAccess('_lv_imgbtn_set_src');
 var _lv_imgbtn_set_state = Module['_lv_imgbtn_set_state'] = makeInvalidEarlyAccess('_lv_imgbtn_set_state');
 var _lv_imgbtn_get_src_left = Module['_lv_imgbtn_get_src_left'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_left');
 var _lv_imgbtn_get_src_middle = Module['_lv_imgbtn_get_src_middle'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_middle');
 var _lv_imgbtn_get_src_right = Module['_lv_imgbtn_get_src_right'] = makeInvalidEarlyAccess('_lv_imgbtn_get_src_right');
 var _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = makeInvalidEarlyAccess('_lv_keyboard_def_event_cb');
-var _lv_keyboard_create = Module['_lv_keyboard_create'] = makeInvalidEarlyAccess('_lv_keyboard_create');
 var _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = makeInvalidEarlyAccess('_lv_keyboard_set_textarea');
 var _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = makeInvalidEarlyAccess('_lv_keyboard_set_mode');
 var _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = makeInvalidEarlyAccess('_lv_keyboard_set_popovers');
@@ -6184,7 +6199,6 @@ var _lv_list_create = Module['_lv_list_create'] = makeInvalidEarlyAccess('_lv_li
 var _lv_list_add_text = Module['_lv_list_add_text'] = makeInvalidEarlyAccess('_lv_list_add_text');
 var _lv_label_set_text = Module['_lv_label_set_text'] = makeInvalidEarlyAccess('_lv_label_set_text');
 var _lv_list_add_btn = Module['_lv_list_add_btn'] = makeInvalidEarlyAccess('_lv_list_add_btn');
-var _lv_img_create = Module['_lv_img_create'] = makeInvalidEarlyAccess('_lv_img_create');
 var _lv_img_set_src = Module['_lv_img_set_src'] = makeInvalidEarlyAccess('_lv_img_set_src');
 var _lv_list_get_btn_text = Module['_lv_list_get_btn_text'] = makeInvalidEarlyAccess('_lv_list_get_btn_text');
 var _lv_label_get_text = Module['_lv_label_get_text'] = makeInvalidEarlyAccess('_lv_label_get_text');
@@ -6206,7 +6220,6 @@ var _lv_menu_get_main_header_back_btn = Module['_lv_menu_get_main_header_back_bt
 var _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header');
 var _lv_menu_get_sidebar_header_back_btn = Module['_lv_menu_get_sidebar_header_back_btn'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header_back_btn');
 var _lv_menu_back_btn_is_root = Module['_lv_menu_back_btn_is_root'] = makeInvalidEarlyAccess('_lv_menu_back_btn_is_root');
-var _lv_meter_create = Module['_lv_meter_create'] = makeInvalidEarlyAccess('_lv_meter_create');
 var _lv_meter_add_scale = Module['_lv_meter_add_scale'] = makeInvalidEarlyAccess('_lv_meter_add_scale');
 var _lv_meter_set_scale_ticks = Module['_lv_meter_set_scale_ticks'] = makeInvalidEarlyAccess('_lv_meter_set_scale_ticks');
 var _lv_meter_set_scale_major_ticks = Module['_lv_meter_set_scale_major_ticks'] = makeInvalidEarlyAccess('_lv_meter_set_scale_major_ticks');
@@ -6255,7 +6268,6 @@ var _lv_pow = Module['_lv_pow'] = makeInvalidEarlyAccess('_lv_pow');
 var _lv_spinbox_step_prev = Module['_lv_spinbox_step_prev'] = makeInvalidEarlyAccess('_lv_spinbox_step_prev');
 var _lv_spinbox_increment = Module['_lv_spinbox_increment'] = makeInvalidEarlyAccess('_lv_spinbox_increment');
 var _lv_spinbox_decrement = Module['_lv_spinbox_decrement'] = makeInvalidEarlyAccess('_lv_spinbox_decrement');
-var _lv_spinbox_create = Module['_lv_spinbox_create'] = makeInvalidEarlyAccess('_lv_spinbox_create');
 var _lv_spinbox_set_value = Module['_lv_spinbox_set_value'] = makeInvalidEarlyAccess('_lv_spinbox_set_value');
 var _lv_textarea_set_text = Module['_lv_textarea_set_text'] = makeInvalidEarlyAccess('_lv_textarea_set_text');
 var _lv_spinbox_set_rollover = Module['_lv_spinbox_set_rollover'] = makeInvalidEarlyAccess('_lv_spinbox_set_rollover');
@@ -6268,7 +6280,6 @@ var _lv_spinbox_get_value = Module['_lv_spinbox_get_value'] = makeInvalidEarlyAc
 var _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = makeInvalidEarlyAccess('_lv_spinbox_get_step');
 var _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = makeInvalidEarlyAccess('_lv_spinbox_step_next');
 var _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = makeInvalidEarlyAccess('_lv_spinbox_get_rollover');
-var _lv_spinner_create = Module['_lv_spinner_create'] = makeInvalidEarlyAccess('_lv_spinner_create');
 var _lv_anim_path_ease_in_out = Module['_lv_anim_path_ease_in_out'] = makeInvalidEarlyAccess('_lv_anim_path_ease_in_out');
 var _lv_arc_set_bg_angles = Module['_lv_arc_set_bg_angles'] = makeInvalidEarlyAccess('_lv_arc_set_bg_angles');
 var _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = makeInvalidEarlyAccess('_lv_arc_set_rotation');
@@ -6427,7 +6438,6 @@ var _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = makeInvalidEarlyAcce
 var _lv_tlsf_create = Module['_lv_tlsf_create'] = makeInvalidEarlyAccess('_lv_tlsf_create');
 var _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = makeInvalidEarlyAccess('_lv_tlsf_memalign');
 var _lv_arc_set_value = Module['_lv_arc_set_value'] = makeInvalidEarlyAccess('_lv_arc_set_value');
-var _lv_arc_create = Module['_lv_arc_create'] = makeInvalidEarlyAccess('_lv_arc_create');
 var _lv_arc_set_angles = Module['_lv_arc_set_angles'] = makeInvalidEarlyAccess('_lv_arc_set_angles');
 var _lv_arc_set_bg_start_angle = Module['_lv_arc_set_bg_start_angle'] = makeInvalidEarlyAccess('_lv_arc_set_bg_start_angle');
 var _lv_arc_set_bg_end_angle = Module['_lv_arc_set_bg_end_angle'] = makeInvalidEarlyAccess('_lv_arc_set_bg_end_angle');
@@ -6444,31 +6454,24 @@ var _lv_arc_get_max_value = Module['_lv_arc_get_max_value'] = makeInvalidEarlyAc
 var _lv_arc_get_mode = Module['_lv_arc_get_mode'] = makeInvalidEarlyAccess('_lv_arc_get_mode');
 var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_align_obj_to_angle');
 var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_rotate_obj_to_angle');
-var _lv_bar_create = Module['_lv_bar_create'] = makeInvalidEarlyAccess('_lv_bar_create');
 var _lv_bar_get_mode = Module['_lv_bar_get_mode'] = makeInvalidEarlyAccess('_lv_bar_get_mode');
 var _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = makeInvalidEarlyAccess('_lv_btnmatrix_clear_btn_ctrl');
 var _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = makeInvalidEarlyAccess('_lv_btnmatrix_set_btn_width');
 var _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_map');
 var _lv_btnmatrix_get_one_checked = Module['_lv_btnmatrix_get_one_checked'] = makeInvalidEarlyAccess('_lv_btnmatrix_get_one_checked');
 var _lv_canvas_create = Module['_lv_canvas_create'] = makeInvalidEarlyAccess('_lv_canvas_create');
-var _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = makeInvalidEarlyAccess('_lv_canvas_set_buffer');
-var _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = makeInvalidEarlyAccess('_lv_canvas_set_px_color');
 var _lv_canvas_set_px_opa = Module['_lv_canvas_set_px_opa'] = makeInvalidEarlyAccess('_lv_canvas_set_px_opa');
-var _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = makeInvalidEarlyAccess('_lv_canvas_set_palette');
 var _lv_canvas_get_px = Module['_lv_canvas_get_px'] = makeInvalidEarlyAccess('_lv_canvas_get_px');
-var _lv_canvas_get_img = Module['_lv_canvas_get_img'] = makeInvalidEarlyAccess('_lv_canvas_get_img');
 var _lv_canvas_copy_buf = Module['_lv_canvas_copy_buf'] = makeInvalidEarlyAccess('_lv_canvas_copy_buf');
 var _lv_canvas_transform = Module['_lv_canvas_transform'] = makeInvalidEarlyAccess('_lv_canvas_transform');
 var _lv_canvas_blur_hor = Module['_lv_canvas_blur_hor'] = makeInvalidEarlyAccess('_lv_canvas_blur_hor');
 var _lv_canvas_blur_ver = Module['_lv_canvas_blur_ver'] = makeInvalidEarlyAccess('_lv_canvas_blur_ver');
-var _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = makeInvalidEarlyAccess('_lv_canvas_fill_bg');
 var _lv_canvas_draw_rect = Module['_lv_canvas_draw_rect'] = makeInvalidEarlyAccess('_lv_canvas_draw_rect');
 var _lv_canvas_draw_text = Module['_lv_canvas_draw_text'] = makeInvalidEarlyAccess('_lv_canvas_draw_text');
 var _lv_canvas_draw_img = Module['_lv_canvas_draw_img'] = makeInvalidEarlyAccess('_lv_canvas_draw_img');
 var _lv_canvas_draw_line = Module['_lv_canvas_draw_line'] = makeInvalidEarlyAccess('_lv_canvas_draw_line');
 var _lv_canvas_draw_polygon = Module['_lv_canvas_draw_polygon'] = makeInvalidEarlyAccess('_lv_canvas_draw_polygon');
 var _lv_canvas_draw_arc = Module['_lv_canvas_draw_arc'] = makeInvalidEarlyAccess('_lv_canvas_draw_arc');
-var _lv_checkbox_create = Module['_lv_checkbox_create'] = makeInvalidEarlyAccess('_lv_checkbox_create');
 var _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = makeInvalidEarlyAccess('_lv_checkbox_set_text');
 var _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = makeInvalidEarlyAccess('_lv_checkbox_set_text_static');
 var _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = makeInvalidEarlyAccess('_lv_checkbox_get_text');
@@ -6522,15 +6525,12 @@ var _lv_line_set_y_invert = Module['_lv_line_set_y_invert'] = makeInvalidEarlyAc
 var _lv_line_get_y_invert = Module['_lv_line_get_y_invert'] = makeInvalidEarlyAccess('_lv_line_get_y_invert');
 var _lv_roller_set_options = Module['_lv_roller_set_options'] = makeInvalidEarlyAccess('_lv_roller_set_options');
 var _lv_roller_set_selected = Module['_lv_roller_set_selected'] = makeInvalidEarlyAccess('_lv_roller_set_selected');
-var _lv_roller_create = Module['_lv_roller_create'] = makeInvalidEarlyAccess('_lv_roller_create');
 var _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = makeInvalidEarlyAccess('_lv_roller_set_visible_row_count');
 var _lv_roller_get_selected = Module['_lv_roller_get_selected'] = makeInvalidEarlyAccess('_lv_roller_get_selected');
 var _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = makeInvalidEarlyAccess('_lv_roller_get_selected_str');
 var _lv_roller_get_options = Module['_lv_roller_get_options'] = makeInvalidEarlyAccess('_lv_roller_get_options');
 var _lv_roller_get_option_cnt = Module['_lv_roller_get_option_cnt'] = makeInvalidEarlyAccess('_lv_roller_get_option_cnt');
-var _lv_slider_create = Module['_lv_slider_create'] = makeInvalidEarlyAccess('_lv_slider_create');
 var _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = makeInvalidEarlyAccess('_lv_slider_is_dragged');
-var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
 var _lv_table_create = Module['_lv_table_create'] = makeInvalidEarlyAccess('_lv_table_create');
 var _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = makeInvalidEarlyAccess('_lv_table_set_cell_value');
 var _lv_table_set_col_cnt = Module['_lv_table_set_col_cnt'] = makeInvalidEarlyAccess('_lv_table_set_col_cnt');
@@ -6550,7 +6550,6 @@ var _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = make
 var _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = makeInvalidEarlyAccess('_lv_textarea_cursor_up');
 var _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = makeInvalidEarlyAccess('_lv_textarea_cursor_down');
 var _lv_textarea_del_char_forward = Module['_lv_textarea_del_char_forward'] = makeInvalidEarlyAccess('_lv_textarea_del_char_forward');
-var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
 var _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = makeInvalidEarlyAccess('_lv_textarea_clear_selection');
 var _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = makeInvalidEarlyAccess('_lv_textarea_get_accepted_chars');
 var _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = makeInvalidEarlyAccess('_lv_textarea_get_max_length');
@@ -6601,14 +6600,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglSetKeyboardGroup'] != 'undefined', 'missing Wasm export: lvglSetKeyboardGroup');
   assert(typeof wasmExports['init'] != 'undefined', 'missing Wasm export: init');
   assert(typeof wasmExports['lv_init'] != 'undefined', 'missing Wasm export: lv_init');
-  assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
-  assert(typeof wasmExports['lv_disp_draw_buf_init'] != 'undefined', 'missing Wasm export: lv_disp_draw_buf_init');
-  assert(typeof wasmExports['lv_disp_drv_init'] != 'undefined', 'missing Wasm export: lv_disp_drv_init');
-  assert(typeof wasmExports['lv_disp_drv_register'] != 'undefined', 'missing Wasm export: lv_disp_drv_register');
-  assert(typeof wasmExports['lv_indev_drv_init'] != 'undefined', 'missing Wasm export: lv_indev_drv_init');
-  assert(typeof wasmExports['lv_indev_drv_register'] != 'undefined', 'missing Wasm export: lv_indev_drv_register');
-  assert(typeof wasmExports['lv_fs_drv_init'] != 'undefined', 'missing Wasm export: lv_fs_drv_init');
-  assert(typeof wasmExports['lv_fs_drv_register'] != 'undefined', 'missing Wasm export: lv_fs_drv_register');
   assert(typeof wasmExports['lv_disp_get_default'] != 'undefined', 'missing Wasm export: lv_disp_get_default');
   assert(typeof wasmExports['lv_palette_main'] != 'undefined', 'missing Wasm export: lv_palette_main');
   assert(typeof wasmExports['lv_theme_default_init'] != 'undefined', 'missing Wasm export: lv_theme_default_init');
@@ -6620,6 +6611,38 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['onPointerEvent'] != 'undefined', 'missing Wasm export: onPointerEvent');
   assert(typeof wasmExports['onMouseWheelEvent'] != 'undefined', 'missing Wasm export: onMouseWheelEvent');
   assert(typeof wasmExports['onKeyPressed'] != 'undefined', 'missing Wasm export: onKeyPressed');
+  assert(typeof wasmExports['lv_spinner_create'] != 'undefined', 'missing Wasm export: lv_spinner_create');
+  assert(typeof wasmExports['lv_colorwheel_create'] != 'undefined', 'missing Wasm export: lv_colorwheel_create');
+  assert(typeof wasmExports['lv_qrcode_create'] != 'undefined', 'missing Wasm export: lv_qrcode_create');
+  assert(typeof wasmExports['lv_obj_has_flag'] != 'undefined', 'missing Wasm export: lv_obj_has_flag');
+  assert(typeof wasmExports['lv_obj_del'] != 'undefined', 'missing Wasm export: lv_obj_del');
+  assert(typeof wasmExports['getStudioSymbols'] != 'undefined', 'missing Wasm export: getStudioSymbols');
+  assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
+  assert(typeof wasmExports['lv_disp_draw_buf_init'] != 'undefined', 'missing Wasm export: lv_disp_draw_buf_init');
+  assert(typeof wasmExports['lv_disp_drv_init'] != 'undefined', 'missing Wasm export: lv_disp_drv_init');
+  assert(typeof wasmExports['lv_disp_drv_register'] != 'undefined', 'missing Wasm export: lv_disp_drv_register');
+  assert(typeof wasmExports['lv_indev_drv_init'] != 'undefined', 'missing Wasm export: lv_indev_drv_init');
+  assert(typeof wasmExports['lv_indev_drv_register'] != 'undefined', 'missing Wasm export: lv_indev_drv_register');
+  assert(typeof wasmExports['lv_fs_drv_init'] != 'undefined', 'missing Wasm export: lv_fs_drv_init');
+  assert(typeof wasmExports['lv_fs_drv_register'] != 'undefined', 'missing Wasm export: lv_fs_drv_register');
+  assert(typeof wasmExports['lv_obj_create'] != 'undefined', 'missing Wasm export: lv_obj_create');
+  assert(typeof wasmExports['lv_label_create'] != 'undefined', 'missing Wasm export: lv_label_create');
+  assert(typeof wasmExports['lv_btn_create'] != 'undefined', 'missing Wasm export: lv_btn_create');
+  assert(typeof wasmExports['lv_img_create'] != 'undefined', 'missing Wasm export: lv_img_create');
+  assert(typeof wasmExports['lv_slider_create'] != 'undefined', 'missing Wasm export: lv_slider_create');
+  assert(typeof wasmExports['lv_roller_create'] != 'undefined', 'missing Wasm export: lv_roller_create');
+  assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
+  assert(typeof wasmExports['lv_bar_create'] != 'undefined', 'missing Wasm export: lv_bar_create');
+  assert(typeof wasmExports['lv_dropdown_create'] != 'undefined', 'missing Wasm export: lv_dropdown_create');
+  assert(typeof wasmExports['lv_arc_create'] != 'undefined', 'missing Wasm export: lv_arc_create');
+  assert(typeof wasmExports['lv_checkbox_create'] != 'undefined', 'missing Wasm export: lv_checkbox_create');
+  assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
+  assert(typeof wasmExports['lv_keyboard_create'] != 'undefined', 'missing Wasm export: lv_keyboard_create');
+  assert(typeof wasmExports['lv_chart_create'] != 'undefined', 'missing Wasm export: lv_chart_create');
+  assert(typeof wasmExports['lv_calendar_create'] != 'undefined', 'missing Wasm export: lv_calendar_create');
+  assert(typeof wasmExports['lv_imgbtn_create'] != 'undefined', 'missing Wasm export: lv_imgbtn_create');
+  assert(typeof wasmExports['lv_meter_create'] != 'undefined', 'missing Wasm export: lv_meter_create');
+  assert(typeof wasmExports['lv_spinbox_create'] != 'undefined', 'missing Wasm export: lv_spinbox_create');
   assert(typeof wasmExports['lv_obj_get_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_get_style_prop');
   assert(typeof wasmExports['lv_obj_set_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_set_local_style_prop');
   assert(typeof wasmExports['lv_event_get_code'] != 'undefined', 'missing Wasm export: lv_event_get_code');
@@ -6631,7 +6654,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['lv_obj_add_state'] != 'undefined', 'missing Wasm export: lv_obj_add_state');
   assert(typeof wasmExports['lv_obj_clear_state'] != 'undefined', 'missing Wasm export: lv_obj_clear_state');
-  assert(typeof wasmExports['lv_obj_has_flag'] != 'undefined', 'missing Wasm export: lv_obj_has_flag');
   assert(typeof wasmExports['lv_obj_add_flag'] != 'undefined', 'missing Wasm export: lv_obj_add_flag');
   assert(typeof wasmExports['lv_obj_clear_flag'] != 'undefined', 'missing Wasm export: lv_obj_clear_flag');
   assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
@@ -6651,7 +6673,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglAddEventHandler'] != 'undefined', 'missing Wasm export: lvglAddEventHandler');
   assert(typeof wasmExports['lv_event_get_user_data'] != 'undefined', 'missing Wasm export: lv_event_get_user_data');
   assert(typeof wasmExports['lvglCreateScreen'] != 'undefined', 'missing Wasm export: lvglCreateScreen');
-  assert(typeof wasmExports['lv_obj_create'] != 'undefined', 'missing Wasm export: lv_obj_create');
   assert(typeof wasmExports['lv_obj_set_pos'] != 'undefined', 'missing Wasm export: lv_obj_set_pos');
   assert(typeof wasmExports['lv_obj_set_size'] != 'undefined', 'missing Wasm export: lv_obj_set_size');
   assert(typeof wasmExports['lv_obj_update_layout'] != 'undefined', 'missing Wasm export: lv_obj_update_layout');
@@ -6659,7 +6680,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglScreenLoad'] != 'undefined', 'missing Wasm export: lvglScreenLoad');
   assert(typeof wasmExports['lv_scr_load_anim'] != 'undefined', 'missing Wasm export: lv_scr_load_anim');
   assert(typeof wasmExports['lvglDeleteObject'] != 'undefined', 'missing Wasm export: lvglDeleteObject');
-  assert(typeof wasmExports['lv_obj_del'] != 'undefined', 'missing Wasm export: lv_obj_del');
   assert(typeof wasmExports['lv_disp_get_scr_act'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_act');
   assert(typeof wasmExports['lv_disp_load_scr'] != 'undefined', 'missing Wasm export: lv_disp_load_scr');
   assert(typeof wasmExports['lvglDeleteObjectIndex'] != 'undefined', 'missing Wasm export: lvglDeleteObjectIndex');
@@ -7170,6 +7190,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_sw_bg'] != 'undefined', 'missing Wasm export: lv_draw_sw_bg');
   assert(typeof wasmExports['lv_draw_sw_transform'] != 'undefined', 'missing Wasm export: lv_draw_sw_transform');
   assert(typeof wasmExports['lv_flex_init'] != 'undefined', 'missing Wasm export: lv_flex_init');
+  assert(typeof wasmExports['lv_style_register_prop'] != 'undefined', 'missing Wasm export: lv_style_register_prop');
   assert(typeof wasmExports['lv_obj_set_flex_flow'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_flow');
   assert(typeof wasmExports['lv_obj_set_style_flex_flow'] != 'undefined', 'missing Wasm export: lv_obj_set_style_flex_flow');
   assert(typeof wasmExports['lv_obj_set_flex_align'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_align');
@@ -7183,6 +7204,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_style_set_flex_cross_place'] != 'undefined', 'missing Wasm export: lv_style_set_flex_cross_place');
   assert(typeof wasmExports['lv_style_set_flex_track_place'] != 'undefined', 'missing Wasm export: lv_style_set_flex_track_place');
   assert(typeof wasmExports['lv_style_set_flex_grow'] != 'undefined', 'missing Wasm export: lv_style_set_flex_grow');
+  assert(typeof wasmExports['lv_area_set_width'] != 'undefined', 'missing Wasm export: lv_area_set_width');
   assert(typeof wasmExports['lv_grid_init'] != 'undefined', 'missing Wasm export: lv_grid_init');
   assert(typeof wasmExports['lv_obj_set_grid_dsc_array'] != 'undefined', 'missing Wasm export: lv_obj_set_grid_dsc_array');
   assert(typeof wasmExports['lv_obj_set_style_grid_column_dsc_array'] != 'undefined', 'missing Wasm export: lv_obj_set_style_grid_column_dsc_array');
@@ -7213,8 +7235,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_gif_set_src'] != 'undefined', 'missing Wasm export: lv_gif_set_src');
   assert(typeof wasmExports['lv_gif_restart'] != 'undefined', 'missing Wasm export: lv_gif_restart');
   assert(typeof wasmExports['lv_png_init'] != 'undefined', 'missing Wasm export: lv_png_init');
-  assert(typeof wasmExports['lv_qrcode_create'] != 'undefined', 'missing Wasm export: lv_qrcode_create');
+  assert(typeof wasmExports['lv_canvas_set_buffer'] != 'undefined', 'missing Wasm export: lv_canvas_set_buffer');
+  assert(typeof wasmExports['lv_canvas_set_palette'] != 'undefined', 'missing Wasm export: lv_canvas_set_palette');
+  assert(typeof wasmExports['lv_canvas_get_img'] != 'undefined', 'missing Wasm export: lv_canvas_get_img');
   assert(typeof wasmExports['lv_qrcode_update'] != 'undefined', 'missing Wasm export: lv_qrcode_update');
+  assert(typeof wasmExports['lv_canvas_fill_bg'] != 'undefined', 'missing Wasm export: lv_canvas_fill_bg');
+  assert(typeof wasmExports['lv_canvas_set_px_color'] != 'undefined', 'missing Wasm export: lv_canvas_set_px_color');
   assert(typeof wasmExports['lv_qrcode_delete'] != 'undefined', 'missing Wasm export: lv_qrcode_delete');
   assert(typeof wasmExports['lv_split_jpeg_init'] != 'undefined', 'missing Wasm export: lv_split_jpeg_init');
   assert(typeof wasmExports['lv_tiny_ttf_create_file_ex'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_file_ex');
@@ -7223,8 +7249,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tiny_ttf_create_data_ex'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_data_ex');
   assert(typeof wasmExports['lv_tiny_ttf_create_data'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_create_data');
   assert(typeof wasmExports['lv_tiny_ttf_destroy'] != 'undefined', 'missing Wasm export: lv_tiny_ttf_destroy');
-  assert(typeof wasmExports['lv_style_register_prop'] != 'undefined', 'missing Wasm export: lv_style_register_prop');
-  assert(typeof wasmExports['lv_area_set_width'] != 'undefined', 'missing Wasm export: lv_area_set_width');
   assert(typeof wasmExports['lv_msg_init'] != 'undefined', 'missing Wasm export: lv_msg_init');
   assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
   assert(typeof wasmExports['lv_fs_tell'] != 'undefined', 'missing Wasm export: lv_fs_tell');
@@ -7338,7 +7362,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_animimg_set_duration'] != 'undefined', 'missing Wasm export: lv_animimg_set_duration');
   assert(typeof wasmExports['lv_animimg_set_repeat_count'] != 'undefined', 'missing Wasm export: lv_animimg_set_repeat_count');
   assert(typeof wasmExports['lv_calendar_set_showed_date'] != 'undefined', 'missing Wasm export: lv_calendar_set_showed_date');
-  assert(typeof wasmExports['lv_calendar_create'] != 'undefined', 'missing Wasm export: lv_calendar_create');
   assert(typeof wasmExports['lv_btnmatrix_create'] != 'undefined', 'missing Wasm export: lv_btnmatrix_create');
   assert(typeof wasmExports['lv_btnmatrix_set_map'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_map');
   assert(typeof wasmExports['lv_btnmatrix_set_btn_ctrl_all'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_btn_ctrl_all');
@@ -7358,12 +7381,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_btnmatrix_get_btn_text'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_btn_text');
   assert(typeof wasmExports['lv_btnmatrix_has_btn_ctrl'] != 'undefined', 'missing Wasm export: lv_btnmatrix_has_btn_ctrl');
   assert(typeof wasmExports['lv_calendar_header_arrow_create'] != 'undefined', 'missing Wasm export: lv_calendar_header_arrow_create');
-  assert(typeof wasmExports['lv_btn_create'] != 'undefined', 'missing Wasm export: lv_btn_create');
-  assert(typeof wasmExports['lv_label_create'] != 'undefined', 'missing Wasm export: lv_label_create');
   assert(typeof wasmExports['lv_label_set_long_mode'] != 'undefined', 'missing Wasm export: lv_label_set_long_mode');
   assert(typeof wasmExports['lv_label_set_text_fmt'] != 'undefined', 'missing Wasm export: lv_label_set_text_fmt');
   assert(typeof wasmExports['lv_calendar_header_dropdown_create'] != 'undefined', 'missing Wasm export: lv_calendar_header_dropdown_create');
-  assert(typeof wasmExports['lv_dropdown_create'] != 'undefined', 'missing Wasm export: lv_dropdown_create');
   assert(typeof wasmExports['lv_dropdown_set_options'] != 'undefined', 'missing Wasm export: lv_dropdown_set_options');
   assert(typeof wasmExports['lv_calendar_header_dropdown_set_year_list'] != 'undefined', 'missing Wasm export: lv_calendar_header_dropdown_set_year_list');
   assert(typeof wasmExports['lv_dropdown_clear_options'] != 'undefined', 'missing Wasm export: lv_dropdown_clear_options');
@@ -7371,7 +7391,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_dropdown_get_options'] != 'undefined', 'missing Wasm export: lv_dropdown_get_options');
   assert(typeof wasmExports['lv_dropdown_set_selected'] != 'undefined', 'missing Wasm export: lv_dropdown_set_selected');
   assert(typeof wasmExports['lv_chart_get_point_pos_by_id'] != 'undefined', 'missing Wasm export: lv_chart_get_point_pos_by_id');
-  assert(typeof wasmExports['lv_chart_create'] != 'undefined', 'missing Wasm export: lv_chart_create');
   assert(typeof wasmExports['lv_chart_set_type'] != 'undefined', 'missing Wasm export: lv_chart_set_type');
   assert(typeof wasmExports['lv_chart_refresh'] != 'undefined', 'missing Wasm export: lv_chart_refresh');
   assert(typeof wasmExports['lv_chart_set_point_count'] != 'undefined', 'missing Wasm export: lv_chart_set_point_count');
@@ -7410,7 +7429,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_colorwheel_set_hsv'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_hsv');
   assert(typeof wasmExports['lv_atan2'] != 'undefined', 'missing Wasm export: lv_atan2');
   assert(typeof wasmExports['lv_color_hsv_to_rgb'] != 'undefined', 'missing Wasm export: lv_color_hsv_to_rgb');
-  assert(typeof wasmExports['lv_colorwheel_create'] != 'undefined', 'missing Wasm export: lv_colorwheel_create');
   assert(typeof wasmExports['lv_colorwheel_set_rgb'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_rgb');
   assert(typeof wasmExports['lv_color_rgb_to_hsv'] != 'undefined', 'missing Wasm export: lv_color_rgb_to_hsv');
   assert(typeof wasmExports['lv_colorwheel_set_mode'] != 'undefined', 'missing Wasm export: lv_colorwheel_set_mode');
@@ -7419,14 +7437,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_colorwheel_get_rgb'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_rgb');
   assert(typeof wasmExports['lv_colorwheel_get_color_mode'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_color_mode');
   assert(typeof wasmExports['lv_colorwheel_get_color_mode_fixed'] != 'undefined', 'missing Wasm export: lv_colorwheel_get_color_mode_fixed');
-  assert(typeof wasmExports['lv_imgbtn_create'] != 'undefined', 'missing Wasm export: lv_imgbtn_create');
   assert(typeof wasmExports['lv_imgbtn_set_src'] != 'undefined', 'missing Wasm export: lv_imgbtn_set_src');
   assert(typeof wasmExports['lv_imgbtn_set_state'] != 'undefined', 'missing Wasm export: lv_imgbtn_set_state');
   assert(typeof wasmExports['lv_imgbtn_get_src_left'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_left');
   assert(typeof wasmExports['lv_imgbtn_get_src_middle'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_middle');
   assert(typeof wasmExports['lv_imgbtn_get_src_right'] != 'undefined', 'missing Wasm export: lv_imgbtn_get_src_right');
   assert(typeof wasmExports['lv_keyboard_def_event_cb'] != 'undefined', 'missing Wasm export: lv_keyboard_def_event_cb');
-  assert(typeof wasmExports['lv_keyboard_create'] != 'undefined', 'missing Wasm export: lv_keyboard_create');
   assert(typeof wasmExports['lv_keyboard_set_textarea'] != 'undefined', 'missing Wasm export: lv_keyboard_set_textarea');
   assert(typeof wasmExports['lv_keyboard_set_mode'] != 'undefined', 'missing Wasm export: lv_keyboard_set_mode');
   assert(typeof wasmExports['lv_keyboard_set_popovers'] != 'undefined', 'missing Wasm export: lv_keyboard_set_popovers');
@@ -7455,7 +7471,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_list_add_text'] != 'undefined', 'missing Wasm export: lv_list_add_text');
   assert(typeof wasmExports['lv_label_set_text'] != 'undefined', 'missing Wasm export: lv_label_set_text');
   assert(typeof wasmExports['lv_list_add_btn'] != 'undefined', 'missing Wasm export: lv_list_add_btn');
-  assert(typeof wasmExports['lv_img_create'] != 'undefined', 'missing Wasm export: lv_img_create');
   assert(typeof wasmExports['lv_img_set_src'] != 'undefined', 'missing Wasm export: lv_img_set_src');
   assert(typeof wasmExports['lv_list_get_btn_text'] != 'undefined', 'missing Wasm export: lv_list_get_btn_text');
   assert(typeof wasmExports['lv_label_get_text'] != 'undefined', 'missing Wasm export: lv_label_get_text');
@@ -7477,7 +7492,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_menu_get_sidebar_header'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header');
   assert(typeof wasmExports['lv_menu_get_sidebar_header_back_btn'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header_back_btn');
   assert(typeof wasmExports['lv_menu_back_btn_is_root'] != 'undefined', 'missing Wasm export: lv_menu_back_btn_is_root');
-  assert(typeof wasmExports['lv_meter_create'] != 'undefined', 'missing Wasm export: lv_meter_create');
   assert(typeof wasmExports['lv_meter_add_scale'] != 'undefined', 'missing Wasm export: lv_meter_add_scale');
   assert(typeof wasmExports['lv_meter_set_scale_ticks'] != 'undefined', 'missing Wasm export: lv_meter_set_scale_ticks');
   assert(typeof wasmExports['lv_meter_set_scale_major_ticks'] != 'undefined', 'missing Wasm export: lv_meter_set_scale_major_ticks');
@@ -7526,7 +7540,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_spinbox_step_prev'] != 'undefined', 'missing Wasm export: lv_spinbox_step_prev');
   assert(typeof wasmExports['lv_spinbox_increment'] != 'undefined', 'missing Wasm export: lv_spinbox_increment');
   assert(typeof wasmExports['lv_spinbox_decrement'] != 'undefined', 'missing Wasm export: lv_spinbox_decrement');
-  assert(typeof wasmExports['lv_spinbox_create'] != 'undefined', 'missing Wasm export: lv_spinbox_create');
   assert(typeof wasmExports['lv_spinbox_set_value'] != 'undefined', 'missing Wasm export: lv_spinbox_set_value');
   assert(typeof wasmExports['lv_textarea_set_text'] != 'undefined', 'missing Wasm export: lv_textarea_set_text');
   assert(typeof wasmExports['lv_spinbox_set_rollover'] != 'undefined', 'missing Wasm export: lv_spinbox_set_rollover');
@@ -7539,7 +7552,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_spinbox_get_step'] != 'undefined', 'missing Wasm export: lv_spinbox_get_step');
   assert(typeof wasmExports['lv_spinbox_step_next'] != 'undefined', 'missing Wasm export: lv_spinbox_step_next');
   assert(typeof wasmExports['lv_spinbox_get_rollover'] != 'undefined', 'missing Wasm export: lv_spinbox_get_rollover');
-  assert(typeof wasmExports['lv_spinner_create'] != 'undefined', 'missing Wasm export: lv_spinner_create');
   assert(typeof wasmExports['lv_anim_path_ease_in_out'] != 'undefined', 'missing Wasm export: lv_anim_path_ease_in_out');
   assert(typeof wasmExports['lv_arc_set_bg_angles'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_angles');
   assert(typeof wasmExports['lv_arc_set_rotation'] != 'undefined', 'missing Wasm export: lv_arc_set_rotation');
@@ -7698,7 +7710,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tlsf_create'] != 'undefined', 'missing Wasm export: lv_tlsf_create');
   assert(typeof wasmExports['lv_tlsf_memalign'] != 'undefined', 'missing Wasm export: lv_tlsf_memalign');
   assert(typeof wasmExports['lv_arc_set_value'] != 'undefined', 'missing Wasm export: lv_arc_set_value');
-  assert(typeof wasmExports['lv_arc_create'] != 'undefined', 'missing Wasm export: lv_arc_create');
   assert(typeof wasmExports['lv_arc_set_angles'] != 'undefined', 'missing Wasm export: lv_arc_set_angles');
   assert(typeof wasmExports['lv_arc_set_bg_start_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_start_angle');
   assert(typeof wasmExports['lv_arc_set_bg_end_angle'] != 'undefined', 'missing Wasm export: lv_arc_set_bg_end_angle');
@@ -7715,31 +7726,24 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_arc_get_mode'] != 'undefined', 'missing Wasm export: lv_arc_get_mode');
   assert(typeof wasmExports['lv_arc_align_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_align_obj_to_angle');
   assert(typeof wasmExports['lv_arc_rotate_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_rotate_obj_to_angle');
-  assert(typeof wasmExports['lv_bar_create'] != 'undefined', 'missing Wasm export: lv_bar_create');
   assert(typeof wasmExports['lv_bar_get_mode'] != 'undefined', 'missing Wasm export: lv_bar_get_mode');
   assert(typeof wasmExports['lv_btnmatrix_clear_btn_ctrl'] != 'undefined', 'missing Wasm export: lv_btnmatrix_clear_btn_ctrl');
   assert(typeof wasmExports['lv_btnmatrix_set_btn_width'] != 'undefined', 'missing Wasm export: lv_btnmatrix_set_btn_width');
   assert(typeof wasmExports['lv_btnmatrix_get_map'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_map');
   assert(typeof wasmExports['lv_btnmatrix_get_one_checked'] != 'undefined', 'missing Wasm export: lv_btnmatrix_get_one_checked');
   assert(typeof wasmExports['lv_canvas_create'] != 'undefined', 'missing Wasm export: lv_canvas_create');
-  assert(typeof wasmExports['lv_canvas_set_buffer'] != 'undefined', 'missing Wasm export: lv_canvas_set_buffer');
-  assert(typeof wasmExports['lv_canvas_set_px_color'] != 'undefined', 'missing Wasm export: lv_canvas_set_px_color');
   assert(typeof wasmExports['lv_canvas_set_px_opa'] != 'undefined', 'missing Wasm export: lv_canvas_set_px_opa');
-  assert(typeof wasmExports['lv_canvas_set_palette'] != 'undefined', 'missing Wasm export: lv_canvas_set_palette');
   assert(typeof wasmExports['lv_canvas_get_px'] != 'undefined', 'missing Wasm export: lv_canvas_get_px');
-  assert(typeof wasmExports['lv_canvas_get_img'] != 'undefined', 'missing Wasm export: lv_canvas_get_img');
   assert(typeof wasmExports['lv_canvas_copy_buf'] != 'undefined', 'missing Wasm export: lv_canvas_copy_buf');
   assert(typeof wasmExports['lv_canvas_transform'] != 'undefined', 'missing Wasm export: lv_canvas_transform');
   assert(typeof wasmExports['lv_canvas_blur_hor'] != 'undefined', 'missing Wasm export: lv_canvas_blur_hor');
   assert(typeof wasmExports['lv_canvas_blur_ver'] != 'undefined', 'missing Wasm export: lv_canvas_blur_ver');
-  assert(typeof wasmExports['lv_canvas_fill_bg'] != 'undefined', 'missing Wasm export: lv_canvas_fill_bg');
   assert(typeof wasmExports['lv_canvas_draw_rect'] != 'undefined', 'missing Wasm export: lv_canvas_draw_rect');
   assert(typeof wasmExports['lv_canvas_draw_text'] != 'undefined', 'missing Wasm export: lv_canvas_draw_text');
   assert(typeof wasmExports['lv_canvas_draw_img'] != 'undefined', 'missing Wasm export: lv_canvas_draw_img');
   assert(typeof wasmExports['lv_canvas_draw_line'] != 'undefined', 'missing Wasm export: lv_canvas_draw_line');
   assert(typeof wasmExports['lv_canvas_draw_polygon'] != 'undefined', 'missing Wasm export: lv_canvas_draw_polygon');
   assert(typeof wasmExports['lv_canvas_draw_arc'] != 'undefined', 'missing Wasm export: lv_canvas_draw_arc');
-  assert(typeof wasmExports['lv_checkbox_create'] != 'undefined', 'missing Wasm export: lv_checkbox_create');
   assert(typeof wasmExports['lv_checkbox_set_text'] != 'undefined', 'missing Wasm export: lv_checkbox_set_text');
   assert(typeof wasmExports['lv_checkbox_set_text_static'] != 'undefined', 'missing Wasm export: lv_checkbox_set_text_static');
   assert(typeof wasmExports['lv_checkbox_get_text'] != 'undefined', 'missing Wasm export: lv_checkbox_get_text');
@@ -7793,15 +7797,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_line_get_y_invert'] != 'undefined', 'missing Wasm export: lv_line_get_y_invert');
   assert(typeof wasmExports['lv_roller_set_options'] != 'undefined', 'missing Wasm export: lv_roller_set_options');
   assert(typeof wasmExports['lv_roller_set_selected'] != 'undefined', 'missing Wasm export: lv_roller_set_selected');
-  assert(typeof wasmExports['lv_roller_create'] != 'undefined', 'missing Wasm export: lv_roller_create');
   assert(typeof wasmExports['lv_roller_set_visible_row_count'] != 'undefined', 'missing Wasm export: lv_roller_set_visible_row_count');
   assert(typeof wasmExports['lv_roller_get_selected'] != 'undefined', 'missing Wasm export: lv_roller_get_selected');
   assert(typeof wasmExports['lv_roller_get_selected_str'] != 'undefined', 'missing Wasm export: lv_roller_get_selected_str');
   assert(typeof wasmExports['lv_roller_get_options'] != 'undefined', 'missing Wasm export: lv_roller_get_options');
   assert(typeof wasmExports['lv_roller_get_option_cnt'] != 'undefined', 'missing Wasm export: lv_roller_get_option_cnt');
-  assert(typeof wasmExports['lv_slider_create'] != 'undefined', 'missing Wasm export: lv_slider_create');
   assert(typeof wasmExports['lv_slider_is_dragged'] != 'undefined', 'missing Wasm export: lv_slider_is_dragged');
-  assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
   assert(typeof wasmExports['lv_table_create'] != 'undefined', 'missing Wasm export: lv_table_create');
   assert(typeof wasmExports['lv_table_set_cell_value'] != 'undefined', 'missing Wasm export: lv_table_set_cell_value');
   assert(typeof wasmExports['lv_table_set_col_cnt'] != 'undefined', 'missing Wasm export: lv_table_set_col_cnt');
@@ -7821,7 +7822,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_textarea_cursor_up'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_up');
   assert(typeof wasmExports['lv_textarea_cursor_down'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_down');
   assert(typeof wasmExports['lv_textarea_del_char_forward'] != 'undefined', 'missing Wasm export: lv_textarea_del_char_forward');
-  assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
   assert(typeof wasmExports['lv_textarea_clear_selection'] != 'undefined', 'missing Wasm export: lv_textarea_clear_selection');
   assert(typeof wasmExports['lv_textarea_get_accepted_chars'] != 'undefined', 'missing Wasm export: lv_textarea_get_accepted_chars');
   assert(typeof wasmExports['lv_textarea_get_max_length'] != 'undefined', 'missing Wasm export: lv_textarea_get_max_length');
@@ -7869,14 +7869,6 @@ function assignWasmExports(wasmExports) {
   _lvglSetKeyboardGroup = Module['_lvglSetKeyboardGroup'] = createExportWrapper('lvglSetKeyboardGroup', 1);
   _init = Module['_init'] = createExportWrapper('init', 9);
   _lv_init = Module['_lv_init'] = createExportWrapper('lv_init', 0);
-  _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);
-  _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = createExportWrapper('lv_disp_draw_buf_init', 4);
-  _lv_disp_drv_init = Module['_lv_disp_drv_init'] = createExportWrapper('lv_disp_drv_init', 1);
-  _lv_disp_drv_register = Module['_lv_disp_drv_register'] = createExportWrapper('lv_disp_drv_register', 1);
-  _lv_indev_drv_init = Module['_lv_indev_drv_init'] = createExportWrapper('lv_indev_drv_init', 1);
-  _lv_indev_drv_register = Module['_lv_indev_drv_register'] = createExportWrapper('lv_indev_drv_register', 1);
-  _lv_fs_drv_init = Module['_lv_fs_drv_init'] = createExportWrapper('lv_fs_drv_init', 1);
-  _lv_fs_drv_register = Module['_lv_fs_drv_register'] = createExportWrapper('lv_fs_drv_register', 1);
   _lv_disp_get_default = Module['_lv_disp_get_default'] = createExportWrapper('lv_disp_get_default', 0);
   _lv_palette_main = Module['_lv_palette_main'] = createExportWrapper('lv_palette_main', 2);
   _lv_theme_default_init = Module['_lv_theme_default_init'] = createExportWrapper('lv_theme_default_init', 5);
@@ -7888,6 +7880,38 @@ function assignWasmExports(wasmExports) {
   _onPointerEvent = Module['_onPointerEvent'] = createExportWrapper('onPointerEvent', 3);
   _onMouseWheelEvent = Module['_onMouseWheelEvent'] = createExportWrapper('onMouseWheelEvent', 2);
   _onKeyPressed = Module['_onKeyPressed'] = createExportWrapper('onKeyPressed', 1);
+  _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create', 3);
+  _lv_colorwheel_create = Module['_lv_colorwheel_create'] = createExportWrapper('lv_colorwheel_create', 2);
+  _lv_qrcode_create = Module['_lv_qrcode_create'] = createExportWrapper('lv_qrcode_create', 4);
+  _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag', 2);
+  _lv_obj_del = Module['_lv_obj_del'] = createExportWrapper('lv_obj_del', 1);
+  _getStudioSymbols = Module['_getStudioSymbols'] = createExportWrapper('getStudioSymbols', 0);
+  _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);
+  _lv_disp_draw_buf_init = Module['_lv_disp_draw_buf_init'] = createExportWrapper('lv_disp_draw_buf_init', 4);
+  _lv_disp_drv_init = Module['_lv_disp_drv_init'] = createExportWrapper('lv_disp_drv_init', 1);
+  _lv_disp_drv_register = Module['_lv_disp_drv_register'] = createExportWrapper('lv_disp_drv_register', 1);
+  _lv_indev_drv_init = Module['_lv_indev_drv_init'] = createExportWrapper('lv_indev_drv_init', 1);
+  _lv_indev_drv_register = Module['_lv_indev_drv_register'] = createExportWrapper('lv_indev_drv_register', 1);
+  _lv_fs_drv_init = Module['_lv_fs_drv_init'] = createExportWrapper('lv_fs_drv_init', 1);
+  _lv_fs_drv_register = Module['_lv_fs_drv_register'] = createExportWrapper('lv_fs_drv_register', 1);
+  _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create', 1);
+  _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create', 1);
+  _lv_btn_create = Module['_lv_btn_create'] = createExportWrapper('lv_btn_create', 1);
+  _lv_img_create = Module['_lv_img_create'] = createExportWrapper('lv_img_create', 1);
+  _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create', 1);
+  _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create', 1);
+  _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
+  _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create', 1);
+  _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create', 1);
+  _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create', 1);
+  _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create', 1);
+  _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
+  _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create', 1);
+  _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create', 1);
+  _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create', 1);
+  _lv_imgbtn_create = Module['_lv_imgbtn_create'] = createExportWrapper('lv_imgbtn_create', 1);
+  _lv_meter_create = Module['_lv_meter_create'] = createExportWrapper('lv_meter_create', 1);
+  _lv_spinbox_create = Module['_lv_spinbox_create'] = createExportWrapper('lv_spinbox_create', 1);
   _lv_obj_get_style_prop = Module['_lv_obj_get_style_prop'] = createExportWrapper('lv_obj_get_style_prop', 4);
   _lv_obj_set_local_style_prop = Module['_lv_obj_set_local_style_prop'] = createExportWrapper('lv_obj_set_local_style_prop', 4);
   _lv_event_get_code = Module['_lv_event_get_code'] = createExportWrapper('lv_event_get_code', 1);
@@ -7899,7 +7923,6 @@ function assignWasmExports(wasmExports) {
   __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   _lv_obj_add_state = Module['_lv_obj_add_state'] = createExportWrapper('lv_obj_add_state', 2);
   _lv_obj_clear_state = Module['_lv_obj_clear_state'] = createExportWrapper('lv_obj_clear_state', 2);
-  _lv_obj_has_flag = Module['_lv_obj_has_flag'] = createExportWrapper('lv_obj_has_flag', 2);
   _lv_obj_add_flag = Module['_lv_obj_add_flag'] = createExportWrapper('lv_obj_add_flag', 2);
   _lv_obj_clear_flag = Module['_lv_obj_clear_flag'] = createExportWrapper('lv_obj_clear_flag', 2);
   _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
@@ -7919,7 +7942,6 @@ function assignWasmExports(wasmExports) {
   _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 2);
   _lv_event_get_user_data = Module['_lv_event_get_user_data'] = createExportWrapper('lv_event_get_user_data', 1);
   _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
-  _lv_obj_create = Module['_lv_obj_create'] = createExportWrapper('lv_obj_create', 1);
   _lv_obj_set_pos = Module['_lv_obj_set_pos'] = createExportWrapper('lv_obj_set_pos', 3);
   _lv_obj_set_size = Module['_lv_obj_set_size'] = createExportWrapper('lv_obj_set_size', 3);
   _lv_obj_update_layout = Module['_lv_obj_update_layout'] = createExportWrapper('lv_obj_update_layout', 1);
@@ -7927,7 +7949,6 @@ function assignWasmExports(wasmExports) {
   _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad', 2);
   _lv_scr_load_anim = Module['_lv_scr_load_anim'] = createExportWrapper('lv_scr_load_anim', 5);
   _lvglDeleteObject = Module['_lvglDeleteObject'] = createExportWrapper('lvglDeleteObject', 1);
-  _lv_obj_del = Module['_lv_obj_del'] = createExportWrapper('lv_obj_del', 1);
   _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = createExportWrapper('lv_disp_get_scr_act', 1);
   _lv_disp_load_scr = Module['_lv_disp_load_scr'] = createExportWrapper('lv_disp_load_scr', 1);
   _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = createExportWrapper('lvglDeleteObjectIndex', 1);
@@ -8438,6 +8459,7 @@ function assignWasmExports(wasmExports) {
   _lv_draw_sw_bg = Module['_lv_draw_sw_bg'] = createExportWrapper('lv_draw_sw_bg', 3);
   _lv_draw_sw_transform = Module['_lv_draw_sw_transform'] = createExportWrapper('lv_draw_sw_transform', 10);
   _lv_flex_init = Module['_lv_flex_init'] = createExportWrapper('lv_flex_init', 0);
+  _lv_style_register_prop = Module['_lv_style_register_prop'] = createExportWrapper('lv_style_register_prop', 1);
   _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = createExportWrapper('lv_obj_set_flex_flow', 2);
   _lv_obj_set_style_flex_flow = Module['_lv_obj_set_style_flex_flow'] = createExportWrapper('lv_obj_set_style_flex_flow', 3);
   _lv_obj_set_flex_align = Module['_lv_obj_set_flex_align'] = createExportWrapper('lv_obj_set_flex_align', 4);
@@ -8451,6 +8473,7 @@ function assignWasmExports(wasmExports) {
   _lv_style_set_flex_cross_place = Module['_lv_style_set_flex_cross_place'] = createExportWrapper('lv_style_set_flex_cross_place', 2);
   _lv_style_set_flex_track_place = Module['_lv_style_set_flex_track_place'] = createExportWrapper('lv_style_set_flex_track_place', 2);
   _lv_style_set_flex_grow = Module['_lv_style_set_flex_grow'] = createExportWrapper('lv_style_set_flex_grow', 2);
+  _lv_area_set_width = Module['_lv_area_set_width'] = createExportWrapper('lv_area_set_width', 2);
   _lv_grid_init = Module['_lv_grid_init'] = createExportWrapper('lv_grid_init', 0);
   _lv_obj_set_grid_dsc_array = Module['_lv_obj_set_grid_dsc_array'] = createExportWrapper('lv_obj_set_grid_dsc_array', 3);
   _lv_obj_set_style_grid_column_dsc_array = Module['_lv_obj_set_style_grid_column_dsc_array'] = createExportWrapper('lv_obj_set_style_grid_column_dsc_array', 3);
@@ -8481,8 +8504,12 @@ function assignWasmExports(wasmExports) {
   _lv_gif_set_src = Module['_lv_gif_set_src'] = createExportWrapper('lv_gif_set_src', 2);
   _lv_gif_restart = Module['_lv_gif_restart'] = createExportWrapper('lv_gif_restart', 1);
   _lv_png_init = Module['_lv_png_init'] = createExportWrapper('lv_png_init', 0);
-  _lv_qrcode_create = Module['_lv_qrcode_create'] = createExportWrapper('lv_qrcode_create', 4);
+  _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = createExportWrapper('lv_canvas_set_buffer', 5);
+  _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = createExportWrapper('lv_canvas_set_palette', 3);
+  _lv_canvas_get_img = Module['_lv_canvas_get_img'] = createExportWrapper('lv_canvas_get_img', 1);
   _lv_qrcode_update = Module['_lv_qrcode_update'] = createExportWrapper('lv_qrcode_update', 3);
+  _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = createExportWrapper('lv_canvas_fill_bg', 3);
+  _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = createExportWrapper('lv_canvas_set_px_color', 4);
   _lv_qrcode_delete = Module['_lv_qrcode_delete'] = createExportWrapper('lv_qrcode_delete', 1);
   _lv_split_jpeg_init = Module['_lv_split_jpeg_init'] = createExportWrapper('lv_split_jpeg_init', 0);
   _lv_tiny_ttf_create_file_ex = Module['_lv_tiny_ttf_create_file_ex'] = createExportWrapper('lv_tiny_ttf_create_file_ex', 3);
@@ -8491,8 +8518,6 @@ function assignWasmExports(wasmExports) {
   _lv_tiny_ttf_create_data_ex = Module['_lv_tiny_ttf_create_data_ex'] = createExportWrapper('lv_tiny_ttf_create_data_ex', 4);
   _lv_tiny_ttf_create_data = Module['_lv_tiny_ttf_create_data'] = createExportWrapper('lv_tiny_ttf_create_data', 3);
   _lv_tiny_ttf_destroy = Module['_lv_tiny_ttf_destroy'] = createExportWrapper('lv_tiny_ttf_destroy', 1);
-  _lv_style_register_prop = Module['_lv_style_register_prop'] = createExportWrapper('lv_style_register_prop', 1);
-  _lv_area_set_width = Module['_lv_area_set_width'] = createExportWrapper('lv_area_set_width', 2);
   _lv_msg_init = Module['_lv_msg_init'] = createExportWrapper('lv_msg_init', 0);
   _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
   _lv_fs_tell = Module['_lv_fs_tell'] = createExportWrapper('lv_fs_tell', 2);
@@ -8606,7 +8631,6 @@ function assignWasmExports(wasmExports) {
   _lv_animimg_set_duration = Module['_lv_animimg_set_duration'] = createExportWrapper('lv_animimg_set_duration', 2);
   _lv_animimg_set_repeat_count = Module['_lv_animimg_set_repeat_count'] = createExportWrapper('lv_animimg_set_repeat_count', 2);
   _lv_calendar_set_showed_date = Module['_lv_calendar_set_showed_date'] = createExportWrapper('lv_calendar_set_showed_date', 3);
-  _lv_calendar_create = Module['_lv_calendar_create'] = createExportWrapper('lv_calendar_create', 1);
   _lv_btnmatrix_create = Module['_lv_btnmatrix_create'] = createExportWrapper('lv_btnmatrix_create', 1);
   _lv_btnmatrix_set_map = Module['_lv_btnmatrix_set_map'] = createExportWrapper('lv_btnmatrix_set_map', 2);
   _lv_btnmatrix_set_btn_ctrl_all = Module['_lv_btnmatrix_set_btn_ctrl_all'] = createExportWrapper('lv_btnmatrix_set_btn_ctrl_all', 2);
@@ -8626,12 +8650,9 @@ function assignWasmExports(wasmExports) {
   _lv_btnmatrix_get_btn_text = Module['_lv_btnmatrix_get_btn_text'] = createExportWrapper('lv_btnmatrix_get_btn_text', 2);
   _lv_btnmatrix_has_btn_ctrl = Module['_lv_btnmatrix_has_btn_ctrl'] = createExportWrapper('lv_btnmatrix_has_btn_ctrl', 3);
   _lv_calendar_header_arrow_create = Module['_lv_calendar_header_arrow_create'] = createExportWrapper('lv_calendar_header_arrow_create', 1);
-  _lv_btn_create = Module['_lv_btn_create'] = createExportWrapper('lv_btn_create', 1);
-  _lv_label_create = Module['_lv_label_create'] = createExportWrapper('lv_label_create', 1);
   _lv_label_set_long_mode = Module['_lv_label_set_long_mode'] = createExportWrapper('lv_label_set_long_mode', 2);
   _lv_label_set_text_fmt = Module['_lv_label_set_text_fmt'] = createExportWrapper('lv_label_set_text_fmt', 3);
   _lv_calendar_header_dropdown_create = Module['_lv_calendar_header_dropdown_create'] = createExportWrapper('lv_calendar_header_dropdown_create', 1);
-  _lv_dropdown_create = Module['_lv_dropdown_create'] = createExportWrapper('lv_dropdown_create', 1);
   _lv_dropdown_set_options = Module['_lv_dropdown_set_options'] = createExportWrapper('lv_dropdown_set_options', 2);
   _lv_calendar_header_dropdown_set_year_list = Module['_lv_calendar_header_dropdown_set_year_list'] = createExportWrapper('lv_calendar_header_dropdown_set_year_list', 2);
   _lv_dropdown_clear_options = Module['_lv_dropdown_clear_options'] = createExportWrapper('lv_dropdown_clear_options', 1);
@@ -8639,7 +8660,6 @@ function assignWasmExports(wasmExports) {
   _lv_dropdown_get_options = Module['_lv_dropdown_get_options'] = createExportWrapper('lv_dropdown_get_options', 1);
   _lv_dropdown_set_selected = Module['_lv_dropdown_set_selected'] = createExportWrapper('lv_dropdown_set_selected', 2);
   _lv_chart_get_point_pos_by_id = Module['_lv_chart_get_point_pos_by_id'] = createExportWrapper('lv_chart_get_point_pos_by_id', 4);
-  _lv_chart_create = Module['_lv_chart_create'] = createExportWrapper('lv_chart_create', 1);
   _lv_chart_set_type = Module['_lv_chart_set_type'] = createExportWrapper('lv_chart_set_type', 2);
   _lv_chart_refresh = Module['_lv_chart_refresh'] = createExportWrapper('lv_chart_refresh', 1);
   _lv_chart_set_point_count = Module['_lv_chart_set_point_count'] = createExportWrapper('lv_chart_set_point_count', 2);
@@ -8678,7 +8698,6 @@ function assignWasmExports(wasmExports) {
   _lv_colorwheel_set_hsv = Module['_lv_colorwheel_set_hsv'] = createExportWrapper('lv_colorwheel_set_hsv', 2);
   _lv_atan2 = Module['_lv_atan2'] = createExportWrapper('lv_atan2', 2);
   _lv_color_hsv_to_rgb = Module['_lv_color_hsv_to_rgb'] = createExportWrapper('lv_color_hsv_to_rgb', 4);
-  _lv_colorwheel_create = Module['_lv_colorwheel_create'] = createExportWrapper('lv_colorwheel_create', 2);
   _lv_colorwheel_set_rgb = Module['_lv_colorwheel_set_rgb'] = createExportWrapper('lv_colorwheel_set_rgb', 2);
   _lv_color_rgb_to_hsv = Module['_lv_color_rgb_to_hsv'] = createExportWrapper('lv_color_rgb_to_hsv', 4);
   _lv_colorwheel_set_mode = Module['_lv_colorwheel_set_mode'] = createExportWrapper('lv_colorwheel_set_mode', 2);
@@ -8687,14 +8706,12 @@ function assignWasmExports(wasmExports) {
   _lv_colorwheel_get_rgb = Module['_lv_colorwheel_get_rgb'] = createExportWrapper('lv_colorwheel_get_rgb', 2);
   _lv_colorwheel_get_color_mode = Module['_lv_colorwheel_get_color_mode'] = createExportWrapper('lv_colorwheel_get_color_mode', 1);
   _lv_colorwheel_get_color_mode_fixed = Module['_lv_colorwheel_get_color_mode_fixed'] = createExportWrapper('lv_colorwheel_get_color_mode_fixed', 1);
-  _lv_imgbtn_create = Module['_lv_imgbtn_create'] = createExportWrapper('lv_imgbtn_create', 1);
   _lv_imgbtn_set_src = Module['_lv_imgbtn_set_src'] = createExportWrapper('lv_imgbtn_set_src', 5);
   _lv_imgbtn_set_state = Module['_lv_imgbtn_set_state'] = createExportWrapper('lv_imgbtn_set_state', 2);
   _lv_imgbtn_get_src_left = Module['_lv_imgbtn_get_src_left'] = createExportWrapper('lv_imgbtn_get_src_left', 2);
   _lv_imgbtn_get_src_middle = Module['_lv_imgbtn_get_src_middle'] = createExportWrapper('lv_imgbtn_get_src_middle', 2);
   _lv_imgbtn_get_src_right = Module['_lv_imgbtn_get_src_right'] = createExportWrapper('lv_imgbtn_get_src_right', 2);
   _lv_keyboard_def_event_cb = Module['_lv_keyboard_def_event_cb'] = createExportWrapper('lv_keyboard_def_event_cb', 1);
-  _lv_keyboard_create = Module['_lv_keyboard_create'] = createExportWrapper('lv_keyboard_create', 1);
   _lv_keyboard_set_textarea = Module['_lv_keyboard_set_textarea'] = createExportWrapper('lv_keyboard_set_textarea', 2);
   _lv_keyboard_set_mode = Module['_lv_keyboard_set_mode'] = createExportWrapper('lv_keyboard_set_mode', 2);
   _lv_keyboard_set_popovers = Module['_lv_keyboard_set_popovers'] = createExportWrapper('lv_keyboard_set_popovers', 2);
@@ -8723,7 +8740,6 @@ function assignWasmExports(wasmExports) {
   _lv_list_add_text = Module['_lv_list_add_text'] = createExportWrapper('lv_list_add_text', 2);
   _lv_label_set_text = Module['_lv_label_set_text'] = createExportWrapper('lv_label_set_text', 2);
   _lv_list_add_btn = Module['_lv_list_add_btn'] = createExportWrapper('lv_list_add_btn', 3);
-  _lv_img_create = Module['_lv_img_create'] = createExportWrapper('lv_img_create', 1);
   _lv_img_set_src = Module['_lv_img_set_src'] = createExportWrapper('lv_img_set_src', 2);
   _lv_list_get_btn_text = Module['_lv_list_get_btn_text'] = createExportWrapper('lv_list_get_btn_text', 2);
   _lv_label_get_text = Module['_lv_label_get_text'] = createExportWrapper('lv_label_get_text', 1);
@@ -8745,7 +8761,6 @@ function assignWasmExports(wasmExports) {
   _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = createExportWrapper('lv_menu_get_sidebar_header', 1);
   _lv_menu_get_sidebar_header_back_btn = Module['_lv_menu_get_sidebar_header_back_btn'] = createExportWrapper('lv_menu_get_sidebar_header_back_btn', 1);
   _lv_menu_back_btn_is_root = Module['_lv_menu_back_btn_is_root'] = createExportWrapper('lv_menu_back_btn_is_root', 2);
-  _lv_meter_create = Module['_lv_meter_create'] = createExportWrapper('lv_meter_create', 1);
   _lv_meter_add_scale = Module['_lv_meter_add_scale'] = createExportWrapper('lv_meter_add_scale', 1);
   _lv_meter_set_scale_ticks = Module['_lv_meter_set_scale_ticks'] = createExportWrapper('lv_meter_set_scale_ticks', 6);
   _lv_meter_set_scale_major_ticks = Module['_lv_meter_set_scale_major_ticks'] = createExportWrapper('lv_meter_set_scale_major_ticks', 7);
@@ -8794,7 +8809,6 @@ function assignWasmExports(wasmExports) {
   _lv_spinbox_step_prev = Module['_lv_spinbox_step_prev'] = createExportWrapper('lv_spinbox_step_prev', 1);
   _lv_spinbox_increment = Module['_lv_spinbox_increment'] = createExportWrapper('lv_spinbox_increment', 1);
   _lv_spinbox_decrement = Module['_lv_spinbox_decrement'] = createExportWrapper('lv_spinbox_decrement', 1);
-  _lv_spinbox_create = Module['_lv_spinbox_create'] = createExportWrapper('lv_spinbox_create', 1);
   _lv_spinbox_set_value = Module['_lv_spinbox_set_value'] = createExportWrapper('lv_spinbox_set_value', 2);
   _lv_textarea_set_text = Module['_lv_textarea_set_text'] = createExportWrapper('lv_textarea_set_text', 2);
   _lv_spinbox_set_rollover = Module['_lv_spinbox_set_rollover'] = createExportWrapper('lv_spinbox_set_rollover', 2);
@@ -8807,7 +8821,6 @@ function assignWasmExports(wasmExports) {
   _lv_spinbox_get_step = Module['_lv_spinbox_get_step'] = createExportWrapper('lv_spinbox_get_step', 1);
   _lv_spinbox_step_next = Module['_lv_spinbox_step_next'] = createExportWrapper('lv_spinbox_step_next', 1);
   _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = createExportWrapper('lv_spinbox_get_rollover', 1);
-  _lv_spinner_create = Module['_lv_spinner_create'] = createExportWrapper('lv_spinner_create', 3);
   _lv_anim_path_ease_in_out = Module['_lv_anim_path_ease_in_out'] = createExportWrapper('lv_anim_path_ease_in_out', 1);
   _lv_arc_set_bg_angles = Module['_lv_arc_set_bg_angles'] = createExportWrapper('lv_arc_set_bg_angles', 3);
   _lv_arc_set_rotation = Module['_lv_arc_set_rotation'] = createExportWrapper('lv_arc_set_rotation', 2);
@@ -8966,7 +8979,6 @@ function assignWasmExports(wasmExports) {
   _lv_tlsf_create = Module['_lv_tlsf_create'] = createExportWrapper('lv_tlsf_create', 1);
   _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = createExportWrapper('lv_tlsf_memalign', 3);
   _lv_arc_set_value = Module['_lv_arc_set_value'] = createExportWrapper('lv_arc_set_value', 2);
-  _lv_arc_create = Module['_lv_arc_create'] = createExportWrapper('lv_arc_create', 1);
   _lv_arc_set_angles = Module['_lv_arc_set_angles'] = createExportWrapper('lv_arc_set_angles', 3);
   _lv_arc_set_bg_start_angle = Module['_lv_arc_set_bg_start_angle'] = createExportWrapper('lv_arc_set_bg_start_angle', 2);
   _lv_arc_set_bg_end_angle = Module['_lv_arc_set_bg_end_angle'] = createExportWrapper('lv_arc_set_bg_end_angle', 2);
@@ -8983,31 +8995,24 @@ function assignWasmExports(wasmExports) {
   _lv_arc_get_mode = Module['_lv_arc_get_mode'] = createExportWrapper('lv_arc_get_mode', 1);
   _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createExportWrapper('lv_arc_align_obj_to_angle', 3);
   _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle', 3);
-  _lv_bar_create = Module['_lv_bar_create'] = createExportWrapper('lv_bar_create', 1);
   _lv_bar_get_mode = Module['_lv_bar_get_mode'] = createExportWrapper('lv_bar_get_mode', 1);
   _lv_btnmatrix_clear_btn_ctrl = Module['_lv_btnmatrix_clear_btn_ctrl'] = createExportWrapper('lv_btnmatrix_clear_btn_ctrl', 3);
   _lv_btnmatrix_set_btn_width = Module['_lv_btnmatrix_set_btn_width'] = createExportWrapper('lv_btnmatrix_set_btn_width', 3);
   _lv_btnmatrix_get_map = Module['_lv_btnmatrix_get_map'] = createExportWrapper('lv_btnmatrix_get_map', 1);
   _lv_btnmatrix_get_one_checked = Module['_lv_btnmatrix_get_one_checked'] = createExportWrapper('lv_btnmatrix_get_one_checked', 1);
   _lv_canvas_create = Module['_lv_canvas_create'] = createExportWrapper('lv_canvas_create', 1);
-  _lv_canvas_set_buffer = Module['_lv_canvas_set_buffer'] = createExportWrapper('lv_canvas_set_buffer', 5);
-  _lv_canvas_set_px_color = Module['_lv_canvas_set_px_color'] = createExportWrapper('lv_canvas_set_px_color', 4);
   _lv_canvas_set_px_opa = Module['_lv_canvas_set_px_opa'] = createExportWrapper('lv_canvas_set_px_opa', 4);
-  _lv_canvas_set_palette = Module['_lv_canvas_set_palette'] = createExportWrapper('lv_canvas_set_palette', 3);
   _lv_canvas_get_px = Module['_lv_canvas_get_px'] = createExportWrapper('lv_canvas_get_px', 4);
-  _lv_canvas_get_img = Module['_lv_canvas_get_img'] = createExportWrapper('lv_canvas_get_img', 1);
   _lv_canvas_copy_buf = Module['_lv_canvas_copy_buf'] = createExportWrapper('lv_canvas_copy_buf', 6);
   _lv_canvas_transform = Module['_lv_canvas_transform'] = createExportWrapper('lv_canvas_transform', 9);
   _lv_canvas_blur_hor = Module['_lv_canvas_blur_hor'] = createExportWrapper('lv_canvas_blur_hor', 3);
   _lv_canvas_blur_ver = Module['_lv_canvas_blur_ver'] = createExportWrapper('lv_canvas_blur_ver', 3);
-  _lv_canvas_fill_bg = Module['_lv_canvas_fill_bg'] = createExportWrapper('lv_canvas_fill_bg', 3);
   _lv_canvas_draw_rect = Module['_lv_canvas_draw_rect'] = createExportWrapper('lv_canvas_draw_rect', 6);
   _lv_canvas_draw_text = Module['_lv_canvas_draw_text'] = createExportWrapper('lv_canvas_draw_text', 6);
   _lv_canvas_draw_img = Module['_lv_canvas_draw_img'] = createExportWrapper('lv_canvas_draw_img', 5);
   _lv_canvas_draw_line = Module['_lv_canvas_draw_line'] = createExportWrapper('lv_canvas_draw_line', 4);
   _lv_canvas_draw_polygon = Module['_lv_canvas_draw_polygon'] = createExportWrapper('lv_canvas_draw_polygon', 4);
   _lv_canvas_draw_arc = Module['_lv_canvas_draw_arc'] = createExportWrapper('lv_canvas_draw_arc', 7);
-  _lv_checkbox_create = Module['_lv_checkbox_create'] = createExportWrapper('lv_checkbox_create', 1);
   _lv_checkbox_set_text = Module['_lv_checkbox_set_text'] = createExportWrapper('lv_checkbox_set_text', 2);
   _lv_checkbox_set_text_static = Module['_lv_checkbox_set_text_static'] = createExportWrapper('lv_checkbox_set_text_static', 2);
   _lv_checkbox_get_text = Module['_lv_checkbox_get_text'] = createExportWrapper('lv_checkbox_get_text', 1);
@@ -9061,15 +9066,12 @@ function assignWasmExports(wasmExports) {
   _lv_line_get_y_invert = Module['_lv_line_get_y_invert'] = createExportWrapper('lv_line_get_y_invert', 1);
   _lv_roller_set_options = Module['_lv_roller_set_options'] = createExportWrapper('lv_roller_set_options', 3);
   _lv_roller_set_selected = Module['_lv_roller_set_selected'] = createExportWrapper('lv_roller_set_selected', 3);
-  _lv_roller_create = Module['_lv_roller_create'] = createExportWrapper('lv_roller_create', 1);
   _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'] = createExportWrapper('lv_roller_set_visible_row_count', 2);
   _lv_roller_get_selected = Module['_lv_roller_get_selected'] = createExportWrapper('lv_roller_get_selected', 1);
   _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = createExportWrapper('lv_roller_get_selected_str', 3);
   _lv_roller_get_options = Module['_lv_roller_get_options'] = createExportWrapper('lv_roller_get_options', 1);
   _lv_roller_get_option_cnt = Module['_lv_roller_get_option_cnt'] = createExportWrapper('lv_roller_get_option_cnt', 1);
-  _lv_slider_create = Module['_lv_slider_create'] = createExportWrapper('lv_slider_create', 1);
   _lv_slider_is_dragged = Module['_lv_slider_is_dragged'] = createExportWrapper('lv_slider_is_dragged', 1);
-  _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
   _lv_table_create = Module['_lv_table_create'] = createExportWrapper('lv_table_create', 1);
   _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = createExportWrapper('lv_table_set_cell_value', 4);
   _lv_table_set_col_cnt = Module['_lv_table_set_col_cnt'] = createExportWrapper('lv_table_set_col_cnt', 2);
@@ -9089,7 +9091,6 @@ function assignWasmExports(wasmExports) {
   _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = createExportWrapper('lv_textarea_cursor_up', 1);
   _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = createExportWrapper('lv_textarea_cursor_down', 1);
   _lv_textarea_del_char_forward = Module['_lv_textarea_del_char_forward'] = createExportWrapper('lv_textarea_del_char_forward', 1);
-  _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
   _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = createExportWrapper('lv_textarea_clear_selection', 1);
   _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = createExportWrapper('lv_textarea_get_accepted_chars', 1);
   _lv_textarea_get_max_length = Module['_lv_textarea_get_max_length'] = createExportWrapper('lv_textarea_get_max_length', 1);
@@ -9279,7 +9280,7 @@ run();
 
 // end include: postamble.js
 
-// include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/post.js
+// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/post.js
 }
-// end include: /mnt/c/Work/eez/studio/wasm/lvgl-runtime/v8.3/../common/post.js
+// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/post.js
 

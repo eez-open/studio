@@ -203,7 +203,7 @@ export class Bitmap extends EezObject {
 
                     const project = ProjectEditor.getProject(bitmap);
 
-                    if (project.settings.general.lvglVersion == "9.0") {
+                    if (project.settings.general.lvglVersion.startsWith("9.")) {
                         return true;
                     }
 
@@ -222,7 +222,7 @@ export class Bitmap extends EezObject {
 
                     const project = ProjectEditor.getProject(bitmap);
 
-                    if (project.settings.general.lvglVersion == "9.0") {
+                    if (project.settings.general.lvglVersion.startsWith("9.")) {
                         return true;
                     }
 

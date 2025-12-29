@@ -1233,7 +1233,7 @@ export class LVGLMeterWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
             projectType === ProjectType.LVGL &&
             (!projectStore ||
-                projectStore.project.settings.general.lvglVersion == "8.3"),
+                projectStore.project.settings.general.lvglVersion.startsWith("8.")),
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -1337,7 +1337,7 @@ export class LVGLMeterWidget extends LVGLWidget {
         },
 
         check: (widget, messages) =>
-            checkWidgetTypeLvglVersion(widget, messages, "8.3")
+            checkWidgetTypeLvglVersion(widget, messages, "8.")
     });
 
     override makeEditable() {

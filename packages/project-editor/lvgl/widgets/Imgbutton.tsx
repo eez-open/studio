@@ -104,7 +104,7 @@ export class LVGLImgbuttonWidget extends LVGLWidget {
         ),
 
         check: (widget: LVGLImgbuttonWidget, messages: IMessage[]) => {
-            // checkWidgetTypeLvglVersion(widget, messages, "8.3");
+            // checkWidgetTypeLvglVersion(widget, messages, "8.");
 
             if (widget.imageReleased) {
                 const bitmap = findBitmap(

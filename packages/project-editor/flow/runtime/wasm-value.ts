@@ -258,7 +258,7 @@ export function createWasmValue(
     }
 
     if (typeof value == "string") {
-        const stringPtr = WasmFlowRuntime.allocateUTF8(value);
+        const stringPtr = WasmFlowRuntime.stringToNewUTF8(value);
         const valuePtr = WasmFlowRuntime._createStringValue(stringPtr);
         WasmFlowRuntime._free(stringPtr);
         return valuePtr;

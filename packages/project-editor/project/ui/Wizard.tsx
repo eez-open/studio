@@ -50,6 +50,7 @@ import {
 } from "project-editor/store/examples-catalog";
 
 import {
+    LVGLVersion,
     PROJECT_TYPE_NAMES,
     ProjectType
 } from "project-editor/project/project";
@@ -118,7 +119,7 @@ interface IProjectType {
     resourceFiles?: string[];
     projectFileUrl?:
         | string
-        | { "8.3": string; "9.0": string }
+        | { "8.4.0": string; "9.2.2": string; "9.3.0": string; "9.4.0": string; }
         | { SCPI: string; PROPRIETARY: string };
 
     author?: string;
@@ -221,7 +222,7 @@ class WizardModel {
         commandsProtocol: string;
     };
 
-    lvglVersion: "8.3" | "9.0" = "8.3";
+    lvglVersion: LVGLVersion = "8.4.0";
 
     commandsProtocol: CommandsProtocolType;
 
@@ -299,7 +300,7 @@ class WizardModel {
                     this.projectVersion = options.projectVersion;
                     this.gitClone = options.gitClone;
                     this.gitInit = options.gitInit;
-                    this.lvglVersion = options.lvglVersion ?? "8.3";
+                    this.lvglVersion = options.lvglVersion ?? "8.4.0";
                     this.commandsProtocol = options.commandsProtocol ?? "SCPI";
                 }
             } catch (err) {
@@ -727,8 +728,10 @@ class WizardModel {
                 projectName: "LVGL",
                 description: "Start your new LVGL project development here.",
                 projectFileUrl: {
-                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-8.3.eez-project",
-                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-9.0.eez-project"
+                    "8.4.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-8.3.eez-project",
+                    "9.2.2": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-9.0.eez-project",
+                    "9.3.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-9.0.eez-project",
+                    "9.4.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL-9.0.eez-project"
                 }
             },
             {
@@ -739,8 +742,10 @@ class WizardModel {
                 description:
                     "Start your new LVGL with EEZ Flow project development here.",
                 projectFileUrl: {
-                    "8.3": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-8.3.eez-project",
-                    "9.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project"
+                    "8.4.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-8.3.eez-project",
+                    "9.2.2": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project",
+                    "9.3.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project",
+                    "9.4.0": "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/v0.23.0/LVGL%20with%20EEZ%20Flow-9.0.eez-project"
                 }
             },
             {
@@ -2197,15 +2202,18 @@ const ProjectProperties = observer(
                                             onChange={action(
                                                 event =>
                                                     (wizardModel.lvglVersion =
-                                                        event.target.value ==
-                                                        "9.0"
-                                                            ? "9.0"
-                                                            : "8.3")
+                                                        event.target.value == "9.2.2" ||
+                                                        event.target.value == "9.3.0" || 
+                                                        event.target.value == "9.4.0"
+                                                            ? event.target.value
+                                                            : "8.4.0")
                                             )}
                                             value={wizardModel.lvglVersion}
                                         >
-                                            <option value="8.3">8.x</option>
-                                            <option value="9.0">9.x</option>
+                                            <option value="8.4.0">8.4.0</option>
+                                            <option value="9.2.2">9.2.2</option>
+                                            <option value="9.3.0">9.3.0</option>
+                                            <option value="9.4.0">9.4.0</option>
                                         </select>
                                     </div>
                                 )}

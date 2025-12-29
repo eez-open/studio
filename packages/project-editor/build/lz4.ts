@@ -16,7 +16,7 @@ export async function compress(buffer: Buffer, compressionLevel: number) {
     if (!lz4_module) {
         // load lz4 wasm module
         lz4_module = await new Promise<any>(resolve => {
-            const lz4_module_constructor = require("project-editor/flow/runtime/lz4.js");
+            const lz4_module_constructor = require("project-editor/flow/runtime/wasm/lz4.js");
             const lz4_module = lz4_module_constructor(() => {
                 resolve(lz4_module);
             });

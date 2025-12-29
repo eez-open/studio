@@ -27,7 +27,7 @@ import {
     PropertyInfo,
     PropertyProps
 } from "project-editor/core/object";
-import type { Project, ProjectType } from "project-editor/project/project";
+import type { LVGLVersion, Project, ProjectType } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import type {
@@ -319,15 +319,13 @@ class SystemEnum implements IEnum {
                 ) != -1
             ) {
                 if (projectStore.projectTypeTraits.isLVGL) {
-                    if (systemEnum.lvglVersion == undefined) {
+                    if (systemEnum.lvglVersions == undefined) {
                         return true;
                     }
-
-                    if (
-                        systemEnum.lvglVersion ==
-                        projectStore.project.settings.general.lvglVersion
-                    ) {
-                        return true;
+                    for (let i = 0; i < systemEnum.lvglVersions.length; i++) {
+                        if (projectStore.project.settings.general.lvglVersion == systemEnum.lvglVersions[i]) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -340,7 +338,7 @@ class SystemEnum implements IEnum {
         public name: string,
         public members: IEnumMember[],
         private projectTypes: ProjectType[] | undefined,
-        private lvglVersion?: "8.3" | "9.0"
+        private lvglVersions?: LVGLVersion[]
     ) {
         makeObservable(this, {
             membersMap: computed
@@ -360,15 +358,15 @@ export function registerSystemEnum({
     name,
     members,
     projectTypes,
-    lvglVersion
+    lvglVersions
 }: {
     name: string;
     members: IEnumMember[];
     projectTypes: ProjectType[] | undefined;
-    lvglVersion?: "8.3" | "9.0";
+    lvglVersions?: LVGLVersion[];
 }) {
     SystemEnum.SYSTEM_ENUMS.push(
-        new SystemEnum(name, members, projectTypes, lvglVersion)
+        new SystemEnum(name, members, projectTypes, lvglVersions)
     );
 }
 

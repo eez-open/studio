@@ -264,7 +264,7 @@ export class SimulatorLVGLCode implements LVGLCode {
                     : unescapeCString(value);
         }
 
-        const strPtr = this.runtime.wasm.allocateUTF8(str);
+        const strPtr = this.runtime.wasm.stringToNewUTF8(str);
         this.allocated.push(strPtr);
         return strPtr;
     }

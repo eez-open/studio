@@ -24,7 +24,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
             projectType === ProjectType.LVGL &&
             (!projectStore ||
-                projectStore.project.settings.general.lvglVersion == "8.3"),
+                projectStore.project.settings.general.lvglVersion.startsWith("8.")),
 
         componentPaletteGroupName: "!1Input",
 
@@ -100,7 +100,7 @@ export class LVGLColorwheelWidget extends LVGLWidget {
         },
 
         check: (widget, messages) =>
-            checkWidgetTypeLvglVersion(widget, messages, "8.3")
+            checkWidgetTypeLvglVersion(widget, messages, "8.")
     });
 
     override makeEditable() {

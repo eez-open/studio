@@ -119,7 +119,7 @@ class LVGLMatrixButton extends EezObject {
                 hideInPropertyGrid: (button: LVGLMatrixButton) =>
                     button.newLine ||
                     ProjectEditor.getProject(button).settings.general
-                        .lvglVersion == "9.0"
+                        .lvglVersion.startsWith("9.")
             },
             {
                 name: "ctrlCustom1",
@@ -332,7 +332,7 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             mapArray = new Uint32Array(buttons.length + 1);
             for (let i = 0; i < buttons.length; i++) {
                 let button = buttons[i];
-                mapArray[i] = runtime.wasm.allocateUTF8(
+                mapArray[i] = runtime.wasm.stringToNewUTF8(
                     unescapeCString(
                         button.newLine ? "\n" : button.text ? button.text : " "
                     )

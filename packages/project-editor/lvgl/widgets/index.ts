@@ -91,6 +91,7 @@ import {
     LV_BUTTONMATRIX_CTRL_ENUM_NAME,
     LV_BUTTONMATRIX_CTRL
 } from "../lvgl-constants";
+import type { LVGLVersion } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -163,7 +164,7 @@ registerClass("LVGLWindowWidget", LVGLWindowWidget);
 export function registerLvglEnum(
     enumName: string,
     members: { [key: string]: number },
-    lvglVersion?: "8.3" | "9.0"
+    lvglVersions?: LVGLVersion[]
 ) {
     registerSystemEnum({
         name: enumName,
@@ -172,7 +173,7 @@ export function registerLvglEnum(
             value: members[key]
         })),
         projectTypes: [ProjectType.LVGL],
-        lvglVersion
+        lvglVersions
     });
 }
 
@@ -244,7 +245,7 @@ registerLvglEnum(
         FLOATING: LVGL_FLAG_CODES.FLOATING,
         OVERFLOW_VISIBLE: LVGL_FLAG_CODES.OVERFLOW_VISIBLE
     },
-    "8.3"
+    ["8.4.0"]
 );
 
 registerLvglEnum(
@@ -271,7 +272,7 @@ registerLvglEnum(
         FLOATING: LVGL_FLAG_CODES_90.FLOATING,
         OVERFLOW_VISIBLE: LVGL_FLAG_CODES_90.OVERFLOW_VISIBLE
     },
-    "9.0"
+    ["9.2.2", "9.3.0", "9.4.0"]
 );
 
 registerLvglEnum(LV_STATE_ENUM_NAME, {

@@ -28,6 +28,7 @@ import type {
     LVGLWidget
 } from "project-editor/lvgl/widgets";
 import {
+    LVGLVersion,
     Project,
     ProjectType,
     findBitmap,
@@ -77,7 +78,7 @@ interface LVGLCreateContext {
 }
 
 export abstract class LVGLPageRuntime {
-    lvglVersion: "8.3" | "9.0";
+    lvglVersion: LVGLVersion;
     wasm: IWasmFlowRuntime;
     toLVGLCode = new SimulatorLVGLCode(this, LVGL_CONSTANTS_ALL);
     isMounted: boolean = false;
@@ -134,7 +135,7 @@ export abstract class LVGLPageRuntime {
     }
 
     get isV9() {
-        return this.lvglVersion == "9.0";
+        return this.lvglVersion.startsWith("9.");
     }
 
     abstract get isEditor(): boolean;
@@ -142,13 +143,19 @@ export abstract class LVGLPageRuntime {
     abstract mount(): void;
     abstract unmount(): void;
 
-    beginUserWidget(widget: LVGLUserWidgetWidget) {}
+    _isInsideUserWidget: number = 0;
 
-    get isInsideUserWidget() {
-        return false;
+    beginUserWidget(widget: LVGLUserWidgetWidget) {
+        this._isInsideUserWidget++;
     }
 
-    endUserWidget() {}
+    get isInsideUserWidget() {
+        return this._isInsideUserWidget > 0;
+    }
+
+    endUserWidget() {
+        this._isInsideUserWidget--;
+    }
 
     getWidgetIndex(object: LVGLWidget | Page) {
         return 0;
@@ -268,7 +275,7 @@ export abstract class LVGLPageRuntime {
                 this.wasm.HEAP8[fontMemPtr + i] = bin[i];
             }
 
-            const fontPathStr = this.wasm.allocateUTF8("M:" + fontMemPtr);
+            const fontPathStr = this.wasm.stringToNewUTF8("M:" + fontMemPtr);
 
             let fallbackUserFont = 0;
             let fallbackBuiltinFont = -1;
@@ -314,7 +321,7 @@ export abstract class LVGLPageRuntime {
     }
 
     allocateUTF8(str: string, free: boolean) {
-        const stringPtr = this.wasm.allocateUTF8(str);
+        const stringPtr = this.wasm.stringToNewUTF8(str);
         if (free) {
             this.pointers.push(stringPtr);
         }
@@ -550,7 +557,7 @@ export abstract class LVGLPageRuntime {
     stringLiteral(str: string) {
         let strPtr = this.stringLiterals.get(str);
         if (!strPtr) {
-            strPtr = this.wasm.allocateUTF8(str);
+            strPtr = this.wasm.stringToNewUTF8(str);
             this.stringLiterals.set(str, strPtr);
         }
         return strPtr;
