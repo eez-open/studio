@@ -1,7 +1,4 @@
-import { resolve } from "path";
-
-import { getTempDirPath, isDev } from "eez-studio-shared/util-electron";
-import { sourceRootDir } from "eez-studio-shared/util";
+import path from "path";
 
 import type { IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -34,7 +31,6 @@ import {
     LVGL_PARTS_8,
     LVGL_PARTS_9
 } from "project-editor/lvgl/lvgl-constants";
-import { settingsController } from "home/settings";
 import type { LVGLVersion } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,109 +278,44 @@ const version_9 = {
         fileName: string,
         binFile?: boolean
     ) => {
-        const lvglImageScriptPath = isDev
-            ? resolve(`${sourceRootDir()}/../resources/lv_img_conv_9`)
-            : process.resourcesPath! + "/lv_img_conv_9";
+        const TO_IMAGE_MODE = {
+            [CF_L8.toString()]: "L8",
 
-        const fs = await import("fs");
+            [CF_INDEXED_1_BIT.toString()]: "I1",
+            [CF_INDEXED_2_BIT.toString()]: "I2",
+            [CF_INDEXED_4_BIT.toString()]: "I4",
+            [CF_INDEXED_8_BIT.toString()]: "I8",
 
-        const [tempDir, cleanupCallback] = await getTempDirPath({
-            unsafeCleanup: true
-        });
+            [CF_ALPHA_1_BIT.toString()]: "A1",
+            [CF_ALPHA_2_BIT.toString()]: "A2",
+            [CF_ALPHA_4_BIT.toString()]: "A4",
+            [CF_ALPHA_8_BIT.toString()]: "A8",
 
-        let bitmapFilePath = `${tempDir}/${fileName}.png`;
+            [CF_TRUE_COLOR_ALPHA.toString()]: "ARGB8888",
+            [CF_TRUE_COLOR_CHROMA.toString()]: "XRGB8888",
+            [CF_RGB565.toString()]: "RGB565",
+            [CF_RGB565A8.toString()]: "RGB565A8",
+            [CF_TRUE_COLOR.toString()]: "RGB888",
 
-        {
-            // for example: data:image/png;base64,
-            const k = bitmap.image.indexOf(",");
+            [CF_RAW.toString()]: "RAW",
+            [CF_RAW_ALPHA.toString()]: "RAW_ALPHA"
+        };
 
-            const bin = Buffer.from(
-                bitmap.image.substring(k + 1),
-                "base64"
-            );
-            await fs.promises.writeFile(bitmapFilePath, bin);
+        const { LVGLImage } = require("./lv_img_conv_v9/index.js");
+
+        const img = await new LVGLImage().from_png(bitmap.image, TO_IMAGE_MODE[bitmap.bpp.toString()], 0x000000, false, false, true);
+        const align = 10;
+        img.adjust_stride(0, align);
+
+        let result;
+        if (binFile) {
+            result = img.to_bin_as_buffer('NONE');
+        } else {
+            const baseName = path.basename(fileName, path.extname(fileName));
+            result = img.to_c_array_as_string(baseName + '.c');
         }
 
-        return new Promise<string | any>((resolve, reject) => {
-            const { PythonShell } =
-                require("python-shell") as typeof import("python-shell");
-
-            const TO_IMAGE_MODE = {
-                [CF_L8.toString()]: "L8",
-
-                [CF_INDEXED_1_BIT.toString()]: "I1",
-                [CF_INDEXED_2_BIT.toString()]: "I2",
-                [CF_INDEXED_4_BIT.toString()]: "I4",
-                [CF_INDEXED_8_BIT.toString()]: "I8",
-
-                [CF_ALPHA_1_BIT.toString()]: "A1",
-                [CF_ALPHA_2_BIT.toString()]: "A2",
-                [CF_ALPHA_4_BIT.toString()]: "A4",
-                [CF_ALPHA_8_BIT.toString()]: "A8",
-
-                [CF_TRUE_COLOR_ALPHA.toString()]: "ARGB8888",
-                [CF_TRUE_COLOR_CHROMA.toString()]: "XRGB8888",
-                [CF_RGB565.toString()]: "RGB565",
-                [CF_RGB565A8.toString()]: "RGB565A8",
-                [CF_TRUE_COLOR.toString()]: "RGB888",
-
-                [CF_RAW.toString()]: "RAW",
-                [CF_RAW_ALPHA.toString()]: "RAW_ALPHA"
-            };
-
-            const pythonShell = new PythonShell("LVGLImage.py", {
-                mode: "text",
-                pythonOptions: ["-u"], // get print results in real-time
-                scriptPath: lvglImageScriptPath,
-                pythonPath: settingsController.pythonUseCustomPath
-                    ? settingsController.pythonCustomPath
-                    : undefined,
-                args: [
-                    "--ofmt",
-                    binFile ? "BIN" : "C",
-                    "--cf",
-                    TO_IMAGE_MODE[bitmap.bpp.toString()],
-                    "--output",
-                    `${tempDir}`,
-                    bitmapFilePath
-                ]
-            });
-
-            let wasError = false;
-
-            pythonShell.on("close", async () => {
-                if (!wasError) {
-                    try {
-                        const cFile = await fs.promises.readFile(
-                            `${tempDir}/${fileName}.${
-                                binFile ? "bin" : "c"
-                            }`,
-                            binFile ? null : "utf-8"
-                        );
-
-                        resolve(cFile);
-                    } catch (err) {
-                        reject(err);
-                    }
-
-                    cleanupCallback();
-                }
-            });
-
-            pythonShell.on("pythonError", err => {
-                console.error("pythonError", err);
-                wasError = true;
-                reject(err);
-                cleanupCallback();
-            });
-
-            pythonShell.on("error", err => {
-                console.error("error", err);
-                wasError = true;
-                reject(err);
-                cleanupCallback();
-            });
-        });
+        return result;
     },
 
     getLvglStylePropName: (stylePropName: string) => {

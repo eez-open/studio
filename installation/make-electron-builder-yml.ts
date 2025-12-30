@@ -14,13 +14,6 @@ async function getExtraResource() {
         to: path.basename(extraResourcePath)
     }));
 
-    let lvImgConv9 = (
-        await fs.promises.readdir("./resources/lv_img_conv_9")
-    ).map(file => ({
-        from: "./resources/lv_img_conv_9/" + file,
-        to: "lv_img_conv_9/" + file
-    }));
-
     let eezframeworkAmalgamation = (
         await fs.promises.readdir("./resources/eez-framework-amalgamation")
     ).map(file => ({
@@ -30,7 +23,6 @@ async function getExtraResource() {
 
     return [
         ...extraResources,
-        ...lvImgConv9,
         ...eezframeworkAmalgamation,
         ...[
             {

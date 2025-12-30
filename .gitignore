@@ -31,6 +31,7 @@ bundle-meta.json
 circular.txt
 
 !packages/project-editor/flow/runtime/wasm/**
+!packages/project-editor/lvgl/lv_img_conv_v9/**
 
 npm-module/packages
 npm-module/libs
